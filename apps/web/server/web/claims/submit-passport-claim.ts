@@ -39,6 +39,15 @@ export type SubmitPassportClaimInput = {
   claimantNote?: string | null
   /** Rank the claimant asserts at claim time (PENDING; ADR 0035 §4). */
   claimedRankId?: string | null
+  /**
+   * Lineage selections asserted at claim time via the join-wizard creatable comboboxes
+   * (SESSION_0441). Each is a registered-pick FK ref; a custom entry leaves it null and
+   * only the text label (in `claimantNote`) survives. Shown to the steward as resolved
+   * links and actionable on approve.
+   */
+  claimedSchoolId?: string | null
+  trainedUnderNodeId?: string | null
+  representTreeId?: string | null
   /** Door context — present for the lineage door; null for a directory-only person. */
   nodeId?: string | null
   treeId?: string | null
@@ -90,6 +99,9 @@ export async function submitPassportClaim(
       relationship: input.relationship ?? null,
       claimantNote: input.claimantNote ?? null,
       claimedRankId: input.claimedRankId ?? null,
+      claimedSchoolId: input.claimedSchoolId ?? null,
+      trainedUnderNodeId: input.trainedUnderNodeId ?? null,
+      representTreeId: input.representTreeId ?? null,
       nodeId: input.nodeId ?? null,
       treeId: input.treeId ?? null,
       directoryProfileId: input.directoryProfileId ?? null,

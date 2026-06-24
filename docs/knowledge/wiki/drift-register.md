@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-24
+last_agent: claude-session-0441
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -399,3 +399,21 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   `directoryProfile.passport.displayName` (identity SoT, ADR 0025); `profileClaimSubjectLabel`
   updated to match. `/app/claims` renders green (browser-verified, 0 console errors).
   **Logged + resolved in:** SESSION_0438 (surfaced during ADR 0036 P5).
+
+### D-032 — `/admin` and `/app` admin route trees are duplicated and drifting (SESSION_0441, partially resolved)
+
+- **Source:** the platform-admin `app/admin/*` route tree and the org-admin `app/app/*` tree carry
+  near-duplicate pages; `/admin/*` largely 308-redirects to `/app/*` already (noted SESSION_0438). The
+  copies have **drifted**: `/admin/lineage/claims/[id]` rendered a "Claimed Rank" card that its
+  `/app/lineage/claims/[id]` twin (the surface the operator actually lands on) lacked. fallow flags ~7
+  more dup pairs: `tool-form`, `pricing-plan-form`, `tool-publish-actions`, lineage `[treeId]`, merch
+  orders, `subscription-form`, `category-form`.
+- **Impact:** two-sources-of-truth — a fix applied to one tree silently misses the other; the operator
+  sees the stale `/app` copy.
+- **Direction:** operator (SESSION_0441) — **`app/admin/*` (the ROUTE tree) is being retired; only
+  `app/app/*` remains.** `server/admin/*` modules stay (server logic, not routes).
+- **Status:** **partially resolved** (SESSION_0441) — the lineage-claim review was consolidated into one
+  shared `ClaimReviewDetail` **relocated under `/app`** (the `/admin` page is now a thin wrapper that
+  deletes cleanly at the purge); this also backported the missing Claimed Rank card to `/app`. The
+  remaining ~7 dup pairs + the full `/admin` route removal are a dedicated migration (SESSION_0442+).
+  **Logged in:** SESSION_0441 (operator direction also recorded in session memory).

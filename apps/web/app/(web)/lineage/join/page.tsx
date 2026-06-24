@@ -4,6 +4,7 @@ import { Wrapper } from "~/components/common/wrapper"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
+import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { db } from "~/services/db"
 import { BblHeritage } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-heritage"
 import { BblVideo } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-video"
@@ -47,9 +48,10 @@ const getData = cache(async (nodeId?: string) => {
       },
     })
 
-  const [nodeTree, membershipPlans] = await Promise.all([
+  const [nodeTree, membershipPlans, joinOptions] = await Promise.all([
     nodeId ? findClaimableTree(true) : Promise.resolve(null),
     findLineageMembershipPlans(Brand.BBL),
+    getJoinWizardOptions(),
   ])
   // Prefer the node's own tree; fall back to the first claimable tree for the
   // generic entry, or when a stale/invalid node link doesn't resolve (so the
@@ -72,6 +74,7 @@ const getData = cache(async (nodeId?: string) => {
         }
       : null,
     membershipPlans,
+    joinOptions,
   }
 })
 
@@ -88,7 +91,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
   const params = await searchParams
   const isCancelled = params?.cancelled === "true"
   const isSubmitted = params?.submitted === "true"
-  const { claimableTree, membershipPlans } = await getData(params?.node)
+  const { claimableTree, membershipPlans, joinOptions } = await getData(params?.node)
 
   // Preselect the claim node only when it's an actual claimable member of the
   // resolved tree (e.g. arriving from a View A card "Claim this profile").
@@ -106,6 +109,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
         claimableTree={claimableTree}
         initialNodeId={initialNodeId}
         membershipPlans={membershipPlans}
+        joinOptions={joinOptions}
         isCancelled={isCancelled}
         isSubmitted={isSubmitted}
         riganSlot={<BblHeritage rankColors={rankColors} />}

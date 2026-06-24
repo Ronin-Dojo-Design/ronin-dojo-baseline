@@ -1203,7 +1203,9 @@ model Organization {
   hostedPromotionEvents PromotionEvent[] @relation("PromotionEventHostOrg")
 
   // @added   SESSION_0354 (2026-06-06) — generic member/org claim requests (owner-less orgs)
-  claimRequests ProfileClaimRequest[]
+  claimRequests        ProfileClaimRequest[]
+  // @added   SESSION_0441 — "current school" ref asserted on a Passport claim (join wizard).
+  passportClaimSchools PassportClaimRequest[] @relation("PassportClaimSchool")
 
   @@unique([brand, slug])
   @@index([brand])
@@ -2630,15 +2632,17 @@ model LineageNode {
   passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   passportId String   @unique
 
-  relationshipsFrom     LineageRelationship[]  @relation("LineageFrom")
-  relationshipsTo       LineageRelationship[]  @relation("LineageTo")
-  ownedLineageTrees     LineageTree[]          @relation("LineageTreeOwnerNode")
-  treeMembers           LineageTreeMember[]
-  accessGrants          LineageTreeAccess[]
-  claimRequests         LineageClaimRequest[]
-  pendingClaims         LineagePendingClaim[]
+  relationshipsFrom            LineageRelationship[]  @relation("LineageFrom")
+  relationshipsTo              LineageRelationship[]  @relation("LineageTo")
+  ownedLineageTrees            LineageTree[]          @relation("LineageTreeOwnerNode")
+  treeMembers                  LineageTreeMember[]
+  accessGrants                 LineageTreeAccess[]
+  claimRequests                LineageClaimRequest[]
+  pendingClaims                LineagePendingClaim[]
   // @added SESSION_0437 (ADR 0036) — unified claim back-relation (node door context).
-  passportClaimRequests PassportClaimRequest[]
+  passportClaimRequests        PassportClaimRequest[] @relation("PassportClaimNode")
+  // @added SESSION_0441 — "trained under" instructor ref asserted at claim time.
+  trainedUnderInPassportClaims PassportClaimRequest[] @relation("PassportClaimTrainedUnder")
 }
 
 model LineageRelationship {
@@ -2693,12 +2697,14 @@ model LineageTree {
   ownerNode      LineageNode?  @relation("LineageTreeOwnerNode", fields: [ownerNodeId], references: [id], onDelete: SetNull)
   ownerNodeId    String?
 
-  members               LineageTreeMember[]
-  visualGroups          LineageVisualGroup[]
-  accessGrants          LineageTreeAccess[]
-  claimRequests         LineageClaimRequest[]
+  members                   LineageTreeMember[]
+  visualGroups              LineageVisualGroup[]
+  accessGrants              LineageTreeAccess[]
+  claimRequests             LineageClaimRequest[]
   // @added SESSION_0437 (ADR 0036) — unified claim back-relation (tree door context).
-  passportClaimRequests PassportClaimRequest[]
+  passportClaimRequests     PassportClaimRequest[] @relation("PassportClaimTree")
+  // @added SESSION_0441 — "represent" tree ref asserted at claim time.
+  representInPassportClaims PassportClaimRequest[] @relation("PassportClaimRepresentTree")
 
   // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=TREE.
   bookmarks Bookmark[]
@@ -2982,9 +2988,9 @@ model PassportClaimRequest {
   // Door context — all optional (SetNull): a directory-only person claim has
   // no node/tree; a lineage claim back-fills node+tree; directoryProfileId is
   // set when the directory door opened the claim.
-  node               LineageNode?      @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+  node               LineageNode?      @relation("PassportClaimNode", fields: [nodeId], references: [id], onDelete: SetNull)
   nodeId             String?
-  tree               LineageTree?      @relation(fields: [treeId], references: [id], onDelete: SetNull)
+  tree               LineageTree?      @relation("PassportClaimTree", fields: [treeId], references: [id], onDelete: SetNull)
   treeId             String?
   directoryProfile   DirectoryProfile? @relation(fields: [directoryProfileId], references: [id], onDelete: SetNull)
   directoryProfileId String?
@@ -2998,6 +3004,17 @@ model PassportClaimRequest {
   // admin-verify mints the awarded RankAward from this (claim→award, ADR 0035).
   claimedRank   Rank?   @relation("PassportClaimClaimedRank", fields: [claimedRankId], references: [id], onDelete: SetNull)
   claimedRankId String?
+
+  // Lineage selections asserted at claim time (SESSION_0441) — same shape as claimedRank:
+  // a registered combobox pick links the entity (shown to the steward as a resolved link +
+  // actionable on approve); a custom entry leaves these null and only the text label (carried
+  // in claimantNote) survives.
+  claimedSchool      Organization? @relation("PassportClaimSchool", fields: [claimedSchoolId], references: [id], onDelete: SetNull)
+  claimedSchoolId    String?
+  trainedUnderNode   LineageNode?  @relation("PassportClaimTrainedUnder", fields: [trainedUnderNodeId], references: [id], onDelete: SetNull)
+  trainedUnderNodeId String?
+  representTree      LineageTree?  @relation("PassportClaimRepresentTree", fields: [representTreeId], references: [id], onDelete: SetNull)
+  representTreeId    String?
 
   evidence PassportClaimEvidence[]
 

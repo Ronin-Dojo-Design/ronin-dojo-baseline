@@ -48,11 +48,18 @@ export const joinLegacyFormSchema = z.object({
   email: z.string().trim().email("Valid email is required"),
   phoneE164: optionalTrimmedString(32),
   currentRank: optionalTrimmedString(200),
+  // Creatable-combobox refs (SESSION_0441): a registered pick persists the *Id; a
+  // custom entry leaves it empty and only the text label above survives. The steward
+  // review surface reads the ref when present, else the text.
+  currentRankId: optionalTrimmedString(64),
   role: z.enum(joinLegacyRoles),
   schoolName: optionalTrimmedString(160),
+  schoolOrgId: optionalTrimmedString(64),
   location: optionalTrimmedString(160),
   trainedUnder: optionalTrimmedString(500),
+  trainedUnderNodeId: optionalTrimmedString(64),
   represent: optionalTrimmedString(500),
+  representTreeId: optionalTrimmedString(64),
   evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: optionalTrimmedString(2000),
   profileUrl: httpUrlSchema.optional().or(z.literal("")),

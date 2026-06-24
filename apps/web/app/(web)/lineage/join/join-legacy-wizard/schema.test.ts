@@ -56,4 +56,33 @@ describe("joinLegacyFormSchema", () => {
     expect(result.error?.flatten().fieldErrors.instagramUrl?.[0]).toContain("http or https")
     expect(result.error?.flatten().fieldErrors.evidenceUrl?.[0]).toContain("http or https")
   })
+
+  it("accepts the creatable-combobox ref ids alongside their text labels (SESSION_0441)", () => {
+    const result = joinLegacyFormSchema.safeParse({
+      ...validInput,
+      currentRankId: "rank_black",
+      schoolOrgId: "org_machado",
+      trainedUnderNodeId: "node_carlos",
+      representTreeId: "tree_machado",
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.currentRankId).toBe("rank_black")
+    expect(result.data?.trainedUnderNodeId).toBe("node_carlos")
+    // The text labels survive independently — the dual "store BOTH" shape.
+    expect(result.data?.currentRank).toBe("8th degree coral belt")
+    expect(result.data?.schoolName).toBe("Machado Jiu-Jitsu")
+  })
+
+  it("allows a custom entry: text present, ref id omitted", () => {
+    const result = joinLegacyFormSchema.safeParse({
+      ...validInput,
+      currentRank: "Underwater basket-weaving black belt",
+      // no currentRankId — the custom path
+    })
+
+    expect(result.success).toBe(true)
+    expect(result.data?.currentRankId).toBeUndefined()
+    expect(result.data?.currentRank).toBe("Underwater basket-weaving black belt")
+  })
 })

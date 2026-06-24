@@ -7,6 +7,7 @@ import {
   LockKeyholeIcon,
   MailIcon,
 } from "lucide-react"
+import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
 import { Button } from "~/components/common/button"
 import { Form } from "~/components/common/form"
 import { Note } from "~/components/common/note"
@@ -21,9 +22,11 @@ import { useJoinWizard, type ClaimableTree } from "./use-join-wizard"
 export function JoinLegacyWizard({
   claimableTree,
   initialNodeId,
+  joinOptions,
 }: {
   claimableTree?: ClaimableTree
   initialNodeId?: string
+  joinOptions: JoinWizardOptions
 }) {
   const wizard = useJoinWizard({ claimableTree, initialNodeId })
   const errorCount = Object.keys(wizard.form.formState.errors).length
@@ -125,6 +128,7 @@ export function JoinLegacyWizard({
           active={wizard.currentStep === 2}
           claimableTree={claimableTree}
           form={wizard.form}
+          options={joinOptions}
         />
 
         <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 p-3 shadow-2xl backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none">

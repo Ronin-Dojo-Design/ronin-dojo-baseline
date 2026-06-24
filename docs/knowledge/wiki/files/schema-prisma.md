@@ -4,9 +4,9 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-05-12
+updated: 2026-06-24
 author: Brian + Copilot
-last_agent: copilot-session-0152
+last_agent: claude-session-0441
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
@@ -22,7 +22,9 @@ backlinks:
   - docs/knowledge/wiki/files/discipline-queries.md
   - docs/sprints/SESSION_0152.md
 needs_fix:
-  - "Dirstarter template models (Tool, Category, Tag, Report, Ad) still present — remove before prod"
+  - "Single-brand BBL prune (ADR 0034): the 4-brand Brand enum harness + ~170 vestigial getRequestBrand sites are slated for full prune; multi-brand is dead, multi-product is the model"
+  - "Tool/Category/Tag NOT removable as plain Dirstarter boilerplate — Tool is repurposed as the join-the-legacy non-claim 'Legacy Profile' record (createJoinLegacyInterest); confirm consumers before any removal"
+  - "Legacy LineageClaimRequest table retained for stragglers only (ADR 0036 P5) — drop in a later migration"
 wiring:
   - "apps/web/prisma/seed.ts — seeds data into these models"
   - "apps/web/services/db.ts — creates PrismaClient from generated types"
@@ -35,42 +37,65 @@ tags: [prisma, schema, database, s1]
 
 ## Summary
 
-The Prisma schema defining all database models for the Ronin Dojo platform. 109 models, ~55 enums, ~3500 lines. Source of truth for the data layer.
+The Prisma schema defining all database models for the Ronin Dojo platform. **125 models, 86 enums,
+~4127 lines** (59 migrations). Source of truth for the data layer. *(Counts refreshed SESSION_0441;
+the prior 109/55/~3500 figure was frozen at SESSION_0152.)*
 
 ## Intent
 
-Single schema file defining the complete data model for a multi-brand martial arts SaaS. Everything from identity (Passport) through tournaments, gamification, subscriptions, and lineage is modeled here. Brand extensibility is built in via `isSystem` + `brand` columns on key reference tables.
+Single schema file defining the complete data model for the platform. Everything from identity
+(**Passport** as the identity root, ADR 0025) through tournaments, gamification, subscriptions,
+lineage, and the **unified person-claim** flow is modeled here. Originally multi-brand (`isSystem` +
+`brand` columns on reference tables); per **ADR 0034** multi-*brand* is dead (single-brand collapse to
+BBL) and multi-*product* (apps in one monorepo) is the model — the 4-brand harness is slated for prune.
 
 ## Architecture
 
 Two sections:
 
-1. **Dirstarter template models** (top) — User, Session, Account, Verification, Tool, Category, Tag, Report, Ad. Kept as working reference for Prisma patterns.
-2. **Ronin Dojo platform models** (bottom) — All 31 domain models organized by concern: Identity, Organization + Discipline, Rank System, Membership + Roles, Rank Awards, Courses + Curriculum, Tournaments, Gamification, Styles, Subscriptions, Lineage, Waivers, Certifications.
+1. **Dirstarter template models** (top) — User, Session, Account, Verification, Tool, Category, Tag,
+   Report, Ad. **No longer pure boilerplate:** `Tool` is repurposed as the join-the-legacy non-claim
+   "Legacy Profile" record (`createJoinLegacyInterest`); auth models (User/Session/Account) are core.
+2. **Ronin Dojo platform models** (bottom) — organized by concern: Identity, Organization + Discipline,
+   Rank System, Membership + Roles, Rank Awards, Courses + Curriculum, Tournaments, Gamification,
+   Styles, Subscriptions, **Lineage (trees + nodes + relationships)**, **Claims (unified)**, Leads,
+   Media, Entitlements, Waivers, Certifications.
 
 ## Key exports / models
 
-- **Identity:** User, Passport, DirectoryProfile
-- **Organization:** Organization, Discipline, OrganizationDiscipline
-- **Ranks:** RankSystem, Rank, RankAward
+- **Identity (Passport-rooted, ADR 0025):** Passport (identity SoT; `userId` nullable — account
+  attaches on claim), User, DirectoryProfile
+- **Organization:** Organization, Discipline, OrganizationDiscipline, Affiliation (school axis,
+  separate from Membership)
+- **Ranks:** RankSystem, Rank (`colorHex` belt color), RankAward (canonical promotion fact)
+- **Lineage:** LineageTree, LineageTreeMember, LineageNode, LineageRelationship, LineageVisualGroup,
+  LineageTreeAccess
+- **Claims (unified, ADR 0036):** **PassportClaimRequest** (THE person-claim record — keyed on
+  Passport; `claimedRankId` + the SESSION_0441 `claimedSchoolId`/`trainedUnderNodeId`/`representTreeId`
+  typed refs), PassportClaimEvidence, ProfileClaimRequest (org claims — sibling), LineagePendingClaim
+  (email→node binding), LineageClaimRequest (legacy, retired writer)
 - **Membership:** Membership, MembershipRoleAssignment, Role
+- **Leads / intake:** Lead, LeadFollowUp (join-the-legacy intake + CRM)
+- **Saves:** Bookmark (polymorphic — `BookmarkSubjectType` + nullable FKs, ADR 0028/0029)
 - **Curriculum:** Course, CurriculumItem, CourseEnrollment, CurriculumItemCompletion
-- **Tournaments:** Tournament, TournamentDiscipline, Division, Registration, RegistrationEntry, TournamentRole, TournamentStaffAssignment
+- **Tournaments:** Tournament, TournamentDiscipline, Division, Registration, RegistrationEntry,
+  TournamentRole, TournamentStaffAssignment
 - **Gamification:** GamificationEventType, GamificationEvent
-- **Styles:** Style
-- **Subscriptions:** SubscriptionTier, UserBrandSubscription
-- **Lineage:** LineageNode, LineageRelationship
-- **Waivers:** Waiver, WaiverSignature
-- **Certifications:** Certification
+- **Subscriptions / billing:** SubscriptionTier, UserBrandSubscription, UserEntitlement (comp/paid
+  grants)
+- **Styles · Waivers · Certifications:** Style; Waiver, WaiverSignature; Certification
 
 ## Health
 
-- Compiles: ✅ (`prisma generate` clean)
-- Type-checks: ✅ (`tsc --noEmit` clean, only pre-existing Dirstarter errors)
-- Tested: ❌ (no automated schema tests yet)
-- Seeded: ✅ (seed.ts runs clean)
-- Migration history: ✅ (`prisma migrate dev` works with Prisma 7.x; shadow DB hang resolved)
-- Score: **8.5/10**
+- Compiles: ✅ (`prisma generate` clean, Prisma 7.8)
+- Type-checks: ✅ (`tsc --noEmit` clean)
+- Tested: ◑ (model-level zod/action tests exist per-feature; no whole-schema test)
+- Seeded: ✅ (per-brand seeds run clean)
+- Migration history: ✅ 59 migrations. **⚠ prodsnap/prod drift hazard (SESSION_0441):** the
+  hand-stamped `20260622000000_add_claimed_rank_to_lineage_claim_request` is **pending** and marked
+  *"DO NOT APPLY in cloud sessions"* — a deploy's `prisma migrate deploy` applies ALL pending
+  migrations, so check `prisma migrate status` before any schema-touching push.
+- Score: **8/10** (the doc body drifted ~30 sessions before this refresh; whole-schema test still absent)
 
 ## Teachable explanation
 

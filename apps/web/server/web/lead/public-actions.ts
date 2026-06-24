@@ -62,11 +62,17 @@ const legacyInterestSchema = z.object({
   email: z.string().trim().email(),
   phoneE164: z.string().trim().max(32).optional().or(z.literal("")),
   currentRank: z.string().trim().max(200).optional().or(z.literal("")),
+  // Creatable-combobox refs (SESSION_0441): registered picks persist the *Id; custom
+  // entries leave them empty and only the text label survives. Steward reads ref-else-text.
+  currentRankId: z.string().trim().max(64).optional().or(z.literal("")),
   role: z.enum(["STUDENT", "BLACK_BELT", "INSTRUCTOR", "SCHOOL_OWNER", "OTHER"]).default("STUDENT"),
   schoolName: z.string().trim().max(160).optional().or(z.literal("")),
+  schoolOrgId: z.string().trim().max(64).optional().or(z.literal("")),
   location: z.string().trim().max(160).optional().or(z.literal("")),
   trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
+  trainedUnderNodeId: z.string().trim().max(64).optional().or(z.literal("")),
   represent: z.string().trim().max(500).optional().or(z.literal("")),
+  representTreeId: z.string().trim().max(64).optional().or(z.literal("")),
   evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   profileUrl: httpUrlSchema.optional().or(z.literal("")),
@@ -156,7 +162,7 @@ export const createPublicLead = publicActionClient
 
     after(() => {
       revalidate({
-        paths: ["/admin/leads"],
+        paths: ["/app/leads"],
         tags: ["leads"],
       })
     })
@@ -287,6 +293,13 @@ export const createJoinLegacyInterest = publicActionClient
     const location = normalizeOptional(parsedInput.location)
     const trainedUnder = normalizeOptional(parsedInput.trainedUnder)
     const represent = normalizeOptional(parsedInput.represent)
+    // Creatable-combobox refs — a registered pick carries an *Id; a custom entry
+    // carries only the text above. Persisted alongside the text so the steward
+    // reads the ref when present, else the text (SESSION_0441).
+    const currentRankId = normalizeOptional(parsedInput.currentRankId)
+    const schoolOrgId = normalizeOptional(parsedInput.schoolOrgId)
+    const trainedUnderNodeId = normalizeOptional(parsedInput.trainedUnderNodeId)
+    const representTreeId = normalizeOptional(parsedInput.representTreeId)
     const evidenceUrl = normalizeOptional(parsedInput.evidenceUrl)
     const bio = normalizeOptional(parsedInput.bio)
     const profileUrl = normalizeOptional(parsedInput.profileUrl)
@@ -405,9 +418,13 @@ export const createJoinLegacyInterest = publicActionClient
           discoverySourceOther: discoverySourceOther ?? null,
           shareConsent,
           schoolName: schoolName ?? null,
+          schoolOrgId: schoolOrgId ?? null,
           location: location ?? null,
           trainedUnder: trainedUnder ?? null,
+          trainedUnderNodeId: trainedUnderNodeId ?? null,
           represent: represent ?? null,
+          representTreeId: representTreeId ?? null,
+          currentRankId: currentRankId ?? null,
           evidenceUrl: evidenceUrl ?? null,
           profileUrl: profileUrl ?? null,
           instagramUrl: instagramUrl ?? null,
@@ -465,6 +482,16 @@ export const createJoinLegacyInterest = publicActionClient
           claimantUserId: session.user.id,
           brand: Brand.BBL,
           claimantNote: notes || "Submitted through Join the Legacy.",
+          // A registered rank pick asserts the claimed rank (ADR 0035) — the award is
+          // built from this on steward approval (FI-006). A custom rank carries no id,
+          // so the narrative text stays in `notes` only.
+          claimedRankId: currentRankId ?? null,
+          // Registered school/instructor/tree picks become typed refs on the claim so the
+          // steward sees resolved links + can act on approve (SESSION_0441). Custom entries
+          // carry no id — their text stays in `notes`.
+          claimedSchoolId: schoolOrgId ?? null,
+          trainedUnderNodeId: trainedUnderNodeId ?? null,
+          representTreeId: representTreeId ?? null,
           nodeId: parsedInput.nodeId,
           treeId: claimTree.id,
           evidence: claimEvidence,
@@ -546,7 +573,7 @@ export const createJoinLegacyInterest = publicActionClient
       })
 
       revalidate({
-        paths: ["/admin/leads", "/lineage/join"],
+        paths: ["/app/leads", "/lineage/join"],
         tags: ["leads", "tools", `lead-${lead.id}`],
       })
     })

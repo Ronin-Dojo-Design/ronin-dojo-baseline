@@ -4,8 +4,8 @@ slug: directory-org-profile-hub
 type: runbook
 status: active
 created: 2026-06-07
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-24
+last_agent: claude-session-0441
 domain: directory-org-profile
 pairs_with:
   - docs/architecture/decisions/0023-generic-profile-claim.md
@@ -75,9 +75,10 @@ So a session opens the right file directly instead of grepping.
 | **Register org** | `/organizations/new`, `/organizations/join`, `/organizations/[slug]/get-started` | `create-organization-form.tsx` |
 | **Org admin (owner)** | `/organizations/[slug]/settings/*` | `settings/{general,invites,members,theme}/` |
 | **Own profile** | `/me` | `app/(web)/me/` (+ `passport-editor.tsx`) |
-| **Org claim review (admin)** | `/admin/claims`, `/admin/claims/[id]` (org-only since ADR 0036 P5) | `app/app/claims/` (`/admin/*` 308-redirects to `/app/*`) |
-| **Person claim review (manager)** | `/app/lineage/claims`, `/app/lineage/claims/[id]` | `app/app/lineage/claims/` (unified `PassportClaimRequest` queue) |
-| **Org admin (platform)** | `/admin/organizations`, `/admin/organizations/[id]/theme` | `app/admin/organizations/` |
+| **Join-the-Legacy wizard** (BBL person register/claim funnel) | `/lineage/join` (+ home `/`) | `app/(web)/lineage/join/` — 3-step intake; the lineage step has the **creatable-combobox** rank/school/instructor/tree selectors (SESSION_0441). Account-optional; signed-in + node-selected → creates a `PassportClaimRequest`. |
+| **Org claim review (admin)** | `/admin/claims`, `/admin/claims/[id]` (org-only since ADR 0036 P5) | `app/app/claims/` (`/admin/*` 308-redirects to `/app/*` — `/admin` being retired) |
+| **Person claim review (manager)** | `/app/lineage/claims`, `/app/lineage/claims/[id]` | `app/app/lineage/claims/` (unified `PassportClaimRequest` queue; shared `_components/claim-review-detail.tsx` renders Claimed Rank + Lineage selections) |
+| **Org admin (platform)** | `/app/organizations` (`/admin/*` retiring) | `app/admin/organizations/` → `/app/organizations/` |
 
 ### Read models & actions (server)
 
@@ -85,7 +86,8 @@ So a session opens the right file directly instead of grepping.
 | --- | --- |
 | Directory read model + tier projection | `server/web/directory/queries.ts`, `profile-projection.ts`, `search-profiles.ts` |
 | Directory filters/facets | `server/web/directory/filter-options.ts` |
-| Claim submit (claimant) | `server/web/claims/claim-actions.ts` (`userActionClient`; owner-less/placeholder precondition; per-claimant dedup; brand-scoped) |
+| Claim submit (claimant, drawer/directory doors) | `server/web/claims/claim-actions.ts` (`userActionClient`; owner-less/placeholder precondition; per-claimant dedup; brand-scoped) → `submit-passport-claim.ts` core |
+| Claim submit (join-wizard lead door) | `server/web/lead/public-actions.ts` `createJoinLegacyInterest` (`publicActionClient` — account-optional; creates a `Lead` + either a `PassportClaimRequest` (signed-in, node selected) or a Pending `Tool`; persists the SESSION_0441 combobox refs to `lead.meta` + as typed claim columns; rank → `claimedRankId`) |
 | Org claim review (admin) | `server/admin/claims/claim-review-actions.ts` (ProfileClaimRequest; approve sets `organization.ownerId`; org-only since P5) |
 | Person claim review (unified) | `server/admin/claims/passport-claim-review-actions.ts` (`reviewPassportClaim` → `finalizePassportClaim`: real account→Passport attach + node entitlements when node context present). Admin queries: `server/admin/lineage/claim-queries.ts`. `applyLineageClaimReview` retained for legacy stragglers only. |
 
@@ -97,6 +99,8 @@ So a session opens the right file directly instead of grepping.
 | `OrgClaimCta` | `components/web/claims/org-claim-cta.tsx` | Owner-less-org "Claim this organization" CTA (sign-in-gated, `?next=`). |
 | `ListingRegisterCta` | `components/web/directory/listing-register-cta.tsx` | "Add your school" / "Join the directory" register callouts. |
 | `create-organization-form` | `components/web/organizations/create-organization-form.tsx` | Register a new org (+ dedup hint — interim search-first). |
+| `CreatableCombobox` | `components/common/creatable-combobox.tsx` | Pick-registered-or-type-custom selector (dual `{id,label}`). Powers the join-wizard rank/school/instructor/tree fields (SESSION_0441). See [Custom Component Inventory](../../knowledge/wiki/custom-component-inventory.md). |
+| `ClaimReviewDetail` | `app/app/lineage/claims/[id]/_components/claim-review-detail.tsx` | Shared steward claim-review body (Status/Claimed Rank/**Lineage selections**/Note/Evidence/actions); used by both `/app` and the thin `/admin` wrapper (SESSION_0441 consolidation). |
 | Directory filters | `components/web/directory/*` | Faceted filtering (DataSelect / ComboboxSelector — see the [Custom Component Inventory](../../knowledge/wiki/custom-component-inventory.md)). |
 
 Catalogued in [Custom Component Inventory](../../knowledge/wiki/custom-component-inventory.md).

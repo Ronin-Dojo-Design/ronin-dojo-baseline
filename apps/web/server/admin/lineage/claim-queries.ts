@@ -54,6 +54,14 @@ export async function findClaimById(id: string) {
       updatedAt: true,
       // FI-006: rank the claimant asserted at claim time.
       claimedRank: { select: { id: true, name: true, shortName: true, colorHex: true } },
+      // SESSION_0441: registered school/instructor/tree the claimant picked in the wizard —
+      // resolved to names/links on the review surface. Null = the claimant typed a custom
+      // value (the text label is in `claimantNote`).
+      claimedSchool: { select: { id: true, name: true, slug: true } },
+      trainedUnderNode: {
+        select: { id: true, slug: true, passport: { select: { displayName: true } } },
+      },
+      representTree: { select: { id: true, name: true, slug: true } },
       passport: { select: { displayName: true } },
       tree: { select: { id: true, name: true, slug: true } },
       node: { select: { id: true } },

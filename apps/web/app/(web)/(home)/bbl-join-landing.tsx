@@ -6,6 +6,7 @@ import { heritageContent } from "~/app/(web)/(home)/bbl/bbl-landing-content"
 import { JoinLegacyLanding } from "~/app/(web)/lineage/join/join-legacy-landing"
 import { Brand } from "~/.generated/prisma/client"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
+import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { db } from "~/services/db"
 
 /**
@@ -16,7 +17,7 @@ import { db } from "~/services/db"
  * bob-tony preview cookie sees it.
  */
 export async function BblJoinLanding() {
-  const [claimableTree, membershipPlans, rankColors] = await Promise.all([
+  const [claimableTree, membershipPlans, rankColors, joinOptions] = await Promise.all([
     db.lineageTree.findFirst({
       where: {
         brand: Brand.BBL,
@@ -44,6 +45,7 @@ export async function BblJoinLanding() {
     }),
     findLineageMembershipPlans(Brand.BBL),
     getStaticBblRankColors([heritageContent.badge]),
+    getJoinWizardOptions(),
   ])
 
   return (
@@ -65,6 +67,7 @@ export async function BblJoinLanding() {
             : null
         }
         membershipPlans={membershipPlans}
+        joinOptions={joinOptions}
         isCancelled={false}
         isSubmitted={false}
         riganSlot={<BblHeritage rankColors={rankColors} />}

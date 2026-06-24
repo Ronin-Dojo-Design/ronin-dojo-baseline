@@ -1,5 +1,6 @@
 "use client"
 
+import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
 import { JoinLegacyWizard } from "./join-legacy-wizard"
 
 type JoinLegacyFormProps = {
@@ -10,6 +11,8 @@ type JoinLegacyFormProps = {
   } | null
   /** Node to preselect in the claim picker (from `?node=` — e.g. a View A card "Claim"). */
   initialNodeId?: string
+  /** Registered option lists for the creatable comboboxes (BBL-scoped, public). */
+  joinOptions: JoinWizardOptions
 }
 
 export function JoinLegacyForm(props: JoinLegacyFormProps) {

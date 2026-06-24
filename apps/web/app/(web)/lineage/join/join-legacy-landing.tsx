@@ -32,6 +32,7 @@ import {
 import { JoinLegacyForm } from "./join-legacy-form"
 import { LineageMembershipCheckout } from "./lineage-membership-checkout"
 import type { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
+import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
 
 type MembershipPlans = Awaited<ReturnType<typeof findLineageMembershipPlans>>
 
@@ -73,6 +74,7 @@ export function JoinLegacyLanding({
   claimableTree,
   initialNodeId,
   membershipPlans,
+  joinOptions,
   isCancelled,
   isSubmitted,
   riganSlot,
@@ -81,6 +83,7 @@ export function JoinLegacyLanding({
   claimableTree: ClaimableTree
   initialNodeId?: string
   membershipPlans: MembershipPlans
+  joinOptions: JoinWizardOptions
   isCancelled: boolean
   isSubmitted: boolean
   // Server-rendered sections passed as slots (they're server components).
@@ -345,7 +348,11 @@ export function JoinLegacyLanding({
             </DrawerDescription>
           </DrawerHeader>
           <div className="px-4 pb-6 sm:px-6">
-            <JoinLegacyForm claimableTree={claimableTree} initialNodeId={initialNodeId} />
+            <JoinLegacyForm
+              claimableTree={claimableTree}
+              initialNodeId={initialNodeId}
+              joinOptions={joinOptions}
+            />
           </div>
         </DrawerContent>
       </Drawer>

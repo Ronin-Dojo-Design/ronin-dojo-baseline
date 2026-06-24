@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-24
+last_agent: claude-session-0441
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -70,6 +70,7 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 
 ## Claim & verification
 
+- **Live flow (ADR 0036):** person claims are ONE Passport-keyed `PassportClaimRequest` (lineage + directory doors are thin adapters). Submit via `submit-passport-claim.ts` (or the join-wizard `createJoinLegacyInterest` door); review at **`/app/lineage/claims/[id]`** (`ClaimReviewDetail`); approve → `finalizePassportClaim` (account→Passport attach + node entitlements + `claimedRankId`→`RankAward`). **SESSION_0441:** registered rank/school/instructor/tree picks persist as typed FK refs on the claim and render as resolved links in the "Lineage selections" card. See ADR 0036 + the [directory hub](directory-org-profile-hub.md) for the org-claim sibling.
 - [Lineage Claim Workflow + Evidence Review](../../architecture/lineage/lineage-claim-workflow-evidence-review.md)
 - [BBL BJJ Rank Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md)
 
@@ -105,12 +106,13 @@ So a session can open the right file directly instead of grepping. Components ar
 | Surface | File(s) |
 | --- | --- |
 | **Public viewer route** | `apps/web/app/(web)/lineage/[treeSlug]/page.tsx`; discipline embed `app/(web)/disciplines/_components/lineage-tree-section.tsx` |
-| **Admin editor route** | `apps/web/app/admin/lineage/[treeId]/page.tsx` (+ `_components/`) |
-| **Dashboard** | `apps/web/app/(web)/dashboard/lineage-tab.tsx`; join flow `app/(web)/lineage/join/` |
+| **Editor route** | `apps/web/app/app/lineage/[treeId]/page.tsx` (+ `_components/`). ⚠ `/admin/lineage/*` is being retired → only `/app/*` remains (drift [D-032](../../knowledge/wiki/drift-register.md)). |
+| **Join-the-Legacy wizard** (intake + claim funnel) | `app/(web)/lineage/join/page.tsx` (server-loads options via `server/web/lineage/join-options.ts`) → `join-legacy-landing.tsx` → `join-legacy-form.tsx` → `join-legacy-wizard/` (`lineage-step.tsx` = the 4 **creatable-combobox** selectors: rank/school/instructor/tree → registered ref id OR custom text; `schema.ts`, `use-join-wizard.ts`). Also the home `/` variant `app/(web)/(home)/bbl-join-landing.tsx`. |
+| **Claim review surface** (steward) | `app/app/lineage/claims/[id]/page.tsx` → shared `_components/claim-review-detail.tsx` (`ClaimReviewDetail` — Claimed Rank + **Lineage selections** cards; the `/admin` twin is a thin wrapper, SESSION_0441). Query: `server/admin/lineage/claim-queries.ts` `findClaimById`. |
 | **Public read model** | `apps/web/server/web/lineage/queries.ts` (brand-scoped fetch + visibility materialization) + `payloads.ts` (the public-field allowlist) + `node-profile-queries.ts` |
-| **Mutations + RBAC** | `server/web/lineage/editor-actions.ts` / `editor-queries.ts` / `editor-graph.ts` (placement edits, `assertPlacementEditorAccess`, audit-on-mutation); `node-profile-actions.ts`; `claim-actions.ts` |
+| **Mutations + RBAC** | `server/web/lineage/editor-actions.ts` / `editor-queries.ts` / `editor-graph.ts` (placement edits, `assertPlacementEditorAccess`, audit-on-mutation); `node-profile-actions.ts`; `claim-actions.ts`. **Claim submit (unified):** `server/web/claims/submit-passport-claim.ts` (writes `PassportClaimRequest` incl. `claimedRankId` + the SESSION_0441 `claimedSchoolId`/`trainedUnderNodeId`/`representTreeId` refs); the join-wizard lead door is `server/web/lead/public-actions.ts` `createJoinLegacyInterest`. Review/finalize: `server/admin/lineage/claim-finalize.ts` (claim→RankAward). |
 | **Pure libs (presentation-agnostic)** | `apps/web/lib/lineage/canvas-model.ts` (normalization), `tree-layout.ts`, `rank-progression.ts`, `search.ts`, `bbl-bjj-rank-map.ts` |
-| **Schema + seeds** | `apps/web/prisma/schema.prisma` (Lineage* models, `RankAward`); seeds `prisma/seed-baseline-lineage.ts`, `seed-bbl-org.ts` |
+| **Schema + seeds** | `apps/web/prisma/schema.prisma` (`Lineage*` models, `RankAward`, `PassportClaimRequest` + claim-ref columns); seeds `prisma/seed-baseline-lineage.ts`, `seed-bbl-org.ts` |
 
 ## Open work & invariants (read before changing read-models)
 

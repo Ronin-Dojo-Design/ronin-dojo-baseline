@@ -1,5 +1,12 @@
 import { AwardIcon } from "lucide-react"
-import type { UseFormReturn } from "react-hook-form"
+import { useMemo } from "react"
+import { type FieldPath, type UseFormReturn, useWatch } from "react-hook-form"
+import { BeltSwatch } from "~/components/common/belt-swatch"
+import {
+  CreatableCombobox,
+  type CreatableOption,
+  type CreatableValue,
+} from "~/components/common/creatable-combobox"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "~/components/common/form"
 import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
@@ -11,20 +18,102 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { TextArea } from "~/components/common/textarea"
+import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
 import { bblPortalFontClass } from "./constants"
 import type { JoinLegacyFormValues } from "./schema"
 import { StepShell } from "./step-shell"
 import type { ClaimableTree } from "./use-join-wizard"
 
+/**
+ * A creatable-combobox bound to TWO form fields: the human `textName` (the
+ * label/custom fallback) and the `idName` ref (set only on a registered pick).
+ * Storing both is the settled claim-wiring shape (SESSION_0441, ADR 0036) — the
+ * steward reads the ref when present, else the text.
+ */
+function CreatableField({
+  form,
+  textName,
+  idName,
+  label,
+  options,
+  placeholder,
+  searchPlaceholder,
+  note,
+  className,
+}: {
+  form: UseFormReturn<JoinLegacyFormValues>
+  textName: FieldPath<JoinLegacyFormValues>
+  idName: FieldPath<JoinLegacyFormValues>
+  label: string
+  options: CreatableOption[]
+  placeholder: string
+  searchPlaceholder: string
+  note?: string
+  className?: string
+}) {
+  const idValue = useWatch({ control: form.control, name: idName })
+
+  return (
+    <FormField
+      control={form.control}
+      name={textName}
+      render={({ field }) => (
+        <FormItem className={className}>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <CreatableCombobox
+              options={options}
+              value={{
+                id: typeof idValue === "string" && idValue.length > 0 ? idValue : null,
+                label: typeof field.value === "string" ? field.value : "",
+              }}
+              onValueChange={(next: CreatableValue) => {
+                // Write BOTH: the text label (always) and the ref id (registered pick
+                // → the id; custom → cleared). `shouldValidate` keeps the existing
+                // text-field validation/error chrome live.
+                field.onChange(next.label)
+                form.setValue(idName, next.id ?? "", { shouldDirty: true })
+              }}
+              placeholder={placeholder}
+              searchPlaceholder={searchPlaceholder}
+            />
+          </FormControl>
+          {note ? <Note className="text-xs">{note}</Note> : null}
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
 export function LineageStep({
   active,
   claimableTree,
   form,
+  options,
 }: {
   active: boolean
   claimableTree?: ClaimableTree
   form: UseFormReturn<JoinLegacyFormValues>
+  options: JoinWizardOptions
 }) {
+  // Belt colors stay data-driven (Rank.colorHex) — the swatch renders ONLY in the
+  // dropdown row; the collapsed trigger shows the plain rank name.
+  const rankOptions = useMemo<CreatableOption[]>(
+    () =>
+      options.ranks.map(rank => ({
+        id: rank.id,
+        name: rank.name,
+        content: (
+          <span className="flex items-center gap-2">
+            <BeltSwatch colorHex={rank.colorHex} />
+            {rank.name}
+          </span>
+        ),
+      })),
+    [options.ranks],
+  )
+
   return (
     <StepShell
       active={active}
@@ -34,76 +123,48 @@ export function LineageStep({
       description="Share enough rank, school, evidence, and story context for reviewers to place your Passport and lineage profile correctly."
     >
       <div className="grid gap-4">
-        <FormField
-          control={form.control}
-          name="currentRank"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Rank and promotion history</FormLabel>
-              <FormControl>
-                <TextArea
-                  placeholder="Belt rank, dates, certifying instructor..."
-                  className="min-h-28"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <CreatableField
+          form={form}
+          textName="currentRank"
+          idName="currentRankId"
+          label="Current rank"
+          options={rankOptions}
+          placeholder="Select your belt rank..."
+          searchPlaceholder="Search ranks, or type your own..."
+          note="Pick your current rank from the ladder, or type one that isn't listed. Add dates and promotion history below."
         />
 
-        <FormField
-          control={form.control}
-          name="schoolName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Current school / academy</FormLabel>
-              <FormControl>
-                <TextArea
-                  placeholder="School, team, or organization name..."
-                  className="min-h-28"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <CreatableField
+          form={form}
+          textName="schoolName"
+          idName="schoolOrgId"
+          label="Current school / academy"
+          options={options.schools}
+          placeholder="Select or type your school..."
+          searchPlaceholder="Search schools, or type to add..."
+          note="Choosing a registered school links it; otherwise we record the name you enter."
         />
 
-        <FormField
-          control={form.control}
-          name="trainedUnder"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Who did you train under?</FormLabel>
-              <FormControl>
-                <TextArea
-                  placeholder="Instructors, schools, teams, affiliations..."
-                  className="min-h-28"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <CreatableField
+          form={form}
+          textName="trainedUnder"
+          idName="trainedUnderNodeId"
+          label="Who did you train under?"
+          options={options.instructors}
+          placeholder="Select or type your instructor..."
+          searchPlaceholder="Search the lineage, or type a name..."
+          note="Pick a registered instructor to link your line, or type someone not yet in the lineage."
         />
 
-        <FormField
-          control={form.control}
-          name="represent"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Who should your tree connect to?</FormLabel>
-              <FormControl>
-                <TextArea
-                  placeholder="Family tree, instructor line, organization..."
-                  className="min-h-28"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <CreatableField
+          form={form}
+          textName="represent"
+          idName="representTreeId"
+          label="Who should your tree connect to?"
+          options={options.trees}
+          placeholder="Optional: select a lineage tree..."
+          searchPlaceholder="Search lineage trees, or type..."
+          note="Optional — the lineage tree your profile should connect to."
         />
 
         <FormField
