@@ -426,3 +426,20 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   repointed**. **Exception:** `app/admin/task-board` is live (no redirect, no `/app` twin) — keep it.
   TASK_04 was scoped + **deferred to its own PR** (operator decision SESSION_0442); the claim wrapper was
   NOT deleted this session (deferred with the rest so it lands atomically with the move).
+
+### D-033 — Two divergent BBL lineage trees; public page showed the thin clone (SESSION_0443, resolved — held for prod)
+
+- **Source:** BBL had TWO `LineageTree` rows — `bbl-lineage` (the real 77-member WP roster, Rigan-rooted
+  via edges but with `defaultRootMemberId`/`disciplineId` unset and 0 visual groups) and the cloned
+  `rigan-machado-bjj-lineage` (20 curated members WITH the bjj discipline + Dirty Dozen / Coral Belt
+  groups). The public discipline embed rendered the **thin clone**, not the full roster.
+- **Impact:** the public lineage page showed 20 curated members instead of the real 77; the full roster
+  was un-rendered dark data. The clone was produced by the now-dead Baseline→BBL brand projection in
+  `seed-bbl-org.ts` (vestigial under single-brand collapse).
+- **Resolution (SESSION_0443):** `scripts/consolidate-rigan-machado-tree.ts` makes `bbl-lineage`
+  canonical — sets root + discipline, migrates the visual groups (the Dirty Dozen group also drives the
+  lifetime-comp decision in `claim-finalize`, so it MUST carry over), renames slug → `rigan-machado-lineage`,
+  unpublishes the clone. Idempotent, backup-on-apply, `--rollback` proven on prodsnap. Code repointed
+  (brand-agnostic embed, join href, script defaults; `seed-bbl-org.ts` slimmed to just the BBL Org).
+  Browser-verified on prodsnap. **Status: resolved in code + prodsnap; prod cutover HELD on operator go**
+  (data `--apply` + code deploy land together).

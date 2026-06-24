@@ -31,8 +31,11 @@ type LineageTreeSectionProps = {
   disciplineCode?: string | null
 }
 
+// ADR 0037 (SESSION_0443): BBL collapsed its two bjj trees into the canonical full-roster
+// `rigan-machado-lineage`. Single-brand collapse is in flight (Baseline serves BBL content), so the
+// map is brand-agnostic — no per-brand override needed.
 const LINEAGE_TREE_SLUG_BY_DISCIPLINE_CODE: Record<string, string> = {
-  bjj: "rigan-machado-bjj-lineage",
+  bjj: "rigan-machado-lineage",
   eskrima: "doce-pares-eskrima-lineage",
   "muay-thai": "muay-thai-lineage",
   kajukenbo: "kajukenbo-lineage",

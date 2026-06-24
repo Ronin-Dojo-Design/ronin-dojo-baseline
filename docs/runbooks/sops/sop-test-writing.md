@@ -4,8 +4,8 @@ slug: sop-test-writing
 type: runbook
 status: active
 created: 2026-05-12
-updated: 2026-06-18
-last_agent: claude-session-0412
+updated: 2026-06-24
+last_agent: claude-session-0443
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/protocols/cody-preflight.md
@@ -101,7 +101,12 @@ flowchart TD
 - **Run all (non-e2e):** `cd apps/web && bun run test` (= `bun test --parallel=1 --path-ignore-patterns='e2e/**'`)
 - **Package script:** `bun run test` (defined in `apps/web/package.json`)
 - **No `@types/bun`** — use `// @ts-expect-error` on bun:test imports
-- **Real Postgres** — all tests hit `ronindojo_dev`, not mocks or SQLite
+- **Real Postgres** — all tests hit the DB named in `apps/web/.env` `DATABASE_URL`, not mocks or SQLite.
+  **SESSION_0443 correction:** local `.env` currently points at **`ronindojo_prodsnap`** (the real-roster
+  snapshot), and there is no separate `ronindojo_dev` in the env — so the app, bun scripts, *and* this
+  suite all run against prodsnap. Committing tests (§5) therefore write+clean-up on prodsnap; prefer the
+  §5d rolled-back-tx pattern for tx-shaped helpers so nothing persists. (Older `ronindojo_dev` mentions
+  below are historical, from when a dev DB was configured.)
 
 ### ⚠ The full suite is a two-headed concurrency problem — use `--parallel=1`
 
@@ -529,8 +534,70 @@ asserting it, that guard MUST be asserted in the wrapped file.
 Example: `server/web/lineage/claim-accept-actions.safe-action.test.ts` — one unauth gate case + five
 guard/idempotency cases (accountless-attach happy path, `CLAIMANT_HAS_NODE`, already-owned-by-other,
 unpublished/unclaimable tree, replay no-op), because every guard is the security boundary and there is no
-helper-level file. The shared finalize it calls (`finalizeLineageNodeClaim`) is covered transitively by the
-admin path's `claim-review-actions` tests — so it is NOT re-asserted here (that part of §5b still holds).
+helper-level file. The shared finalize it calls is covered transitively by the admin path's
+`claim-review-actions` tests — so it is NOT re-asserted here (that part of §5b still holds).
+
+> **⚠ Naming de-stale (SESSION_0443, ADR 0036).** Older examples in §5/§5b/§5c name the **retired**
+> lineage-claim helpers `applyLineageClaimReview` / `finalizeLineageNodeClaim`. The live unified person-claim
+> path is **`reviewPassportClaim` → `finalizePassportClaim`** (`server/admin/lineage/claim-finalize.ts`,
+> driven by `passport-claim-review-actions.ts`). The legacy names still resolve (read-only for straggler
+> `LineageClaimRequest` rows) but are no longer the path new tests should target.
+
+---
+
+## 5d. Rolled-back-tx helper test for tx-shaped functions (SESSION_0443)
+
+The **preferred** helper-level (§5) pattern for a server function that already takes a Prisma **transaction
+client** as its first arg — `finalizePassportClaim(tx, input)`, the `materialize*` helpers, any
+`fn(tx, …)` — is to call it **directly inside a transaction that is always rolled back**. No mock seams, no
+teardown, no DB pollution, and it exercises the **live** function (not a legacy wrapper).
+
+### Why this beats the §5 mock-chain pattern *for tx-shaped functions*
+
+| | §5 (drive the action/wrapper) | §5d (direct call in rolled-back tx) |
+| --- | --- | --- |
+| Mock seams | 4 `mock.module` (next/headers, next/cache, auth, next/server) | **none** |
+| Teardown | two-phase cleanup + zombie sweep | **none** — the tx never commits |
+| DB pollution | commits rows to the local DB (currently `ronindojo_prodsnap`) | **impossible** — nothing persists |
+| Brand coupling | brand-scoped fixtures + `x-brand` mock | a plain `brand` arg (drops out post-de-brand) |
+
+Use §5d when the unit under test accepts a `tx`. Keep §5/§5b for the **wrapper gates** (auth/role/brand/
+serverError) — those still need the action client. The two layers are complementary: §5d proves the tx/SQL
+semantics; the wrapped `*.safe-action.test.ts` proves the gates. Do not drive a tx-shaped helper through the
+full mock chain just to assert its internal behavior.
+
+### Harness (copy-paste)
+
+```typescript
+class Rollback extends Error {}
+
+/** Run `body` inside a transaction that is ALWAYS rolled back — zero persistence, zero teardown. */
+async function inRolledBackTx(body: (tx: Tx) => Promise<void>): Promise<void> {
+  try {
+    await db.$transaction(async (tx: Tx) => {
+      await body(tx)
+      throw new Rollback()
+    })
+  } catch (error) {
+    if (!(error instanceof Rollback)) throw error
+  }
+}
+```
+
+Each test creates its fixtures **inside** the `tx`, calls the function on that **same** `tx`, asserts by
+reading back through the `tx`, then the sentinel `Rollback` discards everything. Fixtures need unique keys
+only within the tx's lifetime — a module `let seq = 0` counter suffices (no timestamp-tag cleanup machinery).
+
+### Keeping fixtures minimal
+
+- Pick fixture values that **skip** expensive side branches you are not testing. Example: `finalizePassportClaim`
+  only grants comp for BBL (or with an override), so a non-BBL `brand` skips the comp path and needs **no**
+  entitlement fixtures.
+- Leave nullable unique columns (`LineageNode.slug`) unset to avoid collisions instead of generating unique values.
+
+Reference: `server/admin/lineage/claim-finalize.test.ts` — 7 cases (4 ADR-0037 placement: file-under-branch-head,
+instructor-not-in-tree → root, no-clobber, no-instructor no-op; 3 FI-006 RankAward: created-on-approve, none-without-rank,
+idempotent), zero mocks, ~0.7s.
 
 ---
 
@@ -756,6 +823,7 @@ reused by `app/(web)/preview/route.ts` and `hooks/use-auth-callback-url.ts`.
 - `server/web/schedule/session-generator.test.ts` — session generation logic
 - `components/web/tournaments/registration-notice.test.tsx` — component render
 - `lib/public-media-url.test.ts` — utility function
+- `server/admin/lineage/claim-finalize.test.ts` — **§5d rolled-back-tx helper test**: `finalizePassportClaim(tx, …)` called directly (no mocks, no teardown) — asserted RankAward (FI-006, ported from the retired `claim-rank-lifecycle.test.ts`) + ADR-0037 branch-head visual placement
 
 ### Smoke scripts (standalone, own PrismaClient)
 

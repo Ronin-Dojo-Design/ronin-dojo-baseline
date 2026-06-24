@@ -82,11 +82,6 @@ export async function mintClaimMagicLink(opts: {
   email: string
   /** Where the recipient lands after verifying — the claim-accept route or `/me`. */
   nextPath: string
-  /**
-   * @deprecated SESSION_0440 — retained for caller compat but no longer used. The
-   * `/preview` gate-bypass hop is gone (see callbackURL note below).
-   */
-  previewToken?: string
 }): Promise<string> {
   // The callbackURL MUST be a relative path with at most ONE query string. Better Auth's
   // magic-link `originCheck` runs `decodeURIComponent(ctx.query.callbackURL)` — a SECOND

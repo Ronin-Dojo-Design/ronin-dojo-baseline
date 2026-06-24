@@ -54,7 +54,7 @@ const overwriteNames = new Set(
     .filter(Boolean)
     .map(s => normName(s)),
 )
-const treeSlug = flag("--tree-slug", "bbl-lineage")!
+const treeSlug = flag("--tree-slug", "rigan-machado-lineage")!
 const manifestPath = flag("--manifest", "/tmp/bbl-export/optimized-manifest.json")!
 const mediaBase = (
   flag("--media-base", process.env.NEXT_PUBLIC_MEDIA_BASE_URL ?? "") ?? ""

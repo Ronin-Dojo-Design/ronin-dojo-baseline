@@ -23,7 +23,7 @@ const args = process.argv.slice(2)
 const dryRun = args.includes("--dry-run")
 const treeSlug = args.includes("--tree-slug")
   ? args[args.indexOf("--tree-slug") + 1]
-  : "bbl-lineage"
+  : "rigan-machado-lineage"
 const mediaBase = (
   args.includes("--media-base")
     ? (args[args.indexOf("--media-base") + 1] ?? "")

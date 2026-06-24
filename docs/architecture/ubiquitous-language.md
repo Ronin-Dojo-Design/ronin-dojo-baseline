@@ -260,6 +260,12 @@ The tree-specific placement of a LineageNode.
 
 LineageTreeMember owns visual parent, display order, selected display RankAward, group membership, and public display toggles. It does not own promotion truth.
 
+### Branch head
+
+A LineageTreeMember placed directly beneath the tree root whose person-node anchors a *branch* — the instructor / school owner under whom that branch's students are filed.
+
+A branch head is a **real person-node**, not an abstract container — though it also *acts* as the container its students' placements point to (via `primaryVisualParentMemberId`). It is typically a **placeholder** node an admin adds ahead of the person; the holder later **claims it or accepts an invite** to take ownership. Claiming/accepting a branch-head node grants **branch-scoped LineageTreeAccess**, letting the holder maintain (add, place, verify) the members beneath them. Decentralizing lineage maintenance this way — students filing under their own instructor's branch — is the reason placeholder nodes + claim exist. Visual placement under the root is independent of promotion provenance (a branch head need not be PROMOTED_BY the root).
+
 ### LineageVisualGroup
 
 A materialized visual row/group inside a LineageTree.

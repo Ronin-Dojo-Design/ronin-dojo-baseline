@@ -78,7 +78,7 @@ function flagValue(name: string, fallback: string | null): string | null {
 }
 const isDryRun = args.includes("--dry-run")
 const inputPath = flagValue("--input", "/tmp/bbl-export/reconciled-full.json")!
-const treeSlug = flagValue("--tree-slug", "bbl-lineage")!
+const treeSlug = flagValue("--tree-slug", "rigan-machado-lineage")!
 const ensureRanks = !args.includes("--no-ensure-ranks")
 const importGalleries = !args.includes("--no-galleries")
 const uploaderEmail = flagValue("--uploader-email", null)

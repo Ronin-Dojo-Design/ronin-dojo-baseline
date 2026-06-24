@@ -5,7 +5,6 @@ import { after } from "next/server"
 import { z } from "zod"
 import { Brand, type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getBblPreviewToken } from "~/lib/bbl-preview"
 import { getRequestOrigin } from "~/lib/brand-context"
 import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import {
@@ -215,9 +214,7 @@ async function dispatchJoinLegacyNotifications(opts: {
       const claimUrl = await mintClaimMagicLink({
         baseUrl: bblOrigin,
         email,
-        nextPath: claimAcceptNextPath(nodeId),
-        previewToken: getBblPreviewToken(),
-      })
+        nextPath: claimAcceptNextPath(nodeId),      })
       if (claimIsFounder) {
         // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
         // founder — with his one-click claim link carried inside.
@@ -239,9 +236,7 @@ async function dispatchJoinLegacyNotifications(opts: {
       const verifyUrl = await mintClaimMagicLink({
         baseUrl: bblOrigin,
         email,
-        nextPath: FREE_SIGNUP_NEXT_PATH,
-        previewToken: getBblPreviewToken(),
-      })
+        nextPath: FREE_SIGNUP_NEXT_PATH,      })
       await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
     } else if (isGuestPaidSubmission) {
       // Guest paid tier → mint a magic link that signs them in and lands them on the
@@ -250,9 +245,7 @@ async function dispatchJoinLegacyNotifications(opts: {
       const verifyUrl = await mintClaimMagicLink({
         baseUrl: bblOrigin,
         email,
-        nextPath: "/lineage/join#lineage-membership",
-        previewToken: getBblPreviewToken(),
-      })
+        nextPath: "/lineage/join#lineage-membership",      })
       await notifyUserOfBblFreeSignup({ brand: Brand.BBL, to: email, firstName, verifyUrl })
     } else {
       // Signed-in users (claim already created above) + paid tiers (Stripe checkout next):

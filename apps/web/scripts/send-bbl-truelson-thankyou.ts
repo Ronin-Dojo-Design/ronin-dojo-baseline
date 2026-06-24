@@ -27,7 +27,7 @@ import { EmailBblFirstTesterWelcome } from "~/emails/bbl-first-tester-welcome"
  *   bun scripts/send-bbl-truelson-thankyou.ts --send
  *
  * Steps 1–4 require prod credentials in the environment (DATABASE_URL = Neon;
- * --send also needs RESEND_API_KEY + RESEND_SENDER_EMAIL_BBL + BBL_PREVIEW_TOKEN).
+ * --send also needs RESEND_API_KEY + RESEND_SENDER_EMAIL_BBL).
  * Flags may be combined; they run in the order verify -> backfill -> grant -> send.
  */
 
@@ -54,7 +54,7 @@ const mode = {
   send: has("--send"),
 }
 
-const PLACEHOLDER_CLAIM_URL = `${TARGET.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=%2Fpreview%3Ftoken%3D%3Cpreview%3E%26next%3D%252Flineage%252Fclaim%252Faccept%253Fnode%253D%3Cnode%3E`
+const PLACEHOLDER_CLAIM_URL = `${TARGET.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=%2Flineage%2Fclaim%2Faccept%3Fnode%3D%3Cnode%3E`
 
 /** Render the email to /tmp with a placeholder link — no DB, no send. */
 async function renderDryRun(): Promise<void> {
@@ -341,12 +341,10 @@ async function send(): Promise<void> {
   }
 
   const nextPath = freeSignup ? FREE_SIGNUP_NEXT_PATH : claimAcceptNextPath(resolved.nodeId)
-  const previewToken = process.env.BBL_PREVIEW_TOKEN ?? "bob-tony-BBL-preview"
   const claimUrl = await mintClaimMagicLink({
     baseUrl: TARGET.baseUrl,
     email: toEmail,
     nextPath,
-    previewToken,
   })
   console.log(
     `📤 SEND — to=${toEmail} | nextPath=${nextPath}${freeSignup ? " (FREE-SIGNUP test — no claim)" : ""}`,

@@ -33,7 +33,6 @@
  */
 
 import { Brand } from "../.generated/prisma/client.js"
-import { getBblPreviewToken } from "../lib/bbl-preview"
 import { notifyFounderOfTheLongRoad } from "../lib/notifications"
 import {
   FREE_SIGNUP_NEXT_PATH,
@@ -107,8 +106,6 @@ async function main() {
     return
   }
 
-  const previewToken = getBblPreviewToken()
-
   const nextPath =
     opts.next === "claim"
       ? claimAcceptNextPath(await resolveClaimableNodeId(opts.nodeSlug))
@@ -123,7 +120,6 @@ async function main() {
     baseUrl: opts.baseUrl,
     email: opts.to,
     nextPath,
-    previewToken,
   })
   console.log(`🔗 Minted: ${claimUrl}`)
 
