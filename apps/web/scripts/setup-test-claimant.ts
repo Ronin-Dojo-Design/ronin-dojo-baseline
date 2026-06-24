@@ -43,6 +43,7 @@ const mode = {
   verify: has("--verify"),
   bind: has("--bind"),
   reset: has("--reset"),
+  send: has("--send"),
 }
 
 type ResolvedNode = {
@@ -284,15 +285,55 @@ async function bind(): Promise<void> {
   )
 }
 
+/**
+ * Reset any prior claim, mint a fresh claim-accept magic link (now-fixed callbackURL,
+ * SESSION_0440), and email it via the real "Claim your Black Belt Legacy profile" notifier.
+ * Needs RESEND_API_KEY + RESEND_SENDER_EMAIL_BBL in env (alongside DATABASE_URL).
+ */
+async function send(): Promise<void> {
+  if (!NODE_SLUG) return fail("--send requires --node-slug")
+  const { db } = await import("~/services/db")
+  const { mintClaimMagicLink, claimAcceptNextPath } =
+    await import("~/server/web/lineage/mint-claim-magic-link")
+  const { notifyMemberOfBblClaimYourProfile } = await import("~/lib/notifications")
+
+  const resolved = await resolveNode(db, NODE_SLUG)
+  if (!resolved) return fail(`no node for "${NODE_SLUG}"`)
+
+  // Re-testable: if this test user already claimed it, detach first so the fresh link re-claims.
+  await resetClaim(db, resolved)
+
+  const claimUrl = await mintClaimMagicLink({
+    baseUrl: "https://blackbeltlegacy.com",
+    email: EMAIL,
+    nextPath: claimAcceptNextPath(resolved.nodeId),
+  })
+  console.log(`📤 SEND — claim link minted for ${EMAIL} → ${resolved.profileName}`)
+
+  const res = await notifyMemberOfBblClaimYourProfile({
+    brand: BRAND,
+    to: EMAIL,
+    firstName: "there",
+    profileName: resolved.profileName,
+    claimUrl,
+    compTier: "ELITE",
+    isLifetime: false,
+  })
+  const id = (res as { data?: { id?: string } } | undefined)?.data?.id
+  console.log(
+    id ? `✅ SEND — Resend id ${id}` : "⚠️ SEND — no id (rate-limited or RESEND key unset?)",
+  )
+}
+
 function fail(msg: string): void {
   console.error("❌", msg)
   process.exitCode = 1
 }
 
 async function main() {
-  if (!mode.status && !mode.verify && !mode.bind && !mode.reset) {
+  if (!mode.status && !mode.verify && !mode.bind && !mode.reset && !mode.send) {
     console.log(
-      "No mode flag. Use --status | --verify | --bind | --reset (+ --node-slug <slug> [--email <e>]).",
+      "No mode flag. Use --status | --verify | --bind | --reset | --send (+ --node-slug <slug> [--email <e>]).",
     )
     return
   }
@@ -300,6 +341,7 @@ async function main() {
   if (mode.verify) await verify()
   if (mode.reset) await reset()
   if (mode.bind) await bind()
+  if (mode.send) await send()
 }
 
 main().catch(error => {
