@@ -495,4 +495,67 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     expect(sent).toContain("notifyFounderOfTheLongRoad")
     expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
+
+  // SESSION_0442 TASK_03 — the creatable-combobox "store BOTH" contract at the action+db seam.
+  // A REGISTERED pick persists the typed ref id alongside the text; a CUSTOM entry persists only
+  // the text with a null ref id. (Schema-level was pinned in SESSION_0441; this proves the action
+  // actually writes the dual shape into `lead.meta`.)
+  it("registered picks: lead.meta carries BOTH the ref id and the text", async () => {
+    setTestSession(null)
+    const submitter = "refs-registered"
+
+    const result = await createJoinLegacyInterest({
+      ...baseInput(submitter),
+      currentRank: "Black Belt",
+      currentRankId: "rank_reg_123",
+      schoolName: "Combat Base",
+      schoolOrgId: "org_reg_456",
+      trainedUnder: "Alexander Martinez",
+      trainedUnderNodeId: "node_reg_789",
+      represent: "Rigan Machado Lineage",
+      representTreeId: "tree_reg_abc",
+    })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(result?.data?.leadId).toBeTruthy()
+
+    const lead = await db.lead.findUnique({ where: { id: result!.data!.leadId } })
+    const meta = lead?.meta as Record<string, unknown>
+    expect(meta.currentRank).toBe("Black Belt")
+    expect(meta.currentRankId).toBe("rank_reg_123")
+    expect(meta.schoolName).toBe("Combat Base")
+    expect(meta.schoolOrgId).toBe("org_reg_456")
+    expect(meta.trainedUnder).toBe("Alexander Martinez")
+    expect(meta.trainedUnderNodeId).toBe("node_reg_789")
+    expect(meta.represent).toBe("Rigan Machado Lineage")
+    expect(meta.representTreeId).toBe("tree_reg_abc")
+  })
+
+  it("custom entries: lead.meta carries the text with NULL ref ids", async () => {
+    setTestSession(null)
+    const submitter = "refs-custom"
+
+    const result = await createJoinLegacyInterest({
+      ...baseInput(submitter),
+      currentRank: "Faixa Preta",
+      schoolName: "Atlantis Jiu-Jitsu Reykjavik",
+      trainedUnder: "Unlisted Sensei",
+      represent: "Unlisted Lineage",
+      // no *Id fields → every selection is a custom (typed) value
+    })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(result?.data?.leadId).toBeTruthy()
+
+    const lead = await db.lead.findUnique({ where: { id: result!.data!.leadId } })
+    const meta = lead?.meta as Record<string, unknown>
+    expect(meta.currentRank).toBe("Faixa Preta")
+    expect(meta.currentRankId).toBeNull()
+    expect(meta.schoolName).toBe("Atlantis Jiu-Jitsu Reykjavik")
+    expect(meta.schoolOrgId).toBeNull()
+    expect(meta.trainedUnder).toBe("Unlisted Sensei")
+    expect(meta.trainedUnderNodeId).toBeNull()
+    expect(meta.represent).toBe("Unlisted Lineage")
+    expect(meta.representTreeId).toBeNull()
+  })
 })

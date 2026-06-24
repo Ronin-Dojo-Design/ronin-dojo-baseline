@@ -124,7 +124,14 @@ export async function claimNodeForUser(
       status: { in: ["PENDING", "NEEDS_INFO"] },
     },
     orderBy: { createdAt: "desc" },
-    select: { id: true },
+    // SESSION_0442: carry the wizard's registered lineage selections (if this reusable claim was
+    // created via the join wizard) so the one-click accept materializes them like the admin path.
+    select: {
+      id: true,
+      claimedSchoolId: true,
+      trainedUnderNodeId: true,
+      representTreeId: true,
+    },
   })
 
   const claim = reusable
@@ -171,6 +178,9 @@ export async function claimNodeForUser(
       claimantUserId: userId,
       passportId: node.passportId,
       passportUserId: node.passport.userId,
+      claimedSchoolId: reusable?.claimedSchoolId ?? null,
+      trainedUnderNodeId: reusable?.trainedUnderNodeId ?? null,
+      representTreeId: reusable?.representTreeId ?? null,
       treeId,
       nodeId: node.id,
     },

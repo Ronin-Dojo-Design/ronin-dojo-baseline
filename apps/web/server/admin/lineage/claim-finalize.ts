@@ -57,6 +57,15 @@ export type FinalizePassportClaimInput = {
   passportUserId: string | null
   // FI-006: rank asserted at claim time; if set, approval creates an awarded RankAward.
   claimedRankId?: string | null
+  // SESSION_0442: registered lineage selections asserted in the join wizard. On approval each
+  // materializes into the real graph, the same way `claimedRankId` mints a RankAward:
+  //   - claimedSchoolId      → a TRAINS_AT Affiliation (passport-keyed; works without a node)
+  //   - trainedUnderNodeId   → an INSTRUCTOR_STUDENT edge (instructor → the claimed node)
+  //   - representTreeId       → a LineageTreeMember row for the claimed node
+  // The two node edges require the claim to carry a node; they no-op for a directory-only person.
+  claimedSchoolId?: string | null
+  trainedUnderNodeId?: string | null
+  representTreeId?: string | null
   // Door context — present for a lineage claim, null for a directory-only person.
   treeId?: string | null
   nodeId?: string | null
@@ -76,6 +85,11 @@ export type FinalizePassportClaimResult = {
   passportAccountAttached: boolean
   // FI-006: id of the RankAward created from the claimed rank on approval, or null.
   rankAwardId: string | null
+  // SESSION_0442: ids of the lineage selections materialized on approval, or null when the
+  // selection was absent / could not apply (e.g. a node edge on a directory-only claim).
+  affiliationId: string | null
+  trainedUnderRelationshipId: string | null
+  representMemberId: string | null
 }
 
 /** NODE_EDITOR access grant for a node claim — creates the access row or repairs an existing one. */
@@ -165,6 +179,86 @@ const mintAssertedRankAward = async (
 }
 
 /**
+ * SESSION_0442: materialize the claimant's asserted SCHOOL into a TRAINS_AT Affiliation on the
+ * claimed Passport. Idempotent — an existing affiliation to that org is returned untouched.
+ * Passport-keyed, so it applies even to a directory-only person (no lineage node).
+ */
+const materializeClaimedSchool = async (
+  tx: Tx,
+  { passportId, organizationId }: { passportId: string; organizationId: string },
+): Promise<string> => {
+  const existing = await tx.affiliation.findFirst({
+    where: { passportId, organizationId },
+    select: { id: true },
+  })
+  if (existing) return existing.id
+
+  const created = await tx.affiliation.create({
+    data: { passportId, organizationId, role: "TRAINS_AT", isCurrent: true },
+    select: { id: true },
+  })
+  return created.id
+}
+
+/**
+ * SESSION_0442: materialize "trained under X" into an INSTRUCTOR_STUDENT edge — the instructor
+ * (`fromNode`) → the claimed node (`toNode`), the direction the visual/secondary-link layer reads.
+ * VERIFIED on approval (operator decision, mirroring the RankAward). Idempotent on (from, to, type);
+ * skips a self-edge. Returns null when there is no claimed node to anchor the student end.
+ */
+const materializeTrainedUnder = async (
+  tx: Tx,
+  {
+    trainedUnderNodeId,
+    claimedNodeId,
+  }: { trainedUnderNodeId: string; claimedNodeId: string | null },
+): Promise<string | null> => {
+  if (!claimedNodeId || claimedNodeId === trainedUnderNodeId) return null
+
+  const existing = await tx.lineageRelationship.findFirst({
+    where: { type: "INSTRUCTOR_STUDENT", fromNodeId: trainedUnderNodeId, toNodeId: claimedNodeId },
+    select: { id: true },
+  })
+  if (existing) return existing.id
+
+  const created = await tx.lineageRelationship.create({
+    data: {
+      type: "INSTRUCTOR_STUDENT",
+      fromNodeId: trainedUnderNodeId,
+      toNodeId: claimedNodeId,
+      isVerified: true,
+      verificationStatus: "VERIFIED",
+    },
+    select: { id: true },
+  })
+  return created.id
+}
+
+/**
+ * SESSION_0442: materialize "represents tree Y" by adding the claimed node as a member of that
+ * tree. Idempotent via the `@@unique([treeId, nodeId])`. Returns null when there is no claimed
+ * node to add.
+ */
+const materializeRepresentTree = async (
+  tx: Tx,
+  { representTreeId, claimedNodeId }: { representTreeId: string; claimedNodeId: string | null },
+): Promise<string | null> => {
+  if (!claimedNodeId) return null
+
+  const existing = await tx.lineageTreeMember.findUnique({
+    where: { treeId_nodeId: { treeId: representTreeId, nodeId: claimedNodeId } },
+    select: { id: true },
+  })
+  if (existing) return existing.id
+
+  const created = await tx.lineageTreeMember.create({
+    data: { treeId: representTreeId, nodeId: claimedNodeId },
+    select: { id: true },
+  })
+  return created.id
+}
+
+/**
  * Comp grant: a manual `compOverride` wins for any brand; otherwise BBL auto-comps the Elite tier
  * (Dirty Dozen cohort for life, everyone else one year). No grant for non-BBL without an override.
  */
@@ -237,6 +331,9 @@ export const finalizePassportClaim = async (
   let ownershipTransferred = false
   let passportAccountAttached = false
   let rankAwardId: string | null = null
+  let affiliationId: string | null = null
+  let trainedUnderRelationshipId: string | null = null
+  let representMemberId: string | null = null
 
   const hasNode = claim.nodeId != null && claim.treeId != null
   const treeId = claim.treeId ?? null
@@ -327,6 +424,27 @@ export const finalizePassportClaim = async (
     })
   }
 
+  // --- Asserted lineage selections (SESSION_0442) — materialize the registered wizard picks ----
+  // School is passport-keyed (works without a node); the two node edges anchor on the claimed node.
+  if (claim.claimedSchoolId) {
+    affiliationId = await materializeClaimedSchool(tx, {
+      passportId: claim.passportId,
+      organizationId: claim.claimedSchoolId,
+    })
+  }
+  if (claim.trainedUnderNodeId) {
+    trainedUnderRelationshipId = await materializeTrainedUnder(tx, {
+      trainedUnderNodeId: claim.trainedUnderNodeId,
+      claimedNodeId: nodeId,
+    })
+  }
+  if (claim.representTreeId) {
+    representMemberId = await materializeRepresentTree(tx, {
+      representTreeId: claim.representTreeId,
+      claimedNodeId: nodeId,
+    })
+  }
+
   // --- Comp grant --------------------------------------------------------------------------
   // Dirty-Dozen cohort drives the BBL comp term; the signal is the claimed node's visual group
   // (a directory-only person with no node defaults to non-DD).
@@ -350,7 +468,16 @@ export const finalizePassportClaim = async (
     now,
   })
 
-  return { accessGrantId, compGrantIds, ownershipTransferred, passportAccountAttached, rankAwardId }
+  return {
+    accessGrantId,
+    compGrantIds,
+    ownershipTransferred,
+    passportAccountAttached,
+    rankAwardId,
+    affiliationId,
+    trainedUnderRelationshipId,
+    representMemberId,
+  }
 }
 
 /**

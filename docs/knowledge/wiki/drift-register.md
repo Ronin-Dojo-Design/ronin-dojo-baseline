@@ -417,3 +417,12 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   deletes cleanly at the purge); this also backported the missing Claimed Rank card to `/app`. The
   remaining ~7 dup pairs + the full `/admin` route removal are a dedicated migration (SESSION_0442+).
   **Logged in:** SESSION_0441 (operator direction also recorded in session memory).
+- **Topology finding (SESSION_0442 — sharpens the remaining work):** the consolidation is NOT a delete,
+  it is a **component-topology migration.** Every `/admin/*` route is already redirect-shadowed via
+  `config/app-redirects.ts` (`MIGRATED_ADMIN_APP_ROUTES`; `curl /admin/tools` → 308 → `/app/tools`), so
+  the `app/admin/*/page.tsx` files are **dead/unreachable** — BUT the `app/admin/*/_components/*` are
+  **LIVE**: ~20 live `app/app/*` pages import them via `~/app/admin/...`. So the dead `page.tsx` files
+  can be deleted, but the shared `_components` must first be **moved to `/app` and their ~20 importers
+  repointed**. **Exception:** `app/admin/task-board` is live (no redirect, no `/app` twin) — keep it.
+  TASK_04 was scoped + **deferred to its own PR** (operator decision SESSION_0442); the claim wrapper was
+  NOT deleted this session (deferred with the rest so it lands atomically with the move).
