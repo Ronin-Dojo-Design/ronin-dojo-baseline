@@ -161,7 +161,7 @@ export function JoinLegacyLanding({
                 {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
               </button>
               <a
-                href="/lineage/bbl-lineage"
+                href="/lineage/rigan-machado-lineage"
                 className="inline-flex min-h-12 items-center justify-center rounded-full border border-white/15 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white/80 transition hover:bg-white/[0.06]"
               >
                 Explore the lineage

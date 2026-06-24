@@ -4,24 +4,21 @@ import { PrismaClient } from "~/.generated/prisma/client"
 /**
  * seed-bbl-org.ts
  *
- * Idempotent seed for the BBL (Black Belt Legacy) organization and a
- * minimal claimable lineage tree so `/lineage/join` can be smoke-tested.
+ * Idempotent seed for the BBL (Black Belt Legacy) Organization row.
  *
- * Creates:
- *   1. A BBL Organization (skips if one already exists).
- *   2. A placeholder User for a claimable lineage node.
- *   3. A LineageNode for that user.
- *   4. A published, claimable LineageTree with one claimable member.
- *   5. A BBL-scoped Rigan Machado BJJ Lineage tree cloned from the
- *      Baseline public Rigan tree projection when that seed is present.
+ * SESSION_0443 (ADR 0037): this script USED to also create a smoke-test tree and CLONE the Baseline
+ * `rigan-machado-bjj-lineage` projection into a brand-scoped BBL copy. Both are retired — BBL now has
+ * ONE canonical tree, `rigan-machado-lineage`, built by `scripts/import-bbl-members-full.ts` (the full
+ * 77-member roster) and wired up by `scripts/consolidate-rigan-machado-tree.ts`. The Baseline→BBL
+ * brand-clone was dead weight under the single-brand collapse, so only the Organization remains here.
  *
- * Idempotency: every insert uses findFirst + create. Safe to re-run.
+ * Idempotency: findFirst + create. Safe to re-run.
  *
  * Usage (LOCAL DEV ONLY):
  *   bun run apps/web/prisma/seed-bbl-org.ts
  *
- * @see docs/sprints/SESSION_0280.md
- * @see apps/web/prisma/seed-baseline-lineage.ts (pattern reference)
+ * @see apps/web/scripts/import-bbl-members-full.ts (the canonical roster import)
+ * @see apps/web/scripts/consolidate-rigan-machado-tree.ts (root/discipline/visual-group wiring)
  */
 
 const adapter = new PrismaPg({
@@ -31,13 +28,10 @@ const adapter = new PrismaPg({
 const db = new PrismaClient({ adapter })
 
 const BRAND = "BBL" as const
-const BASELINE_BRAND = "BASELINE_MARTIAL_ARTS" as const
-const RIGAN_TREE_SLUG = "rigan-machado-bjj-lineage"
 
 async function main() {
-  console.log("[seed-bbl-org] Starting BBL org + lineage tree seed...")
+  console.log("[seed-bbl-org] Ensuring BBL Organization...")
 
-  // 1. BBL Organization
   let org = await db.organization.findFirst({ where: { brand: BRAND } })
   if (!org) {
     org = await db.organization.create({
@@ -50,287 +44,6 @@ async function main() {
     console.log(`  ✅ Created BBL Organization: ${org.id}`)
   } else {
     console.log(`  ⏭️  BBL Organization already exists: ${org.id}`)
-  }
-
-  // 2. Accountless Passport for the claimable lineage person (SOT-ADR D1: claimable = no account).
-  const placeholderDisplayName = "BBL Claimable Profile"
-  let placeholderPassport = await db.passport.findFirst({
-    where: { displayName: placeholderDisplayName, userId: null },
-  })
-  if (!placeholderPassport) {
-    placeholderPassport = await db.passport.create({
-      data: { displayName: placeholderDisplayName },
-    })
-    console.log(`  ✅ Created accountless Passport: ${placeholderPassport.id}`)
-  } else {
-    console.log(`  ⏭️  Placeholder Passport already exists: ${placeholderPassport.id}`)
-  }
-
-  // 3. LineageNode for the placeholder
-  let node = await db.lineageNode.findFirst({ where: { passportId: placeholderPassport.id } })
-  if (!node) {
-    node = await db.lineageNode.create({
-      data: {
-        passportId: placeholderPassport.id,
-        slug: "bbl-claimable-profile",
-        bio: "Placeholder lineage profile for BBL smoke testing.",
-      },
-    })
-    console.log(`  ✅ Created LineageNode: ${node.id}`)
-  } else {
-    console.log(`  ⏭️  LineageNode already exists: ${node.id}`)
-  }
-
-  // 4. Published, claimable LineageTree with one member
-  let tree = await db.lineageTree.findFirst({
-    where: { brand: BRAND, name: "BBL Smoke Test Tree" },
-  })
-  if (!tree) {
-    tree = await db.lineageTree.create({
-      data: {
-        brand: BRAND,
-        name: "BBL Smoke Test Tree",
-        slug: "bbl-smoke-test-tree",
-        isPublished: true,
-        isClaimable: true,
-      },
-    })
-    console.log(`  ✅ Created LineageTree: ${tree.id}`)
-  } else {
-    console.log(`  ⏭️  LineageTree already exists: ${tree.id}`)
-  }
-
-  // 5. TreeMember linking node to tree
-  let member = await db.lineageTreeMember.findFirst({
-    where: { treeId: tree.id, nodeId: node.id },
-  })
-  if (!member) {
-    member = await db.lineageTreeMember.create({
-      data: {
-        treeId: tree.id,
-        nodeId: node.id,
-        isClaimable: true,
-        visualSortOrder: 1,
-      },
-    })
-    console.log(`  ✅ Created LineageTreeMember: ${member.id}`)
-  } else {
-    console.log(`  ⏭️  LineageTreeMember already exists: ${member.id}`)
-  }
-
-  // 6. BBL-scoped public Rigan Machado BJJ tree.
-  //
-  // LineageNode and RankAward are global facts; LineageTree is the
-  // brand-scoped presentation projection. BBL gets its own tree row and member
-  // projection so runtime reads can stay strict on { brand, slug }.
-  const sourceTree = await db.lineageTree.findUnique({
-    where: { brand_slug: { brand: BASELINE_BRAND, slug: RIGAN_TREE_SLUG } },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      visibility: true,
-      isPublished: true,
-      isClaimable: true,
-      disciplineId: true,
-      defaultRootMemberId: true,
-      members: {
-        orderBy: { visualSortOrder: "asc" },
-        select: {
-          id: true,
-          nodeId: true,
-          visualSortOrder: true,
-          showPromotionDatePublic: true,
-          showRankPublic: true,
-          isClaimable: true,
-          isCollapsedDefault: true,
-          rankAwardId: true,
-          primaryVisualParentMemberId: true,
-          visualGroupId: true,
-        },
-      },
-    },
-  })
-
-  if (!sourceTree) {
-    console.log(
-      `  ⚠️  Baseline ${RIGAN_TREE_SLUG} not found; run seed-baseline-lineage.ts before cloning the BBL Rigan tree.`,
-    )
-  } else {
-    let bblRiganTree = await db.lineageTree.findUnique({
-      where: { brand_slug: { brand: BRAND, slug: RIGAN_TREE_SLUG } },
-      select: { id: true, defaultRootMemberId: true },
-    })
-
-    if (!bblRiganTree) {
-      bblRiganTree = await db.lineageTree.create({
-        data: {
-          brand: BRAND,
-          slug: RIGAN_TREE_SLUG,
-          name: sourceTree.name,
-          description: sourceTree.description,
-          visibility: sourceTree.visibility,
-          isPublished: sourceTree.isPublished,
-          isClaimable: sourceTree.isClaimable,
-          disciplineId: sourceTree.disciplineId,
-          organizationId: org.id,
-        },
-        select: { id: true, defaultRootMemberId: true },
-      })
-      console.log(`  ✅ Created BBL Rigan Machado tree: ${bblRiganTree.id}`)
-    } else {
-      bblRiganTree = await db.lineageTree.update({
-        where: { id: bblRiganTree.id },
-        data: {
-          name: sourceTree.name,
-          description: sourceTree.description,
-          visibility: sourceTree.visibility,
-          isPublished: sourceTree.isPublished,
-          isClaimable: sourceTree.isClaimable,
-          disciplineId: sourceTree.disciplineId,
-          organizationId: org.id,
-        },
-        select: { id: true, defaultRootMemberId: true },
-      })
-      console.log(`  ⏭️  BBL Rigan Machado tree already exists: ${bblRiganTree.id}`)
-    }
-
-    const targetMemberIdBySourceMemberId = new Map<string, string>()
-
-    for (const sourceMember of sourceTree.members) {
-      let targetMember = await db.lineageTreeMember.findUnique({
-        where: { treeId_nodeId: { treeId: bblRiganTree.id, nodeId: sourceMember.nodeId } },
-        select: { id: true },
-      })
-
-      const memberData = {
-        visualSortOrder: sourceMember.visualSortOrder,
-        showPromotionDatePublic: sourceMember.showPromotionDatePublic,
-        showRankPublic: sourceMember.showRankPublic,
-        isClaimable: sourceMember.isClaimable,
-        isCollapsedDefault: sourceMember.isCollapsedDefault,
-        rankAwardId: sourceMember.rankAwardId,
-      }
-
-      if (!targetMember) {
-        targetMember = await db.lineageTreeMember.create({
-          data: {
-            treeId: bblRiganTree.id,
-            nodeId: sourceMember.nodeId,
-            ...memberData,
-          },
-          select: { id: true },
-        })
-      } else {
-        targetMember = await db.lineageTreeMember.update({
-          where: { id: targetMember.id },
-          data: memberData,
-          select: { id: true },
-        })
-      }
-
-      targetMemberIdBySourceMemberId.set(sourceMember.id, targetMember.id)
-    }
-
-    for (const sourceMember of sourceTree.members) {
-      const targetMemberId = targetMemberIdBySourceMemberId.get(sourceMember.id)
-      if (!targetMemberId) {
-        continue
-      }
-
-      await db.lineageTreeMember.update({
-        where: { id: targetMemberId },
-        data: {
-          primaryVisualParentMemberId: sourceMember.primaryVisualParentMemberId
-            ? (targetMemberIdBySourceMemberId.get(sourceMember.primaryVisualParentMemberId) ?? null)
-            : null,
-        },
-      })
-    }
-
-    // SESSION_0316: clone the source tree's LineageVisualGroup rows (e.g. the
-    // "Dirty Dozen" cohort) into the BBL tree and re-point member.visualGroupId.
-    // Visual groups are brand-scoped projections like the tree itself, so the
-    // BBL discipline page needs its own copies. Idempotent (match by label).
-    const sourceGroups = await db.lineageVisualGroup.findMany({
-      where: { treeId: sourceTree.id },
-      orderBy: { sortOrder: "asc" },
-      select: {
-        id: true,
-        label: true,
-        groupType: true,
-        promotionDate: true,
-        showPublicLabel: true,
-        sortOrder: true,
-        parentMemberId: true,
-      },
-    })
-
-    const targetGroupIdBySourceGroupId = new Map<string, string>()
-    for (const g of sourceGroups) {
-      const targetParentMemberId = g.parentMemberId
-        ? (targetMemberIdBySourceMemberId.get(g.parentMemberId) ?? null)
-        : null
-
-      const groupData = {
-        label: g.label,
-        groupType: g.groupType,
-        promotionDate: g.promotionDate,
-        showPublicLabel: g.showPublicLabel,
-        sortOrder: g.sortOrder,
-        parentMemberId: targetParentMemberId,
-      }
-
-      let targetGroup = await db.lineageVisualGroup.findFirst({
-        where: { treeId: bblRiganTree.id, label: g.label },
-        select: { id: true },
-      })
-      if (!targetGroup) {
-        targetGroup = await db.lineageVisualGroup.create({
-          data: { treeId: bblRiganTree.id, ...groupData },
-          select: { id: true },
-        })
-        console.log(`  ✅ Cloned LineageVisualGroup "${g.label}": ${targetGroup.id}`)
-      } else {
-        targetGroup = await db.lineageVisualGroup.update({
-          where: { id: targetGroup.id },
-          data: groupData,
-          select: { id: true },
-        })
-        console.log(`  ⏭️  LineageVisualGroup "${g.label}" already exists: ${targetGroup.id}`)
-      }
-      targetGroupIdBySourceGroupId.set(g.id, targetGroup.id)
-    }
-
-    // Re-point each BBL target member's visualGroupId to the cloned group.
-    for (const sourceMember of sourceTree.members) {
-      const targetMemberId = targetMemberIdBySourceMemberId.get(sourceMember.id)
-      if (!targetMemberId) {
-        continue
-      }
-      const targetGroupId = sourceMember.visualGroupId
-        ? (targetGroupIdBySourceGroupId.get(sourceMember.visualGroupId) ?? null)
-        : null
-      await db.lineageTreeMember.update({
-        where: { id: targetMemberId },
-        data: { visualGroupId: targetGroupId },
-      })
-    }
-
-    const defaultRootMemberId = sourceTree.defaultRootMemberId
-      ? (targetMemberIdBySourceMemberId.get(sourceTree.defaultRootMemberId) ?? null)
-      : (targetMemberIdBySourceMemberId.get(sourceTree.members[0]?.id ?? "") ?? null)
-
-    if (defaultRootMemberId !== bblRiganTree.defaultRootMemberId) {
-      await db.lineageTree.update({
-        where: { id: bblRiganTree.id },
-        data: { defaultRootMemberId },
-      })
-    }
-
-    console.log(
-      `  ✅ Synced BBL ${RIGAN_TREE_SLUG}: ${sourceTree.members.length} members from Baseline projection.`,
-    )
   }
 
   console.log("[seed-bbl-org] Done.")

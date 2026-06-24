@@ -65,7 +65,7 @@ function flagValue(name: string, fallback: string | null): string | null {
 }
 const isDryRun = args.includes("--dry-run")
 const inputPath = flagValue("--input", "/tmp/bbl-export/reconciled.json")!
-const treeSlug = flagValue("--tree-slug", "bbl-lineage")!
+const treeSlug = flagValue("--tree-slug", "rigan-machado-lineage")!
 const ensureRanks = !args.includes("--no-ensure-ranks")
 // --media-base wins; fall back to NEXT_PUBLIC_MEDIA_BASE_URL for parity with lib/media.ts.
 const mediaBase = (

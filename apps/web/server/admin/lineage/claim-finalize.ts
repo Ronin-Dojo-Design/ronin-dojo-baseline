@@ -90,6 +90,10 @@ export type FinalizePassportClaimResult = {
   affiliationId: string | null
   trainedUnderRelationshipId: string | null
   representMemberId: string | null
+  // SESSION_0443 (ADR 0037): the instructor member the student was filed under (visual parent
+  // seeded from the INSTRUCTOR_STUDENT edge), or null when there was no instructor to anchor to /
+  // the instructor is not a member of the tree (student left at root for the steward).
+  visualParentMemberId: string | null
 }
 
 /** NODE_EDITOR access grant for a node claim — creates the access row or repairs an existing one. */
@@ -259,6 +263,51 @@ const materializeRepresentTree = async (
 }
 
 /**
+ * SESSION_0443 (ADR 0037): file a student under their branch head by SEEDING the visual placement
+ * from the `INSTRUCTOR_STUDENT` edge — set the student member's `primaryVisualParentMemberId` to the
+ * instructor's member in the same tree. Provenance (the edge) is truth; this is the editable display
+ * projection seeded from it, so a steward can re-place later. Returns the instructor member id when it
+ * files, else null:
+ *   - instructor is not a member of that tree → leave the student at root (steward decides);
+ *   - the student member already has a visual parent → do not clobber a prior steward placement;
+ *   - self-reference → skip.
+ */
+const materializeVisualPlacement = async (
+  tx: Tx,
+  {
+    treeId,
+    studentMemberId,
+    studentNodeId,
+    trainedUnderNodeId,
+  }: {
+    treeId: string
+    studentMemberId: string
+    studentNodeId: string | null
+    trainedUnderNodeId: string
+  },
+): Promise<string | null> => {
+  if (trainedUnderNodeId === studentNodeId) return null
+
+  const instructorMember = await tx.lineageTreeMember.findUnique({
+    where: { treeId_nodeId: { treeId, nodeId: trainedUnderNodeId } },
+    select: { id: true },
+  })
+  if (!instructorMember || instructorMember.id === studentMemberId) return null
+
+  const student = await tx.lineageTreeMember.findUnique({
+    where: { id: studentMemberId },
+    select: { primaryVisualParentMemberId: true },
+  })
+  if (student?.primaryVisualParentMemberId) return student.primaryVisualParentMemberId
+
+  await tx.lineageTreeMember.update({
+    where: { id: studentMemberId },
+    data: { primaryVisualParentMemberId: instructorMember.id },
+  })
+  return instructorMember.id
+}
+
+/**
  * Comp grant: a manual `compOverride` wins for any brand; otherwise BBL auto-comps the Elite tier
  * (Dirty Dozen cohort for life, everyone else one year). No grant for non-BBL without an override.
  */
@@ -309,6 +358,92 @@ const grantClaimComp = async (
   return compResult.grants.map((grant: { id: string }) => grant.id)
 }
 
+type AssertedSelectionsResult = {
+  rankAwardId: string | null
+  affiliationId: string | null
+  trainedUnderRelationshipId: string | null
+  representMemberId: string | null
+  visualParentMemberId: string | null
+}
+
+/**
+ * SESSION_0443: materialize ALL asserted claim selections in one place — the registered wizard picks
+ * (claimedRankId → RankAward, ADR 0035; claimedSchoolId → Affiliation; trainedUnderNodeId →
+ * INSTRUCTOR_STUDENT edge; representTreeId → tree member; + ADR 0037 visual placement). Extracted from
+ * `finalizePassportClaim` to keep that orchestrator's complexity bounded — each selection's own logic
+ * lives in the materializers above. Every selection is independent and skipped when its ref is absent.
+ */
+const materializeAssertedSelections = async (
+  tx: Tx,
+  {
+    claim,
+    treeId,
+    nodeId,
+    memberId,
+    actorUserId,
+  }: {
+    claim: FinalizePassportClaimInput
+    treeId: string | null
+    nodeId: string | null
+    memberId: string | null
+    actorUserId: string
+  },
+): Promise<AssertedSelectionsResult> => {
+  const result: AssertedSelectionsResult = {
+    rankAwardId: null,
+    affiliationId: null,
+    trainedUnderRelationshipId: null,
+    representMemberId: null,
+    visualParentMemberId: null,
+  }
+
+  // Asserted RankAward (FI-006, ADR 0035 §4) — keyed on the claimed Passport.
+  if (claim.claimedRankId) {
+    result.rankAwardId = await mintAssertedRankAward(tx, {
+      passportId: claim.passportId,
+      claimedRankId: claim.claimedRankId,
+      actorUserId,
+    })
+  }
+  // School is passport-keyed (works without a node); the two node edges anchor on the claimed node.
+  if (claim.claimedSchoolId) {
+    result.affiliationId = await materializeClaimedSchool(tx, {
+      passportId: claim.passportId,
+      organizationId: claim.claimedSchoolId,
+    })
+  }
+  if (claim.trainedUnderNodeId) {
+    result.trainedUnderRelationshipId = await materializeTrainedUnder(tx, {
+      trainedUnderNodeId: claim.trainedUnderNodeId,
+      claimedNodeId: nodeId,
+    })
+  }
+  if (claim.representTreeId) {
+    result.representMemberId = await materializeRepresentTree(tx, {
+      representTreeId: claim.representTreeId,
+      claimedNodeId: nodeId,
+    })
+  }
+
+  // ADR 0037: seed the student's visual parent from the instructor edge so they render UNDER their
+  // branch head. Target the represented tree (else the claim's node tree); the student member is the
+  // one just created/resolved there.
+  if (claim.trainedUnderNodeId) {
+    const placementTreeId = claim.representTreeId ?? treeId
+    const studentMemberId = result.representMemberId ?? memberId ?? null
+    if (placementTreeId && studentMemberId) {
+      result.visualParentMemberId = await materializeVisualPlacement(tx, {
+        treeId: placementTreeId,
+        studentMemberId,
+        studentNodeId: nodeId,
+        trainedUnderNodeId: claim.trainedUnderNodeId,
+      })
+    }
+  }
+
+  return result
+}
+
 export const finalizePassportClaim = async (
   tx: Tx,
   {
@@ -330,10 +465,6 @@ export const finalizePassportClaim = async (
   let compGrantIds: string[] = []
   let ownershipTransferred = false
   let passportAccountAttached = false
-  let rankAwardId: string | null = null
-  let affiliationId: string | null = null
-  let trainedUnderRelationshipId: string | null = null
-  let representMemberId: string | null = null
 
   const hasNode = claim.nodeId != null && claim.treeId != null
   const treeId = claim.treeId ?? null
@@ -415,35 +546,15 @@ export const finalizePassportClaim = async (
     })
   }
 
-  // --- Asserted RankAward (FI-006, ADR 0035 §4) — ALWAYS (keyed on the claimed Passport) ----
-  if (claim.claimedRankId) {
-    rankAwardId = await mintAssertedRankAward(tx, {
-      passportId: claim.passportId,
-      claimedRankId: claim.claimedRankId,
-      actorUserId,
-    })
-  }
-
-  // --- Asserted lineage selections (SESSION_0442) — materialize the registered wizard picks ----
-  // School is passport-keyed (works without a node); the two node edges anchor on the claimed node.
-  if (claim.claimedSchoolId) {
-    affiliationId = await materializeClaimedSchool(tx, {
-      passportId: claim.passportId,
-      organizationId: claim.claimedSchoolId,
-    })
-  }
-  if (claim.trainedUnderNodeId) {
-    trainedUnderRelationshipId = await materializeTrainedUnder(tx, {
-      trainedUnderNodeId: claim.trainedUnderNodeId,
-      claimedNodeId: nodeId,
-    })
-  }
-  if (claim.representTreeId) {
-    representMemberId = await materializeRepresentTree(tx, {
-      representTreeId: claim.representTreeId,
-      claimedNodeId: nodeId,
-    })
-  }
+  // --- Asserted selections (RankAward / school / trained-under edge / represent tree / visual ----
+  // placement) — all the registered wizard picks materialized into real graph facts on approval.
+  const selections = await materializeAssertedSelections(tx, {
+    claim,
+    treeId,
+    nodeId,
+    memberId: member?.id ?? null,
+    actorUserId,
+  })
 
   // --- Comp grant --------------------------------------------------------------------------
   // Dirty-Dozen cohort drives the BBL comp term; the signal is the claimed node's visual group
@@ -473,10 +584,11 @@ export const finalizePassportClaim = async (
     compGrantIds,
     ownershipTransferred,
     passportAccountAttached,
-    rankAwardId,
-    affiliationId,
-    trainedUnderRelationshipId,
-    representMemberId,
+    rankAwardId: selections.rankAwardId,
+    affiliationId: selections.affiliationId,
+    trainedUnderRelationshipId: selections.trainedUnderRelationshipId,
+    representMemberId: selections.representMemberId,
+    visualParentMemberId: selections.visualParentMemberId,
   }
 }
 

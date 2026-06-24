@@ -173,18 +173,13 @@ async function main() {
 
       // FIX #3 (SESSION_0412): the claim link is now an email-bound, single-use
       // magic link. The recipient clicks it → BA verifies + sets the session →
-      // redirects to the `callbackURL`, which self-arms the BBL preview cookie
-      // (past the countdown gate) and lands on the token-accept route, which
-      // re-validates server-side and one-click-claims the profile. (Default
-      // preview token matches getBblPreviewToken; duplicated literally to avoid
-      // importing the app env into this SKIP_ENV_VALIDATION script.)
-      const previewToken = process.env.BBL_PREVIEW_TOKEN ?? "bob-tony-BBL-preview"
-
+      // redirects straight to the `callbackURL` (token-accept route), which
+      // one-click-claims the profile. (SESSION_0443: the `/preview` countdown-gate
+      // wrapper is retired — the gate is hard-off and the public site is open.)
       if (opts.dryRun) {
         // Dry run must not mint a real (DB-writing, single-use) token — print the
         // would-be link SHAPE with a placeholder token instead.
-        const accept = claimAcceptNextPath(resolved.nodeId)
-        const callbackURL = `/preview?token=${encodeURIComponent(previewToken)}&next=${encodeURIComponent(accept)}`
+        const callbackURL = claimAcceptNextPath(resolved.nodeId)
         const wouldBe = `${opts.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=${encodeURIComponent(callbackURL)}`
         console.log(
           `  ✓ would send → ${recipient.email} (${resolved.profileName}, ${recipient.dirtyDozen ? "lifetime" : "1yr"}) ${wouldBe}`,
@@ -197,7 +192,6 @@ async function main() {
         baseUrl: opts.baseUrl,
         email: recipient.email,
         nextPath: claimAcceptNextPath(resolved.nodeId),
-        previewToken,
       })
 
       await notifyMemberOfBblClaimYourProfile({

@@ -44,12 +44,20 @@ Lineage is a **dual model** — keep these axes distinct:
   + `isCollapsedDefault`. The tree never owns promotion truth.
 - **Affiliation (separate axis):** `Membership → Organization` = where they train now, independent of
   who promoted them.
+- **Branch heads (display role, ADR 0037):** a *branch head* is a real person-node (instructor / school
+  owner) placed directly under the tree root; their `LineageTreeMember` is the placement anchor that
+  their students' `primaryVisualParentMemberId` point at. Claiming/accepting a branch-head node grants
+  **branch-scoped `LineageTreeAccess`**. On claim approval, `finalizePassportClaim` **seeds** a student's
+  visual parent from the `INSTRUCTOR_STUDENT` edge (provenance → projection); if the instructor isn't in
+  the tree the student stays at root for the steward. One canonical brand-agnostic tree
+  (`rigan-machado-lineage`, renamed from `bbl-lineage`); the Baseline→BBL clone is retired.
 
 Authority + sync rules are governed by **ADR 0016** below — read it before touching rank/promotion logic.
 
 ## Data model & decisions
 
 - [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — `RankAward` canonical; `PROMOTED_BY` mirror; tree never owns truth. **Authoritative.**
+- [ADR 0037 — Branch heads & visual placement seeded from provenance](../../architecture/decisions/0037-lineage-branch-heads-and-visual-placement.md) — branch head = display role + branch-scoped editor; one brand-agnostic `rigan-machado-lineage` tree; finalize seeds a student's `primaryVisualParentMemberId` from the `INSTRUCTOR_STUDENT` edge.
 - [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — create/update/delete promotion flows, conflict rules, verification, visual-group sync.
 - [Lineage Prisma Schema Patch Proposal](../../architecture/lineage/lineage-prisma-schema-patch-proposal.md) — the v1 schema patch shape.
 - [Promotion Event Model — design + plan](../../architecture/lineage/promotion-event-model.md) — **draft/staged (SESSION_0316).** First-class `PromotionEvent` (belt ceremony) grouping multiple `RankAward`s with a shared media gallery; discipline-agnostic; flagged the most important cross-brand domain logic. Build via dedicated ADR + epic.
