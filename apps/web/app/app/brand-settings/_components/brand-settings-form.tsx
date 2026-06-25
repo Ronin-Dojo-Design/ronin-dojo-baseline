@@ -21,6 +21,11 @@ import { Stack } from "~/components/common/stack"
 import { upsertBrandSettings } from "~/server/admin/brand-settings/actions"
 import type { findBrandSettings } from "~/server/admin/brand-settings/queries"
 
+// Single-brand collapse (SESSION_0447): BBL is the only brand. The `brand` field
+// keeps the action's enum contract (narrowed at Stage-2 with the schema drop) but
+// is fixed to BBL — the editor only ever writes the one row.
+const BBL_LABEL = "Black Belt Legacy"
+
 const brandSettingsFormSchema = z.object({
   brand: z.enum(["BASELINE_MARTIAL_ARTS", "RONIN_DOJO_DESIGN", "BBL", "WEKAF"]),
   primaryColor: z.string().default(""),
@@ -33,24 +38,16 @@ const brandSettingsFormSchema = z.object({
 })
 
 type BrandSettingsFormProps = ComponentProps<"form"> & {
-  brand: string
-  brandLabel: string
   settings: Awaited<ReturnType<typeof findBrandSettings>>
 }
 
-export function BrandSettingsForm({
-  brand,
-  brandLabel,
-  settings,
-  className,
-  ...props
-}: BrandSettingsFormProps) {
+export function BrandSettingsForm({ settings, className, ...props }: BrandSettingsFormProps) {
   const resolver = zodResolver(brandSettingsFormSchema)
 
   const { form, handleSubmitWithAction } = useHookFormAction(upsertBrandSettings, resolver, {
     formProps: {
       defaultValues: {
-        brand: brand as any,
+        brand: "BBL",
         primaryColor: settings?.primaryColor ?? "",
         primaryFgColor: settings?.primaryFgColor ?? "",
         accentColor: settings?.accentColor ?? "",
@@ -62,7 +59,7 @@ export function BrandSettingsForm({
     },
     actionProps: {
       onSuccess: () => {
-        toast.success(`${brandLabel} settings saved`)
+        toast.success(`${BBL_LABEL} settings saved`)
       },
       onError: ({ error }) => {
         toast.error(error.serverError ?? "Failed to save settings")
@@ -74,7 +71,7 @@ export function BrandSettingsForm({
     <Form {...form}>
       <form onSubmit={handleSubmitWithAction} className={className} {...props}>
         <div className="space-y-6">
-          <H3>{brandLabel}</H3>
+          <H3>{BBL_LABEL}</H3>
 
           {/* Color preview */}
           <div className="flex items-center gap-3">

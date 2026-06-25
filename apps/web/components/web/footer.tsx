@@ -14,22 +14,27 @@ import { CTAForm } from "~/components/web/cta-form"
 import { ExternalLink } from "~/components/web/external-link"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { NavLink, navLinkVariants } from "~/components/web/ui/nav-link"
-import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
 import { linksConfig } from "~/config/links"
 import { siteConfig } from "~/config/site"
-import { useBrand } from "~/contexts/brand-context"
 import { cx } from "~/lib/utils"
+
+// Single-brand collapse (SESSION_0447): config/brand-features.ts was removed. This
+// generic full-chrome footer is currently unused (BBL renders BblFooter) but kept
+// as reference; the brand gates are inlined as the single-brand constants they
+// collapsed to (every feature on; minimal chrome — the `!minimal` Browse column is
+// retained below for reference).
+const footerHasFeature = (_feature: string) => true
+const footerMinimalChrome = () => true
 
 type FooterProps = ComponentProps<"div"> & {
   hideCTA?: boolean
 }
 
-export const Footer = ({ children, className, hideCTA, ...props }: FooterProps) => {
+export const Footer = ({ children, className, hideCTA: _hideCTA, ...props }: FooterProps) => {
   const t = useTranslations()
-  const { brand } = useBrand()
-  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
+  const has = footerHasFeature
   // Minimal chrome: no Browse column — primary nav lives in the slide-in.
-  const minimal = brandHasMinimalChrome(brand)
+  const minimal = footerMinimalChrome()
 
   return (
     <footer className="flex flex-col gap-y-8 mt-auto pt-fluid-md border-t border-foreground/10">

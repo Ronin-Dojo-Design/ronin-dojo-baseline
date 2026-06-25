@@ -37,7 +37,6 @@ import { Button } from "~/components/common/button"
 import { Kbd } from "~/components/common/kbd"
 import { Link } from "~/components/common/link"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
-import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
 import { useBrand } from "~/contexts/brand-context"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
@@ -53,7 +52,6 @@ import { APP_AREA_PERMISSIONS, type Permission } from "~/server/orpc/roles"
 type NavItem = NavLink & {
   permission?: Permission
   lineage?: boolean
-  feature?: BrandFeature
 }
 
 /**
@@ -65,12 +63,10 @@ const buildVisibleLinks = (
   items: Array<NavItem | undefined>,
   user: SessionUser | null,
   hasLineageGrant: boolean,
-  brand: Parameters<typeof brandHasFeature>[0],
 ) => {
   const links = items
     .filter(item => {
       if (!item) return true
-      if (item.feature && !brandHasFeature(brand, item.feature)) return false
       if (!item.permission) return true
       if (can(user, item.permission)) return true
       return item.lineage === true && hasLineageGrant
@@ -84,10 +80,9 @@ const buildVisibleLinks = (
         return result
       }
 
-      const { permission, lineage, feature, ...link } = item
+      const { permission, lineage, ...link } = item
       void permission
       void lineage
-      void feature
       result.push(link)
       return result
     }, [])
@@ -109,7 +104,6 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
   const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
   const search = useSearch()
-  const { brand } = useBrand()
 
   const handleOpenSite = () => {
     window.open("/", "_self")
@@ -160,13 +154,11 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       title: "Events",
       href: "/app/events",
       prefix: <CalendarIcon />,
-      feature: "events",
     },
     {
       title: "Techniques",
       href: "/app/techniques",
       prefix: <SwordsIcon />,
-      feature: "techniques",
     },
     {
       title: "Users",
@@ -383,23 +375,20 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     },
   ]
 
-  // Minimal-chrome brands (BBL): regular members get the simplified BBL member
-  // rail; privileged users (anyone with a gated area permission, or an active
-  // lineage grant) keep the full management nav so nothing is lost. Every other
-  // brand always renders the full nav.
-  const minimal = brandHasMinimalChrome(brand)
+  // BBL (single brand): regular members get the simplified BBL member rail;
+  // privileged users (anyone with a gated area permission, or an active lineage
+  // grant) keep the full management nav so nothing is lost.
   const isPrivileged = items.some(
     item =>
       item?.permission != null &&
       (can(user, item.permission) || (item.lineage === true && hasLineageGrant)),
   )
 
-  if (minimal && user && !isPrivileged) {
+  if (user && !isPrivileged) {
     return (
       <BblMemberRail
         user={user}
         hasLineageGrant={hasLineageGrant}
-        brand={brand}
         isMobile={!!isMobile}
         onVisitSite={handleOpenSite}
         onSignOut={handleSignOut}
@@ -411,7 +400,7 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     <Nav
       isCollapsed={!!isMobile}
       className={cx("sticky top-0 h-dvh z-40 border-r", isMobile ? "w-12" : "w-48")}
-      links={buildVisibleLinks(items, user, hasLineageGrant, brand)}
+      links={buildVisibleLinks(items, user, hasLineageGrant)}
     />
   )
 }
@@ -425,7 +414,6 @@ const RAIL_UTILITY_ITEM =
 type BblMemberRailProps = {
   user: SessionUser
   hasLineageGrant: boolean
-  brand: Parameters<typeof brandHasFeature>[0]
   isMobile: boolean
   onVisitSite: () => void
   onSignOut: () => void
@@ -443,7 +431,6 @@ type BblMemberRailProps = {
 const BblMemberRail = ({
   user,
   hasLineageGrant,
-  brand,
   isMobile,
   onVisitSite,
   onSignOut,
@@ -470,7 +457,7 @@ const BblMemberRail = ({
       permission: APP_AREA_PERMISSIONS.posts,
     },
   ]
-  const links = buildVisibleLinks(memberItems, user, hasLineageGrant, brand)
+  const links = buildVisibleLinks(memberItems, user, hasLineageGrant)
   const canPost = can(user, APP_AREA_PERMISSIONS.posts)
 
   if (isMobile) {

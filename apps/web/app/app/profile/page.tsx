@@ -20,7 +20,6 @@ import { ProfileEnhancementLauncher } from "~/components/web/onboarding/profile-
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
-import { type BrandFeature, brandHasFeature } from "~/config/brand-features"
 import { getBrandSiteConfig } from "~/config/site"
 import { requireUser } from "~/lib/auth-guard"
 import { Brand } from "~/.generated/prisma/client"
@@ -54,7 +53,6 @@ export const generateMetadata = async (): Promise<Metadata> => {
 
 export default async function ({ searchParams }: PageProps<"/app/profile">) {
   const { breadcrumbs, metadata } = await getData()
-  const has = (feature: BrandFeature) => brandHasFeature(Brand.BBL, feature)
 
   const user = await requireUser()
   const [onboarding, ranks] = await Promise.all([
@@ -108,32 +106,24 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
                       </Suspense>
                     ),
                   },
-                  ...(has("techniques")
-                    ? [
-                        {
-                          id: "techniques",
-                          label: "Techniques",
-                          content: (
-                            <Suspense fallback={<DataTableSkeleton />}>
-                              <DashboardTechniquesTab />
-                            </Suspense>
-                          ),
-                        },
-                      ]
-                    : []),
-                  ...(has("listings")
-                    ? [
-                        {
-                          id: "listings",
-                          label: "Listings",
-                          content: (
-                            <Suspense fallback={<DataTableSkeleton />}>
-                              <DashboardToolListing searchParams={searchParams} />
-                            </Suspense>
-                          ),
-                        },
-                      ]
-                    : []),
+                  {
+                    id: "techniques",
+                    label: "Techniques",
+                    content: (
+                      <Suspense fallback={<DataTableSkeleton />}>
+                        <DashboardTechniquesTab />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    id: "listings",
+                    label: "Listings",
+                    content: (
+                      <Suspense fallback={<DataTableSkeleton />}>
+                        <DashboardToolListing searchParams={searchParams} />
+                      </Suspense>
+                    ),
+                  },
                   {
                     id: "lineage",
                     label: "Lineage",
@@ -175,10 +165,10 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
               <CardDescription className="line-clamp-none">
                 <Stack direction="column" size="xs" className="items-start">
                   <Link href="/me">My Passport</Link>
-                  {has("techniques") && <Link href="/app/techniques/new">Add technique</Link>}
+                  <Link href="/app/techniques/new">Add technique</Link>
                   <Link href="/directory">Public directory</Link>
-                  {has("programs") && <Link href="/programs">Programs</Link>}
-                  {has("tournaments") && <Link href="/tournaments">Tournaments</Link>}
+                  <Link href="/programs">Programs</Link>
+                  <Link href="/tournaments">Tournaments</Link>
                   <Link href="/schools">Schools</Link>
                 </Stack>
               </CardDescription>
