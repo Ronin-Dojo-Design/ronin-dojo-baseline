@@ -178,7 +178,7 @@ wait for "go" before push/deploy/send/grant.
 | Headless browser (414px) — all 7 findings | 15/15 checks pass (comp card first-year + lifetime, Address, evidence upload, nav modal no-nav, BJJ ladder) |
 | #5 belt ladder (DB) | clean 31-rank IBJJF ladder, no dupes |
 | #6 name fix (prod + prodsnap) | `Eric Cullet` / `Francis Delpech` / `Robert Mansfield`; idempotent re-run confirmed |
-| `next build` | **NOT run** (would disrupt the operator's running dev server) — Vercel builds on deploy |
+| `next build` (local pre-push cost gate) | **green** (exit 0 — full prod build + routes + sitemap) before pushing |
 
 ## Open decisions / blockers
 
@@ -286,5 +286,6 @@ inline key pattern (never persist). See `scripts/send-bbl-truelson-thankyou.ts` 
 | Review & Recommend | yes — Next session = Truelson care (blocked on Resend key) |
 | Memory sweep | added `join-funnel-comp-gate-and-global-modal` (patterns); existing explicit-push + Resend-key memories still valid |
 | Next session unblock check | BLOCKED ON USER — Truelson needs the BBL Resend key |
-| Git hygiene | branch `main`; staged + committed; **push HELD for operator "go"** (explicit-push rule) — hash reported in chat |
-| Graphify update | count reported in chat (run before close commit) |
+| Git hygiene | branch `main`; commit `83599dfb` (app code) + a docs(ritual) commit; **pushed on operator "go"** after the local `next build` gate passed — hashes in chat |
+| Graphify update | Nodes 93 · Edges 927 · Communities 2112 (run before close commit) |
+| Pre-push cost gate | local `next build` green (exit 0) before push; new closing.md step **4a** codifies this + the push-selectivity discipline; CI follow-up (trim Playwright ×3 matrix) spawned as a task |

@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-06
-last_agent: claude-session-0350
+updated: 2026-06-25
+last_agent: claude-session-0445
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -138,6 +138,28 @@ Before committing:
 5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
 
 If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
+
+### 4a. Pre-push cost gate (CI / GitHub Actions spend)
+
+Pushing to `main` is not free. An **app-code** push (anything under `apps/web/**`) fires the full CI
+matrix — typecheck, unit, oxc, and **Playwright ×3 browsers** (chromium/firefox/webkit) — *and* a Vercel
+prod deploy. A remote build failure burns that entire matrix to learn what a local build would have told
+you for free. So, before an app-code push:
+
+1. **Run `next build` locally** (`cd apps/web && bun run build`) — it mirrors Vercel's build and catches
+   the failures tsc/lint/test can't: `"use server"` non-function exports, Prisma-in-browser, dynamic-import
+   issues. Push **only when it's green.** (Docs/governance pushes skip this — they don't build or deploy.)
+2. **Be selective about _when_:** one push per session at close (never mid-session); push a *complete,
+   verified unit*, not work-in-progress. Batch only when another push is genuinely imminent — don't strand
+   finished, verified work waiting for a bundle that isn't coming.
+3. **Keep docs separate from code when independent:** `ci.yml` + `playwright.yml` already `paths-ignore`
+   `docs/**` / `**.md` / `.claude/**` (SESSION_0267), and `vercel.json`'s `ignoreCommand` skips the deploy
+   for non-`apps/web` pushes — so a **docs-only push is free** (no CI matrix, no deploy). A mixed app+docs
+   commit still pays the full matrix; split them when the docs don't depend on the code.
+
+Record in the SESSION evidence table whether the local build gate was run and its result. (Standing
+follow-up cost lever: the per-push Playwright **×3** matrix is the biggest remaining GHA spend — trimming
+it to chromium-only per-push with the full ×3 on a nightly/label is the structural win.)
 
 ### 4b. Graphify update (if installed)
 
