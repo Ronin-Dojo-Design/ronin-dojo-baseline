@@ -229,7 +229,6 @@ export const BBL_BJJ_RANK_FIELDS: readonly BblBjjRankField[] = [
 ] as const
 
 const BJJ_RANK_BY_KEY = new Map(BBL_BJJ_RANK_FIELDS.map(rank => [rank.key, rank]))
-const BJJ_RANK_BY_SHORT_NAME = new Map(BBL_BJJ_RANK_FIELDS.map(rank => [rank.rankShortName, rank]))
 const BJJ_RANK_ALIASES = new Map<string, BblBjjRankKey>()
 
 for (const rank of BBL_BJJ_RANK_FIELDS) {
@@ -270,10 +269,6 @@ export function getBblBjjRankByKey(key: BblBjjRankKey): BblBjjRankField {
     throw new Error(`Unknown BBL BJJ rank key: ${key}`)
   }
   return rank
-}
-
-export function findBblBjjRankByShortName(shortName: string): BblBjjRankField | null {
-  return BJJ_RANK_BY_SHORT_NAME.get(shortName.trim().toUpperCase()) ?? null
 }
 
 export function normalizeBblBjjRankName(value: unknown): BblBjjRankField | null {

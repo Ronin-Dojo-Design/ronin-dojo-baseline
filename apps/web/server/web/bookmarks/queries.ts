@@ -14,13 +14,6 @@ type PublicBookmarkFindManyArgs = {
   cursor?: Prisma.BookmarkWhereUniqueInput
 }
 
-export const findBookmark = async (userId: string, toolId: string) => {
-  return db.bookmark.findUnique({
-    where: { userId_toolId: { userId, toolId } },
-    select: { id: true, createdAt: true },
-  })
-}
-
 export const findBookmarkedToolIds = async (userId: string) => {
   const bookmarks = await db.bookmark.findMany({
     where: { userId },

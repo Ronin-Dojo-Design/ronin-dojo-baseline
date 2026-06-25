@@ -11,7 +11,6 @@ import { EmailAdminBblJoinLegacy } from "~/emails/admin-bbl-join-legacy"
 import { EmailAdminFeedback } from "~/emails/admin-feedback"
 import { EmailAdminSubmissionPremium } from "~/emails/admin-submission-premium"
 import { EmailBblBuildTour } from "~/emails/bbl-build-tour"
-import { EmailBblClaimExplainer } from "~/emails/bbl-claim-explainer"
 import { EmailBblClaimYourProfile } from "~/emails/bbl-claim-your-profile"
 import { EmailBblFirstTesterWelcome } from "~/emails/bbl-first-tester-welcome"
 import { EmailBblJoinLegacyConfirmation } from "~/emails/bbl-join-legacy-confirmation"
@@ -683,18 +682,6 @@ export const notifyFounderOfBuildTour = async (params: BblBuildTourParams) => {
     to: params.to,
     subject: "A window into everything we built for Black Belt Legacy",
     react: EmailBblBuildTour({ to: params.to, variant: params.variant }),
-  })
-}
-
-/** Technical heads-up to Tony about the claim-link gap + fix (SESSION_0419). */
-export const notifyFounderOfClaimExplainer = async (params: { brand: Brand; to: string }) => {
-  if (await shouldSkipForRateLimit(`bbl-claim-explainer:${params.to}`)) return
-
-  return await sendEmail({
-    brand: params.brand,
-    to: params.to,
-    subject: "A heads-up on the claim links (in case Bob asks)",
-    react: EmailBblClaimExplainer({ to: params.to }),
   })
 }
 

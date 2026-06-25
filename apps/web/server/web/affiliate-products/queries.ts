@@ -55,42 +55,6 @@ export const getMetadata = (row: AffiliateProductRow): AffiliateProductMetadata 
 }
 
 /**
- * Fetches gear recommendations for a discipline, grouped by type.
- * Returns PricingPlan rows joined through GearRecommendation.
- *
- * @see docs/sprints/SESSION_0109.md TASK_04
- */
-export const findGearRecommendations = async (disciplineSlug: string) => {
-  const recommendations = await db.gearRecommendation.findMany({
-    where: {
-      brand: Brand.BBL,
-      discipline: { slug: disciplineSlug },
-    },
-    select: {
-      type: true,
-      sortOrder: true,
-      pricingPlan: {
-        select: {
-          id: true,
-          name: true,
-          amountCents: true,
-          metadata: true,
-          isActive: true,
-          sortOrder: true,
-        },
-      },
-    },
-    orderBy: { sortOrder: "asc" },
-  })
-
-  const required = recommendations.filter(r => r.type === "REQUIRED").map(r => r.pricingPlan)
-
-  const recommended = recommendations.filter(r => r.type === "RECOMMENDED").map(r => r.pricingPlan)
-
-  return { required, recommended }
-}
-
-/**
  * Fetches all gear recommendations grouped by discipline slug.
  *
  * @see docs/sprints/SESSION_0109.md TASK_04
