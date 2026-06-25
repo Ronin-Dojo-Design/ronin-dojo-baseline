@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-24
-last_agent: claude-session-0441
+last_agent: claude-session-0444
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -427,7 +427,7 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   TASK_04 was scoped + **deferred to its own PR** (operator decision SESSION_0442); the claim wrapper was
   NOT deleted this session (deferred with the rest so it lands atomically with the move).
 
-### D-033 — Two divergent BBL lineage trees; public page showed the thin clone (SESSION_0443, resolved — held for prod)
+### D-033 — Two divergent BBL lineage trees; public page showed the thin clone (RESOLVED SESSION_0444 — applied on prod)
 
 - **Source:** BBL had TWO `LineageTree` rows — `bbl-lineage` (the real 77-member WP roster, Rigan-rooted
   via edges but with `defaultRootMemberId`/`disciplineId` unset and 0 visual groups) and the cloned
@@ -441,5 +441,12 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   lifetime-comp decision in `claim-finalize`, so it MUST carry over), renames slug → `rigan-machado-lineage`,
   unpublishes the clone. Idempotent, backup-on-apply, `--rollback` proven on prodsnap. Code repointed
   (brand-agnostic embed, join href, script defaults; `seed-bbl-org.ts` slimmed to just the BBL Org).
-  Browser-verified on prodsnap. **Status: resolved in code + prodsnap; prod cutover HELD on operator go**
-  (data `--apply` + code deploy land together).
+  Browser-verified on prodsnap.
+- **Status: RESOLVED (SESSION_0444, PR #162 merged `720a54da`).** Consolidation APPLIED on prod: `bbl-lineage`
+  renamed → `rigan-machado-lineage` (77 members, root Rigan, bjj discipline), the clone unpublished, 3 visual
+  groups migrated. Backup `/tmp/rigan-consolidate-backup-1782331827952.json`.
+- **Prod/prodsnap-drift lesson:** prod actually carried a SECOND published `rigan-machado-bjj-lineage` clone
+  (17 members) **plus** a standalone `bbl-dirty-dozen` tree (7) that prodsnap (where the script was validated)
+  did NOT have, so the single-clone consolidation script silently missed them; both were unpublished by hand
+  (the Dirty Dozen is now a visual group). Lesson: after a prodsnap-validated data migration, audit the FULL
+  prod table, not the script's self-report.

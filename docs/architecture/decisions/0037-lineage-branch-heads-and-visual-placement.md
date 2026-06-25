@@ -5,7 +5,7 @@ type: adr
 status: accepted
 created: 2026-06-24
 updated: 2026-06-24
-last_agent: claude-session-0443
+last_agent: claude-session-0444
 pairs_with:
   - apps/web/prisma/schema.prisma
   - apps/web/server/admin/lineage/claim-finalize.ts
@@ -18,6 +18,11 @@ backlinks:
 ---
 
 # ADR 0037 — Lineage branch heads & visual placement seeded from provenance
+
+> **Status / Applied (SESSION_0444, PR #162 `720a54da`):** the tree consolidation, slug rename
+> (`bbl-lineage` → `rigan-machado-lineage`), and clone retirement described here are now APPLIED on prod
+> (77 members, root Rigan, bjj discipline; clone + standalone `bbl-dirty-dozen` tree unpublished). See
+> drift `D-033` (resolved).
 
 ## Context
 

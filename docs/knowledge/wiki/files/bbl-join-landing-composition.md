@@ -4,9 +4,9 @@ slug: bbl-join-landing-composition
 type: file
 status: active
 created: 2026-06-19
-updated: 2026-06-19
+updated: 2026-06-24
 author: Brian + Claude
-last_agent: claude-session-0416
+last_agent: claude-session-0444
 pairs_with:
   - knowledge/wiki/files/bbl-home-landing
   - knowledge/wiki/files/bbl-join-form-wizard
@@ -27,7 +27,7 @@ tags: [bbl, landing, composition, client, hero, s6]
 
 The shared **landing composition** (client) rendered by both `/` (`bbl-join-landing`) and
 `/lineage/join`. Section order (SESSION_0416): **scrolling-phone hero** (logo + headline +
-Claim/Join CTAs + "Explore the lineage" → `/lineage/bbl-lineage`) → **Rigan** (`riganSlot`) →
+Claim/Join CTAs + "Explore the lineage" → `/lineage/rigan-machado-lineage`) → **Rigan** (`riganSlot`) →
 **Rigan video** (`videoSlot`) → value props / features / FAQ / final CTA → **EmailCapture** →
 the **Join drawer** (opens `JoinLegacyForm`).
 

@@ -4,8 +4,8 @@ slug: resend-setup-runbook
 type: runbook
 status: active
 created: 2026-05-09
-updated: 2026-05-28
-last_agent: codex-session-0278
+updated: 2026-06-24
+last_agent: claude-session-0444
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/architecture/infrastructure/dns-verification-spec.md
@@ -285,3 +285,16 @@ Repeat steps 2–4 for each brand domain as it goes live:
 - `blackbeltlegacy.com`
 
 Single API key works for all verified domains. `apps/web/lib/email.ts` resolves the sender by brand and falls back to the Baseline sender only for Baseline/default contexts. Before sending BBL production email, verify `blackbeltlegacy.com` in Resend and set `RESEND_SENDER_EMAIL_BBL`.
+
+## BBL sending key must be domain-authorized (SESSION_0444)
+
+Domain *verification* alone is NOT enough to send from `welcome@blackbeltlegacy.com`. The API **key** itself must be authorized for the `blackbeltlegacy.com` sending domain. A *restricted, domain-scoped* key for a different domain (e.g. one scoped to `baselinemartialarts.com`) authenticates fine but returns HTTP 403 when sending from BBL:
+
+```text
+This API key is not authorized to send emails from blackbeltlegacy.com
+```
+
+- **Silent symptom:** in scripts, `sendEmail` returns no `data.id` because the 403 error is swallowed. Nothing visibly throws.
+- **Diagnose:** call `resend.domains.list()` — a restricted send-only key returns `restricted_api_key` (it cannot list domains). Then run an A/B from-domain test send (one from `baselinemartialarts.com`, one from `blackbeltlegacy.com`) to confirm the from-domain is the discriminator.
+- **Get the right key from the Resend dashboard**, not Vercel. Create a restricted "Sending" key scoped to `blackbeltlegacy.com`. `vercel env pull` on the `ronin-dojo-baseline` project (whose prod URL IS blackbeltlegacy.com) returns EVERY var empty because they are all Sensitive/write-only — Vercel cannot supply the key value.
+- **Placement for local prod-ops scripts:** put the key in the gitignored `apps/web/.env.prod` (env-prod overlay convention). A phone-pasted throwaway key can be used one-shot inline without persisting it: `RESEND_API_KEY=… bun … --send`.

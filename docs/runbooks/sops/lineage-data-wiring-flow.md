@@ -4,8 +4,8 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-24
+last_agent: claude-session-0444
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
@@ -239,6 +239,16 @@ flowchart TD
 
 A claim never silently grants tree-wide editor rights. Node claim → node ownership; tree claim → `TREE_EDITOR`
 (`TREE_ADMIN` requires explicit brand-admin grant). See lineage-listing-runbook §6.
+
+### Dogfood / operational note (SESSION_0444)
+
+The magic-link claim loop is **proven end-to-end on real prod** (Chayce rehearsal: `--send` → claimed → torn
+down; the SESSION_0440 callbackURL fix held, no 403). Dogfood via `setup-test-claimant.ts`.
+
+> **⚠ Teardown gotcha:** `setup-test-claimant.ts --reset` clears a `LineagePendingClaim` binding's `consumedAt`
+> but **KEEPS the row**, so it re-fires on next sign-in (a stale `cullet-eric` binding auto-claimed Eric Cullet
+> instead of Chayce). **Full teardown must DELETE the `LineagePendingClaim` rows for the dogfood email**, not
+> just `--reset`.
 
 ---
 

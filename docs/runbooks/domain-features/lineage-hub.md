@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-05-30
 updated: 2026-06-24
-last_agent: claude-session-0441
+last_agent: claude-session-0444
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -50,7 +50,8 @@ Lineage is a **dual model** — keep these axes distinct:
   **branch-scoped `LineageTreeAccess`**. On claim approval, `finalizePassportClaim` **seeds** a student's
   visual parent from the `INSTRUCTOR_STUDENT` edge (provenance → projection); if the instructor isn't in
   the tree the student stays at root for the steward. One canonical brand-agnostic tree
-  (`rigan-machado-lineage`, renamed from `bbl-lineage`); the Baseline→BBL clone is retired.
+  (`rigan-machado-lineage`, renamed from `bbl-lineage` — applied to prod SESSION_0444, PR #162);
+  the Baseline→BBL clone is retired.
 
 Authority + sync rules are governed by **ADR 0016** below — read it before touching rank/promotion logic.
 
@@ -94,9 +95,9 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 
 - `BASELINE_MARTIAL_ARTS` and `BBL` both expose the BJJ discipline-page lineage section for `discipline.code = bjj`.
 - The runtime tree lookup remains brand-scoped (`getLineageTreeBySlug({ brand, slug })`); do not add broad cross-brand fallbacks.
-- `apps/web/prisma/seed-baseline-lineage.ts` seeds the canonical Baseline `rigan-machado-bjj-lineage` projection.
-- `apps/web/prisma/seed-bbl-org.ts` syncs a BBL-scoped `rigan-machado-bjj-lineage` tree projection from the Baseline public projection when the Baseline seed exists. This reuses global `LineageNode` / `RankAward` facts while keeping `LineageTree` brand-scoped.
-- Local smoke target: `http://bbl.local:3000/disciplines/bjj` should show the Rigan Machado BJJ Lineage section; tree mode should be horizontally scrollable.
+- One canonical, brand-agnostic `rigan-machado-lineage` tree (root = Rigan Machado, 77 members, published; renamed from `bbl-lineage` on prod SESSION_0444, PR #162). The old `rigan-machado-bjj-lineage` clone and the standalone `bbl-dirty-dozen` tree are retired (unpublished); the Dirty Dozen is now a **visual group** inside the canonical tree.
+- `apps/web/prisma/seed-bbl-org.ts` was slimmed to seed just the BBL `Organization` — it no longer syncs/clones a BBL `rigan-machado-bjj-lineage` tree projection. The Baseline→BBL clone-sync is retired (dead under single-brand collapse).
+- Local smoke target: `http://bbl.local:3000/disciplines/bjj` should show the `rigan-machado-lineage` roster (the bjj discipline embed resolves brand-agnostically to that slug); tree mode should be horizontally scrollable.
 
 ## Components
 

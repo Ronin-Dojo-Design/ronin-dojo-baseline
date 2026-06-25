@@ -4,8 +4,8 @@ slug: bbl-cutover-checklist
 type: report
 status: active
 created: 2026-06-04
-updated: 2026-06-17
-last_agent: claude-session-0402
+updated: 2026-06-24
+last_agent: claude-session-0444
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/runbooks/deploy/bbl-production-runbook.md
@@ -52,7 +52,7 @@ The cross-layer sequencer for a safe `blackbeltlegacy.com` cutover. Spans the th
 | # | Item | State |
 | --- | --- | --- |
 | 0 | **DNS source of truth** — `blackbeltlegacy.com` NS = `ns1/ns2.bluehost.com`; registrar Bluehost; WP origin on Flywheel behind Fastly (apex A `151.101.66.159`). | ✅ **RESOLVED (SESSION_0343)** — Bluehost is DNS authority (matches ADR 0015). Cutover = repoint records **at Bluehost**, not a zone migration. |
-| 1 | BBL brand renders on Vercel prod (`data-brand=BBL`, `/disciplines/bjj`, `/lineage/rigan-machado-bjj-lineage`). | pending verify |
+| 1 | BBL brand renders on Vercel prod (`data-brand=BBL`, `/disciplines/bjj`, `/lineage/rigan-machado-lineage`). | pending verify |
 | 2 | Inventory WP content to migrate (BBL-only — Baseline cannot proxy). | pending |
 | 3 | 301 redirect map: old WP permalinks → Vercel routes (BBL-only). | pending |
 | 4 | Attach `blackbeltlegacy.com` to bbl Vercel project. | pending |

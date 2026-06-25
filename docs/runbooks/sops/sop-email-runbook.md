@@ -4,8 +4,8 @@ slug: sop-email-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-06-12
-last_agent: codex-session-0370
+updated: 2026-06-24
+last_agent: claude-session-0444
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/runbooks/resend-setup-runbook.md
@@ -41,7 +41,7 @@ replies still spans Resend plus the operator mailbox.
 - `/admin/email` is an operator dashboard surface that explains the current read/reply paths without pretending the app is a full inbox.
 - `/admin/email` also carries the BBL email catalog, a live-test invite composer, and recent Join
   Legacy captures so the first live invite/claim run can be operated from the current app.
-- Baseline and Black Belt Legacy use separate senders: `welcome@baselinemartialarts.com` and `welcome@blackbeltlegacy.com`. BBL requires `blackbeltlegacy.com` domain verification in Resend before production sends.
+- Baseline and Black Belt Legacy use separate senders: `welcome@baselinemartialarts.com` and `welcome@blackbeltlegacy.com`. BBL requires `blackbeltlegacy.com` domain verification in Resend before production sends. **Beyond verification, the `RESEND_API_KEY` itself must be authorized for `blackbeltlegacy.com`** — a Baseline-scoped restricted key authenticates but 403s on BBL sends (`This API key is not authorized to send emails from blackbeltlegacy.com`). See [Resend Setup Runbook → BBL sending key must be domain-authorized](../integrations/resend-setup-runbook.md#bbl-sending-key-must-be-domain-authorized-session_0444).
 
 ## Current operator answer
 
@@ -219,3 +219,11 @@ All Stripe/lifecycle membership emails use the same outbound boundary but are ad
 - Scheduled lifecycle surfaces (renewal reminder, comp expiry, win-back, trial ending) should call the
   same helper from their job entrypoints; do not register live crons until the dry-run previews are
   approved.
+
+> **The dry-run gate is NOT a claim-email control (SESSION_0444).** `EMAIL_LIFECYCLE_DRYRUN` only
+> gates lifecycle emails routed through `notifyUserOfLifecycleEvent`. **Direct notifiers** like
+> `notifyMemberOfBblClaimYourProfile` (the BBL claim "claim your profile" email) bypass the gate
+> entirely — they call `sendEmail` directly, so setting `EMAIL_LIFECYCLE_DRYRUN=0` does NOT
+> enable/affect claim sends. For claim emails, only the Resend key/domain authorization matters (see
+> the BBL-key 403 note above + the Resend Setup Runbook). Do not mis-diagnose a stuck claim send as a
+> dry-run issue.
