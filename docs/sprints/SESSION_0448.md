@@ -179,7 +179,8 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
 | SESSION_0448_TASK_02 | landed | Moved 6 sections' `_components` + dashboard metrics → `/app` (whole-dir, behavior-preserving); repointed all 21 importers `~/app/admin/<s>`→`~/app/app/<s>`. 7 per-section commits (`be4b8d72`,`96d26ff5`,`b327ebe3`,`fca78002`,`d6359a1b`,`0c52d0f4`,`9faa7d2e`). `app/app` has 0 `~/app/admin/` refs. |
 | SESSION_0448_TASK_03 | landed | Deleted 10 dead redirect-shadowed Category-B sections + dead admin pages (`82224ef0`). `app/admin/` now = `task-board` + `{layout,error,not-found}.tsx`. Verify: tsc 0, oxlint 0 err (4 inherited warns), **faithful build GREEN 194/194 pages exit 0**; live `/app`,`/app/users`,`/app/lineage`,`/app/tournaments`→200; `/admin/tools`+`/admin/tournaments`→308→`/app`. |
 | SESSION_0448_TASK_04 | landed | fallow-fix-loop: 1 introduced finding (orphaned `lineage-avatar-action` → deleted `1b6666b8`); dead-code 5→4 (introduced 0, rest inherited/FP); dup net-decreased (10 admin copies deleted); complexity all inherited. 2 fallow finders + 2 code-review finders = **4 independent reviewers, all clean**. Drift: 13/14 page-pairs at parity; 1 gap surfaced (lineage avatar-uploader — see Open decisions). |
-| SESSION_0448_TASK_05 | in-progress | Faithful build GREEN (194/194); bow-out running; push held for operator "go". |
+| SESSION_0448_TASK_05 | landed | Faithful build GREEN (194/194); bow-out + full close done; push held for operator "go". |
+| SESSION_0448_TASK_06 | landed | **Operator chose restore+wire** the avatar-uploader parity gap. Restored `lineage-avatar-action.tsx` (verbatim from `5f5bdc41` — no repoint) into `app/app/lineage/_components/` + wired into `/app/lineage/[treeId]/page.tsx` per member with a `passport.id` (`7a794178`). Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, **browser-verified** (7 avatar controls render for placeholder passports; cropper modal mounts on file-select — screenshot confirmed; stopped before "Apply" to avoid a real-R2 write — the action path is unchanged/proven 0437). Page gated by `requireLineageManagementAccess`; action admin-gated → no new auth surface. |
 
 ## What landed
 
@@ -202,6 +203,12 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
   → 200 with real content · redirects intact (`/admin/tools`→308→`/app/tools`,
   `/admin/tournaments`→308→`/app/tournaments`) · **4 independent review finders (2 fallow + 2 code-review)
   all clean** · code-review `[]`.
+- **Avatar-uploader parity gap RESOLVED (TASK_06, operator: restore+wire).** Restored
+  `lineage-avatar-action.tsx` (verbatim, no repoint — imports `~/components` + the surviving
+  `~/server/admin/passport-avatar` action) into `app/app/lineage/_components/` and wired it into
+  `/app/lineage/[treeId]/page.tsx` per member with a `passport.id`, mirroring the old admin layout.
+  Browser-verified live (7 controls render, cropper modal mounts on file-select — screenshot confirmed);
+  faithful build GREEN 194/194. So `/app` now has the admin avatar-uploader the redirect-shadowing hid.
 
 ## Decisions resolved
 
@@ -212,9 +219,13 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
 - **Whole-dir `_components` moves (Cody):** move the entire `_components` dir per section (not just the
   /app-imported subset) — correct for transitive sibling deps (e.g. `tournament-form`→`divisions-editor`);
   any genuinely-orphaned component is caught by the fallow-fix-loop (it caught exactly 1).
-- **Orphaned `lineage-avatar-action` (Doug/fallow):** DELETE, not relocate — it was unreachable in prod
-  (its admin-page host was redirect-shadowed) and the `/app` twin never wired it → deleting preserves prod
-  behavior. The surfaced parity gap is recorded as a follow-up (see Open decisions).
+- **Orphaned `lineage-avatar-action` (Doug/fallow):** initially DELETED in the migration (unreachable in
+  prod; behavior-preserving) — then the drift finder surfaced it as a real admin capability the `/app` twin
+  lacked.
+- **Avatar-uploader parity gap (operator, at bow-out):** **RESTORE + WIRE now** (not defer). Re-exposed the
+  uploader on `/app/lineage/[treeId]` (TASK_06) — the operator wants the admin lineage-member avatar control
+  on the live `/app` surface (member photos matter for BBL). Behavior is now a *superset* of pre-migration
+  prod (prod never exposed it; `/app` now does, gated).
 
 ## Files touched
 
@@ -232,6 +243,8 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
 | `app/admin/**/page.tsx` (49 dead pages) + `app/admin/page.tsx` | **deleted** (all redirect-shadowed → `/app`) |
 | `app/admin/{layout,error,not-found}.tsx` + `task-board/**` | **untouched** (kept-live shell) |
 | `apps/web/server/admin/*`, `config/app-redirects.ts`, `next.config.ts` | **untouched** (confirmed by empty diff-stat) |
+| `app/app/lineage/_components/lineage-avatar-action.tsx` | **TASK_06** restored (verbatim from `5f5bdc41`, no repoint) — admin avatar-uploader |
+| `app/app/lineage/[treeId]/page.tsx` | **TASK_06** wired `LineageAvatarAction` per member with a `passport.id` |
 | `docs/sprints/SESSION_0448.md`, `docs/knowledge/wiki/index.md` | this session file + index row |
 
 ## Verification
@@ -245,19 +258,17 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
 | Redirect integrity | `/admin/tools`→308→`/app/tools`; `/admin/tournaments`→308→`/app/tournaments` (resolver executed by code-review finder across 49 routes — all land on live twins) |
 | `npx fallow audit --changed-since 5f5bdc41 --gate new-only` | dead-code 5→**4** after orphan delete (**introduced: 0**; remaining = 2 inherited unused exports + react-email/react-dom FP); dup net-decreased (10 admin copies deleted); complexity all inherited |
 | Review (4 finders: 2 fallow-loop + 2 code-review) | **all clean** — repoint/deletion-safety CLEAN, drift 13/14 pairs at parity, code-review `[]`, conventions `[]` |
+| **TASK_06** faithful `next build` (clonefile @ `7a794178`) | ✅ GREEN — compiled 2.4min, TypeScript ✓, **194/194 static pages**, exit 0 |
+| **TASK_06** browser-verify (isolated playwright, dev-login) | PASS — `/app/lineage/[treeId]` renders **7 avatar controls** for placeholder passports; file-select **mounts the cropper modal** ("Crop avatar for John Lewis", Apply present) — screenshot confirmed; stopped before Apply (no real-R2 write; action unchanged/proven 0437) |
 
 ## Open decisions / blockers
 
-- **⭐ Parity gap surfaced (operator decision): lineage member avatar-uploader.** The deleted (dead,
-  redirect-shadowed) `/admin/lineage/[treeId]` page rendered `LineageAvatarAction` — an admin-only avatar
-  uploader for lineage members (incl. unclaimed placeholder Passports). The live `/app/lineage/[treeId]`
-  twin **never wired it up**, so prod never had it → deleting the orphan is behavior-preserving. **The
-  backend action survives** (`server/admin/passport-avatar.ts:30 setPassportAvatarAsAdmin`). *Recommendation:
-  DEFER* — re-exposing it is feature work (restore `lineage-avatar-action.tsx` from `5f5bdc41`, repoint,
-  wire into `/app/lineage/[treeId]`), not part of a topology migration. Operator decides: accept-and-defer
-  vs restore-and-wire. (Member photos matter for BBL — [[bbl-launch-is-the-focus]] — so not trivial.)
-- **Push HELD** — 11 app-code commits ready (2 inherited from 0446/0447 + 9 this session), awaiting operator
-  "go" (explicit-push rule). One app-code push → CI matrix + Baseline prod deploy.
+- **✅ Parity gap RESOLVED (operator: restore+wire — TASK_06).** The lineage member avatar-uploader the
+  deleted dead `/admin/lineage/[treeId]` had is now restored + wired into the live `/app/lineage/[treeId]`
+  (`7a794178`), browser-verified. No longer an open item.
+- **Push HELD** — **13 app-code commits** ready (2 inherited from 0446/0447 + 11 this session incl. the
+  avatar restore), awaiting operator "go" (explicit-push rule). One app-code push → CI matrix + Baseline
+  prod deploy.
 - **Inherited follow-ups (named, not this session's job):** score-forms 2 unused exports (`TKO_THRESHOLD`,
   `ESKRIMA_DEFAULT_ROUNDS` — dead at base); 87 cross-section table/form dup clone-groups (the
   `<ThemeFieldset>`/table-columns consolidation flagged 0447); `config/site` `siteConfig.name` metadata
@@ -267,22 +278,21 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
 
 ### Goal
 
-Operator's call. Two clean candidates: **(a)** decide the lineage avatar-uploader parity gap (restore +
-wire into `/app/lineage/[treeId]`, or formally accept the drop); **(b)** the deferred single-brand vestige
-follow-ups — `<ThemeFieldset>` extraction (collapses 12+ theme-form dup clone-groups), `config/site`
-`siteConfig.name` metadata destale, `repo-truth-index` §D 4-brand-enum destale; **(c)** the gated Stage-2
-brand schema drop (its own PR, prod migration — decision gates first).
+Operator's call — the deferred single-brand vestige follow-ups: **(a)** `<ThemeFieldset>` extraction
+(collapses 12+ theme-form dup clone-groups: `brand-settings-form` / `org-theme-form` /
+`self-service-theme-form`); **(b)** `config/site` `siteConfig.name` metadata destale +
+`repo-truth-index` §D 4-brand-enum destale; **(c)** the gated Stage-2 brand schema drop (its own PR, prod
+migration — decision gates first: BASELINE comp-fixture, no non-BBL prod rows). Optional cleanup: trim the
+2 inherited dead exports in `app/app/tournaments/_components/score-forms.tsx`.
 
 ### First task
 
-If (a): restore `5f5bdc41:apps/web/app/admin/lineage/_components/lineage-avatar-action.tsx` → `/app`,
-repoint to the surviving `setPassportAvatarAsAdmin` action, wire into `/app/lineage/[treeId]/page.tsx`,
-browser-verify the upload on a placeholder Passport. Else pick (b)/(c) per operator.
+Pick (a)/(b)/(c) per operator. If (a): grep the 3 theme-form files, extract the shared fieldset into a
+`<ThemeFieldset>` (Dirstarter L1 primitive pattern), repoint the 3 consumers, browser-verify each renders.
 
 ### Inputs to read
 
-- This file; memory `admin-retiring-only-app-remains` (update at sweep), `brand-vestige-trim-inventory`.
-- `server/admin/passport-avatar.ts` (surviving action) + `app/app/lineage/[treeId]/page.tsx` (the twin).
+- This file; memory `brand-vestige-trim-inventory`, `admin-retiring-only-app-remains` (admin→app DONE).
 
 ## Review log
 
@@ -301,7 +311,20 @@ browser-verify the upload on a placeholder Passport. Else pick (b)/(c) per opera
 - **Score:** 9.5/10 — disciplined, honestly verified, faithful build green; half-point for the
   imprecise first orphan-check (checked `lineage/page.tsx`, not `[treeId]/page.tsx`) — corrected by the
   drift finder, deletion rationale held.
-- **Follow-up:** avatar-uploader parity decision; the named inherited follow-ups above.
+- **Follow-up:** the named inherited follow-ups above (`<ThemeFieldset>`, `siteConfig.name`, truth-index §D,
+  score-forms dead exports).
+
+### SESSION_0448_REVIEW_02 — avatar-uploader restore (TASK_06)
+
+- **Reviewed task:** TASK_06 (operator-chosen restore+wire after bow-out).
+- **Verdict:** Clean, low-risk feature restore. The component is verbatim from `5f5bdc41` (no edits, no
+  repoint — it only ever imported `~/components` + the surviving `~/server/admin/passport-avatar` action),
+  wired into the live twin exactly as the old admin page did (per member with a `passport.id`). The page is
+  already behind `requireLineageManagementAccess` and the action is admin-gated → **no new auth surface**.
+  Browser-verified: 7 controls render for placeholder passports + the cropper modal mounts on file-select
+  (screenshot); faithful build GREEN 194/194. The R2-write/Apply step was deliberately not exercised (would
+  pollute the real bucket; the path is unchanged + proven SESSION_0437) — disclosed, not skipped silently.
+- **Score:** 9.5/10.
 
 ## Hostile close review
 
@@ -314,9 +337,11 @@ browser-verify the upload on a placeholder Passport. Else pick (b)/(c) per opera
   live twins); (3) the faithful Vercel-parity `next build` is GREEN end-to-end (194/194 pages). tsc 0,
   oxlint 0 errors, fallow introduced-0. Honesty: the 194-vs-225 page drop is explained (deleted dead pages),
   the orphan-check imprecision is disclosed in the review log, the avatar gap is surfaced not buried.
-- **Desi:** **pass (light)** — no visual change: the migrated surfaces render the *same* components (moved
-  byte-identical), live smoke confirms `/app` + 3 surfaces render 200 with real content. The only UX delta
-  is the (already prod-invisible) loss of the admin avatar-uploader affordance — surfaced for decision.
+- **Desi:** **pass** — no visual regression: the migrated surfaces render the *same* components (moved
+  byte-identical), live smoke confirms `/app` + 3 surfaces render 200 with real content. The one UX delta is
+  a deliberate **addition** (TASK_06): the admin lineage-member avatar-uploader is now restored on
+  `/app/lineage/[treeId]` (browser-verified — 7 controls render, cropper mounts), making `/app` a UX superset
+  of pre-migration prod.
 - **Kaizen aggregate:** 9.5/10.
 
 ## ADR / ubiquitous-language check
@@ -365,6 +390,6 @@ browser-verify the upload on a placeholder Passport. Else pick (b)/(c) per opera
 | Review & Recommend | yes — Next session = avatar-uploader parity decision OR deferred brand-vestige follow-ups |
 | Memory sweep | updated `admin-retiring-only-app-remains` (migration DONE; avatar-uploader parity gap noted) + `brand-vestige-trim-inventory` (admin→app done); no new memory file needed |
 | Next session unblock check | unblocked (both candidate lanes are doable; avatar lane has the surviving action + twin path named) |
-| Git hygiene | branch `main`; 9 session commits `be4b8d72..1b6666b8` + 1 docs close commit; push **HELD** per explicit-push rule — hash reported at bow-out / see git log |
-| Graphify update | Nodes 41 · Edges 1462 · Communities 2033 (incremental rebuild, run before the close commit) |
-| Pre-push cost gate | ✅ **faithful Vercel-parity `next build` GREEN** (clonefile worktree @ `82224ef0`, real deps, default `.next`, no dev interference): compile + type-check + page-data + **194/194 static pages**, exit 0 |
+| Git hygiene | branch `main`; **13 unpushed commits** (11 session `be4b8d72..7a794178` incl. docs close `e4fbeef9` + avatar restore `7a794178`; + 2 inherited 0446/0447); push **HELD** per explicit-push rule — hashes in git log |
+| Graphify update | refreshed twice (incremental): post-migration Nodes 41 · Edges 1462 · Communities 2033; post-avatar-restore Nodes 16 · Edges 663 · Communities 2054 — both before their close commit |
+| Pre-push cost gate | ✅ **faithful Vercel-parity `next build` GREEN ×2** — migration @ `82224ef0` (194/194, exit 0) AND avatar-restore @ `7a794178` (194/194, exit 0); both clonefile worktrees, real deps, default `.next`, no dev interference |
