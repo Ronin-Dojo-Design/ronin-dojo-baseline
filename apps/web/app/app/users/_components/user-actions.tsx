@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { type ComponentProps, useTransition } from "react"
 import { toast } from "sonner"
 import type { User } from "~/.generated/prisma/browser"
-import { UsersDeleteDialog } from "~/app/admin/users/_components/users-delete-dialog"
+import { UsersDeleteDialog } from "~/app/app/users/_components/users-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,

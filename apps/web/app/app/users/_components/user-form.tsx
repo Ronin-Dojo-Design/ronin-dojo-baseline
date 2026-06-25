@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
-import { UserActions } from "~/app/admin/users/_components/user-actions"
+import { UserActions } from "~/app/app/users/_components/user-actions"
 import { Avatar, AvatarImage } from "~/components/common/avatar"
 import { Button } from "~/components/common/button"
 import {

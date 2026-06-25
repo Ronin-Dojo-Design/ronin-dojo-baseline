@@ -1,4 +1,4 @@
-import { PersonForm } from "~/app/admin/users/_components/person-form"
+import { PersonForm } from "~/app/app/users/_components/person-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { findAddPersonOptions } from "~/server/admin/users/queries"
 
