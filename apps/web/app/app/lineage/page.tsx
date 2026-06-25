@@ -1,5 +1,5 @@
 import { Suspense } from "react"
-import { LineageClaimabilityToggle } from "~/app/admin/lineage/_components/lineage-claimability-toggle"
+import { LineageClaimabilityToggle } from "~/app/app/lineage/_components/lineage-claimability-toggle"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"

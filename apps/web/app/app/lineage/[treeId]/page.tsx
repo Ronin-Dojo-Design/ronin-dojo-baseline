@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
-import { LineageClaimabilityToggle } from "~/app/admin/lineage/_components/lineage-claimability-toggle"
-import { LineageSelectedRankSelect } from "~/app/admin/lineage/_components/lineage-selected-rank-select"
+import { LineageClaimabilityToggle } from "~/app/app/lineage/_components/lineage-claimability-toggle"
+import { LineageSelectedRankSelect } from "~/app/app/lineage/_components/lineage-selected-rank-select"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
