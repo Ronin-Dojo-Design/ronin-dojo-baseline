@@ -4,8 +4,8 @@ slug: payment-security-checklist
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-05-31
-last_agent: codex-session-0313
+updated: 2026-06-24
+last_agent: claude-session-0447
 pairs_with:
   - docs/security/README.md
   - docs/security/ronin-security-risk-register.md
@@ -63,7 +63,7 @@ The repo already has a stronger-than-average webhook route. This checklist recor
 
 ### Checkout creation
 
-- [ ] Checkout creation requires server-side auth/org/brand checks where applicable.
+- [ ] Checkout creation requires server-side auth/org checks where applicable. *(2026-06-24: brand check is now a no-op — single brand, ADR 0034; auth/org checks unchanged.)*
 - [ ] Checkout metadata is treated as a hint, not authorization truth.
 - [ ] Checkout action is rate-limited and fails closed if payment risk controls are unavailable.
 - [ ] User-facing errors are generic in production.
@@ -80,7 +80,7 @@ The repo already has a stronger-than-average webhook route. This checklist recor
 - [ ] Printful webhook secret is required when Printful is enabled in production.
 - [ ] Shipping addresses and order metadata are never logged raw.
 - [ ] Fulfillment status changes do not modify entitlements unless explicitly designed.
-- [ ] Merchandise orders are brand/org-scoped in admin queries.
+- [ ] Merchandise orders are org-scoped in admin queries. *(2026-06-24, SESSION_0447: brand-scoping clause dropped — single brand, ADR 0034; org scoping still applies.)*
 
 ## Failure modes
 

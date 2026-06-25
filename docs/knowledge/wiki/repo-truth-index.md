@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-25
+last_agent: claude-session-0447
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -39,7 +39,7 @@ Quick rule set:
 - **Schema truth beats nostalgia**
 - **ADR truth beats habit**
 - **Latest session truth beats memory**
-- **MDX is current public content truth**
+- **The DB-backed blog (`Post` model) is current public content truth** *(2026-06-24, SESSION_0447: replaced the stale "MDX is current public content truth"; `content/blog/` MDX is gone)*
 - **Content atoms are emerging structured editorial truth**
 - **Wiki pages are repo memory, not clutter**
 - **Legacy monorepo is reference, not active canon**
@@ -57,7 +57,7 @@ Confirms:
 - Expo mobile app
 - Postgres backend
 - Prisma schema
-- MDX blog content
+- DB-backed blog content (`Post` model; admin CRUD under `apps/web/app/app/posts/`)
 - package structure
 
 **Rule:** Do not use old WP/PODS assumptions when the repo README or package layout says otherwise.
@@ -133,14 +133,18 @@ The repo follows an LLM-wiki pattern: index, concept pages, file pages, sessions
 **Rule:** Treat the wiki as repo-native structured memory, not as disposable commentary.
 
 #### I. Public content truth
-**Canonical source today:** `apps/web/content/blog/` MDX
+**Canonical source today:** the DB-backed blog — the `Post` model in
+`apps/web/prisma/schema.prisma` (`PostStatus` Draft / Scheduled / Published),
+with admin CRUD under `apps/web/app/app/posts/`. *(2026-06-24, SESSION_0447:
+corrected from the stale "`apps/web/content/blog/` MDX" — that directory no
+longer exists; public long-form content is now DB-backed, not MDX in the repo.)*
 
 Current content truth is split into:
-1. **Public long-form content today** = MDX in repo
+1. **Public long-form content today** = DB-backed `Post` rows (admin CRUD at `apps/web/app/app/posts/`)
 2. **Knowledge/process truth** = wiki/docs/sessions
 3. **Future structured reusable editorial truth** = ContentAtom / ContentTask / content-variant direction
 
-**Rule:** Do not pretend the content engine has already replaced MDX if it has not.
+**Rule:** Public blog content lives in the database (`Post`), not in `content/blog/` MDX; do not reintroduce an MDX content tree without an explicit migration decision.
 
 #### J. Operational truth
 **Canonical source:** Postgres + Prisma models + runbooks + session files

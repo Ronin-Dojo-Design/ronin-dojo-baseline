@@ -4,8 +4,8 @@ slug: brand-scope-hardening-plan
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-05-31
-last_agent: codex-session-0313
+updated: 2026-06-24
+last_agent: claude-session-0447
 pairs_with:
   - docs/security/README.md
   - docs/security/ronin-security-risk-register.md
@@ -17,27 +17,82 @@ backlinks:
 
 # Brand-Scope Hardening Plan
 
+> **Single-brand update (2026-06-24, SESSION_0447).** ADR 0034 collapsed the
+> 4-brand model (BASELINE / RONIN / BBL / WEKAF) to a **single brand: Black Belt
+> Legacy (BBL)**. The bulk of this plan — runtime brand-scope **data-isolation**
+> enforcement to stop one brand's rows leaking into another brand's tenant — is
+> now **largely moot**: there is only one tenant, so cross-brand data leakage is
+> no longer a live attack surface. Those sections are marked **superseded /
+> reduced-scope** below.
+>
+> **KEEP-FOREVER exception — the host→brand SECURITY gate (MB-002 core).** The
+> host→brand resolution and trusted-origin boundary in
+> `apps/web/lib/brand-context.ts` (`HOST_TO_BRAND`, `BRAND_TRUSTED_ORIGINS`,
+> `resolveBrand`) is **load-bearing and survives the single-brand collapse and
+> the eventual schema-level `brand` column drop**. It maps incoming request
+> hosts to a brand and rejects untrusted origins (Better Auth `trustedOrigins`,
+> OAuth/magic-link callback validation). Do **not** treat this as vestigial. The
+> distinction throughout this doc: *host-origin trust boundary = keep* vs
+> *multi-brand data-isolation hardening = stale*.
+
 ## Summary
 
-Brand isolation is the highest-value hardening task for Ronin Dojo Baseline. The platform intentionally uses one app, one database, and one schema with `brand` as a column. That architecture is efficient, but a single missed predicate can leak data across Baseline Martial Arts, Black Belt Legacy, WEKAF, and Ronin Dojo Design.
+Brand **data isolation** was the highest-value hardening task under the original
+multi-brand model: one app, one database, one schema with `brand` as a column,
+where a single missed predicate could leak data across Baseline Martial Arts,
+Black Belt Legacy, WEKAF, and Ronin Dojo Design.
 
-This plan stages the first code PR: `fix(security): enforce brand-scoped database access`.
+**As of the single-brand collapse (ADR 0034) that data-isolation risk is moot** —
+there is only one brand (BBL), so there is no second tenant for rows to leak
+into. The runtime brand-scope enforcement PR staged below
+(`fix(security): enforce brand-scoped database access`) is therefore **shelved as
+superseded**, not lost; it is preserved here as history and as a re-activation
+plan should the platform ever re-introduce a second product tenant. What remains
+permanently in force is the host→brand **origin trust** gate (see the
+KEEP-FOREVER note above).
 
 ## Existing strengths
 
-- Brand mapping is centralized in `apps/web/lib/brand-context.ts`.
-- `apps/web/proxy.ts` overwrites downstream `x-brand`, so server code should not trust a client-supplied brand header.
-- Auth/authorization helpers already model active brand, membership, organization ownership, and org-scoped roles.
-- `apps/web/lib/authz.ts` explicitly says app-layer authorization and a brand-scope Prisma extension are belt-and-suspenders controls.
-- Many Prisma models already include `brand` and indexes.
+- **(KEEP-FOREVER)** Host→brand mapping and the trusted-origin boundary are
+  centralized in `apps/web/lib/brand-context.ts` (`HOST_TO_BRAND`,
+  `BRAND_TRUSTED_ORIGINS`, `resolveBrand`). This is the MB-002 security gate and
+  is **not** affected by the single-brand collapse — it survives even the
+  eventual `brand` column drop. `resolveBrand` now always returns `Brand.BBL`,
+  but the trusted-origin allowlist still gates Better Auth origin checks and
+  OAuth/magic-link callbacks.
+- `apps/web/proxy.ts` is now single-brand middleware (no `x-brand` header
+  injection); server code no longer derives or trusts a client-supplied brand
+  header — callers inline `Brand.BBL`.
+- Auth/authorization helpers model membership, organization ownership, and
+  org-scoped roles. *(2026-06-24: "active brand" is now constant BBL.)*
+- `apps/web/lib/authz.ts` describes app-layer authorization as the live control;
+  the brand-scope Prisma extension it proposed as belt-and-suspenders is
+  superseded — see below.
+- Many Prisma models still include a `brand` column and indexes. *(2026-06-24:
+  these are now single-valued vestiges slated for the gated Stage-2 `brand`
+  column drop; they are not a second-tenant boundary.)*
 
-## Current gap
+## Current gap (SUPERSEDED — single-brand collapse, ADR 0034)
 
-`apps/web/services/db.ts` currently returns a Prisma client extended only with `uniqueSlugsExtension`. The review did not find a brand-scope extension wired into the client.
+> **2026-06-24, SESSION_0447.** The gap below was a *multi-tenant data-isolation*
+> gap. With a single brand it no longer represents a live risk: there is no
+> second brand whose rows a missing predicate could expose. Retained for history.
 
-That means brand isolation currently depends on each query/action remembering the correct predicate.
+`apps/web/services/db.ts` returns a Prisma client extended only with
+`uniqueSlugsExtension`; no brand-scope extension is wired in. Under the old
+multi-brand model that meant brand isolation depended on each query remembering
+the correct predicate. Single-brand: the runtime brand-scope extension is **not
+needed** and is not planned.
 
-## Target invariant
+## Target invariant (SUPERSEDED — single-brand collapse, ADR 0034)
+
+> **2026-06-24, SESSION_0447.** The invariant and proposed implementation below
+> (scoped client factory, model allowlist, fail-loud cross-brand denial) targeted
+> *multi-tenant* isolation and are **superseded**: with one brand there is no
+> cross-brand path to enforce. Kept verbatim as the re-activation blueprint if a
+> second product tenant is ever introduced. The two test cases that remain
+> relevant — *unknown production host* and *brand cookie manipulation* — fold into
+> the **KEEP-FOREVER** host→brand origin gate, not into a data-scope extension.
 
 For brand-scoped models, every read/write must satisfy one of these paths:
 
@@ -136,9 +191,14 @@ Minimum test cases:
 - [Risk register](ronin-security-risk-register.md)
 - [Security test plan](security-test-plan.md)
 - [ADR 0004 — Multi-brand as column](../architecture/decisions/0004-multi-brand-as-column.md)
+- [ADR 0034 — Monorepo platform and per-product deploys](../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md)
 - [Auth architecture](../architecture/auth.md)
 
 ## Open Questions
+
+> **2026-06-24, SESSION_0447.** The cross-brand questions below are **moot under
+> the single-brand collapse** (no global-admin cross-brand workflow exists). They
+> are retained only as the re-activation checklist for a future second tenant.
 
 - Should parent-derived model protection happen in the Prisma extension, service layer, or query wrappers first?
 - How should global-admin cross-brand workflows present explicit intent in the UI and audit log?

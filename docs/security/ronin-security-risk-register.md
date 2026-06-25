@@ -4,8 +4,8 @@ slug: ronin-security-risk-register
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-05-31
-last_agent: codex-session-0313
+updated: 2026-06-24
+last_agent: claude-session-0447
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -23,11 +23,22 @@ This register captures the highest-priority security risks from the SESSION_0313
 
 The most important theme is **documented controls must become enforced, tested, and monitored controls**.
 
+> **Single-brand update (2026-06-24, SESSION_0447).** ADR 0034 collapsed the
+> 4-brand model to a single brand (BBL). Risk **#1 (runtime brand-scope DB
+> enforcement)** below is now **superseded** — cross-brand data isolation is moot
+> with one tenant. It is kept visible (not deleted) so the history and any future
+> second-tenant re-activation stay traceable. The host→brand **origin** trust
+> gate (`HOST_TO_BRAND` / `BRAND_TRUSTED_ORIGINS` / `resolveBrand` in
+> `apps/web/lib/brand-context.ts`) is **KEEP-FOREVER** and is *not* part of risk
+> #1's supersession — it survives even the eventual `brand` column drop. All
+> other rows (#2–#10) are brand-agnostic web/payment/auth hardening and remain in
+> force.
+
 ## Priority Register
 
 | Priority | Risk | Severity | Current state | Target fix | Owner lane |
 | --- | --- | --- | --- | --- | --- |
-| 1 | Missing runtime brand-scope DB enforcement | Critical | Auth docs describe brand-scope defense-in-depth, but `db.ts` only wires `uniqueSlugsExtension` | Add `brandScopeExtension` / `brandScopedDb`, model allowlist, tests that omitted brand predicates fail | Security/platform |
+| 1 | ~~Missing runtime brand-scope DB enforcement~~ — **superseded (single-brand collapse, ADR 0034)** | ~~Critical~~ → N/A | Single brand (BBL); no second tenant for rows to leak into, so the multi-tenant data-isolation gap is moot. `db.ts` still wires only `uniqueSlugsExtension` (correct for single-brand). The host→brand **origin** gate in `brand-context.ts` stays KEEP-FOREVER. | None — shelved. Re-activate the brand-scope extension only if a second product tenant is introduced. | Security/platform |
 | 2 | No global security headers / CSP gate | Critical | No obvious launch-enforced CSP/security header policy recorded in config docs | Add report-only CSP, then enforced CSP; add HSTS, frame, referrer, permissions, content-type headers | Web/platform |
 | 3 | Admin route reliance risk | High | `proxy.ts` checks session cookie for `/admin`, `/dashboard`, `/me` UX redirects; server-side admin/org checks still must be proven per route/action | Add mandatory admin layout checks and audit route/action/query coverage | Admin/auth |
 | 4 | Optional production secrets | High | Stripe, Redis, S3, Printful, Resend, Plausible, AI keys are optional in env schema | Add feature-gated production env requirements | Platform/devops |
@@ -40,11 +51,29 @@ The most important theme is **documented controls must become enforced, tested, 
 
 ## Risk Detail
 
-### 1. Runtime brand-scope DB enforcement
+### 1. Runtime brand-scope DB enforcement — SUPERSEDED (single-brand collapse, ADR 0034)
 
-Ronin is a one-app, one-database, multi-brand platform. Every business-data query must be scoped by brand, org, role, and sometimes owner. One missed predicate in an admin query, profile drawer, certificate path, media query, or payment ledger can leak cross-brand data.
-
-The first implementation PR should enforce brand predicates at the database client boundary and test that missing predicates fail.
+> **2026-06-24, SESSION_0447.** This risk assumed a one-app, one-database,
+> **multi-brand** platform where a missed predicate could leak rows across
+> brands. ADR 0034 collapsed the platform to a **single brand (BBL)**, so there
+> is no second tenant and the cross-brand data-leak risk no longer exists. The
+> proposed brand-scope Prisma extension is **shelved, not implemented** (see
+> [brand-scope hardening plan](brand-scope-hardening-plan.md)). Org/role/owner
+> scoping is still enforced at the app layer and remains live — it was never the
+> brand axis.
+>
+> **Not superseded:** the host→brand **origin trust** gate
+> (`apps/web/lib/brand-context.ts`) stays load-bearing forever. It is a request
+> origin/host boundary (Better Auth `trustedOrigins`, OAuth/magic-link callback
+> validation), not a DB-row data-isolation control, and survives the eventual
+> schema-level `brand` column drop.
+>
+> *Original text (retained for history):* Ronin is a one-app, one-database,
+> multi-brand platform. Every business-data query must be scoped by brand, org,
+> role, and sometimes owner. One missed predicate in an admin query, profile
+> drawer, certificate path, media query, or payment ledger can leak cross-brand
+> data. The first implementation PR should enforce brand predicates at the
+> database client boundary and test that missing predicates fail.
 
 ### 2. Security headers and CSP
 
@@ -125,6 +154,10 @@ AI tooling should not access raw PII, rosters, payment state, waivers, or privat
 
 ## Open Questions
 
-- Which models are definitely brand-scoped and should be in the first allowlist?
-- Should global admins bypass brand-scope enforcement by explicit helper only, or via a separate unscoped client?
+> **2026-06-24, SESSION_0447.** The first two questions are **moot under the
+> single-brand collapse** (no brand-scope allowlist / cross-brand admin bypass to
+> design). The security-headers question (#3) is still open.
+
+- ~~Which models are definitely brand-scoped and should be in the first allowlist?~~ *(moot — single brand)*
+- ~~Should global admins bypass brand-scope enforcement by explicit helper only, or via a separate unscoped client?~~ *(moot — single brand)*
 - Which security headers break current Stripe/analytics/media integrations in report-only mode?

@@ -4,8 +4,8 @@ slug: security-privacy-payments-monitoring-plan
 type: file
 status: active
 created: 2026-04-30
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-06-24
+last_agent: claude-session-0447
 pairs_with:
   - docs/sprints/SESSION_0030.md
   - docs/architecture/auth.md
@@ -30,6 +30,18 @@ backlinks:
 Define the minimum security envelope for SESSION_0030 class scheduling and the future CGR commerce path before implementation starts.
 
 This is a plan and gate document. It does not claim the system is impossible to compromise. It defines the controls required before code can be considered launch-safe.
+
+> **Single-brand update (2026-06-24, SESSION_0447).** ADR 0034 collapsed the
+> 4-brand model to a **single brand: Black Belt Legacy (BBL)**. Throughout this
+> doc, *cross-brand data-isolation* gates (brand predicates on rows, cross-brand
+> leakage findings, brand-scope reject monitoring) are now **moot / reduced
+> scope** — there is one tenant. Such items are annotated inline. The host→brand
+> **origin trust** gate (`HOST_TO_BRAND` / `BRAND_TRUSTED_ORIGINS` /
+> `resolveBrand` in `apps/web/lib/brand-context.ts`) — the load-bearing half of
+> **MB-002** — is **KEEP-FOREVER**: it survives the single-brand collapse and the
+> eventual schema-level `brand` column drop, and still gates Better Auth origin
+> checks and OAuth/magic-link callbacks. Org/role/owner authorization is
+> unchanged and was never the brand axis.
 
 ## Dirstarter Docs Proof
 
@@ -62,6 +74,13 @@ Live Dirstarter docs checked on 2026-04-30 and re-checked for the commerce lane 
 | Secrets | Env vars, webhook secrets, API keys, S3 credentials, cron secret | Never public | Env validation, no logs, rotation plan, least privilege |
 
 ## Hostile Review Findings
+
+> **2026-06-24, SESSION_0447.** These findings remain valid as **org/role/owner**
+> authorization gates (KEEP). Under the single-brand collapse (ADR 0034) the
+> "cross-brand" *impact* framing is reduced — the live boundary is now
+> org/role/ownership, not brand-vs-brand — but the required server-side
+> `organizationId` / role / ownership predicates are unchanged. Read each `brand`
+> predicate below as a now-constant `Brand.BBL`, not a tenant separator.
 
 | Finding | Severity | Impact | Required gate |
 | --- | --- | --- | --- |
@@ -158,7 +177,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Decision | Default | Revisit condition |
 | --- | --- | --- |
 | Route placement for schedules | Program-adjacent under existing `apps/web/app/(web)` routes. | Move to dashboard only after staff workflows require a separate operational shell. |
-| Brand context | Server-derived from request/proxy and org/program rows. | Revisit only if a centralized request-brand helper is added. |
+| Brand context | Server-derived; single brand (BBL) — `resolveBrand` always returns `Brand.BBL`; host→brand *origin* gate stays load-bearing (MB-002, KEEP-FOREVER). *(2026-06-24: per-brand row derivation is moot under single brand, ADR 0034.)* | Revisit only if a second product tenant is introduced. |
 | Authorization | Server actions and queries enforce auth, brand, org, and role. | No route is accepted with middleware-only protection. |
 | Instructor eligibility | ACTIVE same-org memberships with owner/admin/instructor role codes. | Add coach/staff roles only after roles are defined in seed and authz docs. |
 | ClassSession materialization | Bounded generation from `daysOfWeek`, `startTime`, `endTime`, effective dates, and timezone. | Add `rrule` engine only when recurring edge cases exceed the MVP shape. |
@@ -169,6 +188,11 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Monitoring | Start with admin dashboards and local/on-demand checks; graduate to scheduled pulses and alerts before staging. | `/admin/billing/monitoring` and `/admin/storage/monitoring` exist; local drift/audit proof exists for billing. SESSION_0351 records pulse candidates in `repo-alignment-report.md`; revisit after the pulse summary is supplied to choose cron routes, recipients, and failure policy. |
 
 ## Required Security Gates
+
+> **2026-06-24, SESSION_0447.** Below, every `brand` filter/predicate is now a
+> constant `Brand.BBL` (single-brand collapse, ADR 0034) and the "cross-brand"
+> rejection cases are subsumed by org/role rejection. The `organizationId`,
+> ownership, and role gates are **unchanged and required**.
 
 ### SESSION_0030 class schedules
 
@@ -199,7 +223,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 | Signal | Why it matters | Owner | Alert threshold |
 | --- | --- | --- | --- |
 | Failed auth and role checks by route | Detect probing and broken auth flows. | Doug + Cody | Spike above normal baseline or repeated single-user failures. |
-| Brand-scope rejects | Detect attempted cross-brand access and coding bugs. | Giddy + Cody | Any production spike; any admin bypass attempt. |
+| Untrusted-origin / host rejects | Detect requests from hosts outside `BRAND_TRUSTED_ORIGINS` (host→brand origin gate, MB-002). *(2026-06-24: reframed from cross-brand-row "brand-scope rejects", moot under single brand; the origin-gate rejections still matter.)* | Giddy + Cody | Any production spike; any untrusted-origin auth attempt. |
 | Rate-limit hits | Detect abuse on auth, forms, payments, verification, and admin actions. | Doug | Repeated IP/user hits in one hour. |
 | Stripe webhook signature failures | Detect spoofed or misconfigured payment events. | Doug + Cody | Any production failure after setup. |
 | Duplicate Stripe event ids | Detect replay or idempotency bugs. | Cody | Any duplicate that changes state. |
@@ -224,7 +248,7 @@ These are low-fidelity control wireframes. They define what data is allowed on e
 
 ## Launch Blockers
 
-- MB-002 brand-scope enforcement remains open.
+- ~~MB-002 brand-scope enforcement remains open.~~ **Split (2026-06-24, SESSION_0447):** the *runtime brand-scope DB-row enforcement* half is **superseded** by the single-brand collapse (ADR 0034) — no second tenant, no cross-brand leak, no longer a launch blocker. The *host→brand origin trust gate* half of MB-002 (`apps/web/lib/brand-context.ts`) is **implemented and KEEP-FOREVER** (Better Auth `trustedOrigins`, OAuth/magic-link callback validation) — it survives the eventual `brand` column drop.
 - Entitlement implementation plus one-time and subscription webhook proof exists, including Customer Portal/customer ID, non-tournament ledger projection, and failed-payment/refund/dispute policy from SESSION_0096.
 - Protected program enrollment Checkout now derives user/brand/org/metadata server-side; any future protected paid-access surface must use the same contract instead of generic Dirstarter caller metadata.
 - Payment/entitlement drift audit and Stripe webhook monitoring now exist locally; production alert/schedule setup and staging proof must be completed, or an explicit launch bridge must be accepted, before paid curriculum launch.

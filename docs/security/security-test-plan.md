@@ -4,8 +4,8 @@ slug: security-test-plan
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-05-31
-last_agent: codex-session-0313
+updated: 2026-06-24
+last_agent: claude-session-0447
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -22,15 +22,25 @@ backlinks:
 
 This plan turns the SESSION_0313 security review into executable test coverage. It should guide the first brand-scope enforcement PR and follow-on payment/privacy hardening work.
 
-## Cross-brand tests
+## Cross-brand tests (SUPERSEDED — single-brand collapse, ADR 0034)
 
-- Baseline user cannot read BBL membership.
-- BBL user cannot read Baseline roster, schedule, invoice, media, or certificate internals.
-- WEKAF admin cannot mutate Baseline organization unless using explicit global-admin path.
-- Missing brand predicate on an allowlisted brand-scoped model fails in test/dev.
-- Unknown production host cannot silently default to a privileged brand context.
-- Brand cookie manipulation does not change server authority.
-- Public search returns only brand-scoped, publish-safe results.
+> **2026-06-24, SESSION_0447.** The cross-brand *data-isolation* cases below are
+> **moot**: there is one brand (BBL), so there is no second tenant to read across
+> or to mutate without authorization. They are retained as the re-activation
+> spec for a future second product tenant.
+>
+> **Still required (folds into the KEEP-FOREVER host→brand origin gate, MB-002):**
+> the host/origin trust cases below stay live regardless of brand count — they
+> guard `BRAND_TRUSTED_ORIGINS` / `resolveBrand` in `apps/web/lib/brand-context.ts`,
+> not DB-row scoping.
+
+- ~~Baseline user cannot read BBL membership.~~ *(moot — single brand)*
+- ~~BBL user cannot read Baseline roster, schedule, invoice, media, or certificate internals.~~ *(moot — single brand)*
+- ~~WEKAF admin cannot mutate Baseline organization unless using explicit global-admin path.~~ *(moot — single brand)*
+- ~~Missing brand predicate on an allowlisted brand-scoped model fails in test/dev.~~ *(moot — single brand)*
+- **(KEEP)** Unknown production host cannot silently default to a privileged/trusted origin — request from an untrusted host is rejected by the origin gate.
+- **(KEEP)** Brand cookie / forwarded-host manipulation does not change server authority or bypass the trusted-origin check.
+- Public search returns only publish-safe results. *(2026-06-24: the brand-scoping clause is now implicit — everything is BBL.)*
 
 ## Access-control tests
 
@@ -39,7 +49,7 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 - Instructor can view only their own org roster.
 - Assistant coach cannot manage billing.
 - Guardian can view linked child records only.
-- Organization owner cannot edit another organization in the same brand.
+- Organization owner cannot edit another organization. *(2026-06-24: "same brand" qualifier dropped — single brand.)*
 - Node editor cannot rewrite canonical lineage truth without required role.
 - Admin server actions reject unauthorized users before mutation.
 
@@ -63,7 +73,7 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 - Claim evidence is never public by default.
 - Private media URL requires signed access and expires.
 - DSR export contains requester data only.
-- DSR export cannot include records from another brand/org/user.
+- DSR export cannot include records from another org/user. *(2026-06-24: cross-brand clause dropped — single brand.)*
 - DSR delete respects legal/audit/payment/certificate retention policy.
 
 ## Logging/error tests
@@ -88,14 +98,15 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 
 ### Unit / integration
 
-- Prisma brand-scope extension tests.
-- Authz helper tests for role/org/brand combinations.
+- ~~Prisma brand-scope extension tests.~~ *(2026-06-24: superseded — no brand-scope extension under single brand.)*
+- **(KEEP)** Host→brand origin-gate tests — `resolveBrand` / `BRAND_TRUSTED_ORIGINS` trusted-vs-untrusted origin coverage (`apps/web/lib/brand-context.test.ts`).
+- Authz helper tests for role/org combinations. *(2026-06-24: brand dimension is constant BBL.)*
 - Safe logger redaction tests.
 - Env validation tests by feature flag.
 
 ### E2E
 
-- Cross-brand session flows on `baseline.local`, `bbl.local`, and `wekaf.local`.
+- Session flows on `bbl.local`. *(2026-06-24: the `baseline.local` / `wekaf.local` cross-brand hosts are retired with the single-brand collapse; keep the untrusted-host rejection check against the origin gate.)*
 - Admin page/action denial tests.
 - Public certificate verification anti-enumeration checks.
 - Private media signed URL checks.
@@ -106,7 +117,7 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 - Secret scanning / push protection.
 - Dependency scanning.
 - CodeQL or equivalent SAST.
-- Semgrep-style rules for missing brand predicates on high-risk query paths.
+- ~~Semgrep-style rules for missing brand predicates on high-risk query paths.~~ *(2026-06-24: superseded — no brand predicate to enforce under single brand.)*
 
 ## Relationships
 
@@ -118,5 +129,5 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 ## Open Questions
 
 - Which tests should become required CI gates before the first production payment launch?
-- Which brand-scope failures should be warning-only during rollout vs immediate denial?
+- ~~Which brand-scope failures should be warning-only during rollout vs immediate denial?~~ *(2026-06-24: moot — no brand-scope rollout under single brand.)*
 - What fixtures should represent minors/guardians without storing real personal data?
