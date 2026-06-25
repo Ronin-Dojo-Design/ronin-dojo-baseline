@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, PaletteIcon } from "lucide-react"
 import { notFound } from "next/navigation"
-import { OrgThemeForm } from "~/app/admin/organizations/[id]/theme/_components/org-theme-form"
+import { OrgThemeForm } from "~/app/app/organizations/[id]/theme/_components/org-theme-form"
 import { H2 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Wrapper } from "~/components/common/wrapper"
