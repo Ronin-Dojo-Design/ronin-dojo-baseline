@@ -4,7 +4,7 @@ import { EllipsisIcon, TrashIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import type { TournamentRole } from "~/.generated/prisma/browser"
-import { TournamentRolesDeleteDialog } from "~/app/admin/tournaments/roles/_components/tournament-roles-delete-dialog"
+import { TournamentRolesDeleteDialog } from "~/app/app/tournaments/roles/_components/tournament-roles-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,

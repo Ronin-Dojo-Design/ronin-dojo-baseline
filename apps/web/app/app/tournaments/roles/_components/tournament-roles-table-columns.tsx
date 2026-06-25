@@ -3,7 +3,7 @@
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HashIcon } from "lucide-react"
-import { TournamentRoleActions } from "~/app/admin/tournaments/roles/_components/tournament-role-actions"
+import { TournamentRoleActions } from "~/app/app/tournaments/roles/_components/tournament-role-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"

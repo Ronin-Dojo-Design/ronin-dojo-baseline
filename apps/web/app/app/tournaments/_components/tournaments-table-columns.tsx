@@ -3,7 +3,7 @@
 import { formatDateTime } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Tournament } from "~/.generated/prisma/browser"
-import { TournamentActions } from "~/app/admin/tournaments/_components/tournament-actions"
+import { TournamentActions } from "~/app/app/tournaments/_components/tournament-actions"
 import { Badge } from "~/components/common/badge"
 import { Checkbox } from "~/components/common/checkbox"
 import { Link } from "~/components/common/link"

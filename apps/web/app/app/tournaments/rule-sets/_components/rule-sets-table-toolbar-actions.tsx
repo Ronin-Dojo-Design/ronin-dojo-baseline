@@ -2,7 +2,7 @@
 
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
-import { RuleSetsDeleteDialog } from "~/app/admin/tournaments/rule-sets/_components/rule-sets-delete-dialog"
+import { RuleSetsDeleteDialog } from "~/app/app/tournaments/rule-sets/_components/rule-sets-delete-dialog"
 import { Button } from "~/components/common/button"
 import type { findRuleSetsPaginated } from "~/server/admin/tournaments/queries"
 

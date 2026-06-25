@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { TournamentsSubNav } from "~/app/admin/tournaments/_components/tournaments-sub-nav"
-import { TournamentsTable } from "~/app/admin/tournaments/_components/tournaments-table"
+import { TournamentsSubNav } from "~/app/app/tournaments/_components/tournaments-sub-nav"
+import { TournamentsTable } from "~/app/app/tournaments/_components/tournaments-table"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findTournaments } from "~/server/admin/tournaments/queries"
 import { tournamentsTableParamsCache } from "~/server/admin/tournaments/schema"

@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { TournamentsSubNav } from "~/app/admin/tournaments/_components/tournaments-sub-nav"
-import { TournamentRolesTable } from "~/app/admin/tournaments/roles/_components/tournament-roles-table"
+import { TournamentsSubNav } from "~/app/app/tournaments/_components/tournaments-sub-nav"
+import { TournamentRolesTable } from "~/app/app/tournaments/roles/_components/tournament-roles-table"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findTournamentRolesPaginated } from "~/server/admin/tournaments/queries"
 import { tournamentRolesTableParamsCache } from "~/server/admin/tournaments/schema"

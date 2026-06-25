@@ -1,4 +1,4 @@
-import { RuleSetForm } from "~/app/admin/tournaments/rule-sets/_components/rule-set-form"
+import { RuleSetForm } from "~/app/app/tournaments/rule-sets/_components/rule-set-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { db } from "~/services/db"
 

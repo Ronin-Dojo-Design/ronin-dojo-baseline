@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { TournamentRoleForm } from "~/app/admin/tournaments/roles/_components/tournament-role-form"
+import { TournamentRoleForm } from "~/app/app/tournaments/roles/_components/tournament-role-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { findTournamentRoleById } from "~/server/admin/tournaments/queries"
 

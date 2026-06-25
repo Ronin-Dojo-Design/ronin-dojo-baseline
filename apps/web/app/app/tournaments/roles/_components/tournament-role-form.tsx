@@ -5,7 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
-import { TournamentRoleActions } from "~/app/admin/tournaments/roles/_components/tournament-role-actions"
+import { TournamentRoleActions } from "~/app/app/tournaments/roles/_components/tournament-role-actions"
 import { Button } from "~/components/common/button"
 import {
   Form,

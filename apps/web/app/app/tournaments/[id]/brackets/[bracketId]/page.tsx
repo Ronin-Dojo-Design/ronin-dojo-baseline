@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { BracketViewer } from "~/app/admin/tournaments/_components/bracket-viewer"
+import { BracketViewer } from "~/app/app/tournaments/_components/bracket-viewer"
 import { Wrapper } from "~/components/common/wrapper"
 import { db } from "~/services/db"
 
