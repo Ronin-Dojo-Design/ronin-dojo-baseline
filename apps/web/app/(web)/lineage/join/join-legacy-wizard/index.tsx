@@ -22,14 +22,24 @@ import { useJoinWizard, type ClaimableTree } from "./use-join-wizard"
 export function JoinLegacyWizard({
   claimableTree,
   initialNodeId,
+  compIsLifetime,
   joinOptions,
 }: {
   claimableTree?: ClaimableTree
   initialNodeId?: string
+  compIsLifetime?: boolean
   joinOptions: JoinWizardOptions
 }) {
   const wizard = useJoinWizard({ claimableTree, initialNodeId })
   const errorCount = Object.keys(wizard.form.formState.errors).length
+
+  // Claim-link arrival (?node=) → this is a granted-comp claim path: the claimant
+  // gets comp Elite at claim-finalize, so the Path step locks to a "complimentary
+  // Elite" card instead of the confusing Free/Premium/Elite picker (SESSION_0445 #1).
+  const compClaim = Boolean(initialNodeId)
+  const claimProfileName = initialNodeId
+    ? claimableTree?.members.find(member => member.nodeId === initialNodeId)?.displayName
+    : undefined
 
   // Founder welcome — Bob Bass, the genius behind Black Belt Legacy, claiming his own
   // profile. A personalized, celebratory screen instead of the generic success state.
@@ -122,7 +132,13 @@ export function JoinLegacyWizard({
           )}
         </div>
 
-        <PathStep active={wizard.currentStep === 0} form={wizard.form} />
+        <PathStep
+          active={wizard.currentStep === 0}
+          form={wizard.form}
+          compClaim={compClaim}
+          compIsLifetime={compIsLifetime}
+          claimProfileName={claimProfileName}
+        />
         <IdentityStep active={wizard.currentStep === 1} form={wizard.form} />
         <LineageStep
           active={wizard.currentStep === 2}

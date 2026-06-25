@@ -26,6 +26,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
 import { NavSheet } from "~/components/web/nav/nav-sheet"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
@@ -71,14 +72,9 @@ const MinimalAuthControls = () => {
       <Link href="/auth/login" className={OUTLINE_PILL}>
         {t("navigation.sign_in")}
       </Link>
-      <Button
-        size="sm"
-        variant="fancy"
-        className="rounded-full px-4"
-        render={<Link href="/lineage/join" />}
-      >
+      <JoinCtaButton size="sm" variant="fancy" className="rounded-full px-4">
         {t("navigation.join")}
-      </Button>
+      </JoinCtaButton>
     </>
   )
 }
@@ -254,9 +250,9 @@ const Header = ({
             ) : (
               <>
                 {has("lineage") && (
-                  <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
+                  <JoinCtaButton size="sm" variant="primary">
                     Join Legacy
-                  </Button>
+                  </JoinCtaButton>
                 )}
 
                 <UserMenu />

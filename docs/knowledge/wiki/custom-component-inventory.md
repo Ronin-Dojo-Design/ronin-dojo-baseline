@@ -4,7 +4,7 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-24
+updated: 2026-06-25
 last_agent: claude-session-0441
 pairs_with:
   - docs/sprints/SESSION_0398.md
@@ -352,6 +352,18 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Tool claim/embed/report dialogs | `components/web/dialogs/tool-*.tsx` | Public tool-action dialogs. |
 | `LeadCaptureForm` | `components/web/lead-capture-form.tsx` | Public lead capture. |
 | `CTAForm`, `CTAProof` | `components/web/cta-form.tsx`, `cta-proof.tsx` | Public CTA surfaces with social proof. |
+
+### Join-the-Legacy funnel — `app/(web)/lineage/join/` + `_components/join-modal/` (SESSION_0445)
+
+| Component | File | Purpose |
+| --- | --- | --- |
+| `JoinModalProvider` + `useJoinModal` | `app/(web)/_components/join-modal/join-modal-{provider,context}.tsx` | Layout-mounted, app-wide Join-the-Legacy modal so the nav "Join" CTA pops the wizard **in place** (no page nav — #7). Context is a tiny separate module (no UI imports) so `JoinCtaButton` doesn't drag the wizard into the header bundle. Wizard chunk lazy-loads on first open; remounts fresh each open (no stale success). Inert when `joinOptions` is null (signed-in views). |
+| `JoinCtaButton` | `app/(web)/_components/join-modal/join-cta-button.tsx` | The "Join" CTA — opens the global modal when the provider is mounted; **degrades to a `/lineage/join` link** when not. `onActivate` lets the nav sheet close itself first. Used by `header.tsx` + `nav-sheet.tsx`. |
+| `JoinLegacyDrawer` | `app/(web)/lineage/join/join-legacy-drawer.tsx` | Shared drawer chrome (width + title + copy) rendered by BOTH the page landing drawer and the global modal so they can't drift. Form passed as `children` (direct vs lazy) to preserve lazy-loading. |
+| `CompTierCard` | `app/(web)/lineage/join/join-legacy-wizard/comp-tier-card.tsx` | Locked "Complimentary Elite" card on the Path step for a granted-comp claim (`?node=` — #1). Replaces the Free/Premium/Elite picker; `membershipPath` stays FREE so the server never routes a comp claimant to Stripe. Lifetime (Dirty Dozen) vs first-year via `isLifetimeComp`. |
+| `EvidencePhotoInput` | `app/(web)/lineage/join/join-legacy-wizard/evidence-photo-input.tsx` | **Guest-capable** evidence photo uploader (#3) — pick → upload to R2 via the public, rate-limited `uploadJoinLegacyEvidence` action → thumbnail. Photo-only. NOT the avatar uploader/cropper (round-square crop; auth-gated). |
+
+> Server seams: `uploadJoinLegacyEvidence` (`server/web/lead/public-actions.ts`) is the public R2 upload — IP rate-limited (`evidence_upload`, 15/h), content-sniffed against a **raster** allowlist (SVG rejected — stored-XSS), hard byte ceiling, isolated `lineage-evidence/` key. `isLifetimeComp(label)` (`lib/lineage/dirty-dozen.ts`) is the one shared comp-term predicate (UI + grant). `getJoinWizardOptions` is `unstable_cache`'d (300s).
 
 ---
 

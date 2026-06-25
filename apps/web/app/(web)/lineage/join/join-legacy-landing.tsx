@@ -10,13 +10,6 @@ import {
   type MarqueeColumn,
 } from "~/app/(web)/_components/bbl-teaser/bbl-teaser-types"
 import { Badge } from "~/components/common/badge"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "~/components/common/drawer"
 import { Note } from "~/components/common/note"
 import { cx } from "~/lib/utils"
 import {
@@ -29,6 +22,7 @@ import {
   valueProps,
   valuePropsSection,
 } from "~/app/(web)/(home)/bbl/bbl-landing-content"
+import { JoinLegacyDrawer } from "./join-legacy-drawer"
 import { JoinLegacyForm } from "./join-legacy-form"
 import { LineageMembershipCheckout } from "./lineage-membership-checkout"
 import type { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
@@ -73,6 +67,7 @@ function SectionEyebrow({ children }: { children: React.ReactNode }) {
 export function JoinLegacyLanding({
   claimableTree,
   initialNodeId,
+  compIsLifetime,
   membershipPlans,
   joinOptions,
   isCancelled,
@@ -82,6 +77,8 @@ export function JoinLegacyLanding({
 }: {
   claimableTree: ClaimableTree
   initialNodeId?: string
+  /** Claim-link arrival only: the claimed node is a Dirty Dozen member (lifetime Elite comp). */
+  compIsLifetime?: boolean
   membershipPlans: MembershipPlans
   joinOptions: JoinWizardOptions
   isCancelled: boolean
@@ -338,24 +335,15 @@ export function JoinLegacyLanding({
         <EmailCapture theme="light" />
       </section>
 
-      {/* Join modal — the existing intake form, in a responsive drawer. */}
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent className="max-h-[92vh] w-full max-w-full overflow-x-hidden overflow-y-auto sm:max-w-2xl">
-          <DrawerHeader>
-            <DrawerTitle>Join the Legacy</DrawerTitle>
-            <DrawerDescription>
-              Share your martial arts history and, when signed in, claim your lineage profile.
-            </DrawerDescription>
-          </DrawerHeader>
-          <div className="px-4 pb-6 sm:px-6">
-            <JoinLegacyForm
-              claimableTree={claimableTree}
-              initialNodeId={initialNodeId}
-              joinOptions={joinOptions}
-            />
-          </div>
-        </DrawerContent>
-      </Drawer>
+      {/* Join modal — the existing intake form, in the shared responsive drawer. */}
+      <JoinLegacyDrawer open={open} onOpenChange={setOpen}>
+        <JoinLegacyForm
+          claimableTree={claimableTree}
+          initialNodeId={initialNodeId}
+          compIsLifetime={compIsLifetime}
+          joinOptions={joinOptions}
+        />
+      </JoinLegacyDrawer>
     </div>
   )
 }

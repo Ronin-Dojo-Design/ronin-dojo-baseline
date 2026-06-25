@@ -16,7 +16,6 @@ import { useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
 import {
   Sheet,
   SheetContent,
@@ -24,6 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "~/components/common/sheet"
+import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { NavLink } from "~/components/web/ui/nav-link"
@@ -108,9 +108,9 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
 
             {!user && (
               <div className="flex flex-col gap-2">
-                <Button variant="primary" size="md" render={<Link href="/lineage/join" />}>
+                <JoinCtaButton variant="primary" size="md" onActivate={() => onOpenChange(false)}>
                   {t("navigation.create_account")}
-                </Button>
+                </JoinCtaButton>
                 <Button
                   variant="secondary"
                   size="md"
@@ -170,9 +170,9 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
                 className="p-1 text-base"
                 render={<ThemeSwitcher />}
               />
-              <Button size="sm" variant="primary" render={<Link href="/lineage/join" />}>
+              <JoinCtaButton size="sm" variant="primary" onActivate={() => onOpenChange(false)}>
                 Join Legacy
-              </Button>
+              </JoinCtaButton>
             </div>
           </SheetFooter>
         </SheetContent>

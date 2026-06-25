@@ -10,7 +10,10 @@ import { Container } from "~/components/web/ui/container"
 import { siteConfig } from "~/config/site"
 import { env } from "~/env"
 import { BBL_PREVIEW_COOKIE, getBblPreviewToken } from "~/lib/bbl-preview"
+import { getServerSession } from "~/lib/auth"
 import { getCurrentUserAvatar } from "~/server/web/account/current-user-avatar"
+import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
+import { JoinModalProvider } from "./_components/join-modal/join-modal-provider"
 import { BblFooter } from "./_components/bbl-footer"
 import { BblTeaserPage } from "./_components/bbl-teaser"
 
@@ -37,22 +40,31 @@ export default async function ({ children }: PropsWithChildren) {
   // in the client chrome.
   const userAvatarUrl = await getCurrentUserAvatar(Brand.BBL)
 
+  // Global Join-the-Legacy modal (SESSION_0445 #7): load the wizard options ONCE for
+  // the nav CTA, but only for signed-out visitors — the Join button is hidden when
+  // signed in, so signed-in page views skip the query and the provider stays inert.
+  // getServerSession is request-cached, so this reuses the avatar call's session.
+  const session = await getServerSession()
+  const joinOptions = session?.user ? null : await getJoinWizardOptions()
+
   return (
     <PlausibleProvider
       domain={env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN ?? siteConfig.domain}
       customDomain={env.NEXT_PUBLIC_PLAUSIBLE_URL}
     >
-      <div className="flex flex-col min-h-dvh overflow-clip pt-(--header-inner-offset)">
-        <Header userAvatarUrl={userAvatarUrl} />
+      <JoinModalProvider joinOptions={joinOptions}>
+        <div className="flex flex-col min-h-dvh overflow-clip pt-(--header-inner-offset)">
+          <Header userAvatarUrl={userAvatarUrl} />
 
-        <Backdrop isFixed />
+          <Backdrop isFixed />
 
-        <Container render={<Wrapper className="grow py-fluid-md" />}>{children}</Container>
+          <Container render={<Wrapper className="grow py-fluid-md" />}>{children}</Container>
 
-        <BblFooter />
-      </div>
+          <BblFooter />
+        </div>
 
-      <FeedbackWidget />
+        <FeedbackWidget />
+      </JoinModalProvider>
     </PlausibleProvider>
   )
 }

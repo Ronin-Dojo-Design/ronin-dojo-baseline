@@ -1,12 +1,15 @@
 "use server"
 
+import { fileTypeFromBuffer } from "file-type"
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { z } from "zod"
 import { Brand, type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getRequestOrigin } from "~/lib/brand-context"
-import { BBL_FOUNDER_NODE_SLUG, DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
+import { uploadToS3Storage } from "~/lib/media"
+import { getIP, isRateLimited } from "~/lib/rate-limiter"
+import { BBL_FOUNDER_NODE_SLUG, isLifetimeComp } from "~/lib/lineage/dirty-dozen"
 import {
   type BblJoinLegacyMembershipPath,
   notifyAdminOfBblJoinLegacy,
@@ -122,6 +125,55 @@ const checkPublicLeadRateLimit = async ({
     throw new Error("Too many submissions. Please try again later.")
   }
 }
+
+const EVIDENCE_MAX_BYTES = 8 * 1024 * 1024
+// Allowlist the RASTER image types we accept, sniffed from the bytes. Critically
+// EXCLUDES SVG: an SVG can carry inline <script>, so accepting one and serving its
+// public R2 URL would be a stored-XSS vector when the link is opened directly.
+// `startsWith("image/")` would let `image/svg+xml` through — an allowlist won't.
+const EVIDENCE_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"])
+
+const evidencePhotoSchema = z.object({
+  file: z
+    .instanceof(File)
+    .refine(f => f.size > 0, "The image is empty.")
+    .refine(f => f.size <= EVIDENCE_MAX_BYTES, "Image must be under 8MB.")
+    .refine(f => f.type.startsWith("image/"), "Only image files are allowed."),
+})
+
+/**
+ * Public (unauthenticated) evidence-photo upload for the Join-the-Legacy intake
+ * (SESSION_0445 #3). Lets a guest attach a certificate/proof image without an
+ * account (the wizard is account-optional). Rate-limited by IP; the bytes get a
+ * hard server-side size ceiling and are content-sniffed against a raster-image
+ * allowlist (the declared MIME is not trusted; SVG is rejected); stored under an
+ * isolated `lineage-evidence/` prefix for steward review. Returns the public URL,
+ * which the wizard writes into `evidenceUrl`.
+ */
+export const uploadJoinLegacyEvidence = publicActionClient
+  .inputSchema(evidencePhotoSchema)
+  .action(async ({ parsedInput }) => {
+    if (await isRateLimited(await getIP(), "evidence_upload")) {
+      throw new Error("Too many uploads. Please try again in a bit.")
+    }
+    const buffer = Buffer.from(await parsedInput.file.arrayBuffer())
+    // Hard server-side ceiling — the Zod refine trusts the File's self-reported size,
+    // which a direct (non-browser) caller controls.
+    if (buffer.byteLength > EVIDENCE_MAX_BYTES) {
+      throw new Error("Image must be under 8MB.")
+    }
+    // Trust the bytes, not the declared type — sniff + allowlist raster images (no SVG).
+    const sniffed = await fileTypeFromBuffer(buffer)
+    if (!sniffed || !EVIDENCE_IMAGE_MIMES.has(sniffed.mime)) {
+      throw new Error("Upload a JPEG, PNG, WebP, or AVIF image.")
+    }
+    const url = await uploadToS3Storage(
+      buffer,
+      `lineage-evidence/${crypto.randomUUID()}`,
+      Brand.BBL,
+    )
+    return { url }
+  })
 
 /**
  * Public (unauthenticated) lead capture action.
@@ -349,9 +401,9 @@ export const createJoinLegacyInterest = publicActionClient
         : null
     const isClaimOfExistingNode = Boolean(claimTree && claimMember)
 
-    // Dirty Dozen → lifetime Elite comp; everyone else → one free year. (Byte-matches the
-    // seeded visual-group label, the single source of truth shared with claim-finalize.)
-    const claimIsLifetime = claimMember?.visualGroup?.label === DIRTY_DOZEN_LABEL
+    // Dirty Dozen → lifetime Elite comp; everyone else → one free year. Shared predicate
+    // with the claim card UI + claim-finalize so the term shown never diverges from the grant.
+    const claimIsLifetime = isLifetimeComp(claimMember?.visualGroup?.label)
     // The founder (Bob Bass) claiming his OWN node gets the celebratory welcome — detected
     // deterministically off the node slug, never a name string.
     const claimIsFounder = claimMember?.node?.slug === BBL_FOUNDER_NODE_SLUG

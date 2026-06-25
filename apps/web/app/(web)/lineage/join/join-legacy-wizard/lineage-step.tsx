@@ -20,6 +20,7 @@ import {
 import { TextArea } from "~/components/common/textarea"
 import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
 import { bblPortalFontClass } from "./constants"
+import { EvidencePhotoInput } from "./evidence-photo-input"
 import type { JoinLegacyFormValues } from "./schema"
 import { StepShell } from "./step-shell"
 import type { ClaimableTree } from "./use-join-wizard"
@@ -224,16 +225,16 @@ export function LineageStep({
           name="evidenceUrl"
           render={({ field }) => (
             <FormItem className="md:col-span-2">
-              <FormLabel>Reference / evidence URL</FormLabel>
+              <FormLabel>Certificate or evidence photo</FormLabel>
               <FormControl>
-                <Input
-                  type="url"
-                  inputMode="url"
-                  size="lg"
-                  placeholder="Certificate, academy bio, Smoothcomp, IBJJF..."
-                  {...field}
+                <EvidencePhotoInput
+                  value={typeof field.value === "string" ? field.value : ""}
+                  onChange={field.onChange}
                 />
               </FormControl>
+              <Note className="text-xs">
+                Upload a photo of a belt certificate or other proof for steward review.
+              </Note>
               <FormMessage />
             </FormItem>
           )}

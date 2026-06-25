@@ -92,6 +92,15 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(5, "1 h"), // 5 invite generations per hour per actor
       }),
+      // @added SESSION_0445 #3 — public, UNAUTHENTICATED evidence-photo upload on the
+      // Join-the-Legacy intake. Keyed on client IP; caps storage abuse of the public
+      // upload surface while leaving room for a few cert photos + retries. Fail-open in
+      // dev when redis is null (uploads work locally).
+      evidence_upload: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(15, "1 h"), // 15 evidence uploads per hour per IP
+      }),
     }
   : null
 

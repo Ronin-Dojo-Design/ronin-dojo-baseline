@@ -11,6 +11,8 @@ type JoinLegacyFormProps = {
   } | null
   /** Node to preselect in the claim picker (from `?node=` — e.g. a View A card "Claim"). */
   initialNodeId?: string
+  /** Claim-link arrival only: claimed node is Dirty Dozen → lifetime (vs first-year) Elite comp. */
+  compIsLifetime?: boolean
   /** Registered option lists for the creatable comboboxes (BBL-scoped, public). */
   joinOptions: JoinWizardOptions
 }

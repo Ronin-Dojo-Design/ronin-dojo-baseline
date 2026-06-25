@@ -1,5 +1,6 @@
 import "server-only"
 
+import { unstable_cache } from "next/cache"
 import { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
@@ -87,13 +88,22 @@ async function getTreeOptions(): Promise<JoinNamedOption[]> {
   })
 }
 
-/** Load all four wizard option lists in parallel. */
-export async function getJoinWizardOptions(): Promise<JoinWizardOptions> {
-  const [ranks, schools, instructors, trees] = await Promise.all([
-    getRankOptions(),
-    getSchoolOptions(),
-    getInstructorOptions(),
-    getTreeOptions(),
-  ])
-  return { ranks, schools, instructors, trees }
-}
+/**
+ * Load all four wizard option lists in parallel. Cross-request cached (300s): the
+ * lists are slow-moving public reference data shared by every visitor, and the
+ * global join modal (SESSION_0445 #7) loads them on every signed-out page render —
+ * the cache keeps that to one query batch every 5 min instead of one per page view.
+ */
+export const getJoinWizardOptions = unstable_cache(
+  async (): Promise<JoinWizardOptions> => {
+    const [ranks, schools, instructors, trees] = await Promise.all([
+      getRankOptions(),
+      getSchoolOptions(),
+      getInstructorOptions(),
+      getTreeOptions(),
+    ])
+    return { ranks, schools, instructors, trees }
+  },
+  ["join-wizard-options"],
+  { revalidate: 300, tags: ["join-wizard-options"] },
+)

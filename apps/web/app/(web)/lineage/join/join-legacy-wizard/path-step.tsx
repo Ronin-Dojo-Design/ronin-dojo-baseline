@@ -2,6 +2,7 @@ import { CheckIcon, SparklesIcon } from "lucide-react"
 import { FormControl, FormField, FormItem, FormMessage } from "~/components/common/form"
 import { RadioGroup, RadioGroupItem } from "~/components/common/radio-group"
 import { cx } from "~/lib/utils"
+import { CompTierCard } from "./comp-tier-card"
 import { goalLabels, pathCards } from "./constants"
 import type { JoinLegacyFormValues } from "./schema"
 import { StepShell } from "./step-shell"
@@ -10,12 +11,34 @@ import type { UseFormReturn } from "react-hook-form"
 export function PathStep({
   active,
   form,
+  compClaim = false,
+  compIsLifetime = false,
+  claimProfileName,
 }: {
   active: boolean
   form: UseFormReturn<JoinLegacyFormValues>
+  /** Claim-link arrival → lock to the complimentary-Elite card (no tier picker). */
+  compClaim?: boolean
+  /** Dirty Dozen → lifetime Elite; otherwise the first year is complimentary. */
+  compIsLifetime?: boolean
+  /** Display name of the profile being claimed (for the comp card copy). */
+  claimProfileName?: string
 }) {
   const selectedPath = form.watch("membershipPath")
   const selectedGoal = form.watch("primaryGoal")
+
+  // Granted-comp claim path (?node=): swap the Free/Premium/Elite picker for a locked
+  // complimentary-Elite card. `membershipPath` stays at its FREE default under the hood
+  // so the server routes them to the claim magic link, never Stripe checkout.
+  if (compClaim) {
+    return (
+      <CompTierCard
+        active={active}
+        compIsLifetime={compIsLifetime}
+        claimProfileName={claimProfileName}
+      />
+    )
+  }
 
   return (
     <StepShell

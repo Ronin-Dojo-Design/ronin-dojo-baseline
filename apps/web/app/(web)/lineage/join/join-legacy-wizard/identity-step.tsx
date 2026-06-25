@@ -155,7 +155,7 @@ export function IdentityStep({
           name="location"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City / region</FormLabel>
+              <FormLabel>Address</FormLabel>
               <FormControl>
                 <Input
                   size="lg"

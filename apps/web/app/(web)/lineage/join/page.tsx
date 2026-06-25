@@ -5,6 +5,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
+import { isLifetimeComp } from "~/lib/lineage/dirty-dozen"
 import { db } from "~/services/db"
 import { BblHeritage } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-heritage"
 import { BblVideo } from "~/app/(web)/(home)/bbl/bbl-landing/bbl-video"
@@ -38,6 +39,11 @@ const getData = cache(async (nodeId?: string) => {
           orderBy: { visualSortOrder: "asc" },
           select: {
             nodeId: true,
+            // Visual-group label drives the comp term shown on the locked tier card:
+            // Dirty Dozen → lifetime Elite, everyone else → first-year-comp Elite. SAME
+            // signal `createJoinLegacyInterest` uses to grant the comp, so the UI never
+            // contradicts the grant (SESSION_0445 #1).
+            visualGroup: { select: { label: true } },
             node: {
               select: {
                 passport: { select: { displayName: true, user: { select: { name: true } } } },
@@ -58,6 +64,13 @@ const getData = cache(async (nodeId?: string) => {
   // visitor still lands on a usable form).
   const claimableTree = nodeTree ?? (await findClaimableTree(false))
 
+  // For a claim-link arrival (?node=), is the claimed node a Dirty Dozen member?
+  // → the comp tier card shows "Elite for life" vs "first year complimentary".
+  const claimMember = nodeId
+    ? claimableTree?.members.find(member => member.nodeId === nodeId)
+    : undefined
+  const compIsLifetime = isLifetimeComp(claimMember?.visualGroup?.label)
+
   return {
     ...(await getPageData(url, title, description, {
       breadcrumbs: [{ url, title }],
@@ -73,6 +86,7 @@ const getData = cache(async (nodeId?: string) => {
           })),
         }
       : null,
+    compIsLifetime,
     membershipPlans,
     joinOptions,
   }
@@ -91,7 +105,9 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
   const params = await searchParams
   const isCancelled = params?.cancelled === "true"
   const isSubmitted = params?.submitted === "true"
-  const { claimableTree, membershipPlans, joinOptions } = await getData(params?.node)
+  const { claimableTree, compIsLifetime, membershipPlans, joinOptions } = await getData(
+    params?.node,
+  )
 
   // Preselect the claim node only when it's an actual claimable member of the
   // resolved tree (e.g. arriving from a View A card "Claim this profile").
@@ -108,6 +124,7 @@ export default async function JoinLegacyPage({ searchParams }: JoinLegacyPagePro
       <JoinLegacyLanding
         claimableTree={claimableTree}
         initialNodeId={initialNodeId}
+        compIsLifetime={compIsLifetime}
         membershipPlans={membershipPlans}
         joinOptions={joinOptions}
         isCancelled={isCancelled}
