@@ -2,8 +2,7 @@
 
 Standing context for every Claude Code session in this repo: **session operations** (how to run a
 session) and the **repo & product strategy** (the platform/monorepo model). Kept tight — this loads
-into context each session. The wiki-maintenance rules were extracted to a referenced doc (read on
-demand, not every turn) per ADR 0033 D7.
+into context each session; detailed rules live in referenced docs, read on demand.
 
 ## Session operations (bow-in / bow-out / orchestration)
 
@@ -41,10 +40,11 @@ demand, not every turn) per ADR 0033 D7.
 - Route findings to their canonical ledger via the **finding router** (closing.md §6.7):
   wiring→`wiring-ledger` (WL), drift→`drift-register` (D), SOP miss→`failed-steps-log` (FS),
   unclean close→`incidents`, smoke boundary→`manual-boundary-registry`, decision→ADR.
-- **Standing authorization: stage, commit (conventional message), and push to `main`
-  on completion** — trunk-based flow for this repo. Gates (typecheck / oxlint / oxfmt / tests /
-  wiki-lint) must pass first; never force-push; run the FS-0024 git guard.
-  *(Remove this bullet if you'd rather confirm each push.)*
+- **Push policy: explicit per-push authorization.** Stage + commit (conventional message) on
+  completion, but **wait for the operator's "go" before any push / PR merge / deploy** — build,
+  verify, show, then push on the word. Trunk-based flow (commits land on `main`); gates
+  (typecheck / oxlint / oxfmt / tests / wiki-lint) must pass first; never force-push; run the
+  FS-0024 git guard. (Operator standing preference — see the `explicit-push-authorization` memory.)
 - **Push cadence:** one push per session at close — don't push mid-session. Production
   deploys are decoupled from pushes: `vercel.json`'s `ignoreCommand` skips the prod build
   unless `apps/web` / `pnpm-lock.yaml` / `package.json` / `vercel.json` changed, so docs /
