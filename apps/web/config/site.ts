@@ -48,15 +48,14 @@ export const getBrandSiteConfig = (_brand: Brand): BrandSiteConfig => ({
 })
 
 /**
- * Default site config — backward compatible. Falls back to Baseline Martial Arts
- * for contexts where brand isn't resolved yet (static imports, build-time).
- * NOTE (SESSION_0447): `name`/`slug` still read "Baseline" — a static metadata
- * fallback (runtime uses `getBrandSiteConfig(BBL)`); left for a follow-up metadata
- * destale, not changed here to keep this pass behavior-preserving.
+ * Default site config — the static fallback for contexts where brand isn't resolved
+ * yet (static imports, build-time, the RSS feed title). Single-brand collapse: aligned
+ * to BBL to match `getBrandSiteConfig(BBL)` / `bblConfig` (was "Baseline Martial Arts" —
+ * the SESSION_0447 metadata destale, completed SESSION_0449).
  */
 export const siteConfig = {
-  name: "Baseline Martial Arts",
-  slug: "baseline-martial-arts",
+  name: "Black Belt Legacy",
+  slug: "black-belt-legacy",
   email: "welcome@blackbeltlegacy.com",
   url: env.NEXT_PUBLIC_SITE_URL,
   domain: getDomain(env.NEXT_PUBLIC_SITE_URL),

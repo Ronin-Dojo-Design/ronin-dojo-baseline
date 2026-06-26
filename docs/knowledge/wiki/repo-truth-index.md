@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-25
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
@@ -83,21 +83,15 @@ The schema is the platform spine for: identity, memberships, tournaments, regist
 #### D. Brand truth
 **Canonical source:**
 
-- `docs/architecture/decisions/0004-multi-brand-as-column.md`
-- host-derived brand behavior in middleware
-- `activeBrandId` logic in auth/brand context docs
+- `docs/architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md` (single-brand collapse — supersedes the multi-brand model)
+- `docs/architecture/decisions/0004-multi-brand-as-column.md` (historical — the original 4-brand-as-column model)
+- host→brand security gate: `resolveBrand` / `BRAND_TRUSTED_ORIGINS` in `lib/brand-context.ts`
 
 Brand is a data and routing concern, not a separate backend stack.
 
-Current truth:
+**Current truth — SINGLE-BRAND collapse (ADR 0034 + SESSION_0447):** the app is collapsed to **BBL only** (Black Belt Legacy, `blackbeltlegacy.com` — the sole live brand). The 4-value `Brand` enum (`BASELINE_MARTIAL_ARTS`, `BBL`, `WEKAF`, `RONIN_DOJO_DESIGN`) still exists in the schema as a **vestige**, but nothing is multi-brand at runtime: `getBrandSiteConfig`, chrome, SEO, and `config/site` all resolve to BBL (the `_brand` arg is ignored). The gated **Stage-2** cleanup (its own PR) drops the `brand` column (~42 models) + the `Brand` enum + the `Brand.BBL` literals.
 
-- `BASELINE_MARTIAL_ARTS` = flagship outward training brand
-- `BBL` = Black Belt Legacy
-- `WEKAF` = WEKAF USA
-- `RONIN_DOJO_DESIGN` = umbrella/admin/studio lane
-- `TUFFBUFFS` is intentionally not first-class in the new enum right now
-
-**Rule:** Do not casually reintroduce TuffBuffs as a first-class new-platform enum without an explicit migration reason.
+**KEEP-FOREVER:** the host→brand SECURITY gate — `resolveBrand` / `BRAND_TRUSTED_ORIGINS` / `HOST_TO_BRAND` (`lib/brand-context.ts`, MB-002) — is separable from and survives the schema drop (it gates trusted origins for `stripe-webhook` + `lib/auth`). `TUFFBUFFS` was never first-class in the enum.
 
 #### E. Auth truth
 **Canonical source:** `docs/architecture/auth.md`

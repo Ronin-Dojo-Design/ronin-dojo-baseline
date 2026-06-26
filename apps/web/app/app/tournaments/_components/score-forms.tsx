@@ -15,10 +15,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/too
 // -----------------------------------------------------------------------------
 
 /** 3 knockdowns/disarms = TKO */
-export const TKO_THRESHOLD = 3
+const TKO_THRESHOLD = 3
 
 /** Eskrima/WEKAF default rounds */
-export const ESKRIMA_DEFAULT_ROUNDS = 3
+const ESKRIMA_DEFAULT_ROUNDS = 3
 
 /** Scoring guide tooltips */
 const SCORE_GUIDE = {
