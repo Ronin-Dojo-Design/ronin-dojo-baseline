@@ -6,18 +6,10 @@ import type { ComponentProps } from "react"
 import { toast } from "sonner"
 import { z } from "zod/v4"
 import { Button } from "~/components/common/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "~/components/common/form"
+import { Form } from "~/components/common/form"
 import { H3 } from "~/components/common/heading"
-import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
+import { ThemeFieldset } from "~/components/web/forms/theme-fieldset"
 import { upsertBrandSettings } from "~/server/admin/brand-settings/actions"
 import type { findBrandSettings } from "~/server/admin/brand-settings/queries"
 
@@ -91,111 +83,19 @@ export function BrandSettingsForm({ settings, className, ...props }: BrandSettin
             )}
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FormField
-              control={form.control}
-              name="primaryColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Primary Color</FormLabel>
-                  <FormControl>
-                    <Input placeholder="234 98% 61%" {...field} />
-                  </FormControl>
-                  <FormDescription>HSL values without hsl() wrapper</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="primaryFgColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Primary Foreground</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0 0% 98%" {...field} />
-                  </FormControl>
-                  <FormDescription>Text color on primary background</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="accentColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Accent Color</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0 0% 96%" {...field} />
-                  </FormControl>
-                  <FormDescription>Secondary highlight color</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="accentFgColor"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Accent Foreground</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0 0% 9%" {...field} />
-                  </FormControl>
-                  <FormDescription>Text color on accent background</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <FormField
-              control={form.control}
-              name="logoUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Logo URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/images/brands/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="faviconUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Favicon URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/images/brands/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="ogImageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>OG Image URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="/images/brands/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+          <ThemeFieldset
+            placeholders={{
+              primaryColor: "234 98% 61%",
+              primaryFgColor: "0 0% 98%",
+              accentColor: "0 0% 96%",
+              accentFgColor: "0 0% 9%",
+              logoUrl: "/images/brands/...",
+              faviconUrl: "/images/brands/...",
+              ogImageUrl: "/images/brands/...",
+            }}
+            accentColorDescription="Secondary highlight color"
+            imageGridCols="3"
+          />
 
           <Stack>
             <Button type="submit" disabled={form.formState.isSubmitting}>
