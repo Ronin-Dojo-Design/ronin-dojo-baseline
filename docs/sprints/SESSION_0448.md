@@ -213,6 +213,24 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
   Browser-verified live (7 controls render, cropper modal mounts on file-select — screenshot confirmed);
   faithful build GREEN 194/194. So `/app` now has the admin avatar-uploader the redirect-shadowing hid.
 
+### Post-bow-out extension (TASK_07–09 — session grew past the initial close)
+
+- **Repo-wide quality sweep (TASK_07).** fallow health = 89.8 (good), dup 11.6% (normal); the dead-code
+  headline confirmed inflated. Applied 4 verified behavior-preserving wins: React `cache()` on
+  `findBrandSettings` (root layout read it 2×/req); deleted dead `components/common/field.tsx` +
+  `server/web/entitlement/manage-entitlements.ts`; dropped dead `findMediaById`/`findMediaAttachments`.
+- **`<ThemeFieldset>` extraction (TASK_08).** The SESSION_0447-named dedup — lifted the identical 7-field
+  color/asset fieldset out of the 3 theme forms into `components/web/forms/theme-fieldset.tsx` (reads
+  `control` via `useFormContext`). −~225 dup lines; the 3-way clone family collapsed; browser-verified.
+- **⚠ Org-settings access fix (TASK_09 — operator-directed, ships authz + a public-page change to prod).**
+  The platform admin was wrongly locked out of self-service org settings: (1) `hasOrgAdminAccess` now grants
+  `user.role === "admin"` (the WP-imported orgs have `ownerId: null` → platform staff got OrgAccessDenied);
+  (2) `getOrganizationBySlug` resolves by slug alone (brand-agnostic) so legacy non-BBL orgs stop 404ing.
+  Verified the operator now reaches the theme form on a null-owner BBL org AND their BASELINE org. **Two
+  blast-radius notes for review:** the authz grant also widens *mutation* access (`assertOrgAdminAccess`) for
+  **all 2 `role:admin` users** to every org; and the brand-agnostic lookup now resolves **non-BBL orgs on
+  public `/organizations/[slug]` pages** (delta = the legit BASELINE org + a couple of test orgs).
+
 ## Decisions resolved
 
 - **Commit cadence (operator):** per-section commits + ONE final faithful build (not per-pair with a build
@@ -371,6 +389,25 @@ Pick (a)/(b)/(c) per operator. If (a): grep the 3 theme-form files, extract the 
   `/app/lineage/[treeId]` (browser-verified — 7 controls render, cropper mounts), making `/app` a UX superset
   of pre-migration prod.
 - **Kaizen aggregate:** 9.5/10.
+
+### Post-bow-out extension review (TASK_07–09) — Giddy
+
+- **Quality sweep (TASK_07–08):** pass. Behavior-preserving; each dead-code removal grep-verified, the
+  `cache()` and ThemeFieldset changes faithful-built + browser-verified; one bad agent rec (deleting
+  `lib/i18n.ts locales`) was caught and skipped. No concern.
+- **⚠ Org-settings fix (TASK_09): pass-with-flags — the part of the stack that warrants the most scrutiny
+  before it ships, because it changes authorization and public resolution on prod:**
+  1. **Authz widening.** `hasOrgAdminAccess` now returns true for `user.role === "admin"`; since
+     `assertOrgAdminAccess` is the *mutation* gate for the self-service org actions, every platform admin can
+     now WRITE any org's settings. There are **2** `role:admin` users — confirm the second is trusted with
+     that scope. Operator-directed + reasonable (platform admin ⊃ org admin), but a real authz expansion.
+  2. **Public exposure delta.** Brand-agnostic `getOrganizationBySlug` makes non-BBL orgs resolve on the
+     public `/organizations/[slug]` pages (only `!view` gating). Delta = the legit BASELINE org (fine) + a
+     couple of test orgs that probably shouldn't be public — handled by the test-org cleanup step next.
+- **Verification coverage:** strong on build (5 faithful Vercel-parity builds GREEN) + browser; thinner on
+  the authz/public runtime semantics (verified vs prodsnap, not prod) → the reason for the PR path.
+- **Merge recommendation:** PR (branch → CI + Vercel preview, no prod deploy until merge) over a straight
+  push-to-main, with an independent review pass (`/code-review ultra` or `/pr-fix-loop`) before merge.
 
 ## ADR / ubiquitous-language check
 
