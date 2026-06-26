@@ -30,6 +30,10 @@ export const getOrganizationBySlug = async (_brand: string, slug: string) => {
   // (SESSION_0448 — operator directive.)
   return db.organization.findFirst({
     where: { slug },
+    // Deterministic tie-break: `slug` is only `@@unique([brand, slug])`, not globally unique,
+    // so a same-slug/different-brand pair (none today — 0 dups verified) would otherwise resolve
+    // arbitrarily. Oldest org wins until Stage-2 makes `slug` globally unique and drops `brand`.
+    orderBy: { createdAt: "asc" },
     select: organizationDetailPayload,
   })
 }
