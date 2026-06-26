@@ -181,6 +181,7 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
 | SESSION_0448_TASK_04 | landed | fallow-fix-loop: 1 introduced finding (orphaned `lineage-avatar-action` → deleted `1b6666b8`); dead-code 5→4 (introduced 0, rest inherited/FP); dup net-decreased (10 admin copies deleted); complexity all inherited. 2 fallow finders + 2 code-review finders = **4 independent reviewers, all clean**. Drift: 13/14 page-pairs at parity; 1 gap surfaced (lineage avatar-uploader — see Open decisions). |
 | SESSION_0448_TASK_05 | landed | Faithful build GREEN (194/194); bow-out + full close done; push held for operator "go". |
 | SESSION_0448_TASK_06 | landed | **Operator chose restore+wire** the avatar-uploader parity gap. Restored `lineage-avatar-action.tsx` (verbatim from `5f5bdc41` — no repoint) into `app/app/lineage/_components/` + wired into `/app/lineage/[treeId]/page.tsx` per member with a `passport.id` (`7a794178`). Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, **browser-verified** (7 avatar controls render for placeholder passports; cropper modal mounts on file-select — screenshot confirmed; stopped before "Apply" to avoid a real-R2 write — the action path is unchanged/proven 0437). Page gated by `requireLineageManagementAccess`; action admin-gated → no new auth surface. |
+| SESSION_0448_TASK_08 | landed | **`<ThemeFieldset>` extraction** (operator: execute now). Lifted the identical 7-field color/asset fieldset out of `brand-settings-form` + `org-theme-form` + `self-service-theme-form` → `components/web/forms/theme-fieldset.tsx` (reads `control` via `useFormContext` to dodge RHF's invariant `Control` typing across 3 differently-typed schemas); every per-form diff is a prop (placeholders, accentColor description, `imageGridCols` as static class literals). `94aa4787`. Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, brand-settings + org-theme **browser-verified** (correct per-form placeholders/descriptions/grid; screenshot = identical layout), self-service same component + verified props (page org-ownership-gated for dev user). fallow: the 3-way clone family **collapsed** (~225 dup lines removed; brand-settings out of the family). |
 | SESSION_0448_TASK_07 | landed | **Repo-wide quality sweep** (operator: fallow health+audit + fix-loop). Health = **89.8 (good)**, dup 11.6% (normal); dead-code headline (235 exports/80 types) confirmed **inflated** (Zod-schema/DTO/convention/test-only FPs — SESSION_0446 lesson). 3 parallel verifier agents. **Applied 4 verified behavior-preserving wins** (`b0d0f816`): React `cache()` on `findBrandSettings` (root layout read it 2×/request); deleted dead `components/common/field.tsx` + `server/web/entitlement/manage-entitlements.ts`; dropped dead `findMediaById`/`findMediaAttachments`. Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, home 200 + brand CSS injects, fallow 0-introduced. **Skipped** `lib/i18n.ts` `locales` (load-bearing for the `Locale` type — agent missed it; verified). Bigger refactors → proposals (below). |
 
 ## What landed
@@ -246,6 +247,11 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
 | `apps/web/server/admin/*`, `config/app-redirects.ts`, `next.config.ts` | **untouched** (confirmed by empty diff-stat) |
 | `app/app/lineage/_components/lineage-avatar-action.tsx` | **TASK_06** restored (verbatim from `5f5bdc41`, no repoint) — admin avatar-uploader |
 | `app/app/lineage/[treeId]/page.tsx` | **TASK_06** wired `LineageAvatarAction` per member with a `passport.id` |
+| `server/admin/brand-settings/queries.ts` | **TASK_07** `findBrandSettings` wrapped in React `cache()` (root layout read it 2×/request) |
+| `components/common/field.tsx`, `server/web/entitlement/manage-entitlements.ts` | **TASK_07** deleted (verified-dead) |
+| `server/admin/media/queries.ts` | **TASK_07** dropped dead `findMediaById` + `findMediaAttachments` |
+| `components/web/forms/theme-fieldset.tsx` | **TASK_08** new — shared `<ThemeFieldset>` (the SESSION_0447-named extraction) |
+| `app/app/brand-settings/_components/brand-settings-form.tsx`, `app/app/organizations/[id]/theme/_components/org-theme-form.tsx`, `app/(web)/organizations/[slug]/settings/theme/_components/self-service-theme-form.tsx` | **TASK_08** repointed to `<ThemeFieldset>` (−~225 dup lines) |
 | `docs/sprints/SESSION_0448.md`, `docs/knowledge/wiki/index.md` | this session file + index row |
 
 ## Verification
@@ -280,12 +286,10 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
 These are behavior-preserving but bigger/regression-trap-prone, so they were NOT auto-applied — each needs
 its own focused pass + verification:
 
-- **`<ThemeFieldset>` extraction (HIGH value, MEDIUM risk).** The 3 theme forms (`self-service-theme-form`,
-  `brand-settings-form`, `org-theme-form`) share a 7-field color/asset fieldset (~143 dup lines). Extract a
-  fully-parameterized `components/web/forms/theme-fieldset.tsx`. **Regression trap (verified by agent):** the
-  per-form **placeholder strings + the accentColor description differ** across the three — every placeholder
-  + the description + `imageGridCols` must be props, or 2 forms regress. Schema/action/toasts/button stay in
-  each consumer. Needs a 3-form browser verify.
+- **✅ `<ThemeFieldset>` extraction — DONE (TASK_08, `94aa4787`).** Executed per operator. The regression
+  trap (per-form placeholders + accentColor description) was handled by making every difference a prop;
+  `control` reads from `useFormContext` (RHF `Control` is invariant — couldn't widen across the 3 schemas).
+  Browser-verified behavior-identical. ~225 dup lines removed.
 - **School/org-general schema dedup (LOW value, LOW risk).** `school-form` ↔ `org-general-info-form` share
   an identical 10-field zod schema + defaultValues (~30 lines) but the rendered JSX is intentionally
   DIVERGENT (school has a ProfileHero preview, different labels/layout, omits FormMessage on 4 fields). Only

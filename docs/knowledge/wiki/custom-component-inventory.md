@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-06-25
-last_agent: claude-session-0441
+last_agent: claude-session-0448
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -374,7 +374,8 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Component | File | Purpose |
 | --- | --- | --- |
 | Settings index | `settings/page.tsx` | Section-card hub (General Info, Members, Invite Links, Theme & Branding). `hasOrgAdminAccess` gate; non-admins get `OrgAccessDenied`. SESSION_0295 (Theme), SESSION_0296 (Members), SESSION_0298 (General + Invites). |
-| `SelfServiceThemeForm` | `settings/theme/_components/self-service-theme-form.tsx` | Org owner/ORG_ADMIN theme editor → `updateOrgThemeSelfService`. SESSION_0294. |
+| `SelfServiceThemeForm` | `settings/theme/_components/self-service-theme-form.tsx` | Org owner/ORG_ADMIN theme editor → `updateOrgThemeSelfService`. SESSION_0294. Renders the shared `<ThemeFieldset>` (SESSION_0448). |
+| `ThemeFieldset` | `components/web/forms/theme-fieldset.tsx` | **Shared** 7-field color/asset fieldset (primary/primaryFg/accent/accentFg + logo/favicon/og) used by all 3 theme editors — `SelfServiceThemeForm`, admin `OrgThemeForm`, admin `BrandSettingsForm`. Reads `control` via `useFormContext` (the 3 host forms have differently-typed schemas — RHF `Control` is invariant). Per-form differences are props: `placeholders` (each form's own copy), `accentColorDescription`, `imageGridCols` ("1" \| "3", emitted as static class literals so Tailwind JIT keeps both). Preview swatch / heading / submit / schema / action stay in each consumer. SESSION_0448 (the SESSION_0447-named extraction). |
 | General-info page + `OrgGeneralInfoForm` | `settings/general/page.tsx`, `_components/org-general-info-form.tsx` | Edit org name/slug/description/contact/address → `updateOrgGeneralInfo` (assertOrgAdminAccess). Reuses the dashboard school-form field set but is wired to the org-scoped action (consistent gating). Legacy `updateOrganization` left untouched — see drift D-017. SESSION_0298. |
 | Invites page | `settings/invites/page.tsx` | List + generate/revoke org invite links. `ButtonGroup` Active \| All filter rail via `?status=` searchParam; rows show `/invite/{code}`, status badge, `claims · used/max · expires`. SESSION_0298. |
 | `GenerateInviteForm` | `settings/invites/_components/generate-invite-form.tsx` | Generate button + optional maxUses/expiry → `createOrgInvite`; copies the new `/invite/{code}` link to clipboard on success. SESSION_0298. |
