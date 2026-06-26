@@ -4,8 +4,8 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-25
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - aliases-and-canonical-ids
   - manual-boundary-registry
