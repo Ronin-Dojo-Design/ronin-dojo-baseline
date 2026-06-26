@@ -181,6 +181,7 @@ NOT `bun run build` (prebuild runs `db:migrate deploy` against prodsnap).
 | SESSION_0448_TASK_04 | landed | fallow-fix-loop: 1 introduced finding (orphaned `lineage-avatar-action` → deleted `1b6666b8`); dead-code 5→4 (introduced 0, rest inherited/FP); dup net-decreased (10 admin copies deleted); complexity all inherited. 2 fallow finders + 2 code-review finders = **4 independent reviewers, all clean**. Drift: 13/14 page-pairs at parity; 1 gap surfaced (lineage avatar-uploader — see Open decisions). |
 | SESSION_0448_TASK_05 | landed | Faithful build GREEN (194/194); bow-out + full close done; push held for operator "go". |
 | SESSION_0448_TASK_06 | landed | **Operator chose restore+wire** the avatar-uploader parity gap. Restored `lineage-avatar-action.tsx` (verbatim from `5f5bdc41` — no repoint) into `app/app/lineage/_components/` + wired into `/app/lineage/[treeId]/page.tsx` per member with a `passport.id` (`7a794178`). Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, **browser-verified** (7 avatar controls render for placeholder passports; cropper modal mounts on file-select — screenshot confirmed; stopped before "Apply" to avoid a real-R2 write — the action path is unchanged/proven 0437). Page gated by `requireLineageManagementAccess`; action admin-gated → no new auth surface. |
+| SESSION_0448_TASK_07 | landed | **Repo-wide quality sweep** (operator: fallow health+audit + fix-loop). Health = **89.8 (good)**, dup 11.6% (normal); dead-code headline (235 exports/80 types) confirmed **inflated** (Zod-schema/DTO/convention/test-only FPs — SESSION_0446 lesson). 3 parallel verifier agents. **Applied 4 verified behavior-preserving wins** (`b0d0f816`): React `cache()` on `findBrandSettings` (root layout read it 2×/request); deleted dead `components/common/field.tsx` + `server/web/entitlement/manage-entitlements.ts`; dropped dead `findMediaById`/`findMediaAttachments`. Verify: tsc 0, oxlint 0, **faithful build GREEN 194/194**, home 200 + brand CSS injects, fallow 0-introduced. **Skipped** `lib/i18n.ts` `locales` (load-bearing for the `Locale` type — agent missed it; verified). Bigger refactors → proposals (below). |
 
 ## What landed
 
@@ -273,6 +274,28 @@ Grouped (160 files; full list in the diff `git diff 5f5bdc41..HEAD`):
   `ESKRIMA_DEFAULT_ROUNDS` — dead at base); 87 cross-section table/form dup clone-groups (the
   `<ThemeFieldset>`/table-columns consolidation flagged 0447); `config/site` `siteConfig.name` metadata
   destale; `repo-truth-index` brand-truth §D (4-brand enum); gated Stage-2 brand schema drop.
+
+### Quality-sweep refactor proposals (TASK_07 — verified-feasible, await operator greenlight)
+
+These are behavior-preserving but bigger/regression-trap-prone, so they were NOT auto-applied — each needs
+its own focused pass + verification:
+
+- **`<ThemeFieldset>` extraction (HIGH value, MEDIUM risk).** The 3 theme forms (`self-service-theme-form`,
+  `brand-settings-form`, `org-theme-form`) share a 7-field color/asset fieldset (~143 dup lines). Extract a
+  fully-parameterized `components/web/forms/theme-fieldset.tsx`. **Regression trap (verified by agent):** the
+  per-form **placeholder strings + the accentColor description differ** across the three — every placeholder
+  + the description + `imageGridCols` must be props, or 2 forms regress. Schema/action/toasts/button stay in
+  each consumer. Needs a 3-form browser verify.
+- **School/org-general schema dedup (LOW value, LOW risk).** `school-form` ↔ `org-general-info-form` share
+  an identical 10-field zod schema + defaultValues (~30 lines) but the rendered JSX is intentionally
+  DIVERGENT (school has a ProfileHero preview, different labels/layout, omits FormMessage on 4 fields). Only
+  extract the **schema + type + defaultValues** to a shared module; do NOT touch the JSX.
+- **`editor-queries.ts:261-273` Promise.all (MARGINAL perf).** Fold `tree` + the 2 access queries into one
+  `Promise.all` (verified independent). Editor path (low frequency); adds 2 queries on the rare not-found
+  path → net win only because not-found is rare. Low priority.
+- **NOT actioned (verified KEEP):** `getRequestOrigin` "duplicate" (intentional layering — `request-url`
+  wraps `brand-context` with a non-null SEO fallback; different contracts); haptics named exports (used
+  internally via the `haptics` object); the ~235 fallow "unused exports" (Zod-schema/DTO/convention FPs).
 
 ## Next session
 
