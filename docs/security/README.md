@@ -5,7 +5,7 @@ type: index
 status: active
 created: 2026-05-31
 updated: 2026-06-26
-last_agent: claude-session-0449
+last_agent: claude-session-0451
 pairs_with:
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/security/ronin-security-risk-register.md
@@ -73,7 +73,7 @@ Use six security functions as the organizing model:
 
 The near-term risk is not lack of security intent. The risk is that some controls are documented better than they are enforced globally.
 
-1. ~~**Runtime brand-scope DB enforcement is the central risk.**~~ **Superseded (single-brand collapse, ADR 0034 — 2026-06-24).** With one brand (BBL) there is no second tenant for rows to leak into, so this is no longer a live risk; `apps/web/services/db.ts` wiring only `uniqueSlugsExtension` is correct for single-brand. (The host→brand *origin* gate above is unaffected and stays KEEP-FOREVER.)
+1. ~~**Runtime brand-scope DB enforcement is the central risk.**~~ **Superseded (single-brand collapse, ADR 0034 — 2026-06-24).** With one brand (BBL) at the chrome/UI layer there is no second *concurrently-written* tenant, so the staged runtime brand-scope Prisma extension is shelved; `apps/web/services/db.ts` wiring only `uniqueSlugsExtension` is correct for that. *(2026-06-26 caveat: prod still carries ~388 co-resident legacy Baseline rows (SESSION_0450) that the existing `brand` column + brand predicates actively hide from BBL surfaces — so the brand filter already in the code is load-bearing isolation today; "single brand" does not mean "drop the brand predicates." See the [risk register](ronin-security-risk-register.md) #1 detail.)* (The host→brand *origin* gate above is unaffected and stays KEEP-FOREVER.)
 2. **Security headers / CSP are not evident as a global launch gate.** Add CSP, HSTS, frame controls, referrer policy, permissions policy, and content-type protection.
 3. **Admin route protection must not depend on cookie presence.** Middleware UX gating is useful, but pages/actions/queries need server-side authorization.
 4. **Production secrets are optional.** Feature-gated env validation should require Stripe, Redis, S3, Printful, Resend, Plausible, and AI secrets when those features are enabled.

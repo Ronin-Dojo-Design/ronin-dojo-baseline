@@ -4,8 +4,8 @@ slug: privacy-data-classification
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-05-31
-last_agent: codex-session-0313
+updated: 2026-06-26
+last_agent: claude-session-0451
 pairs_with:
   - docs/security/README.md
   - docs/security/security-test-plan.md
@@ -16,6 +16,21 @@ backlinks:
 ---
 
 # Privacy Data Classification
+
+> **Single-brand update (2026-06-26, SESSION_0451 — this doc was missed by the
+> SESSION_0447 destale pass).** ADR 0034 collapsed the 4-brand model to a single
+> brand at the chrome/UI layer (Black Belt Legacy). Where this page says "brand
+> filter" / "brand/org predicates" / "cross-brand leakage," read it as **org/user
+> scoping** going forward — those are the live authorization axes and never went
+> away. **Two nuances keep `brand` relevant, do not delete it from the controls:**
+> (1) the host→brand **origin trust** gate in `apps/web/lib/brand-context.ts`
+> (`HOST_TO_BRAND` / `BRAND_TRUSTED_ORIGINS` / `resolveBrand`) is the MB-002
+> security gate, **KEEP-FOREVER**; and (2) prod still carries a co-resident legacy
+> **Baseline** dataset (~388 non-BBL rows, SESSION_0450) that the `brand` column
+> actively hides from BBL surfaces — so a public-payload **brand filter is still
+> doing real isolation work today** and stays load-bearing until that data is
+> extracted to the future `baselinemartialarts.com` product. The cross-brand DSR
+> clause is reduced-scope (no live cross-brand admin workflow), not deleted.
 
 ## Summary
 
@@ -42,11 +57,11 @@ This page extends the existing security/privacy/payment plan into a practical la
 ## Enforcement principles
 
 - Public payloads are allowlists, not filtered private objects.
-- Brand and organization are authorization inputs, not display-only metadata.
+- Organization (and, while the legacy Baseline data is co-resident, `brand`) are authorization inputs, not display-only metadata.
 - Client cookies can improve UX but cannot authorize access.
 - Private media requires signed access; obscurity is not a control.
 - Logs should contain event types and correlation IDs, not raw PII/payment payloads.
-- DSR exports must include requester data only and must not cross brand/org/user boundaries.
+- DSR exports must include requester data only and must not cross org/user boundaries. *(2026-06-26: the cross-brand clause is reduced-scope — single brand at the UI layer; org/user boundaries remain the live enforcement.)*
 
 ## DSR and retention notes
 
@@ -57,7 +72,7 @@ The Prisma schema already includes a `DataSubjectRequest` workflow. Launch-harde
 - How are minors/guardian relationships handled?
 - What happens to audit logs on deletion requests?
 - How is rectification tracked?
-- How is cross-brand leakage prevented in exports?
+- How is cross-org/user leakage prevented in exports? *(2026-06-26: was "cross-brand" — reduced-scope under the single-brand collapse; org/user is the live boundary, see the banner.)*
 
 ## Media boundary
 
@@ -85,6 +100,7 @@ Until a dedicated AI policy lands:
 - [Security review hub](README.md)
 - [Security test plan](security-test-plan.md)
 - [Security, Privacy, Payments, and Monitoring Plan](../architecture/security-privacy-payments-monitoring-plan.md)
+- [ADR 0034 — Monorepo platform and per-product deploys](../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md)
 
 ## Open Questions
 

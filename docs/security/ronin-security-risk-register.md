@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-05-31
 updated: 2026-06-26
-last_agent: claude-session-0449
+last_agent: claude-session-0451
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -69,6 +69,20 @@ The most important theme is **documented controls must become enforced, tested, 
 > origin/host boundary (Better Auth `trustedOrigins`, OAuth/magic-link callback
 > validation), not a DB-row data-isolation control, and survives the eventual
 > schema-level `brand` column drop.
+>
+> **2026-06-26 sharpening (SESSION_0450/0451).** "No second tenant" is true at the
+> *UI/chrome* layer but **not at the data layer**: prod still carries the original
+> Baseline Martial Arts demo dataset — ~388 non-BBL rows co-resident in the BBL
+> database (full audit in `[[brand-vestige-trim-inventory]]` / SESSION_0450). The
+> `brand` column + brand-scoped query predicates (e.g. `searchCourses(...,
+> Brand.BBL)`, `where:{brand}`) are what keep that legacy data **hidden from BBL
+> surfaces today** — so the brand filter is still doing real isolation work and is
+> load-bearing until that data is extracted to the future
+> `baselinemartialarts.com` product. The supersession here is narrow and still
+> correct: it shelves the *runtime brand-scope Prisma extension PR* (a
+> multi-tenant defense-in-depth that assumed two live tenants writing concurrently)
+> — it does **not** license dropping the existing brand predicates while the
+> Baseline rows remain.
 >
 > *Original text (retained for history):* Ronin is a one-app, one-database,
 > multi-brand platform. Every business-data query must be scoped by brand, org,

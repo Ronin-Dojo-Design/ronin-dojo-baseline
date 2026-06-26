@@ -4,8 +4,8 @@ slug: brand-scope-hardening-plan
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-06-24
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0451
 pairs_with:
   - docs/security/README.md
   - docs/security/ronin-security-risk-register.md
@@ -42,14 +42,27 @@ multi-brand model: one app, one database, one schema with `brand` as a column,
 where a single missed predicate could leak data across Baseline Martial Arts,
 Black Belt Legacy, WEKAF, and Ronin Dojo Design.
 
-**As of the single-brand collapse (ADR 0034) that data-isolation risk is moot** —
-there is only one brand (BBL), so there is no second tenant for rows to leak
-into. The runtime brand-scope enforcement PR staged below
+**As of the single-brand collapse (ADR 0034) the multi-tenant data-isolation risk
+is reduced-scope** — there is one brand (BBL) at the chrome/UI layer, so there is
+no second *concurrently-written* tenant for the staged runtime extension to guard.
+The runtime brand-scope enforcement PR staged below
 (`fix(security): enforce brand-scoped database access`) is therefore **shelved as
 superseded**, not lost; it is preserved here as history and as a re-activation
-plan should the platform ever re-introduce a second product tenant. What remains
-permanently in force is the host→brand **origin trust** gate (see the
+plan should the platform ever re-introduce a second active product tenant. What
+remains permanently in force is the host→brand **origin trust** gate (see the
 KEEP-FOREVER note above).
+
+> **2026-06-26 sharpening (SESSION_0450/0451) — do NOT read "single brand" as
+> "drop the brand predicates."** Prod still carries the original Baseline Martial
+> Arts demo dataset (~388 non-BBL rows co-resident in the BBL database, SESSION_0450
+> audit; `[[brand-vestige-trim-inventory]]`). The existing `brand` column + the
+> per-query brand predicates (`searchCourses(..., Brand.BBL)`, `where:{brand}`) are
+> exactly what hide that legacy data from BBL surfaces **right now**. So the
+> brand filter is load-bearing isolation today and stays until the Baseline data is
+> extracted to the future `baselinemartialarts.com` product (then run the banked
+> `apps/web/scripts/purge-non-bbl-baseline-data.ts` and drop the column). What's
+> shelved is only the *new* runtime Prisma-extension PR, not the brand filter
+> already in the codebase.
 
 ## Existing strengths
 

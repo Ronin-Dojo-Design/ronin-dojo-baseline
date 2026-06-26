@@ -273,6 +273,19 @@ The SESSION file's `### Findings (severity ≥ medium)` block stays **session-sc
 
 **Wiring-ledger sweep:** if the session surfaced or resolved wiring debt, append rows with stable `WL-P{0,1,2}-N` IDs (or flip resolved rows to ✅/fixed). Skip if no wiring debt changed.
 
+**Ledger cross-off sweep (the inbound/outbound symmetry).** The finding-router above *adds* findings to the
+ledgers (outbound). Its mirror: for every ledger item this session **resolved**, flip the row to ✅/done with the
+SESSION reference — `failed-steps-log` (FS `Status:` → mitigated/resolved), `drift-register` (D-NNN → resolved),
+`wiring-ledger` (WL → ✅), `POST_LAUNCH_SOT` (FI → MVP_LIVE/declined), `manual-boundary-registry` (boundary
+verified). This keeps the ledgers a live backlog whose open items shrink as sessions close them — the inbound
+half (bow-in pulls 3–5 open ledger items as the session's tasks) is the [Loop of Loops](../protocols/loop-of-loops-ledger-driven-sessions.md)
+design (P1). Skip rows the session didn't touch.
+
+**AdminKanban reminder.** The operator's task-board (`app/.../task-board`) is a client-side (localStorage) board
+— it can't be synced from a session today. If the session resolved items the operator tracks there, **remind the
+operator to move the cards** (a DB-backed projection is the [Loop of Loops](../protocols/loop-of-loops-ledger-driven-sessions.md)
+P3 target). Don't edit `lib/task-board/seed.ts` to "update tasks" — that's the demo/test fixture, not the live board.
+
 ### 7. Memory sweep
 
 If anything from this session is worth carrying forward across all future sessions (not just the next one), update operator-side memory. Examples:

@@ -77,7 +77,7 @@ export const grantUserEntitlement = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users", `/admin/users/${parsedInput.userId}`],
+      paths: ["/app/users", `/app/users/${parsedInput.userId}`],
       tags: ["user-entitlements", `user-entitlements-${parsedInput.userId}`],
     })
 
@@ -97,7 +97,7 @@ export const revokeUserEntitlement = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users", `/admin/users/${parsedInput.userId}`],
+      paths: ["/app/users", `/app/users/${parsedInput.userId}`],
       tags: ["user-entitlements", `user-entitlements-${parsedInput.userId}`],
     })
 
@@ -125,7 +125,7 @@ export const grantUserComp = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users", `/admin/users/${parsedInput.userId}`],
+      paths: ["/app/users", `/app/users/${parsedInput.userId}`],
       tags: ["user-entitlements", `user-entitlements-${parsedInput.userId}`],
     })
 
@@ -151,7 +151,7 @@ export const revokeUserComp = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users", `/admin/users/${parsedInput.userId}`],
+      paths: ["/app/users", `/app/users/${parsedInput.userId}`],
       tags: ["user-entitlements", `user-entitlements-${parsedInput.userId}`],
     })
 

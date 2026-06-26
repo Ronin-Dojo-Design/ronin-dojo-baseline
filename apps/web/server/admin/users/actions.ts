@@ -21,7 +21,7 @@ export const updateUser = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users"],
+      paths: ["/app/users"],
     })
 
     return user
@@ -43,7 +43,7 @@ export const deleteUsers = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users"],
+      paths: ["/app/users"],
     })
 
     return true
@@ -53,7 +53,7 @@ export const deleteUsers = adminActionClient
  * Add-person ("just add someone"). ONE action, ONE transaction: a claimable placeholder `User`
  * (`isPlaceholder`, synthetic unique email) + `Passport` (identity SoT) + stated `RankAward`
  * (`source=STATED`, `verificationStatus=UNVERIFIED`) + optional display-only `Affiliation`. Optional
- * lineage placement is layered in TASK_02 (same action). Mirrors the `/admin/tools/new` create idiom.
+ * lineage placement is layered in TASK_02 (same action). Mirrors the `/app/tools/new` create idiom.
  *
  * @added SESSION_0358 — Passport-centric consolidation (TASK_01). See passport-and-shells.md + ADR 0016.
  */
@@ -145,7 +145,7 @@ export const createPerson = adminActionClient
       }
     })
 
-    revalidate({ paths: ["/admin/users"] })
+    revalidate({ paths: ["/app/users"] })
 
     return created
   })
@@ -159,7 +159,7 @@ export const updateUserRole = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/users"],
+      paths: ["/app/users"],
     })
 
     return user
