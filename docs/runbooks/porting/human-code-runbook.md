@@ -186,6 +186,17 @@ Three sources feed almost everything: **(a) Prisma** generates entity types from
 **(b) Zod** schemas give runtime validation **and** a static type via `z.infer` (one definition, both jobs);
 **(c) libraries** (react-hook-form, oRPC) ship their own. When in doubt, follow a value back to one of these three.
 
+### 7. When a save "doesn't stick" — it's usually the cache, not the database
+
+A real symptom (SESSION_0451): in the admin, picking someone's belt rank said "saved," but leaving and
+returning showed "no rank" again. It *looked* like the save failed. It hadn't — the database had the rank the
+whole time. The page was showing a **remembered (cached) copy** because the code that says "forget the cached
+page after a save" (`revalidatePath`) pointed at the wrong web address (a retired one). WordPress analogy: you
+edited the post and it saved, but the site cache kept serving the old version until cleared. **What this teaches:
+"it saved but didn't show" ≠ "it didn't save."** First check whether the *view* refreshed (a cache/`revalidatePath`
+issue), before suspecting the save. A hard browser refresh that shows the new value is the tell — the data was
+there all along. (See `[[admin-app-migration-revalidate-paths]]` and the glossary "Router Cache" entry.)
+
 ## See also
 
 - [Repo Truth Index → canonical-entity layer](../../knowledge/wiki/repo-truth-index.md) — entity → source-of-truth table.

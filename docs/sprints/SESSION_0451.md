@@ -2,7 +2,7 @@
 title: "SESSION 0451 — operator's pick (Stage-2 parked): cleanup leftovers / cred rotation / security-docs / BBL feature"
 slug: session-0451
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-26
 updated: 2026-06-26
 last_agent: claude-session-0451
