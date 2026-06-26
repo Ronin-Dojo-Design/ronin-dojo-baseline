@@ -82,7 +82,9 @@ export const organizationDetailPayload = {
     },
     orderBy: { createdAt: "asc" as const },
   },
-  owner: { select: { id: true, name: true, email: true } },
+  // owner inherits `{ id, name }` from organizationOnePayload — do NOT add `email` here.
+  // This payload feeds the PUBLIC /organizations/[slug] page; an owner email must not leak
+  // (the public page is brand-agnostic since SESSION_0448, so non-BBL orgs resolve too).
 } satisfies Prisma.OrganizationSelect
 
 export type OrganizationMany = Prisma.OrganizationGetPayload<{

@@ -22,10 +22,10 @@ export function OrganizationAbout({ org, formattedAddress }: OrganizationAboutPr
       <div className="space-y-3">
         <H4>Details</H4>
         <dl className="grid gap-2 text-sm @sm:grid-cols-[10rem_minmax(0,1fr)]">
-          {org.owner && (
+          {org.owner?.name && (
             <>
               <dt className="text-muted-foreground">Owner</dt>
-              <dd>{org.owner.name ?? org.owner.email}</dd>
+              <dd>{org.owner.name}</dd>
             </>
           )}
 
