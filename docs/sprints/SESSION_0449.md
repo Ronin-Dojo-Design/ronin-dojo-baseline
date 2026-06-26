@@ -260,9 +260,11 @@ after. Use `npx next build` NOT `bun run build` (prebuild runs `db:migrate deplo
 | SESSION_0449_TASK_00 | landed | PR #163 reviewed (SAFE-WITH-NOTES) → added `orderBy:{createdAt:asc}` determinism fix to `getOrganizationBySlug` (`921d88f8`, review note #1 closed) → CI green → **merged `1f0640b8`** → prod deploy SUCCESS → local `main` resynced 0/0. 2nd `role:admin` = stale test seed acct (`session-0207-…@test.local`), NOT Tony Hua (he's a User-less Passport) → folded into TASK_02. |
 | SESSION_0449_TASK_01 | **LANDED + prod-verified** | Built `6219b687` → **PR #164** → CI all green (Vercel build PASSED) → **merged `ecf98ebc`** → **prod migration applied data-preserving** (column→`UserRole`, 4 user + 2 admin intact, both admins, not rolled back, `blackbeltlegacy.com` 200). `enum UserRole {user,admin,tournament_director}`, hand-authored migration `20260626000000` (in-place `USING` cast — Prisma's auto-diff would DROP+recreate→data loss), 12 test/seed/script/e2e-helper call-sites typed to `UserRole` (0 production app code). Better Auth COMPATIBLE. **DB REJECTS `'Admin'` typo** (the hardening, proven). |
 | SESSION_0449_TASK_02 | resolved — no-op on prod | PROD dry-run (`SKIP_ENV_VALIDATION=1 bun --env-file=.env.prod`) → **0 test-org candidates**; PROD has **0 `@test.local`/`session-` users**. The junk test orgs + test-admin exist ONLY in stale **prodsnap**, not real prod → nothing to delete. **PROD 2 admins = Brian + Tony Hua** (`tonyhua08@gmail.com`) — both legit (resolves the "2nd admin" 0448-authz concern; the prodsnap test-admin was a snapshot artifact). Bonus: prod role values = only `user`+`admin` → TASK_01 migration `USING` cast is safe on the prod merge. ⚠ prod Neon pw surfaced in a psql error → rotate at bow-out. (prodsnap is stale — refresh is a separate maintenance item.) |
-| SESSION_0449_TASK_03 | landed → **PR #165** (awaiting merge go) | `config/site.ts` `siteConfig.name`/`slug`→BBL; `repo-truth-index.md` §D destaled to single-brand collapse (ADR 0034); `score-forms.tsx` dropped `export` from `TKO_THRESHOLD`/`ESKRIMA_DEFAULT_ROUNDS` (0 external importers, used in-file). `42908bd1` rebased onto main. tsc 0, oxlint 0, wiki:lint 0. Reviewed SAFE-TO-MERGE. |
+| SESSION_0449_TASK_03 | **LANDED — merged #165 → prod** | `config/site.ts` `siteConfig.name`/`slug`→BBL; `repo-truth-index.md` §D destaled to single-brand collapse (ADR 0034); `score-forms.tsx` dropped `export` from `TKO_THRESHOLD`/`ESKRIMA_DEFAULT_ROUNDS` (0 external importers, used in-file). Reviewed SAFE-TO-MERGE; merged `2c2c677a`. |
 | SESSION_0449_TASK_04 | landed | Independent review: #163 SAFE-WITH-NOTES; TASK_01 + TASK_03 both SAFE-TO-MERGE (0 BLOCKER/HIGH). One LOW (migration prod-drift fallback) mitigated by direct prod verification. |
 | SESSION_0449_TASK_05 | landed | Full bow-out: SESSION doc filled, JETTY sweep, wiki:lint, graphify, memory sweep, Giddy/Doug/Desi hostile review (9.5/10). |
+| SESSION_0449_TASK_06 | landed (post-close) | **Doc-coverage sweep** (operator-requested) — 4 Giddy doc-review + 3 Cody code-review subagents over the touched surfaces. Code: all 3 reviews CLEAN (1 MEDIUM = owner-email PII → TASK_07; 0 BLOCKER/HIGH). Docs (13 files, `c0aded09`, pushed to main): `auth.md` REWRITE + 2 mermaid diagrams (authz decision path + role write path); `schema-migration.md` String→enum `USING`-cast pattern banked; NEW `wiki/files/org-admin-access.md` (+ index registry); `organization-detail-page.md` brand-agnostic; `schema-prisma.md` enum 86→87; `repo-truth-index §E`; `custom-component-inventory`; 2 wiring SOPs (platform-admin gate); `security/{risk-register #11/#12, security-test-plan, README}`. wiki:lint 0 errors. |
+| SESSION_0449_TASK_07 | LANDED (PR #166, awaiting merge go) | **Owner-email PII fix** (the TASK_06 MEDIUM, widened by #163's brand-agnostic resolution): dropped `owner.email` from the public `organizationDetailPayload` + render the Owner row only when `name` exists. tsc 0, oxlint 0; PR #166 (clean 2-file diff), CI running. |
 
 ## What landed
 
@@ -288,6 +290,21 @@ after. Use `npx next build` NOT `bun run build` (prebuild runs `db:migrate deplo
 - **TASK_04 — independent review:** PR #163 (`SAFE-WITH-NOTES`), TASK_01 + TASK_03 (both `SAFE-TO-MERGE`,
   0 BLOCKER/HIGH). The one LOW (migration has no fallback if prod drifted from prodsnap) was mitigated by
   directly verifying prod's role values (only `user`+`admin`) before the merge.
+
+### Post-close extension (TASK_06–07 — operator-requested doc + code coverage sweep)
+
+- **TASK_06 — doc-coverage sweep (7 subagents: 4 Giddy doc-review + 3 Cody code-review).** Code came back
+  CLEAN (the 3 reviews independently re-confirmed the enum + authz + brand changes; 0 BLOCKER/HIGH). The doc
+  surfaces were materially stale — `auth.md` was ~14 months out of date and the **platform-admin-manages-all-orgs
+  widening + the brand-agnostic public org resolution were documented nowhere outside code comments.** Landed a
+  13-file doc batch (`c0aded09`, pushed to `main`): `auth.md` rewrite (4-axis role taxonomy + the 2 undocumented
+  authz changes + single-brand banners + 2 mermaid diagrams), the String→enum migration pattern banked in
+  `schema-migration.md`, a NEW `org-admin-access.md` file-page, + 9 others (incl. `security/*` risk rows #11/#12).
+- **TASK_07 — owner-email PII fix (the one real code finding from TASK_06, MEDIUM).** The public
+  `/organizations/[slug]` page could render an owner's email (`organizationDetailPayload` added `owner.email`;
+  the Owner row rendered `name ?? email`) — widened by #163's brand-agnostic resolution (3 BASELINE orgs now
+  resolve publicly). Dropped `owner.email` from the public payload + hide the Owner row when name is null.
+  **PR #166** (clean 2-file diff, tsc/oxlint 0, CI running) — awaiting merge go.
 
 ## Decisions resolved
 
@@ -332,7 +349,8 @@ after. Use `npx next build` NOT `bun run build` (prebuild runs `db:migrate deplo
 
 ## Open decisions / blockers
 
-- **PR #165 (TASK_03)** — open, CI running; awaiting operator merge go (config/site is app code → deploys).
+- **PR #165 (TASK_03)** — ✅ merged → prod (`2c2c677a`).
+- **PR #166 (TASK_07 owner-email PII fix)** — open, CI running; awaiting operator merge go (deploys the public org-page change).
 - **🔐 Rotate the prod Neon password** — it surfaced in a psql connection error in this session's transcript.
   (Consistent with prior R2/Neon rotations.) Not blocking; do at convenience.
 - **prodsnap is stale** — 44/48 users are test data; it lacks Tony Hua's admin account + has test orgs prod
