@@ -16,6 +16,7 @@ import {
 } from "~/lib/entitlements/lineage-comp"
 import { grantUserComp, revokeUserComp } from "~/server/admin/entitlements/actions"
 import { grantComp } from "~/server/entitlements/comp-grants"
+import type { UserRole } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 const TEST_BRAND = "BBL" as const
@@ -40,7 +41,7 @@ async function ensureEntitlement(key: string, name: string) {
   return entitlement
 }
 
-async function createUser(name: string, role = "user") {
+async function createUser(name: string, role: UserRole = "user") {
   const user = await db.user.create({
     data: {
       id: tag(name),

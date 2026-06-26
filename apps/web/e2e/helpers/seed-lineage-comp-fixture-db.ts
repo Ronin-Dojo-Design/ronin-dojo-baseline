@@ -4,7 +4,7 @@
  * import the Prisma client directly.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../../.generated/prisma/client"
+import { PrismaClient, type UserRole } from "../../.generated/prisma/client"
 import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
@@ -100,7 +100,7 @@ async function createUserNode({
 }: {
   runId: string
   label: string
-  role?: string
+  role?: UserRole
 }) {
   const displayName = `E2E ${label} ${runId}`
   const slug = slugify(`${TAG_PREFIX}-${label}-${runId}`)

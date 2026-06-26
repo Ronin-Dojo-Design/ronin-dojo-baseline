@@ -16,6 +16,7 @@ import {
 } from "~/lib/entitlements/lineage-comp"
 import { createInvite } from "~/server/admin/invites/actions"
 import { claimInvite } from "~/server/invites/actions"
+import type { UserRole } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 // Single-brand collapse (brand-prune Stage 1): the action scopes by the
@@ -43,7 +44,7 @@ async function ensureEntitlement(key: string, name: string) {
   return entitlement
 }
 
-async function createUser(name: string, role = "user") {
+async function createUser(name: string, role: UserRole = "user") {
   const user = await db.user.create({
     data: {
       id: tag(name),

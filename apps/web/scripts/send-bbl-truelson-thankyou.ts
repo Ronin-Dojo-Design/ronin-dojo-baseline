@@ -293,7 +293,7 @@ async function grant(): Promise<void> {
         select: { id: true },
       })
     : await db.user.findFirst({
-        where: { role: { contains: "admin" } },
+        where: { role: "admin" },
         select: { id: true },
       })
   if (!grantor) {

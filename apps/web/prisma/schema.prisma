@@ -54,13 +54,24 @@ enum PostStatus {
   Published
 }
 
+// Platform-level user role (Better Auth `admin()` plugin owns this field).
+// Typed enum (was free-text String) so a typo can't silently bypass an authz gate.
+// `lineage_tree_admin` is intentionally NOT here — it's a synthetic UI label derived
+// from the separate LineageTreeAccess table, never stored on User.role. Keep roles
+// single-valued (Better Auth array-roles would emit "a,b", invalid for an enum column).
+enum UserRole {
+  user
+  admin
+  tournament_director
+}
+
 model User {
   id            String    @id @default(cuid(2))
   name          String
   email         String    @unique
   emailVerified Boolean   @default(false)
   image         String?
-  role          String    @default("user")
+  role          UserRole  @default(user)
   banned        Boolean?  @default(false)
   banReason     String?
   banExpires    DateTime?

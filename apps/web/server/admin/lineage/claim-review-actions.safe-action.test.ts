@@ -24,6 +24,7 @@ import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-e
 installSafeActionMocks({ brand: "BBL" })
 
 import { reviewLineageClaim } from "~/server/admin/lineage/claim-review-actions"
+import type { UserRole } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 const TEST_BRAND = "BBL" as const
@@ -64,7 +65,7 @@ const ensureEntitlement = async (key: string, name: string) => {
 
 const createUser = async (
   name: string,
-  options: { role?: string; isPlaceholder?: boolean } = {},
+  options: { role?: UserRole; isPlaceholder?: boolean } = {},
 ) => {
   return db.user.create({
     data: {

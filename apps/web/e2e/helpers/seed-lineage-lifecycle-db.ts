@@ -5,7 +5,7 @@
  * and public tree routes should still only expose the public claim target.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../../.generated/prisma/client"
+import { PrismaClient, type UserRole } from "../../.generated/prisma/client"
 import type { LineageLifecycleFixture, LineageLifecycleState } from "./seed-lineage-lifecycle"
 
 const adapter = new PrismaPg({
@@ -145,7 +145,7 @@ async function createUser({
 }: {
   runId: string
   label: string
-  role?: string
+  role?: UserRole
   isPlaceholder?: boolean
 }) {
   const displayName = `E2E ${label} ${runId}`
