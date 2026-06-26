@@ -44,7 +44,7 @@ export const updateOrgTheme = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: [`/admin/organizations/${organizationId}/theme`, "/admin/organizations"],
+        paths: [`/app/organizations/${organizationId}/theme`, "/app/organizations"],
         tags: [`org-settings-${organizationId}`],
       })
     })

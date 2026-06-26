@@ -30,7 +30,7 @@ function revalidateForTarget(target: MediaAttachTarget) {
       tags.push("organization")
       break
     case "course":
-      paths.push("/courses", `/admin/courses/${target.id}`)
+      paths.push("/courses", `/app/courses/${target.id}`)
       tags.push("courses")
       break
     case "passport":

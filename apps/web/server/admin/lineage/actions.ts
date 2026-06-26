@@ -88,7 +88,7 @@ export const toggleLineageTreeClaimability = userActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
+        paths: ["/app/lineage", `/app/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
         tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })
@@ -138,7 +138,7 @@ export const toggleLineageTreeMemberClaimability = userActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
+        paths: ["/app/lineage", `/app/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
         tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })
@@ -207,7 +207,7 @@ export const updateLineageTreeMemberSelectedRank = userActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/lineage", `/admin/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
+        paths: ["/app/lineage", `/app/lineage/${tree.id}`, "/lineage", `/lineage/${tree.slug}`],
         tags: ["lineage", `lineage-tree-${Brand.BBL}-${tree.slug}`, `lineage-trees-${Brand.BBL}`],
       })
     })

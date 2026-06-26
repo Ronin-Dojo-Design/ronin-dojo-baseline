@@ -55,7 +55,7 @@ export const upsertTournament = tournamentAdminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/tournaments"],
+        paths: ["/app/tournaments"],
         tags: ["tournaments", `tournament-${tournament.slug}`],
       })
     })
@@ -71,7 +71,7 @@ export const deleteTournaments = tournamentAdminActionClient
     })
 
     revalidate({
-      paths: ["/admin/tournaments"],
+      paths: ["/app/tournaments"],
       tags: ["tournaments"],
     })
 
@@ -108,7 +108,7 @@ export const updateTournamentStatus = tournamentAdminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/tournaments"],
+        paths: ["/app/tournaments"],
         tags: ["tournaments", `tournament-${updated.slug}`],
       })
     })

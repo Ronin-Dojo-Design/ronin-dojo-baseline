@@ -110,7 +110,7 @@ export const transitionMembershipStatus = adminActionClient
       }
 
       revalidate({
-        paths: ["/admin/memberships"],
+        paths: ["/app/memberships"],
         tags: ["memberships", `membership-${updated.id}`],
       })
     })
@@ -126,7 +126,7 @@ export const deleteMemberships = adminActionClient
     })
 
     revalidate({
-      paths: ["/admin/memberships"],
+      paths: ["/app/memberships"],
       tags: ["memberships"],
     })
 
@@ -144,7 +144,7 @@ export const assignRoleToMembership = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/memberships", `/admin/memberships/${membershipId}`],
+        paths: ["/app/memberships", `/app/memberships/${membershipId}`],
         tags: ["memberships", `membership-${membershipId}`],
       })
     })
@@ -161,7 +161,7 @@ export const removeRoleFromMembership = adminActionClient
 
     after(async () => {
       revalidate({
-        paths: ["/admin/memberships", `/admin/memberships/${membershipId}`],
+        paths: ["/app/memberships", `/app/memberships/${membershipId}`],
         tags: ["memberships", `membership-${membershipId}`],
       })
     })

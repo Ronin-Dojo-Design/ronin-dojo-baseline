@@ -78,7 +78,7 @@ export const findUserList = async () => {
 }
 
 /**
- * Option data for the `/admin/users/new` add-person form. Brand-scoped, no hardcoding:
+ * Option data for the `/app/users/new` add-person form. Brand-scoped, no hardcoding:
  * disciplines + the flat rank list (each carrying `disciplineId` so the client can show a
  * discipline-scoped Rank cascade) + brand organizations for the Affiliation select.
  *
