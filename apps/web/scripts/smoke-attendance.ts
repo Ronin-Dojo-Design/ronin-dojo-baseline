@@ -10,7 +10,12 @@
  */
 
 import { PrismaPg } from "@prisma/adapter-pg"
-import { type Brand, type ClassSessionStatus, PrismaClient } from "../.generated/prisma/client.js"
+import {
+  type Brand,
+  type ClassSessionStatus,
+  PrismaClient,
+  type UserRole,
+} from "../.generated/prisma/client.js"
 
 const DATABASE_URL =
   process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev"
@@ -259,7 +264,7 @@ async function main() {
   }
 }
 
-async function createUser(kind: string, role = "user") {
+async function createUser(kind: string, role: UserRole = "user") {
   return db.user.create({
     data: { name: `${TAG} ${kind}`, email: `${TAG}-${kind}@test.local`, role },
   })

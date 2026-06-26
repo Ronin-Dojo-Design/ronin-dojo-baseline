@@ -1,6 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { addDays } from "date-fns"
-import { PrismaClient, ToolStatus, ToolTier } from "~/.generated/prisma/client"
+import { PrismaClient, ToolStatus, ToolTier, type UserRole } from "~/.generated/prisma/client"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
@@ -1498,7 +1498,7 @@ async function main() {
         name: tu.name,
         email: tu.email,
         emailVerified: true,
-        role: tu.role,
+        role: tu.role as UserRole,
         lastActiveBrandId: "BASELINE_MARTIAL_ARTS",
       },
     })

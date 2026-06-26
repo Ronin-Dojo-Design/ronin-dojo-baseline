@@ -21,6 +21,7 @@ import {
   revokeUserComp,
   revokeUserEntitlement,
 } from "~/server/admin/entitlements/actions"
+import type { UserRole } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 const TEST_BRAND = "BBL" as const
@@ -37,7 +38,7 @@ let genericRevokeUserId = ""
 let genericEntitlementKey = ""
 let genericEntitlementId = ""
 
-async function createUser(name: string, role = "user") {
+async function createUser(name: string, role: UserRole = "user") {
   const user = await db.user.create({
     data: {
       id: tag(name),

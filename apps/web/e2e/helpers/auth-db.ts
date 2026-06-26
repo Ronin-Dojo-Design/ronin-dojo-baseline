@@ -6,7 +6,7 @@
  * e2e/helpers/auth.ts.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient } from "../../.generated/prisma/client"
+import { PrismaClient, type UserRole } from "../../.generated/prisma/client"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -17,7 +17,7 @@ const prisma = new PrismaClient({ adapter })
 type AuthUserOptions = {
   name?: string
   email?: string
-  role?: string
+  role?: UserRole
 }
 
 type RegistrationUser = {
