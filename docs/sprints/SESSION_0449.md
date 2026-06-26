@@ -264,7 +264,7 @@ after. Use `npx next build` NOT `bun run build` (prebuild runs `db:migrate deplo
 | SESSION_0449_TASK_04 | landed | Independent review: #163 SAFE-WITH-NOTES; TASK_01 + TASK_03 both SAFE-TO-MERGE (0 BLOCKER/HIGH). One LOW (migration prod-drift fallback) mitigated by direct prod verification. |
 | SESSION_0449_TASK_05 | landed | Full bow-out: SESSION doc filled, JETTY sweep, wiki:lint, graphify, memory sweep, Giddy/Doug/Desi hostile review (9.5/10). |
 | SESSION_0449_TASK_06 | landed (post-close) | **Doc-coverage sweep** (operator-requested) — 4 Giddy doc-review + 3 Cody code-review subagents over the touched surfaces. Code: all 3 reviews CLEAN (1 MEDIUM = owner-email PII → TASK_07; 0 BLOCKER/HIGH). Docs (13 files, `c0aded09`, pushed to main): `auth.md` REWRITE + 2 mermaid diagrams (authz decision path + role write path); `schema-migration.md` String→enum `USING`-cast pattern banked; NEW `wiki/files/org-admin-access.md` (+ index registry); `organization-detail-page.md` brand-agnostic; `schema-prisma.md` enum 86→87; `repo-truth-index §E`; `custom-component-inventory`; 2 wiring SOPs (platform-admin gate); `security/{risk-register #11/#12, security-test-plan, README}`. wiki:lint 0 errors. |
-| SESSION_0449_TASK_07 | LANDED (PR #166, awaiting merge go) | **Owner-email PII fix** (the TASK_06 MEDIUM, widened by #163's brand-agnostic resolution): dropped `owner.email` from the public `organizationDetailPayload` + render the Owner row only when `name` exists. tsc 0, oxlint 0; PR #166 (clean 2-file diff), CI running. |
+| SESSION_0449_TASK_07 | **LANDED — merged #166 → prod** | **Owner-email PII fix** (the TASK_06 MEDIUM, widened by #163's brand-agnostic resolution): dropped `owner.email` from the public `organizationDetailPayload` + render the Owner row only when `name` exists. tsc 0, oxlint 0; PR #166 (clean 2-file diff) CI green → merged `f5bbfc18` → prod. |
 
 ## What landed
 
@@ -350,7 +350,7 @@ after. Use `npx next build` NOT `bun run build` (prebuild runs `db:migrate deplo
 ## Open decisions / blockers
 
 - **PR #165 (TASK_03)** — ✅ merged → prod (`2c2c677a`).
-- **PR #166 (TASK_07 owner-email PII fix)** — open, CI running; awaiting operator merge go (deploys the public org-page change).
+- **PR #166 (TASK_07 owner-email PII fix)** — ✅ merged → prod (`f5bbfc18`).
 - **🔐 Rotate the prod Neon password** — it surfaced in a psql connection error in this session's transcript.
   (Consistent with prior R2/Neon rotations.) Not blocking; do at convenience.
 - **prodsnap is stale** — 44/48 users are test data; it lacks Tony Hua's admin account + has test orgs prod
