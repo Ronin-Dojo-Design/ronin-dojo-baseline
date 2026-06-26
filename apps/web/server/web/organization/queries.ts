@@ -17,14 +17,19 @@ import {
 } from "~/server/web/organization/payloads"
 import { db } from "~/services/db"
 
-export const getOrganizationBySlug = async (brand: string, slug: string) => {
+export const getOrganizationBySlug = async (_brand: string, slug: string) => {
   "use cache"
 
   cacheTag(`organization-${slug}`)
   cacheLife("minutes")
 
-  return db.organization.findUnique({
-    where: { brand_slug: { brand: brand as any, slug } },
+  // Single-brand app: org slugs are unique across the legacy multi-brand data, so resolve
+  // by slug alone. The `_brand` arg is retained for signature compatibility but intentionally
+  // ignored — brand-scoping the lookup 404s legacy non-BBL orgs (e.g. a BASELINE-branded org)
+  // on every /organizations/[slug] route. Drop the arg in the Stage-2 brand-column removal.
+  // (SESSION_0448 — operator directive.)
+  return db.organization.findFirst({
+    where: { slug },
     select: organizationDetailPayload,
   })
 }
