@@ -324,21 +324,41 @@ its own focused pass + verification:
 
 ### Goal
 
-Operator's call — the deferred single-brand vestige follow-ups: **(a)** `<ThemeFieldset>` extraction
-(collapses 12+ theme-form dup clone-groups: `brand-settings-form` / `org-theme-form` /
-`self-service-theme-form`); **(b)** `config/site` `siteConfig.name` metadata destale +
-`repo-truth-index` §D 4-brand-enum destale; **(c)** the gated Stage-2 brand schema drop (its own PR, prod
-migration — decision gates first: BASELINE comp-fixture, no non-BBL prod rows). Optional cleanup: trim the
-2 inherited dead exports in `app/app/tournaments/_components/score-forms.tsx`.
+**Step 0 — land PR #163** (the 22-commit SESSION_0448 stack on branch `session-0448-admin-app-migration`):
+confirm CI green, run an independent review pass (`/code-review ultra` or `/pr-fix-loop`) on the **authz +
+public-resolution** changes, merge → prod deploy, then `git checkout main && git pull` to resync local main.
+Then the new work:
+
+- **(1) FIRST TASK — `user.role` String→`UserRole` enum hardening.** `prisma/schema.prisma` has
+  `role String @default("user")` — typo-prone, unchecked (a `"Admin"` slip silently fails every authz gate
+  the SESSION_0448 fix relies on). Convert to a real enum. ⚠ **#1 risk: Better Auth `admin()` plugin
+  (`lib/auth.ts:215`) manages `role` as a string** — verify it can write/read an enum column (adminRole /
+  defaultRole config) before migrating; this is the gate. Enumerate ALL role values in data + code first
+  (found so far: `user`, `admin`, `tournament_director`, `lineage_tree_admin`) so the migration doesn't fail
+  on existing rows. ~30 call sites (`lib/authz.ts`, `lib/auth-hoc.ts`, `lib/safe-actions.ts`,
+  `components/admin/*`, `app/app/users/_components/user-form.tsx`).
+- **(2) Test-org cleanup** — script staged + dry-run-proven: `apps/web/scripts/delete-test-orgs.ts`. Run
+  `bun --env-file=.env.prod scripts/delete-test-orgs.ts` (dry-run) against PROD first, eyeball the list
+  (⚠ `session-0179-…` has a `lineageTree`, `test-ce-sa-…` has a `course` — confirm they're junk), then
+  `--apply` on go.
+- **(3) Brand-vestige follow-ups** — `config/site` `siteConfig.name` metadata destale; `repo-truth-index`
+  §D 4-brand-enum destale; trim 2 dead exports in `app/app/tournaments/_components/score-forms.tsx`.
+- **(4) Gated Stage-2 brand schema drop** (its own PR, prod migration — decision gates first: BASELINE
+  comp-fixture, confirm no live non-BBL rows). `getOrganizationBySlug` was already de-branded SESSION_0448.
 
 ### First task
 
-Pick (a)/(b)/(c) per operator. If (a): grep the 3 theme-form files, extract the shared fieldset into a
-`<ThemeFieldset>` (Dirstarter L1 primitive pattern), repoint the 3 consumers, browser-verify each renders.
+`SESSION_0449_TASK_01` — the `UserRole` enum hardening (after PR #163 lands). Start by enumerating all role
+values (`grep -rho '"\(admin\|user\|tournament_director\|lineage_tree_admin\)"'` + check Better Auth config),
+verify the `admin()` plugin tolerates an enum column, THEN write the schema enum + `migrate dev` + repoint
+call sites. Confirm the 2nd `role:admin` user is intended to keep all-org write access (SESSION_0448 widened it).
 
 ### Inputs to read
 
-- This file; memory `brand-vestige-trim-inventory`, `admin-retiring-only-app-remains` (admin→app DONE).
+- This file (esp. Hostile close review's TASK_09 flags); memory `brand-vestige-trim-inventory`,
+  `admin-retiring-only-app-remains` (admin→app DONE), `explicit-push-authorization`, `next-build-catches-use-server`.
+- `lib/auth.ts` (Better Auth `admin()` plugin), `lib/authz.ts`, `server/web/organization/org-admin-access.ts`
+  (the SESSION_0448 authz fix), `prisma/schema.prisma` (User.role).
 
 ## Review log
 
