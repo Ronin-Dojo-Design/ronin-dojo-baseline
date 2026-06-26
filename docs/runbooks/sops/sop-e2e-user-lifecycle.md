@@ -4,8 +4,8 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/resend-setup-runbook.md
@@ -73,7 +73,7 @@ The user now exists as:
 
 > **🔒 Security gates (hardened SESSION_0294–0300):**
 >
-> - Org settings mutations (theme, general-info, members, invites) require `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role.
+> - Org settings mutations (theme, general-info, members, invites) require `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role **OR platform admin (`User.role === "admin"`)** — platform admins manage all orgs, incl. WP-imported `ownerId`-null orgs (SESSION_0448).
 > - Membership status transitions enforce: cross-org guard, `VALID_TRANSITIONS` state machine, optimistic version locking.
 > - Role assignment/removal: org-admin gated, system-role validated, cross-org guarded.
 > - Reject (PENDING → delete): hard-deletes the row to avoid `@@unique` collision on re-request. Audit entry written before delete.
@@ -279,6 +279,8 @@ Membership roles / admin authority
  v
 TournamentStaffAssignment / admin pages
 ```
+
+> **Role taxonomy (SESSION_0448).** `User.role` is the Prisma `enum UserRole { user, admin, tournament_director }`. `admin` is the platform super-admin role gating `assertOrgAdminAccess` (and `adminActionClient`) across all orgs.
 
 ---
 

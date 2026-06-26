@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -123,7 +123,7 @@ Host brand and active app brand may align, but they are not always the same thin
 
 > **🔒 Security gates (hardened SESSION_0295–0300):**
 >
-> - Org-scoped mutations use `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role. See `server/web/organization/org-admin-access.ts`.
+> - Org-scoped mutations use `assertOrgAdminAccess(userId, organizationId)` — owner by `ownerId` OR `ORG_ADMIN` role OR **platform admin (`User.role === "admin"`)**, which grants access to all orgs incl. WP-imported `ownerId`-null orgs (SESSION_0448). See `server/web/organization/org-admin-access.ts`.
 > - Every org-scoped mutation enforces a **cross-org guard**: the target entity (membership, invite, etc.) must belong to the asserted `organizationId`. An org admin cannot act on another org's resources by ID.
 > - **Behaviorally proven:** `server/web/organization/org-management.safe-action.test.ts` (SESSION_0301) — 18 test cases proving unauth rejection, cross-org rejection, and happy paths for all 6 org management actions.
 > - Brand is **never client-trusted** — server derives brand from the org row or host header.

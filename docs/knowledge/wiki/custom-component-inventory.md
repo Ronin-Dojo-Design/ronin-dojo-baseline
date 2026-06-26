@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-25
-last_agent: claude-session-0448
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -369,7 +369,7 @@ SESSION_0202 added the user-dashboard editor preview surface:
 
 ## 7. Org self-service settings — `app/(web)/organizations/[slug]/settings/`
 
-> Owner + ORG_ADMIN gated surface (auth via `hasOrgAdminAccess` on pages, `assertOrgAdminAccess` in actions — `server/web/organization/org-admin-access.ts`). Distinct from the platform-admin `/admin/memberships` area: org-scoped, exposed to org admins, not platform staff.
+> Owner + ORG_ADMIN + platform-admin gated surface (auth via `hasOrgAdminAccess` on pages, `assertOrgAdminAccess` in actions — `server/web/organization/org-admin-access.ts`). The gate grants access to the org owner, any member with the `ORG_ADMIN` role, **and** any platform admin (`User.role === "admin"`) — so platform staff can read+write every org's settings (SESSION_0448/0449), not just their own. Org admins remain scoped to their own org; the platform-admin path is the cross-org override.
 
 | Component | File | Purpose |
 | --- | --- | --- |

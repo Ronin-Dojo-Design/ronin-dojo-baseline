@@ -4,9 +4,9 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-06-01
-last_agent: codex-session-0317
-use_count: 1
+updated: 2026-06-26
+last_agent: claude-session-0449
+use_count: 2
 pairs_with:
   - docs/runbooks/database.md
   - docs/runbooks/prisma-workflow.md
@@ -59,7 +59,7 @@ Add models/enums/fields per the wave spec. Work in dependency order:
 
 Three Prisma commands, three jobs. Pick by what the change needs downstream.
 
-- **`prisma migrate dev`** — creates a versioned migration file in `prisma/migrations/` and applies it to the local dev DB in one step. Use this whenever the change must ship to production: Neon prod is migrated via `prisma migrate deploy` during Vercel prebuild (`package.json` `prebuild: bun run db:migrate deploy`), and `deploy` only runs migration files that already exist in the repo. No migration file in the repo means nothing to deploy.
+- **`prisma migrate dev`** — creates a versioned migration file in `prisma/migrations/` and applies it to the local dev DB in one step. Use this whenever the change must ship to production: Neon prod is migrated via `prisma migrate deploy` during Vercel prebuild (`package.json` `prebuild: bun run db:migrate deploy`), and `deploy` only runs migration files that already exist in the repo. No migration file in the repo means nothing to deploy. **⚠ Exception: for column TYPE changes (e.g. `String`→`enum`) use `--create-only` + hand-edit — a bare `migrate dev` will DROP the column and reset every row to the default. See "Type-changing a column" below.**
 - **`prisma db push`** — pushes the current `schema.prisma` to the dev DB without creating a migration file. Use for rapid local iteration only — destructive wave rewrites, throwaway schema experiments, or large model bursts where you're going to `dropdb/createdb` and reseed anyway. Do **not** use `db push` for changes that need to ship.
 - **`prisma migrate deploy`** — applies committed migration files against the target DB. This is what Vercel runs in `prebuild` against Neon prod. Never invoke it by hand in dev; it's the production half of the pair with `migrate dev`.
 
@@ -98,6 +98,43 @@ bunx prisma migrate dev --name <descriptive-name>
 This creates a migration in `prisma/migrations/`, applies it, and regenerates the client in one step.
 
 > **Note:** The shadow DB hang reported in SESSION_0004 does not reproduce with Prisma 7.x.
+
+> **⚠ Not for column TYPE changes.** A bare `migrate dev` on a `String`→`enum` (or any type)
+> change emits DROP+ADD COLUMN — see the next subsection.
+
+#### Type-changing a column (String→enum) — hand-author the migration
+
+Prisma's auto-diff cannot do an in-place column TYPE change. For e.g. `String`→`enum` (or any
+type swap) it emits a **DROP COLUMN + ADD COLUMN** pair — which **resets every existing row to the
+column default, silently wiping data** (e.g. every platform admin's `role` resets to `user`). **Do
+NOT accept the SQL `migrate dev` generates for a type change.** Hand-author an in-place cast instead.
+
+**The fix:**
+
+1. **Scaffold without applying.** Run
+   `bunx prisma migrate dev --create-only --name <name>` to write the migration dir + a generated
+   `migration.sql` WITHOUT touching any DB. *(`--create-only` is blocked non-interactively when a
+   data-loss warning fires — so you may need to create the migration directory and write
+   `migration.sql` fully by hand.)*
+2. **Replace the generated DROP/ADD with an in-place cast.** Drop and re-set the column default
+   around the cast — a column default blocks the type change:
+
+   ```sql
+   CREATE TYPE "UserRole" AS ENUM ('user', 'admin', 'tournament_director');
+
+   ALTER TABLE "user" ALTER COLUMN "role" DROP DEFAULT;
+   ALTER TABLE "user" ALTER COLUMN "role" TYPE "UserRole" USING ("role"::"UserRole");
+   ALTER TABLE "user" ALTER COLUMN "role" SET DEFAULT 'user';
+   ```
+
+3. **Confirm every existing value is a valid enum label first** — the `USING (...::"UserRole")` cast
+   errors at deploy if any row holds a string that isn't an enum member.
+4. **Apply with `prisma migrate deploy`, NOT `migrate dev`.** A second `migrate dev` would re-diff
+   the schema against the DB and try to "fix" your hand-edit, re-introducing the DROP/ADD.
+
+**Reference impl:** `apps/web/prisma/migrations/20260626000000_user_role_enum/migration.sql`
+(SESSION_0449 — `User.role` String→`UserRole` enum). The **inverse** (dropping a column / enum) hits
+the same hand-author requirement and will recur for the gated Stage-2 brand-column prune.
 
 ### 4. Verify
 

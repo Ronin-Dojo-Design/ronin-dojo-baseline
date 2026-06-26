@@ -4,8 +4,8 @@ slug: ronin-security-review
 type: index
 status: active
 created: 2026-05-31
-updated: 2026-06-24
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/security/ronin-security-risk-register.md
@@ -63,6 +63,7 @@ Use six security functions as the organizing model:
 - Better Auth is centralized in `apps/web/lib/auth.ts`; the auth architecture also documents the relationship between Passport, DirectoryProfile, Membership, and brand/org-scoped authorization.
 - Safe-action clients exist for public, user, admin, tournament-admin, and media-upload actions.
 - `apps/web/lib/authz.ts` centralizes role/org authorization helpers. *(2026-06-24: the brand-scope extension it described as defense-in-depth is superseded under single brand; role/org authorization stays live.)*
+- `apps/web/server/web/organization/org-admin-access.ts` centralizes org-settings authorization (`hasOrgAdminAccess` for READ, `assertOrgAdminAccess` for WRITE). *(2026-06-26, SESSION_0448: any `User.role === "admin"` now passes both, so platform admins are super-users over every org's settings/members/invites/theme — see risk register #11. Owner and `ORG_ADMIN` members also pass; everyone else is denied.)*
 - Central rate-limit buckets exist in `apps/web/lib/rate-limiter.ts`.
 - The Stripe webhook route verifies signatures, persists event IDs, and handles fulfillment idempotently.
 - `AuditLog` and `DataSubjectRequest` models already exist in Prisma.

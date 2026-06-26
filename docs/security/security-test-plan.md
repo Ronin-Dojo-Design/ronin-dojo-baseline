@@ -4,8 +4,8 @@ slug: security-test-plan
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-06-24
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -52,6 +52,23 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 - Organization owner cannot edit another organization. *(2026-06-24: "same brand" qualifier dropped — single brand.)*
 - Node editor cannot rewrite canonical lineage truth without required role.
 - Admin server actions reject unauthorized users before mutation.
+
+### Org-admin access helper (`org-admin-access.ts`, SESSION_0448)
+
+These cover `hasOrgAdminAccess` / `assertOrgAdminAccess` in `apps/web/server/web/organization/org-admin-access.ts`, now live on prod (PR #163).
+
+- `hasOrgAdminAccess` returns `true` for a platform admin (`User.role === "admin"`) against **any** org.
+- `hasOrgAdminAccess` returns `true` for the org owner.
+- `hasOrgAdminAccess` returns `true` for an `ORG_ADMIN` member of that org.
+- `hasOrgAdminAccess` returns `false` for an unrelated signed-in user (no ownership, no `ORG_ADMIN`, not a platform admin).
+- `hasOrgAdminAccess` returns `false` for an anonymous (unauthenticated) request.
+- `assertOrgAdminAccess` throws `ACCESS_DENIED` for both false cases (unrelated signed-in user and anonymous).
+- Cross-org platform-admin writes (settings/members/invites/theme) write an `AuditLog` event; a mutation with no audit event fails the test.
+
+### Public org resolution (`/organizations/[slug]`, SESSION_0448)
+
+- `/organizations/[slug]` resolves any org by slug (brand-agnostic, no positive visibility gate) — assert this is the intended behavior, not a leak.
+- The public `organizationDetailPayload` does NOT leak owner PII: a null-name owner's `owner.email` must not render on the public page (the `owner.name ?? owner.email` fallback should expose no email).
 
 ## Payment tests
 
@@ -101,6 +118,7 @@ This plan turns the SESSION_0313 security review into executable test coverage. 
 - ~~Prisma brand-scope extension tests.~~ *(2026-06-24: superseded — no brand-scope extension under single brand.)*
 - **(KEEP)** Host→brand origin-gate tests — `resolveBrand` / `BRAND_TRUSTED_ORIGINS` trusted-vs-untrusted origin coverage (`apps/web/lib/brand-context.test.ts`).
 - Authz helper tests for role/org combinations. *(2026-06-24: brand dimension is constant BBL.)*
+- Org-admin access-helper tests — `hasOrgAdminAccess` / `assertOrgAdminAccess` over platform-admin / owner / `ORG_ADMIN` / unrelated / anonymous combinations (`apps/web/server/web/organization/org-admin-access.ts`, SESSION_0448).
 - Safe logger redaction tests.
 - Env validation tests by feature flag.
 

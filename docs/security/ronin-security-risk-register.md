@@ -4,8 +4,8 @@ slug: ronin-security-risk-register
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-06-24
-last_agent: claude-session-0447
+updated: 2026-06-26
+last_agent: claude-session-0449
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -48,6 +48,8 @@ The most important theme is **documented controls must become enforced, tested, 
 | 8 | Payment/access drift | Medium-high | Stripe webhook idempotency and refund/dispute logic exist; reconciliation must be operationalized | Nightly Stripe/internal entitlement drift audit + alerts/admin replay | Payments |
 | 9 | Dirstarter template model debt | Medium | Template/reference models still exist during learning phase | Delete or quarantine unused template models/routes before production cutover | Product/platform |
 | 10 | AI/MCP data leakage | Medium | AI/content tooling exists or is emerging | Add AI data safety policy, prompt redaction, tool audit, human approval gates | AI/content |
+| 11 | Platform-admin org super-user scope (SESSION_0448) | Medium | `hasOrgAdminAccess` (`apps/web/server/web/organization/org-admin-access.ts`) now grants any `User.role === "admin"` READ + (via `assertOrgAdminAccess`) WRITE to **every** org's settings/members/invites/theme — not just owned/ORG_ADMIN orgs. Live on prod (PR #163); 2 platform admins today (Brian, Tony Hua). | Confirm `AuditLog` records cross-org admin writes; keep the platform-admin set minimal (review periodically); alert on unexpected `role:admin` grants | Admin/auth |
+| 12 | Public org-resolution owner-email PII exposure (SESSION_0448) | Medium | `getOrganizationBySlug` is now brand-agnostic (any org resolves by slug on public `/organizations/[slug]`, no positive visibility gate). `organizationDetailPayload` selects `owner.email`; the public page renders `owner.name ?? owner.email`, so a null-name owner's email can appear publicly. The brand-scoping drop widened which orgs resolve publicly (incl. 3 BASELINE orgs). | Drop `owner.email` from the public payload or gate the email fallback; backfill `owner.name`; reconsider a visibility gate for non-public orgs | Web/privacy |
 
 ## Risk Detail
 
@@ -143,6 +145,38 @@ Unused template models/routes/admin screens add attack surface and permission am
 ### 10. AI/MCP safety
 
 AI tooling should not access raw PII, rosters, payment state, waivers, or private evidence by default. Mutating AI tools require human approval, tool-call logs, and explicit scopes.
+
+### 11. Platform-admin org super-user scope (SESSION_0448)
+
+> **2026-06-26, SESSION_0448 (live on prod via PR #163).** `hasOrgAdminAccess`
+> in `apps/web/server/web/organization/org-admin-access.ts` now grants
+> org-settings READ — and, through `assertOrgAdminAccess`, WRITE — to any
+> `User.role === "admin"` account. Platform admins are therefore super-users over
+> **every** org's settings, members, invites, and theme, not just orgs they own
+> or hold `ORG_ADMIN` on. This is intended (2 trusted platform admins today:
+> Brian and Tony Hua), but it concentrates cross-org authority and must be
+> monitored.
+
+Controls and mitigations:
+
+- Confirm `AuditLog` records every cross-org admin write (settings/members/invites/theme) with the acting admin id; a mutation with no audit event should fail the test gate (see security test plan).
+- Keep the platform-admin set minimal — review the `role:admin` roster periodically and alert on any unexpected grant.
+- Treat `assertOrgAdminAccess` as the single write boundary; new org-mutating actions must call it rather than re-deriving access.
+
+### 12. Public org-resolution owner-email PII exposure (SESSION_0448)
+
+> **2026-06-26, SESSION_0448 (live on prod via PR #163).** `getOrganizationBySlug`
+> is now brand-agnostic: it resolves any org by slug on the public
+> `/organizations/[slug]` route with no positive visibility gate. The brand-scoping
+> drop widened which orgs resolve publicly (including 3 BASELINE orgs).
+
+The related PII concern: `organizationDetailPayload` selects `owner.email`, and the public page renders `owner.name ?? owner.email`. For an owner whose `name` is null, the email falls through and can appear publicly.
+
+Controls and mitigations:
+
+- Drop `owner.email` from the public org payload, or gate the `owner.name ?? owner.email` fallback so a null name renders a non-PII placeholder instead of the email.
+- Backfill `owner.name` for null-name owners on now-public orgs.
+- Reconsider whether non-public orgs should resolve at all on the public route (a visibility gate), now that resolution is brand-agnostic.
 
 ## Relationships
 

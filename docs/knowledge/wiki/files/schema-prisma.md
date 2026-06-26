@@ -4,9 +4,9 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-06-24
+updated: 2026-06-26
 author: Brian + Copilot
-last_agent: claude-session-0441
+last_agent: claude-session-0449
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
@@ -37,9 +37,10 @@ tags: [prisma, schema, database, s1]
 
 ## Summary
 
-The Prisma schema defining all database models for the Ronin Dojo platform. **125 models, 86 enums,
+The Prisma schema defining all database models for the Ronin Dojo platform. **125 models, 87 enums,
 ~4127 lines** (59 migrations). Source of truth for the data layer. *(Counts refreshed SESSION_0441;
-the prior 109/55/~3500 figure was frozen at SESSION_0152.)*
+enum count +1 at SESSION_0449 for `UserRole`; the prior 109/55/~3500 figure was frozen at
+SESSION_0152.)*
 
 ## Intent
 
@@ -65,6 +66,9 @@ Two sections:
 
 - **Identity (Passport-rooted, ADR 0025):** Passport (identity SoT; `userId` nullable — account
   attaches on claim), User, DirectoryProfile
+  - `User.role` is now a typed `UserRole` enum (`user` / `admin` / `tournament_director`) as of
+    SESSION_0449 — was free-text String; Better Auth's `admin()` plugin owns the field;
+    `lineage_tree_admin` and `guest` are synthetic UI/code labels, never stored.
 - **Organization:** Organization, Discipline, OrganizationDiscipline, Affiliation (school axis,
   separate from Membership)
 - **Ranks:** RankSystem, Rank (`colorHex` belt color), RankAward (canonical promotion fact)

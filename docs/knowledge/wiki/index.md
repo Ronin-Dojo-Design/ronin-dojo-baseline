@@ -646,6 +646,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [discipline-queries.ts](files/discipline-queries.md) | file | active |
 | [organizations/page.tsx](files/organizations-list-page.md) | file | active |
 | [organizations/[slug]/page.tsx](files/organization-detail-page.md) | file | active |
+| [org-admin-access.ts](files/org-admin-access.md) | file | active |
 | [join-organization-button.tsx](files/join-organization-button.md) | file | active |
 | [directory/queries.ts](files/directory-queries.md) | file | active |
 | [directory/schema.ts](files/directory-schema.md) | file | active |

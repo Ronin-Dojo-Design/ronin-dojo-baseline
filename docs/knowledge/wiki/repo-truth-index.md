@@ -98,6 +98,12 @@ Brand is a data and routing concern, not a separate backend stack.
 
 Defines: Better-Auth as auth base, host brand vs active app brand distinction, authorization model, mobile auth decision boundary, future Prisma brand-scope enforcement.
 
+Also covers (SESSION_0448/0449):
+
+- The platform `User.role` enum — `UserRole { user, admin, tournament_director }` — the role axis for platform-wide authorization.
+- The platform-admin-manages-all-orgs rule: `hasOrgAdminAccess` / `assertOrgAdminAccess` (`server/web/organization/org-admin-access.ts`) grant org owner + `ORG_ADMIN` **and** any platform admin (`User.role === "admin"`) read+write access to every org's settings.
+- Brand-agnostic public org resolution: `getOrganizationBySlug(_brand, slug)` (`server/web/organization/queries.ts`) resolves by `slug` alone (the `_brand` arg is ignored), so non-BBL orgs now resolve on the public `/organizations/[slug]` route — there is no positive visibility gate.
+
 **Rule:** Do not create auth assumptions outside this file without updating it.
 
 #### F. Session / handoff truth
