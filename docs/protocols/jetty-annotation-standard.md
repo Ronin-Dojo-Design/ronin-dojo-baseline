@@ -4,11 +4,12 @@ slug: jetty-annotation-standard
 type: protocol
 status: active
 created: 2026-05-09
-updated: 2026-05-12
-last_agent: copilot-session-0147
+updated: 2026-06-26
+last_agent: claude-session-0451
 pairs_with:
   - apps/web/prisma/schema.prisma
   - docs/protocols/code-guardrails.md
+  - docs/protocols/code-quality-matrix.md
   - docs/rituals/closing.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -73,7 +74,7 @@ New server modules (actions, queries, schemas) and significant new components ge
 /**
  * @added   SESSION_0147 (2026-05-12)
  * @why     Admin CRUD actions for invite management (create, revoke, delete)
- * @wired   app/admin/invites/ (list, new, detail pages)
+ * @wired   app/app/invites/ (list, new, detail pages)
  */
 "use server"
 

@@ -515,6 +515,32 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** A clean close from SESSION_0305 forward produces **exactly one** close commit — no `fill close evidence` follow-up commit appears in `git log`.
 - **Status:** mitigated
 
+### FS-0026 — Route migration (admin→app) left `revalidatePath()` on the retired path prefix
+
+- **Session:** SESSION_0448 (the admin→app migration); surfaced + fixed SESSION_0451.
+- **Agent:** discovered by Claude / Petey (SESSION_0451).
+- **Step failed:** the SESSION_0448 `app/admin/*` → `app/app/*` route migration moved the pages and added
+  `/admin/*`→`/app/*` redirects in `next.config.ts` (so links keep working), but did **not** update the
+  `revalidatePath("/admin/...")` calls in the server actions. No ritual step says "when you move a route, grep
+  the old prefix in `revalidatePath`/`redirect`/`<Link>`."
+- **SOP source:** none existed — this is the gap. (`closing.md` JETTY sweep checks *touched* files, but a route
+  move's revalidate callers are usually NOT in the migration diff.)
+- **Root cause:** a `revalidatePath` against a 308 redirect-stub path is a silent no-op for the real page — the
+  mutation persists to the DB but the Router Cache for the live `/app/*` page is never busted. The redirects
+  *masked* the break (pages loaded, saves persisted) so it read as a save/display bug. Undetected 0448→0451
+  until the operator hit "rank saves but reverts" on the lineage admin card.
+- **Impact:** MEDIUM — admin-wide. Post-mutation refresh silently broken across lineage, users, memberships,
+  entitlements, tournaments, org-settings for ~3 sessions. No data loss (writes persisted); stale views until a
+  hard refresh.
+- **Corrective action:** SESSION_0451 swept all 8 files (`"/admin/` + `` `/admin/ `` → `/app/`; imports
+  untouched). Process fix: a **route-migration checklist** — when moving/renaming a route, grep the old prefix
+  across `revalidatePath`, `redirect()`, `<Link href>`, `router.push` and update in the SAME change. Captured in
+  `[[admin-app-migration-revalidate-paths]]`.
+- **Verification:** typecheck/lint/format + local `next build` green; root cause proven on three legs (prod
+  audit log showing persisted-but-unrefreshed saves, `/admin/*`=308-stub vs `/app/*`=live topology, the
+  `next.config.ts` redirect map). Live render of the fixed refresh is deploy-gated (verify post-merge).
+- **Status:** mitigated (deploy-verify pending).
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.
