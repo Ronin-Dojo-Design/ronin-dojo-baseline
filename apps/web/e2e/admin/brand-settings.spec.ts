@@ -23,29 +23,25 @@ test.describe("Admin brand-settings E2E", () => {
     }
   })
 
-  test("admin can view brand-settings page with all 4 brands", async ({ page }) => {
+  test("admin can view the brand-settings page (single BBL editor)", async ({ page }) => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
 
     await page.goto("/admin/brand-settings")
 
-    // Wait for page to render — all 4 brand headings should appear
     await expect(page.getByRole("heading", { name: "Brand Settings", level: 2 })).toBeVisible({
       timeout: 20_000,
     })
 
-    for (const brand of [
-      "Baseline Martial Arts",
-      "Ronin Dojo Design",
-      "Black Belt Legacy",
-      "WEKAF USA",
-    ]) {
-      await expect(page.getByRole("heading", { name: brand, level: 3 })).toBeVisible()
+    // Single-brand collapse (SESSION_0447): the 4-brand picker is now one BBL editor — the
+    // only brand-section heading is Black Belt Legacy, with a single Save button.
+    await expect(page.getByRole("heading", { name: "Black Belt Legacy", level: 3 })).toBeVisible()
+    for (const goneBrand of ["Baseline Martial Arts", "Ronin Dojo Design", "WEKAF USA"]) {
+      await expect(page.getByRole("heading", { name: goneBrand, level: 3 })).toHaveCount(0)
     }
 
-    // Each brand section should have a Save button
     const saveButtons = page.getByRole("button", { name: /save settings/i })
-    await expect(saveButtons).toHaveCount(4)
+    await expect(saveButtons).toHaveCount(1)
   })
 
   test("admin can save BBL colors and see toast confirmation", async ({ page }) => {

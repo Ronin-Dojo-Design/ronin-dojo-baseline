@@ -4,7 +4,7 @@
  * @wired   server/admin/memberships/queries.ts, server/admin/programs/queries.ts
  */
 import { Suspense } from "react"
-import { MembershipsTable } from "~/app/admin/memberships/_components/memberships-table"
+import { MembershipsTable } from "~/app/app/memberships/_components/memberships-table"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findMemberships } from "~/server/admin/memberships/queries"
 import { membershipsTableParamsCache } from "~/server/admin/memberships/schema"

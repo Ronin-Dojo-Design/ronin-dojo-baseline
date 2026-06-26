@@ -8,21 +8,19 @@ import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { Container } from "~/components/web/ui/container"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { Tile, TileCaption, TileDivider } from "~/components/web/ui/tile"
-import { Brand } from "~/.generated/prisma/client"
-import { brandHasFeature } from "~/config/brand-features"
 import { cx } from "~/lib/utils"
 import { findCategories } from "~/server/web/categories/queries"
 
+// NOTE (SESSION_0447): currently unused, kept as reference. Single-brand collapse —
+// the former `brandHasFeature(BBL, "listings")` gate was constant-true and removed.
 export const Bottom = async ({ className, ...props }: ComponentProps<typeof Wrapper>) => {
   const t = await getTranslations("components.bottom")
 
-  // Categories are the listings taxonomy — brands without listings skip the rail.
-  const categories = brandHasFeature(Brand.BBL, "listings")
-    ? await findCategories({
-        orderBy: { tools: { _count: "desc" } },
-        take: 12,
-      })
-    : []
+  // Categories are the listings taxonomy.
+  const categories = await findCategories({
+    orderBy: { tools: { _count: "desc" } },
+    take: 12,
+  })
 
   return (
     <Container>

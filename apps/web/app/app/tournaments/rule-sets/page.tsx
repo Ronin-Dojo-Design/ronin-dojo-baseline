@@ -1,6 +1,6 @@
 import { Suspense } from "react"
-import { TournamentsSubNav } from "~/app/admin/tournaments/_components/tournaments-sub-nav"
-import { RuleSetsTable } from "~/app/admin/tournaments/rule-sets/_components/rule-sets-table"
+import { TournamentsSubNav } from "~/app/app/tournaments/_components/tournaments-sub-nav"
+import { RuleSetsTable } from "~/app/app/tournaments/rule-sets/_components/rule-sets-table"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { findRuleSetsPaginated } from "~/server/admin/tournaments/queries"
 import { ruleSetsTableParamsCache } from "~/server/admin/tournaments/schema"

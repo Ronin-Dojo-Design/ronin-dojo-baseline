@@ -14,25 +14,26 @@ import { cache } from "react"
 import {
   organizationDetailPayload,
   organizationManyPayload,
-  organizationOnePayload,
 } from "~/server/web/organization/payloads"
 import { db } from "~/services/db"
 
-export const getOrganizationById = cache(async (id: string) => {
-  return db.organization.findUnique({
-    where: { id },
-    select: organizationOnePayload,
-  })
-})
-
-export const getOrganizationBySlug = async (brand: string, slug: string) => {
+export const getOrganizationBySlug = async (_brand: string, slug: string) => {
   "use cache"
 
   cacheTag(`organization-${slug}`)
   cacheLife("minutes")
 
-  return db.organization.findUnique({
-    where: { brand_slug: { brand: brand as any, slug } },
+  // Single-brand app: org slugs are unique across the legacy multi-brand data, so resolve
+  // by slug alone. The `_brand` arg is retained for signature compatibility but intentionally
+  // ignored — brand-scoping the lookup 404s legacy non-BBL orgs (e.g. a BASELINE-branded org)
+  // on every /organizations/[slug] route. Drop the arg in the Stage-2 brand-column removal.
+  // (SESSION_0448 — operator directive.)
+  return db.organization.findFirst({
+    where: { slug },
+    // Deterministic tie-break: `slug` is only `@@unique([brand, slug])`, not globally unique,
+    // so a same-slug/different-brand pair (none today — 0 dups verified) would otherwise resolve
+    // arbitrarily. Oldest org wins until Stage-2 makes `slug` globally unique and drops `brand`.
+    orderBy: { createdAt: "asc" },
     select: organizationDetailPayload,
   })
 }
@@ -56,37 +57,6 @@ export const getOrganizationsByBrand = async (brand: string) => {
     orderBy: { name: "asc" },
   })
 }
-
-export const getUserMemberships = cache(async (userId: string) => {
-  return db.membership.findMany({
-    where: { userId },
-    select: {
-      id: true,
-      brand: true,
-      status: true,
-      joinedAt: true,
-      createdAt: true,
-      organization: {
-        select: { id: true, name: true, slug: true, brand: true },
-      },
-      discipline: {
-        select: { id: true, name: true, slug: true },
-      },
-      style: {
-        select: { id: true, name: true },
-      },
-      rank: {
-        select: { id: true, name: true, sortOrder: true },
-      },
-      roleAssignments: {
-        select: {
-          role: { select: { id: true, code: true, name: true } },
-        },
-      },
-    },
-    orderBy: { createdAt: "desc" },
-  })
-})
 
 /**
  * Org-scoped membership roster for the org settings → members surface.

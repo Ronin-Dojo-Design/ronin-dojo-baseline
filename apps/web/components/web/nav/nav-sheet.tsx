@@ -28,10 +28,7 @@ import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
-import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
-import { useBrand } from "~/contexts/brand-context"
 import { useSession } from "~/lib/auth-client"
-import { cx } from "~/lib/utils"
 
 // Inlined here (not imported from lib/media, which pulls the Prisma client into the
 // browser bundle — this is a client component). Single-brand BBL gi fallback avatar.
@@ -47,18 +44,17 @@ type NavSheetProps = {
 // Curated BBL nav (SESSION_0416 operator). Posts + Blog both kept for now to
 // compare. Organizations / Disciplines / Tournaments / Courses / Gear / Merch cut.
 const PRIMARY_NAV_ITEMS = [
-  { href: "/lineage/join", key: "lineage", icon: GitBranchIcon, feature: "lineage" },
-  { href: "/directory", key: "directory", icon: ContactRoundIcon, feature: "directory" },
-  { href: "/members", key: "members", icon: UsersIcon, feature: "members" },
-  { href: "/schools", key: "schools", icon: SchoolIcon, feature: "schools" },
-  { href: "/posts", key: "posts", icon: NewspaperIcon, feature: "posts" },
+  { href: "/lineage/join", key: "lineage", icon: GitBranchIcon },
+  { href: "/directory", key: "directory", icon: ContactRoundIcon },
+  { href: "/members", key: "members", icon: UsersIcon },
+  { href: "/schools", key: "schools", icon: SchoolIcon },
+  { href: "/posts", key: "posts", icon: NewspaperIcon },
   // Curriculum / Techniques / Blog hidden for launch (SESSION_0417) — routes still
   // exist; re-add here to resurface in nav.
 ] satisfies Array<{
   href: string
   key: string
   icon: typeof GitBranchIcon
-  feature: BrandFeature
 }>
 
 /**
@@ -70,12 +66,10 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
   const { data: session } = useSession()
   const pathname = usePathname()
   const t = useTranslations()
-  const { brand } = useBrand()
   // BBL (minimal chrome) drawer rides the shared `.chrome-surface` remap so the
   // NavLink / Button / Avatar primitives render on the brand-dark surface with no
-  // per-component overrides; other brands keep the default light/dark Sheet.
-  const minimal = brandHasMinimalChrome(brand)
-  const navItems = PRIMARY_NAV_ITEMS.filter(item => brandHasFeature(brand, item.feature))
+  // per-component overrides.
+  const navItems = PRIMARY_NAV_ITEMS
   const [loginOpen, setLoginOpen] = useState(false)
 
   // Close when the user navigates to a new page
@@ -86,7 +80,7 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className={cx("w-[280px]", minimal && "chrome-surface")}>
+        <SheetContent side="right" className="w-[280px] chrome-surface">
           <SheetTitle className="sr-only">{t("navigation.open_menu")}</SheetTitle>
 
           <SheetHeader>

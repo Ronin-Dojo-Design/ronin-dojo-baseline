@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
-import { LineageClaimabilityToggle } from "~/app/admin/lineage/_components/lineage-claimability-toggle"
-import { LineageSelectedRankSelect } from "~/app/admin/lineage/_components/lineage-selected-rank-select"
+import { LineageAvatarAction } from "~/app/app/lineage/_components/lineage-avatar-action"
+import { LineageClaimabilityToggle } from "~/app/app/lineage/_components/lineage-claimability-toggle"
+import { LineageSelectedRankSelect } from "~/app/app/lineage/_components/lineage-selected-rank-select"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -201,6 +202,14 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
                   />
                   <Note>{member.isClaimable ? "On" : "Off"}</Note>
                 </Stack>
+
+                {member.node.passport?.id && (
+                  <LineageAvatarAction
+                    passportId={member.node.passport.id}
+                    displayName={displayName(member)}
+                    initialAvatarUrl={member.node.passport.avatarUrl}
+                  />
+                )}
 
                 <Stack size="xs" className="justify-end" wrap>
                   {member.currentClaim && (

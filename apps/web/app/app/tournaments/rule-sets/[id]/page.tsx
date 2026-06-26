@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { RuleSetForm } from "~/app/admin/tournaments/rule-sets/_components/rule-set-form"
+import { RuleSetForm } from "~/app/app/tournaments/rule-sets/_components/rule-set-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { findRuleSetById } from "~/server/admin/tournaments/queries"
 import { db } from "~/services/db"

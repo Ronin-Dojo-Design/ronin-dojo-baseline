@@ -1,40 +1,16 @@
 "use client"
 
-import {
-  BookOpenIcon,
-  BuildingIcon,
-  ChevronDownIcon,
-  ContactRoundIcon,
-  GitBranchIcon,
-  GraduationCapIcon,
-  SchoolIcon,
-  SearchIcon,
-  ShieldIcon,
-  ShoppingBagIcon,
-  StoreIcon,
-  SwordsIcon,
-  UsersIcon,
-} from "lucide-react"
+import { SearchIcon } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { type ComponentProps, useEffect, useState } from "react"
 import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
 import { NavSheet } from "~/components/web/nav/nav-sheet"
-import { ThemeSwitcher } from "~/components/web/theme-switcher"
-import { type BrandFeature, brandHasFeature, brandHasMinimalChrome } from "~/config/brand-features"
-import { useBrand } from "~/contexts/brand-context"
 import { Container } from "~/components/web/ui/container"
 import { Hamburger } from "~/components/web/ui/hamburger"
 import { Logo } from "~/components/web/ui/logo"
-import { NavLink } from "~/components/web/ui/nav-link"
 import { UserMenu } from "~/components/web/user-menu"
 import { useSearch } from "~/contexts/search-context"
 import { useSession } from "~/lib/auth-client"
@@ -79,6 +55,13 @@ const MinimalAuthControls = () => {
   )
 }
 
+/**
+ * Public header — minimal (BBL) chrome (SESSION_0361 legacy spec): logo +
+ * hamburger left, search + account/Join right; primary nav lives in the slide-in
+ * (`NavSheet`). Single-brand collapse (SESSION_0447): the former full-chrome
+ * inline-nav branch (gated on the now-removed per-brand chrome flag) was dead for
+ * the only brand and has been removed.
+ */
 const Header = ({
   className,
   userAvatarUrl,
@@ -86,11 +69,6 @@ const Header = ({
 }: ComponentProps<"div"> & { userAvatarUrl?: string | null }) => {
   const search = useSearch()
   const t = useTranslations()
-  const { brand } = useBrand()
-  const has = (feature: BrandFeature) => brandHasFeature(brand, feature)
-  // Minimal chrome (SESSION_0361 legacy spec): logo + hamburger + Join CTA + account;
-  // primary nav lives in the slide-in only.
-  const minimal = brandHasMinimalChrome(brand)
   // Escape + route-change closing live in NavSheet (Base UI Dialog handles Escape).
   const [isNavOpen, setNavOpen] = useState(false)
 
@@ -98,9 +76,8 @@ const Header = ({
     <header
       className={cx(
         "fixed top-(--header-top) inset-x-0 z-50",
-        // Brand-dark chrome for minimal brands (BBL) via the shared
-        // `.chrome-surface` remap; every other brand keeps the plain background.
-        minimal ? "chrome-surface border-b border-chrome-border" : "bg-background",
+        // Brand-dark chrome via the shared `.chrome-surface` remap.
+        "chrome-surface border-b border-chrome-border",
         className,
       )}
       data-state={isNavOpen ? "open" : "close"}
@@ -119,145 +96,18 @@ const Header = ({
               <Hamburger className="size-7" />
             </button>
 
-            {/* BBL ships the white uploaded mark only (no wordmark) on the dark
-                chrome; other brands keep the mark + wordmark lockup. */}
-            <Logo
-              className="min-w-0"
-              hideName={minimal}
-              imageClassName={minimal ? "h-8" : undefined}
-            />
+            {/* BBL ships the white uploaded mark only (no wordmark) on the dark chrome. */}
+            <Logo className="min-w-0" hideName imageClassName="h-8" />
           </Stack>
 
-          {minimal ? (
-            <div className="flex-1 max-lg:hidden" />
-          ) : (
-            <nav className="flex flex-wrap gap-x-4 gap-y-0.5 flex-1 max-lg:hidden">
-              {has("tournaments") && (
-                <NavLink href="/tournaments">{t("navigation.tournaments")}</NavLink>
-              )}
-
-              <DropdownMenu>
-                <NavLink
-                  className="gap-1"
-                  suffix={<ChevronDownIcon className="group-data-open:-rotate-180" />}
-                  render={<DropdownMenuTrigger />}
-                >
-                  {t("navigation.browse")}
-                </NavLink>
-
-                <DropdownMenuContent align="start">
-                  {has("disciplines") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/disciplines" prefix={<ShieldIcon />} />}
-                    >
-                      {t("navigation.disciplines")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("schools") && (
-                    <DropdownMenuItem render={<NavLink href="/schools" prefix={<SchoolIcon />} />}>
-                      {t("navigation.schools")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("organizations") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/organizations" prefix={<BuildingIcon />} />}
-                    >
-                      {t("navigation.organizations")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("courses") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/courses" prefix={<GraduationCapIcon />} />}
-                    >
-                      {t("navigation.courses")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("curriculum") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/curriculum" prefix={<BookOpenIcon />} />}
-                    >
-                      {t("navigation.curriculum")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("techniques") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/techniques" prefix={<SwordsIcon />} />}
-                    >
-                      {t("navigation.techniques")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("lineage") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/lineage" prefix={<GitBranchIcon />} />}
-                    >
-                      {t("navigation.lineage")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("directory") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/directory" prefix={<ContactRoundIcon />} />}
-                    >
-                      {t("navigation.directory")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("members") && (
-                    <DropdownMenuItem render={<NavLink href="/members" prefix={<UsersIcon />} />}>
-                      {t("navigation.members")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("gear") && (
-                    <DropdownMenuItem
-                      render={<NavLink href="/gear" prefix={<ShoppingBagIcon />} />}
-                    >
-                      {t("navigation.gear")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("merch") && (
-                    <DropdownMenuItem render={<NavLink href="/merch" prefix={<StoreIcon />} />}>
-                      {t("navigation.merch")}
-                    </DropdownMenuItem>
-                  )}
-                  {has("blog") && (
-                    <DropdownMenuItem render={<NavLink href="/blog" prefix={<BookOpenIcon />} />}>
-                      {t("navigation.blog")}
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <NavLink href="/about">{t("navigation.about")}</NavLink>
-            </nav>
-          )}
+          <div className="flex-1 max-lg:hidden" />
 
           <Stack size="sm" wrap={false} className="justify-end max-lg:grow">
-            {has("listings") && (
-              <Button size="sm" variant="ghost" className="p-1 text-base" onClick={search.open}>
-                <SearchIcon />
-              </Button>
-            )}
+            <Button size="sm" variant="ghost" className="p-1 text-base" onClick={search.open}>
+              <SearchIcon />
+            </Button>
 
-            {!minimal && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="p-1 -ml-1 text-base max-sm:hidden"
-                render={<ThemeSwitcher />}
-              />
-            )}
-
-            {minimal ? (
-              <MinimalAuthControls />
-            ) : (
-              <>
-                {has("lineage") && (
-                  <JoinCtaButton size="sm" variant="primary">
-                    Join Legacy
-                  </JoinCtaButton>
-                )}
-
-                <UserMenu />
-              </>
-            )}
+            <MinimalAuthControls />
           </Stack>
         </div>
 

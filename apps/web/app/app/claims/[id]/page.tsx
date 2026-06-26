@@ -6,7 +6,7 @@ import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { findProfileClaimById, profileClaimSubjectLabel } from "~/server/admin/claims/claim-queries"
-import { ProfileClaimReviewActions } from "~/app/admin/claims/[id]/_components/profile-claim-review-actions"
+import { ProfileClaimReviewActions } from "~/app/app/claims/[id]/_components/profile-claim-review-actions"
 
 /**
  * Admin profile-claim detail + review (SESSION_0354). Mirrors lineage claim detail.

@@ -1,4 +1,4 @@
-import { TournamentForm } from "~/app/admin/tournaments/_components/tournament-form"
+import { TournamentForm } from "~/app/app/tournaments/_components/tournament-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { Brand } from "~/.generated/prisma/client"
 import { db } from "~/services/db"

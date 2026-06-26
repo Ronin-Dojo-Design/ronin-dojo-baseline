@@ -16,8 +16,6 @@ import { H4 } from "~/components/common/heading"
 import { Skeleton } from "~/components/common/skeleton"
 import { AdBadge, AdLink } from "~/components/web/ads/ad-base"
 import { Favicon } from "~/components/web/ui/favicon"
-import { Brand } from "~/.generated/prisma/client"
-import { brandHasFeature } from "~/config/brand-features"
 import { cx } from "~/lib/utils"
 import { findAdWithFallback } from "~/server/web/ads/actions"
 
@@ -25,12 +23,6 @@ type AdCardProps = CardProps & InferSafeActionFnInput<typeof findAdWithFallback>
 
 const AdCard = async ({ className, type, explicitAd, fallback, ...props }: AdCardProps) => {
   const t = await getTranslations()
-
-  // Ads are gated on the `advertise` brand feature (BBL is excluded — SESSION_0388 gated AdBanner;
-  // SESSION_0390 closes the gap for AdCard, the "Bottom"/footer + post/blog/listing placement).
-  if (!brandHasFeature(Brand.BBL, "advertise")) {
-    return null
-  }
 
   const { data: ad } = await findAdWithFallback({ type, explicitAd, fallback })
 

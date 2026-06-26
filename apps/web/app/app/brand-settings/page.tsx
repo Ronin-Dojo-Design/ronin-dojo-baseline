@@ -1,21 +1,14 @@
 import { PaletteIcon } from "lucide-react"
+import { Brand } from "~/.generated/prisma/client"
 import { H2 } from "~/components/common/heading"
 import { Wrapper } from "~/components/common/wrapper"
-import { findAllBrandSettings } from "~/server/admin/brand-settings/queries"
+import { findBrandSettings } from "~/server/admin/brand-settings/queries"
 import { BrandSettingsForm } from "./_components/brand-settings-form"
 
-const brandLabels: Record<string, string> = {
-  BASELINE_MARTIAL_ARTS: "Baseline Martial Arts",
-  RONIN_DOJO_DESIGN: "Ronin Dojo Design",
-  BBL: "Black Belt Legacy",
-  WEKAF: "WEKAF USA",
-}
-
-const allBrands = ["BASELINE_MARTIAL_ARTS", "RONIN_DOJO_DESIGN", "BBL", "WEKAF"] as const
-
+// Single-brand collapse (SESSION_0447): one editable row (BBL) — the former
+// per-brand list (BASELINE/RONIN/WEKAF) is gone.
 export default async function AppBrandSettingsPage() {
-  const existingSettings = await findAllBrandSettings()
-  const settingsMap = new Map(existingSettings.map(s => [s.brand, s]))
+  const settings = await findBrandSettings(Brand.BBL)
 
   return (
     <Wrapper size="lg" gap="sm">
@@ -24,21 +17,13 @@ export default async function AppBrandSettingsPage() {
         <div>
           <H2>Brand Settings</H2>
           <p className="text-sm text-muted-foreground">
-            Theme colors and asset URLs per brand. Changes take effect on next page load.
+            Theme colors and asset URLs. Changes take effect on next page load.
           </p>
         </div>
       </div>
 
-      <div className="space-y-8">
-        {allBrands.map(brand => (
-          <div key={brand} className="rounded-lg border p-6">
-            <BrandSettingsForm
-              brand={brand}
-              brandLabel={brandLabels[brand] ?? brand}
-              settings={settingsMap.get(brand) ?? null}
-            />
-          </div>
-        ))}
+      <div className="rounded-lg border p-6">
+        <BrandSettingsForm settings={settings} />
       </div>
     </Wrapper>
   )

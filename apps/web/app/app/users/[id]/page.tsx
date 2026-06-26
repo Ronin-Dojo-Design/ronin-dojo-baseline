@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
-import { UploadGrantToggle } from "~/app/admin/users/_components/upload-grant-toggle"
-import { UserForm } from "~/app/admin/users/_components/user-form"
+import { UploadGrantToggle } from "~/app/app/users/_components/upload-grant-toggle"
+import { UserForm } from "~/app/app/users/_components/user-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { Brand } from "~/.generated/prisma/client"
 import { findUserById } from "~/server/admin/users/queries"

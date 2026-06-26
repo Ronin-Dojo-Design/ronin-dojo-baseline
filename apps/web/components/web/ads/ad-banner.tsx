@@ -5,14 +5,12 @@ import { Card } from "~/components/common/card"
 import { AdBadge, AdLink } from "~/components/web/ads/ad-base"
 import { Container } from "~/components/web/ui/container"
 import { Favicon } from "~/components/web/ui/favicon"
-import { Brand } from "~/.generated/prisma/client"
-import { brandHasFeature } from "~/config/brand-features"
 import { cx } from "~/lib/utils"
 import { findAdWithFallback } from "~/server/web/ads/actions"
 
+// NOTE (SESSION_0447): currently unused, kept as reference. Single-brand collapse —
+// the former `brandHasFeature(BBL, "advertise")` gate was constant-true and removed.
 export const AdBanner = async ({ className, ...props }: ComponentProps<typeof Card>) => {
-  if (!brandHasFeature(Brand.BBL, "advertise")) return null
-
   const type = "Banner"
   const t = await getTranslations("components.ads")
   const { data: ad } = await findAdWithFallback({ type })
