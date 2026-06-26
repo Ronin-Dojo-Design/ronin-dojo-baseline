@@ -95,7 +95,10 @@ prod data ops dry-run-gated.
 #### SESSION_0449_TASK_00 — Land PR #163
 
 - **Agent:** Petey (orchestrate) + Doug (verify) + `/code-review ultra` or `/pr-fix-loop` (independent pass)
-- **What:** get the 23-commit 0448 stack reviewed + merged → prod.
+- **What:** get the 25-commit 0448 stack reviewed + merged → prod. **As of pre-stage (2026-06-25) CI is
+  GREEN / mergeState CLEAN** — the only e2e failure (chromium `brand-settings.spec.ts` asserted 4 brands,
+  stale after the 0447 single-brand collapse) was fixed in `b132f08c`. So TASK_00 = re-confirm green + the
+  review pass + merge (no fix step expected).
 - **Steps:** `gh pr checks 163` — if red, fix on the branch (push updates the PR; no prod deploy until merge);
   run `/code-review ultra` (or `/pr-fix-loop`) focused on the **two security-sensitive changes**:
   `server/web/organization/org-admin-access.ts` (authz widening — `role==="admin"` ⇒ all-org *write* via
