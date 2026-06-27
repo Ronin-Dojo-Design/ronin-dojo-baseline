@@ -206,20 +206,29 @@ and DB-back the AdminKanban board (P3, re-grill first).
 
 ## Next session
 
+> **Two lanes — read carefully.** SESSION_0453 split the next work into an **autonomous** safe lane (overnight
+> `auto-session.sh`) and an **operator-gated** lane. They share this block on purpose.
+
 ### Goal
 
-**Drive ledger debt toward ≈zero so Brian Truelson lands on a bug-free MVP — then send FI-001.** Bundle the
-top ledger-backlog items (dogfood the loop). Headline lanes: clean up the duplicate clone trees + build the
-**admin CRUD / chrome for handling lineage branches & subtrees** (so tree state is manageable, not hand-fixed),
-then FI-001 `--backfill` + `--send`.
+Drive ledger debt toward ≈zero with **safe, schema-free** slices so Brian Truelson eventually lands on a
+bug-free MVP — **then** (operator-gated) the clone-tree cleanup + admin branch/subtree CRUD + the FI-001 send.
 
 ### First task
 
-1. **`bun scripts/ledger-backlog.ts`** → bundle 3–5 coherent items (dogfood the new bow-in step).
-2. **Clone-tree cleanup** (WL-P2-21): audit + remove the duplicate unpublished `rigan-machado-bjj-lineage`
+**AUTONOMOUS sessions (`auto-session.sh`):** bow in against
+[`docs/petey-plan-0454-autonomous-paydown.md`](../petey-plan-0454-autonomous-paydown.md) and do the **next
+unchecked slice** (start at **Slice 1 — D-024**). Treat its **HARD BOUNDARY as binding** (schema-free,
+behavior-preserving, no prod data, no FI-001, no `brand`/`prisma`/Neon). One slice → one PR. After the last
+slice (or on any STOP), **hand back to the operator** per the plan's hand-back block.
+
+**OPERATOR-ONLY — do NOT autonomize (next interactive session):**
+
+1. **Clone-tree cleanup** (WL-P2-21): audit + remove the duplicate unpublished `rigan-machado-bjj-lineage`
    trees on prod (careful — ~16–17 members each; verify against PROD, not the snapshot).
-3. **Admin branch/subtree CRUD + chrome** so lineage tree topology is operator-manageable.
-4. **FI-001 send** (the gate now passes truthfully): `--backfill` → `--send` btruelson@gmail.com → verify his claim E2E.
+2. **Admin branch/subtree CRUD + chrome** so lineage tree topology is operator-manageable (no more hand-SQL).
+3. **FI-001 send** (the `--verify` gate now passes truthfully): `send-bbl-truelson-thankyou.ts` `--backfill` →
+   `--send` btruelson@gmail.com → verify his claim E2E. **Blocked until ledger debt ≈zero.**
 
 ### Inputs to read
 
