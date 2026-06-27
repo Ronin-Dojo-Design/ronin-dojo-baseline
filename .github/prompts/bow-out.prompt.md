@@ -1,95 +1,53 @@
 ---
-description: "Closing ritual — end the current session (v5.1; single close mode)"
+description: "Closing ritual — end the current session (single close mode)"
 mode: "agent"
 ---
 
 # Bow Out — Closing Ritual
 
-**Source of truth:** [`docs/rituals/closing.md`](../../docs/rituals/closing.md). Read and execute it as written. This file is a thin pointer plus the minimum binding steps so the ritual can't be skipped.
+**Source of truth:** [`docs/rituals/closing.md`](../../docs/rituals/closing.md). **Read and execute it as
+written** — agent-agnostic and binding for every agent (Claude, Copilot, **Codex**). This file is a **thin
+pointer, not a second copy** of the steps (a duplicated step-list rots — leaned at SESSION_0453 per ADR 0033 D7).
 
-This ritual is agent-agnostic. When you stamp `last_agent` on touched docs, name the agent that actually executed (e.g., `claude-session-NNNN`, `copilot-session-NNNN`, `codex-session-NNNN`). Do not rewrite past values.
+When you stamp `last_agent` on touched docs, name the agent that executed (`claude-`/`copilot-`/`codex-session-NNNN`);
+do not rewrite past values.
 
-## Close mode
+**One close mode.** Status is `in-progress` → `closed`. Single source of truth = the SESSION frontmatter
+`status:` field (the body `## Status` is a pointer, SESSION_0342). The legacy `closed-quick` / `closed-full` /
+`closed-unclean` values are **retired** — do not use them for new sessions.
 
-One mode: **closed**. No quick/full/unclean distinction (consolidated SESSION_0241). Status values are `in-progress` or `closed`.
+## Must-not-skip gates (the ritual has the full, current procedure)
 
-## Binding steps
+- **Update the SESSION file** (`docs/sprints/SESSION_NNNN.md`): `What landed`, `Files touched`,
+  `Decisions resolved`, `Open decisions / blockers`, `Next session` (Goal + Inputs + First task), `Task log`.
+  Set frontmatter `status: closed`.
+- **SESSION-file gate** — the current file must have ≥1 `## Task log` entry before `closed`. The cross-session
+  `project-log.md` is **retired (SESSION_0228)** — do not write to it.
+- **JETTY 3.0 sweep** on every file in `Files touched` — bump `updated` + set `last_agent`; bidirectional
+  backlinks; add this session's row to `docs/knowledge/wiki/index.md`. Then run `bun run wiki:lint` from the
+  repo root and record the exact error/warning count (pre-existing vs introduced).
+- **Finding router + ledger cross-off sweep (closing.md §6.7)** — route new findings to their canonical ledger
+  (`wiring-ledger` WL / `drift-register` D / `failed-steps-log` FS / `incidents` / `manual-boundary-registry` /
+  `POST_LAUNCH_SOT` FI / ADR), **and cross off** every ledger item this session resolved (FS→mitigated/resolved,
+  D→resolved, WL→✅, FI→live/declined, risk→resolved). This is the outbound half of the
+  [Loop of Loops](../../docs/protocols/loop-of-loops-ledger-driven-sessions.md).
+- **Git hygiene** — branch check; `git add -A && git status` (no secrets, no `.env`, no `node_modules`);
+  conventional commit (`feat:`/`fix:`/`docs:`/`chore:`), don't bundle unrelated changes. **Push only on the
+  operator's explicit per-push authorization** (standing rule — build + verify + show, then wait for "go").
+- **Graphify update** *before* the close commit (so the count lands in the single push) —
+  `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`; record node/edge/community counts. Skip only if Graphify
+  is unavailable or no files changed.
+- **Bow-out line** — `Bowed out — SESSION_NNNN closed. Next session goal: {one line}.`
 
-Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
+## Optional deep items (recommended at end-of-day / sprint / milestone / when schema·auth·payments·prod·governance changed)
 
-1. **Pause the work.** Let any in-flight tool calls finish. Stop typing.
-2. **Update the SESSION file** (`docs/sprints/SESSION_NNNN.md`):
-   - `What landed` — bullets of completed work.
-   - `Files touched` — paths + one-line note each.
-   - `Decisions resolved` — anything the user signed off on.
-   - `Open decisions / blockers` — anything unresolved.
-   - `Next session: Goal + Inputs to read + First task`.
-   - `Task Log` — the `TASK_PLAN_LOG` IDs touched this session.
-   - **Atomicity rule (FS-0015):** YAML `status:` and body `### Status` line must update together in one edit pass. Never one without the other. Set `status: closed`.
-3. **SESSION-file gate.** Verify the current session has at least one entry in its `## Task log`. The cross-session `project-log.md` is retired.
-
-4. **JETTY 3.0 sweep on touched files.** For every file in `Files touched`:
-   - Doc frontmatter sweep — verify JETTY 3.0 frontmatter; bump `updated`; set `last_agent` to current agent identity.
-   - Bidirectional backlinks audit — both directions, both pages.
-   - Wiki index completeness (FS-0019 gate) — current session has a row in `docs/knowledge/wiki/index.md` with correct status; spot-check last 5 session numbers for gaps.
-   - Run `bun run wiki:lint` — record exact error/warning count and whether failures are pre-existing or introduced.
-   - Incremental markdown formatting fix (G8 / R8) — only for files touched this session.
-
-5. **Refine session type.** Default at bow-in is `session--open`. At bow-out, narrow to `session--plan`, `session--implement`, or `session--review` only if the session was clearly one mode. Mixed sessions stay `session--open`. Legacy `session` (pre-0139) — leave as-is, do not backfill.
-
-6. **Git hygiene.**
-   - Branch check (`git branch --show-current`) — if on `main` but expected to be on a feature branch, stop and discuss.
-   - Worktree check (`git worktree list`) — remove clean/merged worktrees; record any with unique commits.
-   - Stage and review (`git add -A && git status`) — no secrets, no `.env`, no `node_modules`.
-   - Commit — conventional prefix (`feat:` / `docs:` / `fix:` / `chore:`); don't bundle unrelated changes.
-   - Push only if authorized; otherwise note "changes committed but not pushed".
-
-7. **Graphify update** (if installed and files changed):
-
-   ```bash
-   GRAPHIFY_VIZ_NODE_LIMIT=6000 graphify update .
-   ```
-
-   Report final node/edge/community counts. Skip only if Graphify is not installed or no files changed.
-
-8. **Bow-out line.** State: `Bowed out — SESSION_NNNN closed. Next session goal: {one line}.`
-
-## Optional deep items
-
-Do when useful — end of day, milestone, schema/auth/payments touched:
-
-- **Reflections** — add `## Reflections` to the SESSION file (surprises, near-misses, patterns/anti-patterns, lessons).
-- **Hostile close review** — run [Giddy + Doug Hostile Close Review](../../docs/protocols/hostile-close-review.md).
-- **Evidence table** — add proof per row to the SESSION file (JETTY sweep, backlinks/index, wiki-lint, hostile review, next-session unblock, git hygiene, Graphify).
-- **ADR + ubiquitous-language check** — if the session made/changed/rejected an architectural decision, create or update an ADR. Update [Ubiquitous Language](../../docs/architecture/ubiquitous-language.md) for new/changed domain terms. If neither applies, record that explicitly.
-- **Memory sweep** — update any agent memory files with session learnings.
-13. **Memory sweep** — update operator-side memory only for project-scoped facts worth carrying across all future sessions (not session-scoped content).
-14. **Confirm next session unblocked** — re-read `Open decisions / blockers` and `Next session: First task`. If user input is required, mark "BLOCKED ON USER" with reason.
-15. Run quick close steps 6–8 (git hygiene → Graphify → bow-out line) as the final commit-and-report pass.
-
-## Status values
-
-- `in-progress` — session still open.
-- `closed-quick` — quick close complete.
-- `closed-full` — full close evidence artifact present, hostile review run, ADR/glossary check recorded.
-- `closed-unclean` — recovery close (see UNCLEAN_CLOSING in `closing.md`); requires incident log entry.
-
-`closed-full` is a proof state, not a tone. Missing evidence means status stays `in-progress` or `closed-quick`.
-
-## What you must not skip
-
-- The SESSION file update. **Always.** No exceptions.
-- The `Next session` entry. If the next session can't pick up the thread, this ritual failed.
-- The JETTY 3.0 sweep on touched files.
-- The project-log gate before setting any closed status.
-- The git hygiene check (uncommitted changes with no record = lost work).
+- **Reflections** (kaizen note in the SESSION file) · **Hostile close review** (Giddy + Doug, +Desi if UI) ·
+  **Evidence table** (proof per close step) · **ADR + ubiquitous-language check** (create/update the ADR + glossary,
+  or record "not needed") · **Memory sweep** (project-scoped facts only — not session content) ·
+  document new components in `docs/knowledge/wiki/custom-component-inventory.md`.
 
 ## Cross-references
 
-- [Closing ritual (source of truth)](../../docs/rituals/closing.md)
-- [Opening ritual](../../docs/rituals/opening.md)
-- [Project Log](../../docs/protocols/project-log.md)
-- [Giddy + Doug Hostile Close Review](../../docs/protocols/hostile-close-review.md)
-- [Review & Recommend protocol](../../docs/protocols/review-recommend.md)
-- [FAILED_STEPS Log](../../docs/protocols/failed-steps-log.md)
-- [Graphify Repo Memory Runbook](../../docs/runbooks/graphify-repo-memory.md)
+- [Closing ritual (source of truth)](../../docs/rituals/closing.md) · [Opening ritual](../../docs/rituals/opening.md)
+- [Loop of Loops — ledger-driven sessions](../../docs/protocols/loop-of-loops-ledger-driven-sessions.md)
+- [Hostile Close Review](../../docs/protocols/hostile-close-review.md) · [Review & Recommend](../../docs/protocols/review-recommend.md) · [FAILED_STEPS Log](../../docs/protocols/failed-steps-log.md) · [Graphify Repo Memory](../../docs/runbooks/dev-environment/graphify-repo-memory.md)

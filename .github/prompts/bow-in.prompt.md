@@ -5,43 +5,32 @@ mode: "agent"
 
 # Bow In — Opening Ritual
 
-**Source of truth:** [`docs/rituals/opening.md`](../../docs/rituals/opening.md). Read and execute it as written. This file is a thin pointer plus the minimum binding steps so the ritual can't be skipped.
+**Source of truth:** [`docs/rituals/opening.md`](../../docs/rituals/opening.md). **Read and execute it as
+written** — it is agent-agnostic and binding for every agent (Claude, Copilot, **Codex**). This file is a
+**thin pointer, not a second copy** of the steps: a duplicated step-list rots out of sync (it did — this was
+leaned at SESSION_0453, matching the `AGENTS.md` / `copilot-instructions.md` de-dup, ADR 0033 D7).
 
-This ritual is agent-agnostic. When you stamp `last_agent` or describe the operator, name the agent that actually executed (e.g., `claude-session-NNNN`, `copilot-session-NNNN`, `codex-session-NNNN`).
+When you stamp `last_agent` on the SESSION file or touched docs, name the agent that actually executed
+(`claude-session-NNNN`, `copilot-session-NNNN`, `codex-session-NNNN`).
 
-## Minimum binding steps
+## Must-not-skip gates (the ritual has the full, current procedure)
 
-Run in order. Skipping any of these is a FAILED_STEPS-grade miss.
-
-1. **Read the latest SESSION file.** Highest-numbered `docs/sprints/SESSION_NNNN.md`. Read its `Goal`, `Open decisions / blockers`, and `Next session` section.
-2. **Read WORKFLOW 5.0 + program plan.** [`docs/protocols/WORKFLOW_5.0.md`](../../docs/protocols/WORKFLOW_5.0.md) — find today's session calendar row, confirm primary lane and worktree, fill the Dirstarter alignment table. Skim [`docs/architecture/program-plan.md`](../../docs/architecture/program-plan.md) for context.
-3. **Skim cross-references on demand only.** plan-vs-current, ADRs, runbooks, or the dirstarter-docs-inventory Alignment URLs — touch only the ones that bear on today's task.
-4. **Check FAILED_STEPS + Drift Register.** [`docs/protocols/failed-steps-log.md`](../../docs/protocols/failed-steps-log.md) and [`docs/knowledge/wiki/drift-register.md`](../../docs/knowledge/wiki/drift-register.md). Acknowledge any `open` or `mitigated` entries in today's lane before proceeding.
-5. **Graphify-first discovery for cross-area lanes.** Before any repo-wide text search, run `graphify stats` then `graphify query "<lane nouns>" --budget 2000` per [`docs/runbooks/graphify-repo-memory.md`](../../docs/runbooks/graphify-repo-memory.md). Open exact files Graphify identifies. Do **not** use `grep` / `rg` / `find` for task planning. If a path is already known, open it directly. Skip this step only for small, obvious, single-file tasks.
-6. **Identify ONE task.** State the task, why it matters now (one sentence linking to program plan or user request), and what "done" looks like. If unclear or multi-part, invoke Petey ([`docs/protocols/petey-plan.md`](../../docs/protocols/petey-plan.md)) to plan first.
-7. **Number tasks in TASK_PLAN_LOG.** For every task in the session plan, add or update an entry in [`docs/protocols/project-log.md`](../../docs/protocols/project-log.md) using stable IDs (`SESSION_NNNN_TASK_01`, `_TASK_02`, …) before implementation starts.
-8. **Branch check.** `git branch --show-current` and `git status --short`. If on `main` and that's expected, proceed. If uncommitted changes from a previous session exist, raise them before starting new work. If on a stale feature branch, discuss with the user.
-9. **Create the new SESSION file** by copying the template:
-
-   ```bash
-   cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md
-   ```
-
-   Fill in every `<placeholder>`, delete all HTML comment blocks. Do NOT generate the file from scratch — the template is the source of truth for structure, section order, and lint compliance. The template already includes JETTY 3.0 frontmatter, all required sections, and the correct markdown formatting.
-
-10. **State the goal and first task** before starting any work. Then proceed as Petey or Cody (Cody must complete [`docs/protocols/cody-preflight.md`](../../docs/protocols/cody-preflight.md) before writing any code).
-
-## What this ritual is NOT
-
-- Not a context dump — you're not loading every file in the repo.
-- Not a checklist for the user — they can ask "are we ready to work" and trust the operator's bow-in.
+- **Read the latest SESSION file** — highest-numbered `docs/sprints/SESSION_NNNN.md`: its `Goal`,
+  `Open decisions / blockers`, and `Next session` block — plus the operator's `/goal` (which wins).
+- **Scan the ledger backlog (inbound loop)** — run `bun scripts/ledger-backlog.ts` and bundle **3–5 coherent
+  open items** into the Petey plan on one axis (domain hub / risk class / deploy unit). The operator `/goal` +
+  prior `Next session` block take **precedence** (opening.md step 1b).
+- **Check FAILED_STEPS + Drift Register** for `open`/`mitigated` entries in today's lane; acknowledge before proceeding.
+- **Graphify-first** for cross-area lanes — `graphify stats` then `graphify query "<lane nouns>"` before any
+  repo-wide `grep`/`rg`/`find`. Skip only for small single-file tasks.
+- **Number tasks in the SESSION file's `## Task log`** with stable IDs (`SESSION_NNNN_TASK_01`, …). The
+  cross-session `project-log.md` is **retired (SESSION_0228)** — the SESSION file is canonical; do not write to it.
+- **Create the new SESSION file** from the template — `cp docs/sprints/_template/SESSION_TEMPLATE.md
+  docs/sprints/SESSION_NNNN.md` — never from scratch. Set frontmatter `status: in-progress`.
+- **Branch check** — `git branch --show-current` / `git status --short`; raise any prior-session carryover before new work.
 
 ## Cross-references
 
-- [Opening ritual (source of truth)](../../docs/rituals/opening.md)
-- [Closing ritual](../../docs/rituals/closing.md)
-- [WORKFLOW 5.0](../../docs/protocols/WORKFLOW_5.0.md)
-- [Graphify Repo Memory Runbook](../../docs/runbooks/graphify-repo-memory.md)
-- [Project Log](../../docs/protocols/project-log.md)
-- [Petey Plan protocol](../../docs/protocols/petey-plan.md)
-- [Cody Pre-flight Protocol](../../docs/protocols/cody-preflight.md)
+- [Opening ritual (source of truth)](../../docs/rituals/opening.md) · [Closing ritual](../../docs/rituals/closing.md)
+- [Loop of Loops — ledger-driven sessions](../../docs/protocols/loop-of-loops-ledger-driven-sessions.md) (the `scripts/ledger-backlog.ts` aggregator)
+- [WORKFLOW 5.0](../../docs/protocols/WORKFLOW_5.0.md) · [Graphify Repo Memory](../../docs/runbooks/dev-environment/graphify-repo-memory.md) · [Petey Plan](../../docs/protocols/petey-plan.md) · [Cody Pre-flight](../../docs/protocols/cody-preflight.md)
