@@ -35,7 +35,8 @@ async function createUser(name: string, role: UserRole = "user") {
 const latestRoleAudit = (entityId: string) =>
   db.auditLog.findFirst({
     where: { action: "user.role.changed", entityId },
-    orderBy: { createdAt: "desc" },
+    // `id` tiebreak so two audit rows sharing a `now()` tick resolve deterministically.
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   })
 
 beforeAll(async () => {
@@ -95,10 +96,15 @@ describe("updateUserRole — gate + self-guard + audit", () => {
 
 describe("updateUser — role change through the generic edit is audited + self-guarded", () => {
   it("audits a role change made via updateUser", async () => {
+    // Seed the precondition explicitly so this case stands alone (not reliant on a
+    // prior block having left targetId at a different role): a same-role update would
+    // be a no-op and write no audit row.
+    await db.user.update({ where: { id: targetId }, data: { role: "tournament_director" } })
     setTestSession({ id: adminId, role: "admin" })
     const res = await updateUser({ id: targetId, role: "user" })
     expect(res?.serverError).toBeUndefined()
     const audit = await latestRoleAudit(targetId)
+    expect((audit?.before as { role?: string } | null)?.role).toBe("tournament_director")
     expect((audit?.after as { role?: string } | null)?.role).toBe("user")
   })
 

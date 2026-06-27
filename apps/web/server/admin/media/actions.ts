@@ -67,14 +67,14 @@ export const createMedia = adminActionClient
 const MAX_LIBRARY_UPLOAD_BYTES = 25 * 1024 * 1024
 
 const uploadMediaToLibrarySchema = z.object({
+  // No client-MIME refine here: `sniffUploadBuffer` in the action is the media-type
+  // authority (trust the bytes, not `file.type`). A pre-gate on `file.type` would only
+  // reject valid files whose client MIME is missing/wrong — the byte-sniff already
+  // rejects SVG/non-media fail-closed.
   file: z
     .instanceof(File)
     .refine(file => file.size > 0, "File is empty.")
-    .refine(file => file.size <= MAX_LIBRARY_UPLOAD_BYTES, "File exceeds the 25MB limit.")
-    .refine(
-      file => file.type.startsWith("image/") || file.type.startsWith("video/"),
-      "Only image and video files are allowed.",
-    ),
+    .refine(file => file.size <= MAX_LIBRARY_UPLOAD_BYTES, "File exceeds the 25MB limit."),
   title: z.string().optional(),
   isPublic: z.boolean().default(false),
 })

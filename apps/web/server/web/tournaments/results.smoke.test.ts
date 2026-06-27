@@ -200,4 +200,15 @@ describe("Tournament results page smoke", () => {
     const result = await findTournamentResults(SLUG, Brand.BBL)
     expect(result).toBeNull()
   })
+
+  // SESSION_0452/0453 — guest competitors' email is PII and must never reach the
+  // public results payload. A future `guestEmail: true` re-add to the select would
+  // surface the key on every returned registration; this asserts it stays absent.
+  it("does not expose guestEmail on the public results payload (PII guard)", async () => {
+    const result = await findTournamentResults(SLUG, BRAND)
+    const registration = result!.disciplines[0].divisions.find(d => d.id === divisionId)!
+      .brackets[0].matches[0].competitors[0].registrationEntry.registration
+
+    expect("guestEmail" in registration).toBe(false)
+  })
 })

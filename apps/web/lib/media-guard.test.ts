@@ -8,6 +8,20 @@ const jpegFile = (type = "image/jpeg") =>
 
 const textFile = (body: string, type: string) => new File([body], "upload", { type })
 
+// Real MP4 `ftyp` box (isom) — `file-type` sniffs `video/mp4` from these bytes.
+const mp4File = (type = "video/mp4") =>
+  new File(
+    [
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02,
+        0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32, 0x61, 0x76, 0x63, 0x31, 0x6d, 0x70,
+        0x34, 0x31,
+      ]),
+    ],
+    "upload.mp4",
+    { type },
+  )
+
 describe("sniffUploadBuffer", () => {
   it("accepts a real JPEG and reports IMAGE + the sniffed mime (declared type ignored)", async () => {
     const result = await sniffUploadBuffer(jpegFile("application/octet-stream"), {
@@ -47,8 +61,15 @@ describe("sniffUploadBuffer", () => {
     ).rejects.toThrow()
   })
 
-  it("defaults the video gate closed (allowVideo is opt-in)", async () => {
-    const result = await sniffUploadBuffer(jpegFile("image/jpeg"), { maxBytes: 1024 * 1024 })
-    expect(result.kind).toBe("IMAGE")
+  it("rejects a real video when allowVideo is omitted (default-closed)", async () => {
+    await expect(sniffUploadBuffer(mp4File(), { maxBytes: 1024 * 1024 })).rejects.toThrow(
+      /valid image/i,
+    )
+  })
+
+  it("accepts a real video only when allowVideo is opted in", async () => {
+    const result = await sniffUploadBuffer(mp4File(), { maxBytes: 1024 * 1024, allowVideo: true })
+    expect(result.kind).toBe("VIDEO")
+    expect(result.mime).toBe("video/mp4")
   })
 })

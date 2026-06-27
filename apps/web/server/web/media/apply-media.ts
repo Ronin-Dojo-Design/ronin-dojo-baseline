@@ -52,6 +52,7 @@ export async function applyWebMediaUpload({
   user,
   input,
   allowAdminOverride = false,
+  allowVideo = false,
 }: {
   db: AppDb
   brand: Brand
@@ -59,6 +60,12 @@ export async function applyWebMediaUpload({
   input: UploadWebMediaInput
   /** Opt-in admin bypass for setting an unowned/placeholder passport's media. Default false. */
   allowAdminOverride?: boolean
+  /**
+   * Whether the sniffed bytes may be a video. Default `false` (fail-closed): image-only
+   * callers like avatar upload reject a spoofed `image/*` carrying video bytes at the sniff,
+   * so no stray VIDEO media/attachment ever persists. The general media library opts in.
+   */
+  allowVideo?: boolean
 }): Promise<WebMediaUploadResult> {
   const authorized = await authorizeMediaTarget({
     db,
@@ -80,7 +87,7 @@ export async function applyWebMediaUpload({
     kind: type,
   } = await sniffUploadBuffer(file, {
     maxBytes: MAX_WEB_UPLOAD_BYTES,
-    allowVideo: true,
+    allowVideo,
   })
   const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`, brand)
 
