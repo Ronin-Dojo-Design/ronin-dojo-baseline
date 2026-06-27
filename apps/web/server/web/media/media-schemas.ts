@@ -1,7 +1,7 @@
 import { z } from "zod/v4"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
 
-const MAX_WEB_UPLOAD_BYTES = 25 * 1024 * 1024
+export const MAX_WEB_UPLOAD_BYTES = 25 * 1024 * 1024
 
 /**
  * The set of owner entities a web user can attach media to. Kept in sync with

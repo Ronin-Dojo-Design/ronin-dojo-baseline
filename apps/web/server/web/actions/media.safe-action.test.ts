@@ -43,7 +43,10 @@ mock.module("next-intl/server", () => ({
 }))
 
 const TEST_USER = { id: "media-gate-user", role: "user" }
-const validFile = () => new File([new Uint8Array([1, 2, 3])], "avatar.png", { type: "image/png" })
+const ADMIN_USER = { id: "media-gate-admin", role: "admin" }
+// Real JPEG magic bytes (FF D8 FF E0) so the server-side `sniffUploadBuffer` guard accepts it.
+const validFile = () =>
+  new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "avatar.jpg", { type: "image/jpeg" })
 
 beforeEach(() => {
   entitlementState.canUpload = true
@@ -70,6 +73,18 @@ describe("web media actions — upload auth gate", () => {
 
     expect(result?.serverError).toBe("User not authorized to upload media")
     expect(uploadCalls.length).toBe(0)
+  })
+
+  it("allows uploadMedia for a platform admin even with NO entitlement (WL-P2-19 role bypass)", async () => {
+    const { uploadMedia } = await import("~/server/web/actions/media")
+    setTestSession(ADMIN_USER)
+    entitlementState.canUpload = false
+
+    const result = await uploadMedia({ path: "avatars/admin", file: validFile() })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(result?.data).toBe("https://s3.test/avatars/admin")
+    expect(uploadCalls).toEqual([{ path: "avatars/admin" }])
   })
 
   it("allows uploadMedia for an entitled user and stores to S3", async () => {

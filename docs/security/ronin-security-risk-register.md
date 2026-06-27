@@ -5,7 +5,7 @@ type: file
 status: active
 created: 2026-05-31
 updated: 2026-06-26
-last_agent: claude-session-0451
+last_agent: claude-session-0452
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -50,6 +50,9 @@ The most important theme is **documented controls must become enforced, tested, 
 | 10 | AI/MCP data leakage | Medium | AI/content tooling exists or is emerging | Add AI data safety policy, prompt redaction, tool audit, human approval gates | AI/content |
 | 11 | Platform-admin org super-user scope (SESSION_0448) | Medium | `hasOrgAdminAccess` (`apps/web/server/web/organization/org-admin-access.ts`) now grants any `User.role === "admin"` READ + (via `assertOrgAdminAccess`) WRITE to **every** org's settings/members/invites/theme — not just owned/ORG_ADMIN orgs. Live on prod (PR #163); 2 platform admins today (Brian, Tony Hua). | Confirm `AuditLog` records cross-org admin writes; keep the platform-admin set minimal (review periodically); alert on unexpected `role:admin` grants | Admin/auth |
 | 12 | Public org-resolution owner-email PII exposure (SESSION_0448) | Medium | `getOrganizationBySlug` is now brand-agnostic (any org resolves by slug on public `/organizations/[slug]`, no positive visibility gate). `organizationDetailPayload` selects `owner.email`; the public page renders `owner.name ?? owner.email`, so a null-name owner's email can appear publicly. The brand-scoping drop widened which orgs resolve publicly (incl. 3 BASELINE orgs). | Drop `owner.email` from the public payload or gate the email fallback; backfill `owner.name`; reconsider a visibility gate for non-public orgs | Web/privacy |
+| 13 | Prod Neon DB credential exposed in session transcripts — **rotation overdue** (SESSION_0449/0450) | High | The prod Neon role password leaked into local shell/transcript output **twice** (`psql` error messages echoed the conninfo; root-caused in `docs/_archive/project-log/03-task-review-log.md:992`). Credential is **still live (never rotated)**; exposure is bounded to local Claude transcripts. Confirmed by the SESSION_0452 sweep that the secret is **not** committed anywhere (lives only in gitignored `apps/web/.env.prod` + Vercel env). | Rotate the Neon role password (Neon dashboard → reset), update `apps/web/.env.prod` + Vercel `DATABASE_URL`/`DIRECT_URL`, re-test the prod connect (`psql -h pg.neon.tech …`); going forward pass creds via `PG*` env vars and redact `postgres://…` in any error output | Platform/devops |
+| 14 | Authed/admin image+video uploads trust the client MIME → SVG **stored-XSS** (SESSION_0452) | High | `webMediaFileSchema` / `uploadMediaToLibrarySchema` / `createFileSchema` validate only `file.type.startsWith("image/")` (client-declared) and cap on `file.size` (client-reported). `image/svg+xml` passes; the **avatar** path makes the URL public, so an SVG with inline `<script>` is stored-XSS when opened directly. 3 user-upload sites: `applyWebMediaUpload`, `uploadMediaToLibrary`, `uploadMedia`. The guest evidence path (`lead/public-actions.ts`) was already byte-sniff-hardened. | **Fixing SESSION_0452 (PR):** shared `lib/media-guard.ts::sniffUploadBuffer` — sniff bytes via `file-type` (SVG → `undefined` → rejected), enforce ceiling on `buffer.byteLength`, derive type+mime from the sniff; applied at all 3 sites (folds the MED client-`file.size` issue) | Web/media |
+| 15 | Guest registrant email leaks to **public** tournament results (SESSION_0452) | High | `findTournamentResults` (public, `"use cache"`, PUBLISHED-only, no auth) selects `guestEmail`; `bracket-results.tsx` / `medal-standings.tsx` render it as the display-name fallback (`… ?? r.guestEmail`). `guestName` is nullable, so a name-less guest's email prints in public SSR HTML (scraper-harvestable). | **Fixing SESSION_0452 (PR):** drop `guestEmail` from the results payload + remove the `?? r.guestEmail` fallback (and the prop types) in both components | Web/privacy |
 
 ## Risk Detail
 
@@ -191,6 +194,77 @@ Controls and mitigations:
 - Drop `owner.email` from the public org payload, or gate the `owner.name ?? owner.email` fallback so a null name renders a non-PII placeholder instead of the email.
 - Backfill `owner.name` for null-name owners on now-public orgs.
 - Reconsider whether non-public orgs should resolve at all on the public route (a visibility gate), now that resolution is brand-agnostic.
+
+### 13. Prod Neon credential exposure — rotation overdue (SESSION_0449/0450)
+
+> **2026-06-26, SESSION_0452.** The prod Neon DB password leaked into local shell
+> output twice (SESSION_0449 + 0450), each time via a `psql` error echoing the full
+> connection string. Root cause: a host-only redaction regex left `USER:PASSWORD`
+> before the `@` untouched (`docs/_archive/project-log/03-task-review-log.md:992`).
+> Each session flagged "rotate" but the rotation never happened, so the credential
+> should be treated as compromised. A SESSION_0452 secret sweep confirmed the value
+> is **not** committed to the repo (current tree or history) — it lives only in the
+> gitignored `apps/web/.env.prod` and Vercel env vars — so the blast radius is the
+> local transcripts, not the public repo.
+
+Controls and mitigations:
+
+- **Rotate now:** reset the Neon role password in the dashboard; update
+  `apps/web/.env.prod` (`DATABASE_URL`/`DIRECT_URL`) and the matching Vercel
+  production env vars; redeploy/verify the prod connection (`psql -h pg.neon.tech …`).
+- **Prevent re-leak:** pass DB creds via `PG*` env vars (never the URL on the command
+  line) and redact `postgres(ql)://…` in any captured stderr — the pattern used in
+  the SESSION_0452 prodsnap refresh.
+- Consider a scoped, least-privilege Neon role for local prodsnap pulls instead of the
+  primary owner role.
+
+### 14. Authed/admin upload content-sniff gap — SVG stored-XSS (SESSION_0452)
+
+> **2026-06-26, SESSION_0452 (parallel security-review agent).** The guest evidence
+> path was hardened at SESSION_0445 (byte-sniff allowlist, SVG excluded), but the three
+> **authenticated** image/video upload sites never received the same treatment — they
+> trust `file.type` (client-declared) and `file.size` (client-reported). `image/svg+xml`
+> passes `startsWith("image/")`; the avatar path promotes the URL to a public
+> `Passport.avatarUrl`. **Fix (this session, PR):** a shared `sniffUploadBuffer` reads the
+> bytes (`file-type`), rejects anything that doesn't sniff to `image/*`/`video/*` (SVG
+> sniffs to `undefined` → rejected), and enforces the ceiling on `buffer.byteLength`.
+> Applied at `applyWebMediaUpload`, `uploadMediaToLibrary`, and `uploadMedia`.
+> `fetchMedia` (favicon/screenshot from Google/screenshotone) is server-fetched, not a
+> user file — out of scope.
+
+### 15. Guest email leak on public tournament results (SESSION_0452)
+
+> **2026-06-26, SESSION_0452.** `findTournamentResults` selected `guestEmail` and the
+> results components used it as the last display-name fallback. With a nullable
+> `guestName`, a guest who registered with email only had that email printed in the
+> public results HTML. **Fix (this session, PR):** drop `guestEmail` from the public
+> payload and from the fallback chain; a name-less guest renders "Unknown".
+
+### SESSION_0452 review confirmations (existing rows)
+
+The parallel review re-confirmed three standing rows with concrete anchors (no new row needed):
+
+- **#5 (rate-limit fail-open):** the app `isRateLimited` fail-open is deliberate, but
+  Better Auth **magic-link / OTP send has no explicit `rateLimit` block** in `lib/auth.ts`
+  and the `email_notify` bucket fails open — an auth-email flood is bounded only by Better
+  Auth's in-memory default. Consider an explicit `rateLimit` config + fail-*closed* for
+  OTP/magic-link send.
+- **#6 (private media):** **confirmed real and unmitigated** — there is **no** media
+  GET/proxy/signed-URL route anywhere; `Media.isPublic` only filters public *payloads*, it
+  does not gate the object. Private cert PDFs / claim-evidence are world-readable by URL
+  (security-by-obscurity on the UUID key). Architectural fix (signed-URL route or
+  private bucket/prefix) — deferred, tracked here.
+- **#7 (PII/secret logging):** **confirmed** — no `safeLog`/redaction helper exists;
+  logging is raw `console.*`. No secret/body is logged today, but `userId` is logged
+  cleartext and there is no guardrail against the next `console.log(session)`. Add a
+  `safeLog` + lint-ban bare `console.log` in `server/**`.
+
+**Verified safe (this review):** no unauthenticated/non-admin path reaches an admin action
+or admin data (only the known #11 cross-org super-user + a LOW `updateUserRole` self-lockout
+footgun); the Stripe webhook is signature-verified before processing, idempotent, and grants
+entitlements only off Stripe-side price IDs + a server-set `metadata.userId` (no forgery
+path); risk **#12 owner-email fallback is fixed** (`organizationOwnerPayload` = `{id,name}`,
+no email).
 
 ## Relationships
 

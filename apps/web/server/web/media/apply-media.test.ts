@@ -133,7 +133,10 @@ function makeDb(state: FakeState = {}) {
   return { db, created, attachments }
 }
 
-const imageFile = () => new File([new Uint8Array([1, 2, 3, 4])], "photo.png", { type: "image/png" })
+// Real JPEG magic bytes (FF D8 FF E0) so the server-side `sniffUploadBuffer` guard
+// (file-type) accepts it — the declared MIME is no longer trusted.
+const imageFile = () =>
+  new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "photo.jpg", { type: "image/jpeg" })
 
 const expectRejectsWithMessage = async (promise: Promise<unknown>, message: string) => {
   try {
@@ -420,6 +423,41 @@ describe("web media upload", () => {
       file: imageFile(),
     })
     expect(ok.success).toBe(true)
+  })
+
+  // Fail-closed default: image-only callers (avatar) omit `allowVideo`, so a spoofed
+  // `image/*` carrying real video bytes is rejected at the sniff — before S3/DB writes —
+  // and no stray VIDEO media/attachment ever persists.
+  it("rejects spoofed video bytes on the default (image-only) path and persists nothing", async () => {
+    const { db, created } = makeDb({ authorizedOrgIds: ["org-1"] })
+    // Real MP4 `ftyp` (isom) magic bytes behind a lying `image/png` declaration.
+    const spoofedVideo = new File(
+      [
+        new Uint8Array([
+          0x00, 0x00, 0x00, 0x20, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d, 0x00, 0x00, 0x02,
+          0x00, 0x69, 0x73, 0x6f, 0x6d, 0x69, 0x73, 0x6f, 0x32, 0x61, 0x76, 0x63, 0x31, 0x6d, 0x70,
+          0x34, 0x31,
+        ]),
+      ],
+      "avatar.png",
+      { type: "image/png" },
+    )
+
+    await expectRejectsWithMessage(
+      applyWebMediaUpload({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "organization", id: "org-1" },
+          file: spoofedVideo,
+          isPublic: true,
+        },
+      }),
+      "Upload a valid image file (SVG and non-image files are rejected).",
+    )
+    expect(created.media).toHaveLength(0)
+    expect(created.attachments).toHaveLength(0)
   })
 })
 

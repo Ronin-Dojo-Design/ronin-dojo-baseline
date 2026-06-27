@@ -47,7 +47,16 @@ function revalidateForTarget(target: MediaAttachTarget) {
 export const uploadWebMedia = userActionClient
   .inputSchema(uploadWebMediaSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const result = await applyWebMediaUpload({ db, brand: Brand.BBL, user, input: parsedInput })
+    // The general media library accepts video (technique/course/event media). The
+    // dedicated avatar upload actions use the fail-closed `allowVideo: false` default,
+    // and avatar *promotion* additionally rejects any non-IMAGE media.
+    const result = await applyWebMediaUpload({
+      db,
+      brand: Brand.BBL,
+      user,
+      input: parsedInput,
+      allowVideo: true,
+    })
 
     revalidate(revalidateForTarget(parsedInput.target))
 
