@@ -61,6 +61,8 @@ type SafeActionEnv = {
   setHost: (host: string) => void
   setIp: (ip: string) => void
   setRateLimited: (limited: boolean) => void
+  /** Await all `after()` callbacks queued so far — for deterministic assertions on deferred work. */
+  flushAfter: () => Promise<void>
 }
 
 const sessionState: { current: TestSessionUser | null } = { current: null }
@@ -131,9 +133,12 @@ export const installSafeActionMocks = (options: SafeActionMockOptions = {}): Saf
     resolveRequestOrigin,
   }))
 
+  const afterTasks: Array<Promise<unknown>> = []
   mock.module("next/server", () => ({
     after: (fn: () => void | Promise<void>) => {
-      void Promise.resolve().then(() => fn())
+      // Keep fire-and-forget auto-run (tests that don't flush are unaffected), but also
+      // track each callback's promise so `flushAfter()` can deterministically await it.
+      afterTasks.push(Promise.resolve().then(() => fn()))
     },
   }))
 
@@ -153,6 +158,15 @@ export const installSafeActionMocks = (options: SafeActionMockOptions = {}): Saf
     },
     setRateLimited: (limited: boolean) => {
       rateLimitState.limited = limited
+    },
+    // Deterministically settle all `after()` callbacks queued so far (incl. ones queued
+    // transitively). Use in place of arbitrary `setTimeout(0)` waits when a test asserts
+    // on deferred work (e.g. audit-log writes done inside `after()`).
+    flushAfter: async () => {
+      while (afterTasks.length) {
+        const pending = afterTasks.splice(0)
+        await Promise.allSettled(pending)
+      }
     },
   }
 }
