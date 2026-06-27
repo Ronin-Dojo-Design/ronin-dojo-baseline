@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BBL" })
+const env = installSafeActionMocks({ brand: "BBL" })
 
 import { ToolStatus, ToolTier } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
@@ -81,7 +81,7 @@ describe("admin tool actions", () => {
     expect(result?.data?.tier).toBe(ToolTier.Premium)
     expect(result?.data?.isFeatured).toBe(true)
 
-    await new Promise(resolve => setTimeout(resolve, 0))
+    await env.flushAfter()
 
     const audit = await db.auditLog.findFirst({
       where: {

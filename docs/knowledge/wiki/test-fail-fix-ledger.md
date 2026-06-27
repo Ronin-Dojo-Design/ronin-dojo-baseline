@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-06-17
-last_agent: claude-session-tff006
+updated: 2026-06-27
+last_agent: claude-session-0454
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -93,6 +93,28 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   leak state between them. Validate by reproducing red locally, applying the fix, then `bun run test` green
   several times consecutively (mirroring SESSION_0342's 4× proof). The proper long-term lever SOP §2 names
   is **per-worker DB isolation**.
+
+### TFF-007 — flaky `tools` TIER_TRANSITION audit test: unawaited `after()` deferred write
+
+- **Status:** `fixed` (branch `fix/flaky-tools-after-flush`, post-#170-merge; SESSION_0454 follow-up).
+- **Last observed:** 2026-06-27. `cd apps/web && bun run test server/admin/tools` in isolation →
+  `1 pass / 2 fail`: `admin tool actions > writes a TIER_TRANSITION audit row when an admin changes
+  listing tier` + an `(unnamed)` teardown failure. Surfaced reviewing PR #170 (WL-P2-17) against a
+  persistent local `prodsnap` DB; **passes on CI's fresh seeded DB** (so #170 CI stayed green).
+- **Root cause (NOT pollution / FK-order — those red herrings were ruled out):** `upsertTool` writes
+  the audit inside `after()` (Next.js post-response hook). The `next/server` `after` mock in
+  `lib/test/safe-action-env.ts` was **fire-and-forget** (`void Promise.resolve().then(() => fn())`), so
+  the deferred async `db.auditLog.create` was never awaited. The test's `setTimeout(0)` raced it →
+  `findFirst` returned `null` (`Expected {tier:Free}` vs `Received undefined`), and the late write
+  raced teardown → `delete User violates AuditLog_userId_fkey`. The test already used unique per-run
+  ids + FK-ordered teardown, so the "fixed-id pollution" hypothesis was wrong.
+- **Fix:** made `after()` flushable — the mock now also tracks each callback's promise, and
+  `installSafeActionMocks` returns `flushAfter()`; the test awaits `env.flushAfter()` in place of
+  `setTimeout(0)`. Additive (callbacks still auto-run → the other safe-action tests are unaffected).
+- **Verified:** typecheck 0; tools test `2/0` twice in isolation; full `bun run test server/admin`
+  `118/0`; oxlint/oxfmt clean.
+- **Reusable pattern:** any test asserting on `after()`-deferred work should `await env.flushAfter()`,
+  not a `setTimeout` hack. Relates to FS-0027 / SOP §3.
 
 ### TFF-001..005 — resolved
 
