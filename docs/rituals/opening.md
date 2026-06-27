@@ -63,7 +63,7 @@ ledger items and bundle **3–5 coherent ones** into this session's Petey plan �
 Run the aggregator instead of hand-scanning eight files:
 
 ```bash
-bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK
+bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK/TD
 bun scripts/ledger-backlog.ts --ledger=WL   # one ledger · --top=N to cap · --json for tooling
 ```
 

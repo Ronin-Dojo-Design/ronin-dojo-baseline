@@ -643,6 +643,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Feature Intake Ledger](feature-intake-ledger.md) | reference | superseded → [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) (SESSION_0424) |
 | [Wiring Ledger](wiring-ledger.md) | reference | active — not-done / gaps / FS-0001 handroll slips; WL-P1-6 closed the unaudited admin entitlement path in SESSION_0347 |
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md) | reference | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2 |
+| [Teardown Ledger](teardown-ledger.md) | reference | active — deferred prod/test data cleanup (`TD-NNN`); created SESSION_0457 (TD-001 FI-001 test user parked, TD-002 banked Baseline purge); wired into `ledger-backlog.ts` |
 
 ## Code files (annotated)
 

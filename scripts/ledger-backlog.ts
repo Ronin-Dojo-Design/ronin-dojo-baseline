@@ -16,10 +16,11 @@
  *   TFF  test-fail-fix-ledger      docs/knowledge/wiki/test-fail-fix-ledger.md
  *   INC  incidents                 docs/knowledge/wiki/incidents.md
  *   RISK ronin-security-risk-register docs/security/ronin-security-risk-register.md
+ *   TD   teardown-ledger           docs/knowledge/wiki/teardown-ledger.md
  *
  * Usage:
  *   bun scripts/ledger-backlog.ts                 # ranked backlog, all ledgers
- *   bun scripts/ledger-backlog.ts --ledger=WL     # one ledger (FS|D|WL|FI|MB|TFF|INC|RISK)
+ *   bun scripts/ledger-backlog.ts --ledger=WL     # one ledger (FS|D|WL|FI|MB|TFF|INC|RISK|TD)
  *   bun scripts/ledger-backlog.ts --top=20        # cap the rows printed
  *   bun scripts/ledger-backlog.ts --json          # machine-readable JSON
  */
@@ -236,9 +237,17 @@ const COLLECT: Record<string, () => Item[]> = {
   FI: () => parseFeatureIntake(read("docs/product/black-belt-legacy/POST_LAUNCH_SOT.md")),
   INC: () => parseIncidents(read("docs/knowledge/wiki/incidents.md")),
   RISK: () => parseRisk(read("docs/security/ronin-security-risk-register.md")),
+  TD: () =>
+    parseSectioned(
+      read("docs/knowledge/wiki/teardown-ledger.md"),
+      "TD",
+      3,
+      /^TD-\d/,
+      s => /^open\b/i.test(s) || /pending/i.test(s),
+    ),
 }
 
-const LEDGER_ORDER = ["FS", "D", "WL", "FI", "MB", "TFF", "INC", "RISK"]
+const LEDGER_ORDER = ["FS", "D", "WL", "FI", "MB", "TFF", "INC", "RISK", "TD"]
 
 let items: Item[] = []
 for (const code of LEDGER_ORDER) {
