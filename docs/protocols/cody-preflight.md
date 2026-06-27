@@ -4,8 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: copilot-session-0300
+updated: 2026-06-26
+last_agent: claude-session-0452
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -71,7 +71,11 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 - Dev server command: `npx next dev --turbo` (from `apps/web/`)
 - Working directory: {path — must be `apps/web/`}
 - Brand/host for testing: {host:port}
-- Verification commands confirmed: `bun run typecheck`, `bun run lint`, `bun test` (from `apps/web/`)
+- Verification commands confirmed: `bun run typecheck`, `bun run lint`, `bun run test` (from `apps/web/`)
+  — use `bun run test` (= `bun test --parallel=1`), **never a bare `bun test fileA fileB`**: the non-parallel
+  runner shares the module registry across files, so `mock.module()` leaks and produces false failures (FS-0027).
+- **Writing or modifying tests? Read [`sop-test-writing.md`](../runbooks/sops/sop-test-writing.md) FIRST** —
+  especially the "two-headed concurrency problem" (`--parallel=1`) and the §5d rolled-back-tx pattern.
 - Reference: [dev-environment.md — Verification commands](../runbooks/dev-environment/dev-environment.md)
 
 ### 6. FAILED_STEPS check
