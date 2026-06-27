@@ -2,7 +2,7 @@
 title: "SESSION 0454 — Ledger paydown (inline): D-024 deploy runbooks + WL-P2-5 dead treeId"
 slug: session-0454
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-26
 updated: 2026-06-27
 last_agent: claude-session-0454
@@ -133,6 +133,35 @@ surfaced the single never-read pass-through (`lineage-tree-board.tsx:240`, the d
 confirmed: "potentially future, start fresh later"). Flipped WL-P2-5 → ✅. Gates: typecheck 0,
 oxlint/oxfmt clean (only pre-existing warnings), `next build` exit 0.
 
+### SESSION_0454_TASK_03 — WL-P2-10: dependency hygiene · **no-op (already resolved SESSION_0354)**
+
+Re-audited per `petey-plan-0454` Slice 3. The removable unused deps (`@ai-sdk/google`, `github-slugger`)
+were already removed in SESSION_0354 (lockfiles regenerated). The only deps `fallow` still flags are
+`react-email` (backs the `email dev` script, `package.json:13`) and `react-dom` (core React renderer) —
+both documented false-positives. **Nothing provably-unused remains**, so the slice is a clean no-op (the
+plan's resilience rule). No code / `package.json` change. WL-P2-10 re-verified ✅.
+
+## What landed
+
+- **D-024 resolved** (Slice 1, `d71fb8bf`) — deploy runbooks + `ignoreCommand` (CLAUDE.md +
+  `verification-and-testing.md`) + email-SOP flipped `pnpm` → `bun` to match the live
+  `apps/web/vercel.json` (gate `bun.lock`). Docs-only → no deploy.
+- **WL-P2-5 resolved** (Slice 2, `2d878ea7`) — removed the dead `treeId` prop from the lineage profile
+  drawer + its one pass-through. Behavior-preserving; all gates green; fallow-fix-loop = 0 introduced.
+- **WL-P2-10 re-verified no-op** (Slice 3) — deps already clean; residual flags are false-positives.
+- **WL-P2-22 logged** — `LineageTreeBoard` CRAP-1190 complexity hotspot (inherited; operator-gated).
+- **Remainder handed to Codex** — `auto-session-codex.sh 2` launched from this session for Slices 4–5
+  (`codex exec` authenticates from the sandbox; `claude -p` does not — 401).
+
+## Decisions resolved
+
+- Paydown runs **inline**, not via unattended `auto-session.sh` — nested `claude -p` 401s (Claude oauth
+  is in-memory). For the remainder, the **Codex** variant works because `codex exec` reads on-disk
+  ChatGPT auth (verified: `codex login status` + a `PONG` exec from the sandbox).
+- D-024: the runbook (not the plan) was stale — verified against the live `vercel.json` before flipping.
+- WL-P2-5: the `treeId` verification-feature plumbing is "potentially future, start fresh later"
+  (operator) → safe to remove now; re-threadable at the call site.
+
 ## Files touched
 
 | File | Change |
@@ -158,27 +187,91 @@ oxlint/oxfmt clean (only pre-existing warnings), `next build` exit 0.
 | `bun run typecheck` (Slice 2) | 0 errors — surfaced + fixed the one drawer `treeId` pass-through |
 | `apps/web` oxlint + oxfmt check (Slice 2) | oxlint: only pre-existing warnings (none in touched files); oxfmt: all formatted |
 | `cd apps/web && npx next build` (Slice 2) | exit 0 (full route table rendered) |
+| `npx fallow audit` (deps, Slice 3) | only `react-email` + `react-dom` flagged — both false-positives → no-op |
+| `fallow audit --changed-since origin/main --gate new-only` | `✓ No issues in 11 changed files` — 0 introduced dead-code/dup/complexity |
+| `codex exec --sandbox read-only "PONG"` | authenticated + returned PONG (gpt-5.5, ChatGPT) — launch-from-here viable |
 
 ## Open decisions / blockers
 
 - None for D-024 — the flagged `ignoreCommand` + email-SOP drift was folded into this slice per operator
   request.
+- **WL-P2-22** (`LineageTreeBoard` CRAP 1190) logged as a follow-up — operator-gated refactor, NOT an
+  autonomous slice.
+- **Codex run** (Slices 4–5) is unattended + PR-gated: review + merge the stacked PRs bottom-up; nothing
+  merges to `main` without you.
 
 ## Next session
 
 ### Goal
 
-Continue the safe paydown: Slice 3 — WL-P2-10 (dependency hygiene). NOTE WL-P2-10 was already
-**partially resolved SESSION_0354** (removed `@ai-sdk/google` + `github-slugger`, regenerated lockfiles)
-— re-audit for what actually remains before acting; if nothing is provably unused, no-op the slice.
+**Autonomous handoff → Codex.** Slices 1–3 are done inline (Slice 3 = no-op). The **remainder
+(Slice 4 + Slice 5)** runs unattended via `scripts/auto-session-codex.sh 2`, launched from this session
+(Codex auth is on-disk → `codex exec` runs from the sandbox; verified). Each cold codex session bows in
+here, does the next `petey-plan-0454` slice, and opens one stacked PR (PR gate — nothing merges to
+`main` unattended; operator reviews + merges bottom-up). After Slice 5 the run hands back to the
+operator-gated lane (clone-tree cleanup WL-P2-21, admin branch CRUD, FI-001 send).
 
 ### First task
 
-Per `petey-plan-0454` Slice 3: `npx fallow audit` for the current dependency-hygiene list; for each
-candidate grep every import (source/script/config/dynamic) before removing; `tailwind-merge` +
-`@react-email/preview-server` are documented KEEP false-positives (WL-P2-10). App-code push → deploys,
-so `bun install` + `next build` must pass. Then Slice 4 (WL-P2-18) + Slice 5 (WL-P2-17).
+**Slice 4 — WL-P2-18** (`server/admin/tournaments/actions.ts`): extract the oversized `upsertDivision`
+/ `scoreMatch` / `seedable` branches into named helpers (behavior-preserving) and remove the 2
+confirmed-dead exports (`updateTournamentStatus`, `AddPersonOptions`) after a zero-ref grep. Write
+SESSION task IDs + Cody pre-flight first; run the tournament-action + scoring tests (correctness-
+critical); confirm `fallow dead_code_introduced: 0` + `next build` exit 0; flip WL-P2-18 → ✅. Then
+**Slice 5 — WL-P2-17** (extract the shared admin-query-builder helper across ~24
+`server/admin/*/queries.ts`; behavior-preservation paramount — largest slice, may need "WL-P2-17
+continued").
+
+## Review log
+
+### SESSION_0454_REVIEW_01 — D-024 + WL-P2-5 + WL-P2-10 no-op
+
+- **Reviewed tasks:** TASK_01 (D-024), TASK_02 (WL-P2-5), TASK_03 (WL-P2-10 no-op).
+- **Dirstarter docs check:** not applicable — docs-truth correction + a dead-code removal; no Dirstarter
+  L1 layer touched.
+- **Verdict:** strong. D-024 earned its keep by *verifying* (the runbook asserted pnpm was live; the
+  live `vercel.json` said bun) instead of trusting the plan blindly. WL-P2-5 is a clean, compiler-proven
+  removal; fallow-fix-loop confirmed 0 introduced and correctly named the inherited `LineageTreeBoard`
+  bloat as a follow-up (WL-P2-22) rather than scope-creeping. The Slice 3 no-op is honest.
+- **Score:** 9/10.
+- **Follow-up:** Codex run does Slices 4–5; WL-P2-22 + the operator-gated lane remain.
 
 ## Hostile close review
 
-Pending bow-out — session in progress (Slices 1–2 committed locally; fallow-fix-loop + operator review before close/push).
+- **Giddy:** pass — D-024 verified vs the live `vercel.json` before flipping; WL-P2-5 proven dead by
+  compiler + whole-app grep; fallow confirms 0 introduced; codex auth verified before promising launch.
+- **Doug:** pass — gates green (typecheck / oxlint / oxfmt / `next build` / `wiki:lint` 0 errors);
+  fallow-fix-loop delta clean.
+- **Kaizen aggregate:** 9/10 — honest no-op on Slice 3, inherited complexity named not adopted. −1:
+  WL-P2-5 is build/type-proven not live-render-proven (accepted — the prop fed no code path, so there
+  is no behavioral surface to render).
+
+## ADR / ubiquitous-language check
+
+- ADR update **not required** — docs-truth correction (D-024), a dead-code removal (WL-P2-5), a no-op
+  (WL-P2-10). No architectural decision changed.
+- Ubiquitous language update **not required** — no new domain terms.
+
+## Reflections
+
+The session pivoted from "launch the overnight run" to "do it inline" once the nested-`claude -p` 401
+was proven — and the right fix wasn't to fight the auth but to switch to the agent whose creds the
+sandbox can read (Codex). The D-024 slice was the standout: blindly trusting the plan's "flip to bun"
+would have been wrong if the runbook were right — so verifying against `apps/web/vercel.json` first was
+load-bearing. The fallow-fix-loop on a 2-line removal mostly proved a negative (0 introduced), which is
+exactly what a clean removal should show; scaling the review to the change kept it proportionate.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Frontmatter sweep | `updated: 2026-06-27` + `last_agent: claude-session-0454` on every touched doc |
+| Backlinks/index sweep | `wiki:lint` 0 errors (index intact) |
+| Wiki lint | 0 errors, 15 warnings (all pre-existing) |
+| Kaizen reflection | see Reflections |
+| Hostile close review | SESSION_0454_REVIEW_01 + hostile review above (Kaizen 9/10) |
+| Review & Recommend | Next session = Slice 4 (Codex handoff) written |
+| Memory sweep | new finding saved: `codex exec` authenticates from the Claude Code sandbox; `claude -p` does not |
+| Next session unblock check | Codex run launched for Slices 4–5 from a clean pushed `main` |
+| Git hygiene | close commit on `main` (see push) |
+| Graphify update | refreshed (FS-0025, before commit) |
