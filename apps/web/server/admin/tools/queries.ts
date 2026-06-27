@@ -1,28 +1,24 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { type Prisma, ToolStatus } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { ToolsTableSchema } from "~/server/admin/tools/schema"
 import { db } from "~/services/db"
 
 export const findTools = async (search: ToolsTableSchema, where?: Prisma.ToolWhereInput) => {
-  const { name, sort, page, perPage, from, to, operator, status, tier } = search
-
-  // Offset to paginate the results
-  const offset = (page - 1) * perPage
-
-  // Column and order to sort by
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  // Convert the date strings to date objects
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator, status, tier } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.ToolOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.ToolWhereInput | undefined)[] = [
     // Filter by name
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
 
     // Filter by createdAt
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.ToolWhereInput>(fromDate, toDate),
 
     // Filter tasks by status
     status.length > 0 ? { status: { in: status } } : undefined,
@@ -31,25 +27,28 @@ export const findTools = async (search: ToolsTableSchema, where?: Prisma.ToolWhe
     tier.length > 0 ? { tier: { in: tier } } : undefined,
   ]
 
-  const whereQuery: Prisma.ToolWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.ToolWhereInput>({
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  // Transaction is used to ensure both queries are executed in a single transaction
-  const [tools, total] = await db.$transaction([
-    db.tool.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
+  const {
+    rows: tools,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.tool.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.tool.count({ where: whereQuery }),
+  })
 
-    db.tool.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(total / perPage)
   return { tools, total, pageCount }
 }
 

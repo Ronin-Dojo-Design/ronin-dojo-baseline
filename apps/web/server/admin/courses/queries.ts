@@ -1,47 +1,51 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { CoursesTableSchema } from "~/server/admin/courses/schema"
 import { db } from "~/services/db"
 
 export const findCourses = async (search: CoursesTableSchema, where?: Prisma.CourseWhereInput) => {
-  const { title, sort, page, perPage, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { title, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.CourseOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.CourseWhereInput | undefined)[] = [
     title ? { title: { contains: title, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.CourseWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.CourseWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.CourseWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [courses, total] = await db.$transaction([
-    db.course.findMany({
-      where: { ...whereQuery, ...where },
-      include: {
-        organization: { select: { id: true, name: true } },
-        discipline: { select: { id: true, name: true } },
-        _count: { select: { curriculumItems: true, enrollments: true } },
-      },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
+  const {
+    rows: courses,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.course.findMany({
+        where: whereQuery,
+        include: {
+          organization: { select: { id: true, name: true } },
+          discipline: { select: { id: true, name: true } },
+          _count: { select: { curriculumItems: true, enrollments: true } },
+        },
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.course.count({ where: whereQuery }),
+  })
 
-    db.course.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(total / perPage)
   return { courses, total, pageCount }
 }
 

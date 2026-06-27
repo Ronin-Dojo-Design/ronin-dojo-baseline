@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { SkillLevelsTableSchema } from "~/server/admin/skill-levels/schema"
 import { db } from "~/services/db"
 
@@ -8,38 +12,38 @@ export const findSkillLevels = async (
   search: SkillLevelsTableSchema,
   where?: Prisma.SkillLevelWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.SkillLevelOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.SkillLevelWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.SkillLevelWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.SkillLevelWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.SkillLevelWhereInput>({
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [skillLevels, skillLevelsTotal] = await db.$transaction([
-    db.skillLevel.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { sortOrder: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: { _count: { select: { programs: true } } },
-    }),
+  const {
+    rows: skillLevels,
+    total: skillLevelsTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.skillLevel.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { sortOrder: "asc" }],
+        take: perPage,
+        skip: offset,
+        include: { _count: { select: { programs: true } } },
+      }),
+    count: () => db.skillLevel.count({ where: whereQuery }),
+  })
 
-    db.skillLevel.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(skillLevelsTotal / perPage)
   return { skillLevels, skillLevelsTotal, pageCount }
 }
 

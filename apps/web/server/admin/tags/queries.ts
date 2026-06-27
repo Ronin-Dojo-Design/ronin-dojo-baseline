@@ -1,49 +1,52 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { TagsTableSchema } from "~/server/admin/tags/schema"
 import { db } from "~/services/db"
 
+type TagRow = Prisma.TagGetPayload<{
+  include: { _count: { select: { tools: true } } }
+}>
+
 export const findTags = async (search: TagsTableSchema, where?: Prisma.TagWhereInput) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  // Offset to paginate the results
-  const offset = (page - 1) * perPage
-
-  // Column and order to sort by
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  // Convert the date strings to Date objects and adjust the range
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.TagOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.TagWhereInput | undefined)[] = [
     // Filter by name
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
 
     // Filter by createdAt
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.TagWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.TagWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
-
-  const combinedWhere = { ...whereQuery, ...where }
-
-  const tagsQuery = (db.tag.findMany as any)({
-    where: combinedWhere,
-    orderBy: [...orderBy, { createdAt: "asc" as const }],
-    take: perPage,
-    skip: offset,
-    include: { _count: { select: { tools: true } } },
+  const combinedWhere = buildAdminListWhere<Prisma.TagWhereInput>({
+    expressions,
+    extraWhere: where,
+    operator,
   })
 
-  const countQuery = db.tag.count({ where: combinedWhere })
-
-  const [tags, tagsTotal] = await db.$transaction([tagsQuery, countQuery])
-
-  const pageCount = Math.ceil(tagsTotal / perPage)
+  const {
+    rows: tags,
+    total: tagsTotal,
+    pageCount,
+  } = await runAdminListTransaction<TagRow[]>({
+    perPage,
+    findMany: () =>
+      (db.tag.findMany as any)({
+        where: combinedWhere,
+        orderBy: [...orderBy, { createdAt: "asc" as const }],
+        take: perPage,
+        skip: offset,
+        include: { _count: { select: { tools: true } } },
+      }) as Prisma.PrismaPromise<TagRow[]>,
+    count: () => db.tag.count({ where: combinedWhere }),
+  })
   return { tags, tagsTotal, pageCount }
 }
 

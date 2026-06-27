@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { ProgramsTableSchema } from "~/server/admin/programs/schema"
 import { db } from "~/services/db"
 
@@ -8,44 +12,44 @@ export const findPrograms = async (
   search: ProgramsTableSchema,
   where?: Prisma.ProgramWhereInput,
 ) => {
-  const { name, status, sort, page, perPage, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, status, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.ProgramOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.ProgramWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
     status ? { status: status as any } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.ProgramWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.ProgramWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.ProgramWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [programs, total] = await db.$transaction([
-    db.program.findMany({
-      where: { ...whereQuery, ...where },
-      include: {
-        organization: { select: { id: true, name: true } },
-        discipline: { select: { id: true, name: true } },
-        _count: { select: { programEnrollments: true, courses: true, classSchedules: true } },
-      },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
+  const {
+    rows: programs,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.program.findMany({
+        where: whereQuery,
+        include: {
+          organization: { select: { id: true, name: true } },
+          discipline: { select: { id: true, name: true } },
+          _count: { select: { programEnrollments: true, courses: true, classSchedules: true } },
+        },
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.program.count({ where: whereQuery }),
+  })
 
-    db.program.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(total / perPage)
   return { programs, total, pageCount }
 }
 

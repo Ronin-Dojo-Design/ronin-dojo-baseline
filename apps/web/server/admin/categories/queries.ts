@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { CategoriesTableSchema } from "~/server/admin/categories/schema"
 import { db } from "~/services/db"
 
@@ -8,46 +12,42 @@ export const findCategories = async (
   search: CategoriesTableSchema,
   where?: Prisma.CategoryWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  // Offset to paginate the results
-  const offset = (page - 1) * perPage
-
-  // Column and order to sort by
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  // Convert the date strings to Date objects and adjust the range
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.CategoryOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.CategoryWhereInput | undefined)[] = [
     // Filter by name
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
 
     // Filter by createdAt
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.CategoryWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.CategoryWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.CategoryWhereInput>({
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
   // Transaction is used to ensure both queries are executed in a single transaction
-  const [categories, categoriesTotal] = await db.$transaction([
-    db.category.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: { _count: { select: { tools: true } } },
-    }),
+  const {
+    rows: categories,
+    total: categoriesTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.category.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+        include: { _count: { select: { tools: true } } },
+      }),
+    count: () => db.category.count({ where: whereQuery }),
+  })
 
-    db.category.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(categoriesTotal / perPage)
   return { categories, categoriesTotal, pageCount }
 }
 

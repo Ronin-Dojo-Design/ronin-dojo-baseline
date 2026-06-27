@@ -1,21 +1,17 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import { db } from "~/services/db"
 import type { ReportsTableSchema } from "./schema"
 
 export const findReports = async (search: ReportsTableSchema) => {
-  const { message, page, perPage, sort, from, to, operator, type } = search
-
-  // Offset to paginate the results
-  const offset = (page - 1) * perPage
-
-  // Column and order to sort by
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  // Convert the date strings to date objects
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { message, perPage, operator, type } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.ReportOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.ReportWhereInput | undefined)[] = [
     // Filter by message
@@ -25,29 +21,32 @@ export const findReports = async (search: ReportsTableSchema) => {
     type.length > 0 ? { type: { in: type } } : undefined,
 
     // Filter by createdAt
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.ReportWhereInput>(fromDate, toDate),
   ]
 
-  const where: Prisma.ReportWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const where = buildAdminListWhere<Prisma.ReportWhereInput>({
+    expressions,
+    operator,
+  })
 
   // Transaction is used to ensure both queries are executed in a single transaction
-  const [reports, reportsTotal] = await db.$transaction([
-    db.report.findMany({
-      where,
-      orderBy,
-      take: perPage,
-      skip: offset,
-      include: { tool: { select: { slug: true, name: true } } },
-    }),
+  const {
+    rows: reports,
+    total: reportsTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.report.findMany({
+        where,
+        orderBy,
+        take: perPage,
+        skip: offset,
+        include: { tool: { select: { slug: true, name: true } } },
+      }),
+    count: () => db.report.count({ where }),
+  })
 
-    db.report.count({
-      where,
-    }),
-  ])
-
-  const pageCount = Math.ceil(reportsTotal / perPage)
   return { reports, reportsTotal, pageCount }
 }
 

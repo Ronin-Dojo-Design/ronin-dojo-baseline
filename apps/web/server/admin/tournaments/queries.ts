@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type {
   RuleSetsTableSchema,
   TournamentRolesTableSchema,
@@ -27,13 +31,9 @@ export const findTournaments = async (
   search: TournamentsTableSchema,
   where?: Prisma.TournamentWhereInput,
 ) => {
-  const { name, sort, page, perPage, from, to, operator, status } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator, status } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.TournamentOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.TournamentWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
@@ -41,35 +41,39 @@ export const findTournaments = async (
     fromDate || toDate ? { startDate: { gte: fromDate, lte: toDate } } : undefined,
   ]
 
-  const whereQuery: Prisma.TournamentWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.TournamentWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [tournaments, total] = await db.$transaction([
-    db.tournament.findMany({
-      where: { ...whereQuery, ...where },
-      include: {
-        host: { select: { id: true, name: true } },
-        disciplines: {
-          include: {
-            discipline: { select: { id: true, name: true } },
-            _count: { select: { divisions: true } },
+  const {
+    rows: tournaments,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.tournament.findMany({
+        where: whereQuery,
+        include: {
+          host: { select: { id: true, name: true } },
+          disciplines: {
+            include: {
+              discipline: { select: { id: true, name: true } },
+              _count: { select: { divisions: true } },
+            },
           },
+          _count: { select: { registrations: true } },
         },
-        _count: { select: { registrations: true } },
-      },
-      orderBy: [...orderBy, { startDate: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
+        orderBy: [...orderBy, { startDate: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.tournament.count({ where: whereQuery }),
+  })
 
-    db.tournament.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(total / perPage)
   return { tournaments, total, pageCount }
 }
 
@@ -136,38 +140,40 @@ export const findTournamentRoles = async () => {
 }
 
 export const findTournamentRolesPaginated = async (search: TournamentRolesTableSchema) => {
-  const { name, sort, page, perPage, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.TournamentRoleOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.TournamentRoleWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.TournamentRoleWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.TournamentRoleWhereInput = {
-    OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.TournamentRoleWhereInput>({
+    baseWhere: { OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }] },
+    expressions,
+    operator,
+  })
 
-  const [roles, total] = await db.$transaction([
-    db.tournamentRole.findMany({
-      where: whereQuery,
-      include: {
-        _count: { select: { staffAssignments: true } },
-      },
-      orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
-    db.tournamentRole.count({ where: whereQuery }),
-  ])
+  const {
+    rows: roles,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.tournamentRole.findMany({
+        where: whereQuery,
+        include: {
+          _count: { select: { staffAssignments: true } },
+        },
+        orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.tournamentRole.count({ where: whereQuery }),
+  })
 
-  const pageCount = Math.ceil(total / perPage)
   return { roles, total, pageCount }
 }
 
@@ -293,39 +299,41 @@ export const findRuleSets = async () => {
 }
 
 export const findRuleSetsPaginated = async (search: RuleSetsTableSchema) => {
-  const { name, sort, page, perPage, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.RuleSetOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.RuleSetWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.RuleSetWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.RuleSetWhereInput = {
-    OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }],
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.RuleSetWhereInput>({
+    baseWhere: { OR: [{ brand: Brand.BBL }, { brand: null, isSystem: true }] },
+    expressions,
+    operator,
+  })
 
-  const [ruleSets, total] = await db.$transaction([
-    db.ruleSet.findMany({
-      where: whereQuery,
-      include: {
-        discipline: { select: { id: true, name: true } },
-        _count: { select: { tournamentDisciplines: true } },
-      },
-      orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
-    db.ruleSet.count({ where: whereQuery }),
-  ])
+  const {
+    rows: ruleSets,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.ruleSet.findMany({
+        where: whereQuery,
+        include: {
+          discipline: { select: { id: true, name: true } },
+          _count: { select: { tournamentDisciplines: true } },
+        },
+        orderBy: [{ isSystem: "desc" }, ...orderBy, { name: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.ruleSet.count({ where: whereQuery }),
+  })
 
-  const pageCount = Math.ceil(total / perPage)
   return { ruleSets, total, pageCount }
 }
 

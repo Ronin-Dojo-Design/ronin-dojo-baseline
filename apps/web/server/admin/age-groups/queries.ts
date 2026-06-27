@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import type { Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { AgeGroupsTableSchema } from "~/server/admin/age-groups/schema"
 import { db } from "~/services/db"
 
@@ -8,38 +12,37 @@ export const findAgeGroups = async (
   search: AgeGroupsTableSchema,
   where?: Prisma.AgeGroupWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.AgeGroupOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.AgeGroupWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.AgeGroupWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.AgeGroupWhereInput = {
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.AgeGroupWhereInput>({
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [ageGroups, ageGroupsTotal] = await db.$transaction([
-    db.ageGroup.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { sortOrder: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: { _count: { select: { programs: true } } },
-    }),
-
-    db.ageGroup.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(ageGroupsTotal / perPage)
+  const {
+    rows: ageGroups,
+    total: ageGroupsTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.ageGroup.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { sortOrder: "asc" }],
+        take: perPage,
+        skip: offset,
+        include: { _count: { select: { programs: true } } },
+      }),
+    count: () => db.ageGroup.count({ where: whereQuery }),
+  })
   return { ageGroups, ageGroupsTotal, pageCount }
 }
 

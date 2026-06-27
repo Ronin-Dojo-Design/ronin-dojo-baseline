@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { SubscriptionsTableSchema } from "~/server/admin/subscriptions/schema"
 import { db } from "~/services/db"
 
@@ -8,13 +12,9 @@ export const findSubscriptions = async (
   search: SubscriptionsTableSchema,
   where?: Prisma.UserBrandSubscriptionWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.UserBrandSubscriptionOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.UserBrandSubscriptionWhereInput | undefined)[] = [
     name
@@ -27,32 +27,36 @@ export const findSubscriptions = async (
           },
         }
       : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.UserBrandSubscriptionWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.UserBrandSubscriptionWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.UserBrandSubscriptionWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [subscriptions, subscriptionsTotal] = await db.$transaction([
-    db.userBrandSubscription.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "desc" }],
-      take: perPage,
-      skip: offset,
-      include: {
-        user: { select: { id: true, name: true, email: true } },
-        tier: { select: { id: true, name: true, code: true, level: true } },
-      },
-    }),
+  const {
+    rows: subscriptions,
+    total: subscriptionsTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.userBrandSubscription.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { createdAt: "desc" }],
+        take: perPage,
+        skip: offset,
+        include: {
+          user: { select: { id: true, name: true, email: true } },
+          tier: { select: { id: true, name: true, code: true, level: true } },
+        },
+      }),
+    count: () => db.userBrandSubscription.count({ where: whereQuery }),
+  })
 
-    db.userBrandSubscription.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(subscriptionsTotal / perPage)
   return { subscriptions, subscriptionsTotal, pageCount }
 }
 

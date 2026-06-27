@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { EntitlementsTableSchema } from "~/server/admin/entitlements/schema"
 import { db } from "~/services/db"
 
@@ -8,41 +12,41 @@ export const findEntitlements = async (
   search: EntitlementsTableSchema,
   where?: Prisma.EntitlementWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.EntitlementOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.EntitlementWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.EntitlementWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.EntitlementWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.EntitlementWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [entitlements, entitlementsTotal] = await db.$transaction([
-    db.entitlement.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: {
-        _count: { select: { grants: true, assignments: true } },
-      },
-    }),
+  const {
+    rows: entitlements,
+    total: entitlementsTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.entitlement.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+        include: {
+          _count: { select: { grants: true, assignments: true } },
+        },
+      }),
+    count: () => db.entitlement.count({ where: whereQuery }),
+  })
 
-    db.entitlement.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(entitlementsTotal / perPage)
   return { entitlements, entitlementsTotal, pageCount }
 }
 
