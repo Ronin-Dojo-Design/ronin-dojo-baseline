@@ -1,8 +1,12 @@
 import "server-only"
 
-import { isTruthy } from "@dirstack/utils"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import {
+  buildAdminListWhere,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { LineageTreesTableSchema } from "~/server/admin/lineage/schema"
 import { db } from "~/services/db"
 
@@ -34,62 +38,71 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
     return { trees: [], total: 0, pageCount: 0 }
   }
 
-  const { name, page, perPage, sort, operator } = search
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
+  const { name, perPage, operator } = search
+  const { offset, orderBy } =
+    getAdminListQueryParts<Prisma.LineageTreeOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.LineageTreeWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
   ]
 
-  const where: Prisma.LineageTreeWhereInput = {
-    brand: Brand.BBL,
-    ...(isAdmin
-      ? {}
-      : {
-          accessGrants: {
-            some: {
-              userId: session.user.id,
-              role: "TREE_ADMIN",
-              revokedAt: null,
+  const where = buildAdminListWhere<Prisma.LineageTreeWhereInput>({
+    baseWhere: {
+      brand: Brand.BBL,
+      ...(isAdmin
+        ? {}
+        : {
+            accessGrants: {
+              some: {
+                userId: session.user.id,
+                role: "TREE_ADMIN",
+                revokedAt: null,
+              },
+            },
+          }),
+    },
+    expressions,
+    operator,
+  })
+
+  const {
+    rows: trees,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.lineageTree.findMany({
+        where,
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          description: true,
+          visibility: true,
+          isPublished: true,
+          isClaimable: true,
+          updatedAt: true,
+          discipline: { select: { id: true, name: true, slug: true } },
+          organization: { select: { id: true, name: true, slug: true } },
+          _count: {
+            select: {
+              members: true,
+              claimRequests: true,
             },
           },
-        }),
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
-
-  const [trees, total] = await db.$transaction([
-    db.lineageTree.findMany({
-      where,
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        visibility: true,
-        isPublished: true,
-        isClaimable: true,
-        updatedAt: true,
-        discipline: { select: { id: true, name: true, slug: true } },
-        organization: { select: { id: true, name: true, slug: true } },
-        _count: {
-          select: {
-            members: true,
-            claimRequests: true,
+          claimRequests: {
+            select: { id: true, status: true, updatedAt: true },
+            orderBy: { updatedAt: "desc" },
+            take: 20,
           },
         },
-        claimRequests: {
-          select: { id: true, status: true, updatedAt: true },
-          orderBy: { updatedAt: "desc" },
-          take: 20,
-        },
-      },
-    }),
-    db.lineageTree.count({ where }),
-  ])
+      }),
+    count: () => db.lineageTree.count({ where }),
+  })
 
   return {
     trees: trees.map(tree => ({
@@ -97,7 +110,7 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
       currentClaim: latestClaimStatus(tree.claimRequests),
     })),
     total,
-    pageCount: Math.ceil(total / perPage),
+    pageCount,
   }
 }
 

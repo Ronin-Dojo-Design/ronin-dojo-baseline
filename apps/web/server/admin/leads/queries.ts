@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { LeadsTableSchema } from "~/server/admin/leads/schema"
 import { leadFollowUpPayload, leadPayload } from "~/server/web/lead/payloads"
 import { db } from "~/services/db"
@@ -11,13 +15,9 @@ import { db } from "~/services/db"
 // ---------------------------------------------------------------------------
 
 export const findLeads = async (search: LeadsTableSchema, where?: Prisma.LeadWhereInput) => {
-  const { name, sort, page, perPage, from, to, operator, status, source, organizationId } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator, status, source, organizationId } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.LeadOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.LeadWhereInput | undefined)[] = [
     // Filter by name (first or last)
@@ -31,7 +31,7 @@ export const findLeads = async (search: LeadsTableSchema, where?: Prisma.LeadWhe
       : undefined,
 
     // Filter by date range
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.LeadWhereInput>(fromDate, toDate),
 
     // Filter by status
     status.length > 0 ? { status: { in: status } } : undefined,
@@ -43,29 +43,33 @@ export const findLeads = async (search: LeadsTableSchema, where?: Prisma.LeadWhe
     organizationId ? { organizationId } : undefined,
   ]
 
-  const whereQuery: Prisma.LeadWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.LeadWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [leads, total] = await db.$transaction([
-    db.lead.findMany({
-      where: { ...whereQuery, ...where },
-      select: {
-        ...leadPayload,
-        organization: { select: { id: true, name: true, slug: true } },
-      },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-    }),
+  const {
+    rows: leads,
+    total,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.lead.findMany({
+        where: whereQuery,
+        select: {
+          ...leadPayload,
+          organization: { select: { id: true, name: true, slug: true } },
+        },
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.lead.count({ where: whereQuery }),
+  })
 
-    db.lead.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(total / perPage)
   return { leads, total, pageCount }
 }
 

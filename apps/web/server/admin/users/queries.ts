@@ -1,21 +1,17 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import { db } from "~/services/db"
 import type { UsersTableSchema } from "./schema"
 
 export const findUsers = async (search: UsersTableSchema) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  // Offset to paginate the results
-  const offset = (page - 1) * perPage
-
-  // Column and order to sort by
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  // Convert the date strings to date objects
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.UserOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.UserWhereInput | undefined)[] = [
     // Filter by name
@@ -29,34 +25,32 @@ export const findUsers = async (search: UsersTableSchema) => {
       : undefined,
 
     // Filter by createdAt
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.UserWhereInput>(fromDate, toDate),
   ]
 
-  const activeUserWhere: Prisma.UserWhereInput = {
-    archivedAt: null,
-    isPlaceholder: false,
-  }
-  const filteredExpressions = expressions.filter(isTruthy)
-  const where: Prisma.UserWhereInput = {
-    ...activeUserWhere,
-    ...(filteredExpressions.length ? { [operator.toUpperCase()]: filteredExpressions } : {}),
-  }
+  const where = buildAdminListWhere<Prisma.UserWhereInput>({
+    baseWhere: { archivedAt: null, isPlaceholder: false },
+    expressions,
+    operator,
+    omitEmptyOperator: true,
+  })
 
-  // Transaction is used to ensure both queries are executed in a single transaction
-  const [users, usersTotal] = await db.$transaction([
-    db.user.findMany({
-      where,
-      orderBy,
-      take: perPage,
-      skip: offset,
-    }),
+  const {
+    rows: users,
+    total: usersTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.user.findMany({
+        where,
+        orderBy,
+        take: perPage,
+        skip: offset,
+      }),
+    count: () => db.user.count({ where }),
+  })
 
-    db.user.count({
-      where,
-    }),
-  ])
-
-  const pageCount = Math.ceil(usersTotal / perPage)
   return { users, usersTotal, pageCount }
 }
 

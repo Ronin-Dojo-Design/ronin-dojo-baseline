@@ -1,6 +1,10 @@
-import { isTruthy } from "@dirstack/utils"
-import { endOfDay, startOfDay } from "date-fns"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import {
+  buildAdminListWhere,
+  createdAtRangeExpression,
+  getAdminListQueryParts,
+  runAdminListTransaction,
+} from "~/server/admin/list-query"
 import type { PricingPlansTableSchema } from "~/server/admin/pricing-plans/schema"
 import { db } from "~/services/db"
 
@@ -8,43 +12,43 @@ export const findPricingPlans = async (
   search: PricingPlansTableSchema,
   where?: Prisma.PricingPlanWhereInput,
 ) => {
-  const { name, page, perPage, sort, from, to, operator } = search
-
-  const offset = (page - 1) * perPage
-  const orderBy = sort.map(item => ({ [item.id]: item.desc ? "desc" : "asc" }) as const)
-
-  const fromDate = from ? startOfDay(new Date(from)) : undefined
-  const toDate = to ? endOfDay(new Date(to)) : undefined
+  const { name, perPage, operator } = search
+  const { offset, orderBy, fromDate, toDate } =
+    getAdminListQueryParts<Prisma.PricingPlanOrderByWithRelationInput>(search)
 
   const expressions: (Prisma.PricingPlanWhereInput | undefined)[] = [
     name ? { name: { contains: name, mode: "insensitive" } } : undefined,
-    fromDate || toDate ? { createdAt: { gte: fromDate, lte: toDate } } : undefined,
+    createdAtRangeExpression<Prisma.PricingPlanWhereInput>(fromDate, toDate),
   ]
 
-  const whereQuery: Prisma.PricingPlanWhereInput = {
-    brand: Brand.BBL,
-    [operator.toUpperCase()]: expressions.filter(isTruthy),
-  }
+  const whereQuery = buildAdminListWhere<Prisma.PricingPlanWhereInput>({
+    baseWhere: { brand: Brand.BBL },
+    expressions,
+    extraWhere: where,
+    operator,
+  })
 
-  const [pricingPlans, pricingPlansTotal] = await db.$transaction([
-    db.pricingPlan.findMany({
-      where: { ...whereQuery, ...where },
-      orderBy: [...orderBy, { createdAt: "asc" }],
-      take: perPage,
-      skip: offset,
-      include: {
-        organization: { select: { id: true, name: true } },
-        program: { select: { id: true, name: true } },
-        _count: { select: { entitlementGrants: true } },
-      },
-    }),
+  const {
+    rows: pricingPlans,
+    total: pricingPlansTotal,
+    pageCount,
+  } = await runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.pricingPlan.findMany({
+        where: whereQuery,
+        orderBy: [...orderBy, { createdAt: "asc" }],
+        take: perPage,
+        skip: offset,
+        include: {
+          organization: { select: { id: true, name: true } },
+          program: { select: { id: true, name: true } },
+          _count: { select: { entitlementGrants: true } },
+        },
+      }),
+    count: () => db.pricingPlan.count({ where: whereQuery }),
+  })
 
-    db.pricingPlan.count({
-      where: { ...whereQuery, ...where },
-    }),
-  ])
-
-  const pageCount = Math.ceil(pricingPlansTotal / perPage)
   return { pricingPlans, pricingPlansTotal, pageCount }
 }
 
