@@ -279,24 +279,32 @@ session.
 
 ### Goal
 
-Hand back to the operator-gated lane after `docs/petey-plan-0454-autonomous-paydown.md`: verify and clean up the
-duplicate unpublished `rigan-machado-bjj-lineage` prod trees, then decide/build the admin branch/subtree CRUD needed
-before FI-001 send.
+Execute the **operator-gated lineage lane** per
+[`docs/petey-plan-0457-operator-gated-lineage.md`](../petey-plan-0457-operator-gated-lineage.md) — the lane Codex
+correctly refused to autonomize. **Phase A lands Brian Truelson (the P0):** WL-P2-21 clone-tree cleanup (prod,
+verify vs PROD) → FI-001 send. **Phase B (later):** WL-P2-22 board refactor → admin branch/subtree CRUD. **NOT
+autonomous** — interactive; the operator gates every prod mutation / email send / push / merge.
 
-### Inputs to read
+### Inputs to read (in order)
 
-- `docs/sprints/SESSION_0456.md`
-- `docs/petey-plan-0454-autonomous-paydown.md`
-- `docs/knowledge/wiki/wiring-ledger.md` (WL-P2-21 and the resolved paydown rows)
-- `docs/knowledge/wiki/concepts/lineage-branch-heads-and-tree-consolidation.md`
-- `docs/runbooks/domain-features/lineage-hub.md`
+- [`docs/petey-plan-0457-operator-gated-lineage.md`](../petey-plan-0457-operator-gated-lineage.md) — THIS lane's full
+  plan: per-slice files, graphify queries, Petey personas, worktree/sub-agent parallelization.
+- `docs/petey-plan-0454-autonomous-paydown.md` — the completed paydown this follows.
+- `docs/runbooks/domain-features/lineage-hub.md`; ADR 0037 (branch heads); `docs/knowledge/wiki/drift-register.md` (D-033).
+- `apps/web/scripts/send-bbl-truelson-thankyou.ts` (FI-001 flow) + `[[bbl-resend-key-and-dogfood-teardown]]`.
+- `apps/web/scripts/consolidate-rigan-machado-tree.ts` — the safe-tree-op model for WL-P2-21.
 
 ### First task
 
-Do **not** run headless prod mutation. Start interactively with the operator: confirm the prod tree-cleanup plan for
-WL-P2-21, verify the exact duplicate unpublished `rigan-machado-bjj-lineage` rows against PROD, and decide whether
-to clean data first or build admin branch/subtree CRUD first. Only after that human gate should FI-001 send work
-resume.
+**Slice A1 — WL-P2-21 (do NOT autonomize prod mutation).** Run the graphify alignment query, then WITH the operator:
+audit FULL prod published-trees and identify the 2 unpublished `rigan-machado-bjj-lineage` clones + Brian's redundant
+memberships **against PROD** (`bun --env-file=apps/web/.env.prod …`). Write `scripts/remove-residual-lineage-clones.ts`
+(dry-run → JSON backup → apply), show the dry-run, get explicit operator "go" before `--apply`, then re-run
+`send-bbl-truelson-thankyou.ts --verify`. Then **Slice A2 — FI-001:** the test-send to `ronindojodesign@gmail.com` is
+already PROVEN (SESSION_0439/0444) — do ONE final confirmation `--send --to ronindojodesign@gmail.com` (mandatory
+teardown: `DELETE` the `LineagePendingClaim` binding, **never** `--reset`), operator reviews, then the operator-gated
+real send to `btruelson@gmail.com` (`--verify` → `--backfill` → `--send` → `--grant`), Doug verifies the claim E2E.
+Requires a `blackbeltlegacy.com`-scoped Resend key (inline one-shot). Phase B (WL-P2-22 refactor → admin CRUD) follows.
 
 ## Review log
 
