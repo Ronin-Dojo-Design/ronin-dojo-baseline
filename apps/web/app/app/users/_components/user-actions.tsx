@@ -34,7 +34,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
   const pathname = usePathname()
   const router = useRouter()
   const [isUpdatePending, startUpdateTransition] = useTransition()
-  const roles = ["admin", "user"] as const
+  const roles = ["admin", "user", "tournament_director"] as const
 
   if (user.id === session?.user.id) {
     return null
@@ -92,7 +92,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
                     className="capitalize"
                     disabled={isUpdatePending}
                   >
-                    {role}
+                    {role.replace(/_/g, " ")}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>

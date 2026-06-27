@@ -14,18 +14,46 @@ type AppDb = typeof appDb
 
 export const updateUser = adminActionClient
   .inputSchema(userSchema)
-  .action(async ({ parsedInput: { id, ...input }, ctx: { db, revalidate } }) => {
-    const user = await db.user.update({
-      where: { id },
-      data: input,
-    })
+  .action(
+    async ({ parsedInput: { id, ...input }, ctx: { db, revalidate, brand, user: actor } }) => {
+      if (!id) {
+        throw new Error("User id is required.")
+      }
 
-    revalidate({
-      paths: ["/app/users"],
-    })
+      const updated = await db.$transaction(async tx => {
+        const before = await tx.user.findUnique({ where: { id }, select: { role: true } })
+        const roleChanged = input.role !== undefined && input.role !== before?.role
 
-    return user
-  })
+        // A role change through the generic edit gets the same self-guard + audit as the dedicated
+        // role action — an admin cannot change their own role (WL-P2-20 / risk-register #11).
+        if (roleChanged && id === actor.id) {
+          throw new Error("You cannot change your own role.")
+        }
+
+        const user = await tx.user.update({ where: { id }, data: input })
+
+        if (roleChanged) {
+          await tx.auditLog.create({
+            data: {
+              brand,
+              action: "user.role.changed",
+              entityType: "User",
+              entityId: id,
+              userId: actor.id,
+              before: { role: before?.role ?? null },
+              after: { role: input.role },
+            },
+          })
+        }
+
+        return user
+      })
+
+      revalidate({ paths: ["/app/users"] })
+
+      return updated
+    },
+  )
 
 export const deleteUsers = adminActionClient
   .inputSchema(idsSchema)
@@ -152,15 +180,38 @@ export const createPerson = adminActionClient
 
 export const updateUserRole = adminActionClient
   .inputSchema(userSchema.pick({ id: true, role: true }))
-  .action(async ({ parsedInput: { id, role }, ctx: { db, revalidate } }) => {
-    const user = await db.user.update({
-      where: { id },
-      data: { role },
+  .action(async ({ parsedInput: { id, role }, ctx: { db, revalidate, brand, user: actor } }) => {
+    if (!id || !role) {
+      throw new Error("User id and role are required.")
+    }
+    // No self-role-change — an admin can't elevate/demote their own account (server-side mirror of
+    // the UI guard in user-actions.tsx + `deleteUsers`' `role:{not:"admin"}`). WL-P2-20 / risk #11.
+    if (id === actor.id) {
+      throw new Error("You cannot change your own role.")
+    }
+
+    const updated = await db.$transaction(async tx => {
+      const before = await tx.user.findUnique({ where: { id }, select: { role: true } })
+      const user = await tx.user.update({ where: { id }, data: { role } })
+
+      // Audit the privilege change (before/after + acting admin) — mirrors the audited
+      // entitlement-grant path (WL-P1-6); satisfies risk-register #11's "alert on role grants".
+      await tx.auditLog.create({
+        data: {
+          brand,
+          action: "user.role.changed",
+          entityType: "User",
+          entityId: id,
+          userId: actor.id,
+          before: { role: before?.role ?? null },
+          after: { role },
+        },
+      })
+
+      return user
     })
 
-    revalidate({
-      paths: ["/app/users"],
-    })
+    revalidate({ paths: ["/app/users"] })
 
-    return user
+    return updated
   })
