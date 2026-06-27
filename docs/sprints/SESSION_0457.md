@@ -176,10 +176,12 @@ Fully **sequential** — prod data + live send on a single careful operator-gate
 
 ### Goal
 
-**BBLApp feature-adaptation lane (features-not-pixels port) — refine Brian's claim/onboarding surfaces +
-member dashboard BEFORE the FI-001 real send** (operator: Brian must land on a polished MVP). Lift behavior
-from the legacy BBLApp (`/Users/brianscott/dev/ronin-dojo-monorepo/src/brands/blackbeltlegacy/`), translate
-into our Next.js + Prisma + Better Auth patterns. Plus Phase-B holdovers.
+**LEAD (operator, SESSION_0457): shared DB/ledger-backed AdminKanban (Loop-of-Loops P3)** — give Brian +
+**Tony Hua** near-realtime *shared* visibility into session/ledger status. Today's board
+(`apps/web/app/admin/task-board/`) is **localStorage-only / per-browser** → no sharing, no sync, nothing
+flows from sessions. Then the **BBLApp feature-adaptation lane** (N1 verified combobox into the post-claim
+wizard, N2 member-dashboard ports — read-and-translate, no Playwright port), and finally the gated FI-001
+real send. Lift BBLApp behavior from `/Users/brianscott/dev/ronin-dojo-monorepo/src/brands/blackbeltlegacy/`.
 
 ### Port approach (operator asked: full Playwright port vs read-and-translate)
 
@@ -191,6 +193,22 @@ no value. We translate the **features + behaviors + UX** (verified badges, belt-
 GATE only** (render + behavior-parity in the target route), not the porting mechanism.
 
 ### Tasks
+
+#### N0 — Shared DB/ledger-backed AdminKanban (LEAD — Tony + Brian visibility)
+
+- **Why:** the current board (`apps/web/app/admin/task-board/` + `lib/task-board/use-task-board.ts` →
+  `localStorageBoardStore`; **no DB model**) is per-browser localStorage — Tony can't see Brian's board and
+  nothing syncs from sessions/ledgers. This is the Loop-of-Loops **P3** target
+  (`docs/protocols/loop-of-loops-ledger-driven-sessions.md`).
+- **Petey grill (decide first):** **(a) read-only ledger-projection MVP** — a server component that runs
+  `scripts/ledger-backlog.ts`'s aggregation and renders shared, admin-gated cards grouped by ledger/status
+  (ships Tony's visibility fastest, zero new write-model) **vs (b) full DB-backed editable board** — a
+  `KanbanCard` Prisma model + server-action drag/drop persistence. **Recommend (a) first, (b) as Phase 2.**
+- **Reuse:** `packages/ui-kit/src/kanban/*` (`admin-kanban.tsx`, `use-board.ts`) for UI; admin capability
+  gate; surface under `/app`. Data source = the 8 ledgers via `ledger-backlog.ts --json`. Do **not** edit
+  `lib/task-board/seed.ts` (demo fixture).
+- **Done means:** Brian + Tony (admins) both load the `/app` board and see the **same** near-realtime
+  ledger-projected status (open WL/D/FS/FI/MB/TFF/INC/RISK as cards), server-rendered from git.
 
 #### N1 — Verified instructor/school combobox into the profile-enhancement wizard
 
@@ -224,10 +242,13 @@ GATE only** (render + behavior-parity in the target route), not the porting mech
 
 ### First task
 
-Petey-grill N1 (smallest slice): confirm the profile-enhancement wizard is the post-claim surface Brian hits,
-diff its "Promoted by"/"School name" fields against `lineage-step.tsx`'s creatable-combobox usage, then swap
-them in — reusing `join-options.ts` + `creatable-combobox.tsx` (zero new data layer). Headless render-proof the
-wizard step as the PROOF GATE. Then N2 belt-edit cards.
+**Petey-grill N0 (the lead):** decide read-only ledger-projection MVP vs full DB-backed editable board
+(recommend MVP); scope the `/app` surface + admin capability gate + the `ledger-backlog.ts --json` data
+shape; then build the MVP projection reusing `packages/ui-kit/src/kanban/*`. Headless render-proof that an
+admin sees the shared board. **N1/N2 (BBLApp ports) and the gated FI-001 real send follow.** For N1 when
+reached: confirm the profile-enhancement wizard is Brian's post-claim surface, diff its "Promoted by"/"School
+name" fields vs `lineage-step.tsx`'s creatable-combobox, swap them in reusing `join-options.ts` +
+`creatable-combobox.tsx` (zero new data layer).
 
 ## What landed
 
@@ -286,7 +307,11 @@ wizard step as the PROOF GATE. Then N2 belt-edit cards.
 ## Open decisions / blockers
 
 - **FI-001 real send to `btruelson@gmail.com` — BLOCKED ON OPERATOR** (needs explicit "send Brian now" AND N1/N2 landed).
-- **Leftover test `User`** (`sgg3rtFN…`, ronindojodesign) on PROD — delete at teardown once operator is done click-testing.
+- **Leftover test `User`** (`sgg3rtFN…`, ronindojodesign) on PROD — delete **BLOCKED** by 3 immutable
+  `AuditLog` rows (a `lineage.claim.reviewed` + 2 `entitlement.comp.granted` from the **0444** test claim,
+  since torn down — account is otherwise 0-activity). Pending operator call: delete the 3 test audit rows +
+  user (`scripts/delete-test-inbox-user.ts --apply --with-audit-logs`), or leave the benign account. The
+  account is harmless either way (no active claim/entitlement/node).
 - **BBL Resend key rotation** — operator to rotate all Resend keys at EOD (key was used inline only, never on disk).
 - **Founders missing from canonical tree** (D-034) — backfill decision for Phase B.
 
