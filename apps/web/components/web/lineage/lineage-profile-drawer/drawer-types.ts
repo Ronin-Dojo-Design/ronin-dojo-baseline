@@ -49,7 +49,6 @@ export type LineageProfileDrawerProps = {
    */
   viewerClaimState?: ClaimViewerState
   treeSlug?: string
-  treeId?: string
   nodeId?: string | null
   isAdmin?: boolean
   /**

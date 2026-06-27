@@ -237,7 +237,6 @@ export function LineageTreeBoard({
         isTreeClaimable={isTreeClaimable}
         viewerClaimState={selectedNodeId ? claimStateByNodeId?.[selectedNodeId] : undefined}
         treeSlug={treeSlug}
-        treeId={treeId}
         nodeId={selectedNodeId}
         isAdmin={!!capability?.canEditTree}
         activeTab={drawerTab}
