@@ -133,7 +133,10 @@ function makeDb(state: FakeState = {}) {
   return { db, created, attachments }
 }
 
-const imageFile = () => new File([new Uint8Array([1, 2, 3, 4])], "photo.png", { type: "image/png" })
+// Real JPEG magic bytes (FF D8 FF E0) so the server-side `sniffUploadBuffer` guard
+// (file-type) accepts it — the declared MIME is no longer trusted.
+const imageFile = () =>
+  new File([new Uint8Array([0xff, 0xd8, 0xff, 0xe0])], "photo.jpg", { type: "image/jpeg" })
 
 const expectRejectsWithMessage = async (promise: Promise<unknown>, message: string) => {
   try {

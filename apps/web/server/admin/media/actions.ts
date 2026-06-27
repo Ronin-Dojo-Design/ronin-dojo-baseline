@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto"
 import { after } from "next/server"
 import { z } from "zod/v4"
 import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
+import { sniffUploadBuffer } from "~/lib/media-guard"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
 import { getMediaConfig } from "~/services/s3"
@@ -87,9 +88,17 @@ export const uploadMediaToLibrary = adminActionClient
   .inputSchema(uploadMediaToLibrarySchema)
   .action(
     async ({ parsedInput: { file, title, isPublic }, ctx: { db, revalidate, user, brand } }) => {
-      const buffer = Buffer.from(await file.arrayBuffer())
+      // Trust the bytes, not the client-declared MIME: sniff + reject SVG / non-media
+      // (library media is attached to public surfaces). Mirrors the web upload guard.
+      const {
+        buffer,
+        mime,
+        kind: type,
+      } = await sniffUploadBuffer(file, {
+        maxBytes: MAX_LIBRARY_UPLOAD_BYTES,
+        allowVideo: true,
+      })
       const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`, brand)
-      const type = file.type.startsWith("video/") ? "VIDEO" : "IMAGE"
 
       const media = await db.media.create({
         data: {
@@ -97,8 +106,8 @@ export const uploadMediaToLibrary = adminActionClient
           type,
           url,
           title: title ?? file.name,
-          mimeType: file.type || undefined,
-          sizeBytes: file.size,
+          mimeType: mime || undefined,
+          sizeBytes: buffer.byteLength,
           isPublic,
           uploadedBy: { connect: { id: user.id } },
         },

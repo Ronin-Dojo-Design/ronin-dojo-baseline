@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server"
 import wretch from "wretch"
 import { Brand } from "~/.generated/prisma/client"
 import { getFaviconFetchUrl, getScreenshotFetchUrl, uploadToS3Storage } from "~/lib/media"
+import { sniffUploadBuffer } from "~/lib/media-guard"
 import { mediaUploadActionClient } from "~/lib/safe-actions"
 import { createFetchMediaSchema, createUploadMediaSchema } from "~/server/web/shared/schema"
 
@@ -31,7 +32,9 @@ export const uploadMedia = mediaUploadActionClient
     return createUploadMediaSchema(t)
   })
   .action(async ({ parsedInput: { file, path } }) => {
-    const buffer = Buffer.from(await file.arrayBuffer())
+    // Trust the bytes, not the client-declared MIME: sniff + reject SVG / non-image
+    // (matches createFileSchema's 512KB image ceiling).
+    const { buffer } = await sniffUploadBuffer(file, { maxBytes: 512 * 1024 })
 
     return await uploadToS3Storage(buffer, path, Brand.BBL)
   })

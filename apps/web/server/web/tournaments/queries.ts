@@ -129,7 +129,6 @@ export const findTournamentResults = async (slug: string, brand: Brand) => {
                                     },
                                   },
                                   guestName: true,
-                                  guestEmail: true,
                                 },
                               },
                               representingMembership: {

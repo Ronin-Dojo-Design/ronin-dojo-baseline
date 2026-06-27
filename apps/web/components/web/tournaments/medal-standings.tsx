@@ -31,7 +31,6 @@ type CompletedMatch = {
           passport: { displayName: string | null } | null
         } | null
         guestName: string | null
-        guestEmail: string | null
       }
       representingMembership: {
         organization: { name: string }
@@ -65,7 +64,8 @@ type MedalEntry = {
 
 function getCompetitorName(competitor: CompletedMatch["competitors"][number]): string {
   const r = competitor.registrationEntry.registration
-  return r.user?.passport?.displayName ?? r.user?.name ?? r.guestName ?? r.guestEmail ?? "Unknown"
+  // guestEmail intentionally NOT a fallback — this renders on the public results page (PII leak).
+  return r.user?.passport?.displayName ?? r.user?.name ?? r.guestName ?? "Unknown"
 }
 
 function getCompetitorOrg(competitor: CompletedMatch["competitors"][number]): string | null {

@@ -3,7 +3,9 @@ import { tryCatch } from "@dirstack/utils"
 import type { Brand } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
 import { getS3KeyFromUrl, removeS3File, uploadToS3Storage } from "~/lib/media"
+import { sniffUploadBuffer } from "~/lib/media-guard"
 import { authorizeMediaTarget } from "~/server/web/media/media-authorization"
+import { MAX_WEB_UPLOAD_BYTES } from "~/server/web/media/media-schemas"
 import { getMediaConfig } from "~/services/s3"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
 import type {
@@ -70,9 +72,17 @@ export async function applyWebMediaUpload({
   }
 
   const { file, target } = input
-  const buffer = Buffer.from(await file.arrayBuffer())
+  // Trust the bytes, not the client-declared MIME: sniff + reject SVG / non-media.
+  // This path feeds public avatars, so a stored SVG would be stored-XSS.
+  const {
+    buffer,
+    mime,
+    kind: type,
+  } = await sniffUploadBuffer(file, {
+    maxBytes: MAX_WEB_UPLOAD_BYTES,
+    allowVideo: true,
+  })
   const url = await uploadToS3Storage(buffer, `media/${randomUUID()}`, brand)
-  const type = file.type.startsWith("video/") ? "VIDEO" : "IMAGE"
 
   return db.$transaction(async tx => {
     const txDb = tx as AppDb
@@ -84,8 +94,8 @@ export async function applyWebMediaUpload({
         url,
         title: input.title ?? file.name,
         altText: input.altText,
-        mimeType: file.type || undefined,
-        sizeBytes: file.size,
+        mimeType: mime || undefined,
+        sizeBytes: buffer.byteLength,
         isPublic: input.isPublic,
         uploadedBy: { connect: { id: user.id } },
       },
