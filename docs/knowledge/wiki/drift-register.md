@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-24
-last_agent: claude-session-0444
+updated: 2026-06-27
+last_agent: claude-session-0454
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -307,7 +307,14 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Source A (impl):** active `apps/web/vercel.json` uses `bun install --frozen-lockfile` + `bun run --filter @ronin-dojo/web …`; the lockfile contract is `bun.lock`.
 - **Source B (docs):** `docs/runbooks/deploy/vercel-deploy.md` + `vercel-domain-setup-runbook.md` describe a **pnpm** monorepo (`corepack pnpm@9.0.0 install --frozen-lockfile`, "commit `pnpm-lock.yaml` or the build silently fails"). Stale.
 - **Impact:** a session trusting the runbook would chase a pnpm lockfile that isn't the gate.
-- **Status:** open — update the two deploy runbooks to the bun toolchain. **Logged in:** SESSION_0407.
+- **Status:** **RESOLVED SESSION_0454.** Flipped `vercel-deploy.md`, `vercel-domain-setup-runbook.md`, and
+  `bbl-production-runbook.md` (cross-ref descriptors) to the bun toolchain — `bun install --frozen-lockfile`
+  + `bun run --filter @ronin-dojo/web db:generate && … build`, gate `bun.lock` — verified against the live
+  `apps/web/vercel.json`. **Logged in:** SESSION_0407. **Also resolved this session (fold-in):** the
+  `ignoreCommand` lockfile name `pnpm-lock.yaml` → `bun.lock` in `CLAUDE.md` and
+  `docs/runbooks/dev-environment/verification-and-testing.md:115` (now matches the live `vercel.json`
+  `ignoreCommand`), and `sop-email-runbook.md`'s email-preview command `pnpm --filter @ronin-dojo/web email`
+  → `bun run --filter @ronin-dojo/web email`.
 
 ### D-025 — Media-pull script slugifies keys; profile import resolves by exact basename
 

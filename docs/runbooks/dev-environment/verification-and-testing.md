@@ -4,8 +4,8 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-06-11
-last_agent: claude-session-0335
+updated: 2026-06-27
+last_agent: claude-session-0454
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
@@ -112,7 +112,7 @@ commits — triggered a full production build+deploy. SESSION_0335 decoupled pus
 **Ignored Build Step** in `vercel.json`:
 
 ```json
-"ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web pnpm-lock.yaml package.json vercel.json"
+"ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web bun.lock package.json vercel.json"
 ```
 
 Vercel runs this before building: **exit 0 ⇒ skip the deploy, exit 1 ⇒ deploy.** `git diff --quiet`

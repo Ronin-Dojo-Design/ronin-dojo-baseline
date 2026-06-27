@@ -4,8 +4,8 @@ slug: bbl-production-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-06-24
-last_agent: claude-session-0444
+updated: 2026-06-27
+last_agent: claude-session-0454
 pairs_with:
   - docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md
   - docs/product/black-belt-legacy/GAP_MATRIX.md
@@ -52,7 +52,7 @@ For launch sequencing across DNS, feature gaps, and e2e proof, use the
 | Concern | Authoritative doc | Notes |
 | --- | --- | --- |
 | Attach domain + DNS records | [vercel-domain-setup-runbook](vercel-domain-setup-runbook.md) | Bluehost→Vercel; brand-rollout line already says `blackbeltlegacy.com → attach to bbl Vercel project`. |
-| Vercel build/deploy config | [vercel-deploy](vercel-deploy.md) | pnpm monorepo, root `apps/web`, lockfile gate. |
+| Vercel build/deploy config | [vercel-deploy](vercel-deploy.md) | bun monorepo, root `apps/web`, lockfile gate. |
 | General deploy procedure | [deployment](deployment.md) | release steps. |
 | Transactional email | [resend-setup-runbook](../integrations/resend-setup-runbook.md) | per-domain DKIM (BBL needs its own key). |
 | White-label surfaces | [white-label-site-runbook](white-label-site-runbook.md) | confirm BBL name/theme resolve before go-live. |
@@ -149,7 +149,7 @@ Keep the pre-cutover `dig` output saved so rollback values are known.
 ## Cross-references
 
 - [Vercel Domain Setup Runbook](vercel-domain-setup-runbook.md) — generic Bluehost→Vercel domain attach (the mechanics).
-- [Vercel Deploy Runbook](vercel-deploy.md) — pnpm monorepo build config + lockfile gate.
+- [Vercel Deploy Runbook](vercel-deploy.md) — bun monorepo build config + lockfile gate.
 - [Deployment Runbook](deployment.md) — general release procedure.
 - [White-Label Site Runbook](white-label-site-runbook.md) — confirm BBL brand surfaces resolve before go-live.
 - [Resend Setup Runbook](../integrations/resend-setup-runbook.md) — per-domain DKIM for blackbeltlegacy.com.

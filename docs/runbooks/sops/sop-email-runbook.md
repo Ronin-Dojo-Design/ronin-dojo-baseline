@@ -4,8 +4,8 @@ slug: sop-email-runbook
 type: runbook
 status: active
 created: 2026-05-28
-updated: 2026-06-24
-last_agent: claude-session-0444
+updated: 2026-06-27
+last_agent: claude-session-0454
 pairs_with:
   - docs/architecture/infrastructure/email-delivery-spec.md
   - docs/runbooks/resend-setup-runbook.md
@@ -34,7 +34,7 @@ replies still spans Resend plus the operator mailbox.
 
 - The send boundary is `apps/web/lib/email.ts`, which prepares React Email content, resolves brand-aware `from` senders, defaults `replyTo` to that sender, renders plaintext, and calls Resend.
 - The Resend client is `apps/web/services/resend.ts` and depends on `RESEND_API_KEY`.
-- Email templates live in `apps/web/emails/` and can be previewed with `pnpm --filter @ronin-dojo/web email`.
+- Email templates live in `apps/web/emails/` and can be previewed with `bun run --filter @ronin-dojo/web email`.
 - Better-Auth magic-link emails resolve their brand from the auth request host and use that same origin in the login URL.
 - Delivered email activity is read in **Resend Dashboard → Emails**.
 - Replies are read/responded to from the external mailbox for the active brand sender because inbound webhooks/thread storage are not implemented yet.
@@ -148,7 +148,7 @@ flowchart TD
 ### 2. Preview templates locally
 
 ```bash
-pnpm --filter @ronin-dojo/web email
+bun run --filter @ronin-dojo/web email
 ```
 
 Use this to inspect template rendering. It does not prove production delivery.

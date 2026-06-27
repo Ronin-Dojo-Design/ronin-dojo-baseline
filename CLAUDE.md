@@ -47,7 +47,7 @@ into context each session; detailed rules live in referenced docs, read on deman
   FS-0024 git guard. (Operator standing preference — see the `explicit-push-authorization` memory.)
 - **Push cadence:** one push per session at close — don't push mid-session. Production
   deploys are decoupled from pushes: `vercel.json`'s `ignoreCommand` skips the prod build
-  unless `apps/web` / `pnpm-lock.yaml` / `package.json` / `vercel.json` changed, so docs /
+  unless `apps/web` / `bun.lock` / `package.json` / `vercel.json` changed, so docs /
   governance / CI / `scripts` sessions push without deploying. App-code sessions deploy on
   push as before. (SESSION_0335 — see `docs/runbooks/dev-environment/verification-and-testing.md`.)
 

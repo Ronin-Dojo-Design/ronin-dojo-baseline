@@ -4,8 +4,8 @@ slug: vercel-domain-setup-runbook
 type: runbook
 status: active
 created: 2026-05-13
-updated: 2026-05-14
-last_agent: codex-session-0166
+updated: 2026-06-27
+last_agent: claude-session-0454
 pairs_with:
   - docs/sprints/SESSION_0159.md
   - docs/runbooks/resend-setup-runbook.md
@@ -41,7 +41,7 @@ Codifies the SESSION_0159 procedure for `baselinemartialarts.com` so the remaini
 - Resend account with the target domain added in **Domains** (only required if the domain sends transactional email).
 - A Vercel project to attach the domain to (e.g., `ronin-dojo-baseline`).
 - `dig` available locally.
-- Repo has a committed lockfile (`pnpm-lock.yaml` for this monorepo) — without one, Vercel falls back to npm install and the production build will silently fail in ~7s with `next: command not found`. See SESSION_0159 for the regression history.
+- Repo has a committed lockfile (`bun.lock` for this monorepo) — without one, Vercel falls back to npm install and the production build will silently fail in ~7s with `next: command not found`. See SESSION_0159 for the regression history.
 
 ## Architecture Context
 
@@ -78,8 +78,8 @@ Live Dirstarter deployment docs checked on 2026-05-14 describe a Vercel/Next.js 
 | Root Directory | `apps/web` |
 | Framework Preset | `Next.js` |
 | Output Directory | Next.js default |
-| Install Command | `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile` |
-| Build Command | `cd ../.. && pnpm --filter @ronin-dojo/web build` |
+| Install Command | `cd ../.. && bun install --frozen-lockfile` |
+| Build Command | `cd ../.. && bun run --filter @ronin-dojo/web db:generate && bun run --filter @ronin-dojo/web build` |
 | Active app-root config | `apps/web/vercel.json` |
 
 Treat any repo-root `vercel.json` guidance as historical/root fallback only. Use it only when the active source for a project proves Vercel is building from the repo root.
@@ -287,37 +287,37 @@ DKIM, MX Sending, and SPF Sending rows should flip from Failed to Verified withi
 
 ## Production Build Readiness
 
-A correctly attached domain serves nothing if the project's production build is broken. The SESSION_0159 regression: every `main` deploy had been failing for ~18 hours because `pnpm-lock.yaml` was not in the repo, so Vercel auto-detected npm and `next: command not found` killed the build.
+A correctly attached domain serves nothing if the project's production build is broken. The SESSION_0159 regression: every `main` deploy had been failing for ~18 hours because the committed lockfile was missing, so Vercel auto-detected npm and `next: command not found` killed the build. (At the time the lockfile was `pnpm-lock.yaml`; the toolchain has since converged on Bun — the gate is now `bun.lock`.)
 
-For a pnpm monorepo on Vercel:
+For this Bun monorepo on Vercel:
 
 ```bash
 # Locally
-pnpm install                          # generates pnpm-lock.yaml + node_modules
-git add pnpm-lock.yaml
-git commit -m "chore: commit pnpm-lock.yaml for reproducible Vercel builds"
+bun install                           # generates bun.lock + node_modules
+git add bun.lock
+git commit -m "chore: commit bun.lock for reproducible Vercel builds"
 git push origin main                  # triggers Vercel auto-deploy
 ```
 
-Verify Vercel picked up pnpm by checking the next build log:
+Verify Vercel picked up Bun by checking the next build log:
 
 ```
-✅ Good:  "Installing dependencies..." → "Lockfile is up to date" → multi-minute install
+✅ Good:  Bun install resolves + installs the workspace — a real multi-second/minute install
 ❌ Bad:   "Installing dependencies..." → "up to date in 538ms"  (npm fallback, broken)
 ```
 
-If pnpm still isn't used despite the lockfile, first confirm the project is using Root Directory `apps/web` and the active `apps/web/vercel.json`. For the current production app, the expected settings are listed in "Current Vercel Truth" above.
+If Bun still isn't used despite the lockfile, first confirm the project is using Root Directory `apps/web` and the active `apps/web/vercel.json`. For the current production app, the expected settings are listed in "Current Vercel Truth" above.
 
 A repo-root `vercel.json` is historical/root fallback only. Use this shape only when the project source proves Vercel is building from the repo root:
 
 ```json
 {
-  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm -r build"
+  "installCommand": "bun install --frozen-lockfile",
+  "buildCommand": "bun run --filter @ronin-dojo/web db:generate && bun run --filter @ronin-dojo/web build"
 }
 ```
 
-The `packageManager: "pnpm@9.0.0"` field in `package.json` is not enough on its own — Vercel doesn't enable Corepack by default.
+Vercel auto-detects Bun from the committed `bun.lock`, and the explicit `installCommand` in `vercel.json` pins it regardless — no Corepack step is needed (that was the pnpm-era requirement).
 
 ## Troubleshooting
 
@@ -340,7 +340,7 @@ The `packageManager: "pnpm@9.0.0"` field in `package.json` is not enough on its 
 │ Vercel CLI says "set A 76.76.21.21"│ Hardcoded message — not per-domain advice.      │
 │ but dashboard says 216.198.79.1    │ Use the dashboard value. Both work in practice. │
 ├────────────────────────────────────┼─────────────────────────────────────────────────┤
-│ Build fails in ~7s with            │ pnpm-lock.yaml missing → Vercel uses npm        │
+│ Build fails in ~7s with            │ bun.lock missing → Vercel uses npm              │
 │ "next: command not found"          │ install → 0 deps installed. Commit the          │
 │                                    │ lockfile. See "Production Build Readiness".     │
 ├────────────────────────────────────┼─────────────────────────────────────────────────┤

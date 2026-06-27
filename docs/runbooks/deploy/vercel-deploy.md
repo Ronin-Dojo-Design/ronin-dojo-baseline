@@ -4,8 +4,8 @@ slug: vercel-deploy
 type: runbook
 status: active
 created: 2026-05-20
-updated: 2026-06-11
-last_agent: codex-session-0314
+updated: 2026-06-27
+last_agent: claude-session-0454
 pairs_with:
   - docs/runbooks/vercel-domain-setup-runbook.md
   - docs/runbooks/neon-advisory-lock-recovery.md
@@ -31,16 +31,16 @@ The active project builds from `apps/web`, not from the repository root.
 
 Local development and production use different command surfaces. Local app work starts in
 `apps/web` with `bun run dev` (see the [dev-environment runbook](../dev-environment/dev-environment.md)).
-Vercel production still uses the monorepo `pnpm --filter @ronin-dojo/web build` command below,
-because that is the project setting and lockfile contract.
+Vercel production builds with the monorepo `bun run --filter @ronin-dojo/web build` command below,
+because that is the project setting and lockfile contract (`bun.lock`).
 
 | Setting | Current value |
 | --- | --- |
 | Root Directory | `apps/web` |
 | Framework Preset | `Next.js` |
 | Active config | `apps/web/vercel.json` |
-| Install command | `cd ../.. && corepack enable && corepack pnpm@9.0.0 install --frozen-lockfile` |
-| Build command | `cd ../.. && pnpm --filter @ronin-dojo/web build` |
+| Install command | `cd ../.. && bun install --frozen-lockfile` |
+| Build command | `cd ../.. && bun run --filter @ronin-dojo/web db:generate && bun run --filter @ronin-dojo/web build` |
 | Cron path | `/api/cron/publish-tools` |
 
 The repo-root `vercel.json` is a historical/root fallback. Do not use it unless the project root setting changes.
