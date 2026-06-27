@@ -102,14 +102,31 @@ async function resolveNode(db: any): Promise<ResolvedNode | null> {
   }
   if (!node) return null
 
-  const member = await db.lineageTreeMember.findFirst({
-    where: { nodeId: node.id },
-    select: {
-      isClaimable: true,
-      tree: { select: { isPublished: true, isClaimable: true } },
-      visualGroup: { select: { label: true } },
-    },
-  })
+  // A node can belong to several trees — e.g. the leftover unpublished
+  // `rigan-machado-bjj-lineage` clone trees from the PR #162 consolidation. The claim
+  // succeeds via the node's PUBLISHED + claimable membership (`claimNodeForUser` resolves
+  // it), so prefer that membership for the guard; fall back to any membership so the
+  // report still renders when none is published. Using a bare `findFirst` here was a
+  // false-negative: it could pick an unpublished clone-tree row and fail the guard for a
+  // node that is genuinely claimable on the published tree (SESSION_0453).
+  const memberSelect = {
+    isClaimable: true,
+    tree: { select: { isPublished: true, isClaimable: true } },
+    visualGroup: { select: { label: true } },
+  } as const
+  const member =
+    (await db.lineageTreeMember.findFirst({
+      // Match `claimNodeForUser`'s resolver exactly, incl. the brand scope: same-slug clone
+      // trees can be brand-distinct (`LineageTree @@unique([brand, slug])`), so a brandless
+      // query could flag a published membership on the wrong brand's tree.
+      where: {
+        nodeId: node.id,
+        isClaimable: true,
+        tree: { brand: TARGET.brand, isPublished: true, isClaimable: true },
+      },
+      select: memberSelect,
+    })) ??
+    (await db.lineageTreeMember.findFirst({ where: { nodeId: node.id }, select: memberSelect }))
 
   return {
     nodeId: node.id,
