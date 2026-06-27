@@ -144,6 +144,25 @@ Inherited fallow debt from TASK_01 routed → wiring-ledger **WL-P2-17** (admin-
 duplication, ~24 files) + **WL-P2-18** (tournament/media fn complexity + dead exports). Loop-of-loops
 *outbound* routing, dogfooded.
 
+### RBAC / admin media-upload gate (operator-reported → Petey+Giddy research-review)
+
+Operator: admins (Brian, Tony Hua) can't upload media from in-editor surfaces; wants role-gated upload +
+per-user RBAC granting CRUD. **Root cause confirmed:** `canUploadMedia` (`server/web/entitlements/queries.ts:40`)
+ORs S3_UPLOAD-entitlement / org-role / org-ownership but never `User.role` → admins fail `mediaUploadActionClient`
+(`uploadMedia`/`fetchMedia`). Petey + Giddy research-review (converged):
+
+- **2 of 3 asks already exist (discoverability):** per-user grant CRUD ships (audited `grantUserEntitlement`
+  + `UploadGrantToggle` on `/app/users/[id]`); admins unblock *today* by granting the seeded `S3_UPLOAD`
+  entitlement (zero code). Genuinely missing = capability-gate role-honoring.
+- **Don't build a 5th authz system** (repo has 4: User.role, org Role+assignment, code-`can()`, entitlements).
+- **New security gaps found:** `updateUser`/`updateUserRole` are **unaudited + no self-escalation guard**
+  (→ WL-P2-20, unmet risk #11 mitigation); `uploadMedia` passes a caller-controlled S3 `path` (→ risk #6).
+
+Routed → **WL-P2-19** (upload gate + discoverability) + **WL-P2-20** (role-change audit gap). Recommended
+path: (1) grant S3_UPLOAD to the 2 admins now (zero code); (2) durable — `canUploadMedia` honors
+`can(user,"media.manage")`; (3) add `tournament_director` to the role editor; (4) audit + self-escalation
+guard on the role-change path. No new permission table. PR route (authz).
+
 ## Task log
 
 | ID | Status | Summary |
