@@ -4,8 +4,8 @@ slug: autonomous-sessions
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-06-13
-last_agent: codex-session-0375
+updated: 2026-06-27
+last_agent: claude-session-0453
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -156,9 +156,16 @@ So session k+1 branches from session k. You get one focused PR per session.
 **Merge bottom-up:** merge the oldest PR (base `main`) first; GitHub auto-retargets the
 next PR onto `main` as you go. Or squash-merge the stack in order.
 
-## Prerequisite — permissions (one-time)
+## Prerequisite — run from a real terminal (auth), then permissions
 
-A headless `claude -p` agent **cannot answer permission prompts**. Before an unattended
+⚠️ **Launch from your own terminal where `claude` is logged in — never nested inside an active
+Claude Code session.** A cold `claude -p` spawned from within a Claude Code Bash sandbox inherits no
+oauth credentials and dies immediately with `401 Invalid authentication credentials` (the wrapper
+waits for green, creates `auto/session-NNNN`, then the first `claude -p` 401s and the safety brake
+halts the loop — observed SESSION_0453). Verify `claude --version` + that you're logged in, then run
+`scripts/auto-session.sh N` (or `scripts/await-green-then-session.sh N`) from that shell.
+
+A headless `claude -p` agent also **cannot answer permission prompts**. Before an unattended
 run, satisfy one of:
 
 - **Allowlist (recommended):** pre-allow the close-gate commands (`bun …`, `git …`,

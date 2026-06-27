@@ -14,6 +14,12 @@
 # Safe to run under caffeinate for an unattended overnight run:
 #   caffeinate -i scripts/await-green-then-session.sh 5
 #
+# ⚠️ RUN FROM YOUR OWN TERMINAL — not nested inside an active Claude Code session.
+# A `claude -p` spawned from within a Claude Code Bash sandbox has no oauth creds and
+# dies with `401 Invalid authentication credentials` (observed SESSION_0453). The cold
+# `claude -p` needs the terminal where `claude` is logged in. Verify with `claude --version`
+# and that you're logged in, then launch this from that shell.
+#
 # It launches auto-session.sh (PR gate — nothing merges to main unattended). For
 # the hands-off auto-merge peer, swap the launch line for auto-session-automerge.sh.
 set -euo pipefail
