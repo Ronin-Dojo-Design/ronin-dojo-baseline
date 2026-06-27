@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-05-29
-last_agent: claude-session-0304
+updated: 2026-06-26
+last_agent: claude-session-0452
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -540,6 +540,30 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   audit log showing persisted-but-unrefreshed saves, `/admin/*`=308-stub vs `/app/*`=live topology, the
   `next.config.ts` redirect map). Live render of the fixed refresh is deploy-gated (verify post-merge).
 - **Status:** mitigated (deploy-verify pending).
+
+### FS-0027 — Multi-file `bun test` run without `--parallel=1`; rediscovered a documented SOP
+
+- **Session:** SESSION_0452 (RBAC + security tests); flagged by the operator.
+- **Agent:** Claude / Cody (SESSION_0452).
+- **Step failed:** verified new tests with `bun test fileA fileB …` (several `mock.module` files in **one**
+  invocation) without `--parallel=1`. Bun's non-parallel runner shares the module registry across files, so the
+  mocks leaked → ~6 false failures + 2 errors, even though every file passed **alone**. Burned a diagnosis cycle
+  re-deriving a lesson that already exists verbatim.
+- **SOP source:** the lesson EXISTS — `sop-test-writing.md` §"two-headed concurrency problem" (lines 111-135) +
+  `test-fail-fix-ledger` TFF-001..005 literally say *"plain `bun test fileA fileB` (no `--parallel`) is **wrong**."*
+  It was simply not read before running multi-file tests, and `cody-preflight.md:74` listed the WRONG command
+  (`bun test`, not `bun run test` = `--parallel=1`) — actively steering toward the footgun.
+- **Root cause:** the documented rule was not surfaced at the moment of test work. No pre-flight step said
+  "touching tests → read `sop-test-writing.md` first," and the single preflight reference to the test command was
+  itself wrong.
+- **Impact:** LOW — no shipped defect; a wasted diagnosis cycle that briefly *looked* like a regression. Resolved
+  correctly by re-running with `--parallel=1` → 41 pass / 0 fail.
+- **Corrective action:** (a) fixed `cody-preflight.md` §5 to use `bun run test` (= `--parallel=1`) + added a
+  "writing/modifying tests → read `sop-test-writing.md` FIRST" line; (b) this FS entry. Optional hard gate (offered,
+  not yet added): a PreToolUse hook that surfaces `sop-test-writing.md` when a `*.test.*` file is created/edited.
+- **Verification:** `bun test --parallel=1 <files>` → 41 pass / 0 fail; canonical command is `bun run test`
+  (sop-test-writing.md:101).
+- **Status:** mitigated.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
