@@ -65,7 +65,7 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 
 | ID | Item | Type | Pri | Status | Source / notes |
 | --- | --- | --- | --- | --- | --- |
-| FI-001 | Brian Truelson first-tester onboarding + lifetime comp + thank-you email | feature | P0 | triaged | petey-plan-0419 |
+| FI-001 | Brian Truelson first-tester onboarding + lifetime comp + thank-you email | feature | P0 | in-progress | petey-plan-0457 — A1 prod clone cleanup done + test-send re-confirmed 0457 (Resend `8fe8b411…`, from `welcome@blackbeltlegacy.com`); **REAL send to btruelson gated** on N1/N2 + operator "go" |
 | FI-002 | Lifecycle-email copy audit (all `LifecycleEmailKind`, now `DRYRUN=0`) | bug | P1 | triaged | SESSION_0419 follow-up |
 | FI-003 | Student sign-up under instructor/school + claim-approval flow | feature | P1 | triaged | petey-plan-0419 |
 | FI-004 | Admin email-composer parity + port BBLApp BBLEmail + mobile admin | feature | P1 | triaged | petey-plan-0419 |

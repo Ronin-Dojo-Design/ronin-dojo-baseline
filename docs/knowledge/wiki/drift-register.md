@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-06-27
-last_agent: claude-session-0454
+last_agent: claude-session-0457
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -457,3 +457,17 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   did NOT have, so the single-clone consolidation script silently missed them; both were unpublished by hand
   (the Dirty Dozen is now a visual group). Lesson: after a prodsnap-validated data migration, audit the FULL
   prod table, not the script's self-report.
+
+### D-034 — Founding ancestors absent from the canonical published lineage tree (SESSION_0457)
+
+- **Source:** while scoping WL-P2-21, `apps/web/scripts/audit-clone-member-coverage.ts` showed the published
+  `rigan-machado-lineage` (77m) **omits Carlos Gracie Sr, Carlos Gracie Jr, Erik Paulson, Rick Minter** — these
+  4 exist ONLY on the now-pruned unpublished `rigan-machado-bjj-lineage` clones (BBL 16m + BASELINE 17m),
+  with `onCanonical:false / lastPlacement:true`.
+- **Impact:** the public canonical tree lacks the Gracie roots above Rigan; the 4 are publicly invisible
+  (their sole home is unpublished). Also **blocks safe retirement of the clone trees** — deleting them would
+  orphan these 4 (drop their last `LineageTreeMember`), which is why SESSION_0457 removed only Brian's
+  redundant memberships and **kept the clone trees**.
+- **Status: OPEN.** Phase-B backfill: place the 4 correctly under the canonical root (provenance edges +
+  `primaryVisualParentMemberId`), then the clone trees can be retired. Tracked with WL-P2-21 (clone-membership
+  cleanup done SESSION_0457, surgical).
