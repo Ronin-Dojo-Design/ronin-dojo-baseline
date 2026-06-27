@@ -2,10 +2,10 @@
 title: "Loop of Loops — Ledger-Driven Session Planning (research-review)"
 slug: loop-of-loops-ledger-driven-sessions
 type: protocol
-status: draft
+status: active
 created: 2026-06-26
-updated: 2026-06-26
-last_agent: claude-session-0451
+updated: 2026-06-27
+last_agent: claude-session-0453
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
@@ -23,10 +23,11 @@ tags:
 
 # Loop of Loops — Ledger-Driven Session Planning
 
-> **Status: DRAFT research-review (Petey plan + Giddy merge strategy).** Authored SESSION_0451 from the
-> operator's vision: *"our tasks for each session could be items from each ledger that make sense to bundle
-> together in a session … get the ledger items as the 3–5 tasks we roughly shoot for in a given SESSION."*
-> Implementation is the next governance lane — this doc is the plan, not the wiring.
+> **Status: ACTIVE.** Authored SESSION_0451 from the operator's vision: *"our tasks for each session could be
+> items from each ledger that make sense to bundle together in a session … get the ledger items as the 3–5
+> tasks we roughly shoot for in a given SESSION."* **P1 + P2 landed SESSION_0453:** the bow-in ledger-scan
+> step is wired into `opening.md` and the `scripts/ledger-backlog.ts` aggregator is live. P3 (DB-back the
+> AdminKanban) remains the open build — see the merge strategy below.
 
 ## The vision (one sentence)
 
@@ -123,9 +124,10 @@ bad bundling rule is worse than hand-picking.
 
 ## Recommendation
 
-Adopt **P1 now** (this doc + the closing.md cross-off hook landed SESSION_0451; opening.md ledger-scan is
-SESSION_0452's first governance task). Treat the AdminKanban as **manual until P3**. Revisit P2/P3 once 2–3
-sessions have run the P1 loop and the bundling heuristic is calibrated.
+**P1 + P2 landed** (SESSION_0451: this doc + the closing.md cross-off hook; SESSION_0453: the opening.md
+ledger-scan step + `scripts/ledger-backlog.ts`). Treat the AdminKanban as **manual until P3**. Per Giddy's
+risk note, run the P1/P2 loop for 2–3 sessions to calibrate the bundling heuristic before committing to P3's
+schema (automating a bad bundling rule is worse than hand-picking).
 
 ## Cross-references
 

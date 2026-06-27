@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-15
-last_agent: codex-session-0391
+updated: 2026-06-27
+last_agent: claude-session-0453
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -53,6 +53,32 @@ Read at minimum:
 - The previous session's `Goal` (was it achieved?)
 - `Open decisions / blockers` (any block today?)
 - `Next session: Goal` and `First task` (likely your starting point)
+
+### 1b. Scan the open ledgers — bundle 3–5 coherent items (inbound loop)
+
+The ledgers ARE the backlog. After reading the prior SESSION's `Next session` block, pull the open
+ledger items and bundle **3–5 coherent ones** into this session's Petey plan — per
+[`loop-of-loops-ledger-driven-sessions.md`](../protocols/loop-of-loops-ledger-driven-sessions.md).
+
+Run the aggregator instead of hand-scanning eight files:
+
+```bash
+bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK
+bun scripts/ledger-backlog.ts --ledger=WL   # one ledger · --top=N to cap · --json for tooling
+```
+
+Then **bundle on one coherence axis** so the session is one reviewable lane, not a grab-bag:
+
+- **By domain hub** — all lineage, or all directory/org items (reuse one mental model + one hub read).
+- **By risk class** — all authz/public-surface (one PR, one security pass), or all docs-only (one free push).
+- **By deploy unit** — all `apps/web` app-code (one CI matrix), or all governance/docs (no deploy).
+
+Why **3–5**: one coherent lane fits one close's review + one PR, and stays under the ~120K "dumb zone".
+Fewer = under-utilized; more = the close can't honestly verify them all.
+
+**Precedence:** the operator's `/goal` and the prior `Next session` block win. The ledger scan
+*supplements* them (fills the session, surfaces what's overdue) — it does not override an operator
+directive. The symmetric bow-out **cross-off sweep** (closing.md) flips resolved rows to done.
 
 ### 2. Read WORKFLOW 5.0 + program plan
 
