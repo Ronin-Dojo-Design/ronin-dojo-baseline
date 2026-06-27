@@ -150,5 +150,3 @@ export const findAddPersonOptions = async () => {
     })),
   }
 }
-
-export type AddPersonOptions = Awaited<ReturnType<typeof findAddPersonOptions>>

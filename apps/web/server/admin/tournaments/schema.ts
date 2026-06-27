@@ -142,15 +142,6 @@ export const tournamentDisciplineSchema = z.object({
 export type TournamentDisciplineSchema = z.infer<typeof tournamentDisciplineSchema>
 
 // -----------------------------------------------------------------------------
-// Status transition
-// -----------------------------------------------------------------------------
-
-export const updateTournamentStatusSchema = z.object({
-  id: z.string().min(1),
-  status: z.enum(TournamentStatus),
-})
-
-// -----------------------------------------------------------------------------
 // Registration status update
 // -----------------------------------------------------------------------------
 

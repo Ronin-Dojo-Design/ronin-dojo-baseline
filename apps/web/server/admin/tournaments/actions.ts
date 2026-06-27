@@ -6,7 +6,7 @@ import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
 import { ensurePassportForUser } from "~/server/identity/person-service"
-import { seedEntries } from "~/server/admin/tournaments/bracket-seeding"
+import { seedEntries, type SeedableEntry } from "~/server/admin/tournaments/bracket-seeding"
 import {
   bulkRegistrationStatusUpdateSchema,
   createWalkInRegistrationSchema,
@@ -22,13 +22,281 @@ import {
   tournamentRoleSchema,
   tournamentSchema,
   tournamentStaffAssignmentSchema,
-  updateTournamentStatusSchema,
+  type DivisionSchema,
+  type GenerateBracketInput,
+  type ScoreMatchInput,
   type walkInRecipientSchema,
   weighInRecordSchema,
 } from "~/server/admin/tournaments/schema"
 
 function buildRecipientKey(recipient: z.infer<typeof walkInRecipientSchema>): string {
   return recipient.kind === "user" ? recipient.userId : recipient.email
+}
+
+type Tx = any
+type RoundMatch = { id: string; matchNumber: number }
+
+type BracketEntryForSeeding = {
+  id: string
+  registration: {
+    user: {
+      id: string
+      passport: {
+        rankAwardsEarned: { rank: { sortOrder: number } }[]
+      } | null
+    } | null
+  }
+}
+
+function normalizeDivisionData(input: Omit<DivisionSchema, "id">) {
+  return {
+    ...input,
+    rankMinId: input.rankMinId || null,
+    rankMaxId: input.rankMaxId || null,
+    ruleSetId: input.ruleSetId || null,
+  }
+}
+
+function calculateBracketShape(competitorCount: number) {
+  const totalRounds = Math.ceil(Math.log2(competitorCount))
+  const bracketSize = 2 ** totalRounds
+  const byeCount = bracketSize - competitorCount
+
+  return { totalRounds, bracketSize, byeCount }
+}
+
+async function createRoundOneMatches(tx: Tx, bracketId: string, bracketSize: number) {
+  const round1MatchCount = bracketSize / 2
+  const round1Matches: RoundMatch[] = []
+  let matchNumber = 0
+
+  for (let i = 0; i < round1MatchCount; i++) {
+    matchNumber++
+    const match = await tx.match.create({
+      data: {
+        bracketId,
+        roundNumber: 1,
+        matchNumber,
+        status: "SCHEDULED",
+      },
+    })
+    round1Matches.push({ id: match.id, matchNumber })
+  }
+
+  return { round1Matches, matchNumber }
+}
+
+async function createLaterRoundMatches(
+  tx: Tx,
+  bracketId: string,
+  bracketSize: number,
+  totalRounds: number,
+  startingMatchNumber: number,
+) {
+  let matchNumber = startingMatchNumber
+
+  for (let round = 2; round <= totalRounds; round++) {
+    const matchesInRound = bracketSize / 2 ** round
+    for (let i = 0; i < matchesInRound; i++) {
+      matchNumber++
+      await tx.match.create({
+        data: {
+          bracketId,
+          roundNumber: round,
+          matchNumber,
+          status: "SCHEDULED",
+        },
+      })
+    }
+  }
+}
+
+function collectEntryUserIds(entries: BracketEntryForSeeding[]) {
+  return entries
+    .map(e => e.registration.user?.id)
+    .filter((id): id is string => id !== null && id !== undefined)
+}
+
+function toFightRecordScoreMap(
+  fightRecords: {
+    passport: { userId: string | null }
+    wins: number
+    losses: number
+    draws: number
+  }[],
+) {
+  return new Map(
+    fightRecords.flatMap(fr =>
+      fr.passport.userId ? [[fr.passport.userId, fr.wins - fr.losses + fr.draws * 0.5]] : [],
+    ),
+  )
+}
+
+async function buildTournamentRankingScores(
+  tx: Tx,
+  userIds: string[],
+  disciplineId: string,
+  seedingMethod: GenerateBracketInput["seedingMethod"],
+) {
+  if (seedingMethod !== "TOURNAMENT_RANKING") {
+    return new Map<string, number>()
+  }
+
+  const fightRecords = await tx.fightRecord.findMany({
+    where: {
+      // Phase 3c: FightRecord is Passport-rooted; map back to the account id for seeding.
+      passport: { userId: { in: userIds } },
+      disciplineId,
+    },
+    select: {
+      passport: { select: { userId: true } },
+      wins: true,
+      losses: true,
+      draws: true,
+    },
+  })
+
+  return toFightRecordScoreMap(fightRecords)
+}
+
+async function buildSeedableEntries(
+  tx: Tx,
+  entries: BracketEntryForSeeding[],
+  disciplineId: string,
+  seedingMethod: GenerateBracketInput["seedingMethod"],
+  manualSeeds: GenerateBracketInput["manualSeeds"],
+): Promise<SeedableEntry[]> {
+  // Guest registrations (userId null) have no FightRecord and no rank; they seed
+  // with null scores and fall to the back of TOURNAMENT_RANKING order.
+  const fightRecordMap = await buildTournamentRankingScores(
+    tx,
+    collectEntryUserIds(entries),
+    disciplineId,
+    seedingMethod,
+  )
+  const manualSeedMap = new Map((manualSeeds ?? []).map(ms => [ms.entryId, ms.seed]))
+
+  return entries.map((entry, registrationOrder) => {
+    const seedUserId = entry.registration.user?.id
+
+    return {
+      id: entry.id,
+      registrationOrder,
+      tournamentRankingScore:
+        seedUserId !== undefined ? (fightRecordMap.get(seedUserId) ?? null) : null,
+      martialArtsRankOrdinal:
+        entry.registration.user?.passport?.rankAwardsEarned?.[0]?.rank?.sortOrder ?? null,
+      manualSeed: manualSeedMap.get(entry.id) ?? null,
+    }
+  })
+}
+
+async function placeSeededEntriesInRoundOne(
+  tx: Tx,
+  seeded: { entryId: string; seed: number; bracketSlotIndex: number }[],
+  round1Matches: RoundMatch[],
+) {
+  for (const { entryId, seed, bracketSlotIndex } of seeded) {
+    const matchIndex = Math.floor(bracketSlotIndex / 2)
+    const slot = (bracketSlotIndex % 2) + 1
+    const match = round1Matches[matchIndex]!
+
+    await tx.matchCompetitor.create({
+      data: {
+        matchId: match.id,
+        registrationEntryId: entryId,
+        slot,
+        seed,
+      },
+    })
+  }
+}
+
+async function markByeMatches(tx: Tx, round1Matches: RoundMatch[]) {
+  for (const match of round1Matches) {
+    const compCount = await tx.matchCompetitor.count({ where: { matchId: match.id } })
+    if (compCount < 2) {
+      await tx.match.update({
+        where: { id: match.id },
+        data: { status: "BYE" },
+      })
+    }
+  }
+}
+
+async function autoAdvanceByeWinners(tx: Tx, bracketId: string, totalRounds: number) {
+  const byeMatches = await tx.match.findMany({
+    where: { bracketId, roundNumber: 1, status: "BYE" },
+    include: { competitors: true },
+    orderBy: { matchNumber: "asc" },
+  })
+
+  for (const byeMatch of byeMatches) {
+    const soloCompetitor = byeMatch.competitors[0]
+    if (soloCompetitor) {
+      await tx.match.update({
+        where: { id: byeMatch.id },
+        data: { winnerEntryId: soloCompetitor.registrationEntryId },
+      })
+
+      await advanceWinner(
+        tx,
+        bracketId,
+        1,
+        byeMatch.matchNumber,
+        soloCompetitor.registrationEntryId,
+        totalRounds,
+      )
+    }
+  }
+}
+
+function assertMatchCanBeScored(match: any, winnerEntryId: string) {
+  if (match.status !== "SCHEDULED" && match.status !== "IN_PROGRESS") {
+    throw new Error(`Match cannot be scored — current status is ${match.status}`)
+  }
+
+  const isValidWinner = match.competitors.some(
+    (competitor: { registrationEntryId: string }) =>
+      competitor.registrationEntryId === winnerEntryId,
+  )
+  if (!isValidWinner) {
+    throw new Error("Winner must be a competitor in this match")
+  }
+}
+
+function getTotalRounds(seedData: any) {
+  return seedData?.totalRounds ?? 1
+}
+
+async function scoreAndAdvanceMatch(
+  tx: Tx,
+  match: any,
+  input: Pick<ScoreMatchInput, "matchId" | "winnerEntryId" | "result" | "scoreData" | "notes">,
+  totalRounds: number,
+) {
+  const updated = await tx.match.update({
+    where: { id: input.matchId },
+    data: {
+      status: "COMPLETED",
+      result: input.result,
+      winnerEntryId: input.winnerEntryId,
+      scoreData: input.scoreData ?? undefined,
+      notes: input.notes,
+      endedAt: new Date(),
+    },
+  })
+
+  const advancement = await advanceWinner(
+    tx,
+    match.bracket.id,
+    match.roundNumber,
+    match.matchNumber,
+    input.winnerEntryId,
+    totalRounds,
+  )
+
+  return { match: updated, advancement }
 }
 
 // -----------------------------------------------------------------------------
@@ -76,44 +344,6 @@ export const deleteTournaments = tournamentAdminActionClient
     })
 
     return true
-  })
-
-// -----------------------------------------------------------------------------
-// Status transitions
-// -----------------------------------------------------------------------------
-
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  DRAFT: ["PUBLISHED"],
-  PUBLISHED: ["CLOSED", "DRAFT"],
-  CLOSED: ["ARCHIVED", "PUBLISHED"],
-  ARCHIVED: [],
-}
-
-export const updateTournamentStatus = tournamentAdminActionClient
-  .inputSchema(updateTournamentStatusSchema)
-  .action(async ({ parsedInput: { id, status }, ctx: { db, revalidate, brand } }) => {
-    const tournament = await db.tournament.findUniqueOrThrow({ where: { id, brand } })
-
-    const allowed = VALID_TRANSITIONS[tournament.status] ?? []
-    if (!allowed.includes(status)) {
-      throw new Error(
-        `Cannot transition from ${tournament.status} to ${status}. Allowed: ${allowed.join(", ")}`,
-      )
-    }
-
-    const updated = await db.tournament.update({
-      where: { id },
-      data: { status },
-    })
-
-    after(async () => {
-      revalidate({
-        paths: ["/app/tournaments"],
-        tags: ["tournaments", `tournament-${updated.slug}`],
-      })
-    })
-
-    return updated
   })
 
 // -----------------------------------------------------------------------------
@@ -165,14 +395,7 @@ export const upsertDivision = tournamentAdminActionClient
   .inputSchema(divisionSchema)
   .action(async ({ parsedInput, ctx: { db, revalidate } }) => {
     const { id, ...input } = parsedInput
-
-    // Normalize empty FK strings to null
-    const data = {
-      ...input,
-      rankMinId: input.rankMinId || null,
-      rankMaxId: input.rankMaxId || null,
-      ruleSetId: input.ruleSetId || null,
-    }
+    const data = normalizeDivisionData(input)
 
     const division = id
       ? await db.division.update({
@@ -601,11 +824,8 @@ export const generateBracket = tournamentAdminActionClient
       )
     }
 
-    // 4. Calculate single-elimination bracket structure
     const competitorCount = entries.length
-    const totalRounds = Math.ceil(Math.log2(competitorCount))
-    const bracketSize = 2 ** totalRounds // Next power of 2
-    const byeCount = bracketSize - competitorCount
+    const { totalRounds, bracketSize, byeCount } = calculateBracketShape(competitorCount)
 
     // 5. Create bracket, matches, and competitors in a transaction
     const bracket = await db.$transaction(async tx => {
@@ -626,143 +846,27 @@ export const generateBracket = tournamentAdminActionClient
         },
       })
 
-      // Build all rounds and matches
-      let matchNumber = 0
-
-      // Round 1: pair competitors, assign byes
-      const round1MatchCount = bracketSize / 2
-      const round1Matches: { id: string; matchNumber: number }[] = []
-
-      for (let i = 0; i < round1MatchCount; i++) {
-        matchNumber++
-        const match = await tx.match.create({
-          data: {
-            bracketId: bracket.id,
-            roundNumber: 1,
-            matchNumber,
-            status: "SCHEDULED",
-          },
-        })
-        round1Matches.push({ id: match.id, matchNumber })
-      }
-
-      // Seed competitors into round 1 using selected seeding method
-      // Build FightRecord lookup for TOURNAMENT_RANKING. Guest registrations
-      // (userId null) have no FightRecord and no rank — they seed with null
-      // scores and fall to the back of TOURNAMENT_RANKING order.
-      const userIds = entries
-        .map(e => e.registration.user?.id)
-        .filter((id): id is string => id !== null && id !== undefined)
-      const fightRecords =
-        seedingMethod === "TOURNAMENT_RANKING"
-          ? await tx.fightRecord.findMany({
-              where: {
-                // Phase 3c: FightRecord is Passport-rooted; map back to the account id for seeding.
-                passport: { userId: { in: userIds } },
-                disciplineId: division.tournamentDiscipline.disciplineId,
-              },
-              select: {
-                passport: { select: { userId: true } },
-                wins: true,
-                losses: true,
-                draws: true,
-              },
-            })
-          : []
-
-      const fightRecordMap = new Map(
-        fightRecords.flatMap(fr =>
-          fr.passport.userId ? [[fr.passport.userId, fr.wins - fr.losses + fr.draws * 0.5]] : [],
-        ),
+      const { round1Matches, matchNumber } = await createRoundOneMatches(
+        tx,
+        bracket.id,
+        bracketSize,
       )
-
-      const manualSeedMap = new Map((manualSeeds ?? []).map(ms => [ms.entryId, ms.seed]))
-
-      const seedable = entries.map((e, i) => {
-        const seedUserId = e.registration.user?.id
-        return {
-          id: e.id,
-          registrationOrder: i,
-          tournamentRankingScore:
-            seedUserId !== undefined ? (fightRecordMap.get(seedUserId) ?? null) : null,
-          martialArtsRankOrdinal:
-            e.registration.user?.passport?.rankAwardsEarned?.[0]?.rank?.sortOrder ?? null,
-          manualSeed: manualSeedMap.get(e.id) ?? null,
-        }
-      })
+      const seedable = await buildSeedableEntries(
+        tx,
+        entries,
+        division.tournamentDiscipline.disciplineId,
+        seedingMethod,
+        manualSeeds,
+      )
       const seeded = seedEntries(seedable, bracketSize, seedingMethod)
 
-      // Place seeded entries into bracket slots (2 per match: slot 1 = even index, slot 2 = odd)
-      for (const { entryId, seed, bracketSlotIndex } of seeded) {
-        const matchIndex = Math.floor(bracketSlotIndex / 2)
-        const slot = (bracketSlotIndex % 2) + 1 // 1 or 2
-        const match = round1Matches[matchIndex]!
-
-        await tx.matchCompetitor.create({
-          data: {
-            matchId: match.id,
-            registrationEntryId: entryId,
-            slot,
-            seed,
-          },
-        })
-      }
-
-      // Mark BYE matches (matches with only 1 competitor)
-      for (const match of round1Matches) {
-        const compCount = await tx.matchCompetitor.count({ where: { matchId: match.id } })
-        if (compCount < 2) {
-          await tx.match.update({
-            where: { id: match.id },
-            data: { status: "BYE" },
-          })
-        }
-      }
-
-      // Create empty matches for subsequent rounds
-      for (let round = 2; round <= totalRounds; round++) {
-        const matchesInRound = bracketSize / 2 ** round
-        for (let i = 0; i < matchesInRound; i++) {
-          matchNumber++
-          await tx.match.create({
-            data: {
-              bracketId: bracket.id,
-              roundNumber: round,
-              matchNumber,
-              status: "SCHEDULED",
-            },
-          })
-        }
-      }
+      await placeSeededEntriesInRoundOne(tx, seeded, round1Matches)
+      await markByeMatches(tx, round1Matches)
+      await createLaterRoundMatches(tx, bracket.id, bracketSize, totalRounds, matchNumber)
 
       // Auto-advance BYE winners into round 2
       if (byeCount > 0 && totalRounds > 1) {
-        const byeMatches = await tx.match.findMany({
-          where: { bracketId: bracket.id, roundNumber: 1, status: "BYE" },
-          include: { competitors: true },
-          orderBy: { matchNumber: "asc" },
-        })
-
-        for (const byeMatch of byeMatches) {
-          const soloCompetitor = byeMatch.competitors[0]
-          if (soloCompetitor) {
-            // Mark winner on BYE match
-            await tx.match.update({
-              where: { id: byeMatch.id },
-              data: { winnerEntryId: soloCompetitor.registrationEntryId },
-            })
-
-            // Advance to round 2
-            await advanceWinner(
-              tx as any,
-              bracket.id,
-              1,
-              byeMatch.matchNumber,
-              soloCompetitor.registrationEntryId,
-              totalRounds,
-            )
-          }
-        }
+        await autoAdvanceByeWinners(tx, bracket.id, totalRounds)
       }
 
       return bracket
@@ -807,7 +911,7 @@ async function advanceWinner(
   }
 
   // Find all matches in the completed round to determine position within round
-  const roundMatches = await (tx as any).match.findMany({
+  const roundMatches = await tx.match.findMany({
     where: { bracketId, roundNumber: completedRoundNumber },
     orderBy: { matchNumber: "asc" },
     select: { id: true, matchNumber: true },
@@ -821,7 +925,7 @@ async function advanceWinner(
   const slot = positionInRound % 2 === 0 ? 1 : 2
 
   // Find the target match in the next round
-  const nextRoundMatches = await (tx as any).match.findMany({
+  const nextRoundMatches = await tx.match.findMany({
     where: { bracketId, roundNumber: completedRoundNumber + 1 },
     orderBy: { matchNumber: "asc" },
     select: { id: true, matchNumber: true },
@@ -833,7 +937,7 @@ async function advanceWinner(
   }
 
   // Create the MatchCompetitor in the next round
-  await (tx as any).matchCompetitor.create({
+  await tx.matchCompetitor.create({
     data: {
       matchId: targetMatch.id,
       registrationEntryId: winnerEntryId,
@@ -893,48 +997,18 @@ export const scoreMatch = tournamentAdminActionClient
 
     if (!match) throw new Error("Match not found")
 
-    // 2. Validate status
-    if (match.status !== "SCHEDULED" && match.status !== "IN_PROGRESS") {
-      throw new Error(`Match cannot be scored — current status is ${match.status}`)
-    }
-
-    // 3. Validate winner is a competitor in this match
-    const isValidWinner = match.competitors.some(c => c.registrationEntryId === winnerEntryId)
-    if (!isValidWinner) {
-      throw new Error("Winner must be a competitor in this match")
-    }
-
-    // 4. Get total rounds from bracket seedData
-    const seedData = match.bracket.seedData as any
-    const totalRounds = seedData?.totalRounds ?? 1
+    assertMatchCanBeScored(match, winnerEntryId)
+    const totalRounds = getTotalRounds(match.bracket.seedData)
 
     // 5. Score + advance in transaction
-    const scored = await db.$transaction(async tx => {
-      // Update match
-      const updated = await tx.match.update({
-        where: { id: matchId },
-        data: {
-          status: "COMPLETED",
-          result,
-          winnerEntryId,
-          scoreData: scoreData ?? undefined,
-          notes,
-          endedAt: new Date(),
-        },
-      })
-
-      // Advance winner to next round
-      const advancement = await advanceWinner(
-        tx as any,
-        match.bracket.id,
-        match.roundNumber,
-        match.matchNumber,
-        winnerEntryId,
+    const scored = await db.$transaction(async tx =>
+      scoreAndAdvanceMatch(
+        tx,
+        match,
+        { matchId, winnerEntryId, result, scoreData, notes },
         totalRounds,
-      )
-
-      return { match: updated, advancement }
-    })
+      ),
+    )
 
     const tournamentSlug = match.bracket.division.tournamentDiscipline.tournament.slug
 
