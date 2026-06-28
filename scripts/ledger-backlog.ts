@@ -12,11 +12,11 @@
  * projection (fetches them from the public `main` branch). This file = the fs reader + the
  * terminal formatter; all parsing is delegated.
  *
- * Ledgers scanned: FS · D · WL · FI · MB · TFF · INC · RISK · TD (see LEDGER_FILES).
+ * Ledgers scanned: GL · FS · D · WL · FI · MB · TFF · INC · RISK · TD (see LEDGER_FILES).
  *
  * Usage:
  *   bun scripts/ledger-backlog.ts                 # ranked backlog, all ledgers
- *   bun scripts/ledger-backlog.ts --ledger=WL     # one ledger (FS|D|WL|FI|MB|TFF|INC|RISK|TD)
+ *   bun scripts/ledger-backlog.ts --ledger=GL     # one ledger (GL|FS|D|WL|FI|MB|TFF|INC|RISK|TD)
  *   bun scripts/ledger-backlog.ts --top=20        # cap the rows printed
  *   bun scripts/ledger-backlog.ts --json          # machine-readable JSON
  */

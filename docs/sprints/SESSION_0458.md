@@ -265,6 +265,10 @@ Run these at bow-out, after the build lands:
 - **Docs:** `files/loop-board.md` spec; `custom-component-inventory` (AdminKanban row + new LoopBoard
   row); `repo-code-glossary` terms; learning record `0002` (kernel, Giddy voice); Loop-of-Loops doc P3
   marked landed.
+- **Post-close follow-on (operator, same session):** shipped **ADR 0038 — per-product DB separation**
+  (separate DBs per product + deploys + monorepo; BBL-own-repo deferred; amends ADR 0034) and the
+  **Goals Ledger** (`docs/knowledge/wiki/goals-ledger.md`, code `GL`, 6 seed goals) — wired into the
+  shared parser so the loop-board + bow-in CLI pick it up (goals **lead** the backlog; CLI now 53 open).
 
 ## Decisions resolved
 

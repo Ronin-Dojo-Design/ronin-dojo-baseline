@@ -33,6 +33,16 @@ const INC = `
 | 2026-06-02 | inc-y | Fixed | ok | high | someone |
 `
 
+const GOALS = `
+### G-001 — Land the first tester
+
+- **Status:** in-progress — P0
+
+### G-009 — Already achieved goal
+
+- **Status:** done — P1
+`
+
 describe("parseLedger", () => {
   it("parses open wiring rows and excludes resolved (✅) ones", () => {
     const items = parseLedger("WL", WL)
@@ -59,6 +69,13 @@ describe("parseLedger", () => {
     expect(items).toHaveLength(1)
     expect(items[0].priority).toBe("P0")
     expect(items[0].summary).toBe("Boom: bad thing")
+  })
+
+  it("parses open/in-progress goals (GL) and excludes done ones", () => {
+    const items = parseLedger("GL", GOALS)
+    expect(items).toHaveLength(1)
+    expect(items[0].id).toBe("G-001")
+    expect(items[0].priority).toBe("P0")
   })
 })
 

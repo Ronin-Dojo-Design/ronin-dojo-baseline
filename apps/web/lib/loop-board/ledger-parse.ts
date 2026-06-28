@@ -10,7 +10,7 @@
  * root CLI can import it under bun without inheriting the Next tsconfig.
  */
 
-export type LedgerCode = "FS" | "D" | "WL" | "FI" | "MB" | "TFF" | "INC" | "RISK" | "TD"
+export type LedgerCode = "GL" | "FS" | "D" | "WL" | "FI" | "MB" | "TFF" | "INC" | "RISK" | "TD"
 
 export type Priority = "P0" | "P1" | "P2" | "—"
 
@@ -22,11 +22,23 @@ export type Item = {
   summary: string
 }
 
-/** Stable display + ranking order across the 9 governance ledgers. */
-export const LEDGER_ORDER: LedgerCode[] = ["FS", "D", "WL", "FI", "MB", "TFF", "INC", "RISK", "TD"]
+/** Stable display + ranking order across the governance ledgers. Goals (`GL`) lead the backlog. */
+export const LEDGER_ORDER: LedgerCode[] = [
+  "GL",
+  "FS",
+  "D",
+  "WL",
+  "FI",
+  "MB",
+  "TFF",
+  "INC",
+  "RISK",
+  "TD",
+]
 
 /** Repo-relative path of each ledger (the inbound sources from the design doc + security register). */
 export const LEDGER_FILES: Record<LedgerCode, string> = {
+  GL: "docs/knowledge/wiki/goals-ledger.md",
   FS: "docs/protocols/failed-steps-log.md",
   D: "docs/knowledge/wiki/drift-register.md",
   WL: "docs/knowledge/wiki/wiring-ledger.md",
@@ -193,6 +205,14 @@ function parseRisk(content: string): Item[] {
 /** Parse ONE ledger's raw markdown into its open `Item[]`. */
 export function parseLedger(code: LedgerCode, content: string): Item[] {
   switch (code) {
+    case "GL":
+      return parseSectioned(
+        content,
+        "GL",
+        3,
+        /^G-\d/,
+        s => /^(open|in[-\s]?progress|active)\b/i.test(s) || /pending/i.test(s),
+      )
     case "FS":
       return parseSectioned(
         content,
