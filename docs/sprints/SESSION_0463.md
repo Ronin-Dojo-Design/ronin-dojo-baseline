@@ -1,6 +1,6 @@
 ---
 session: 463
-status: open
+status: closed
 ---
 
 # SESSION 0463 — Baseline: restore its own deployment (`apps/baseline`)
@@ -22,7 +22,7 @@ professional `apps/web` (Dirstarter-BBL) backend via the shared `packages/ui-kit
 
 ## Status
 
-open
+closed
 
 ## Locked decisions (sprint planning, 2026-06-28)
 
@@ -87,10 +87,49 @@ responsive" goal) so a new school site is a one-file token swap.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0463_TASK_01 | open | ADR: Baseline = apps/baseline; feature-keep scope + domain cutover |
-| SESSION_0463_TASK_02 | open | scaffold apps/baseline (brand tokens, DB, ui-kit skeleton) |
-| SESSION_0463_TASK_03 | open | minimal white-label brand-tokens kit |
+| SESSION_0463_TASK_01 | done | ADR 0039 (`docs/architecture/decisions/0039-baseline-as-apps-baseline.md`): Baseline = apps/baseline; feature-keep scope (shared ui-kit + lean own backend, NOT BBL's engine); operator-gated domain cutover (verify blackbeltlegacy.com on BBL first) |
+| SESSION_0463_TASK_02 | done | scaffolded `apps/baseline` — runnable Next skeleton (`next build` green), own `prisma/schema.prisma` (Lead + SchoolSettings) + `baseline_dev` DATABASE_URL, consumes `@ronin-dojo/ui-kit` via `workspace:*` |
+| SESSION_0463_TASK_03 | done | brand-tokens kit: `lib/brand.ts` (identity + color/font data) + `app/globals.css` CSS-var surface bridged to the kernel's `--mk-*` — a new school is a two-file swap |
+
+## Key decision made during build (autonomous call — D3 in the ADR)
+
+`apps/baseline` matches the root `package.json` `workspaces` glob (`apps/*`), so — unlike Mammoth
+(`clients/*`, outside the glob) — it is a **root workspace member**, exactly like `apps/web`. It
+therefore consumes the kernel via `"@ronin-dojo/ui-kit": "workspace:*"` and installs from the repo
+root, with **no** `file:` + `link-ui-kit.mjs` symlink hack. The Mammoth standalone-bun pattern fights
+bun's hoisting under `apps/*` (deps hoist to root, the local `file:` link never materializes). This is
+the conservative, idiomatic call (follows the `apps/web` sibling). Recorded as ADR 0039 D3 +
+convention: **`apps/*` = workspace member; `clients/*` = standalone-bun.**
+
+## Evidence
+
+| Claim | Proof |
+| --- | --- |
+| ADR written (placement + feature-keep + cutover) | `docs/architecture/decisions/0039-baseline-as-apps-baseline.md`; markdownlint 0 errors |
+| `apps/baseline` scaffolded + runnable | `next build` → "Compiled successfully", "Finished TypeScript", 3 static pages prerendered (`/`, `/_not-found`) |
+| Typechecks clean | `cd apps/baseline && bun run typecheck` (`tsc --noEmit`) → no output, exit 0 |
+| Own DB, isolated (ADR 0038) | `prisma/schema.prisma` (Lead + SchoolSettings, NO BBL models) + `prisma.config.ts` (`DATABASE_URL` → `baseline_dev`); `prisma generate` → client OK |
+| Consumes shared kernel via workspace | `node_modules/@ronin-dojo/ui-kit -> ../../packages/ui-kit` (whole-dir symlink); `package.json` dep `workspace:*` |
+| Brand-tokens kit = two-file swap | `lib/brand.ts` (identity + `brandColors`/`brandFonts` data) + `app/globals.css` CSS vars bridged to kernel `--mk-*`; landing page renders zero hardcoded school name/copy/hex |
+| Formatting gate | `oxfmt --check apps/baseline` → "All matched files use the correct format" |
+| Lint gate | `oxlint apps/baseline` → only the `no-shadow-restricted-names` warning on the Prisma `globalThis` singleton — identical to `clients/mammoth-build-crm/lib/db.ts` + `apps/web/services/db.ts` (established repo pattern, warning not error) |
+| No real data seeded | `prisma/seed.ts` upserts only the `SchoolSettings` template-defaults singleton; no leads |
+| Scope respected | no edits to `.github/`, `vercel.json`, `apps/web`, or sibling worktrees; only `apps/baseline/**`, ADR 0039, this file, + root `bun.lock` (workspace-add) touched |
+
+## Operator-gated handoffs (NOT done — documented per the guardrails)
+
+1. **DB provision** — `createdb baseline_dev` locally; provision a Baseline Neon DB + `prisma migrate
+   deploy` at ship.
+2. **Vercel project** — create the Baseline project rooted at `apps/baseline`, own env
+   (`DATABASE_URL`), own `ignoreCommand`.
+3. **Domain cutover** — detach `baselinemartialarts.com` from the BBL project, attach to the Baseline
+   project. **VERIFY `blackbeltlegacy.com` is attached to the BBL project FIRST** (ADR 0039 D5).
+4. **CI/deploy wiring** for `apps/*` (`vercel.json` `ignoreCommand`, the `apps/*` CI matrix) — this is
+   **SESSION_0465**'s lane; coordinate at merge. Baseline ships no CI/vercel.json change.
 
 ## Next session
 
-(TBD at close)
+- Execute the operator-gated cutover (DB provision + Vercel project + domain move, in the D5 order),
+  coordinated with SESSION_0465's `apps/*` CI/deploy wiring at merge.
+- Flesh out the Baseline product: a real inquiry POST → `Lead`, an admin board on the shared
+  AdminKanban kernel, and richer school content — all still token-driven.
