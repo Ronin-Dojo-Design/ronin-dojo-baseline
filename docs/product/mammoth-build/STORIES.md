@@ -6,7 +6,7 @@ status: draft
 created: 2026-06-20
 updated: 2026-06-28
 author: Brian + Petey
-last_agent: claude-session-0459
+last_agent: claude-session-0460
 backlinks:
   - docs/product/README.md
   - docs/product/mammoth-build/PRD.md
@@ -87,12 +87,14 @@ Story IDs use the `MB-` prefix. Status: 🟢 in MVP · ⚪ planned.
 | ID | Story | Acceptance criteria | Status |
 | --- | --- | --- | --- |
 | MB-DATA-001 | As the platform, I want Mammoth to have its **own database + schema**, isolated from BBL, so a Mammoth migration can never break another product. | Own `prisma/` + `prisma.config.ts` + `DATABASE_URL` (`mammoth_dev`); HubSpot-replacement CRM schema (Contact/Company/Project/Activity/Quote/LineItem/Product/Invoice/BuildPhoto/TeamMember); first migration applied; **isolation proven** (BBL DB byte-identical). No cross-product FK. | 🟢 (SESSION_0459) |
-| MB-DATA-002 | As a coordinator, I want the app to read/write its **own Prisma DB** instead of localStorage so data persists across devices and users. | `lib/store.ts` localStorage hooks replaced by a Prisma data layer + server actions; pipeline/forms/photos verified against `mammoth_dev`. | ⚪ (P2) |
+| MB-DATA-002 | As a coordinator, I want the app to read/write its **own Prisma DB** instead of localStorage so data persists across devices and users. | `lib/store.ts` localStorage hooks replaced by a Prisma data layer + server actions; pipeline/forms/photos verified against `mammoth_dev`. | 🟢 (SESSION_0460) |
 | MB-DATA-003 | As a user, I want my **own Mammoth login** (separate from BBL) so identity is per-product. | Better Auth wired in the Mammoth app; own auth tables (ADR 0038 D5). | ⚪ (P2) |
 
 ## Notes
 
-MVP stories (🟢, Epics 1–6) are implemented frontend-only (localStorage) in `clients/mammoth-build-crm/`.
 Epic 7 tracks the move onto Mammoth's **own database** (ADR 0038): MB-DATA-001 (the DB + schema) landed
-SESSION_0459; MB-DATA-002/003 (wiring the app + auth onto it) are P2. Remaining planned stories (⚪) are
-gated on the backend phases in `docs/business/leads/project-mammoth-build-crm.md` (P2–P6).
+SESSION_0459; **MB-DATA-002 (the app off localStorage onto `mammoth_dev` — Prisma adapter, server actions,
+a DB-backed AdminKanban, guardrails preserved, one Project SoT, headless-verified) landed SESSION_0460**;
+MB-DATA-003 (per-product Better Auth login) is P2. The MVP Epics 1–6 surfaces (pipeline, job-order form,
+build photos) now read/write the DB, not localStorage. Remaining planned stories (⚪) are gated on the
+backend phases in `docs/business/leads/project-mammoth-build-crm.md` (P2–P6).

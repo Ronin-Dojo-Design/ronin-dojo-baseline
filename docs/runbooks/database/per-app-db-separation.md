@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-27
 updated: 2026-06-28
-last_agent: claude-session-0459
+last_agent: claude-session-0460
 pairs_with:
   - docs/architecture/decisions/0038-per-product-database-separation.md
   - docs/runbooks/database/schema-migration.md
@@ -94,6 +94,32 @@ product runs a **standalone `bun install`** in its own dir, producing its own
 domain isolated (a client's bad/vulnerable dep can't break BBL's install or CI) and keeps the product
 cleanly extractable on handoff (ADR 0033/0034). The shared `ui-kit` kernel is still consumed in-repo via
 a `file:../../packages/ui-kit` dependency. (Decision: SESSION_0459, operator-chosen.)
+
+#### Gotcha: the `file:` ui-kit link breaks Turbopack (whole-dir symlink fix)
+
+A **standalone** `bun install` of the `@ronin-dojo/ui-kit` `file:` dep (whose `package.json` declares
+`files: ["src"]`) materializes `node_modules/@ronin-dojo/ui-kit` as a **real directory with an absolute
+per-file `package.json` symlink**. Next/Turbopack reads a package via its directory realpath and treats
+that per-file symlink as a *redirect*, failing the dev/build with:
+
+```text
+Error parsing package.json file .../node_modules/@ronin-dojo/ui-kit/package.json
+package.json is not parseable: invalid JSON: a redirect can't be parsed as json
+```
+
+`apps/web` never hits this because `workspace:*` gives it a **single whole-directory symlink**, which
+Turbopack realpaths cleanly. **Fix (SESSION_0460):** a committed `postinstall` that reshapes the link to
+the whole-dir form, idempotently, on every install — see Mammoth's
+[`scripts/link-ui-kit.mjs`](../../../clients/mammoth-build-crm/scripts/link-ui-kit.mjs):
+
+```jsonc
+// clients/<product>/package.json
+"scripts": { "postinstall": "node scripts/link-ui-kit.mjs", ... }
+```
+
+`next.config` still needs `transpilePackages: ["@ronin-dojo/ui-kit"]` + `turbopack.root` pinned to the
+monorepo top (so the symlink target is inside the resolution root). Any standalone client consuming the
+in-repo kernel needs this `postinstall`.
 
 ## Adding the next product DB
 

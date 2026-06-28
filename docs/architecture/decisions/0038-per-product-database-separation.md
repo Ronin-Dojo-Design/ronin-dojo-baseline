@@ -4,8 +4,8 @@ slug: adr-0038-per-product-database-separation
 type: decision
 status: accepted
 created: 2026-06-27
-updated: 2026-06-27
-last_agent: claude-session-0458
+updated: 2026-06-28
+last_agent: claude-session-0460
 pairs_with:
   - docs/architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
@@ -106,9 +106,19 @@ longer take down BBL.
   (140 tables, same digest) and the root `bun.lock` was untouched. The current Postgres is **declared**
   BBL's dedicated DB (no data move, no rename). Convention + guardrail documented in
   [per-app-db-separation runbook](../../runbooks/database/per-app-db-separation.md).
-- **Phase 2 — deferred (operator-gated):** provision Mammoth's Neon DB at SHIP; wire the Mammoth app off
-  localStorage onto Prisma; then build **loop-board Phase B** on BBL's own DB. The Baseline data split +
-  the ~130 `getRequestBrand`/`Brand` vestige prune remain a separate deferred sub-lane.
+- **Phase 2 (local half) — LANDED (SESSION_0460).** The Mammoth app is wired **off localStorage onto its
+  own `mammoth_dev`**: a Prisma client + `@prisma/adapter-pg` driver adapter (`lib/db.ts`), a `"use server"`
+  data layer (`lib/actions.ts`) with the pipeline guardrails preserved server-side (order-confirm at
+  `deposit`, no `complete` without a confirmed order, no silent drop), `useProjects` rewired to the
+  actions, and the AdminKanban board swapped to a DB-backed `BoardStore` adapter (`createDbBoardStore`) —
+  so the board + the project pages now share **one `Project` SoT** (the MVP's two localStorage stores are
+  gone). Verified headless (board read/move, create, advance→deposit guardrail, photo add/remove; zero
+  localStorage writes; `next build` green). Gotcha banked: a standalone-bun `file:` link of the in-repo
+  `ui-kit` kernel breaks Turbopack — fixed with a `postinstall` whole-dir symlink (see the per-app-db +
+  new-client runbooks).
+- **Phase 2 (cloud half) — deferred (operator-gated):** provision Mammoth's Neon DB at SHIP + wire its
+  Vercel project; then build **loop-board Phase B** on BBL's own DB. The Baseline data split + the ~130
+  `getRequestBrand`/`Brand` vestige prune remain a separate deferred sub-lane.
 
 ## Alternatives considered
 

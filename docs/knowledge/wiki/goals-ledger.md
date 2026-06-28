@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-06-28
-last_agent: claude-session-0458
+last_agent: claude-session-0460
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -59,8 +59,11 @@ aggregator reads it with no new parser logic.
 - **Lane:** platform / infra. **Decision:** ADR 0038. **Depends on:** nothing (it unblocks G-003).
 - **Progress:** **Phase 1 LANDED (SESSION_0459)** — Mammoth scaffolded on its own `mammoth_dev` DB
   (HubSpot-replacement CRM core); isolated migration proven (BBL `ronindojo_prodsnap` byte-identical;
-  root `bun.lock` untouched); per-app-db-separation runbook + guardrail documented. Phase 2 (Neon
-  provision + app-onto-Prisma + loop-board Phase B) deferred, operator-gated.
+  root `bun.lock` untouched); per-app-db-separation runbook + guardrail documented. **Phase 2 local half
+  LANDED (SESSION_0460)** — Mammoth app wired off localStorage onto `mammoth_dev` (Prisma adapter + server
+  actions + DB-backed AdminKanban store; guardrails preserved; one Project SoT; headless-verified;
+  `next build` green; MB-DATA-002 done). Phase 2 **cloud half** (Neon provision + Vercel wiring) +
+  loop-board Phase B (G-003) deferred, operator-gated/SHIP-gated.
 - **Why:** a shared DB couples products (a client migration can break BBL); BBL's lineage graph
   deserves its own failure domain + backup posture. Completes ADR 0034's multi-product model.
 

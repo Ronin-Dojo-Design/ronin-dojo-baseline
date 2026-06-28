@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BUILDING_TYPES } from "@/lib/content";
-import { useProjects, type NewProjectInput } from "@/lib/store";
+import { useProjects } from "@/lib/store";
+import type { NewProjectInput } from "@/lib/types";
 
 const EMPTY: NewProjectInput = {
   name: "",
@@ -28,13 +29,23 @@ export default function NewJobOrderPage() {
   const setNum = (field: keyof NewProjectInput, value: string) =>
     setForm((f) => ({ ...f, [field]: value === "" ? null : Number(value) }));
 
-  const onSubmit = (e: React.FormEvent) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) {
+      return;
+    }
+    setSubmitting(true);
     const name =
       form.name.trim() ||
       `${form.contactName || "New"} — ${form.buildingType || "Building"}`;
-    const project = create({ ...form, name });
-    router.push(`/app/project/${project.id}`);
+    try {
+      const project = await create({ ...form, name });
+      router.push(`/app/project/${project.id}`);
+    } catch {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -103,9 +114,10 @@ export default function NewJobOrderPage() {
         <div className="flex gap-3">
           <button
             type="submit"
-            className="rounded-md bg-primary px-5 py-2.5 font-semibold text-bg transition-colors hover:bg-primary-hover"
+            disabled={submitting}
+            className="rounded-md bg-primary px-5 py-2.5 font-semibold text-bg transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Create project
+            {submitting ? "Creating…" : "Create project"}
           </button>
           <button
             type="button"

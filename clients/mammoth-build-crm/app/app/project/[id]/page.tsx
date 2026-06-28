@@ -31,13 +31,14 @@ export default function ProjectDetailPage() {
   const next = nextStage(project.stage);
   const blockedToComplete = next === "complete" && !project.orderConfirmed;
 
-  const markLost = () => {
+  const markLost = async () => {
     const reason = window.prompt("Reason for closing this project as lost? (required)");
     if (!reason || !reason.trim()) {
       return;
     }
-    setStage(project.id, "lost");
-    patch(project.id, {
+    // Await the stage move before patching so the two writes don't race the row.
+    await setStage(project.id, "lost");
+    await patch(project.id, {
       nextTask: "",
       notes: `${project.notes}\n[Closed-Lost] ${reason.trim()}`.trim(),
     });
@@ -83,7 +84,7 @@ export default function ProjectDetailPage() {
           {next && (
             <button
               type="button"
-              onClick={() => advance(project.id)}
+              onClick={() => void advance(project.id)}
               disabled={blockedToComplete}
               className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-bg transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               title={blockedToComplete ? "Can't complete: not a confirmed order yet" : undefined}
@@ -94,7 +95,7 @@ export default function ProjectDetailPage() {
           {project.stage !== "lost" && project.stage !== "complete" && (
             <button
               type="button"
-              onClick={markLost}
+              onClick={() => void markLost()}
               className="rounded-md border border-border px-4 py-2 text-sm font-medium text-muted transition-colors hover:border-primary hover:text-ink"
             >
               Mark Lost
@@ -116,7 +117,7 @@ export default function ProjectDetailPage() {
           </span>
           <input
             value={project.nextTask}
-            onChange={(e) => patch(project.id, { nextTask: e.target.value })}
+            onChange={(e) => void patch(project.id, { nextTask: e.target.value })}
             placeholder="What happens next?"
             className="w-full rounded-md border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
           />

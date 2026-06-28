@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-27
 updated: 2026-06-28
-last_agent: claude-session-0462
+last_agent: claude-session-0460
 pairs_with:
   - docs/runbooks/database/per-app-db-separation.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
@@ -124,8 +124,15 @@ clients/<product>/
 In `clients/<product>/package.json`:
 
 - `"@ronin-dojo/ui-kit": "file:../../packages/ui-kit"` (the shared kernel — ADR 0033).
-- `"@prisma/client": "^7.8.0"` (dep) + `"prisma": "^7.8.0"` (devDep).
+- `"@prisma/client": "^7.8.0"` (dep) + `"prisma": "^7.8.0"` (devDep). When the app comes off localStorage,
+  add the runtime driver adapter too: `"@prisma/adapter-pg"` + `"pg"` (+ `"@types/pg"` devDep) — Prisma 7
+  `engineType="client"` needs an adapter at runtime (mirror `apps/web/services/db.ts`).
 - `db:*` scripts: `db:generate`/`db:migrate`/`db:studio`/`db:push`/`db:reset` (copy Mammoth's).
+- ⚠ **`"postinstall": "node scripts/link-ui-kit.mjs"`** — REQUIRED. A standalone-bun `file:` install of
+  `ui-kit` materializes a per-file `package.json` symlink that Turbopack reads as a "redirect" and fails to
+  parse. The postinstall reshapes it to a whole-dir symlink (copy Mammoth's `scripts/link-ui-kit.mjs`).
+  Also set `transpilePackages: ["@ronin-dojo/ui-kit"]` + `turbopack.root` (monorepo top) in `next.config`.
+  See [per-app-db-separation → the `file:` ui-kit link gotcha](../database/per-app-db-separation.md).
 
 ### 4. Standalone bun install ⛔ (gate 1)
 

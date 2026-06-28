@@ -32,6 +32,20 @@ export interface BuildPhoto {
   takenAt: string; // ISO
 }
 
+/** Intake payload for a new project (New Job Order form / programmatic create). */
+export interface NewProjectInput {
+  name: string;
+  contactName: string;
+  contactEmail: string;
+  buildingType: string;
+  use: string;
+  region: string;
+  width: number | null;
+  length: number | null;
+  eaveHeight: number | null;
+  notes: string;
+}
+
 export interface Project {
   id: string;
   /** Short human label, e.g. "Flores — 60x100 Auto Service". */
