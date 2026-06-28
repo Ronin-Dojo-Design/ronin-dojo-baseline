@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-06-13
-last_agent: codex-session-0375
+updated: 2026-06-28
+last_agent: claude-session-0459
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -32,6 +32,7 @@ from package scripts alone. Start with these files, then record any drift you fi
 | White-label hosts | [white-label-site-runbook](deploy/white-label-site-runbook.md) | Host → brand behavior and local smoke expectations. |
 | Lineage work | [lineage-hub](domain-features/lineage-hub.md) | Source of lineage dual model, routes, specs, component inventory, and ADR links. |
 | Directory / org / profile / claim | [directory-org-profile-hub](domain-features/directory-org-profile-hub.md) | Discovery → profile → register vs claim funnels; routes, read-models, components, the claim ADR. |
+| New client product (own DB) | [new-client-runbook](onboarding/new-client-runbook.md) | Repeatable recipe to stand up a new client app under `clients/*` with its own database (ADR 0034 + 0038); invokable as `/new-client-recipe`. |
 
 If a package script and a runbook disagree, treat that as documentation drift: verify the command,
 update the runbook, and note it in the active SESSION before continuing.
@@ -40,8 +41,13 @@ update the runbook, and note it in the active SESSION before continuing.
 
 - [database](database/database.md) — database operations overview.
 - [schema-migration](database/schema-migration.md) — Prisma migration cycle (create → apply → verify).
+- [per-app-db-separation](database/per-app-db-separation.md) — one DB per product (ADR 0038): each app owns its prisma + DATABASE_URL + migrations; how to add the next product DB + the isolation proof.
 - [prisma-workflow](database/prisma-workflow.md) — day-to-day Prisma workflow.
 - [neon-advisory-lock-recovery](database/neon-advisory-lock-recovery.md) — recovering from Neon advisory-lock contention.
+
+## Onboarding
+
+- [new-client-runbook](onboarding/new-client-runbook.md) — stand up a new client product inside the monorepo with its own database (ADR 0034 + 0038); the repeatable recipe, invokable as `/new-client-recipe`.
 
 ## Deploy & Infra
 

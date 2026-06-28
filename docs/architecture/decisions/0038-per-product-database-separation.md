@@ -94,6 +94,22 @@ longer take down BBL.
 4. **Verify** isolated migrations (a client migration does not touch BBL) + prodsnap rescope.
 5. Only then build **loop-board Phase B** on BBL's DB. Re-evaluate D4 (BBL repo) only on a concrete trigger.
 
+### Implementation status
+
+- **Phase 1 — LANDED (SESSION_0459, local-first).** Mammoth Build CRM scaffolded with its own
+  `prisma/schema.prisma` (the HubSpot-replacement CRM core — Contact/Company/Project/Activity/Quote/
+  LineItem/Product/Invoice/BuildPhoto/TeamMember + 9 enums, grounded in the
+  [Flores intake brief](../../business/leads/mammoth-build-michael-flores.md) §3a/§4/§5/§6 and the
+  [HubSpot-replacement epic](../../epics/mammoth-rebuild-crm-001.md)), its own `prisma.config.ts`
+  (Prisma 7 moves the URL out of the schema) + `DATABASE_URL` + standalone `bun.lock`. First migration
+  applied to a new local `mammoth_dev`; **isolation proven** — `ronindojo_prodsnap` stayed byte-identical
+  (140 tables, same digest) and the root `bun.lock` was untouched. The current Postgres is **declared**
+  BBL's dedicated DB (no data move, no rename). Convention + guardrail documented in
+  [per-app-db-separation runbook](../../runbooks/database/per-app-db-separation.md).
+- **Phase 2 — deferred (operator-gated):** provision Mammoth's Neon DB at SHIP; wire the Mammoth app off
+  localStorage onto Prisma; then build **loop-board Phase B** on BBL's own DB. The Baseline data split +
+  the ~130 `getRequestBrand`/`Brand` vestige prune remain a separate deferred sub-lane.
+
 ## Alternatives considered
 
 - **Keep one shared DB** — rejected: the coupling above is exactly what this ADR removes.

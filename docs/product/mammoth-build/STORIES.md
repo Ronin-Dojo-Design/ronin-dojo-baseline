@@ -4,15 +4,16 @@ slug: mammoth-build-stories
 type: stories
 status: draft
 created: 2026-06-20
-updated: 2026-06-20
+updated: 2026-06-28
 author: Brian + Petey
-last_agent: claude-session-0425
+last_agent: claude-session-0459
 backlinks:
   - docs/product/README.md
   - docs/product/mammoth-build/PRD.md
 pairs_with:
   - docs/product/mammoth-build/PRD.md
   - docs/business/leads/project-mammoth-build-crm.md
+  - docs/architecture/decisions/0038-per-product-database-separation.md
 tags:
   - product
   - mammoth-build
@@ -81,8 +82,17 @@ Story IDs use the `MB-` prefix. Status: 🟢 in MVP · ⚪ planned.
 | MB-BILL-001 | As the office, I want milestone invoices (deposit → engineering → fabrication → delivery → final) so cash flow matches the build. | Stage change generates the matching invoice + Stripe payment link. | ⚪ (P5) |
 | MB-REPORT-001 | As the GM, I want pipeline value, win-rate by building type, time-in-stage, and AR-aging so I can manage the business. | Dashboards render from the project/order data. | ⚪ (P4/P5) |
 
+## Epic 7 — Data layer & per-product database (ADR 0038)
+
+| ID | Story | Acceptance criteria | Status |
+| --- | --- | --- | --- |
+| MB-DATA-001 | As the platform, I want Mammoth to have its **own database + schema**, isolated from BBL, so a Mammoth migration can never break another product. | Own `prisma/` + `prisma.config.ts` + `DATABASE_URL` (`mammoth_dev`); HubSpot-replacement CRM schema (Contact/Company/Project/Activity/Quote/LineItem/Product/Invoice/BuildPhoto/TeamMember); first migration applied; **isolation proven** (BBL DB byte-identical). No cross-product FK. | 🟢 (SESSION_0459) |
+| MB-DATA-002 | As a coordinator, I want the app to read/write its **own Prisma DB** instead of localStorage so data persists across devices and users. | `lib/store.ts` localStorage hooks replaced by a Prisma data layer + server actions; pipeline/forms/photos verified against `mammoth_dev`. | ⚪ (P2) |
+| MB-DATA-003 | As a user, I want my **own Mammoth login** (separate from BBL) so identity is per-product. | Better Auth wired in the Mammoth app; own auth tables (ADR 0038 D5). | ⚪ (P2) |
+
 ## Notes
 
-MVP stories (🟢) are implemented frontend-only (localStorage) in `clients/mammoth-build-crm/`.
-Planned stories (⚪) are gated on the backend phases in
-`docs/business/leads/project-mammoth-build-crm.md` (P2–P6).
+MVP stories (🟢, Epics 1–6) are implemented frontend-only (localStorage) in `clients/mammoth-build-crm/`.
+Epic 7 tracks the move onto Mammoth's **own database** (ADR 0038): MB-DATA-001 (the DB + schema) landed
+SESSION_0459; MB-DATA-002/003 (wiring the app + auth onto it) are P2. Remaining planned stories (⚪) are
+gated on the backend phases in `docs/business/leads/project-mammoth-build-crm.md` (P2–P6).

@@ -4,9 +4,9 @@ slug: mammoth-build-prd
 type: prd
 status: draft
 created: 2026-06-20
-updated: 2026-06-20
+updated: 2026-06-28
 author: Brian + Petey
-last_agent: claude-session-0425
+last_agent: claude-session-0459
 backlinks:
   - docs/product/README.md
   - docs/business/leads/project-mammoth-build-crm.md
@@ -14,6 +14,9 @@ pairs_with:
   - docs/product/mammoth-build/STORIES.md
   - docs/business/leads/project-mammoth-build-crm.md
   - docs/business/leads/hubspot-integration-best-practices.md
+  - docs/architecture/decisions/0038-per-product-database-separation.md
+  - docs/runbooks/database/per-app-db-separation.md
+  - clients/mammoth-build-crm/prisma/schema.prisma
 tags:
   - product
   - mammoth-build
@@ -80,11 +83,35 @@ Mammoth needs: (1) every accepted quote becomes an **actual order**, and (2) a p
 - Order-confirmation gate + can't-drop guardrail.
 - App: `clients/mammoth-build-crm/`. Static mockup: `files/mockup.html`.
 
+### Phase 1 — own database scaffolded (SESSION_0459, local-first)
+
+Per [ADR 0038](../../architecture/decisions/0038-per-product-database-separation.md), Mammoth has its
+**own database** (`mammoth_dev`), its own `prisma/` schema, `prisma.config.ts`, and migrations —
+isolated from BBL (proven: a Mammoth migration leaves BBL's DB byte-identical). The app is **not yet
+wired** to it (still localStorage); Phase 2 connects them.
+
 ### Next phases (see roadmap in the project doc)
 
-- P2 backend + persistence + auth · P3 S3 photo storage + public before/after proof links ·
-  P4 automation (rotting/at-risk, quote→order, reminders) · P5 Stripe payments
-  (deposit + milestone) · P6 marketing site + lifecycle email.
+- **P2** wire the app off localStorage **onto its own Prisma DB** + auth · P3 S3 photo storage + public
+  before/after proof links · P4 automation (rotting/at-risk, quote→order, reminders) · P5 Stripe
+  payments (deposit + milestone) · P6 marketing site + lifecycle email.
+
+## Data architecture
+
+Mammoth owns its data end-to-end — no shared database with BBL or any other product (ADR 0038 D1).
+
+- **Schema:** [`clients/mammoth-build-crm/prisma/schema.prisma`](../../../clients/mammoth-build-crm/prisma/schema.prisma)
+  — the HubSpot-replacement CRM core, translated from the
+  [Flores intake brief](../../business/leads/mammoth-build-michael-flores.md) and the
+  [HubSpot-replacement epic](../../epics/mammoth-rebuild-crm-001.md):
+  **Contact · Company · Project (the PEMB Deal) · Activity · Quote · LineItem · Product · Invoice ·
+  BuildPhoto · TeamMember** (+ pipeline/source/lifecycle/quote/invoice enums).
+- **HubSpot object → model:** Contacts→Contact, Companies→Company, Deals→Project, Tasks/Activities→
+  Activity, Quotes→Quote, Line Items→LineItem, Products→Product, Invoices→Invoice, Owners→TeamMember.
+- **PEMB custom properties** (§5 of the brief) are columns where the pipeline gates/filters
+  (`peStampState`, `governingCode`, loads, geometry); the long-tail engineering envelope is a Json bag.
+- **Identity** is Mammoth's own (Better Auth per app, Phase 2) — no shared `User` with BBL (ADR 0038 D5).
+- **No cross-product foreign keys.** Any future cross-product data crosses an API/contract, not a FK.
 
 ## Non-goals
 

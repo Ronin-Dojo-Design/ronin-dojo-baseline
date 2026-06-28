@@ -4,7 +4,7 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 last_agent: claude-session-0458
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -53,10 +53,14 @@ aggregator reads it with no new parser logic.
 
 ### G-002 — Per-product database separation
 
-- **Status:** open — P1
+- **Status:** in-progress — P1
 - **Objective:** give each product its own database (BBL its own dedicated DB; clients their own),
   separate brands + per-product deploys, **staying monorepo**. BBL's own *prod repo* is **deferred**.
 - **Lane:** platform / infra. **Decision:** ADR 0038. **Depends on:** nothing (it unblocks G-003).
+- **Progress:** **Phase 1 LANDED (SESSION_0459)** — Mammoth scaffolded on its own `mammoth_dev` DB
+  (HubSpot-replacement CRM core); isolated migration proven (BBL `ronindojo_prodsnap` byte-identical;
+  root `bun.lock` untouched); per-app-db-separation runbook + guardrail documented. Phase 2 (Neon
+  provision + app-onto-Prisma + loop-board Phase B) deferred, operator-gated.
 - **Why:** a shared DB couples products (a client migration can break BBL); BBL's lineage graph
   deserves its own failure domain + backup posture. Completes ADR 0034's multi-product model.
 

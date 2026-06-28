@@ -1,0 +1,364 @@
+// Mammoth Build CRM — its OWN database (ADR 0038: one database per product).
+//
+// No BBL models, no shared prisma package, no cross-product foreign keys. Each
+// product owns its schema + DATABASE_URL + migrations.
+//
+// This is the HubSpot-replacement CRM core for Mammoth Metal Buildings (PEMB
+// lead → order revenue ops). Every model maps to a documented client need:
+//   - docs/business/leads/mammoth-build-michael-flores.md (§4 pipeline, §5 PEMB
+//     custom properties, §3a friction zones, §6 milestone billing)
+//   - docs/epics/mammoth-rebuild-crm-001.md (HubSpot object → component map)
+//   - clients/mammoth-build-crm MVP forms (InquiryForm, New Job Order)
+//   - HubSpot standard object model (Contacts/Companies/Deals/Activities/
+//     Quotes/Line Items/Products/Invoices).
+//
+// HubSpot object → model: Contacts=Contact · Companies=Company · Deals=Project
+// (the central PEMB record) · Tasks/Activities=Activity · Quotes=Quote ·
+// Line Items=LineItem · Products=Product · Invoices=Invoice · Owners=TeamMember.
+//
+// Generator/datasource shape mirrors apps/web (the BBL DB). Prisma 7 moved the
+// Migrate connection URL out of schema.prisma — it now lives in prisma.config.ts
+// (DATABASE_URL), same as apps/web. The runtime client takes a driver adapter
+// (Phase 2, when the app is wired off localStorage).
+//
+// Money: amounts are whole USD (Int) for the MVP; switch to Decimal(12,2) or
+// integer cents in Phase 2. Engineering long-tail lives in Json "custom
+// properties"; high-value PEMB inputs are columns so the pipeline can gate/filter.
+
+generator client {
+  provider   = "prisma-client"
+  engineType = "client"
+  output     = "../.generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+/// PEMB pipeline stage (brief §4). Labels + exit gates are config in
+/// `lib/stages.ts`; this enum is the persisted identity only — never a table.
+enum StageId {
+  lead
+  qualified
+  quote
+  contract
+  deposit
+  engineering
+  fabrication
+  delivery
+  complete
+  lost
+}
+
+/// Which point in the build a photo documents.
+enum PhotoPhase {
+  before
+  during
+  after
+}
+
+/// Where a contact/deal originated (brief §3a #1 source tracking).
+enum LeadSource {
+  referral
+  web_form
+  phone
+  email
+  trade_show
+  other
+}
+
+/// HubSpot-style contact lifecycle stage.
+enum ContactLifecycle {
+  lead
+  qualified
+  customer
+  lost
+}
+
+/// HubSpot activity types (Tasks/Activities).
+enum ActivityType {
+  task
+  call
+  email
+  meeting
+  note
+}
+
+/// Activity status. `at_risk` = the rotting-deal escalation (brief §3a.2).
+enum ActivityStatus {
+  open
+  completed
+  at_risk
+}
+
+/// Quote lifecycle. `signed` = e-signature accepted = the contract gate (§3a.1).
+enum QuoteStatus {
+  draft
+  sent
+  signed
+  declined
+  expired
+}
+
+/// Milestone invoice kind (brief §6 milestone billing model).
+enum InvoiceKind {
+  deposit
+  engineering
+  fabrication
+  delivery
+  final
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  void
+}
+
+// ---------------------------------------------------------------------------
+// People & accounts (HubSpot Contacts / Companies / Owners)
+// ---------------------------------------------------------------------------
+
+/// A sales/ops owner. The CRM "owner" concept (HubSpot Owners) — NOT an auth
+/// user. Better Auth identity is per-product and deferred to Phase 2 (ADR 0038 D5).
+model TeamMember {
+  id              String     @id @default(cuid())
+  name            String
+  email           String     @unique
+  role            String?
+  active          Boolean    @default(true)
+  ownedProjects   Project[]
+  ownedActivities Activity[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+}
+
+/// A person — HubSpot Contact. Captured from the public InquiryForm + the
+/// New Job Order intake.
+model Contact {
+  id         String           @id @default(cuid())
+  name       String
+  email      String
+  phone      String?
+  role       String?
+  source     LeadSource       @default(web_form)
+  lifecycle  ContactLifecycle @default(lead)
+  notes      String           @default("")
+  company    Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyId  String?
+  projects   Project[]
+  activities Activity[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@index([email])
+  @@index([companyId])
+}
+
+/// An account — HubSpot Company.
+model Company {
+  id        String    @id @default(cuid())
+  name      String
+  website   String?
+  region    String?
+  contacts  Contact[]
+  projects  Project[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// The central revenue record (HubSpot Deal) — a PEMB project
+// ---------------------------------------------------------------------------
+
+/// A PEMB project — the central record (HubSpot Deal). Collapses the lead →
+/// order lifecycle onto one object with its artifacts attached (brief §2).
+model Project {
+  id             String       @id @default(cuid())
+  /// Short human label, e.g. "Flores — 60x100 Auto Service".
+  name           String
+  stage          StageId      @default(lead)
+  source         LeadSource   @default(web_form)
+  /// Estimated deal value in whole USD (MVP).
+  dealValue      Int?
+  expectedClose  DateTime?
+
+  // Primary contact + account (HubSpot deal associations).
+  contact        Contact      @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  contactId      String
+  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyId      String?
+  owner          TeamMember?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId        String?
+
+  // PEMB custom properties (brief §5) — high-value inputs as columns so the
+  // pipeline can gate/filter; the long-tail engineering envelope is Json.
+  buildingType   String
+  use            String
+  region         String
+  width          Int?
+  length         Int?
+  eaveHeight     Int?
+  roofPitch      String?
+  baySpacing     Int?
+  groundSnowLoad Int?
+  windSpeed      Int?
+  seismicCategory String?
+  governingCode  String?
+  /// PE-stamp state — must match the erection state (brief Stage 6 gate).
+  peStampState   String?
+  /// Deflection limits + any other engineering envelope detail (HubSpot custom-property bag).
+  engineeringSpecs Json?
+
+  // Anti-drop guardrails (brief §3a.2).
+  /// "Can't drop a project": an open project always carries a next step.
+  nextTask       String
+  orderConfirmed Boolean      @default(false)
+  /// Stamped when the project becomes an actual order (brief §3a.1).
+  orderNumber    String?
+  /// Required to close-lost — kills silent drops.
+  lostReason     String?
+
+  notes          String       @default("")
+
+  activities     Activity[]
+  quotes         Quote[]
+  invoices       Invoice[]
+  photos         BuildPhoto[]
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([stage])
+  @@index([contactId])
+  @@index([ownerId])
+}
+
+// ---------------------------------------------------------------------------
+// Activities (HubSpot Tasks/Activities) — the anti-drop spine
+// ---------------------------------------------------------------------------
+
+/// A task/activity on a project. Every open deal must carry an open next-step
+/// task with an owner (brief §3a.2); `at_risk` flags a rotting deal.
+model Activity {
+  id          String         @id @default(cuid())
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String
+  contact     Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  contactId   String?
+  owner       TeamMember?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId     String?
+  type        ActivityType   @default(task)
+  title       String
+  body        String         @default("")
+  status      ActivityStatus @default(open)
+  dueAt       DateTime?
+  completedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([projectId])
+  @@index([status, dueAt])
+}
+
+// ---------------------------------------------------------------------------
+// Quote-to-cash (HubSpot Quotes / Line Items / Products / Invoices)
+// ---------------------------------------------------------------------------
+
+/// A CPQ quote (brief §3a #3). `signed` = e-signature = the contract (§3a.1).
+model Quote {
+  id        String      @id @default(cuid())
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  number    String      @unique
+  status    QuoteStatus @default(draft)
+  /// Total in whole USD (MVP); derived from line items.
+  amount    Int?
+  sentAt    DateTime?
+  signedAt  DateTime?
+  expiresAt DateTime?
+  lineItems LineItem[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([projectId])
+}
+
+/// The product library (building systems / components) for CPQ (brief §3a #3).
+model Product {
+  id          String     @id @default(cuid())
+  sku         String?    @unique
+  name        String
+  description String     @default("")
+  category    String?
+  /// Unit price in whole USD (MVP).
+  unitPrice   Int?
+  active      Boolean    @default(true)
+  lineItems   LineItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+/// A quote line item (HubSpot Line Items). May reference a library Product or be ad-hoc.
+model LineItem {
+  id          String   @id @default(cuid())
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId     String
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId   String?
+  description String
+  quantity    Int      @default(1)
+  /// Whole USD (MVP).
+  unitPrice   Int      @default(0)
+  amount      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([quoteId])
+}
+
+/// A milestone invoice (brief §6) with a Stripe payment link.
+model Invoice {
+  id                String        @id @default(cuid())
+  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId         String
+  number            String        @unique
+  kind              InvoiceKind
+  status            InvoiceStatus @default(draft)
+  /// Whole USD (MVP).
+  amount            Int
+  dueAt             DateTime?
+  paidAt            DateTime?
+  stripePaymentLink String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Build proof (Mammoth differentiator) — before/during/after photos
+// ---------------------------------------------------------------------------
+
+/// A build-process photo. `dataUrl` is a downscaled data-URL for the MVP; real
+/// object storage (R2/MinIO) is a Phase-2 concern, not Phase 1.
+model BuildPhoto {
+  id        String     @id @default(cuid())
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String
+  phase     PhotoPhase
+  /// Stage the photo documents (e.g. "fabrication", "delivery").
+  stage     StageId
+  dataUrl   String     @db.Text
+  caption   String     @default("")
+  takenAt   DateTime
+  createdAt DateTime   @default(now())
+
+  @@index([projectId])
+}
