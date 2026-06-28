@@ -10,7 +10,8 @@
 import type { BoardCard, BoardConfig, MCardBadge, MCardTone } from "@ronin-dojo/ui-kit"
 import type { Item, Priority } from "./ledger-parse"
 
-const LOOP_BOARD_CONFIG_ID = "ronin-loop-board"
+/** The single board config id — also the `configId` partition key for `KanbanCard` rows (Phase B). */
+export const LOOP_BOARD_CONFIG_ID = "ronin-loop-board"
 
 /**
  * Workflow axis (not ledger columns): cards flow Backlog → In Progress → Blocked → Done.

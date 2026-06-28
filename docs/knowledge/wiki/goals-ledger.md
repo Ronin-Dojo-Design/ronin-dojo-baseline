@@ -69,11 +69,16 @@ aggregator reads it with no new parser logic.
 
 ### G-003 — Loop-of-Loops P3 Phase B (editable, DB-backed loop-board)
 
-- **Status:** open — P2
+- **Status:** landed — P2 (SESSION_0461)
 - **Objective:** make `/app/loop-board` editable — a `KanbanCard` model + drag/add persistence — and
   **collapse the localStorage `AdminTaskBoard` into it** as a card *source* (one shared board).
 - **Lane:** governance tooling. **Depends on:** G-002 (the table lands on BBL's own DB, not the shared one).
 - **Why:** closes the Loop-of-Loops loop — sessions move cards; the board IS the live backlog.
+- **Progress:** **LANDED (SESSION_0461)** — `KanbanCard` model on BBL's `ronindojo_prodsnap` (migration
+  `20260628000000_add_kanban_card`); Prisma `BoardStore` (upsert-only save) + insert-only ledger importer +
+  one-time localStorage→DB task migration; `AdminTaskBoard` retired (`/admin/task-board`→redirect, engine
+  deleted). Anti-drift discipline → learning record 0004. Verified: data-layer proof 11/11 (anti-drift +
+  anti-race) + Playwright 2/2 + `next build`.
 
 ### G-004 — BBLApp feature adaptation (N1 + N2)
 

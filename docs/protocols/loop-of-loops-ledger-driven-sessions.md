@@ -129,10 +129,13 @@ ledger-scan step + `scripts/ledger-backlog.ts`). **P3 — Phase A landed SESSION
 admin-gated, mobile-first **read projection** at `/app/loop-board` ([`loop-board`](../knowledge/wiki/files/loop-board.md))
 renders the open ledger items as cards on the shared `AdminKanban` kernel, read **live from public
 `main`** (so it's never stale w.r.t. docs-only ledger commits). This realizes the *visibility* half of
-P3 with **zero schema** — Brian + Tony see the same backlog. The **editable, DB-backed** half (a
-`KanbanCard` model + the bow-out sweep writing rows + `AdminTaskBoard` consolidation) is **Phase B,
-deferred to the DB-separation lane** so its table lands on BBL's own DB rather than the about-to-be-split
-shared one. Per Giddy's original risk note, the P1/P2 loop calibrated the bundling heuristic over
+P3 with **zero schema** — Brian + Tony see the same backlog. **P3 — Phase B landed SESSION_0461:** the
+board is now **editable + DB-backed** — a `KanbanCard` model on BBL's own DB (ADR 0038 Phase 1) is the
+single source of truth; the live-ledger projection is demoted to a one-way **insert-only importer** (new
+items auto-add, edits never reverted), and the `AdminTaskBoard` is **retired/consolidated** into it (one
+board, one engine; localStorage tasks migrated). Sessions now *move cards* — the board IS the live backlog.
+Anti-drift discipline: learning record [0004](../learning/ddd/learning-records/0004-projection-to-stored-table-without-drift.md).
+Per Giddy's original risk note, the P1/P2 loop calibrated the bundling heuristic over
 2–3 sessions before this projection shipped (automating a bad bundling rule is worse than hand-picking).
 
 ## Cross-references

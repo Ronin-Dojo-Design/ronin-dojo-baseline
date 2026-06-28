@@ -4136,3 +4136,54 @@ model BblEmailCapture {
 
   @@index([brand, createdAt])
 }
+
+/// Origin of a `KanbanCard` — which importer (or the operator) created it. `ledger` = projected
+/// from a governance ledger item by the insert-only importer; `task` = migrated once from the
+/// retired localStorage AdminTaskBoard; `manual` = created on the board by an operator (kernel
+/// quick-add / intake). This is a PERSISTENCE concern, set at create time and never mutated — it is
+/// distinct from the kernel `BoardCard.source` (the lead intake channel: web/manual/email).
+enum KanbanCardSource {
+  ledger
+  task
+  manual
+}
+
+/// Loop-board Phase B (G-003): the editable, DB-backed persistence tier for the shared AdminKanban
+/// kernel (PWCC-007), living on BBL's own DB (ADR 0038 Phase 1). ONE source of truth: this table owns
+/// card state; the live-ledger projection is a one-way, insert-only importer keyed by
+/// `(configId, source, sourceRef)` that only ever ADDS missing cards — it never updates or deletes, so
+/// operator edits (stage/title/order) are sacred and the projection can't cause drift (learning 0004).
+/// `id` is always app-supplied (stable `CODE:id` for ledger, `task:<id>` for migrated tasks, kernel
+/// `c_<rand>` for manual) — never DB-defaulted — so the importer's `skipDuplicates` is idempotent.
+// @added   migration 20260628_add_kanban_card (2026-06-28)
+// @why     Editable + persistent loop-board (G-003); collapses the localStorage AdminTaskBoard into one board/one engine
+// @wired   apps/web/server/loop-board/board-store.ts, apps/web/lib/loop-board/board-store-client.ts, apps/web/app/app/loop-board/page.tsx
+model KanbanCard {
+  id        String           @id
+  configId  String
+  stage     String
+  /// Intra-column position. Stored for a future explicit-reorder feature; the current kernel sorts a
+  /// column by `updatedAt` desc, so this is not yet the render key (set on save = index within stage).
+  order     Int              @default(0)
+  source    KanbanCardSource @default(manual)
+  /// Stable external key for the importer's idempotent upsert (e.g. `GL:G-003`, a task id). Null for
+  /// manual cards — Postgres treats NULLs as distinct, so manual cards never collide on the unique.
+  sourceRef String?
+  title     String
+  status    String?
+  lane      String?
+  owner     String?
+  /// ISO date string (the kernel treats `due` as an opaque display string, not a timestamp).
+  due       String?
+  nextStep  String?
+  value     Int?
+  /// `MCardBadge[]` passthrough (ledger code + priority badges); kept as JSON — pure presentation.
+  badges    Json?
+  /// Open attribute bag the kernel reads for `requires` guards (domain-agnostic).
+  fields    Json?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([configId, source, sourceRef])
+  @@index([configId, stage, order])
+}

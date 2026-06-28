@@ -5,27 +5,35 @@ type: file
 status: active
 lifecycle: MVP_LIVE
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 author: Brian + claude-session-0458
-last_agent: claude-session-0458
+last_agent: claude-session-0461
 pairs_with:
 
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/knowledge/wiki/files/admin-kanban-board.md
   - docs/knowledge/wiki/files/bbl-admin-task-board.md
+  - docs/learning/ddd/learning-records/0004-projection-to-stored-table-without-drift.md
 backlinks:
 
   - docs/knowledge/wiki/index.md
 wiring:
 
+  - "apps/web/prisma/schema.prisma — KanbanCard model + KanbanCardSource enum (Phase B; migration 20260628000000_add_kanban_card)"
   - "apps/web/lib/loop-board/ledger-parse.ts — pure content→Item[] aggregator (shared with the bow-in CLI scripts/ledger-backlog.ts)"
   - "apps/web/lib/loop-board/fetch-ledgers.ts — server: fetch the 9 ledgers from public main (raw.githubusercontent), revalidate ~60s"
-  - "apps/web/lib/loop-board/board-config.ts — LOOP_BOARD BoardConfig (workflow stages) + itemToBoardCard mapper"
+  - "apps/web/lib/loop-board/board-config.ts — LOOP_BOARD BoardConfig + LOOP_BOARD_CONFIG_ID + itemToBoardCard mapper"
   - "apps/web/lib/loop-board/health.ts — backlog health strip (counts by priority + ledger)"
-  - "apps/web/app/app/loop-board/page.tsx — server projection page (force-dynamic)"
-  - "apps/web/app/app/loop-board/_components/loop-board.tsx — client: health strip + <AdminKanban readOnly>"
+  - "apps/web/lib/loop-board/parse-legacy-tasks.ts — pure parser for the retired bbl_admin_taskboard_v1 localStorage payload"
+  - "apps/web/lib/loop-board/board-store-client.ts — createServerActionBoardStore() = the {load,save} Prisma BoardStore adapter"
+  - "apps/web/server/loop-board/board-store.ts — \"use server\" loadBoard / saveBoard (upsert-only) / importTasks (gated loop-board.manage)"
+  - "apps/web/server/loop-board/sync.ts — syncLedgersForConfig: insert-only ledger importer (createMany skipDuplicates)"
+  - "apps/web/server/loop-board/map-card.ts — pure KanbanCard↔BoardCard mappers"
+  - "apps/web/app/app/loop-board/page.tsx — server page: syncLedgers (import) → editable board + health (force-dynamic)"
+  - "apps/web/app/app/loop-board/_components/loop-board.tsx — client: health strip + <AdminKanban> (editable) + one-time task migration"
   - "apps/web/app/app/loop-board/layout.tsx — requirePermission(loop-board.manage) gate"
-  - "packages/ui-kit/src/kanban/admin-kanban.tsx — PWCC-007 kernel (readOnly + badges + mobile carousel)"
+  - "apps/web/app/admin/task-board/page.tsx — RETIRED → redirect to /app/loop-board"
+  - "packages/ui-kit/src/kanban/admin-kanban.tsx — PWCC-007 kernel (config + BoardStore port + carousel)"
 tags: [admin, loop-of-loops, ledgers, kanban, projection, governance, spec, flow, ui]
 ---
 
@@ -38,10 +46,14 @@ into the open governance backlog. It **projects** the 9 governance ledgers (FS �
 TFF · INC · RISK · TD) — read **live from the public `main` branch** at request time — onto the
 shared `AdminKanban` kernel (PWCC-007) as **read-only** cards on a workflow axis. This is the
 Loop-of-Loops **P3** target ([loop-of-loops-ledger-driven-sessions](../../../protocols/loop-of-loops-ledger-driven-sessions.md)).
-**One rule:** the ledgers stay the source of truth — the board reads `main`, never a bundled/DB
-copy, so docs-only ledger commits (which skip the Vercel prod build via `ignoreCommand`) still show.
-**Phase A = read projection (shipped, zero schema).** Phase B (editable, DB-backed, + AdminTaskBoard
-consolidation) is **deferred to the DB-separation lane** so its `KanbanCard` lands on BBL's own DB.
+**Phase B (SESSION_0461) makes it editable + DB-backed.** A `KanbanCard` model on BBL's own DB
+(ADR 0038 Phase 1) is now the **single source of truth**; the live-ledger projection is demoted to a
+**one-way, insert-only importer** that auto-adds new backlog items on each load but never overwrites an
+edit (drag/add/done persist). The Todoist `AdminTaskBoard` is **retired** — `/admin/task-board` redirects
+here, and the operator's per-browser localStorage tasks migrate into `KanbanCard` once (one board, one
+engine). See learning record [0004](../../../learning/ddd/learning-records/0004-projection-to-stored-table-without-drift.md)
+for the anti-drift discipline (insert-only importer + upsert-only save). The health strip still reads the
+live `main` ledgers (one fetch, reused) so the backlog totals never go stale.
 
 ## Low-fi wireframe — mobile carousel (390px)
 

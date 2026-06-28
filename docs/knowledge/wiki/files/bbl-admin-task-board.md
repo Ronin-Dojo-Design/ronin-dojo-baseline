@@ -1,14 +1,14 @@
 ---
-title: "AdminTaskBoard (BBL operator task board — Todoist model)"
+title: "AdminTaskBoard (BBL operator task board — Todoist model) — RETIRED"
 slug: bbl-admin-task-board
 type: file
-status: active
-lifecycle: PLANNED
+status: deprecated
+lifecycle: RETIRED
 pwcc: PWCC-001
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-28
 author: Brian + Petey/Cody/Desi
-last_agent: claude-session-0428
+last_agent: claude-session-0461
 pairs_with:
 
   - docs/knowledge/wiki/component-design-system.md
@@ -36,6 +36,12 @@ tags: [admin, task-board, todoist, bbl, spec, flow, ui]
 ---
 
 <!-- LIGHTWEIGHT spec. Value = the wireframes + wiring map + status taxonomy + JSON schema, not prose. -->
+
+> **RETIRED (SESSION_0461, G-003).** This localStorage Todoist board was collapsed into the unified,
+> DB-backed [Loop Board](loop-board.md) — one board, one engine. `/admin/task-board` now redirects to
+> `/app/loop-board`; the `lib/task-board` engine + Todoist renderer are deleted; the operator's per-browser
+> `bbl_admin_taskboard_v1` tasks migrate once into `KanbanCard` (source=`task`). Operator task management
+> now happens on the loop-board via the kernel's quick-add/intake. Kept for history; do not build against it.
 
 # AdminTaskBoard (BBL operator task board)
 
