@@ -1,10 +1,10 @@
 ---
 title: "SESSION 0459 — Per-product DB separation (ADR 0038) Phase 1: Mammoth DB + isolation proof"
 slug: session-0459
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 last_agent: claude-session-0459
 sprint: S46
 pairs_with:
@@ -276,21 +276,70 @@ Sequential: TASK_01 → TASK_02 → TASK_03 (single coherent slice; no sub-agent
 | `mammoth_dev` table list | 10 CRM tables + `_prisma_migrations` |
 | `git diff --quiet bun.lock` (root) | clean — root lockfile untouched by standalone install |
 | `bunx prisma migrate status` | "Database schema is up to date!" after bun reinstall |
+| `/fallow-fix-loop` on the diff (`fallow audit --changed-since HEAD~1 --gate new-only`) | **complexity 0 · duplication 0 · 0 new dead-code** — "✓ No issues in 21 changed files." 2 inherited apps/web dep findings (`react-email` unused, `react-dom` test-only) reported, not adopted. No app logic in the diff → nothing to fix |
 
-## Next session
+## Next session — parallel lanes (DB separation now enables this)
 
-### Goal
+With each product on its own DB + dir, **multiple sessions can run in parallel windows** without
+colliding. The lanes below are **file- and DB-disjoint** — run one per window. Pick distinct SESSION
+numbers up front (0460 / 0461 / 0462) to avoid the SESSION-collision trap (see
+`[[pr-loop-first-dogfood-session-collision]]`).
 
-Phase 2 of ADR 0038 (operator-gated) OR a smaller fast-follow. Phase 2 = wire the Mammoth app off
-localStorage onto Prisma + provision Mammoth's Neon DB at SHIP, then unblock loop-board Phase B (G-003)
-on BBL's own DB.
+**Parallel-session hygiene (read before opening windows):**
 
-### First task
+- **Disjoint by construction:** Lane M = `clients/mammoth-build-crm/` + `mammoth_dev`; Lane B =
+  `apps/web/` + `ronindojo_prodsnap`; Lane P = `docs/` + `.github/` + `scripts/` (no DB). No two lanes
+  touch the same code dir or DB.
+- **Only shared collision surface = a few index docs** (`docs/knowledge/wiki/index.md`,
+  `goals-ledger.md`, the SESSION table). Stagger the bow-out pushes, or rebase the second push — these are
+  trivial merges, not logic conflicts.
+- **Two BBL lanes at once?** Only with `git worktree` (separate working copies) — don't run two windows
+  editing `apps/web` in the same checkout. Lane M + Lane B + Lane P in one checkout is fine (disjoint dirs).
+- Each window runs its own `/bow-in`; default DB per lane (Mammoth: set `DATABASE_URL=…mammoth_dev`).
 
-If Phase 2: build the Mammoth Prisma data layer (a `lib/db.ts` driver-adapter client + server actions
-replacing `lib/store.ts`'s localStorage hooks), seed `mammoth_dev` from `lib/content.ts`, and verify the
-existing pipeline/forms against the DB. Defer the Neon provision to an operator-gated step. Otherwise pick
-a P1 ledger item (RISK security headers #2, or FI-002 lifecycle-email copy audit).
+### Lane M — Mammoth Phase 2 (brand: Mammoth · `clients/mammoth-build-crm` · `mammoth_dev`)
+
+- **Goal:** wire the Mammoth app **off localStorage onto its own Prisma DB** (ADR 0038 Phase 2, local
+  half; Neon provision stays SHIP-gated). Stories MB-DATA-002 (+ MB-DATA-003 auth later).
+- **First task:** add a `lib/db.ts` (Prisma client w/ a Postgres driver adapter — `engineType="client"`
+  needs an adapter at runtime), replace `lib/store.ts`'s `useLocalStorage` hooks with server actions over
+  the new models (Project/BuildPhoto/Contact/Activity…), seed `mammoth_dev` from `lib/content.ts`
+  (`SEED_PROJECTS`), and verify the pipeline board + new-job-order form + photo flow against the DB
+  (headless). Gate: `bunx prisma generate` + a real adapter dep install (show first).
+- **Inputs:** `clients/mammoth-build-crm/lib/{store,content,types,stages}.ts`, the new `prisma/schema.prisma`,
+  `per-app-db-separation` runbook.
+
+### Lane B — BBL loop-board Phase B (brand: BBL · `apps/web` · `ronindojo_prodsnap`)
+
+- **Goal:** make the loop-board **editable + DB-backed** (G-003) on **BBL's own DB** (now formalized by
+  ADR 0038 Phase 1 — no longer blocked on a throwaway table). A generic `prismaBoardStore` + `KanbanCard`
+  model so the board reads/writes the DB, and the Todoist `AdminTaskBoard` collapses into the same board.
+- **First task:** add a `KanbanCard` model to `apps/web/prisma/schema.prisma` (hand-author the migration
+  per `schema-migration` runbook), implement the `BoardStore` port against Prisma (the existing kernel
+  already has the slot — Phase A built the read projection), keep the live-ledger projection as the seed
+  source. Gate: schema migration on `ronindojo_prodsnap` (show first). **App-code lane → run `next build`
+  before push (fires CI + deploy).**
+- **Inputs:** `packages/ui-kit/src/kanban/*`, `lib/loop-board/*`, the loop-board file spec, learning 0004
+  (projections → stored table).
+
+### Lane P — Platform: per-product CI + scaffold script (brand-neutral · `docs/` + `.github/` + `scripts/`)
+
+- **Goal:** close the two follow-ups this session surfaced: (1) **per-product CI** so a `clients/*` change
+  stops firing BBL's apps/web Playwright ×3 matrix (today `clients/**` isn't path-ignored → wasteful), and
+  (2) a thin **`scripts/new-client-scaffold.ts`** for the mechanical half of `/new-client-recipe` (copy
+  template, stamp names, `createdb`) — show before running per `operator-script-caution`.
+- **First task:** add a `clients-ci.yml` (or scope `ci.yml`/`playwright.yml` paths) so client apps get
+  their own typecheck/lint without running BBL's e2e; document it in the new-client runbook. Docs/CI-only
+  → **free push** (no deploy). Safe to run alongside Lane M + Lane B.
+- **Inputs:** `.github/workflows/{ci,playwright}.yml`, `vercel.json` `ignoreCommand`, the new-client runbook.
+
+### Still held (not parallel lanes — operator-gated)
+
+- **FI-001 / N1 / N2** — Brian Truelson real send stays GATED on operator "send Brian now" + N1/N2 landing
+  (launch lane). N1 (verified combobox → onboarding wizard) is a BBL-window candidate but **collides with
+  Lane B** in `apps/web` — run it instead of Lane B, or in a separate worktree.
+- **Baseline data split + ~130 `getRequestBrand`/`Brand` vestige prune** — deferred sub-lane.
+- **Mammoth Neon provision** — Phase 2 cloud half, SHIP-gated.
 
 ## Review log
 
@@ -362,5 +411,5 @@ a P1 ledger item (RISK security headers #2, or FI-002 lifecycle-email copy audit
 | Review & Recommend | Next session goal written: yes (Phase 2 / ledger P1) |
 | Memory sweep | updated `[[separation-separate-dbs-per-product]]` (Phase 1 landed + standalone-bun + the `/new-client-recipe`) |
 | Next session unblock check | Phase 2 doable, operator-gated on Neon at SHIP; no hard blocker |
-| Git hygiene | branch `main`; single docs+client-scaffold push at close — hash reported at bow-out (see git log); standalone `bun.lock` added, `package-lock.json` removed; `.env`/`.generated`/`node_modules` ignored |
+| Git hygiene | branch `main`; close commit **`38ef00c1`** (`3b2d3dc2..38ef00c1`); standalone `bun.lock` added, `package-lock.json` removed; `.env`/`.generated`/`node_modules` ignored. NOTE: first commit went out with `status: in-progress` (flip to `closed` + this hash is a one-line follow-up docs push, operator-gated) |
 | Graphify update | ran before the close commit — **15429 nodes / 30302 edges / 2086 communities** (was 15334 / 30222 / 2060 at 0458) |
