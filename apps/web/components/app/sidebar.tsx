@@ -24,6 +24,7 @@ import {
   BarChart3Icon,
   ShieldCheckIcon,
   SparklesIcon,
+  SquareKanbanIcon,
   SwordsIcon,
   TrophyIcon,
   UserIcon,
@@ -143,6 +144,12 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     },
 
     undefined,
+    {
+      title: "Loop Board",
+      href: "/app/loop-board",
+      prefix: <SquareKanbanIcon />,
+      permission: APP_AREA_PERMISSIONS.loopBoard,
+    },
     {
       title: "Lineage",
       href: "/app/lineage",

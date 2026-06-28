@@ -9,6 +9,8 @@
  * interprets — not as bespoke per-project branches inside the board component.
  */
 
+import type { MCardBadge } from "../m-card/m-card.types";
+
 /** Lifecycle taxonomy shared with the AdminTaskBoard / m-card (PWCC-001/002). */
 export type LifecycleStatus = "active" | "inactive" | "deprecated" | "broken";
 
@@ -97,6 +99,12 @@ export interface BoardCard {
   lostReason?: string;
   /** Open generic attribute bag the engine reads for `requires` guards. */
   fields?: Record<string, unknown>;
+  /**
+   * Extra presentation badges appended to the card's badge row (after any at-risk /
+   * order-guard badge the engine computes). A generic passthrough so a consumer can
+   * surface domain tags (e.g. a ledger code + priority) without the kernel knowing them.
+   */
+  badges?: MCardBadge[];
   /** Source the lead came in through (web/manual/email), stamped at intake. */
   source?: string;
   createdAt: string;

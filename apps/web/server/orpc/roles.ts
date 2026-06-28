@@ -120,6 +120,7 @@ export const APP_AREA_PERMISSIONS = {
   invites: "invites.manage",
   leads: "leads.manage",
   lineage: "lineage.manage",
+  loopBoard: "loop-board.manage",
   media: "media.manage",
   memberships: "memberships.manage",
   merch: "merch.manage",

@@ -17,7 +17,7 @@
  * Theming is tokens only — no hex, no brand name. Dark/light inherited from the token layer.
  */
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MCard } from "../m-card/m-card";
 import type { MCardBadge, MCardTaskData } from "../m-card/m-card.types";
 import { sortColumn } from "./automations";
@@ -31,6 +31,12 @@ export interface AdminKanbanProps {
   seed?: BoardCard[];
   /** Injectable clock for deterministic tests/stories. */
   now?: () => number;
+  /**
+   * Read-only projection mode (default false). Suppresses every edit affordance —
+   * the intake form, per-column quick-add, card drag, and the move menu — so the
+   * board renders as a pure, non-mutating view (e.g. a ledger-status projection).
+   */
+  readOnly?: boolean;
 }
 
 const RISK_LABEL: Record<string, string> = {
@@ -55,6 +61,10 @@ function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
   }
   if (card.fields?.orderNumber) {
     badges.push({ label: `Order ${String(card.fields.orderNumber)}` });
+  }
+  // Generic passthrough badges (e.g. a ledger code + priority) ride after the computed ones.
+  if (card.badges?.length) {
+    badges.push(...card.badges);
   }
 
   const metaParts: string[] = [];
@@ -82,7 +92,7 @@ function formatValue(v: number): string {
   return v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`;
 }
 
-export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
+export function AdminKanban({ config, store, seed, now, readOnly = false }: AdminKanbanProps) {
   const board = useBoard({ config, store, seed, now });
   const [toast, setToast] = useState<string | null>(null);
   const [intakeOpen, setIntakeOpen] = useState(false);
@@ -121,12 +131,14 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
             {board.atRiskCount > 0 ? ` · ${board.atRiskCount} at risk` : ""}
           </p>
         </div>
-        <button type="button" style={primaryBtn} onClick={() => setIntakeOpen((v) => !v)}>
-          + New lead
-        </button>
+        {readOnly ? null : (
+          <button type="button" style={primaryBtn} onClick={() => setIntakeOpen((v) => !v)}>
+            + New lead
+          </button>
+        )}
       </header>
 
-      {intakeOpen ? (
+      {intakeOpen && !readOnly ? (
         <IntakeForm
           onSubmit={(input) => {
             const result = board.intake(input);
@@ -140,8 +152,9 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
         />
       ) : null}
 
-      <div style={columnsRow} role="list">
-        {columns.map(({ stage, cards }) => (
+      <BoardColumns
+        columns={columns}
+        renderColumn={(stage, cards) => (
           <Column
             key={stage.id}
             stage={stage}
@@ -150,12 +163,13 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
             flags={board.flags}
             stages={config.stages}
             hydrated={board.hydrated}
+            readOnly={readOnly}
             onDrop={(cardId) => handleDrop(cardId, stage.id)}
             onQuickAdd={(title) => board.quickAdd(stage.id, title)}
             onMenuMove={(cardId, to) => handleDrop(cardId, to)}
           />
-        ))}
-      </div>
+        )}
+      />
 
       {toast ? (
         <div role="alert" style={toastStyle}>
@@ -166,6 +180,118 @@ export function AdminKanban({ config, store, seed, now }: AdminKanbanProps) {
   );
 }
 
+/**
+ * BoardColumns — the mobile-first swipe carousel that hosts the stage columns.
+ *
+ * Generic + presentation-only (ADR 0033 D5): no project/brand concepts leak in. On a phone the
+ * columns are a snap-mandatory horizontal rail (one column + a peek of the next), navigable by
+ * swipe, by the tappable column pager (name + count), or by the prev/next arrows; edge-fade
+ * gradients signal more off-screen. On a wide desktop all columns sit side-by-side and the
+ * affordances quietly disable themselves (nothing to scroll). The same idiom as the BBL/TuffBuffs
+ * `CarouselRail` (snap-x mandatory, fixed item width, arrows-when-scrollable, edge fades).
+ */
+function BoardColumns({
+  columns,
+  renderColumn,
+}: {
+  columns: { stage: StageConfig; cards: BoardCard[] }[];
+  renderColumn: (stage: StageConfig, cards: BoardCard[]) => ReactNode;
+}) {
+  const railRef = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState(0);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const stepWidth = useCallback((rail: HTMLDivElement) => {
+    const first = rail.querySelector<HTMLElement>("[data-stage]");
+    return first ? first.getBoundingClientRect().width + COLUMN_GAP_PX : rail.clientWidth;
+  }, []);
+
+  const update = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    setCanLeft(rail.scrollLeft > 4);
+    setCanRight(rail.scrollLeft < max - 4);
+    const step = stepWidth(rail);
+    setActive(step > 0 ? Math.min(columns.length - 1, Math.round(rail.scrollLeft / step)) : 0);
+  }, [columns.length, stepWidth]);
+
+  useEffect(() => {
+    update();
+    const rail = railRef.current;
+    if (!rail) return;
+    rail.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      rail.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [update]);
+
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      const rail = railRef.current;
+      if (!rail) return;
+      rail.scrollTo({ left: index * stepWidth(rail), behavior: "smooth" });
+    },
+    [stepWidth],
+  );
+
+  return (
+    <div style={boardWrap}>
+      <div style={pagerRow}>
+        <div style={pagerChips} role="tablist" aria-label="Jump to column">
+          {columns.map(({ stage, cards }, index) => (
+            <button
+              key={stage.id}
+              type="button"
+              role="tab"
+              aria-selected={active === index}
+              style={active === index ? { ...pagerChip, ...pagerChipActive } : pagerChip}
+              onClick={() => scrollToIndex(index)}
+            >
+              {stage.name}
+              <span style={pagerCount}>{cards.length}</span>
+            </button>
+          ))}
+        </div>
+        <div style={pagerArrows}>
+          <button
+            type="button"
+            aria-label="Previous column"
+            disabled={!canLeft}
+            style={canLeft ? arrowBtn : { ...arrowBtn, ...arrowBtnDisabled }}
+            onClick={() => scrollToIndex(Math.max(0, active - 1))}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            aria-label="Next column"
+            disabled={!canRight}
+            style={canRight ? arrowBtn : { ...arrowBtn, ...arrowBtnDisabled }}
+            onClick={() => scrollToIndex(Math.min(columns.length - 1, active + 1))}
+          >
+            ›
+          </button>
+        </div>
+      </div>
+
+      <div style={railWrap}>
+        <div ref={railRef} className="mk-board-rail" style={railStyle} role="list">
+          {columns.map(({ stage, cards }) => renderColumn(stage, cards))}
+        </div>
+        {canLeft ? <div aria-hidden style={fadeLeft} /> : null}
+        {canRight ? <div aria-hidden style={fadeRight} /> : null}
+      </div>
+
+      {/* Hide the rail scrollbar (webkit) — Firefox/IE use the inline scrollbarWidth. */}
+      <style>{".mk-board-rail::-webkit-scrollbar{display:none}"}</style>
+    </div>
+  );
+}
+
 function Column({
   stage,
   cards,
@@ -173,6 +299,7 @@ function Column({
   flags,
   stages,
   hydrated,
+  readOnly,
   onDrop,
   onQuickAdd,
   onMenuMove,
@@ -183,6 +310,7 @@ function Column({
   flags: Map<string, CardFlags>;
   stages: StageConfig[];
   hydrated: boolean;
+  readOnly: boolean;
   onDrop: (cardId: string) => void;
   onQuickAdd: (title: string) => void;
   onMenuMove: (cardId: string, toStageId: string) => void;
@@ -196,19 +324,27 @@ function Column({
       role="listitem"
       data-stage={stage.id}
       style={{ ...columnStyle, ...(over ? columnOver : null) }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        setOver(true);
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setOver(false);
-        const id = e.dataTransfer.getData("text/card-id");
-        if (id) {
-          onDrop(id);
-        }
-      }}
+      onDragOver={
+        readOnly
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              setOver(true);
+            }
+      }
+      onDragLeave={readOnly ? undefined : () => setOver(false)}
+      onDrop={
+        readOnly
+          ? undefined
+          : (e) => {
+              e.preventDefault();
+              setOver(false);
+              const id = e.dataTransfer.getData("text/card-id");
+              if (id) {
+                onDrop(id);
+              }
+            }
+      }
     >
       <div style={columnHead}>
         <span style={columnTitle}>{stage.name}</span>
@@ -225,20 +361,24 @@ function Column({
           cards.map((card) => (
             <div
               key={card.id}
-              draggable
-              onDragStart={(e) => e.dataTransfer.setData("text/card-id", card.id)}
-              style={{ cursor: "grab" }}
+              draggable={!readOnly}
+              onDragStart={
+                readOnly ? undefined : (e) => e.dataTransfer.setData("text/card-id", card.id)
+              }
+              style={readOnly ? undefined : { cursor: "grab" }}
             >
               <MCard
                 kind={cardKind}
                 data={cardToMData(card, flags.get(card.id))}
                 actions={
-                  <MoveMenu
-                    cardId={card.id}
-                    currentStage={stage.id}
-                    stages={stages}
-                    onMove={onMenuMove}
-                  />
+                  readOnly ? undefined : (
+                    <MoveMenu
+                      cardId={card.id}
+                      currentStage={stage.id}
+                      stages={stages}
+                      onMove={onMenuMove}
+                    />
+                  )
                 }
               />
             </div>
@@ -246,7 +386,7 @@ function Column({
         )}
       </div>
 
-      {!stage.terminal ? (
+      {!stage.terminal && !readOnly ? (
         adding ? (
           <form
             onSubmit={(e) => {
@@ -392,7 +532,10 @@ function IntakeForm({
 
 /* ---- token-only styles (no hex except graceful CSS-var fallbacks) ---- */
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
+
+/** Inter-column gap in px — kept in sync with `railStyle.gap` for the carousel step math. */
+const COLUMN_GAP_PX = 12;
 
 const shell: CSSProperties = {
   color: "var(--text-primary, inherit)",
@@ -417,13 +560,85 @@ const subtle: CSSProperties = {
   color: "var(--text-muted, #9ba1a8)",
   marginTop: "0.125rem",
 };
-const columnsRow: CSSProperties = {
+const boardWrap: CSSProperties = { marginTop: "1rem" };
+const pagerRow: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: "0.5rem",
+  marginBottom: "0.625rem",
+};
+const pagerChips: CSSProperties = {
+  display: "flex",
+  gap: "0.375rem",
+  overflowX: "auto",
+  flex: "1 1 auto",
+  scrollbarWidth: "none",
+  paddingBottom: "0.125rem",
+};
+const pagerChip: CSSProperties = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.375rem",
+  flex: "0 0 auto",
+  borderRadius: "999px",
+  border: "1px solid var(--border, #2a2e33)",
+  background: "color-mix(in srgb, var(--surface, #16181b) 60%, transparent)",
+  color: "var(--text-muted, #9ba1a8)",
+  padding: "0.25rem 0.625rem",
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  whiteSpace: "nowrap",
+};
+const pagerChipActive: CSSProperties = {
+  background: "var(--accent, #6366f1)",
+  // Full `border` shorthand (not `borderColor`) so it doesn't mix with the base
+  // chip's shorthand on the active rerender — React warns on shorthand/longhand mixing.
+  border: "1px solid var(--accent, #6366f1)",
+  color: "var(--accent-foreground, #0e0f11)",
+};
+const pagerCount: CSSProperties = { fontSize: "0.6875rem", opacity: 0.85 };
+const pagerArrows: CSSProperties = { display: "flex", gap: "0.25rem", flex: "0 0 auto" };
+const arrowBtn: CSSProperties = {
+  width: "1.75rem",
+  height: "1.75rem",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "999px",
+  border: "1px solid var(--border, #2a2e33)",
+  background: "var(--surface, #16181b)",
+  color: "var(--text-primary, inherit)",
+  fontSize: "1rem",
+  lineHeight: 1,
+  cursor: "pointer",
+};
+const arrowBtnDisabled: CSSProperties = { opacity: 0.35, cursor: "default" };
+const railWrap: CSSProperties = { position: "relative" };
+const railStyle: CSSProperties = {
   display: "flex",
   gap: "0.75rem",
   overflowX: "auto",
   paddingBottom: "1rem",
-  marginTop: "1rem",
-  scrollSnapType: "x proximity",
+  scrollSnapType: "x mandatory",
+  scrollbarWidth: "none",
+};
+const fadeEdge: CSSProperties = {
+  position: "absolute",
+  top: 0,
+  bottom: "1rem",
+  width: "1.5rem",
+  pointerEvents: "none",
+};
+const fadeLeft: CSSProperties = {
+  ...fadeEdge,
+  left: 0,
+  background: "linear-gradient(to right, var(--surface, #16181b), transparent)",
+};
+const fadeRight: CSSProperties = {
+  ...fadeEdge,
+  right: 0,
+  background: "linear-gradient(to left, var(--surface, #16181b), transparent)",
 };
 const columnStyle: CSSProperties = {
   width: "min(86vw, 18rem)",
@@ -435,7 +650,9 @@ const columnStyle: CSSProperties = {
   border: "1px solid var(--border, #2a2e33)",
 };
 const columnOver: CSSProperties = {
-  borderColor: "var(--accent, #6366f1)",
+  // Full `border` shorthand (not `borderColor`) to avoid mixing with `columnStyle`'s
+  // shorthand on the drag-over rerender (React shorthand/longhand warning).
+  border: "1px solid var(--accent, #6366f1)",
   background: "color-mix(in srgb, var(--accent, #6366f1) 8%, transparent)",
 };
 const columnHead: CSSProperties = {
