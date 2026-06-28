@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-27
-last_agent: claude-session-0457
+updated: 2026-06-28
+last_agent: claude-session-0459
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -133,6 +133,7 @@ Before committing:
 
 1. **Branch check**: Verify you're on the expected branch (`git branch --show-current`). If you should be on a feature branch but you're on `main`, stop and discuss with the user.
 2. **Worktree check**: Run `git worktree list`. If a session worktree is clean and its branch is already merged into the active branch, remove the worktree and delete the local branch. If it still has unique commits or uncommitted files, record the branch/path and leave it in place.
+   - **Parallel-dispatch sessions (own worktree):** if this session ran in its own worktree (e.g. `../ronin-NNNN` on branch `session-NNNN-<lane>`, as set up by `/new-client-recipe`-style parallel dispatch), the close MUST self-clean once its branch is merged to `main`: `git worktree remove ../ronin-NNNN` then `git branch -d session-NNNN-<lane>`. Leaving stale worktrees/branches is the parallel-session equivalent of an unclean close.
 3. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
 4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
 5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
