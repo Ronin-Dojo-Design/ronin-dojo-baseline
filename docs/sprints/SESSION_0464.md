@@ -80,9 +80,82 @@ Neon staging DB so the dir is a deployable Vercel project. Actual provisioning i
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0464_TASK_01 | open | Mammoth Better Auth instance + auth tables + migration |
-| SESSION_0464_TASK_02 | open | gate every action (session + owner scope) — closes task_9393f59c |
-| SESSION_0464_TASK_03 | open | staging vercel.json + Neon env wiring |
+| SESSION_0464_TASK_01 | done (`2de398f4`) | Mammoth Better Auth instance + auth tables + hand-authored migration |
+| SESSION_0464_TASK_02 | done (`09ae6297`) | gate every action (session + owner scope) — closes task_9393f59c |
+| SESSION_0464_TASK_03 | done (`71bd57e2`) | staging vercel.json + Neon env wiring |
+
+## What was built
+
+**TASK_01 — Mammoth Better Auth (`2de398f4`).** Mammoth owns its OWN auth tables in
+`mammoth_dev` (no shared identity across products, ADR 0038 D5):
+`User`/`Session`/`Account`/`Verification` + a `MammothRole` enum (`owner`/`member`),
+matching the Dirstarter/apps-web Better Auth model shapes minus BBL's lineage satellites.
+`lib/auth.ts` is Mammoth's own Better Auth instance — **email+password** + the `admin()`
+role plugin (NO magic-link/social: Mammoth has no Resend/OAuth infra; conservative call,
+add later if needed). `app/api/auth/[...all]/route.ts` mounts the API surface like apps/web.
+`TeamMember` gained an optional `userId` link (auth `User` → CRM owner). `better-auth@^1.6.16`
+added to the standalone bun project. **Migration hand-authored** (`20260628130000_mammoth_better_auth`),
+NOT auto-diffed — purely additive (new tables + `TeamMember.userId` NULL default); validated
+byte-equivalent to Prisma's own offline `migrate diff`.
+
+**TASK_02 — owner gate on every action (`09ae6297`).** Every export in `lib/actions.ts` now
+runs through `requireOwner()`: no session → `UnauthorizedError`; the caller's `User` resolves
+to its `TeamMember` (auto-provisioned, or adopts a same-email imported owner row, on first
+action). `listProjects` is owner-scoped (caller's projects + claimable unowned legacy rows);
+every mutation (`patch`/`setStage`/`advance`/`addPhoto`/`removePhoto`/`remove`/`reconcileBoard`)
+pre-checks ownership and refuses another owner's row (`ForbiddenError`) — **closes the IDOR
+surface (`task_9393f59c`)**. An unowned legacy row is claimed to the caller on first mutation.
+The optional `stage='complete' ⇒ orderConfirmed` DB CHECK was **deliberately not added** — Prisma
+7 can't model CHECK constraints, so a raw one reads as perpetual schema drift on every
+migrate/reset, and `advanceProject` already enforces the rule server-side.
+
+**TASK_03 — staging deploy config (`71bd57e2`).** `clients/mammoth-build-crm/vercel.json` makes
+the dir a deployable per-product project (standalone-bun install/build, no `cd ../..`; an
+`ignoreCommand` scoping deploys to this dir per the ADR-0034 deploy-unit pattern).
+`prisma.config.ts` grew the Neon pooled/direct split (mirrors apps/web — Migrate runs on
+`DIRECT_URL`, runtime keeps pooled `DATABASE_URL`) + the seed hook. `.env.example` documents
+the full staging env contract (`DATABASE_URL` pooled, `DIRECT_URL`, `BETTER_AUTH_SECRET`,
+`BETTER_AUTH_URL`) with no committed secrets. **Config only — nothing provisioned.**
+
+## Evidence
+
+| Check | Result |
+| --- | --- |
+| `bunx prisma generate` (after schema + config changes) | ✅ Prisma Client 7.8.0 generated |
+| Hand-authored auth migration vs Prisma's offline `migrate diff` | ✅ byte-equivalent superset (same tables/cols/indexes/FKs/constraint names) |
+| `bun run typecheck` (final, post-all-tasks) | ✅ clean (tsc --noEmit, exit 0) |
+| `bun run build` (`next build` — catches use-server + Prisma-in-browser + runtime config) | ✅ green; `/api/auth/[...all]` route compiles + 5 routes built |
+| `next build` caught a real bug | ✅ `BetterAuthError: Invalid admin roles: owner` — fixed by registering owner/member via `createAccessControl` |
+| All `lib/actions.ts` exports are async fns (`"use server"` rule) | ✅ 9 exports, all async; gate helpers are non-exported locals |
+
+## Operator-gated handoffs (NOT done — require operator action)
+
+1. **Provision Mammoth's Neon staging DB** — create the Neon project/branch (`mammoth_staging`),
+   run `prisma migrate deploy` against it (DIRECT_URL). The schema + migrations are ready.
+2. **Create the Mammoth Vercel project** — point Root Directory at `clients/mammoth-build-crm`;
+   `vercel.json` supplies install/build/ignore. Set env vars: `DATABASE_URL` (pooled),
+   `DIRECT_URL`, `BETTER_AUTH_SECRET` (generate fresh), `BETTER_AUTH_URL` (the staging origin).
+3. **Attach a `*.vercel.app` / temporary subdomain** for the demoable staging URL (pre the
+   `mammothbuild.com` handoff from Michael Flores).
+4. **Push / PR / merge to `main`** — three commits on `session-0464-mammoth` await the operator's
+   "go" (explicit-push-authorization). No push performed this session.
+5. **(Optional) Provision an initial `owner` login** — once the DB is up, create the first
+   Better Auth user (email+password) and set its `role = 'owner'` so the pipeline is reachable.
+
+## Decisions made (autonomous, documented)
+
+- **Auth strategy = email+password + `admin()` role plugin**, no magic-link/social (no email/OAuth
+  infra in Mammoth). The cleanest correct per-product identity for an internal CRM.
+- **`MammothRole` enum = `owner`/`member`**, registered via `createAccessControl` so `admin()`'s
+  `adminRoles` validates (the `next build` fix).
+- **`TeamMember.userId` (optional, unique)** is the auth↔CRM bridge; ownership scoping keys off
+  `Project.ownerId`. Unowned legacy/seed rows are readable + claim-on-first-mutation, so the demo
+  seed survives the gate while IDOR (cross-owner access) is fully closed.
+- **No raw `stage='complete'` CHECK constraint** (optional item declined — schema-drift cost vs.
+  redundant server-side rule).
+- **Known minor edge:** two concurrent first-actions from a brand-new login could race the
+  `TeamMember` create (the `@unique` on `userId`/`email` throws the loser, surfaced as a handled
+  error). Acceptable for an internal-tool MVP; revisit with an upsert if it ever bites.
 
 ## Next session
 
