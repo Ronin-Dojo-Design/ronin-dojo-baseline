@@ -21,6 +21,7 @@
     "@prisma/client": "^7.8.0",
     "@ronin-dojo/ui-kit": "file:../../packages/ui-kit",
     "better-auth": "^1.6.16",
+    "dotenv": "^17.4.2",
     "next": "^16.0.0",
     "pg": "^8.22.0",
     "react": "^19.0.0",
