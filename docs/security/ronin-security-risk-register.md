@@ -4,8 +4,8 @@ slug: ronin-security-risk-register
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-06-27
-last_agent: claude-session-0453
+updated: 2026-06-28
+last_agent: claude-session-0465
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -39,12 +39,12 @@ The most important theme is **documented controls must become enforced, tested, 
 | Priority | Risk | Severity | Current state | Target fix | Owner lane |
 | --- | --- | --- | --- | --- | --- |
 | 1 | ~~Missing runtime brand-scope DB enforcement~~ — **superseded (single-brand collapse, ADR 0034)** | ~~Critical~~ → N/A | Single brand (BBL); no second tenant for rows to leak into, so the multi-tenant data-isolation gap is moot. `db.ts` still wires only `uniqueSlugsExtension` (correct for single-brand). The host→brand **origin** gate in `brand-context.ts` stays KEEP-FOREVER. | None — shelved. Re-activate the brand-scope extension only if a second product tenant is introduced. | Security/platform |
-| 2 | No global security headers / CSP gate | Critical | No obvious launch-enforced CSP/security header policy recorded in config docs | Add report-only CSP, then enforced CSP; add HSTS, frame, referrer, permissions, content-type headers | Web/platform |
-| 3 | Admin route reliance risk | High | `proxy.ts` checks session cookie for `/admin`, `/dashboard`, `/me` UX redirects; server-side admin/org checks still must be proven per route/action | Add mandatory admin layout checks and audit route/action/query coverage | Admin/auth |
-| 4 | Optional production secrets | High | Stripe, Redis, S3, Printful, Resend, Plausible, AI keys are optional in env schema | Add feature-gated production env requirements | Platform/devops |
-| 5 | Rate limiter fail-open for sensitive actions | High | `isRateLimited()` returns false when Redis is unavailable or limiter errors | Classify buckets by fail-open vs fail-closed; fail closed for auth/OTP/invite/claims/payment/admin | Auth/platform |
-| 6 | Private media boundary | High | Schema has `Media.isPublic`; plan says private media needs private storage/signed URLs | Separate prefixes/buckets and add signed URL authorization tests | Media/storage |
-| 7 | PII/payment log leakage | High | Existing plan recognizes log risk; webhook/admin flows touch sensitive data | Add `safeLog()`/redaction helpers; ban raw request body logging | Observability |
+| 2 | ~~No global security headers / CSP gate~~ — **✅ MITIGATED (Report-Only CSP + enforced hardening headers shipped, SESSION_0465)** | ~~Critical~~ → Low (enforce-CSP follow-up) | `apps/web/config/security-headers.ts` (app-agnostic builder) wired into `next.config.ts` `headers()` for `/:path*`. ENFORCED now: X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, COOP same-origin, X-DNS-Prefetch-Control, + HSTS (prod-only). CSP ships **Report-Only** (`CSP_ENFORCE=1` promotes the same policy to enforcing). Verified live via `curl -I` (`/`, `/directory`, `/api` 404). 9 unit tests. | **Follow-up:** observe the Report-Only violation stream in prod, then (a) migrate inline `next-themes` + brand `<style>` + Next bootstrap to a per-request **nonce** (drop `'unsafe-inline'` from script/style) and (b) flip `CSP_ENFORCE=1`. | Web/platform |
+| 3 | Admin route reliance risk — **triaged confirmed-managed (SESSION_0465)** | High → Low | `proxy.ts` is a UX **cookie-presence** redirect only (its header comment says "redirect", not "authorize") — `/admin`/`/dashboard`/`/me`. The SESSION_0452 review already verified **no unauthenticated/non-admin path reaches an admin action or admin data** (server-side enforcement via `assertOrgAdminAccess` + per-action guards holds); only the known #11 cross-org super-user + the LOW `updateUserRole` self-lockout footgun remain. No code change needed this session. | Keep the AuditLog gate (#11) green; treat `assertOrgAdminAccess` as the single write boundary for new org-mutating actions; periodic route/action coverage audit. | Admin/auth |
+| 4 | Optional production secrets — **triaged, deferred (SESSION_0465)** | High | Stripe, Redis, S3, Printful, Resend, Plausible, AI keys are all `.optional()` in `env.ts`; no `PAYMENTS_ENABLED`-style feature-gate exists today, so a missing prod secret fails at first runtime use, not at build/deploy. | **Deferred (larger cross-cutting change):** add feature flags (`PAYMENTS_ENABLED` → requires `STRIPE_*`, etc.) enforced in `env.ts` so an enabled feature with a missing secret fails the build. Tracked here. | Platform/devops |
+| 5 | ~~Rate limiter fail-open for sensitive actions~~ — **✅ FIXED (SESSION_0465)** | ~~High~~ → N/A | `isRateLimited()` now fails **closed** for the public/abuse-prone/auth-adjacent buckets (`claim`, `invite`, `evidence_upload`, `teaser_signup`, `email_notify`, `submission`, `report`) when Redis is configured but `.limit()` errors; authenticated actor-keyed write buckets stay fail-open. No-Redis path (dev/CI) unchanged. Pure `shouldFailClosed()` predicate + 3 unit tests (`lib/rate-limiter.test.ts`). | **Residual:** Better Auth magic-link/OTP send still has no explicit `rateLimit` block in `lib/auth.ts` (#5 SESSION_0452 note) — bounded only by Better Auth's in-memory default. Add an explicit fail-closed `rateLimit` config there. | Auth/platform |
+| 6 | Private media boundary — **triaged, confirmed real + deferred (SESSION_0465)** | High | Re-confirmed (SESSION_0452): **no** media GET/proxy/signed-URL route exists; `Media.isPublic` filters public *payloads* but does not gate the object. Private cert PDFs / claim-evidence are world-readable by UUID URL (security-by-obscurity). | **Deferred (architectural):** signed-URL route OR private bucket/prefix (`private-media/`, `certificate-pdfs/`, `claim-evidence/`) + signed-URL authorization tests. Tracked here. | Media/storage |
+| 7 | PII/payment log leakage — **triaged, no live leak + deferred guardrail (SESSION_0465)** | High → Medium | Re-verified: **no** `console.log(session/body/parsedInput)` exists in `server/**` today (no live leak); the Stripe webhook logs no secret/body. The gap is the **absence of a guardrail** against the next one + `userId` logged cleartext. | **Deferred:** add a `safeLog()`/redaction helper + oxlint-ban bare `console.log` in `server/**`. Tracked here. | Observability |
 | 8 | Payment/access drift | Medium-high | Stripe webhook idempotency and refund/dispute logic exist; reconciliation must be operationalized | Nightly Stripe/internal entitlement drift audit + alerts/admin replay | Payments |
 | 9 | Dirstarter template model debt | Medium | Template/reference models still exist during learning phase | Delete or quarantine unused template models/routes before production cutover | Product/platform |
 | 10 | AI/MCP data leakage | Medium | AI/content tooling exists or is emerging | Add AI data safety policy, prompt redaction, tool audit, human approval gates | AI/content |
@@ -94,18 +94,46 @@ The most important theme is **documented controls must become enforced, tested, 
 > data. The first implementation PR should enforce brand predicates at the
 > database client boundary and test that missing predicates fail.
 
-### 2. Security headers and CSP
+### 2. Security headers and CSP — ✅ MITIGATED (SESSION_0465)
 
-A production security header baseline should include:
+> **2026-06-28, SESSION_0465 (RISK #2, P0).** Shipped `apps/web/config/security-headers.ts`
+> (an app-agnostic builder) wired into `next.config.ts` `headers()` at `source: "/:path*"`,
+> so the baseline applies to **every** route. The security posture lives **per-app** (ADR 0034
+> locked decision) — each new product app (`apps/baseline`, …) calls `buildSecurityHeadersConfig()`
+> from its own next config — **not** in root `vercel.json`.
+>
+> **Enforced now** (no app-breaking surface): `X-Content-Type-Options: nosniff`,
+> `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`,
+> `Permissions-Policy` (camera/mic/geo/topics off), `Cross-Origin-Opener-Policy: same-origin`,
+> `X-DNS-Prefetch-Control: on`, and `Strict-Transport-Security` (2y, includeSubDomains, preload —
+> **production only**).
+>
+> **CSP ships Report-Only first** (the register's "observe before enforce"). The policy string is
+> identical in Report-Only and enforcing modes; `CSP_ENFORCE=1` (or `true`) promotes it from
+> `Content-Security-Policy-Report-Only` to the enforcing `Content-Security-Policy` header — a
+> one-flag change, no code edit. Allowlist (verified SESSION_0465): img R2 (`**.r2.dev` /
+> `**.r2.cloudflarestorage.com`, matching `images.remotePatterns`) + `data:`/`blob:` + Google
+> favicons; `script-src`/`style-src` `'self' 'unsafe-inline'` (inline `next-themes` bootstrap +
+> inline brand `<style>` + Next bootstrap; dev also adds `'unsafe-eval'`); `connect-src 'self'`
+> (Plausible is same-origin via `withPlausibleProxy`; dev adds `ws:`/`wss:` for HMR);
+> `font-src 'self' data:` (`next/font/google` self-hosts at build); `frame-src` + `form-action`
+> Stripe Checkout/Billing (Checkout is a server-side full-page **redirect** today, not an iframe —
+> the origins are harmless + future-proof an embedded flow); `frame-ancestors 'none'`,
+> `base-uri 'self'`, `object-src 'none'`, `upgrade-insecure-requests` (prod).
+>
+> **Verified live** via `curl -I` on the dev server (`/`, `/directory`, `/api` 404) — all headers
+> present on every route; CSP correctly Report-Only. 9 unit tests in
+> `apps/web/config/security-headers.test.ts`.
+>
+> **Follow-up before flipping to enforced:** (1) observe the Report-Only violation stream in prod;
+> (2) migrate the inline `next-themes` script + brand `<style>` + Next bootstrap to a per-request
+> **nonce** (threaded via a middleware rewrite) so `'unsafe-inline'` can be dropped from
+> `script-src`/`style-src`; then (3) set `CSP_ENFORCE=1`. Until then the Report-Only header is
+> defense-in-observability, not enforcement.
 
-- `Content-Security-Policy` with Stripe-compatible directives.
-- `Strict-Transport-Security` for production HTTPS.
-- `X-Frame-Options` or CSP `frame-ancestors`.
-- `Referrer-Policy`.
-- `Permissions-Policy`.
-- `X-Content-Type-Options`.
-- COOP/CORP where compatible.
-
+*Original baseline (retained for history):* a production security header baseline should include
+`Content-Security-Policy` (Stripe-compatible), `Strict-Transport-Security`, `X-Frame-Options` /
+CSP `frame-ancestors`, `Referrer-Policy`, `Permissions-Policy`, `X-Content-Type-Options`, COOP/CORP.
 Start report-only, observe, then enforce.
 
 ### 3. Admin authorization
@@ -124,16 +152,29 @@ Suggested flags:
 - `PRINTFUL_ENABLED=true` requires Printful secrets.
 - `AI_ENABLED=true` requires AI gateway key and a privacy-mode flag.
 
-### 5. Rate-limit failure modes
+### 5. Rate-limit failure modes — ✅ FIXED (app layer, SESSION_0465)
 
-Low-risk marketing forms may fail open with an alert. Sensitive surfaces should fail closed or degrade safely when Redis is unavailable:
+> **2026-06-28, SESSION_0465.** `isRateLimited()` (`apps/web/lib/rate-limiter.ts`) previously
+> returned `false` (fail-open) on **any** limiter error, so a Redis outage silently removed the
+> abuse control everywhere. Now the public / abuse-prone / auth-adjacent buckets — `claim`,
+> `invite`, `evidence_upload`, `teaser_signup`, `email_notify`, `submission`, `report` — fail
+> **closed** (block) when Redis is configured but `.limit()` errors; the authenticated,
+> actor-keyed write buckets (`schedule_write`, `attendance_write`, …) stay fail-open (blocking a
+> legit member's write on a transient blip is the worse failure there). The **no-Redis path**
+> (`limiters === null`, e.g. local dev / CI) is unchanged — still fails open so dev works without
+> Redis. The classification is a pure exported `shouldFailClosed(action)` predicate (3 unit tests,
+> `lib/rate-limiter.test.ts`).
+>
+> **Residual (open):** Better Auth's **magic-link / OTP send** has no explicit `rateLimit` block in
+> `lib/auth.ts` (SESSION_0452 note) — it's bounded only by Better Auth's in-memory default, not by
+> the Upstash limiter above. Add an explicit, fail-*closed* `rateLimit` config for OTP/magic-link
+> send. Certificate verification + checkout/payment creation + admin destructive actions should be
+> audited for limiter coverage (not all route through `isRateLimited` today).
 
-- magic links / OTP / auth abuse controls,
-- invite generation,
-- claim/evidence submission,
-- certificate verification,
-- checkout/payment creation,
-- admin destructive actions.
+*Original guidance (retained):* low-risk marketing forms may fail open with an alert; sensitive
+surfaces (magic links / OTP, invite generation, claim/evidence submission, certificate
+verification, checkout/payment creation, admin destructive actions) should fail closed or degrade
+safely when Redis is unavailable.
 
 ### 6. Private media
 
@@ -217,6 +258,30 @@ Controls and mitigations:
   the SESSION_0452 prodsnap refresh.
 - Consider a scoped, least-privilege Neon role for local prodsnap pulls instead of the
   primary owner role.
+
+> **2026-06-28, SESSION_0465 — OPS HANDOFF PREPARED (NOT executed; operator-gated).**
+> This session did **not** rotate the credential (rotating prod secrets + editing the Vercel
+> dashboard are operator-gated; no push/deploy in this lane). The rotation is **still overdue**.
+> Ready-to-run handoff for the operator:
+>
+> 1. **Neon dashboard** → project → Roles → reset the password on the prod role (or create a new
+>    least-privilege role and repoint to it). Copy the new conninfo.
+> 2. **Local** `apps/web/.env.prod` (gitignored) → update `DATABASE_URL` + `DIRECT_URL` with the
+>    new password. Do **not** echo the URL to the terminal (it lands in transcripts — the original
+>    leak). Edit the file directly.
+> 3. **Vercel** (apps/web / BBL project) → Settings → Environment Variables (Production) → update
+>    `DATABASE_URL` + `DIRECT_URL` → save. This requires a redeploy to take effect (next push, or a
+>    manual redeploy of the latest prod deployment).
+> 4. **Verify** the new credential connects **without** putting it on the command line — use `PG*`
+>    env vars: `PGPASSWORD=… psql -h pg.neon.tech -U <role> -d <db> -c 'select 1'`. Confirm the BBL
+>    prod app reads/writes after redeploy (any authed page).
+> 5. **Invalidate** the old password (the reset in step 1 does this automatically for a same-role
+>    reset; if you created a new role, drop/disable the old one once the app is confirmed on the new
+>    one).
+>
+> After rotation, flip this row to RESOLVED with the date. The blast radius stays bounded (local
+> transcripts only — confirmed not committed by the SESSION_0452 sweep), so this is a hygiene
+> rotation, not an active-breach response — but it is overdue and should be done.
 
 ### 14. Authed/admin upload content-sniff gap — SVG stored-XSS (SESSION_0452)
 
