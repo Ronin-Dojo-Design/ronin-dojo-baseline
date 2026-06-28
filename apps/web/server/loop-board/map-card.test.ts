@@ -77,13 +77,14 @@ describe("cardToUpdate", () => {
 })
 
 describe("ledgerCardToCreate", () => {
-  it("stamps source=ledger and reuses the stable card id as the dedup sourceRef", () => {
+  it("stamps source=ledger, reuses the stable card id as the dedup sourceRef, and carries the rank order", () => {
     const c: BoardCard = { ...card, id: "RISK:#9", stage: "blocked", title: "A risk" }
-    const data = ledgerCardToCreate(c, "ronin-loop-board")
+    const data = ledgerCardToCreate(c, "ronin-loop-board", 4)
     expect(data.id).toBe("RISK:#9")
     expect(data.source).toBe("ledger")
     expect(data.sourceRef).toBe("RISK:#9")
     expect(data.stage).toBe("blocked")
+    expect(data.order).toBe(4)
   })
 })
 

@@ -4162,8 +4162,9 @@ model KanbanCard {
   id        String           @id
   configId  String
   stage     String
-  /// Intra-column position. Stored for a future explicit-reorder feature; the current kernel sorts a
-  /// column by `updatedAt` desc, so this is not yet the render key (set on save = index within stage).
+  /// Intra-column rank — the kernel renders a column by `order` asc (falling back to `updatedAt` for a
+  /// card without one), so this IS the render order: the importer stamps the ledger rank; a save
+  /// renormalizes each stage to 0..n by array position.
   order     Int              @default(0)
   source    KanbanCardSource @default(manual)
   /// Stable external key for the importer's idempotent upsert (e.g. `GL:G-003`, a task id). Null for

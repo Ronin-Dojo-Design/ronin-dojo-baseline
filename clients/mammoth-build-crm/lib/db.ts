@@ -16,6 +16,11 @@ import { PrismaClient } from "../.generated/prisma/client";
  */
 const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    // Fail loud at construction (clear message) rather than with an opaque pg connection error
+    // at the first query — mirrors apps/web's validated env contract.
+    throw new Error("DATABASE_URL is required (Mammoth CRM owns its own database — ADR 0038).");
+  }
   const adapter = new PrismaPg({ connectionString });
   return new PrismaClient({ adapter });
 };

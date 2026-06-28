@@ -96,8 +96,23 @@ function toProject(row: DbProject): Project {
   };
 }
 
-function genOrderNumber(): string {
-  return `MB-${Math.floor(1000 + Math.random() * 9000)}`;
+/**
+ * Allocate an order number no project holds yet. 6 digits + an existence check (the `@unique`
+ * on `Project.orderNumber` is the hard DB backstop); retries on the rare collision rather than
+ * silently stamping a duplicate business key.
+ */
+async function genOrderNumber(): Promise<string> {
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const candidate = `MB-${Math.floor(100000 + Math.random() * 900000)}`;
+    const clash = await db.project.findFirst({
+      where: { orderNumber: candidate },
+      select: { id: true },
+    });
+    if (!clash) {
+      return candidate;
+    }
+  }
+  throw new Error("could not allocate a unique order number after 20 attempts");
 }
 
 /** Whether reaching `stage` makes the project a committed order (deposit+). */
@@ -111,14 +126,14 @@ function becomesOrderAt(stage: StageId): boolean {
  * otherwise the existing values carry through. The single home for the
  * order-confirm guardrail — shared by setStage, advance, and the board create.
  */
-function orderFieldsFor(
+async function orderFieldsFor(
   stage: StageId,
   current: { orderConfirmed: boolean; orderNumber: string | null },
-): { orderConfirmed: boolean; orderNumber: string | null } {
+): Promise<{ orderConfirmed: boolean; orderNumber: string | null }> {
   if (!becomesOrderAt(stage)) {
     return { orderConfirmed: current.orderConfirmed, orderNumber: current.orderNumber };
   }
-  return { orderConfirmed: true, orderNumber: current.orderNumber ?? genOrderNumber() };
+  return { orderConfirmed: true, orderNumber: current.orderNumber ?? (await genOrderNumber()) };
 }
 
 async function loadProject(id: string): Promise<Project> {
@@ -177,13 +192,13 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
 export async function patchProject(id: string, changes: Partial<Project>): Promise<Project> {
   const data: Record<string, unknown> = {};
   // Project scalar columns the UI patches (next step, notes, name, dims, etc.).
+  // Deliberately NOT patchable here: `stage` and the order state (`orderConfirmed`/`orderNumber`)
+  // are owned by the guardrail — stage moves go through `setProjectStage`/`advanceProject` so they
+  // run `orderFieldsFor`; a raw `patch({ stage })` would bypass the order-confirm rule.
   const scalarKeys: (keyof Project)[] = [
     "name",
-    "stage",
     "nextTask",
     "notes",
-    "orderConfirmed",
-    "orderNumber",
     "buildingType",
     "use",
     "region",
@@ -219,7 +234,7 @@ export async function setProjectStage(id: string, stage: StageId): Promise<Proje
   const current = await db.project.findUniqueOrThrow({ where: { id } });
   const row = await db.project.update({
     where: { id },
-    data: { stage, ...orderFieldsFor(stage, current) },
+    data: { stage, ...(await orderFieldsFor(stage, current)) },
     include: PROJECT_INCLUDE,
   });
   return toProject(row as unknown as DbProject);
@@ -234,7 +249,7 @@ export async function advanceProject(id: string): Promise<Project> {
   }
   const row = await db.project.update({
     where: { id },
-    data: { stage: next, ...orderFieldsFor(next, current) },
+    data: { stage: next, ...(await orderFieldsFor(next, current)) },
     include: PROJECT_INCLUDE,
   });
   return toProject(row as unknown as DbProject);
@@ -258,7 +273,9 @@ export async function addPhoto(
 }
 
 export async function removePhoto(projectId: string, photoId: string): Promise<Project> {
-  await db.buildPhoto.delete({ where: { id: photoId } });
+  // Scope the delete to its project: a wrong/forged photoId must not delete another project's
+  // photo. `deleteMany` no-ops (count 0) on a mismatch instead of throwing or crossing projects.
+  await db.buildPhoto.deleteMany({ where: { id: photoId, projectId } });
   return loadProject(projectId);
 }
 
@@ -321,7 +338,7 @@ async function createProjectFromCard(card: BoardCard, stage: StageId): Promise<v
       stage,
       source: mapSource(card.source),
       nextTask: card.nextStep?.trim() || "First-touch follow-up within 24h",
-      ...orderFieldsFor(stage, { orderConfirmed: false, orderNumber: null }),
+      ...(await orderFieldsFor(stage, { orderConfirmed: false, orderNumber: null })),
       lostReason: card.lostReason ?? null,
     },
   });

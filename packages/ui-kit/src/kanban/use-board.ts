@@ -51,6 +51,10 @@ export function useBoard({
   const [cards, setCards] = useState<BoardCard[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The cards-change that a (re)load triggers is not an edit — skip persisting it.
+  // Otherwise the very first render after hydrate saves the just-loaded board straight
+  // back, re-stamping every row's `updatedAt` and scrambling any persisted rank order.
+  const justLoaded = useRef(false);
 
   // Load once from the port; seed only if nothing persisted.
   useEffect(() => {
@@ -59,6 +63,7 @@ export function useBoard({
       if (!alive) {
         return;
       }
+      justLoaded.current = true;
       setCards(state?.cards ?? seed);
       setHydrated(true);
     });
@@ -71,6 +76,11 @@ export function useBoard({
   // Debounced persistence through the port.
   useEffect(() => {
     if (!hydrated) {
+      return;
+    }
+    // Don't persist the load itself — only real edits (mutators set cards without this flag).
+    if (justLoaded.current) {
+      justLoaded.current = false;
       return;
     }
     if (saveTimer.current) {

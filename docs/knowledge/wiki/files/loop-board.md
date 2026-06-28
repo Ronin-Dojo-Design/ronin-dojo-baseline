@@ -44,7 +44,7 @@ tags: [admin, loop-of-loops, ledgers, kanban, projection, governance, spec, flow
 A **shared, admin-gated, mobile-first** board that gives Brian + Tony Hua near-realtime visibility
 into the open governance backlog. It **projects** the 9 governance ledgers (FS · D · WL · FI · MB ·
 TFF · INC · RISK · TD) — read **live from the public `main` branch** at request time — onto the
-shared `AdminKanban` kernel (PWCC-007) as **read-only** cards on a workflow axis. This is the
+shared `AdminKanban` kernel (PWCC-007) as cards on a workflow axis. This is the
 Loop-of-Loops **P3** target ([loop-of-loops-ledger-driven-sessions](../../../protocols/loop-of-loops-ledger-driven-sessions.md)).
 **Phase B (SESSION_0461) makes it editable + DB-backed.** A `KanbanCard` model on BBL's own DB
 (ADR 0038 Phase 1) is now the **single source of truth**; the live-ledger projection is demoted to a
@@ -60,7 +60,7 @@ live `main` ledgers (one fetch, reused) so the backlog totals never go stale.
 ```text
 ┌─────────────────────────────────────┐
 │ 47 open · P0 2 · P1 11 · P2 20 …     │  ← health strip (counts by priority + ledger)
-│ Live from …@main · ~60s · read-only  │
+│ Live from …@main · ~60s · editable   │
 │ LOOP OF LOOPS · LEDGER BACKLOG  47   │
 │ [Backlog 45][In Progress 2][Block… ‹ ›]│ ← tappable column pager + prev/next arrows
 │ ┌─ BACKLOG ────────────────────45─┐▏ │  ← snap-mandatory rail; next column peeks (▏)
@@ -138,7 +138,9 @@ flowchart TD
 - **Admin-only** operator surface — gated at `layout.tsx` by `loop-board.manage`; never a public DTO.
 - The board reads only **already-public governance markdown** from the public repo; no private data,
   no secrets, no per-user state. A failed ledger fetch contributes 0 items (logged), never an error page.
-- Read-only in Phase A — no mutation surface; the kernel's `readOnly` prop suppresses every edit affordance.
+- **Editable (Phase B)** but every mutation is gated: both the route `layout.tsx` and each `board-store`
+  server action re-assert `loop-board.manage` (defense-in-depth), so a direct action POST from an
+  unauthorized caller is blocked. The board persists only the task slice — no contact PII surface.
 
 ## Provenance
 

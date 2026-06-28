@@ -21,7 +21,8 @@ async function importLedgerCards(configId: string, items: LedgerBacklog["items"]
     return 0
   }
   const result = await db.kanbanCard.createMany({
-    data: cards.map(c => ledgerCardToCreate(c, configId)),
+    // `cards` is already in backlog rank order — carry the index as the card's `order`.
+    data: cards.map((c, i) => ledgerCardToCreate(c, configId, i)),
     skipDuplicates: true,
   })
   return result.count

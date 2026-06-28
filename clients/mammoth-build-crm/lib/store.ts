@@ -54,13 +54,28 @@ export function useProjects() {
 
   const patch = useCallback(
     async (id: string, changes: Partial<Project>) => {
-      // Optimistic: reflect the edit immediately, then persist in the background.
+      // Optimistic: reflect the edit immediately, then persist in the background. Snapshot the
+      // prior row so a failed save rolls back instead of leaving a phantom edit that silently
+      // reverts on the next navigation/reload.
+      let prior: Project | undefined;
       setProjects((prev) =>
-        prev.map((p) =>
-          p.id === id ? { ...p, ...changes, updatedAt: new Date().toISOString() } : p,
-        ),
+        prev.map((p) => {
+          if (p.id !== id) {
+            return p;
+          }
+          prior = p;
+          return { ...p, ...changes, updatedAt: new Date().toISOString() };
+        }),
       );
-      await patchProject(id, changes);
+      try {
+        await patchProject(id, changes);
+      } catch (err) {
+        if (prior) {
+          const restore = prior;
+          setProjects((prev) => prev.map((p) => (p.id === id ? restore : p)));
+        }
+        console.error("patchProject failed — reverted optimistic edit", err);
+      }
     },
     [],
   );

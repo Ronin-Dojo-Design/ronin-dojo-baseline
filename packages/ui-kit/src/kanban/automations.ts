@@ -81,7 +81,13 @@ export function evaluateBoard(
 
 /**
  * Sort within a column: at-risk cards bump to the top (the only loud signal),
- * then most-recently-updated first. Stable, pure.
+ * then by persisted rank (`order`, ascending) when BOTH cards carry one, else by
+ * most-recently-updated first. Stable, pure.
+ *
+ * The `order` tier is opt-in: a board whose cards never set `order` (e.g. the CRM
+ * deal board) sorts exactly as before. A board that persists a rank (the ledger
+ * backlog) gets that rank as the render order — so it survives reload instead of
+ * being scrambled by save-time `updatedAt` churn.
  */
 export function sortColumn(cards: BoardCard[], flags: Map<string, CardFlags>): BoardCard[] {
   return [...cards].sort((a, b) => {
@@ -89,6 +95,9 @@ export function sortColumn(cards: BoardCard[], flags: Map<string, CardFlags>): B
     const bRisk = flags.get(b.id)?.atRisk ? 1 : 0;
     if (aRisk !== bRisk) {
       return bRisk - aRisk;
+    }
+    if (typeof a.order === "number" && typeof b.order === "number" && a.order !== b.order) {
+      return a.order - b.order;
     }
     return Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
   });

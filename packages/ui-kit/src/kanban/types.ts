@@ -94,6 +94,13 @@ export interface BoardCard {
   nextStep?: string;
   /** Deal value (cents-free integer); rendered as the card's one focal value. */
   value?: number;
+  /**
+   * Intra-column rank (lower = higher in the column). When every card in a column
+   * carries a numeric `order`, the kernel renders by it (so a persisted rank — e.g.
+   * a ledger backlog's priority order — survives reload); when absent it falls back
+   * to most-recently-updated-first. Opt-in: a board that never sets `order` is unchanged.
+   */
+  order?: number;
   contact?: CardContact;
   /** Loss reason — required when moving to a terminal stage as a loss. */
   lostReason?: string;

@@ -11,7 +11,8 @@
  * - cards = m-card(kind=config.cardKind), at-risk bumped to top (the one loud signal)
  * - drag between columns (HTML5 DnD) + keyboard-free menu move for a11y
  * - quick-add at each column foot (title → enter)
- * - "+ New lead" intake form → card in the intake stage
+ * - "+ New lead" intake form → card in the intake stage (deal boards only; a `task`
+ *   board has no leads, so it gets quick-add without the contact form)
  * - blocked moves (order-guard / lost-reason) → toast + no state change
  *
  * Theming is tokens only — no hex, no brand name. Dark/light inherited from the token layer.
@@ -105,6 +106,10 @@ export function AdminKanban({ config, store, seed, now, readOnly = false }: Admi
   const [toast, setToast] = useState<string | null>(null);
   const [intakeOpen, setIntakeOpen] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Lead intake is a deal-board concept (a lead becomes a deal). A `task` board (e.g. a
+  // governance backlog) has no leads, so it gets quick-add only — never the contact form,
+  // whose contact fields the task mapper would silently drop on save.
+  const showIntake = !readOnly && config.cardKind === "deal";
 
   function flash(message: string) {
     setToast(message);
@@ -139,14 +144,14 @@ export function AdminKanban({ config, store, seed, now, readOnly = false }: Admi
             {board.atRiskCount > 0 ? ` · ${board.atRiskCount} at risk` : ""}
           </p>
         </div>
-        {readOnly ? null : (
+        {showIntake ? (
           <button type="button" style={primaryBtn} onClick={() => setIntakeOpen((v) => !v)}>
             + New lead
           </button>
-        )}
+        ) : null}
       </header>
 
-      {intakeOpen && !readOnly ? (
+      {intakeOpen && showIntake ? (
         <IntakeForm
           onSubmit={(input) => {
             const result = board.intake(input);

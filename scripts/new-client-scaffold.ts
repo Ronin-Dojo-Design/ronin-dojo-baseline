@@ -124,6 +124,10 @@ const COPY_VERBATIM = [
   "tailwind.config.ts",
   ".gitignore",
   "prisma.config.ts",
+  // The stamped package.json keeps `postinstall: node scripts/link-ui-kit.mjs`, so the script
+  // MUST ship with the scaffold or `bun install` (gate 1) fails on every new client. It's
+  // product-agnostic — a fixed relative symlink to packages/ui-kit, identical at any clients/<name>.
+  "scripts/link-ui-kit.mjs",
 ]
 
 type Action =
@@ -173,6 +177,12 @@ actions.push({
   rel: "prisma/schema.prisma",
   note: "starter generator+datasource, NO models (translate the brief)",
   content: schemaStarter(),
+})
+actions.push({
+  kind: "gen",
+  rel: "prisma/seed.ts",
+  note: "no-op seed stub (the inherited db:seed script needs a target; 0-model starter)",
+  content: seedStarter(),
 })
 actions.push({ kind: "gen", rel: "app/layout.tsx", note: "runnable skeleton", content: layoutStarter() })
 actions.push({ kind: "gen", rel: "app/page.tsx", note: "runnable skeleton", content: pageStarter() })
@@ -269,6 +279,19 @@ function schemaStarter(): string {
     "datasource db {",
     '  provider = "postgresql"',
     "}",
+    "",
+  ].join("\n")
+}
+
+function seedStarter(): string {
+  return [
+    `// ${TITLE} — seed stub. The starter schema has NO models yet, so this is a no-op; it exists`,
+    "// only so the inherited `db:seed` script has a target (it'd otherwise fail with a missing file).",
+    "//",
+    "// Once you translate the client brief into prisma/schema.prisma (new-client-runbook gate 2),",
+    '// `import { db } from "../lib/db"` and seed your models here. `bun run db:seed` runs this file.',
+    "",
+    'console.log("No seed data yet — add models to prisma/schema.prisma, then seed them here.")',
     "",
   ].join("\n")
 }
@@ -381,7 +404,8 @@ function printNextSteps(): void {
   console.log(
     [
       "  Next (gated — see docs/runbooks/onboarding/new-client-runbook.md):",
-      `    1. cd clients/${NAME} && bun install      # gate 1 — standalone; root bun.lock must stay untouched`,
+      `    1. cd clients/${NAME} && bun install      # gate 1 — standalone; root bun.lock untouched.`,
+      `       Commit clients/${NAME}/bun.lock before pushing — Clients CI installs with --frozen-lockfile.`,
       `    2. design prisma/schema.prisma from the client brief, then bunx prisma migrate dev --name init   # gate 2`,
       "    3. swap app/globals.css starter tokens for the brand token block",
       "    4. PRD/STORIES + wiki/ledger governance",

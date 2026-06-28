@@ -3,8 +3,9 @@
  * AdminKanban kernel (PWCC-007), exactly like `clients/mammoth-build-crm/lib/board-config.ts`.
  *
  * The board is config + data (ADR 0033 D5): this file is a pure `BoardConfig` (workflow
- * stages) + an `Item → BoardCard` mapper. No board logic lives here — columns, drag (Phase B),
- * and rendering all come from `@ronin-dojo/ui-kit/kanban`. Phase A renders it `readOnly`.
+ * stages) + an `Item → BoardCard` mapper. No board logic lives here — columns, drag, and
+ * rendering all come from `@ronin-dojo/ui-kit/kanban`. The board is editable (Phase B):
+ * the server pre-syncs the ledger projection into `KanbanCard`, then drag/add/done persist.
  */
 
 import type { BoardCard, BoardConfig, MCardBadge, MCardTone } from "@ronin-dojo/ui-kit"
@@ -16,9 +17,9 @@ export const LOOP_BOARD_CONFIG_ID = "ronin-loop-board"
 /**
  * Workflow axis (not ledger columns): cards flow Backlog → In Progress → Blocked → Done.
  * An editable board needs a meaningful drag axis; ledger + priority ride as card badges and
- * the per-ledger counts live in the health strip. Phase A is read-only (no drag), but the
- * axis is chosen so Phase B's drag/persist needs no rework. No SLA/rotting automations — a
- * static projection has no activity clock, so nothing should be flagged at-risk.
+ * the per-ledger counts live in the health strip. No SLA/rotting automations — the backlog
+ * projection carries no activity clock, so nothing should be flagged at-risk; column order is
+ * the persisted ledger rank (`KanbanCard.order`), not an updated-at recency clock.
  */
 export const LOOP_BOARD: BoardConfig = {
   id: LOOP_BOARD_CONFIG_ID,

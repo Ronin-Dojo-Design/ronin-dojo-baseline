@@ -17,7 +17,8 @@ import {
  *   1. The ledger importer (`createMany skipDuplicates`) is INSERT-ONLY + idempotent.
  *   2. THE ANTI-DRIFT INVARIANT: re-importing after an operator edit does NOT revert the edit.
  *   3. `importTasks` (legacy localStorage lift) is idempotent.
- *   4. `saveBoard`'s reconcile removes deleted cards; `loadBoard` round-trips the edited state.
+ *   4. `saveBoard` is UPSERT-ONLY (never deletes — check #6 proves an unreferenced card survives);
+ *      `loadBoard` round-trips the edited state.
  *
  * Run:  cd apps/web && bun scripts/loop-board-phase-b-proof.ts
  */

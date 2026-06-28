@@ -41,6 +41,7 @@ export function rowToBoardCard(row: KanbanCard): BoardCard {
   return {
     id: row.id,
     stage: row.stage,
+    order: row.order,
     title: row.title,
     status: (row.status as BoardCard["status"]) ?? undefined,
     lane: (row.lane as BoardCard["lane"]) ?? undefined,
@@ -94,13 +95,25 @@ export function cardToUpdate(
   return cardScalars(card, order)
 }
 
-/** Importer create-row for a projected ledger card (insert-only via `createMany skipDuplicates`). */
+/**
+ * Importer create-row for a projected ledger card (insert-only via `createMany skipDuplicates`).
+ * `order` = the card's rank index in the aggregated backlog, so the persisted column order is the
+ * ledger's priority rank (not all-zero → scrambled). Relative order within a stage is what the
+ * kernel renders by; a later operator edit renormalizes the stage to 0..n via `saveBoard`.
+ */
 export function ledgerCardToCreate(
   card: BoardCard,
   configId: string,
+  order: number,
 ): Prisma.KanbanCardCreateManyInput {
   // The card id is already the stable `CODE:id` (e.g. `GL:G-003`) — reuse it as the dedup sourceRef.
-  return { id: card.id, configId, source: "ledger", sourceRef: card.id, ...cardScalars(card, 0) }
+  return {
+    id: card.id,
+    configId,
+    source: "ledger",
+    sourceRef: card.id,
+    ...cardScalars(card, order),
+  }
 }
 
 /** Importer create-row for a migrated legacy task (one-time localStorage → DB lift). */

@@ -32,7 +32,8 @@ export async function loadBoard(configId: string): Promise<BoardState | null> {
   await assertLoopBoardAccess()
   const rows = await db.kanbanCard.findMany({
     where: { configId },
-    // The kernel re-sorts each column by `updatedAt` desc; this just yields a deterministic initial array.
+    // The kernel renders each column by `order` asc (falling back to `updatedAt`); match that here so
+    // the hydrated array is already in render order.
     orderBy: [{ stage: "asc" }, { order: "asc" }, { updatedAt: "desc" }],
   })
   if (rows.length === 0) {
