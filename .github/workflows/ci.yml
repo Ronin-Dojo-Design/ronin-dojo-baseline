@@ -11,7 +11,8 @@ on:
     # Quality gates don't depend on docs/agent-context; skip docs-only commits
     # to match playwright.yml and save runner minutes. `clients/**` and sibling
     # `apps/*` products (e.g. `apps/baseline`) are their OWN deploy units (ADR 0034)
-    # with their own gate (products-ci.yml) — a product-only change can't affect
+    # with their own gate (clients-ci.yml, the "Products CI" workflow) — a
+    # product-only change can't affect
     # apps/web, so they're ignored here (SESSION_0462/0465). `scripts/**` is
     # root-level tooling apps/web does NOT import (verified SESSION_0465), so a
     # scripts-only change can't break the build — ignore it (SESSION_0462 queued).
