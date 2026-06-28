@@ -1,8 +1,20 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { admin } from "better-auth/plugins";
+import { createAccessControl } from "better-auth/plugins/access";
+import { defaultStatements, adminAc, userAc } from "better-auth/plugins/admin/access";
 import { headers } from "next/headers";
 import { db } from "./db";
+
+// Mammoth's two roles map onto Better Auth's admin access-control statements
+// (user/session management). `owner` carries the full admin capability set;
+// `member` carries none. The admin() plugin requires every `adminRoles` entry to
+// be a defined role here — so the role names match the `MammothRole` enum.
+const ac = createAccessControl(defaultStatements);
+const roles = {
+  owner: ac.newRole(adminAc.statements),
+  member: ac.newRole(userAc.statements),
+};
 
 /**
  * Mammoth Build CRM — its OWN Better Auth instance (ADR 0038 D5: identity per
@@ -59,8 +71,11 @@ export const auth = betterAuth({
   },
 
   plugins: [
-    // Role-based admin: `owner` is the elevated role; `member` the default.
+    // Role-based admin: `owner` is the elevated role; `member` the default. The
+    // `ac` + `roles` map registers owner/member so `adminRoles` validates.
     admin({
+      ac,
+      roles,
       adminRoles: ["owner"],
       defaultRole: "member",
     }),
