@@ -102,3 +102,24 @@ aggregator reads it with no new parser logic.
 - **Objective:** convert each brand's `STORIES.md` (BBL / baseline / mammoth) to `- [ ]`/`- [x]`
   checklists (+ PRD acceptance criteria) and compute a per-brand completion %; surface on the loop-board.
 - **Lane:** product / governance. **Why:** visible progress per brand, aligned with product separation.
+
+### G-007 — PR-review automation: open PRs as a live Loop-of-Loops source
+
+- **Status:** open — P1
+- **Objective:** make `/bow-in` auto-pick-up open-PR review/fix the way it picks up ledger debt.
+  (a) add a **live `PR` source** to `scripts/ledger-backlog.ts` — query
+  `gh pr list --state open --json number,title,headRefName,isDraft,reviewDecision,statusCheckRollup`,
+  emit each open PR as a backlog item (synthetic code `PR`; rank: red-CI/changes-requested = P1,
+  draft/clean = P2, then by age), parser shared with `apps/web/lib/loop-board/ledger-parse.ts` so
+  `/app/loop-board` projects PRs too; (b) wire bow-in (`docs/rituals/opening.md`) to route the default
+  task to `/pr-fix-loop` when open PRs exist; (c) enhance `/pr-fix-loop` to fan out one background
+  subagent per PR in its own `git worktree` (the SESSION_0463–0465 pattern) running
+  pr-review-score-fix + `/fallow-fix-loop` + hostile-close, committing fixes to the PR branch,
+  pause-on-merge, concurrency-capped.
+- **Lane:** governance tooling / automation. **Depends on:** existing `pr-fix-loop` skill +
+  `ledger-backlog.ts` aggregator. **First exercise:** PRs #172 / #173 / #174 (the 0463–0465 lanes).
+- **Design note (Petey/Giddy):** PRs are **live state** (query `gh`), not a hand-maintained markdown
+  ledger — so "PR ledger" = a live *source* in the aggregator, not a file that goes stale. The
+  *capability* is this goal (GL); the *running PRs* surface automatically once the source ships.
+- **Why:** closes the OTHER half of the Loop-of-Loops — inbound ledger debt **and** outbound open-PR
+  review become one auto-surfaced backlog; the operator just runs `/bow-in`.
