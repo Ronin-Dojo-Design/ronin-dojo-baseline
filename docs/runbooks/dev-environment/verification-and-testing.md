@@ -4,8 +4,8 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-06-27
-last_agent: claude-session-0454
+updated: 2026-06-28
+last_agent: claude-session-0462
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
@@ -54,6 +54,14 @@ surface here is narrower than it looks.
   `main`, skipping docs-only commits. Least-privilege `permissions: contents: read`, concurrency-cancel, per-job timeouts.
 - **`playwright.yml`** runs e2e (chromium full + firefox/webkit lineage subset, Postgres service). Its
   web server is `bun run dev` (not a build), so typecheck coverage comes from `ci.yml` + Vercel.
+- **`clients-ci.yml` (SESSION_0462) — per-product CI.** `apps/web`'s `ci.yml` + `playwright.yml` are
+  **BBL-scoped**: both now `paths-ignore: clients/**`, so a `clients/*`-only change no longer fires BBL's
+  Oxc/typecheck/unit + Playwright ×3 (the deploy was already skipped by `vercel.json`'s `ignoreCommand`;
+  this closes the matching CI waste). Client products get their own gate instead — `clients-ci.yml` fires
+  on `clients/**` or `packages/**` (the shared kernel they consume) and runs a **dynamic discover→matrix**:
+  one job per `clients/*` with a `package.json`, each running **typecheck** (+ `lint:check` if defined).
+  A new client product is picked up automatically — **no workflow edit** (mirrors the per-product deploy
+  model, ADR 0034). Matrix details: [new-client-runbook §10](../onboarding/new-client-runbook.md).
 - **Vercel** runs `bun run --filter @ronin-dojo/web build` on deploy — a second `next build` typecheck.
 - **No git hooks.** There is no husky/lefthook/pre-commit; the gates run in CI, not at commit time. Run
   `bun test` + `bun run lint:check` + `bun run format:check` locally before a close so you don't discover a red gate after pushing.

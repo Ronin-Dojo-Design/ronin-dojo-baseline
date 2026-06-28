@@ -18,7 +18,11 @@ product). Reference implementation: **Mammoth Build CRM** (`clients/mammoth-buil
 ## The shape (memorize, then follow the runbook for detail)
 
 1. **Intake → brief** — capture requirements (`docs/business/leads/`); the schema is translated from it.
-2. **Scaffold** `clients/<product>/` (copy Mammoth's structure).
+2. **Scaffold** `clients/<product>/` — run the mechanical scaffolder (**dry-run by default; show before
+   applying** per `operator-script-caution`):
+   `bun scripts/new-client-scaffold.ts <product>` (preview) → `--apply` (write) → `--apply --createdb`
+   (also `createdb <product>_dev`). It copies the agnostic config + stamps the name; it stops at the
+   gated steps below (no install, no schema, no deploy).
 3. **Wire deps** — `@ronin-dojo/ui-kit` via `file:`, `@prisma/client` + `prisma`, `db:*` scripts.
 4. **Standalone bun install** ⛔ — own `bun.lock`; root `bun.lock` must stay untouched.
 5. **Own database** ⛔ — own `prisma/` + `prisma.config.ts` (Prisma 7: URL lives here, not the schema)

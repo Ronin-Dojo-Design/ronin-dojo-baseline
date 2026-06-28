@@ -9,13 +9,18 @@ on:
   pull_request:
     branches: [main]
     # Quality gates don't depend on docs/agent-context; skip docs-only commits
-    # to match playwright.yml and save runner minutes.
+    # to match playwright.yml and save runner minutes. `clients/**` is its own
+    # deploy unit (ADR 0034) with its own gate (clients-ci.yml) — a client-only
+    # change can't affect apps/web, so it's ignored here (SESSION_0462). Filters
+    # stay fail-safe: anything NOT listed (apps/web, packages, root config) still
+    # runs BBL's gate, so an unknown shared root is never silently skipped.
     paths-ignore:
       - 'docs/**'
       - '**.md'
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
+      - 'clients/**'
   push:
     branches: [main]
     paths-ignore:
@@ -24,6 +29,7 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
+      - 'clients/**'
   workflow_dispatch:
 
 # Least privilege: these jobs only read the repo (GitHub Actions security

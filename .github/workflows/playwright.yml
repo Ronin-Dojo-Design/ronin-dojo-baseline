@@ -19,6 +19,10 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
+      # `clients/**` is its own deploy unit (ADR 0034) with its own gate
+      # (clients-ci.yml). A client-only change can't affect apps/web's e2e, so
+      # it no longer fires BBL's chromium/firefox/webkit ×3 matrix (SESSION_0462).
+      - 'clients/**'
   push:
     branches: [main]
     paths-ignore:
@@ -27,6 +31,7 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
+      - 'clients/**'
   workflow_dispatch:
 
 # Least privilege: the e2e job only needs to read the repo (SESSION_0335

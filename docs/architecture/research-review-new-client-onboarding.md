@@ -5,7 +5,7 @@ type: research-review
 status: active
 created: 2026-06-27
 updated: 2026-06-28
-last_agent: claude-session-0459
+last_agent: claude-session-0462
 pairs_with:
   - docs/runbooks/onboarding/new-client-runbook.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
@@ -30,15 +30,17 @@ tags:
 
 ## TL;DR — decision
 
-**A Skill + Runbook pair, with an optional future scaffold script.**
+**A Skill + Runbook pair, with a thin scaffold script for the mechanical half.**
 
 - **Runbook** ([`new-client-runbook.md`](../runbooks/onboarding/new-client-runbook.md)) = the
   agent-agnostic source of truth: every step, gate, and done-criterion.
 - **Skill** ([`/new-client-recipe`](../../.claude/skills/new-client-recipe/SKILL.md)) = the invokable
   entrypoint that *executes* the runbook with operator gates and judgment.
-- **(Later) a thin scaffold script** for the purely-mechanical bits (copy template, `createdb`,
-  stamp names) — built only when the manual copy becomes the bottleneck (YAGNI until then;
-  `operator-script-caution` says show it before running).
+- **Scaffold script** ([`scripts/new-client-scaffold.ts`](../../scripts/new-client-scaffold.ts)) — the
+  purely-mechanical bits (copy the agnostic config, stamp the name, write `.env.example`, optional
+  `createdb`). **Built SESSION_0462** (the named follow-up); **dry-run by default** and shown before any
+  `--apply` run (`operator-script-caution`). It stops at the judgment/gated steps (schema, install,
+  deploy) — those stay with the skill+runbook.
 
 This exactly mirrors the repo's proven `/bow-in` → `opening.md` and `/bow-out` → `closing.md` pattern:
 **a skill is a thin trigger; a doc is the source of truth.** Both were created this session and
@@ -118,8 +120,10 @@ reinvention the repo's "one card / one kernel" ethos forbids (cf. learning recor
 
 ## Outcome
 
-Implemented this session: the [runbook](../runbooks/onboarding/new-client-runbook.md) + the
+Implemented SESSION_0459: the [runbook](../runbooks/onboarding/new-client-runbook.md) + the
 [`/new-client-recipe` skill](../../.claude/skills/new-client-recipe/SKILL.md), proven on
-[Mammoth Build CRM](../product/mammoth-build/PRD.md). Future enhancement: a thin
-`scripts/new-client-scaffold.ts` for the mechanical copy, built when manual scaffolding becomes the
-bottleneck.
+[Mammoth Build CRM](../product/mammoth-build/PRD.md). The mechanical scaffold script
+([`scripts/new-client-scaffold.ts`](../../scripts/new-client-scaffold.ts)) followed in **SESSION_0462**,
+together with **per-product CI** (`clients-ci.yml` — a dynamic discover→matrix so each `clients/*` gets
+its own typecheck/lint while a client-only change no longer fires BBL's e2e). The trio (skill + runbook +
+script) is the steady-state shape; the standalone generator *app* (option B) remains correctly unbuilt.

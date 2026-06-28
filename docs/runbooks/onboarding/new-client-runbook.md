@@ -5,7 +5,7 @@ type: runbook
 status: active
 created: 2026-06-27
 updated: 2026-06-28
-last_agent: claude-session-0459
+last_agent: claude-session-0462
 pairs_with:
   - docs/runbooks/database/per-app-db-separation.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
@@ -84,15 +84,34 @@ pipeline/stages, the domain objects. This brief is what the schema is *translate
 
 ### 2. Scaffold the app directory
 
-Create `clients/<product>/` as a standalone Next.js app. Fastest path: **copy the structure of
-`clients/mammoth-build-crm/`** (Next 16 + React 19 + Tailwind) and rename. Minimum set:
+Create `clients/<product>/` as a standalone Next.js app. **Mechanical entrypoint — run the scaffold
+script** (it does the deterministic copy-and-stamp; it is **dry-run by default**, so always preview
+before applying per `operator-script-caution`):
+
+```bash
+bun scripts/new-client-scaffold.ts <product>            # DRY-RUN — prints the plan, writes nothing
+bun scripts/new-client-scaffold.ts <product> --apply    # scaffold clients/<product>/
+bun scripts/new-client-scaffold.ts <product> --apply --createdb   # + createdb <product>_dev (local)
+```
+
+The script copies the product-agnostic config verbatim (`tsconfig`, `next.config`, `postcss`,
+`tailwind`, `.gitignore`, `prisma.config.ts`) and **generates name-stamped starters** (`package.json`,
+`.env.example` → `<product>_dev`, a minimal `prisma/schema.prisma` with **no models**, a runnable
+`app/` skeleton, `README.md`). It deliberately stops at the judgment/gated steps below — it never runs
+`bun install`, never designs the schema, never deploys. (`--from=<reference>` copies a different
+reference; default is `mammoth-build-crm`.)
+
+What the script produces (the minimum set — equivalent to hand-copying `clients/mammoth-build-crm/`):
 
 ```text
 clients/<product>/
-  app/                 # Next.js app router
+  app/                 # Next.js app router (starter layout/page/globals)
   components/
   lib/
-  package.json         # name, scripts, deps (see step 3-4)
+  prisma/schema.prisma # starter generator+datasource, NO models (you translate the brief)
+  package.json         # name/version/description stamped; scripts + deps inherited
+  prisma.config.ts
+  .env.example         # DATABASE_URL → <product>_dev
   tsconfig.json
   next.config.mjs
   postcss.config.mjs
@@ -169,6 +188,32 @@ Per ADR 0034 (per-product Vercel projects):
 - If the product is destined for client handoff, note it (ADR 0033 D1 — extract to its own repo
   consuming the *published* `ui-kit` at handoff, not before).
 
+### 10. Continuous integration (automatic — no per-client wiring)
+
+Per-product CI is **dynamic** — a new client product gets its own gate with **zero workflow edits**
+(SESSION_0462). The split mirrors the per-product deploy model (ADR 0034):
+
+| Workflow | Fires on | Runs | For |
+| --- | --- | --- | --- |
+| `clients-ci.yml` | `clients/**` or `packages/**` | discover→matrix: per-client **typecheck** (+ `lint:check` if the client defines it) | every `clients/*` with a `package.json` |
+| `ci.yml` (BBL) | everything **except** `docs/**`, `**.md`, `.claude/**`, **`clients/**`** | Oxc + typecheck + unit | `apps/web` + shared roots |
+| `playwright.yml` (BBL) | same as `ci.yml` | chromium full + firefox/webkit lineage ×3 | `apps/web` e2e |
+
+Why this shape:
+
+- **A `clients/*`-only change no longer fires BBL's e2e** — `clients/**` is in BBL's `paths-ignore`. (The
+  *deploy* was already skipped by `vercel.json`'s `ignoreCommand`; this closes the matching CI waste.)
+- **`clients-ci.yml` also fires on `packages/**`** — clients consume the shared kernel
+  (`@ronin-dojo/ui-kit`) via a `file:` dep (ADR 0033), so a kernel edit that breaks a client's typecheck
+  is caught here too.
+- **The matrix auto-discovers** — the `discover` job lists every `clients/*` holding a `package.json`, so
+  the moment the scaffold (step 2) lands, the new product is in the matrix. **No CI file to touch.**
+- **Contract for each client product:** a `typecheck` script (required — the scaffold writes it). A
+  `lint:check` script is optional; `clients-ci.yml` runs it only if present (a client adopts oxlint when
+  ready, mirroring `apps/web`).
+
+> Full CI map (BBL side, jobs, services): [verification-and-testing](../dev-environment/verification-and-testing.md).
+
 ## Done means (checklist)
 
 - [ ] `clients/<product>/` scaffolded; `.gitignore` covers `.env` / `/.generated` / `node_modules`.
@@ -182,6 +227,7 @@ Per ADR 0034 (per-product Vercel projects):
 
 ## Cross-references
 
+- [`scripts/new-client-scaffold.ts`](../../../scripts/new-client-scaffold.ts) — the mechanical scaffolder (step 2; dry-run by default).
 - [Research review — best form for this recipe](../../architecture/research-review-new-client-onboarding.md)
 - [Per-App Database Separation](../database/per-app-db-separation.md) — the DB half, in depth.
 - [ADR 0038](../../architecture/decisions/0038-per-product-database-separation.md) · [ADR 0034](../../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md) · [ADR 0033](../../architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md)
