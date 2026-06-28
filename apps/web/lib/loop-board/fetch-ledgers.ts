@@ -24,7 +24,7 @@ const LEDGER_BRANCH = process.env.LOOP_BOARD_LEDGER_BRANCH ?? "main"
 const RAW_BASE = `https://raw.githubusercontent.com/${LEDGER_REPO}/${LEDGER_BRANCH}`
 
 /** Seconds the fetched ledger content is cached before re-fetching `main`. */
-export const LOOP_BOARD_REVALIDATE_SECONDS = 60
+const LOOP_BOARD_REVALIDATE_SECONDS = 60
 
 export type LedgerBacklog = {
   items: Item[]

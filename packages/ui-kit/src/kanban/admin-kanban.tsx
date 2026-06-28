@@ -53,10 +53,11 @@ const RISK_LABEL: Record<string, string> = {
  * signal as a `critical`-tone badge, `due` folds into the muted meta line, and the order-guard
  * field rides a neutral badge. The card stays a pure presentation slice (ADR 0033 D3).
  */
-function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
-  const reason = flags?.reasons[0];
+/** The badge row: at-risk (the one loud signal) → order-guard → generic passthrough. */
+function buildBadges(card: BoardCard, flags?: CardFlags): MCardBadge[] | undefined {
   const badges: MCardBadge[] = [];
   if (flags?.atRisk) {
+    const reason = flags.reasons[0];
     badges.push({ label: (reason && RISK_LABEL[reason]) || "At risk", tone: "critical" });
   }
   if (card.fields?.orderNumber) {
@@ -66,7 +67,11 @@ function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
   if (card.badges?.length) {
     badges.push(...card.badges);
   }
+  return badges.length > 0 ? badges : undefined;
+}
 
+/** The muted meta line: next step (or contact) · due date. */
+function buildMeta(card: BoardCard): string | undefined {
   const metaParts: string[] = [];
   const next = card.nextStep?.trim() ? `Next: ${card.nextStep}` : card.contact?.name;
   if (next) {
@@ -75,16 +80,19 @@ function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
   if (card.due) {
     metaParts.push(`Due ${card.due}`);
   }
+  return metaParts.length > 0 ? metaParts.join(" · ") : undefined;
+}
 
+function cardToMData(card: BoardCard, flags?: CardFlags): MCardTaskData {
   return {
     id: card.id,
     title: card.title,
-    meta: metaParts.length > 0 ? metaParts.join(" · ") : undefined,
+    meta: buildMeta(card),
     focal:
       typeof card.value === "number"
         ? { value: formatValue(card.value), label: "value" }
         : undefined,
-    badges: badges.length > 0 ? badges : undefined,
+    badges: buildBadges(card, flags),
   };
 }
 
@@ -181,22 +189,11 @@ export function AdminKanban({ config, store, seed, now, readOnly = false }: Admi
 }
 
 /**
- * BoardColumns — the mobile-first swipe carousel that hosts the stage columns.
- *
- * Generic + presentation-only (ADR 0033 D5): no project/brand concepts leak in. On a phone the
- * columns are a snap-mandatory horizontal rail (one column + a peek of the next), navigable by
- * swipe, by the tappable column pager (name + count), or by the prev/next arrows; edge-fade
- * gradients signal more off-screen. On a wide desktop all columns sit side-by-side and the
- * affordances quietly disable themselves (nothing to scroll). The same idiom as the BBL/TuffBuffs
- * `CarouselRail` (snap-x mandatory, fixed item width, arrows-when-scrollable, edge fades).
+ * Carousel controller — owns the rail ref + derived scroll state (active column, can-scroll
+ * left/right) and the smooth scroll-to-index. Recomputes on scroll + resize. The view (BoardColumns)
+ * stays pure JSX. Column step = first column width + the inter-column gap.
  */
-function BoardColumns({
-  columns,
-  renderColumn,
-}: {
-  columns: { stage: StageConfig; cards: BoardCard[] }[];
-  renderColumn: (stage: StageConfig, cards: BoardCard[]) => ReactNode;
-}) {
+function useColumnCarousel(count: number) {
   const railRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const [canLeft, setCanLeft] = useState(false);
@@ -214,8 +211,8 @@ function BoardColumns({
     setCanLeft(rail.scrollLeft > 4);
     setCanRight(rail.scrollLeft < max - 4);
     const step = stepWidth(rail);
-    setActive(step > 0 ? Math.min(columns.length - 1, Math.round(rail.scrollLeft / step)) : 0);
-  }, [columns.length, stepWidth]);
+    setActive(step > 0 ? Math.min(count - 1, Math.round(rail.scrollLeft / step)) : 0);
+  }, [count, stepWidth]);
 
   useEffect(() => {
     update();
@@ -237,6 +234,28 @@ function BoardColumns({
     },
     [stepWidth],
   );
+
+  return { railRef, active, canLeft, canRight, scrollToIndex };
+}
+
+/**
+ * BoardColumns — the mobile-first swipe carousel that hosts the stage columns.
+ *
+ * Generic + presentation-only (ADR 0033 D5): no project/brand concepts leak in. On a phone the
+ * columns are a snap-mandatory horizontal rail (one column + a peek of the next), navigable by
+ * swipe, by the tappable column pager (name + count), or by the prev/next arrows; edge-fade
+ * gradients signal more off-screen. On a wide desktop all columns sit side-by-side and the
+ * affordances quietly disable themselves (nothing to scroll). The same idiom as the BBL/TuffBuffs
+ * `CarouselRail` (snap-x mandatory, fixed item width, arrows-when-scrollable, edge fades).
+ */
+function BoardColumns({
+  columns,
+  renderColumn,
+}: {
+  columns: { stage: StageConfig; cards: BoardCard[] }[];
+  renderColumn: (stage: StageConfig, cards: BoardCard[]) => ReactNode;
+}) {
+  const { railRef, active, canLeft, canRight, scrollToIndex } = useColumnCarousel(columns.length);
 
   return (
     <div style={boardWrap}>

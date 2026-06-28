@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-21
-last_agent: claude-session-0421
+updated: 2026-06-27
+last_agent: claude-session-0458
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -153,7 +153,41 @@ commit) so the term is concrete, not abstract.
 - **fd** — a fast `find` replacement (`brew install fd`; `fd PATTERN path`); respects `.gitignore`, simpler syntax. **Optional, not installed** — this repo's sanctioned discovery path is Graphify first, then `find`/`grep`. Convenience only.
 - **Router Cache / `revalidatePath`** — Next.js keeps a short-lived client-side copy of each page you've visited (the "Router Cache"), so navigating *back* to a page can show a remembered version instead of re-asking the server. After a save, a server action calls `revalidatePath("/some/route")` to tell Next "throw away the cached copy of that page." WordPress analogy: clearing a page cache after editing a post. **The gotcha (SESSION_0451):** if the path string is wrong (e.g. it points at a retired/redirected route), the save still writes to the database but the *visible* page is never refreshed — so the edit "reverts" on navigation even though the data is correct. Rule: a save that persists in the DB but won't show on screen is usually a wrong/missing `revalidatePath`, not a save bug. See FS-0026 / `[[admin-app-migration-revalidate-paths]]`.
 
+## Architecture concepts (SESSION_0458)
+
+- **Kernel** — the small, shared, jointly-owned *core* that multiple products are allowed to reuse, but
+  that **no single product may bend toward its own domain**. In this repo the kernel is
+  `packages/ui-kit` — the `m-card` (the one card), the design tokens, and the `AdminKanban` board
+  engine. Plain analogy: a car *platform* (chassis, axles, electronics) shared across several models —
+  each model adds its own body/trim, but none re-welds the chassis. Why it matters: keeping product-
+  specific rules *out* of the kernel is what lets Black Belt Legacy and Mammoth share UI without their
+  meanings of words like "status" or "owner" leaking into each other. The board you reuse, you don't
+  fork. (Deeper teaching: learning record `0002`; the DDD "Shared Kernel" idea, ADR 0033 D1.)
+- **Projection / read-model** — a *read-only view* computed from a source of truth, never a second copy
+  you have to keep in sync. The Loop Board is a projection: it reads the 9 ledger markdown files and
+  *renders* them as cards; it stores nothing. Analogy: a report built from a spreadsheet — change the
+  spreadsheet, re-run the report, no separate data to reconcile. Example: `apps/web/lib/loop-board/`.
+- **Port & adapter** — a **port** is a named slot a component depends on (an interface: "give me a way
+  to load/save a board"); an **adapter** is a concrete thing that fills the slot (localStorage, a DB, a
+  REST API). The component talks only to the port, so you swap the adapter without touching the
+  component. Example: `BoardStore` (port) with `createLocalStorageBoardStore` / `createMemoryBoardStore`
+  (adapters) in `packages/ui-kit/src/kanban/board-store.ts`.
+- **Scroll-snap carousel** — a row that scrolls sideways and "snaps" to one item at a time (like the
+  Amazon products row or a Spotify shelf), built with plain CSS (`scroll-snap-type`) — no library. On a
+  phone the Loop Board's columns are a snap carousel: swipe, tap the pager, or use the arrows. Example:
+  `BoardColumns` / `useColumnCarousel` in `packages/ui-kit/src/kanban/admin-kanban.tsx`; lifted from the
+  monorepo `CarouselRail`.
+- **Config-driven (zero per-project code)** — a component whose behavior is set entirely by a *data*
+  object passed in, so targeting a new use case means writing config, not editing the component. The
+  whole "Mammoth instance" of `AdminKanban` is one `BoardConfig` + a 15-line mapper; the Loop Board is
+  another config + mapper. Analogy: the same coffee machine, different pods.
+- **Realtime-from-git** — reading content **live from the `main` branch** at request time (via GitHub's
+  public raw URL) instead of from the deployed bundle, so the page reflects the latest commit even when
+  no redeploy happened. The Loop Board uses this so docs-only ledger commits (which skip the prod build)
+  still show. Example: `apps/web/lib/loop-board/fetch-ledgers.ts`.
+
 ## Cross-references
 
 - [Closing ritual](../../rituals/closing.md) — the optional spike that points here.
 - [SESSION_0350](../../sprints/SESSION_0350.md) — the session these first entries came from.
+- [Learning record 0002](../../learning/ddd/learning-records/0002-shared-kernel-in-practice.md) — the kernel, taught.

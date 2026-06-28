@@ -10,7 +10,7 @@
 import type { BoardCard, BoardConfig, MCardBadge, MCardTone } from "@ronin-dojo/ui-kit"
 import type { Item, Priority } from "./ledger-parse"
 
-export const LOOP_BOARD_CONFIG_ID = "ronin-loop-board"
+const LOOP_BOARD_CONFIG_ID = "ronin-loop-board"
 
 /**
  * Workflow axis (not ledger columns): cards flow Backlog → In Progress → Blocked → Done.

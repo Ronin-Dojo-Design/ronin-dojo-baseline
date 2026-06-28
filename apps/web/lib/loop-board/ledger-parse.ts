@@ -227,7 +227,7 @@ export function parseLedger(code: LedgerCode, content: string): Item[] {
 }
 
 /** Rank: priority → ledger order → id (numeric-aware). */
-export function rankItems(items: Item[]): Item[] {
+function rankItems(items: Item[]): Item[] {
   return [...items].sort((a, b) => {
     const p = PRI_SCORE[a.priority] - PRI_SCORE[b.priority]
     if (p !== 0) return p
