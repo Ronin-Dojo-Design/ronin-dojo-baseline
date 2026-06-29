@@ -1,11 +1,13 @@
 import { CalendarIcon, MapPinIcon, UsersIcon } from "lucide-react"
 import { Badge } from "~/components/common/badge"
-import { Card } from "~/components/common/card"
-import { H3 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
-import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { ListingCard } from "~/components/web/listing/listing-card"
 
+/**
+ * TournamentCard — a thin adapter over `ListingCard` (doctrine §5; SESSION_0470). The event meta
+ * (date · location · registrations + division count) renders in the `statusBadges` slot; disciplines
+ * are category badges. Default View+Save footer (View tournament). No bespoke card markup.
+ */
 type TournamentCardProps = {
   tournament: {
     id: string
@@ -31,15 +33,13 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
   const totalDivisions = tournament.disciplines.reduce((sum, d) => sum + d._count.divisions, 0)
 
   return (
-    <Link href={`/tournaments/${tournament.slug}`} className="group">
-      <Card className="flex flex-col p-5 transition-colors hover:border-primary/50 hover:bg-accent/50">
-        <H3 className="group-hover:text-primary transition-colors">{tournament.name}</H3>
-
-        {tournament.description && (
-          <Note className="mt-1 line-clamp-2">{tournament.description}</Note>
-        )}
-
-        <Stack direction="column" size="xs" className="mt-3">
+    <ListingCard
+      href={`/tournaments/${tournament.slug}`}
+      name={tournament.name}
+      tagline={tournament.description}
+      categories={tournament.disciplines.map(td => ({ name: td.discipline.name }))}
+      statusBadges={
+        <Stack direction="column" size="xs" className="w-full">
           <Stack direction="row" size="sm" className="items-center text-sm text-muted-foreground">
             <CalendarIcon className="size-4" />
             <span>
@@ -59,21 +59,15 @@ export function TournamentCard({ tournament }: TournamentCardProps) {
             <UsersIcon className="size-4" />
             <span>{tournament._count.registrations} registered</span>
           </Stack>
-        </Stack>
 
-        <Stack direction="row" size="xs" className="mt-3 flex-wrap">
-          {tournament.disciplines.map(td => (
-            <Badge key={td.discipline.name} variant="soft">
-              {td.discipline.name}
-            </Badge>
-          ))}
           {totalDivisions > 0 && (
-            <Badge variant="outline">
+            <Badge variant="outline" className="mt-1">
               {totalDivisions} division{totalDivisions !== 1 ? "s" : ""}
             </Badge>
           )}
         </Stack>
-      </Card>
-    </Link>
+      }
+      viewLabel="View tournament"
+    />
   )
 }

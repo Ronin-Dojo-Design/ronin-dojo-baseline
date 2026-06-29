@@ -13,6 +13,7 @@
     ".": "./src/index.ts",
     "./kanban": "./src/kanban/index.ts",
     "./tokens.css": "./src/tokens/tokens.css",
+    "./card.css": "./src/card/card.css",
     "./m-card.css": "./src/m-card/m-card.css"
   },
   "scripts": {

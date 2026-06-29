@@ -5,49 +5,50 @@ import Image from "next/image"
 import { useFormatter, useTranslations } from "next-intl"
 import type { ComponentProps } from "react"
 import type { Post } from "~/.generated/prisma/client"
-import { Card, CardDescription, CardFooter, CardHeader } from "~/components/common/card"
-import { H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
+import { ListingCard } from "~/components/web/listing/listing-card"
 
-type PostCardProps = ComponentProps<typeof Card> & {
+/**
+ * PostCard — a thin adapter over `ListingCard` (doctrine §5; SESSION_0470). The blog hero uses the
+ * `mediaTop` rich density (full-bleed image) and the `footer` slot for `date · read-time`, instead of
+ * the default View+Save footer — same ONE catalog card, blog-tuned. No bespoke card markup.
+ */
+type PostCardProps = Omit<ComponentProps<typeof ListingCard>, "href" | "name"> & {
   post: Post
 }
 
-export const PostCard = ({ className, post, ...props }: PostCardProps) => {
+export const PostCard = ({ post, ...props }: PostCardProps) => {
   const t = useTranslations()
   const format = useFormatter()
 
   return (
-    <Card className="overflow-clip" render={<Link href={`/blog/${post.slug}`} />} {...props}>
-      {post.imageUrl && (
-        <Image
-          src={post.imageUrl}
-          alt={post.title}
-          width={1200}
-          height={630}
-          className="-m-5 mb-0 w-[calc(100%+2.5rem)] max-w-none aspect-video object-cover"
-        />
-      )}
-
-      <CardHeader wrap={false}>
-        <H4 render={props => <h3 {...props}>{props.children}</h3>} className="leading-snug!">
-          {post.title}
-        </H4>
-      </CardHeader>
-
-      {post.description && <CardDescription>{post.description}</CardDescription>}
-
-      {post.publishedAt && (
-        <CardFooter className="mt-auto">
-          <time dateTime={post.publishedAt.toISOString()}>
-            {format.dateTime(post.publishedAt, { dateStyle: "medium" })}
-          </time>
-          <span>&bull;</span>
-          <span>
-            {t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}
-          </span>
-        </CardFooter>
-      )}
-    </Card>
+    <ListingCard
+      href={`/blog/${post.slug}`}
+      name={post.title}
+      mediaTop={
+        post.imageUrl ? (
+          <Image
+            src={post.imageUrl}
+            alt={post.title}
+            width={1200}
+            height={630}
+            className="aspect-video w-full object-cover"
+          />
+        ) : undefined
+      }
+      tagline={post.description}
+      footer={
+        post.publishedAt ? (
+          <>
+            <time dateTime={post.publishedAt.toISOString()}>
+              {format.dateTime(post.publishedAt, { dateStyle: "medium" })}
+            </time>
+            <span>
+              {t("posts.read_time", { count: getReadTime(post.plainText || post.content) })}
+            </span>
+          </>
+        ) : undefined
+      }
+      {...props}
+    />
   )
 }

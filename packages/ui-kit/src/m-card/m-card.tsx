@@ -10,14 +10,19 @@ import type {
 } from "./m-card.types";
 
 /**
- * m-card — the ONE presentation card for `task | deal | record` (ADR 0033 D3).
+ * m-card — the kernel BOARD card for `task | deal | record` (doctrine §5; ADR 0033 D3 / ADR 0040).
  *
  * Renders a single skeleton — identity cluster (glyph + title + meta) · ONE focal value · badges,
  * and in `density="rich"`, a golden-ratio hero + connector-motif rows. Only the LEADING GLYPH and
- * a couple of small behaviours branch on `kind`; everything else is shared.
+ * a couple of small behaviours branch on `kind`; everything else is shared. It is "uniform within
+ * the board" (doctrine §5) — that is what satisfies the board's uniform-stream need, NOT a `kind`
+ * god-union spanning catalog + person + board.
  *
- * Token-driven: all color comes from `var(--mk-*)` (load `@ronin-dojo/ui-kit/tokens.css` +
- * `@ronin-dojo/ui-kit/m-card.css` on an ancestor). NO brand identifier lives in this component.
+ * SURFACE: composes the ported L1 `Card` surface — the root renders `class="mk-surface mk-card"`,
+ * so the shell (bg · border · radius · shadow · base padding · focus-visible) comes from `card.css`
+ * and `m-card.css` adds only the board anatomy (Option B port, doctrine §6 / [[kernel-extracts-
+ * dirstarter-l1-not-cleanroom]]). Token-driven: all color is `var(--mk-*)`. NO brand identifier
+ * lives here. Load on an ancestor, in order: `@ronin-dojo/ui-kit/tokens.css` → `card.css` → `m-card.css`.
  */
 export function MCard<K extends MCardKind>(props: MCardProps<K>): ReactNode {
   const {
@@ -35,7 +40,8 @@ export function MCard<K extends MCardKind>(props: MCardProps<K>): ReactNode {
   const isRich = density === "rich";
   const interactive = Boolean(href ?? onSelect);
 
-  const rootClassName = className ? `mk-card ${className}` : "mk-card";
+  // Composes the ported L1 surface (card.css) + the board anatomy (m-card.css). See header.
+  const rootClassName = className ? `mk-surface mk-card ${className}` : "mk-surface mk-card";
 
   const body = (
     <>

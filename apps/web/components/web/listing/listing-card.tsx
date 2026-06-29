@@ -13,12 +13,14 @@ import { cx } from "~/lib/utils"
 
 /**
  * ListingCard — SESSION_0396 shared Listing template (Tool→Listing parity, supersedes ADR 0013's
- * "no shared abstraction"). The ONE card every directory entity renders through: header (media +
- * title + badges), category badges, hover description, and a footer with a View button + Save slot.
+ * "no shared abstraction"). The ONE card every catalog entity renders through (doctrine §5): header
+ * (media + title + badges), category badges, hover description, and a footer with a View button +
+ * Save slot. `tool-card.tsx` is the reference adapter (the live Tool directory renders through this).
  *
- * `tool-card.tsx` is now a thin adapter that wires `ToolMany` into these slots, so the live Tool
- * directory renders through this exact component — `ListingCard` is the canonical L1 card, lifted
- * from the original `ToolCard` markup with the tool-only values turned into props.
+ * Progressive enrichment is a DENSITY, not a fork (doctrine §5): the optional `mediaTop` slot adds a
+ * full-bleed top hero (blog post / merch product image) and `footer` replaces the default View+Save
+ * footer (blog date·read-time / merch price·Buy) — the SAME component, richer. The 5 bespoke catalog
+ * cards (course/post/merch/tournament/facet-result) fold onto this via these slots (SESSION_0470).
  */
 
 type ListingCardCategory = { name: string; slug?: string | null }
@@ -27,7 +29,13 @@ type ListingCardProps = ComponentProps<typeof Card> & {
   /** Detail-page href; used by the title link and the View Listing button. */
   href: string
   name: string
-  /** Leading media slot (e.g. a Favicon or discipline icon). */
+  /**
+   * Full-bleed top hero (the "rich" density) — a blog/merch image rendered edge-to-edge above the
+   * header. ListingCard owns the bleed; the caller passes a plain `<Image>` / `<img>`. Omit for the
+   * default (compact) density. Pairs with `overflow-clip` so the hero clips to the card radius.
+   */
+  mediaTop?: ReactNode
+  /** Leading media slot (e.g. a Favicon or discipline icon), inline with the title. */
   media?: ReactNode
   /** Header trailing badges (e.g. verified + tier); caller pushes right with `ml-auto`. */
   headerBadges?: ReactNode
@@ -35,19 +43,26 @@ type ListingCardProps = ComponentProps<typeof Card> & {
   tagline?: ReactNode
   /** Shared taxonomy badges (the `categories` relation). */
   categories?: ListingCardCategory[]
-  /** Status badges above the footer (e.g. Featured/Verified). */
+  /** Status badges above the footer (e.g. Featured/Verified, or tournament meta rows). */
   statusBadges?: ReactNode
   /** Longer description revealed on hover. */
   description?: string | null
   /** Footer view-button label. Defaults to "View" (entity-agnostic). */
   viewLabel?: string
-  /** Save/bookmark control slot. */
+  /** Save/bookmark control slot (right of the default View button). */
   save?: ReactNode
+  /**
+   * Replaces the default `View + save` footer content with a custom footer (still `justify-between`
+   * inside the `CardFooter`): blog → `date · read-time`, merch → `price · Buy`. Takes precedence over
+   * `viewLabel`/`save`. Omit for the standard catalog footer.
+   */
+  footer?: ReactNode
 }
 
 const ListingCard = ({
   href,
   name,
+  mediaTop,
   media,
   headerBadges,
   tagline,
@@ -56,10 +71,14 @@ const ListingCard = ({
   description,
   viewLabel = "View",
   save,
+  footer,
+  className,
   ...props
 }: ListingCardProps) => {
   return (
-    <Card isRevealed {...props}>
+    <Card isRevealed className={cx(mediaTop ? "overflow-clip" : undefined, className)} {...props}>
+      {mediaTop ? <div className="-mx-5 -mt-5 mb-1 overflow-clip">{mediaTop}</div> : null}
+
       <CardHeader wrap={false}>
         {media}
 
@@ -105,11 +124,15 @@ const ListingCard = ({
       </div>
 
       <CardFooter className="mt-auto w-full justify-between">
-        <Button size="sm" variant="secondary" render={<Link href={href} />}>
-          {viewLabel}
-        </Button>
+        {footer ?? (
+          <>
+            <Button size="sm" variant="secondary" render={<Link href={href} />}>
+              {viewLabel}
+            </Button>
 
-        {save}
+            {save}
+          </>
+        )}
       </CardFooter>
     </Card>
   )

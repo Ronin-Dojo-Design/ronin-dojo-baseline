@@ -4,33 +4,30 @@ import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import type { LineageClaimBadgeStatus, LineageTrustStatus } from "~/lib/lineage/trust-status"
 import { cx } from "~/lib/utils"
 
 /**
- * m-card — the one card contract (PWCC-002).
+ * m-card — the app RECORD/PERSON card (doctrine §5; ADR 0040; PWCC-002).
  *
- * A single, content- and brand-agnostic card template. `kind` selects the DTO slice
- * the card binds to; brand skinning is **token-only** (`--color-primary` / `--accent`,
- * with a data-driven belt tint via `--rank-color` from `Rank.colorHex`, ADR 0022). It is
- * built ON TOP of the Dirstarter L1 base primitive `components/common/card.tsx` — never
- * a rebuilt primitive — and is **presentation-only**: all redaction stays upstream in the
- * projection (see `docs/knowledge/wiki/files/public-passport-dto.md`). Mappers feed it
- * already-projected, already-gated DTOs.
+ * A single, content- and brand-agnostic card template for an IDENTITY record: glyph/avatar +
+ * title + meta + one focal value + badges. `kind` is `roster` (person) | `rank` (belt group /
+ * curriculum); brand skinning is **token-only** (`--color-primary`, with a data-driven belt tint
+ * via `--rank-color` from `Rank.colorHex`, ADR 0022). It is built ON TOP of the Dirstarter L1 base
+ * primitive `components/common/card.tsx` — never a rebuilt primitive — and is **presentation-only**:
+ * all redaction stays upstream in the projection (see `docs/knowledge/wiki/files/public-passport-
+ * dto.md`). Mappers feed it already-projected, already-gated DTOs.
+ *
+ * NOT a god-union (doctrine §5): the demoted `task` / `loop` / `generic` kinds were never wired and
+ * belong to *different* information architectures — `generic` (catalog) → `ListingCard`; `task` /
+ * `loop` (board) → the kernel `BoardCard` (`@ronin-dojo/ui-kit` m-card). Dropped SESSION_0470 so this
+ * stays the ONE record/person card, not five cards in a `switch`.
  *
  * Spec: `docs/knowledge/wiki/files/m-card-pattern.md`.
- *
- * Slice 1 implemented `kind="roster"`; slice 2 adds `kind="rank"` (belt group /
- * curriculum). The remaining kinds (`task` / `loop` / `generic`) are minimal
- * placeholders so the union type compiles — see the per-kind TODOs referencing the spec.
  */
 
-export type MCardKind = "roster" | "rank" | "task" | "loop" | "generic"
-
-/** Shared lifecycle status — aligned with the AdminTaskBoard (spec §contract). */
-export type LifecycleStatus = "active" | "inactive" | "deprecated" | "broken"
+export type MCardKind = "roster" | "rank"
 
 /** A presentation badge the surface wants painted into the card's badge row. */
 export type MCardBadge = {
@@ -74,33 +71,6 @@ export type MCardData = {
     disciplineCode?: string | null
     count?: number
     items?: { id: string; label: string; done?: boolean }[]
-  }
-  // TODO(PWCC-002 slice ≥5): AdminTaskBoard rows. See m-card-pattern.md kind=task.
-  task: {
-    id: string
-    title: string
-    due?: string | null
-    lane?: "QF" | "HF"
-    status: LifecycleStatus
-    priority?: string | null
-    project?: string | null
-  }
-  // TODO(PWCC-002 slice ≥5): orchestration loop step poster. See m-card-pattern.md kind=loop.
-  loop: {
-    id: string
-    num?: number
-    title: string
-    blurb?: string | null
-    status?: LifecycleStatus
-  }
-  // TODO(PWCC-002 slice ≥4): listings / catalog fallback. See m-card-pattern.md kind=generic.
-  generic: {
-    id: string
-    title: string
-    media?: string | null
-    tagline?: string | null
-    categories?: string[]
-    badges?: MCardBadge[]
   }
 }
 
@@ -417,27 +387,8 @@ function RankCard({
 }
 
 /**
- * Placeholder for `kind` paths not yet built this slice. Renders a minimal Dirstarter card
- * so the union type compiles and a surface that wires an un-built kind fails visibly, not silently.
- */
-function PlaceholderCard({ kind, title }: { kind: MCardKind; title: string }) {
-  return (
-    <Card hover={false}>
-      <Stack size="sm">
-        <span className="font-medium text-2xs text-muted-foreground uppercase tracking-wide">
-          m-card · {kind}
-        </span>
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        {/* TODO(PWCC-002): build this kind's render path — see m-card-pattern.md. */}
-        <p className="text-xs text-muted-foreground">Not implemented in slice 1.</p>
-      </Stack>
-    </Card>
-  )
-}
-
-/**
- * The one card. Renders a single skeleton per kind; only the binding differs.
- * `roster` (slice 1) + `rank` (slice 2) are implemented; the rest are placeholders.
+ * The record/person card (doctrine §5). Renders one identity skeleton per kind; only the binding
+ * differs — `roster` (person) and `rank` (belt group / curriculum) are the two record shapes.
  */
 export function MCard<K extends MCardKind>(props: MCardProps<K>) {
   if (props.kind === "roster") {
@@ -453,20 +404,14 @@ export function MCard<K extends MCardKind>(props: MCardProps<K>) {
     )
   }
 
-  if (props.kind === "rank") {
-    const data = props.data as MCardData["rank"]
-    return (
-      <RankCard
-        data={data}
-        href={props.href}
-        density={props.density}
-        selected={props.selected}
-        actions={props.actions}
-      />
-    )
-  }
-
-  // TODO(PWCC-002 slices ≥5): task / loop / generic. See m-card-pattern.md.
-  const data = props.data as { title?: string; name?: string }
-  return <PlaceholderCard kind={props.kind} title={data.title ?? data.name ?? "Untitled"} />
+  const data = props.data as MCardData["rank"]
+  return (
+    <RankCard
+      data={data}
+      href={props.href}
+      density={props.density}
+      selected={props.selected}
+      actions={props.actions}
+    />
+  )
 }

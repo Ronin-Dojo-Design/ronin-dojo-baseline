@@ -1,24 +1,21 @@
 /**
- * m-card styles — token-driven ONLY (every color is `var(--mk-*)`; NO literal hex here).
- * Mobile-first: full-width, no fixed widths, `min-width: 0` everywhere to prevent overflow
- * (the SESSION_0337 lesson). Requires `tokens.css` to be loaded on an ancestor.
+ * m-card styles — the BOARD card (doctrine §5: uniform within the board). Token-driven ONLY (every
+ * color is `var(--mk-*)`; NO literal hex here). Mobile-first: full-width, no fixed widths,
+ * `min-width: 0` everywhere to prevent overflow (the SESSION_0337 lesson).
+ *
+ * COMPOSES the ported L1 surface: `MCard` renders `class="mk-surface mk-card"`, so the shell
+ * (background · border · radius · shadow · base padding · flex-column skeleton · focus-visible)
+ * comes from `card.css` (.mk-surface) and the rules below add only the BOARD-specific deltas
+ * (accent rail · denser gap · rail padding · glyph/focal/badge/row anatomy · hover/selected).
+ * Load order on an ancestor: `tokens.css` → `card.css` → `m-card.css`.
  */
 
 .mk-card {
-  /* identity */
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: var(--mk-space-3);
-  width: 100%;
+  /* board-specific deltas over `.mk-surface` (card.css) */
+  gap: var(--mk-space-3); /* denser than the L1 gap-4 (16px) shell default */
   min-width: 0;
-  box-sizing: border-box;
+  /* the accent rail needs a wider inline-start pad than the L1 uniform p-5 */
   padding: var(--mk-space-4) var(--mk-space-4) var(--mk-space-4) var(--mk-space-5);
-  background: var(--mk-elevated);
-  color: var(--mk-fg);
-  border: 1px solid var(--mk-line);
-  border-radius: var(--mk-r-card);
-  box-shadow: var(--mk-shadow-card);
   font-family: var(--mk-font-body);
   overflow: clip;
   text-align: left;
@@ -36,12 +33,10 @@
   border-end-start-radius: var(--mk-r-card);
 }
 
+/* cursor + hover/selected are board-level (the `.mk-surface` shell stays neutral; transition +
+   focus-visible are inherited from it). A dense board highlights its BORDER on hover, not its bg. */
 .mk-card[data-interactive="true"] {
   cursor: pointer;
-  transition:
-    border-color 120ms ease,
-    box-shadow 120ms ease,
-    background 120ms ease;
 }
 
 .mk-card[data-interactive="true"]:hover {
@@ -51,11 +46,6 @@
 .mk-card[data-selected="true"] {
   border-color: var(--mk-accent);
   background: var(--mk-accent-tint);
-}
-
-.mk-card:focus-visible {
-  outline: 2px solid var(--mk-accent);
-  outline-offset: 2px;
 }
 
 a.mk-card,

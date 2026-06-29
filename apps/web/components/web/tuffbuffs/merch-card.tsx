@@ -1,13 +1,17 @@
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Card } from "~/components/common/card"
-import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { ListingCard } from "~/components/web/listing/listing-card"
 import { resolvePublicMediaUrl } from "~/lib/public-media-url"
 import { formatGearPrice } from "~/lib/tuffbuffs/gear-utils"
 import type { MerchProductMetadata, MerchProductRow } from "~/server/web/merch/queries"
 
+/**
+ * MerchCard — a thin adapter over `ListingCard` (doctrine §5; SESSION_0470). The product image uses
+ * the `mediaTop` rich density and the `footer` slot carries the commerce action (`price · Buy`)
+ * instead of View+Save — same ONE catalog card, commerce-tuned. No bespoke card markup.
+ */
 type MerchCardProps = {
   product: MerchProductRow
   metadata: MerchProductMetadata
@@ -21,6 +25,7 @@ const categoryLabel: Record<string, string> = {
 }
 
 export function MerchCard({ product, metadata }: MerchCardProps) {
+  const href = `/merch/${product.id}`
   const imageSrc =
     resolvePublicMediaUrl(metadata.imagePath ?? "/images/merch/placeholder.svg") ??
     "/images/merch/placeholder.svg"
@@ -29,8 +34,10 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
     metadata.imagePath === "/images/merch/placeholder.svg" || !metadata.imagePath
 
   return (
-    <Link href={`/merch/${product.id}`} className="block">
-      <Card hover className="h-full overflow-hidden p-0">
+    <ListingCard
+      href={href}
+      name={product.name}
+      mediaTop={
         <div className="flex h-52 w-full items-center justify-center bg-muted/50 p-4">
           {isPlaceholder ? (
             <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-muted-foreground/30">
@@ -41,25 +48,17 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
             <img src={imageSrc} alt="" loading="lazy" className="h-full w-full object-contain" />
           )}
         </div>
-
-        <div className="flex flex-1 flex-col gap-4 p-5">
-          <Stack size="sm" className="min-w-0 flex-wrap">
-            <Badge variant="outline">{categoryLabel[metadata.category] ?? metadata.category}</Badge>
-            {metadata.featured && <Badge variant="soft">Featured</Badge>}
-            {!metadata.inStock && <Badge variant="danger">Out of Stock</Badge>}
-          </Stack>
-
-          <div className="space-y-2">
-            <H4
-              render={props => <h3 {...props}>{props.children}</h3>}
-              className="line-clamp-2 text-base"
-            >
-              {product.name}
-            </H4>
-            <p className="line-clamp-3 min-h-16 text-sm text-secondary-foreground">
-              {metadata.description}
-            </p>
-          </div>
+      }
+      categories={[{ name: categoryLabel[metadata.category] ?? metadata.category }]}
+      tagline={metadata.description}
+      statusBadges={
+        <Stack direction="column" size="sm" className="w-full">
+          {(metadata.featured || !metadata.inStock) && (
+            <Stack size="sm" className="flex-wrap">
+              {metadata.featured && <Badge variant="soft">Featured</Badge>}
+              {!metadata.inStock && <Badge variant="danger">Out of Stock</Badge>}
+            </Stack>
+          )}
 
           {metadata.sizes.length > 0 && (
             <Stack size="xs" className="flex-wrap">
@@ -74,15 +73,21 @@ export function MerchCard({ product, metadata }: MerchCardProps) {
           {metadata.colors.length > 0 && (
             <p className="text-xs text-muted-foreground">{metadata.colors.join(" · ")}</p>
           )}
-
-          <Stack className="mt-auto w-full justify-between gap-3" wrap={false}>
-            <span className="text-sm font-semibold">{formatGearPrice(product.amountCents)}</span>
-            <Button size="sm" variant="primary" disabled={!metadata.inStock}>
-              {metadata.inStock ? "Buy Now" : "Sold Out"}
-            </Button>
-          </Stack>
-        </div>
-      </Card>
-    </Link>
+        </Stack>
+      }
+      footer={
+        <>
+          <span className="text-sm font-semibold">{formatGearPrice(product.amountCents)}</span>
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={!metadata.inStock}
+            render={metadata.inStock ? <Link href={href} /> : undefined}
+          >
+            {metadata.inStock ? "Buy Now" : "Sold Out"}
+          </Button>
+        </>
+      }
+    />
   )
 }

@@ -1,9 +1,10 @@
 "use client"
 
 // The board renders kernel m-cards, so it loads the ui-kit token + card CSS once here (same pattern as
-// the retired AdminTaskBoard route): tokens.css defines the --mk-* vars the card reads, m-card.css the
-// .mk-card classes. Both ship from @ronin-dojo/ui-kit.
+// the retired AdminTaskBoard route), IN ORDER: tokens.css defines the --mk-* vars, card.css the ported
+// L1 `.mk-surface` shell, m-card.css the board `.mk-card` anatomy. All ship from @ronin-dojo/ui-kit.
 import "@ronin-dojo/ui-kit/tokens.css"
+import "@ronin-dojo/ui-kit/card.css"
 import "@ronin-dojo/ui-kit/m-card.css"
 
 import { AdminKanban } from "@ronin-dojo/ui-kit/kanban"

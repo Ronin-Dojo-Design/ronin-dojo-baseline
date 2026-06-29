@@ -22,16 +22,30 @@
   --font-display: "Saira", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /*
-   * Mammoth token block for the shared kernel (@ronin-dojo/ui-kit — AdminKanban PWCC-007).
-   * The kernel reads ONLY these CSS vars, never a hex value (ADR 0033). The board already
-   * consumes --surface / --surface-elevated / --border / --text-primary / --text-muted
-   * from the palette above; these three bridge the kernel's accent + danger names onto the
-   * Mammoth orange. Swap this block to re-skin the board for another brand. Mammoth = dark + orange.
-   */
-  --accent: var(--primary);          /* board accent + primary CTA = Mammoth orange */
+  /* Mammoth's own UI aliases (non-kernel components). */
+  --accent: var(--primary);          /* primary CTA = Mammoth orange */
   --accent-foreground: var(--bg);    /* dark ink on the orange button */
   --danger: var(--primary-hover);    /* at-risk = the one loud signal, on-brand orange */
+
+  /*
+   * Kernel bridge for the shared AdminKanban board (@ronin-dojo/ui-kit — PWCC-007). The kernel
+   * card reads ONLY `var(--mk-*)` (NOT --surface/--border/--accent — the old comment was wrong).
+   * These override tokens.css's BBL-red defaults onto the Mammoth palette; spacing/radius/fonts
+   * are inherited from tokens.css (loaded first, in layout.tsx). Swap this block to re-skin the
+   * board for another brand. (--mk-accent-tint / --mk-accent-rail auto-derive from --mk-accent.)
+   */
+  --mk-accent: var(--primary);
+  --mk-accent-strong: var(--primary-deep);
+  --mk-on-accent: var(--bg);
+  --mk-page: var(--bg);
+  --mk-elevated: var(--surface-elevated); /* the .mk-surface card body */
+  --mk-bg: var(--surface-elevated);
+  --mk-surface: var(--surface); /* nested: glyph bg, inset rows, badges */
+  --mk-fg: var(--text-primary);
+  --mk-muted: var(--text-muted);
+  --mk-line: var(--border);
+  --mk-font-head: var(--font-display);
+  --mk-font-body: var(--font-sans);
 }
 
 html {
