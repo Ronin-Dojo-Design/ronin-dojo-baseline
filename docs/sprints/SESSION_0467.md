@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0467 — Heal the card-origin fork (G-005): extract the Dirstarter L1 Card into the kernel"
 slug: session-0467
-type: session--open
-status: in-progress
+type: session--plan
+status: closed
 created: 2026-06-28
 updated: 2026-06-28
 last_agent: claude-session-0467
