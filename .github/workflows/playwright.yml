@@ -19,10 +19,16 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
-      # `clients/**` is its own deploy unit (ADR 0034) with its own gate
-      # (clients-ci.yml). A client-only change can't affect apps/web's e2e, so
-      # it no longer fires BBL's chromium/firefox/webkit ×3 matrix (SESSION_0462).
+      # `clients/**` and sibling `apps/*` products (e.g. `apps/baseline`) are their
+      # OWN deploy units (ADR 0034) with their own gate (clients-ci.yml, the
+      # "Products CI" workflow). A
+      # product-only change can't affect apps/web's e2e, so it no longer fires BBL's
+      # chromium/firefox/webkit ×3 matrix (SESSION_0462/0465). `scripts/**` is
+      # root tooling apps/web does NOT import (verified SESSION_0465) — a
+      # scripts-only change can't change e2e behavior.
       - 'clients/**'
+      - 'apps/baseline/**'
+      - 'scripts/**'
   push:
     branches: [main]
     paths-ignore:
@@ -32,6 +38,8 @@ on:
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
       - 'clients/**'
+      - 'apps/baseline/**'
+      - 'scripts/**'
   workflow_dispatch:
 
 # Least privilege: the e2e job only needs to read the repo (SESSION_0335

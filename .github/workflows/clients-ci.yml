@@ -1,34 +1,42 @@
-name: Clients CI
+name: Products CI
 
-# SESSION_0462 (ADR 0034 multi-product platform): per-product CI for `clients/*`.
+# SESSION_0462 (ADR 0034 multi-product platform): per-product CI for the
+# non-flagship products — `clients/*` (client-handoff products, e.g. Mammoth)
+# AND sibling `apps/*` peers (e.g. `apps/baseline`), i.e. every product EXCEPT
+# the BBL flagship `apps/web` (which has its own rich gate: ci.yml + playwright.yml).
 #
 # Before this, BBL's apps/web matrix (ci.yml + the playwright.yml ×3 browser
-# matrix) fired on ANY non-docs change — including a Mammoth-only commit that
+# matrix) fired on ANY non-docs change — including a product-only commit that
 # can't affect apps/web at all (deploy was already correctly skipped by
 # vercel.json ignoreCommand, but CI minutes were still burned). This workflow
-# gives client products their OWN lightweight gate (typecheck + optional lint),
-# and the sibling change adds `clients/**` to BBL's paths-ignore so a client-only
-# change no longer runs BBL's e2e.
+# gives the other products their OWN lightweight gate (typecheck + optional lint),
+# and the sibling paths-ignore in ci.yml/playwright.yml keeps a product-only change
+# from running BBL's e2e.
 #
-# Dynamic matrix: the `discover` job lists every `clients/*` dir that has a
-# package.json, so a NEW client product gets CI automatically — no edit here
-# (the mechanical-onboarding theme; pairs with scripts/new-client-scaffold.ts).
+# Dynamic matrix: the `discover` job lists every product dir with a package.json
+# under `clients/*` AND `apps/*` (minus `apps/web`), so a NEW product — client OR
+# `apps/baseline` (SESSION_0463) — gets CI automatically with no edit here (the
+# mechanical-onboarding theme; pairs with scripts/new-client-scaffold.ts).
 
 on:
-  # Run on client changes AND on shared-kernel changes — `clients/*` consume
-  # packages/ui-kit via a `file:` dep (ADR 0033), so a kernel edit can break a
-  # client's typecheck and must be caught here too. (clients/* are standalone:
-  # own bun.lock, NOT workspace members, so the root lockfile/config is NOT a
-  # trigger — it doesn't affect them.)
+  # Run on product changes AND on shared-kernel changes — products consume
+  # packages/ui-kit (ADR 0033), so a kernel edit can break a product's typecheck
+  # and must be caught here too. `apps/web/**` is intentionally NOT a trigger: it
+  # has its own gate (ci.yml + playwright.yml) and is excluded from the discover
+  # matrix. (clients/* are standalone — own bun.lock, NOT workspace members — so
+  # the root lockfile/config is NOT a trigger for them; apps/* peers are workspace
+  # members but are installed in-dir below, mirroring the standalone flow.)
   pull_request:
     branches: [main]
     paths:
       - 'clients/**'
+      - 'apps/baseline/**'
       - 'packages/**'
   push:
     branches: [main]
     paths:
       - 'clients/**'
+      - 'apps/baseline/**'
       - 'packages/**'
   workflow_dispatch:
 
@@ -37,39 +45,46 @@ permissions:
   contents: read
 
 concurrency:
-  group: clients-ci-${{ github.ref }}
+  group: products-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   discover:
-    name: Discover client products
+    name: Discover products
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      clients: ${{ steps.list.outputs.clients }}
+      products: ${{ steps.list.outputs.products }}
       empty: ${{ steps.list.outputs.empty }}
     steps:
       - uses: actions/checkout@v6
       - id: list
-        name: List clients/* product dirs
+        name: List clients/* and apps/* product dirs (excluding apps/web)
         run: |
-          # Each immediate subdir of clients/ holding a package.json is a product.
-          clients=$(
-            find clients -mindepth 1 -maxdepth 1 -type d 2>/dev/null \
-              | while read -r d; do [ -f "$d/package.json" ] && basename "$d"; done \
+          # Each immediate subdir of clients/ OR apps/ holding a package.json is a
+          # product. `apps/web` is the BBL flagship — it has its own gate
+          # (ci.yml + playwright.yml), so it is excluded here. Emit FULL relative
+          # paths (e.g. clients/mammoth-build-crm, apps/baseline) so the matrix's
+          # working-directory is unambiguous across both roots.
+          products=$(
+            { find clients apps -mindepth 1 -maxdepth 1 -type d 2>/dev/null; } \
+              | while read -r d; do
+                  [ "$d" = "apps/web" ] && continue
+                  [ -f "$d/package.json" ] && echo "$d"
+                done \
               | sort | jq -R . | jq -cs .
           )
-          [ -z "$clients" ] && clients='[]'
-          echo "clients=$clients" >> "$GITHUB_OUTPUT"
-          if [ "$clients" = '[]' ]; then
+          [ -z "$products" ] && products='[]'
+          echo "products=$products" >> "$GITHUB_OUTPUT"
+          if [ "$products" = '[]' ]; then
             echo "empty=true" >> "$GITHUB_OUTPUT"
           else
             echo "empty=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "Discovered client products: $clients"
+          echo "Discovered products: $products"
 
   check:
-    name: Check (${{ matrix.client }})
+    name: Check (${{ matrix.product }})
     needs: discover
     if: needs.discover.outputs.empty == 'false'
     runs-on: ubuntu-latest
@@ -77,9 +92,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        client: ${{ fromJSON(needs.discover.outputs.clients) }}
+        product: ${{ fromJSON(needs.discover.outputs.products) }}
     env:
-      # Client products own their DATABASE_URL (ADR 0038). A dummy satisfies
+      # Products own their DATABASE_URL (ADR 0038). A dummy satisfies
       # `prisma generate`, which resolves the URL via prisma.config.ts but never
       # connects. Real DB-backed checks run against the product's own DB locally.
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/placeholder
@@ -91,32 +106,33 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '22'
-      # clients/* are standalone (own bun.lock, NOT workspace members) — install
-      # in-dir so the product's own lockfile is the source of truth.
+      # Products are installed in-dir so the product's own lockfile is the source
+      # of truth (clients/* are standalone with own bun.lock; apps/* peers are
+      # workspace members but install cleanly in-dir too — mirrors the flow).
       - name: Install dependencies
         run: bun install --frozen-lockfile
-        working-directory: clients/${{ matrix.client }}
-      # Generate the Prisma client only if the product has a schema (some clients
+        working-directory: ${{ matrix.product }}
+      # Generate the Prisma client only if the product has a schema (some products
       # may be pre-DB). Typecheck needs the generated types once the app imports
       # the client (Phase 2); harmless before then.
       - name: Generate Prisma client
-        if: ${{ hashFiles(format('clients/{0}/prisma/schema.prisma', matrix.client)) != '' }}
+        if: ${{ hashFiles(format('{0}/prisma/schema.prisma', matrix.product)) != '' }}
         run: bunx prisma generate
-        working-directory: clients/${{ matrix.client }}
-      # Typecheck is the baseline contract — every client product must define a
+        working-directory: ${{ matrix.product }}
+      # Typecheck is the baseline contract — every product must define a
       # `typecheck` script (the runbook requires it). A missing script fails here
       # with a clear "Script not found" message, which is the correct signal.
       - name: Typecheck
         run: bun run typecheck
-        working-directory: clients/${{ matrix.client }}
-      # Lint is opt-in per client: run lint:check only if the product defines it
-      # (apps/web uses oxlint; a client adopts it when ready). Skipping is loud,
+        working-directory: ${{ matrix.product }}
+      # Lint is opt-in per product: run lint:check only if the product defines it
+      # (apps/web uses oxlint; a product adopts it when ready). Skipping is loud,
       # not silent — a real lint failure still fails the job.
-      - name: Lint (if the client defines lint:check)
-        working-directory: clients/${{ matrix.client }}
+      - name: Lint (if the product defines lint:check)
+        working-directory: ${{ matrix.product }}
         run: |
           if node -e "process.exit(require('./package.json').scripts?.['lint:check'] ? 0 : 1)"; then
             bun run lint:check
           else
-            echo "No lint:check script in clients/${{ matrix.client }} — skipping (add oxlint to enable a lint gate)."
+            echo "No lint:check script in ${{ matrix.product }} — skipping (add oxlint to enable a lint gate)."
           fi

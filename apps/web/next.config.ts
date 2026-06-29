@@ -5,6 +5,7 @@ import {
   buildMigratedAdminAppRedirects,
   buildMigratedDashboardAppRedirects,
 } from "./config/app-redirects"
+import { buildSecurityHeadersConfig } from "./config/security-headers"
 
 const withNextIntl = createNextIntlPlugin("./lib/i18n.ts")
 const withPlausible = withPlausibleProxy({ customDomain: process.env.NEXT_PUBLIC_PLAUSIBLE_URL })
@@ -41,6 +42,14 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
     ]
+  },
+
+  // Global security-header / CSP baseline (RISK #2, P0). Hardening headers are
+  // enforced; the CSP ships Report-Only first (flip CSP_ENFORCE=1 to enforce).
+  // App-agnostic builder in config/security-headers.ts so each product app
+  // (apps/baseline, …) replicates the same posture (SESSION_0465).
+  async headers() {
+    return buildSecurityHeadersConfig()
   },
 
   cacheLife: {

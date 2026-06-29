@@ -121,19 +121,64 @@ export const getIP = async () => {
 }
 
 /**
+ * Buckets that fail **closed** when the limiter itself errors (RISK #5).
+ *
+ * The register's rule: low-risk forms may fail open with an alert, but sensitive
+ * surfaces (auth/OTP/invite/claims/payment/admin) should fail closed when the
+ * limiter can't be consulted — otherwise a Redis outage silently removes the abuse
+ * control. These are the public/abuse-prone or auth-adjacent buckets where one
+ * blocked request during a Redis blip is cheaper than an unbounded flood:
+ *  - `claim`           — IP-keyed public claim attempts (account-takeover adjacent)
+ *  - `invite`          — invite-link generation (privilege grant)
+ *  - `evidence_upload` — public, UNAUTHENTICATED upload (storage-abuse surface)
+ *  - `teaser_signup`   — public, UNAUTHENTICATED email capture (spam surface)
+ *  - `email_notify`    — gates auth-email / notification sends (mail-flood surface)
+ *  - `submission` / `report` — public IP-keyed submit/report (spam surface)
+ *
+ * The authenticated, actor-keyed write buckets (schedule/attendance/enrollment/…)
+ * stay fail-OPEN: they're bounded by the session and blocking a legit member's
+ * write during a Redis blip is the worse failure for those.
+ *
+ * NOTE: this only changes behavior when Redis is CONFIGURED but the `.limit()` call
+ * ERRORS. When Redis is not configured at all (`limiters === null`, e.g. local dev)
+ * the function still fails open so dev/CI work without Redis.
+ */
+const FAIL_CLOSED_BUCKETS: ReadonlySet<string> = new Set([
+  "claim",
+  "invite",
+  "evidence_upload",
+  "teaser_signup",
+  "email_notify",
+  "submission",
+  "report",
+])
+
+/**
+ * The fail-closed decision for a bucket when the limiter errors (RISK #5).
+ * Exported as a pure predicate so the classification is unit-testable without
+ * standing up Redis or mocking `@upstash/ratelimit`. `true` = block on error.
+ */
+export const shouldFailClosed = (action: string): boolean => FAIL_CLOSED_BUCKETS.has(action)
+
+/**
  * Check if the user is rate limited
  * @param id - The identifier to check
  * @param action - The action to check
- * @returns True if the user is rate limited, false otherwise
+ * @returns True if the user is rate limited (or the limiter errored on a
+ *   fail-closed bucket), false otherwise
  */
 export const isRateLimited = async (id: string, action: keyof NonNullable<typeof limiters>) => {
+  // Redis not configured (e.g. local dev / CI): fail open so the action works.
   if (!limiters) return false
 
   const { data, error } = await tryCatch(limiters[action].limit(id))
 
   if (error) {
     console.error("Rate limiter error:", error)
-    return false // Fail open to prevent blocking legitimate users
+    // RISK #5: fail CLOSED for sensitive buckets (block when we can't consult the
+    // limiter), fail open for the rest (don't block legitimate authenticated work
+    // on a transient Redis blip).
+    return shouldFailClosed(action)
   }
 
   return !data.success
