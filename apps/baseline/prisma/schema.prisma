@@ -1,0 +1,74 @@
+// Baseline — its OWN database (ADR 0038: one database per product).
+//
+// Baseline is the LEAN white-label martial-arts SCHOOL template — a marketing
+// site + lead-capture funnel, NOT BBL's lineage/claim engine. So this schema is
+// deliberately small: it carries only what a school landing site genuinely needs
+// (inquiry capture + white-label site config). No lineage graph, no Passport, no
+// claim system, no Membership/Affiliation — those are BBL's moat, out of scope.
+//
+// No BBL models, no shared prisma package, no cross-product foreign keys. Each
+// product owns its schema + DATABASE_URL + migrations.
+//
+// Prisma 7 moved the Migrate connection URL out of schema.prisma — it lives in
+// prisma.config.ts (DATABASE_URL). The datasource below has provider ONLY; do
+// NOT add an inline `url`. The generated client lands in ../.generated/prisma.
+
+generator client {
+  provider   = "prisma-client"
+  engineType = "client"
+  output     = "../.generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// An inbound inquiry from the school landing page (the core funnel).
+/// A prospective student/parent asks about classes; the school follows up.
+/// This is the one model a white-label school site genuinely needs day one.
+model Lead {
+  id        String     @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  /// Which program they're interested in (free text on the starter; a school
+  /// can promote this to an enum or a Program FK as their offering firms up).
+  interest  String?
+  /// The prospect's own words.
+  message   String?
+  status    LeadStatus @default(NEW)
+  /// Loose UTM/referrer capture so a school can see what's driving inquiries
+  /// without standing up analytics — optional, swap for your funnel of choice.
+  source    String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  TRIAL_BOOKED
+  ENROLLED
+  CLOSED
+}
+
+/// White-label site configuration — the one-row settings record that lets a new
+/// school stand up the template without code edits. Brand *colors* live in CSS
+/// tokens (app/globals.css, the brand-tokens kit); this carries the *content*
+/// knobs (name, contact, hero copy) a non-developer school owner edits.
+model SchoolSettings {
+  id           String   @id @default(cuid())
+  schoolName   String   @default("Baseline Martial Arts")
+  tagline      String?
+  heroHeadline String?
+  heroSub      String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  /// Singleton guard: keep exactly one row (upsert on this fixed key).
+  singleton    Boolean  @unique @default(true)
+  updatedAt    DateTime @updatedAt
+}
