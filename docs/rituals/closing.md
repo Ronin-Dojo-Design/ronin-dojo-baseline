@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-06-28
-last_agent: claude-session-0459
+last_agent: claude-session-0466
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md

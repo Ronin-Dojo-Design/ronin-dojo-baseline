@@ -4,8 +4,8 @@ slug: doug
 type: protocol
 status: active
 created: 2026-05-16
-updated: 2026-05-16
-last_agent: claude-session-0175
+updated: 2026-06-28
+last_agent: claude-session-0466
 pairs_with:
   - docs/agents/petey.md
   - docs/agents/cody.md
