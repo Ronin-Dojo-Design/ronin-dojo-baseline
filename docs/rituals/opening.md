@@ -4,7 +4,7 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-28
+updated: 2026-06-29
 last_agent: claude-session-0466
 pairs_with:
   - docs/rituals/closing.md
@@ -159,6 +159,10 @@ State the task in chat (or in your notes) before you start. Be explicit:
 - What is the task?
 - Why this task now? (one sentence connecting to program plan or user request)
 - What does "done" look like?
+
+To pick the right skill/loop for the task type, consult the **task → workflow router** in
+[`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) §1 (the one-glance map of how this repo runs
+agents — routing, the roster, the ledgers, the trust boundaries, the verification gates).
 
 If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](../agents/petey.md) to plan first, using the [Petey Plan protocol](../protocols/petey-plan.md).
 

@@ -1,1 +1,0 @@
-https://www.hyperagent.com/?promo=FIRST1000&rdt_cid=5597572116389245979&utm_campaign=hyperagent_conversions_test&utm_source=share&utm_medium=ios_app&utm_name=iossmf&utm_content=1&utm_term=22

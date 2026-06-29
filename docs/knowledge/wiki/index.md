@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-06-28
+updated: 2026-06-29
 author: Brian + Copilot
 last_agent: claude-session-0467
 ---
@@ -28,6 +28,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
+| [**Agent Systems Map**](agent-systems-map.md) | concept | active — **the 5 pillars of how this repo runs agents** (SESSION_0468): skill-routing · context discipline (the roster) · work ledgers · trust boundaries · verification loops. Each → our concrete implementation; the **task→workflow router** + **allowed-vs-never table** are filled-in gaps |
 | [**Design-System Doctrine**](design-system-doctrine.md) | concept | active — **canonical design-system law** (ADR 0040, SESSION_0467): tokens-as-contract, type/spacing/φ, one Card surface + named cards, kernel boundary, 6 brand tear sheets |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
@@ -552,6 +553,16 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0430](../../sprints/SESSION_0430.md) | session--open | closed — **Lineage rank read-model reconciled (ADR 0035) + roster data corrections.** Grilled out the real model: the drawer's "current rank" had three disagreeing sources — `awardedAt desc` NULLS-FIRST ordering, the `selectedRankAward` editorial override, and a corrupt base-"Black Belt" `sortOrder` (31) — under-ranking 7/10 founders. Decision: structured `RankAward` canonical, bio narrative-only, display = highest *awarded* belt by sortOrder, `selectedRankAward` → **pending claim** (claim record `rankId` → admin-verify creates the award; FI-006). Code (3 payload orderings + `canvas-model` + drawer) + prodsnap data script (sortOrder ladder; Bill Hosken/Jerry Smith/Rikki/Andre Lima/Rorion award fixes; 2 duplicate merges) — live-verified (Meyer → Coral 7th). Track B: operator playbook validated; §6.7 router reconciled. D-029; FI-006/FI-007 (directory-form cover-photo/avatar). Prod-apply pending. |
 | [SESSION_0429](../../sprints/SESSION_0429.md) | session--open | closed — **Design-system component batch + Mammoth-Rebuild CRM epic (PR #137).** Desi brand pass: one token set + `component-design-system.{md,html}` + shared `bbl-doc-theme.ts` (accent `#E52421`, no gold) + dark/light inversion. Specced a brand-/content-agnostic component library: AdminTaskBoard (PWCC-001), m-card (PWCC-002), three-level magnetic drawer (PWCC-003), AdminKanban + intake + automations (PWCC-007), each with a PWCC cloud handoff. Opened the **Mammoth-Rebuild CRM** (HubSpot-replacement) epic + bindings PWCC-004/005/006 (Petey orchestration). Subscribed to PR #137; diagnosed + re-kicked a transient `@prisma/client` `bun install` flake. Docs/spec only; `wiki:lint` 0 errors. |
 | [SESSION_0428](../../sprints/SESSION_0428.md) | session--open | closed — **Feedback-widget wiring + PR-backlog triage + BBL Galaxy v1 + canonical public Passport DTO.** Feedback widget now persists **and** notifies the operator inbox (`notifyAdminOfFeedback` → welcome@blackbeltlegacy.com, Reply-To submitter) + 390px toast suppression on `/lineage/join` (PR #130, merged). Cleared the open-PR backlog under the Giddy merge strategy: merged #125/#126/#128/#129; closed #122/#123 (already-on-main duplicates) + #60 (superseded). BBL Galaxy v1 rebuilt fresh on main — slice 1 flag-gated R3F prototype + slice 2 public-safe DTO projection + real lineage profile drawer, verified-only (PR #133, draft). Cross-surface DTO parity audit → canonical `publicPassportPayload` + `projectPublicPassport` base (PR #135, draft) + ADR/handoff plan (issue #134). (Sessions 0420–0427 not indexed here — prior cloud-PR closes; not backfilled.) |
+| [SESSION_0468](../../sprints/SESSION_0468.md) | session--review | closed — **S48 hostile repo review (lean-out).** Graphify-first wired-vs-dead audit (15.6k nodes): orchestration spine healthy, rot concentrated. Deleted the 3.2M/102-file `RONIN_DOJO-Baseline/` PARA vault + the byte-identical `_imports/baseline-systems-pack/` dup (emptied `_imports/`); collapsed the 5-copy adoption checklist to 1; retired `project-log.md` → `_archive/` + tombstone (~3.3M/~110 files reclaimed). Caught 2 stale banked assumptions (`send-email-flow` is a live SOP, not an orphan; the neon-advisory dup is already gone) + the stalled loop-promotion program (4 dormant loops). |
+| [SESSION_0467](../../sprints/SESSION_0467.md) | session--plan | closed — **Design-system doctrine + card architecture (ADR 0040).** Refused to build: a grill exposed 3 contradicting "one card" docs + a `kind` god-union + a confidently-wrong imported design system. Ratified the doctrine (one L1 `Card` surface + named cards: `ListingCard`=catalog, `m-card`→record/person, `BoardCard`=kernel; `kind="generic"` dropped) then conform. Deleted the wrong `_imports/monorepo-design-system/`. RDD North Star + "what would Apple do" mantra → CLAUDE.md; refreshed `hostile-repo-review.md`. |
+| [SESSION_0466](../../sprints/SESSION_0466.md) | session--open | closed — **PR-review automation (G-007) + quality loop on PRs #172/#173/#174.** `/bow-in` auto-picks-up open-PR review (shared `parsePullRequests`, gh CLI + GraphQL → `/app/loop-board`); `/pr-fix-loop` worktree fan-out. |
+| [SESSION_0465](../../sprints/SESSION_0465.md) | session--open | open (draft PR #174) — **Platform security + `apps/*` CI.** Security-class ledger debt that gates going multi-domain/public (security headers + CSP) + generalize per-product CI. |
+| [SESSION_0464](../../sprints/SESSION_0464.md) | session--open | open (draft PR #173) — **Mammoth auth (MB-DATA-003).** Wire Better Auth into the Mammoth app (per-product) + owner gate + staging config. |
+| [SESSION_0463](../../sprints/SESSION_0463.md) | session--open | closed (draft PR #172) — **Baseline restore.** Restore baselinemartialarts.com to its OWN white-labeled deployment as `apps/baseline` (own deploy + DB). |
+| [SESSION_0435](../../sprints/SESSION_0435.md) | session--open | closed — **FI-009 BJJ technique-graph + curriculum.** Verify the already-landed technique-graph/curriculum feature (harvested from closed PR #157) + prod import. |
+| [SESSION_0434](../../sprints/SESSION_0434.md) | session--open | in-progress — **FI-008 local verify + merge; FI-007 cover/video render.** Triage the open PR queue + run the deferred local verification. |
+| [SESSION_0433](../../sprints/SESSION_0433.md) | session--implement | closed — **FI-008 seed-baseline-lineage reconcile (D-030).** Reconcile `seed-baseline-lineage.ts` with the SESSION_0430 data corrections. |
+| [SESSION_0432](../../sprints/SESSION_0432.md) | session--open | closed — **FI-006 claim→award rank lifecycle (ADR 0035).** Wire a rank picker into the claim flow; claim `rankId` → admin-verify creates the RankAward. |
 | [petey-plan-0419-post-launch-sweep](../../petey-plan-0419-post-launch-sweep.md) | petey-plan | active — **agent TODO tracker** for the post-SESSION_0419 sweep: (1) **P0** Brian Truelson first-tester onboarding + lifetime comp + special thank-you email, (2) feedback-widget verify/route, (3) student sign-up-under-instructor/school + claim-approval flow, (4) admin email-composer parity + port BBLApp BBLEmail + Apple-worthy admin mobile, (5) UI polish (rank-badge overlap, EmailCapture system-pref theme default, FormLabel wrap). Each task self-contained for a fresh `/bow-in` session. |
 | [petey-plan-0355](../../petey-plan-0355.md) | petey-plan | active — claim teaser / generic claim model / live-preview / gating feature spec (built in SESSION_0354; browser-smoke + org-claim-CTA + person-merge follow-ups remain) |
 | [petey-plan-0356](../../petey-plan-0356-profile-redesign.md) | plan | active — profile system redesign: one Person-presentation contract + BBL profile shell + unified register/claim/invite funnel (Dirstarter submit pattern); assessment staged in SESSION_0355 |
@@ -578,15 +589,16 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Giddy + Doug Hostile Close Review](../../protocols/hostile-close-review.md) | protocol | active |
 | [Giddy Merge Strategy](../../protocols/giddy-merge-strategy.md) | protocol | active |
 | [Hostile Repo Review](../../protocols/hostile-repo-review.md) | protocol | active |
-| [Hot-Fix Protocol](../../protocols/hot-fix-protocol.md) | protocol | active |
-| [Identify-Intent-Improve Loop](../../protocols/identify-intent-improve-loop.md) | protocol | active |
-| [KISS / DRY / YAGNI Loop](../../protocols/kiss-dry-yagni-loop.md) | protocol | active |
+| [Hot-Fix Protocol](../../protocols/hot-fix-protocol.md) | protocol | active — **break-glass** emergency prod-fix runbook; dormant by design (fires only on a user-blocking prod bug) |
+| [Identify-Intent-Improve Loop](../../protocols/identify-intent-improve-loop.md) | protocol | active — **sub-routine** of `pr-review-score-fix-loop` (its `INTEGRATE_INTENT_REQUIRED` branch invokes this intent re-derivation) |
+| [KISS / DRY / YAGNI Loop](../../protocols/kiss-dry-yagni-loop.md) | protocol | **superseded** (SESSION_0468) — workflow = `/fallow-fix-loop` + `/simplify` + `/code-quality`; KISS/DRY/YAGNI rubric folded into `code-quality-matrix` D3 |
 | [Next Session Loading Order](../../protocols/next-session-loading-order.md) | protocol | active |
 | [Petey Plan Protocol](../../protocols/petey-plan.md) | protocol | active |
 | [PR Review → Score → Fix Loop](../../protocols/pr-review-score-fix-loop.md) | protocol | active |
-| [QA Runtime Verification](../../protocols/qa-runtime-verification.md) | protocol | active |
-| [Three-Pass Loop](../../protocols/three-pass-loop.md) | protocol | active |
+| [QA Runtime Verification](../../protocols/qa-runtime-verification.md) | protocol | active — **schema** behind the wired `## Verification` close-gate (Doug's method; audited every bow-out by `hostile-close-review`) |
+| [Three-Pass Loop](../../protocols/three-pass-loop.md) | protocol | active — **foundation**: the reusable score→fix→review engine `pr-review-score-fix-loop` is built on (invoked by other loops, not directly triggered) |
 | [Review & Recommend Protocol](../../protocols/review-recommend.md) | protocol | active |
+| [Send a One-off BBL Email (SOP)](../../protocols/send-email-flow.md) | protocol | active — gated draft→preview→send flow for personal/one-off BBL email (distinct from lifecycle email) |
 | [Wiki Lint](../../protocols/wiki-lint.md) | protocol | active |
 | [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) | protocol | active |
 | [Code Guardrails](../../protocols/code-guardrails.md) | protocol | active |

@@ -1,1 +1,0 @@
-![[Round_kick_angles_1.txt]]

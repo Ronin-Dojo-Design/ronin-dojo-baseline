@@ -4,7 +4,7 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-26
+updated: 2026-06-29
 last_agent: claude-session-0449
 pairs_with:
   - aliases-and-canonical-ids
@@ -236,7 +236,7 @@ When no hub exists for a domain yet, the truth-resolution order above still gove
 
 ## Sources
 
-- Raw import: `docs/_imports/baseline-systems-pack/02_REPO_TRUTH_INDEX_BASELINE.md`
+- Raw import: `docs/ronin_dojo_baseline_systems_pack/02_REPO_TRUTH_INDEX_BASELINE.md`
 
 ## Open Questions
 

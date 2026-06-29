@@ -27,10 +27,11 @@ tags:
 > (the monorepo original used 9.6).
 
 The reusable **score → fix → review** engine. This is the deterministic core that other
-loops lean on: [`pr-review-score-fix-loop`](pr-review-score-fix-loop.md) and the
-`kiss-dry-yagni-loop` (forthcoming) both build their lane-specific flows on top of this
-contract. When a lane needs a graded, repeatable verdict instead of an ad-hoc skim, run
-this loop.
+loops lean on: [`pr-review-score-fix-loop`](pr-review-score-fix-loop.md) builds its
+lane-specific flow on top of this contract. When a lane needs a graded, repeatable verdict
+instead of an ad-hoc skim, run this loop. (The `kiss-dry-yagni-loop` that also rode this
+engine was retired at SESSION_0468 — its KISS/DRY/YAGNI rubric folded into
+[`code-quality-matrix`](code-quality-matrix.md) D3 + the `/fallow-fix-loop` skill.)
 
 ```text
 REVIEW SCORE → FIX → REVIEW SCORE → FIX → REVIEW SCORE → FIX
@@ -132,7 +133,8 @@ retired — SESSION files are canonical).
 
 - [PR Review → Score → Fix Loop](pr-review-score-fix-loop.md) — the PR-lane flow built on
   this engine.
-- `kiss-dry-yagni-loop` — the simplification-lane flow built on this engine (forthcoming).
+- `kiss-dry-yagni-loop` — **retired (SESSION_0468)**; the simplification lane is now the
+  `/fallow-fix-loop` + `/simplify` + `/code-quality` skills (rubric → [`code-quality-matrix`](code-quality-matrix.md) D3).
 - [Hostile Close Review](hostile-close-review.md) — the session-close scoring sibling
   (same `≥9.5` bar).
 - [Petey](../agents/petey.md) · [Cody](../agents/cody.md) · [Doug](../agents/doug.md) ·

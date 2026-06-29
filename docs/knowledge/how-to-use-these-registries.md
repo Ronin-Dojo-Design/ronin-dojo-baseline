@@ -122,4 +122,4 @@ Use these docs when they actually unblock clarity. The point is cleaner work, no
 - Naming, canon, and blockers stay legible across agents and time.
 - Documentation upgrades happen against a known standard, not against vibes.
 
-Source: `docs/_imports/baseline-systems-pack/06_HOW_TO_USE_THESE_REGISTRIES_BASELINE.md`
+Source: `docs/ronin_dojo_baseline_systems_pack/06_HOW_TO_USE_THESE_REGISTRIES_BASELINE.md`

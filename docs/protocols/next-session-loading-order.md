@@ -156,4 +156,4 @@ Then pick the one lane doc that matches the task. That is the best lightweight d
 - Tier 2 / Tier 3 are pulled in by lane, not by reflex.
 - The session avoids loading legacy or out-of-lane context that would dilute focus.
 
-Source: `docs/_imports/baseline-systems-pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md`
+Source: `docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md`

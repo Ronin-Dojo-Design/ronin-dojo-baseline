@@ -184,6 +184,10 @@ SESSION files are canonical). Cite `code-quality-matrix §N` so the basis is aud
 - **`hostile-close-review`** is the *session-close* gate; this matrix's caps and the 100/1k/10k confidence
   triad are taken from it, so a unit scored here and a session scored there agree.
 - **`jetty-annotation-standard`** is the traceability requirement D4/D7 check for.
+- **`kiss-dry-yagni-loop` (retired SESSION_0468)** — its KISS/DRY/YAGNI 0-3 sub-rubric **is** D3 here, and its
+  "measure deltas with `fallow`, don't assert them" method **is** the `/fallow-fix-loop` skill. The standalone
+  loop doc duplicated what D3 + `fallow-fix-loop` + `/simplify` already deliver, so it was superseded; this
+  matrix is its canonical home.
 
 ## Cross-references
 

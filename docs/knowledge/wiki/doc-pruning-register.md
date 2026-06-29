@@ -4,7 +4,7 @@ slug: doc-pruning-register
 type: registry
 status: active
 created: 2026-05-18
-updated: 2026-06-20
+updated: 2026-06-29
 author: Brian + Giddy
 last_agent: claude-session-0298
 backlinks:
@@ -43,8 +43,8 @@ Do not delete or move a doc just because it feels stale. First preserve the usef
 | --- | --- | --- | --- | --- | --- |
 | `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md` | reference | active supporting / later reference | `docs/product/baseline-martial-arts/PRD.md`, `docs/product/baseline-martial-arts/STORIES.md`, `docs/knowledge/wiki/ronin-project-context.md` | Useful Baseline launch/source material, but too broad to remain the active product truth now that Baseline has a canonical PRD/story pack. | Keep as source for now; demote after Baseline PRD is accepted. |
 | `docs/architecture/source/*` | mixed | reference | `docs/knowledge/wiki/ronin-project-context.md`, product docs, ADRs | Raw planning/source material should not compete with accepted architecture/product docs. | Review one-by-one before archive moves. |
-| `docs/_imports/*` | reference | reference (kept, excluded) | `docs/knowledge/wiki/repo-truth-index.md`, `docs/knowledge/wiki/ronin-project-context.md` | Imported packs often duplicate adopted wiki/registry content. | **RESOLVED (SESSION_0298):** kept in place. `_imports/` is excluded by directory name from both `wiki:lint` and the docs navigator, so it is **already out of the active load path**. A physical move to `_archive/` was rejected — zero active-load benefit, and it would push the cold files one level deeper, breaking their outbound relative links. Canonical replacements already carry the live content. |
-| `docs/ronin_dojo_baseline_systems_pack/*` | reference | reference (kept, excluded) | existing wiki registries and project-context | Earlier generated systems pack appears duplicated by current repo-native wiki docs. | **RESOLVED (SESSION_0298):** kept in place, same rationale as `docs/_imports/*` above — excluded by dir name from lint + nav, already out of active load; physical relocation rejected as value-negative. |
+| `docs/_imports/*` | reference | **DELETED (SESSION_0468)** | — | Imported packs duplicate adopted wiki/registry content. | **SUPERSEDED — `_imports/` removed at SESSION_0468 (S48 lean-out).** The 0298 "keep, excluded" call was reversed: `_imports/baseline-systems-pack/` was byte-identical to the root pack (epic RH-1), so it was deleted (emptying `docs/_imports/` entirely) and its 7 live "Source:" footnotes repointed to the root pack. One canonical copy now (the root pack). The other former member, `_imports/monorepo-design-system/`, was deleted at SESSION_0467 (confidently-wrong). |
+| `docs/ronin_dojo_baseline_systems_pack/*` | reference | reference (kept — now the sole canonical copy) | existing wiki registries and project-context | Earlier generated systems pack; the duplicate `_imports/` copy is gone. | **RESOLVED (SESSION_0468):** kept as the **one** canonical import-pack lineage after the `_imports/` duplicate was deleted (S48). Still excluded by dir name from lint + nav; out of active load. |
 | older deep research reports | reference | archive candidate | relevant product PRD, architecture spec, or wiki concept | Useful source material, but too heavy for active startup/context load. | Keep as source/archive, not active canon. |
 | older launch reports superseded by `WORKFLOW_5.0` | mixed | reference/archive candidate | `docs/protocols/WORKFLOW_5.0.md`, latest session files | Avoid competing launch calendars and stale sprint plans. | Add superseded_by metadata before archive. |
 | duplicate repo truth index imports | reference | reference (kept, excluded) | `docs/knowledge/wiki/repo-truth-index.md` | Canonical truth index already exists. | **RESOLVED (SESSION_0298):** these live under `docs/_imports/` — covered by the `docs/_imports/*` decision above (kept in place, excluded from active load). |

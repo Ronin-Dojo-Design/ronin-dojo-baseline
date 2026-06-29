@@ -154,4 +154,4 @@ Keep the canonical repo doc name `JETTY_3.0.md`. Use add-on docs like this one o
 - A `## Truth and boundaries` section appears on auth, content engine, brand/migration, SOP, and runbook pages where applicable.
 - Health scores stay honest; backlinks resolve; canonical JETTY 3.0 page remains the spine.
 
-Source: `docs/_imports/baseline-systems-pack/05_JETTY_3.0_SYSTEMS_PROFILE_BASELINE.md`
+Source: `docs/ronin_dojo_baseline_systems_pack/05_JETTY_3.0_SYSTEMS_PROFILE_BASELINE.md`

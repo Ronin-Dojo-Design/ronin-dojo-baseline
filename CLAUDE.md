@@ -30,6 +30,9 @@ into context each session; detailed rules live in referenced docs, read on deman
   `docs/protocols/petey-plan.md` (grill open decisions first), then Cody builds and
   Doug verifies. Parallelize with sub-agents only when the work is genuinely disjoint;
   do single coherent changes inline.
+- **How the repo runs agents is mapped** in `docs/knowledge/wiki/agent-systems-map.md`
+  (the 5 pillars) — consult its **task→workflow router** when picking a skill/loop, and its
+  **allowed-vs-never table** for the consolidated boundary rules. Reference, not a per-session read.
 
 ### Bow-out = full close (default)
 

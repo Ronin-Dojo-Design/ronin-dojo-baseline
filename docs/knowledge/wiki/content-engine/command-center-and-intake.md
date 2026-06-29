@@ -407,7 +407,7 @@ That proves the lane without overbuilding.
 
 ## Sources
 
-- `docs/_imports/baseline-systems-pack/11_CONTENT_ENGINE_COMMAND_CENTER_AND_INTAKE_BASELINE.md`
+- `docs/ronin_dojo_baseline_systems_pack/11_CONTENT_ENGINE_COMMAND_CENTER_AND_INTAKE_BASELINE.md`
 
 ## Open Questions
 

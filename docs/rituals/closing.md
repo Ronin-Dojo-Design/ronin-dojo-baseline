@@ -4,7 +4,7 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-28
+updated: 2026-06-29
 last_agent: claude-session-0466
 pairs_with:
   - docs/rituals/opening.md
@@ -185,6 +185,13 @@ That's the core close done.
 ## Optional deep items
 
 Do these when useful — especially at end of day, end of sprint, milestone, or when the session touched schema/auth/payments/deployment/production data.
+
+> **Sprint-boundary cadence — run the repo-wide hostile review.** When a sprint closes/opens (a new `S#`)
+> or on signal (token burn rediscovering files, suspected duplication/drift, before a large porting lane),
+> run [`hostile-repo-review.md`](../protocols/hostile-repo-review.md) — the repo-wide sibling of the
+> per-diff `hostile-close-review`. This is its cadence hook: the protocol governs by being *triggered here*,
+> not by being remembered (the lesson of SESSION_0467, where it had drifted out of memory). It is not a
+> per-session step — most bow-outs skip it.
 
 ### 6. Reflections (in the SESSION file)
 

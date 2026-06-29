@@ -252,7 +252,7 @@ That is enough to make the video lane useful without building a giant automation
 
 ## Sources
 
-- `docs/_imports/baseline-systems-pack/12_VIDEO_SHORTCUTS_AND_IGGY_AUTOMATION_BASELINE.md`
+- `docs/ronin_dojo_baseline_systems_pack/12_VIDEO_SHORTCUTS_AND_IGGY_AUTOMATION_BASELINE.md`
 
 ## Open Questions
 

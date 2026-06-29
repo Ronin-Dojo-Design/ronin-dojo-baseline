@@ -1,1 +1,0 @@
-![[# Black Belt Legacy deep research package_1.md]]

@@ -4,7 +4,7 @@ slug: aliases-and-canonical-ids
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-04-29
+updated: 2026-06-29
 author: Brian + ChatGPT
 last_agent: codex-session-0025
 pairs_with:
@@ -155,7 +155,7 @@ Suggested status examples:
 
 ## Sources
 
-- Raw import: `docs/_imports/baseline-systems-pack/03_ALIASES_AND_CANONICAL_IDS_BASELINE.md`
+- Raw import: `docs/ronin_dojo_baseline_systems_pack/03_ALIASES_AND_CANONICAL_IDS_BASELINE.md`
 
 ## Open Questions
 
