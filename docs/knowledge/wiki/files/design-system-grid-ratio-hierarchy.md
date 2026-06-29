@@ -23,6 +23,10 @@ tags:
 
 # Design System — 12-grid, golden ratio & visual hierarchy
 
+> **Absorbed into [`design-system-doctrine.md`](../design-system-doctrine.md) §3–§5** (ratified by
+> [ADR 0040](../../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md)).
+> The doctrine is canon; this file remains the detailed working notes for the grid/ratio/hierarchy layer.
+
 > The **layout + proportion + hierarchy** layer of the design system. Complements the canonical
 > token set + 1-2-3 rhythm + 4px spacing scale in `component-design-system` (lands with PR #137)
 > and the type ladder in [`bbl-type-system`](bbl-type-system.md). PWCC: TBD (slot into the spec

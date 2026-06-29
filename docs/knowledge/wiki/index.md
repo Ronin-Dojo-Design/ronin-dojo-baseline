@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-06-28
 author: Brian + Copilot
-last_agent: claude-session-0460
+last_agent: claude-session-0467
 ---
 
 # LLM Wiki Index
@@ -28,6 +28,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 
 | Page | Type | Status |
 | --- | --- | --- |
+| [**Design-System Doctrine**](design-system-doctrine.md) | concept | active — **canonical design-system law** (ADR 0040, SESSION_0467): tokens-as-contract, type/spacing/φ, one Card surface + named cards, kernel boundary, 6 brand tear sheets |
 | [Passport and Shells](concepts/passport-and-shells.md) | concept | active |
 | [Repo Truth Index](repo-truth-index.md) | concept | active |
 | [Second-Brain Levels](second-brain-levels.md) | reference | active — 5-level self-assessment of the repo's knowledge system (strong L1/L2/L4, gap at L3 semantic, emerging L5); open L3 decision |

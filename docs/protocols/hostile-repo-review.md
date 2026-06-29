@@ -4,13 +4,15 @@ slug: hostile-repo-review
 type: protocol
 status: active
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-06-28
 author: Brian + ChatGPT
-last_agent: chatgpt-hostile-review-pack
+last_agent: claude-session-0467
 pairs_with:
   - docs/protocols/hostile-close-review.md
   - docs/protocols/WORKFLOW_5.0.md
-  - docs/knowledge/wiki/dirstarter-component-inventory.md
+  - docs/learning/ddd/learning-records/0005-extract-the-l1-down-dont-cleanroom-it.md
+  - docs/runbooks/dev-environment/graphify-repo-memory.md
+  - docs/knowledge/wiki/custom-component-inventory.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -18,13 +20,29 @@ tags:
   - repo-health
   - component-porting
   - graphify
+  - drift
+  - leaning
 ---
 
 # Hostile Repo Review
 
+> **Refreshed SESSION_0467** — added the Graphify-first method (§Method), the six hunt-lenses
+> (§Lenses), the finding-router output, and the *what-would-Apple-do* mantra. **Governs the S48
+> repo-health sprint.** (Meta-note: this protocol already existed but had drifted out of memory — almost
+> re-authored from scratch this session, which is itself the cross-cutting drift it hunts. Predicted by
+> [Learning Record 0005](../learning/ddd/learning-records/0005-extract-the-l1-down-dont-cleanroom-it.md).)
+
 ## Summary
 
-This protocol is a repo-wide hostile review, not a session-close review. It is used when the repo has accumulated enough work that the team needs to interrogate structure, searchability, component reuse, token burn, and workflow honesty before the next large implementation lane.
+This protocol is a repo-wide hostile review, not a session-close review (its per-diff sibling is
+[`hostile-close-review.md`](hostile-close-review.md)). Run it when the repo has accumulated enough work
+that the team needs to interrogate **structure, searchability, component reuse, token burn, duplication,
+dead/orphaned work, and workflow honesty** before the next large lane — the cross-cutting drift a
+per-session close structurally cannot see.
+
+> **Mantra: what would Apple / Facebook do?** They do not keep three "one card" docs, a 3M imported vault
+> nobody reads, or a god-component with a five-way `kind` union. One foundation, a few single-purpose
+> pieces, delete the rest. This review hunts the gap between that bar and reality.
 
 ## Status
 
@@ -51,6 +69,35 @@ Run this when any of these are true:
 - component drift or duplicate UI is suspected
 
 ## Steps
+
+## Method — Graphify-first, then verify by inspection
+
+Discovery is [Graphify](../runbooks/dev-environment/graphify-repo-memory.md)-first — the graph *is* the
+"what's wired" oracle. **Quantify every finding** (size, file count, connectivity); never assert from a vibe.
+
+```bash
+graphify stats                                   # baseline: nodes / edges / communities / files
+graphify query "<system / loop / protocol nouns>" --budget 2000   # what relates to X
+graphify explain "<node>"                         # is this node wired (edges) or orphaned (isolated)?
+graphify path "<A>" "<B>"                          # is the claimed wiring actually there?
+```
+
+Then open the exact files and confirm by direct source/doc inspection. Graphify is navigation, not proof.
+
+## The six hunt-lenses (what to look for)
+
+1. **Duplication & forks** — N copies of one file; multiple "the one X" claims (cards, configs, helpers);
+   parallel reimplementations. *Is there exactly one of this thing?*
+2. **Dead / orphaned** — low graph connectivity; retired-but-present docs (`archived-frozen` still in an
+   active dir); unreferenced protocols / skills / scripts. *Does anything point at this?*
+3. **Wired vs lost-in-the-wind** — for each system/loop/protocol built in recent sprints, is it referenced
+   *and* active today (a real call site / ritual hook), or built-then-abandoned? `graphify explain` each.
+4. **Confidently-wrong docs** — imported/remembered values that contradict the live code (the deleted
+   `_imports/monorepo-design-system` gold-BBL corpus is the canonical example). Worse than no docs.
+5. **Token-weight / sprawl** — biggest files + dirs; SESSION sprawl (archive/compact candidates); anything a
+   fresh agent must wade through that it shouldn't.
+6. **Boundary integrity** — kernel purity (no app coupling in `packages/ui-kit`), ADR adherence, design-system
+   doctrine conformance (no `kind` god-unions; tokens-as-contract).
 
 ### 1. Confirm active repo spine
 
@@ -143,11 +190,29 @@ Use this shape:
 
 ## Outputs
 
-- repo score
-- token-efficiency verdict
-- component-port readiness verdict
-- findings with required follow-up
-- go/no-go recommendation for next session
+- repo score + token-efficiency verdict + component-port readiness verdict
+- **HRR findings routed to the canonical ledgers** via the finding router (closing.md §6.7): drift →
+  [`drift-register`](../knowledge/wiki/drift-register.md) (D); wiring → `wiring-ledger` (WL); dead/duplicated
+  → a repo-health (RH) batch in the drift register; decision → ADR.
+- **A lean-out action list** — each item: target · **quantified weight** (size / file count / connectivity) ·
+  classification (delete / archive / dedup / document / keep) · one-line rationale.
+- **An archive/delete plan — operator-gated.** Stage deletes, show the manifest + total reclaimed, delete on
+  the word ([[explicit-push-authorization]]). Never delete SESSION history (append-only); never overwrite/
+  delete anything that contradicts how it was described without surfacing it first.
+- **A wired-vs-dead table** — every recent system/loop/protocol with its live status (active / orphaned /
+  retire) so "what did we actually keep" is answerable in one read.
+- go/no-go recommendation + bundled lanes for subsequent sessions (the loop-of-loops backlog).
+
+## Cadence + relationship to the per-session close
+
+| | per-session | repo-wide |
+| --- | --- | --- |
+| Protocol | [`hostile-close-review`](hostile-close-review.md) | this |
+| Scope | the session's diff | the whole repo |
+| Catches | bugs/regressions in new work | duplication, dead code/docs, forks, sprawl, lost-in-the-wind |
+| Cadence | every bow-out | every sprint / on signal |
+
+The two compose: the close keeps each diff honest; the repo review keeps the *whole* honest.
 
 ## Petey close
 

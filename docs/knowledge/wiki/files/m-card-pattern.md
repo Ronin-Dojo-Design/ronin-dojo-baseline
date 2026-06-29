@@ -37,6 +37,14 @@ tags: [card, m-card, roster, dto, dirstarter, brand-agnostic, spec, flow, ui]
 
 # m-card — the one card contract
 
+> **⚠ Superseded in part by [ADR 0040](../../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md)
+> + the [Design-System Doctrine](../design-system-doctrine.md) §5.** m-card is **no longer "the one card"** —
+> it is demoted to the **record/person card**, one of a small set of named cards on the single L1 `Card`
+> surface (alongside `ListingCard` = catalog, `BoardCard` = kernel boards). The `kind="generic"` plan is
+> **dropped** (catalog content uses `ListingCard`, not a generic m-card kind), and the `kind` god-union is to
+> be split into named cards. Read the doctrine §5 first; the `roster`/`rank` slices below are still valid as
+> the record-card render paths.
+
 ## Summary
 
 **One card, two axes of agnosticism.** `m-card` is a single template that renders any roster, rank

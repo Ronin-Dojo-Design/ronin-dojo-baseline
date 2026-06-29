@@ -4,9 +4,10 @@ slug: baseline-design-system
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-06-08
-last_agent: claude-session-0357
+updated: 2026-06-28
+last_agent: claude-session-0467
 pairs_with:
+  - docs/knowledge/wiki/design-system-doctrine.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
   - docs/runbooks/design/ui-library-candidates.md
   - apps/web/app/styles.css
@@ -17,13 +18,20 @@ backlinks:
 
 # Baseline Design System — Hub
 
+> **Superseded as the design-system hub by [`design-system-doctrine.md`](../../knowledge/wiki/design-system-doctrine.md)**
+> (ratified by [ADR 0040](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md), SESSION_0467).
+> This file is now the **Baseline-specific** runbook (Baseline tokens + the white-label override model);
+> the cross-brand doctrine, all six tear sheets, the card architecture, and the kernel boundary live in the
+> doctrine. The legacy `docs/_imports/monorepo-design-system/` corpus referenced below was **deleted as
+> confidently-wrong** (gold BBL, a `useDesignSystem()` hook) — derive only from the live app + the doctrine.
+
 ## Summary
 
 The single reference for Baseline Martial Arts' design tokens, type/spacing scales, component
 idioms, and the multi-brand override model. Baseline is **dirstarter-derivative and intentionally
 minimal** — it is the clean **Ronin Dojo Design (RDD) white-label boilerplate** that every future
 white-labeled client site forks from. The richer Tuff Buffs / BBL / WEKAF token systems
-(synthesized below from the legacy monorepo) are the **eventual visual reference**, layered on later
+(see the [doctrine tear sheets](../../knowledge/wiki/design-system-doctrine.md)) are the **eventual visual reference**, layered on later
 to demonstrate RDD's customization capability — they are *not* applied to Baseline today.
 
 **Token architecture is frozen** under [ADR 0022 — Brand Chrome Resolution](../../architecture/decisions/0022-brand-chrome-resolution.md).
@@ -35,9 +43,9 @@ Do not introduce brand-specific tokens into Baseline ad hoc.
   Tailwind v4 `@theme` block. Identity strings: [`apps/web/config/site.ts`](../../../apps/web/config/site.ts) (`brandConfigs`).
 - **Governing decision:** [ADR 0022](../../architecture/decisions/0022-brand-chrome-resolution.md) —
   `data-brand` attribute on `<html>`, CSS custom-property overrides per brand, `BrandProvider` context.
-- **Reference imports (raw, immutable):** [`docs/_imports/monorepo-design-system/`](../../_imports/monorepo-design-system/) —
-  the legacy multi-brand token canon (`DESIGN_SYSTEM_TOKENS.md`), per-brand tear sheets, and the
-  DesignSystem quick-reference. These are historical reference; synthesize here, do not edit them.
+- **Cross-brand canon:** [`design-system-doctrine.md`](../../knowledge/wiki/design-system-doctrine.md) — the
+  ratified doctrine with all six tear sheets derived from the live app (the legacy
+  `_imports/monorepo-design-system/` corpus was deleted as wrong; do not look for it).
 
 ## Layering strategy (read this first)
 
@@ -121,10 +129,11 @@ Both have `.dark` parity blocks. Adding a brand: (1) `Brand` enum in Prisma, (2)
 - Icons: Lucide, auto-sized to `1em` and stroke `1.75` via base layer; arrow icons get hover-translate idioms.
 - `prose` utility extends Tailwind Typography with heading-anchor affordances.
 
-## Brand token canon (reference only — synthesized from monorepo)
+## Brand token canon (reference only — derived from live canon)
 
-> These are the **later** alignment targets, not current Baseline tokens. Full detail in
-> [`docs/_imports/monorepo-design-system/`](../../_imports/monorepo-design-system/).
+> These are the **later** alignment targets, not current Baseline tokens. Full per-brand tear sheets (BBL,
+> Baseline, Mammoth, Tuff Buffs, WEKAF + the Ronin umbrella) live in
+> [`design-system-doctrine.md` §7](../../knowledge/wiki/design-system-doctrine.md).
 
 | Brand | Primary | Secondary / Accent | Notes |
 | --- | --- | --- | --- |
@@ -155,7 +164,6 @@ Recurring lessons from the legacy tear sheets worth carrying into Baseline now:
 
 ## Sources
 
-- `docs/_imports/monorepo-design-system/DESIGN_SYSTEM_TOKENS.md` (monorepo Session 308 canon)
-- `docs/_imports/monorepo-design-system/TEAR_SHEET_{TUFFBUFFS,BLACKBELTLEGACY,WEKAFUSA}.md`
-- `docs/_imports/monorepo-design-system/DESIGNSYSTEM_QUICKREF.md`
-- `apps/web/app/styles.css`, `apps/web/config/site.ts`, ADR 0022 (live repo)
+- [`design-system-doctrine.md`](../../knowledge/wiki/design-system-doctrine.md) — the ratified cross-brand canon (ADR 0040).
+- `apps/web/app/styles.css`, `apps/web/lib/brand-theme.ts` + `BrandSettings` (DB), `apps/web/config/site.ts`, ADR 0022 (live repo).
+- `packages/ui-kit/src/tokens/tokens.css` (kernel `--mk-*`), `clients/mammoth-build-crm/app/globals.css` (Mammoth).

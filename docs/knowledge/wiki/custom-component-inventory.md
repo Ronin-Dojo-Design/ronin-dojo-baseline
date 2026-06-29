@@ -410,7 +410,15 @@ Mirrors the lineage claim flow (request → admin review queue → approve) for 
 
 ## 9. Shared Listing template — `components/web/listing/`
 
-The **one card** every directory entity renders through ([ADR 0028](../../architecture/decisions/0028-shared-listing-card-and-taxonomy.md), Tool→Listing parity). Lifted from the L1 `ToolCard` markup with the tool-only values turned into slots; `tool-card.tsx` is now a thin adapter wiring `ToolMany` into it. Techniques, directory people/schools/lineage all compose it.
+> **Card architecture ratified by [ADR 0040](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md)
+> + the [Design-System Doctrine §5](design-system-doctrine.md):** one L1 `Card` **surface** + a small set of
+> **named** cards — `ListingCard` (catalog, this section), the record/person card (today's `m-card`, demoted
+> from "the one card"), `BoardCard` (kernel). **No `kind` god-union.** The five bespoke `<Card>` cards
+> (facet-result, course, post, merch, tournament) consolidate onto **`ListingCard`** (not a generic m-card
+> kind). ⚠ The `FacetResultCard` row below claims it renders through `ListingCard`, but the live code
+> (`facet-result-card.tsx:41`) still uses the **raw `<Card>`** — stale; the migration is the code-session work.
+
+`ListingCard` is the **catalog/listing** card. Lifted from the L1 `ToolCard` markup with the tool-only values turned into slots; `tool-card.tsx` is now a thin adapter wiring `ToolMany` into it. Techniques, directory people/schools/lineage all compose it.
 
 | Component | File | Public props | Notable behavior |
 | --- | --- | --- | --- |

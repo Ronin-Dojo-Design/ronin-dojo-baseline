@@ -91,7 +91,13 @@ aggregator reads it with no new parser logic.
 
 ### G-005 — m-card consolidation: build `kind="generic"` + rebase the kernel card on the Dirstarter L1
 
-- **Status:** open — P1 (promoted SESSION_0466 — operator)
+- **Status:** open — P1 — **doctrine ratified SESSION_0467, code pending.** [ADR 0040](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md)
+  + the [Design-System Doctrine](design-system-doctrine.md) define the target: ONE L1 `Card` surface + named
+  cards (`ListingCard`=catalog, `m-card`→record/person, `BoardCard`=kernel); **`kind="generic"` DROPPED** (the
+  5 bespoke cards fold onto `ListingCard`, not a generic kind); the `kind` god-union splits into named cards;
+  the kernel card rebases on the **ported** L1 surface (Option B: tokens travel, Tailwind doesn't). The code
+  session executes against the doctrine §5–§6 conformance-gap checklist.
+- **Status (historical):** open — P1 (promoted SESSION_0466 — operator)
 - **Objective:** (a) add the `generic` m-card kind to unlock the highest-leverage consolidation —
   FacetResultCard (orgs/trees), CourseCard, PostCard, MerchCard, TournamentCard onto the one card; **and
   (b) heal the card-origin fork** — the kernel card (`packages/ui-kit/src/m-card/m-card.tsx`) is a

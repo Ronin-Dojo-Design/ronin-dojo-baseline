@@ -19,6 +19,12 @@ tags: [design-system, branding, tokens, email, chrome, step-component, bbl]
 
 # Component Design System — BBL doc & email branding tokens
 
+> **Scope narrowed by [ADR 0040](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md).**
+> The cross-system design law (tokens, type ladder, spacing/φ, card architecture, kernel boundary, all six
+> brand tear sheets) now lives in [`design-system-doctrine.md`](design-system-doctrine.md). This file is now
+> the **doc/email/generator branding** reference (the BBL token set + the "1-2-3" step component for the
+> standalone HTML generators) — a consumer of the doctrine, not the canon.
+
 One canonical token set + the "1-2-3" step component, so emails, the app, the doc generators,
 and the spec/poster artifacts all read as **one brand**. Source of truth for the standalone HTML
 generators (orchestration hub, loop posters) and the [`SPEC_TEMPLATE`](files/_template/SPEC_TEMPLATE.md).

@@ -55,6 +55,19 @@ into context each session; detailed rules live in referenced docs, read on deman
 
 ## Repo & product strategy (ADR 0034)
 
+- **North Star (RDD umbrella):** Ronin Dojo Design builds **ONE platform** — a shared kernel
+  (`packages/ui-kit`) + a library of **brand-agnostic feature-modules** (leads/CRM, claims, payments,
+  lineage graph, directory…). A *product* (BBL · Mammoth · Baseline · Tuff Buffs · WEKAF) = a **brand
+  token-swap × a selection of those modules**, on its own DB/deploy. **Any feature can run on any
+  project** (Mammoth exercises CRM/leads/payments; BBL exercises lineage/claims — but the modules belong
+  to the **platform**, not the product). The kernel + the module library are the moat. (ADR 0040 +
+  [`design-system-doctrine.md`](docs/knowledge/wiki/design-system-doctrine.md); portfolio map:
+  `docs/knowledge/wiki/ronin-project-context.md`.)
+- **Operating mantra — "What would Apple / Facebook do?"** Default to the senior design-system answer:
+  one foundation + a few single-purpose pieces (never a god-component / `kind`-union), **ratify the law
+  then conform** to it, kill confidently-wrong docs/imports on sight, tokens-as-contract, lean over
+  sprawl. Apply it to **code, docs, and process** — not just UI. (Giddy lesson:
+  [`learning-records/0006`](docs/learning/ddd/learning-records/0006-design-systems-and-ui-kits.md).)
 - **One monorepo** (this repo) = the platform: `apps/web` (BBL flagship) · `clients/*` (client
   products, e.g. Mammoth CRM) · `packages/ui-kit` (the shared kernel). Deploy unit = **per-product
   Vercel projects** (`ignoreCommand`); `main` = prod, previews = staging. **No separate prod repos.**
