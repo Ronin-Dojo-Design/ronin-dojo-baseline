@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-23
-last_agent: claude-session-0438
+updated: 2026-06-29
+last_agent: claude-session-0470
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -116,6 +116,10 @@ Use links to the relevant live docs pages. Do not paste long excerpts into repo 
 The git hygiene step that checks extra session worktrees at close.
 
 Clean worktrees whose branches are already merged into the active branch may be removed and their local branches deleted. Worktrees with unmerged commits or uncommitted files stay in place and are recorded in the SESSION file.
+
+### AFK / attended vs unattended
+
+Whether the operator is **at the keyboard** during a session (attended) or **away** — **AFK** ("Away From Keyboard", an unattended run). The distinction is operationally load-bearing: an unattended session cannot answer a clarifying prompt or babysit flaky setup (a DB that won't boot, a stuck deploy), so a task queued for an AFK run must be **self-contained**, while an attended session can resolve environment friction live. Reorder a next-session plan accordingly — lead an AFK run with self-contained work, defer env-dependent proofs (e.g. a separate-DB staging check) to an attended one.
 
 ### Task plan log
 
