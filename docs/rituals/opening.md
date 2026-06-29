@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-06-29
-last_agent: claude-session-0466
+last_agent: claude-session-0470
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -31,6 +31,28 @@ Convention for the `last_agent` SESSION-file field is `<agent>-session-NNNN` whe
 Any of: "Bow in" / starting a fresh session / opening a new chat / picking up after a break.
 
 ## Steps
+
+### Before Step 0 — Fresh-worktree bootstrap (environment readiness)
+
+> If this session runs in a **fresh git worktree** (a `../ronin-NNNN` created off `main`, not the
+> canonical `/Users/brianscott/dev/ronin-dojo-app`), it is **not set up**: no `node_modules`, no
+> `apps/web/.env`, no generated Prisma client, and **`graphify` returns 0 nodes** (the graph lives in
+> the canonical checkout). Every gate — `tsc`, `oxlint`, `bun test`, `next dev` — fails on module
+> resolution until you bootstrap, and "graphify-first discovery" silently no-ops. **Do NOT read these
+> as code errors or a broken repo — bootstrap first.** (This is the "built-not-pointed" failure from
+> SESSION_0468 LR 0007: the bootstrap was always documented but never in the bow-in read-path.)
+>
+> **Detect:** if `apps/web/node_modules` is absent → bootstrap before any gate. Run **`/worktree-setup`**
+> (it executes the sequence), or follow the canonical
+> [`dev-environment.md` § Fresh worktree bootstrap](../runbooks/dev-environment/dev-environment.md#fresh-worktree-bootstrap).
+> In short: `bun install` (its prisma `postinstall` needs a `DATABASE_URL` — copy the canonical
+> `apps/web/.env` first, or export a throwaway one) → `bunx prisma generate --no-hints`.
+>
+> **Graphify caveat:** an empty `graphify stats`/`query` in a worktree means "graph not built here," NOT
+> "no matches" — never assert a negative from it.
+>
+> **PATH note:** the sandbox shell has no `curl` / `psql` / `tr` / `timeout` — use `bun` (built-in
+> `fetch`) for HTTP smoke-checks and `bun -e` / scripts for DB pokes.
 
 ### 0. BBL / launch work — read the SoT set FIRST (and nothing else first)
 

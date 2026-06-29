@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-11
-last_agent: claude-session-0342
+updated: 2026-06-29
+last_agent: claude-session-0470
 use_count: 0
 pairs_with:
   - docs/runbooks/mcp-usage-runbook.md
@@ -40,7 +40,13 @@ to ship a feature slice in parallel with main). Each step has produced
 real-world friction in the past — copy-paste rather than improvise. This
 section is cross-linked from
 [`docs/protocols/cody-preflight.md`](../../protocols/cody-preflight.md) step 5
-("Dev environment confirmed").
+("Dev environment confirmed") and surfaced at bow-in by
+[`opening.md` → "Before Step 0 — Fresh-worktree bootstrap"](../../rituals/opening.md).
+
+> **Shortcut:** run the **`/worktree-setup`** skill, which executes this sequence —
+> but **env-first** (it copies the canonical `.env` *before* `bun install`), so the prisma
+> `postinstall` succeeds in one shot instead of failing on `DATABASE_URL` (step 2 below) and
+> being patched at steps 4–5.
 
 ```bash
 # 1. Create the worktree off main
