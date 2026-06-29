@@ -5,7 +5,7 @@ type: concept
 status: active
 created: 2026-04-25
 updated: 2026-06-29
-last_agent: claude-session-0470
+last_agent: claude-session-0472
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -86,6 +86,17 @@ The Giddy + Doug close review that challenges plan sanity, Dirstarter alignment,
 ### ADR
 
 Architecture Decision Record. An ADR records an accepted, proposed, rejected, or superseded architecture choice that should outlive one session.
+
+### IA (Information Architecture)
+
+How a product's content and features are **organized, labeled, and navigated** — the route structure, the
+nav/sidebar hierarchy, which surface *owns* a concept, and what each thing is *called*. IA is distinct from
+**visual design** (how it looks) and from **data modeling** (how it's stored): two records can live in
+separate tables yet be presented on one surface, and one surface can host two record types. Example
+(SESSION_0472): seminars (`Event`) and promotions (`PromotionEvent`) stay **distinct models**, but the IA
+decision routes seminars to `/app/events` and promotions to the lineage area, surfaced together in one
+"Events" view. When a change moves *where* a feature lives or *renames* a nav surface, that's an IA change —
+call it out explicitly; don't fold it silently into a feature PR.
 
 ### Bounded parallelism (test runner)
 

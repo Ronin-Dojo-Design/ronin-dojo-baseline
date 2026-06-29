@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-15
-last_agent: claude-session-0392
+updated: 2026-06-29
+last_agent: claude-session-0472
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -327,6 +327,45 @@ refreshed into `dirstarter_template` at SESSION_0359.
   (`~/Local Sites/BlackBeltLegacy/app/sql/local.sql`) and **commit it to the new repo** — it is the one
   genuinely at-risk artifact (ephemeral `/tmp`, uncommitted inputs). Snapshot prod Neon once as cheap
   insurance even though it is disposable.
+
+---
+
+## D13 — BBL membership-tier + verification-on-ramp model  *(ratified SESSION_0472)*
+
+> Full grill record + reuse-vs-build matrix + the 10–12-slice build plan live in
+> [`SESSION_0472.md`](../../sprints/SESSION_0472.md) (decisions D472-1..15). This is the consolidated entry.
+
+- **Four tiers = the four existing entitlement keys** (no new model): Free (account only) · **Premium Member**
+  `LINEAGE_PREMIUM` **$35/yr** · **Elite Member** `LINEAGE_ELITE` **$65/yr · $45 verified-black-belt** ·
+  **Legend** `LINEAGE_LEGEND` comp-only. **Annual-only** (monthly dropped). Cumulative `PREMIUM ⊂ ELITE ⊂
+  LEGEND` unchanged.
+- **Belt rank is a PRICE axis, not a feature gate** — intentional supply subsidy (black-belt instructors pay
+  *less*; reward the verified holders who anchor the graph). The $45 eligibility reads `buildBeltProgressions`
+  (awarded-truth); promotion flips eligibility, never auto-bills (opt-in).
+- **No payer migration** — prodsnap = 0 paid subscribers; the Stripe change is reprice/relabel + reseed +
+  archive old prices, rehearsed **off-prod (test-mode) before any live edit**. Fix: seed the missing
+  `LINEAGE_LEGEND` entitlement row.
+- **Single access gate = `UserEntitlement`** (audit-confirmed). **Retire the `SubscriptionTier` ladder for
+  gating** (0 rows, 0 gating reads — a dead parallel tier source). `Role` / `AffiliationRole` /
+  `LineageTreeAccess` stay (orthogonal: media authz / academy scope / per-tree edit). Comp-any-tier already
+  ships (`grantUserComp`).
+- **Verification = RBAC-reviewed, OPEN to anyone, runs on regular REGISTRATION** (revises the same-session
+  pay-to-verify draft). The moat is the verified graph — don't toll it; **Premium earns its price on full
+  profile + video + certificate, not the badge.** **Claim** is the rare admin-seeded path (imported cohort;
+  its Elite-year comp was a migration loyalty gift); claim-comp is now **Premium default, Elite for
+  branch-heads**.
+- **The registration→verify claim loop** (the growth engine; ~70% modeled in `PassportClaimRequest`): register
+  → declare rank (`claimedRank`) + instructor (`trainedUnderNode`) + evidence → node placed under the
+  instructor on submit (pending/unverified badge) → **instructor-delegated** review (branch-head
+  `LineageTreeAccess`, admin fallback) → approve mints the `VERIFIED` `RankAward`. Off-platform instructor →
+  placeholder + invite (viral); dedup → route to claim, reviewer confirms.
+- **Instructor Hub = one graduated `/app` dashboard + an `InstructorRail`** (not a separate app); ~all 7 tabs
+  reuse existing `/app` routes (lineage editor already instructor-scoped via `LineageTreeAccess`). **Seminar =
+  `Event{type: SEMINAR}`** (already modeled, with `EventRegistration`), kept **distinct** from `PromotionEvent`
+  (lineage provenance) with one optional link `PromotionEvent.eventId` + a unified "Events" UI. **IA:**
+  `/app/events` = the general `Event` surface; promotions live with lineage.
+- **Carries forward unchanged:** D1 (Passport person-rooted), D3 (oRPC), **D4** (resource-scoped RBAC = the
+  Hub scope seam), D6 (RBAC-reviewed verification). No Dirstarter baseline layer changed.
 
 ---
 
