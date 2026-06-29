@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0470 — G-005: extract the L1 Card surface into the kernel + named cards"
 slug: session-0470
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-06-28
 updated: 2026-06-28
 last_agent: claude-session-0470
@@ -244,7 +244,8 @@ TASK_02→03→04 are sequential (kernel surface chain). TASK_05 (app m-card dem
 | `bun test --parallel=1` map-rank·map-roster·facet-result | **17 pass / 0 fail** |
 | `oxlint .` + `oxfmt --check .` (apps/web) | touched files **clean** (1694 fmt-ok; only pre-existing warns elsewhere) |
 | `oxlint`/`oxfmt --check src` (packages/ui-kit) | **clean** |
-| Runtime (Doug qa-runtime) | in progress — dev server + curl board/catalog surfaces |
+| Runtime (Doug qa-runtime) | dev server `:3210` — `/courses /blog /tournaments /merch /directory/{schools,profiles}` all **HTTP 200, no error markers, card markup** + clean compile; `/app/loop-board` 307→login but **compiles clean** (card.css import resolves); courses + profiles visually confirmed (Playwright). `/tools` 404 (brand/route, not a regression); merch has 0 seed products so card not visually populated. |
+| `next build` (apps/web) pre-push gate (§4a) | see Full close evidence |
 
 ## Open decisions / blockers
 
@@ -259,8 +260,111 @@ TASK_02→03→04 are sequential (kernel surface chain). TASK_05 (app m-card dem
 
 ### Goal
 
-TBD at bow-out.
+Land the G-005 residuals: (1) **prove the Mammoth bridge on Mammoth's own staging** (FINDING_01 — the
+`--mk-*` re-skin renders orange, not BBL-red/unstyled), (2) **close §6 gap #5** (WEKAF `styles.css`
+primary generic red → brand canon `#BF0A30`/`#002868`/`#FCD116`), and (3) **audit remaining bespoke
+cards** not in the canonical 5 (e.g. `content-posts/content-post-card.tsx`) — fold or justify. Then
+pick up the next S48 ledger band, OR continue with whatever the operator pins.
 
 ### First task
 
-TBD at bow-out.
+In a worktree bootstrapped via the new `/worktree-setup` skill, run the Mammoth app (`clients/mammoth-build-crm`)
+against `mammoth_dev` and confirm the AdminKanban board renders in Mammoth orange via the `--mk-*` bridge
+(SESSION_0470 FINDING_01). If it does, flip FINDING_01 to resolved; if not, debug the bridge/import order.
+
+### Inputs to read
+
+- `design-system-doctrine.md` §6 (the remaining gaps #1/#2/#5) + this SESSION's FINDING_01.
+- `[[fresh-worktree-bootstrap-not-in-readpath]]` + run `/worktree-setup` first (don't rediscover the env).
+- `clients/mammoth-build-crm/app/{layout.tsx,globals.css}` (the bridge just added).
+
+## Review log
+
+### SESSION_0470_REVIEW_01 — G-005 kernel Card extraction + catalog fold
+
+- **Reviewed tasks:** TASK_01 (grill), TASK_02–04 (kernel port + parity guard), TASK_05 (app m-card
+  demotion), TASK_07 (5-card fold + ListingCard density), TASK_08 (§6 gap #3 Mammoth bridge), TASK_06 (verify).
+- **Dirstarter docs check:** Theming layer touched (the L1 `Card` surface). The doctrine §1/§6 is the local
+  SoT (it *is* the Dirstarter token model); cached doctrine sufficient, no live re-fetch needed.
+- **Verdict:** A disciplined execution of the ratified ADR 0040 doctrine, net **−101 lines of card code**
+  (the 5 cards became thin adapters — the consolidation *removing* code is the strongest signal it's real).
+  The kernel port followed Option B faithfully (no Tailwind dragged in, parity test guards the contract).
+  Two grills protected the operator's decisions; the second grill caught that the catalog fold was *not*
+  5 thin adapters (post/merch/facet needed a density enhancement) — surfaced before bulldozing a regression.
+  The §6 gap #3 discovery (Mammoth board had **no** kernel CSS) was a real latent bug fixed en route.
+- **Score:** 9.0 / 10 — strong; the −1 is residual: Mammoth's re-skin is statically correct but unproven on
+  its own staging (FINDING_01), and merch's folded card has no seed data to visually confirm.
+- **Follow-up:** FINDING_01 (Mammoth staging proof) + §6 gap #5 (WEKAF) per Next session.
+
+## Hostile close review
+
+- **Giddy:** pass — the lane *healed* drift (3 cards/2 foundations → one ported surface; god-union → named
+  cards) rather than adding to it; the clean-room temptation was explicitly avoided (Option B port + parity
+  test). The Mammoth wiring bug was caught by *reading the consumers*, not assumed.
+- **Doug:** pass — every claim has a command behind it (tsc/test/lint/fmt counts, 6×HTTP-200 + compile log,
+  2 Playwright screenshots). Honest about the gaps: auth-gated board not visually proven, merch unpopulated,
+  Mammoth needs staging. No "it's fine" without evidence.
+- **Desi:** pass with a follow-up — courses folds to a clean catalog card; profiles preserve the
+  person-card identity (large avatar, belt-tint rank chip, trust badge, View/Save). Watch: the folded title
+  truncates aggressively when a header badge competes (pre-existing ListingCard `truncate` behavior), and
+  course cards gained a "View course" footer button (intended uniformity). Full board/merch parity pends data.
+- **Kaizen aggregate:** 9.0/10 — measure-and-grill-before-cut discipline; the ding is unproven Mammoth/merch
+  surfaces (no fault of the code — environment/data), tracked as FINDING_01 + Next session.
+
+### Findings (severity ≥ medium)
+
+#### SESSION_0470_FINDING_01 — Mammoth AdminKanban had no kernel CSS wired (§6 gap #3)
+
+- **Severity:** medium
+- **Task:** SESSION_0470_TASK_08
+- **Evidence:** `clients/mammoth-build-crm/app/layout.tsx` (imported only `./globals.css`); `admin-kanban.tsx`
+  imports no CSS; `globals.css` comment claimed the kernel reads `--surface`/`--border` (it reads `--mk-*`).
+- **Impact:** the Mammoth board rendered `.mk-card` with no `.mk-card` rules + undefined `--mk-*` (unstyled).
+- **Required follow-up:** runtime-prove the orange re-skin on Mammoth's own staging (`mammoth_dev`).
+- **Status:** addressed (static fix committed) — open on runtime proof. Routes to wiring-ledger (dead plumbing).
+
+## ADR / ubiquitous-language check
+
+- **ADR update — not required.** This session *implements* the already-ratified
+  [ADR 0040](../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md) (Option B port,
+  named cards). No new/changed architectural decision; the implementation conforms to the doctrine.
+- **Ubiquitous language — not required.** New code terms (`.mk-surface`, "record/person card", "BoardCard",
+  the `mediaTop` density) are all existing `design-system-doctrine.md` vocabulary, not new *domain* terms.
+
+## Reflections
+
+The session's spine was **grill before you cut, and read before you assert.** Two grills earned their keep:
+the first locked scope (operator chose Full G-005); the second caught that "fold the 5 catalog cards" was
+*not* five thin adapters — post/merch lead with a hero, merch carries a Buy action, facet-result is a premium
+person card. Bulldozing them onto today's ListingCard would have regressed live blog/commerce/directory
+surfaces. The fix was the doctrine's own §5 principle — *progressive enrichment is a density, not a fork* —
+so ListingCard grew two backward-compatible slots and every card kept its identity.
+
+The sharpest discovery was incidental: the Mammoth board had **no kernel CSS loaded at all**, with a
+globals.css comment confidently asserting the opposite. Reading the consumers (not trusting the comment)
+found it. That is the same lesson the repo keeps relearning — the artifact that *describes* the wiring lies;
+the wiring itself is the truth.
+
+And the meta-moment: the operator caught me re-deriving the entire fresh-worktree bootstrap from scratch
+(no `node_modules`/`.env`/Prisma client, `graphify`=0 nodes, no `curl` in PATH) — every step of which was
+*already documented* in `dev-environment.md`, just never in the bow-in read-path. The exact "built-not-pointed"
+failure from last session's learning record, recurring. We fixed the *system* (opening.md Step 0.5 +
+`/worktree-setup` skill), not just the instance — which is the only fix that stops it recurring a third time.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0470.md authored w/ full frontmatter; bootstrap-worktree bumped `opening.md` + `dev-environment.md` `updated:2026-06-29`/`last_agent:claude-session-0470` |
+| Backlinks/index sweep | wiki/index.md session table + custom-component-inventory updated (see git diff); SESSION pairs_with doctrine + ADR 0040 |
+| Wiki lint | `bun run wiki:lint` → **0 errors** (15 pre-existing R8 warnings in untouched files; bootstrap worktree same) |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | SESSION_0470_REVIEW_01 (Giddy/Doug/Desi pass; 9.0/10) |
+| Code-quality gate (Class-A) | the kernel `.mk-surface` port + ListingCard density are Class-A; held to ADR 0040 Option B + guarded by the parity test (`card.css.test.ts`). Net −101 LOC. |
+| Runtime verification (Doug) | 6 catalog surfaces HTTP 200 + clean compile; kernel route compiles clean; courses+profiles screenshotted. Gaps: auth-gated board + unpopulated merch + Mammoth staging (FINDING_01). |
+| Review & Recommend | next session goal written: yes (Mammoth proof + §6 gap #5 + bespoke-card audit) |
+| Memory sweep | new memory `fresh-worktree-bootstrap-not-in-readpath` + MEMORY.md index; doctrine memory already current |
+| Next session unblock check | unblocked — first task (Mammoth staging proof) is self-contained, run after `/worktree-setup` |
+| Git hygiene | branch `session-0470-card`; G-005 commit `bc5b0133` + close commit (hash reported at bow-out — see git log); bootstrap fix `7407e82b` on `chore/worktree-bootstrap-readpath` |
+| `next build` pre-push gate (§4a) | `cd apps/web && bun run build` → **✓ Compiled successfully (32.7s); 181/181 static pages generated** (mirrors Vercel; gates the app-code push) |
+| Graphify update | **skipped — worktree has 0-node graph** (the canonical graphify lives in `/Users/brianscott/dev/ronin-dojo-app`); refresh there post-merge, not in a throwaway worktree |
