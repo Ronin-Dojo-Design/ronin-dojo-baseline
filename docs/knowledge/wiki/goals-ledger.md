@@ -89,12 +89,23 @@ aggregator reads it with no new parser logic.
 - **Lane:** lineage / member dashboard. **Unblocks:** G-001 (polished onboarding before Brian's real send).
 - **Why:** the post-claim surface is where a new claimant lands — it must feel finished.
 
-### G-005 — m-card consolidation: build `kind="generic"`
+### G-005 — m-card consolidation: build `kind="generic"` + rebase the kernel card on the Dirstarter L1
 
-- **Status:** open — P2
-- **Objective:** add the `generic` m-card kind to unlock the highest-leverage consolidation —
-  FacetResultCard (orgs/trees), CourseCard, PostCard, MerchCard, TournamentCard onto the one card.
-- **Lane:** ui-kit / consistency. **Why:** closes the 5-card / 4-shape parity gap; "one card" everywhere.
+- **Status:** open — P1 (promoted SESSION_0466 — operator)
+- **Objective:** (a) add the `generic` m-card kind to unlock the highest-leverage consolidation —
+  FacetResultCard (orgs/trees), CourseCard, PostCard, MerchCard, TournamentCard onto the one card; **and
+  (b) heal the card-origin fork** — the kernel card (`packages/ui-kit/src/m-card/m-card.tsx`) is a
+  clean-room reimplementation that does NOT inherit Piotr Kulpinski's Dirstarter L1 `Card`
+  (`apps/web/components/common/card.tsx`) the way `ListingCard` (ADR 0028/0029) and the app `web/m-card`
+  do. **Extract the Dirstarter L1 `Card` primitive *down* into `packages/ui-kit`** as the ONE shared base
+  (kernel-safe: framework-agnostic, no Next `Link`), then **rebase the kernel m-card on it** and reconcile
+  the two parallel m-cards (app `web/m-card` vs kernel `ui-kit/m-card`, flagged "for reconciliation" in the
+  custom-component-inventory).
+- **Lane:** ui-kit / consistency. **Why:** closes the 5-card / 4-shape parity gap AND restores the
+  Dirstarter origin as the single L1 across app + kernel ("one card" everywhere, on Piotr's clean base
+  instead of three cards / two foundations). The loop-board readability bug (SESSION_0466) was a symptom of
+  the clean-room fork. **Grounding:** Graphify-confirmed (SESSION_0466) — `listing-card.tsx`↔ADR 0028;
+  kernel `m-card.tsx` has no edge to `common/card.tsx`; G-005 is the direct neighbor of `m-card.tsx`.
 
 ### G-006 — Per-brand PRD/story completion tracking
 

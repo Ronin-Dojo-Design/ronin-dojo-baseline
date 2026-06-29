@@ -80,6 +80,23 @@ Fewer = under-utilized; more = the close can't honestly verify them all.
 *supplements* them (fills the session, surfaces what's overdue) — it does not override an operator
 directive. The symmetric bow-out **cross-off sweep** (closing.md) flips resolved rows to done.
 
+### 1c. Open PRs are a live backlog source — route to `/pr-fix-loop` (G-007)
+
+The aggregator's `PR` rows are **live state**, not a markdown ledger: `scripts/ledger-backlog.ts` queries
+`gh pr list --state open` and emits each open PR as a backlog item (red-CI / changes-requested = **P1**,
+draft / clean = **P2**, then oldest-first). So the bow-in scan already surfaces open PRs alongside ledger
+debt (and `/app/loop-board` projects them when a GitHub token is configured).
+
+**If open PRs exist and the operator hasn't pinned a different lane, the default lane is `/pr-fix-loop`** —
+keep the open-PR queue merge-ready before opening new build work. Run one pass (review → score → fix the
+mechanical blockers on each PR branch → verdict), pause-on-merge. Bundle the PRs as the session's coherent
+lane (one risk class: "open PRs"). This is the outbound half of the Loop-of-Loops: inbound ledger debt and
+outbound open-PR review become one auto-surfaced backlog. See the [`pr-fix-loop`](../../.claude/skills/pr-fix-loop/SKILL.md)
+skill (worktree fan-out) and [`pr-review-score-fix-loop.md`](../protocols/pr-review-score-fix-loop.md).
+
+Precedence is unchanged: an operator `/goal` or the prior `Next session` block still wins; PR-pickup is the
+default *only when nothing else is pinned*.
+
 ### 2. Read WORKFLOW 5.0 + program plan
 
 [`docs/protocols/WORKFLOW_5.0.md`](../protocols/WORKFLOW_5.0.md) is the governing operating system for SESSION_0021 forward. Read:

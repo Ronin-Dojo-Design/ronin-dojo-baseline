@@ -12,41 +12,88 @@
  * projection (fetches them from the public `main` branch). This file = the fs reader + the
  * terminal formatter; all parsing is delegated.
  *
- * Ledgers scanned: GL · FS · D · WL · FI · MB · TFF · INC · RISK · TD (see LEDGER_FILES).
+ * Ledgers scanned: GL · PR · FS · D · WL · FI · MB · TFF · INC · RISK · TD. `PR` is a LIVE source —
+ * queried from `gh pr list` (not a file) and parsed by the SAME `parsePullRequests` the loop-board uses
+ * (G-007). Open PRs surface as backlog items: red-CI / changes-requested = P1, draft / clean = P2.
  *
  * Usage:
- *   bun scripts/ledger-backlog.ts                 # ranked backlog, all ledgers
- *   bun scripts/ledger-backlog.ts --ledger=GL     # one ledger (GL|FS|D|WL|FI|MB|TFF|INC|RISK|TD)
+ *   bun scripts/ledger-backlog.ts                 # ranked backlog, all sources (incl. live PRs)
+ *   bun scripts/ledger-backlog.ts --ledger=GL     # one source (GL|PR|FS|D|WL|FI|MB|TFF|INC|RISK|TD)
  *   bun scripts/ledger-backlog.ts --top=20        # cap the rows printed
  *   bun scripts/ledger-backlog.ts --json          # machine-readable JSON
+ *   bun scripts/ledger-backlog.ts --no-pr         # skip the live `gh` PR query
  */
 
+import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
   aggregateFromContents,
+  FILE_LEDGER_ORDER,
+  type FileLedgerCode,
   LEDGER_FILES,
-  LEDGER_ORDER,
   type LedgerCode,
+  LEDGER_ORDER,
+  parsePullRequests,
+  type PullRequestJson,
 } from "../apps/web/lib/loop-board/ledger-parse"
 
 const ROOT = resolve(import.meta.dir, "..")
 const ARGS = process.argv.slice(2)
 const JSON_OUT = ARGS.includes("--json")
+const NO_PR = ARGS.includes("--no-pr")
 const LEDGER_FILTER = (ARGS.find(a => a.startsWith("--ledger=")) ?? "").split("=")[1]?.toUpperCase() as
   | LedgerCode
   | undefined
 const TOP_ARG = (ARGS.find(a => a.startsWith("--top=")) ?? "").split("=")[1]
 const TOP = TOP_ARG ? Number.parseInt(TOP_ARG, 10) : Number.POSITIVE_INFINITY
 
-// Read each ledger from disk; an absent file is left undefined so the parser skips it.
-const contents: Partial<Record<LedgerCode, string>> = {}
-for (const code of LEDGER_ORDER) {
+// Read each file-backed ledger from disk; an absent file is left undefined so the parser skips it.
+const contents: Partial<Record<FileLedgerCode, string>> = {}
+for (const code of FILE_LEDGER_ORDER) {
   const p = resolve(ROOT, LEDGER_FILES[code])
   if (existsSync(p)) contents[code] = readFileSync(p, "utf-8")
 }
 
-const items = aggregateFromContents(contents, LEDGER_FILTER ? { ledger: LEDGER_FILTER } : {})
+/**
+ * Live `PR` source: shell out to `gh pr list --json …` and parse with the shared `parsePullRequests`.
+ * Resilient by design (G-007 "skip cleanly if `gh` absent") — a missing/unauthenticated `gh`, a non-repo
+ * cwd, or malformed JSON all degrade to zero PR items with a one-line stderr note, never a crash.
+ */
+function fetchPullRequestItems() {
+  if (NO_PR) return []
+  if (LEDGER_FILTER && LEDGER_FILTER !== "PR") return [] // a file-ledger filter never needs the PR query
+  try {
+    const out = execFileSync(
+      "gh",
+      [
+        "pr",
+        "list",
+        "--state",
+        "open",
+        "--limit",
+        "100",
+        "--json",
+        "number,title,headRefName,isDraft,reviewDecision,statusCheckRollup",
+      ],
+      { cwd: ROOT, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] },
+    )
+    const prs = JSON.parse(out) as PullRequestJson[]
+    return parsePullRequests(prs)
+  } catch {
+    if (!JSON_OUT) {
+      console.error("  (PR source skipped — `gh` unavailable, unauthenticated, or no repo on this cwd)")
+    }
+    return []
+  }
+}
+
+const prItems = fetchPullRequestItems()
+
+const items = aggregateFromContents(contents, {
+  ...(LEDGER_FILTER ? { ledger: LEDGER_FILTER } : {}),
+  extraItems: prItems,
+})
 
 // --- output ----------------------------------------------------------------
 

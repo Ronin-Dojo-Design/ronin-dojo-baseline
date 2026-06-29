@@ -211,6 +211,8 @@ For sessions that warrant extra proof, add this block to the SESSION file:
 | Wiki lint | <command + pass/fail count + whether failures are pre-existing or introduced> |
 | Kaizen reflection | <Reflections section present: yes/no> |
 | Hostile close review | <TASK_REVIEW_LOG entry or not-applicable line> |
+| Code-quality gate (Class-A) | <`/code-quality` score /10 + any hard-cap, or "no Class-A custom code this session"> |
+| Runtime verification (Doug) | <`qa-runtime-verification` result for touched routes/actions, or "no runtime surface touched"> |
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
@@ -227,6 +229,17 @@ when the **operator asks** ("add X to the glossary") or when this session used a
 non-technical reader would stumble on (e.g., `CI`, `SHA`, `enum`, `adapter`). Keep each entry to 1–2
 plain-English lines + one concrete example (a repo file or a commit SHA from the session). Skip silently
 when nothing new came up.
+
+### 6c. Code-quality gate — Class-A custom code (SESSION_0466)
+
+If this session shipped **Class-A custom code** — a substantial new/changed module that is *not* a thin
+Dirstarter extension, judged by the A/B/C split in
+[`code-quality-matrix`](../protocols/code-quality-matrix.md) — run the
+[`/code-quality`](../../.claude/skills/code-quality/SKILL.md) skill on the largest such module and record
+the `/10` score (+ any hard-cap triggered) in the `## Full close evidence` table. This holds the
+gold-standard bar on exactly the custom code the matrix exists to police (the kernel / card / loop-board
+kind of work), not Dirstarter-derived CRUD. Skip with a one-line "no Class-A custom code this session"
+when the diff is docs / config / thin-wrapper only.
 
 ### 6.5. Review & Recommend (stage the next session)
 

@@ -56,6 +56,7 @@ function stageForItem(item: Item): string {
 /** Compact, informative ledger badge — the id already carries the prefix for most ledgers. */
 function ledgerBadge(item: Item): MCardBadge {
   if (item.ledger === "GL") return { label: item.id, tone: "positive" } // goals — the north-star lane
+  if (item.ledger === "PR") return { label: `PR ${item.id}`, tone: "accent" } // live open-PR source (G-007)
   if (item.ledger === "RISK") return { label: `RISK ${item.id}`, tone: "warning" }
   if (item.ledger === "INC") return { label: "INC", tone: "critical" }
   return { label: item.id, tone: "neutral" }

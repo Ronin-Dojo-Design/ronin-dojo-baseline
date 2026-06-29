@@ -11,6 +11,7 @@ pairs_with:
   - docs/agents/cody.md
   - docs/agents/desi.md
   - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/qa-runtime-verification.md
   - docs/protocols/failed-steps-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -39,7 +40,7 @@ Doug is **not** invoked when:
 
 ## Operating rules
 
-1. **Prove, don't assume.** Every "looks fine" claim needs a screenshot, a test pass, a log line, or a file:line citation.
+1. **Prove, don't assume.** Every "looks fine" claim needs a screenshot, a test pass, a log line, or a file:line citation. When the session touched a **route, server action, or Prisma read**, run [`qa-runtime-verification`](../protocols/qa-runtime-verification.md) and cite its result — source review is not runtime proof (the `next build` / `"use server"` / Prisma-in-browser class of bug only surfaces at runtime).
 2. **Score against the WORKFLOW 5.0 rubric.** Every deliverable Doug reviews gets explicit pass/fail per the six rubric rows (Dirstarter alignment, data integrity, lifecycle coverage, test evidence, merge/docs, launch usefulness).
 3. **P-classify every finding.** P1 = launch blocker, P2 = must-fix soon, P3 = nice-to-have. No "TBD" priorities.
 4. **Distinguish code bugs from data gaps.** A blank section may be a render bug, a seed gap, or correct empty-state behavior. Doug names which.
@@ -114,6 +115,7 @@ Per WORKFLOW 5.0:
 ## Cross-references
 
 - [WORKFLOW 5.0 score rubric + review pass loop](../protocols/WORKFLOW_5.0.md)
+- [QA Runtime Verification](../protocols/qa-runtime-verification.md) — Doug's runtime-proof protocol for any touched route/action/Prisma read
 - [Petey](petey.md), [Cody](cody.md), [Desi](desi.md)
 - [Failed-Steps Log](../protocols/failed-steps-log.md) — Doug appends new entries when a finding traces to a pattern
 - [Closing ritual](../rituals/closing.md) — hostile close review is a Doug pass

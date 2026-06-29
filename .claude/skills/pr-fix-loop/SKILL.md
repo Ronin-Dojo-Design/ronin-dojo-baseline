@@ -27,6 +27,33 @@ Keep the open-PR queue merge-ready: **every open PR is either `READY (pending op
    - `TaskUpdate` → completed with the verdict.
 3. **Report** — one line per PR: `READY (pending go)` · `KEEP_AS_IS — <blocker>` · `INTENT — your call`.
 
+## Fan-out execution (one isolated subagent per PR — G-007)
+
+When there is **more than one** PR to work in a pass, fan out instead of serially babysitting. Each PR is
+genuinely disjoint (different branch, different files), so this is the one place sub-agent parallelism is
+justified (per CLAUDE.md "parallelize only when the work is genuinely disjoint").
+
+- **One background subagent per open PR**, launched in a single message so they run concurrently, each
+  given the PR number + branch + intent (the SESSION `Goal` / PR body).
+- **Each in its own `git worktree` on the PR branch** — never share the main checkout (a subagent's
+  `git stash`/checkout would clobber another's edits; see `[[workflow-over-dirty-tree-clobbers-edits]]`).
+  Set up: `git fetch origin <branch> && git worktree add ../ronin-pr-<N> <branch>`. The subagent runs all
+  `git`/`bun`/review commands from that worktree dir.
+- **Per-PR engine inside the worktree:** run the **pr-review-score-fix** loop (review → score → Giddy
+  gate), then **`/fallow-fix-loop`** on the branch diff (CRAP/dupes/dead-code + multi-angle review + fix +
+  re-verify), then the **hostile-close** review (`docs/protocols/hostile-close-review.md` — Giddy + Doug
+  questions + Kaizen aggregate). Apply **mechanical** fixes only (typecheck/lint/format, red-CI repair,
+  session-doc renumber, obvious correctness) — **commit them to the PR branch**, never to `main`.
+- **No push without the operator's go.** Commit fixes locally in the worktree; **do not `git push`** the
+  branch (which updates the PR) until the operator says go — honor `[[explicit-push-authorization]]`.
+  Report what was committed locally per PR so the operator can authorize the push in one batch.
+- **Concurrency-capped:** at most ~3 PR subagents in flight at once (worktrees + dev servers are heavy);
+  queue the rest. Cap the per-PR loop at ≤3 review→fix passes (`pr-review-score-fix-loop.md` stop rule).
+- **Pause-on-merge:** never merge. Each subagent returns a verdict only.
+- **Cleanup:** once a branch is merged (operator-gated) or abandoned, `git worktree remove ../ronin-pr-<N>`.
+
+Aggregate the per-PR verdicts into the one-line-per-PR report (below).
+
 ## LOOP (how it recurs — invoke the loop, don't just run once)
 
 - **`/loop /pr-fix-loop` (self-paced):** after a pass, if any PR can still change or new ones may

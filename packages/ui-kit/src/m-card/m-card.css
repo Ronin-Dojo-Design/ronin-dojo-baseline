@@ -64,9 +64,13 @@ a.mk-card:hover {
   color: var(--mk-fg);
 }
 
-/* --- top row: identity cluster (icon + title/meta) + focal value, same baseline --- */
+/* --- top row: identity cluster (icon + title/meta) + focal value, same baseline ---
+   `flex-wrap` lets a wide trailing control (e.g. a "Move" stage selector) drop to its own line on a
+   narrow card instead of crushing the title. Pairs with the title's `break-word` (below): the title
+   keeps a word-level min width so it never collapses to a sliver. */
 .mk-card__top {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--mk-space-3);
   min-width: 0;
@@ -101,7 +105,9 @@ a.mk-card:hover {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-  flex: 1 1 auto;
+  /* Claim the bulk of the row so a trailing action control wraps below instead of squeezing the title.
+     `flex-basis: 60%` + the row's `flex-wrap` = title-and-glyph keep line 1, actions drop to line 2. */
+  flex: 1 1 60%;
 }
 
 .mk-card__eyebrow {
@@ -123,7 +129,10 @@ a.mk-card:hover {
   font-weight: 600;
   color: var(--mk-fg);
   min-width: 0;
-  overflow-wrap: anywhere;
+  /* `break-word` (not `anywhere`): only hyphenate a single word that truly can't fit on its own line.
+     `anywhere` collapses the flex min-content to one glyph, which let the title get crushed mid-word
+     ("Truelso→n") when a trailing control competed for width. `break-word` keeps word-level integrity. */
+  overflow-wrap: break-word;
 }
 
 .mk-card__meta {
@@ -174,10 +183,11 @@ a.mk-card:hover {
   white-space: nowrap;
 }
 
-/* trailing actions slot */
+/* trailing actions slot — `margin-inline-start: auto` keeps it hard-right on line 1 AND right-aligned
+   when the row wraps it onto its own line (see `.mk-card__top` flex-wrap). */
 .mk-card__actions {
   flex: 0 0 auto;
-  margin-inline-start: var(--mk-space-2);
+  margin-inline-start: auto;
 }
 
 /* task checkbox glyph */

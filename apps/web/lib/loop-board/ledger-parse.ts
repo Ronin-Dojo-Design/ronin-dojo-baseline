@@ -10,7 +10,21 @@
  * root CLI can import it under bun without inheriting the Next tsconfig.
  */
 
-export type LedgerCode = "GL" | "FS" | "D" | "WL" | "FI" | "MB" | "TFF" | "INC" | "RISK" | "TD"
+export type LedgerCode =
+  | "GL"
+  | "PR"
+  | "FS"
+  | "D"
+  | "WL"
+  | "FI"
+  | "MB"
+  | "TFF"
+  | "INC"
+  | "RISK"
+  | "TD"
+
+/** A ledger code that is backed by a markdown file on disk / `main` (everything except live `PR`). */
+export type FileLedgerCode = Exclude<LedgerCode, "PR">
 
 export type Priority = "P0" | "P1" | "P2" | "—"
 
@@ -22,9 +36,13 @@ export type Item = {
   summary: string
 }
 
-/** Stable display + ranking order across the governance ledgers. Goals (`GL`) lead the backlog. */
+/**
+ * Stable display + ranking order across the governance ledgers. Goals (`GL`) lead the backlog; the
+ * live `PR` source rides right behind them (open PRs are actionable work-in-flight, above static debt).
+ */
 export const LEDGER_ORDER: LedgerCode[] = [
   "GL",
+  "PR",
   "FS",
   "D",
   "WL",
@@ -36,8 +54,14 @@ export const LEDGER_ORDER: LedgerCode[] = [
   "TD",
 ]
 
-/** Repo-relative path of each ledger (the inbound sources from the design doc + security register). */
-export const LEDGER_FILES: Record<LedgerCode, string> = {
+/**
+ * Repo-relative path of each FILE-backed ledger (the inbound sources from the design doc + security
+ * register). `PR` is intentionally absent: it is a LIVE source (queried from `gh` / the GitHub API),
+ * not a markdown file — so the disk reader + the `main`-branch fetch iterate `LEDGER_FILES`, while `PR`
+ * items arrive via `parsePullRequests` and ride into the backlog through `aggregateFromContents`'
+ * `extraItems` channel.
+ */
+export const LEDGER_FILES: Record<FileLedgerCode, string> = {
   GL: "docs/knowledge/wiki/goals-ledger.md",
   FS: "docs/protocols/failed-steps-log.md",
   D: "docs/knowledge/wiki/drift-register.md",
@@ -49,6 +73,11 @@ export const LEDGER_FILES: Record<LedgerCode, string> = {
   RISK: "docs/security/ronin-security-risk-register.md",
   TD: "docs/knowledge/wiki/teardown-ledger.md",
 }
+
+/** File-backed ledger codes in display order — the disk reader + `main`-branch fetch iterate this. */
+export const FILE_LEDGER_ORDER: FileLedgerCode[] = LEDGER_ORDER.filter(
+  (c): c is FileLedgerCode => c !== "PR",
+)
 
 const PRI_SCORE: Record<Priority, number> = { P0: 0, P1: 1, P2: 2, "—": 3 }
 
@@ -202,8 +231,80 @@ function parseRisk(content: string): Item[] {
     })
 }
 
+// --- live PR source (G-007) ------------------------------------------------
+
+/**
+ * The slice of `gh pr list --json number,title,headRefName,isDraft,reviewDecision,statusCheckRollup`
+ * this parser reads. The same shape is produced server-side by a GitHub GraphQL query (gh uses GraphQL
+ * under the hood), so ONE pure parser serves both the bow-in CLI and the `/app/loop-board` projection.
+ */
+export type PullRequestJson = {
+  number: number
+  title: string
+  headRefName?: string
+  isDraft?: boolean
+  /** "" | "APPROVED" | "CHANGES_REQUESTED" | "REVIEW_REQUIRED" */
+  reviewDecision?: string
+  /** Mixed CheckRun (`conclusion`/`status`) + StatusContext (`state`) entries, per the gh JSON. */
+  statusCheckRollup?: Array<{
+    __typename?: string
+    /** CheckRun check name. */
+    name?: string
+    /** StatusContext name (e.g. "Vercel", "CodeRabbit"). */
+    context?: string
+    /** CheckRun terminal outcome — SUCCESS | FAILURE | TIMED_OUT | CANCELLED | ACTION_REQUIRED | … */
+    conclusion?: string
+    /** CheckRun lifecycle — QUEUED | IN_PROGRESS | COMPLETED. */
+    status?: string
+    /** StatusContext rollup state — SUCCESS | FAILURE | ERROR | PENDING | EXPECTED. */
+    state?: string
+  }>
+}
+
+/** CheckRun `conclusion` values that mean the check failed (a red CI signal). */
+const FAILED_CONCLUSIONS = new Set([
+  "FAILURE",
+  "TIMED_OUT",
+  "CANCELLED",
+  "ACTION_REQUIRED",
+  "STARTUP_FAILURE",
+  "STALE",
+])
+/** StatusContext `state` values that mean the external check failed. */
+const FAILED_STATES = new Set(["FAILURE", "ERROR"])
+
+/** A PR is "red" when review is changes-requested OR any rollup check failed. */
+function isPullRequestRed(pr: PullRequestJson): boolean {
+  if ((pr.reviewDecision ?? "").toUpperCase() === "CHANGES_REQUESTED") return true
+  for (const c of pr.statusCheckRollup ?? []) {
+    if (FAILED_CONCLUSIONS.has((c.conclusion ?? "").toUpperCase())) return true
+    if (FAILED_STATES.has((c.state ?? "").toUpperCase())) return true
+  }
+  return false
+}
+
+/**
+ * Parse open PRs into backlog `Item[]`. Rank: red CI / changes-requested = **P1**, draft or clean =
+ * **P2** (then by age — the caller passes PRs oldest-first and `rankItems` keeps PR-number ascending
+ * within a priority). The id is `#<number>` (ledger-scoped to `PR`, so it never collides with RISK's
+ * `#<n>`). Pure: no `gh`, no network — the caller supplies the already-fetched JSON.
+ */
+export function parsePullRequests(prs: PullRequestJson[]): Item[] {
+  return prs.map(pr => {
+    const red = isPullRequestRed(pr)
+    const status = red ? "red-ci" : pr.isDraft ? "draft" : "open"
+    return {
+      id: `#${pr.number}`,
+      ledger: "PR" as const,
+      priority: (red ? "P1" : "P2") as Priority,
+      status,
+      summary: clean(`#${pr.number} ${pr.title}`),
+    }
+  })
+}
+
 /** Parse ONE ledger's raw markdown into its open `Item[]`. */
-export function parseLedger(code: LedgerCode, content: string): Item[] {
+export function parseLedger(code: FileLedgerCode, content: string): Item[] {
   switch (code) {
     case "GL":
       return parseSectioned(
@@ -258,20 +359,25 @@ function rankItems(items: Item[]): Item[] {
 }
 
 /**
- * Aggregate open items across all (or one) ledger from raw markdown contents. A ledger whose
- * content is absent (`undefined`) is skipped — so a failed fetch contributes 0 items rather
- * than breaking the projection. Returns ranked items.
+ * Aggregate open items across all (or one) ledger from raw markdown contents, plus any pre-parsed
+ * `extraItems` (the live `PR` source — `parsePullRequests` output, which has no file to read). A
+ * file-ledger whose content is absent (`undefined`) is skipped — so a failed fetch contributes 0 items
+ * rather than breaking the projection. `opts.ledger` filters BOTH channels. Returns ranked items.
  */
 export function aggregateFromContents(
-  contents: Partial<Record<LedgerCode, string>>,
-  opts: { ledger?: LedgerCode } = {},
+  contents: Partial<Record<FileLedgerCode, string>>,
+  opts: { ledger?: LedgerCode; extraItems?: Item[] } = {},
 ): Item[] {
   const items: Item[] = []
-  for (const code of LEDGER_ORDER) {
+  for (const code of FILE_LEDGER_ORDER) {
     if (opts.ledger && code !== opts.ledger) continue
     const content = contents[code]
     if (content == null) continue
     items.push(...parseLedger(code, content))
+  }
+  for (const item of opts.extraItems ?? []) {
+    if (opts.ledger && item.ledger !== opts.ledger) continue
+    items.push(item)
   }
   return rankItems(items)
 }
