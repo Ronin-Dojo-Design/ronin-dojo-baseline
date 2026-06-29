@@ -21,8 +21,100 @@
 
 import { ORDER_STAGE, nextStage, stageIndex } from "./stages";
 import { db } from "./db";
+import { getServerSession } from "./auth";
 import type { BuildPhoto, NewProjectInput, Project, StageId } from "./types";
 import type { BoardCard } from "@ronin-dojo/ui-kit/kanban";
+
+// ---------------------------------------------------------------------------
+// Auth gate (TASK_02 — ADR 0038 D5: per-product identity)
+// ---------------------------------------------------------------------------
+//
+// Every server action below is owner-gated: it must run as an authenticated
+// Better Auth user that resolves to a CRM owner (`TeamMember`). Two layers:
+//   1. SESSION — `requireOwner` throws if there's no session (no anonymous writes
+//      or reads of the pipeline).
+//   2. OWNERSHIP — reads + mutations are scoped to the caller's TeamMember id via
+//      `Project.ownerId`, so a forged/guessed project id can't read or mutate
+//      another owner's row (closes the IDOR surface flagged by task_9393f59c).
+//
+// Legacy/seed rows have `ownerId = NULL` (created before ownership existed). The
+// gate treats an unowned row as claimable: the caller may read it, and the first
+// mutation stamps it to the caller. It can NEVER cross to a DIFFERENT owner's row.
+
+/** Thrown when an action runs without an authenticated session. */
+class UnauthorizedError extends Error {
+  constructor() {
+    super("Unauthorized: sign in to access the Mammoth pipeline.");
+    this.name = "UnauthorizedError";
+  }
+}
+
+/** Thrown when the caller tries to touch a project owned by someone else. */
+class ForbiddenError extends Error {
+  constructor() {
+    super("Forbidden: this project belongs to another owner.");
+    this.name = "ForbiddenError";
+  }
+}
+
+/**
+ * Resolve the caller's CRM owner (`TeamMember`) from the Better Auth session,
+ * provisioning the owner record on first authenticated action (a fresh login has
+ * a User but no TeamMember yet). Throws `UnauthorizedError` when unauthenticated.
+ * The returned id is the ownership key for all scoping below.
+ */
+async function requireOwner(): Promise<string> {
+  const session = await getServerSession();
+  const user = session?.user;
+  if (!user?.id) {
+    throw new UnauthorizedError();
+  }
+
+  const existing = await db.teamMember.findUnique({
+    where: { userId: user.id },
+    select: { id: true },
+  });
+  if (existing) {
+    return existing.id;
+  }
+
+  // First authenticated action for this login: materialize its owner record.
+  // `email` is unique on TeamMember, so adopt a pre-existing (imported) owner row
+  // with the same email by linking it to this login rather than colliding.
+  const byEmail = user.email
+    ? await db.teamMember.findUnique({ where: { email: user.email }, select: { id: true } })
+    : null;
+  if (byEmail) {
+    await db.teamMember.update({ where: { id: byEmail.id }, data: { userId: user.id } });
+    return byEmail.id;
+  }
+
+  const created = await db.teamMember.create({
+    data: { userId: user.id, name: user.name ?? user.email ?? "Owner", email: user.email },
+    select: { id: true },
+  });
+  return created.id;
+}
+
+/**
+ * Load a project the caller is allowed to act on, or throw. Allowed = the row is
+ * owned by the caller, OR it's an unowned legacy row (claimable). Used as the
+ * ownership pre-check before every mutation on an existing project.
+ */
+async function requireOwnedProject(
+  id: string,
+  ownerId: string,
+): Promise<{ ownerId: string | null }> {
+  const row = await db.project.findUnique({ where: { id }, select: { ownerId: true } });
+  if (!row) {
+    // Surface the same "not found" shape callers already handle from findUniqueOrThrow.
+    throw new Error(`Project ${id} not found`);
+  }
+  if (row.ownerId !== null && row.ownerId !== ownerId) {
+    throw new ForbiddenError();
+  }
+  return row;
+}
 
 // ---------------------------------------------------------------------------
 // Read-model mappers (DB row → the flat Project the components expect)
@@ -160,7 +252,11 @@ async function findOrCreateContact(name?: string, email?: string) {
 // ---------------------------------------------------------------------------
 
 export async function listProjects(): Promise<Project[]> {
+  const ownerId = await requireOwner();
+  // Owner-scoped: the caller's projects + any unowned legacy/seed rows (claimable);
+  // never another owner's rows. This is the read half of the IDOR gate.
   const rows = await db.project.findMany({
+    where: { OR: [{ ownerId }, { ownerId: null }] },
     include: PROJECT_INCLUDE,
     orderBy: { createdAt: "desc" },
   });
@@ -168,11 +264,13 @@ export async function listProjects(): Promise<Project[]> {
 }
 
 export async function createProject(input: NewProjectInput): Promise<Project> {
+  const ownerId = await requireOwner();
   const contact = await findOrCreateContact(input.contactName, input.contactEmail);
   const row = await db.project.create({
     data: {
       name: input.name,
       contactId: contact.id,
+      ownerId,
       buildingType: input.buildingType,
       use: input.use,
       region: input.region,
@@ -190,7 +288,11 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
 }
 
 export async function patchProject(id: string, changes: Partial<Project>): Promise<Project> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(id, ownerId);
   const data: Record<string, unknown> = {};
+  // Claim an unowned legacy row to the caller on first mutation (no-op if already owned).
+  data.ownerId = ownerId;
   // Project scalar columns the UI patches (next step, notes, name, dims, etc.).
   // Deliberately NOT patchable here: `stage` and the order state (`orderConfirmed`/`orderNumber`)
   // are owned by the guardrail — stage moves go through `setProjectStage`/`advanceProject` so they
@@ -231,16 +333,20 @@ export async function patchProject(id: string, changes: Partial<Project>): Promi
 }
 
 export async function setProjectStage(id: string, stage: StageId): Promise<Project> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(id, ownerId);
   const current = await db.project.findUniqueOrThrow({ where: { id } });
   const row = await db.project.update({
     where: { id },
-    data: { stage, ...(await orderFieldsFor(stage, current)) },
+    data: { stage, ownerId, ...(await orderFieldsFor(stage, current)) },
     include: PROJECT_INCLUDE,
   });
   return toProject(row as unknown as DbProject);
 }
 
 export async function advanceProject(id: string): Promise<Project> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(id, ownerId);
   const current = await db.project.findUniqueOrThrow({ where: { id } });
   const next = nextStage(current.stage as StageId);
   // Guardrail: a deal cannot reach "complete" unless it became a real order.
@@ -249,7 +355,7 @@ export async function advanceProject(id: string): Promise<Project> {
   }
   const row = await db.project.update({
     where: { id },
-    data: { stage: next, ...(await orderFieldsFor(next, current)) },
+    data: { stage: next, ownerId, ...(await orderFieldsFor(next, current)) },
     include: PROJECT_INCLUDE,
   });
   return toProject(row as unknown as DbProject);
@@ -259,6 +365,8 @@ export async function addPhoto(
   projectId: string,
   photo: Omit<BuildPhoto, "id">,
 ): Promise<Project> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(projectId, ownerId);
   await db.buildPhoto.create({
     data: {
       projectId,
@@ -273,6 +381,8 @@ export async function addPhoto(
 }
 
 export async function removePhoto(projectId: string, photoId: string): Promise<Project> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(projectId, ownerId);
   // Scope the delete to its project: a wrong/forged photoId must not delete another project's
   // photo. `deleteMany` no-ops (count 0) on a mismatch instead of throwing or crossing projects.
   await db.buildPhoto.deleteMany({ where: { id: photoId, projectId } });
@@ -280,6 +390,8 @@ export async function removePhoto(projectId: string, photoId: string): Promise<P
 }
 
 export async function removeProject(id: string): Promise<void> {
+  const ownerId = await requireOwner();
+  await requireOwnedProject(id, ownerId);
   // Project cascades to its photos/activities/quotes/invoices (schema onDelete: Cascade).
   await db.project.delete({ where: { id } });
 }
@@ -312,12 +424,14 @@ async function updateProjectFromCard(
   existing: { nextTask: string; lostReason: string | null },
   card: BoardCard,
   stage: StageId,
+  ownerId: string,
 ): Promise<void> {
   await db.project.update({
     where: { id: card.id },
     data: {
       name: card.title,
       stage,
+      ownerId, // claim an unowned legacy row to the caller (no-op if already owned)
       nextTask: card.nextStep ?? existing.nextTask,
       lostReason: card.lostReason ?? existing.lostReason,
     },
@@ -325,13 +439,18 @@ async function updateProjectFromCard(
 }
 
 /** Create a Project from a board-originated card (intake / quick-add). */
-async function createProjectFromCard(card: BoardCard, stage: StageId): Promise<void> {
+async function createProjectFromCard(
+  card: BoardCard,
+  stage: StageId,
+  ownerId: string,
+): Promise<void> {
   const contact = await findOrCreateContact(card.contact?.name, card.contact?.email);
   await db.project.create({
     data: {
       id: card.id, // preserve the kernel card id so subsequent saves UPDATE, not dupe
       name: card.title,
       contactId: contact.id,
+      ownerId,
       buildingType: "",
       use: "",
       region: "",
@@ -346,13 +465,21 @@ async function createProjectFromCard(card: BoardCard, stage: StageId): Promise<v
 
 /** Reconcile the kernel board's cards back into Project rows (existing → update, new → create). */
 export async function reconcileBoard(cards: BoardCard[]): Promise<void> {
+  const ownerId = await requireOwner();
   for (const card of cards) {
     const stage = card.stage as StageId;
-    const existing = await db.project.findUnique({ where: { id: card.id } });
+    const existing = await db.project.findUnique({
+      where: { id: card.id },
+      select: { ownerId: true, nextTask: true, lostReason: true },
+    });
     if (existing) {
-      await updateProjectFromCard(existing, card, stage);
+      // Ownership gate: never let a board save mutate another owner's project.
+      if (existing.ownerId !== null && existing.ownerId !== ownerId) {
+        throw new ForbiddenError();
+      }
+      await updateProjectFromCard(existing, card, stage, ownerId);
     } else {
-      await createProjectFromCard(card, stage);
+      await createProjectFromCard(card, stage, ownerId);
     }
   }
 }

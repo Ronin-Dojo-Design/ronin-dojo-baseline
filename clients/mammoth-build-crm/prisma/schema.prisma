@@ -36,6 +36,96 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
+// Authentication & identity (Better Auth — per-product, ADR 0038 D5)
+// ---------------------------------------------------------------------------
+//
+// Mammoth owns its OWN auth tables (no shared User/session across products).
+// Shapes mirror the Better Auth core models in apps/web (the canonical
+// Dirstarter shape) minus BBL's lineage satellites — Mammoth's only satellite
+// is the CRM-owner link (`TeamMember.userId`). Auth strategy = email+password +
+// the admin() role plugin (Mammoth has no transactional-email infra, so no
+// magic-link); see lib/auth.ts. These four models are exactly what the Prisma
+// adapter reads/writes — field names are load-bearing for the adapter.
+
+/// Who an authenticated user is inside Mammoth. `owner` = full CRM access (the
+/// admin() plugin's adminRole); `member` = a scoped sales/ops user. Distinct
+/// from `TeamMember` (the CRM "owner" record / HubSpot Owner) — this is the
+/// login account's authorization role.
+enum MammothRole {
+  owner
+  member
+}
+
+/// A login account (Better Auth User). The auth identity; the CRM-owner record
+/// it acts as is `TeamMember` (1:1 via `TeamMember.userId`).
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  email         String      @unique
+  emailVerified Boolean     @default(false)
+  image         String?
+  role          MammothRole @default(member)
+  banned        Boolean?    @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  accounts   Account[]
+  sessions   Session[]
+  teamMember TeamMember?
+
+  @@index([email])
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  token          String   @unique
+  expiresAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ---------------------------------------------------------------------------
 // Enums
 // ---------------------------------------------------------------------------
 
@@ -125,10 +215,16 @@ enum InvoiceStatus {
 // People & accounts (HubSpot Contacts / Companies / Owners)
 // ---------------------------------------------------------------------------
 
-/// A sales/ops owner. The CRM "owner" concept (HubSpot Owners) — NOT an auth
-/// user. Better Auth identity is per-product and deferred to Phase 2 (ADR 0038 D5).
+/// A sales/ops owner — the CRM "owner" concept (HubSpot Owners). Bridges to a
+/// Better Auth login account via `userId` (1:1, optional): a record can exist
+/// without a login (an imported/placeholder owner), and a login resolves to its
+/// owner record on first authenticated action (auto-provisioned in lib/actions).
+/// Ownership scoping (the IDOR gate) keys off this record's id (`Project.ownerId`).
 model TeamMember {
   id              String     @id @default(cuid())
+  /// The login account this owner acts as (Better Auth User). Null = no login yet.
+  user            User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId          String?    @unique
   name            String
   email           String     @unique
   role            String?
@@ -137,6 +233,8 @@ model TeamMember {
   ownedActivities Activity[]
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
+
+  @@index([userId])
 }
 
 /// A person — HubSpot Contact. Captured from the public InquiryForm + the
