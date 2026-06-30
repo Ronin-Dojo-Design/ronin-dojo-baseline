@@ -2,10 +2,10 @@
 title: "SESSION 0473 — S1: BBL tier reprice + consolidate (parallel track A)"
 slug: session-0473
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-29
-updated: 2026-06-29
-last_agent: claude-session-0472
+updated: 2026-06-30
+last_agent: claude-session-0474
 sprint: S49
 pairs_with:
   - docs/sprints/SESSION_0472.md
@@ -209,18 +209,72 @@ Land the ratified tier reprice + cruft consolidation, rehearsed off-prod, with t
 
 ### Goal
 
-TBD at bow-out (likely: S6 Hub shell once S1 lands, or continue track B).
+**No dedicated next session for this track — see SESSION_0474's `Next session` block.** The parallel track B
+(**SESSION_0474**) has already run and **shipped to prod** (lineage display-model unification). The next session,
+**SESSION_0475**, follows from **SESSION_0474's next-session block**: discipline-scoped rank (BBL = BJJ) +
+`selectedRank` removal + the one-SSR-avatar primitive. This S1 lane's only remaining work is the **operator-gated
+live Stripe step** (below) — a manual action, not an agent session.
 
 ### First task
 
-TBD at bow-out.
+Operator action (not an agent session): fix the Stripe CLI account (`stripe login --project-name bbl`), create the
+live BBL prices ($35/$65/$45 annual; $45 = a second price on the Elite product), supply the `price_…` env vars,
+then run the reprice **off-prod first + re-confirm 0 payers** before any live edit (`BBL_STRIPE_PRODUCTS_SPEC.md`).
+Then the $45-plan join-page filter wiring (the read-model `filterPlansForBlackBeltEligibility` is staged for it).
 
 ## Review log
 
+### SESSION_0473_REVIEW_01 — S1 tier groundwork (parallel track A)
+
+- **Reviewed tasks:** TASK_01 (LINEAGE_LEGEND seed — done), TASK_02 (reprice — code done, live Stripe blocked),
+  TASK_03 (BB-rate eligibility — done), TASK_04 (SubscriptionTier deprecation — done).
+- **Verdict:** clean, well-fenced groundwork. Code-complete + self-verified (typecheck, comp-grants 5✓,
+  rank-progression 16✓, lineage-membership 5✓, build green); rebased clean onto SESSION_0474 (disjoint files),
+  re-verified on the merged state (877 unit tests + build green), pushed (`737868ed`). The session correctly
+  STOPPED at the live-Stripe gate (CLI authed to the wrong account) rather than guessing — exactly the fence the
+  prestage set. No migration (the schema change is comment-only).
+- **Score:** 8/10 — solid, safe, fenced. −2 because the lane is incomplete *by design* (TASK_02 live Stripe blocked
+  on operator action) — the right call, but the customer-facing reprice isn't actually live yet.
+
 ## Hostile close review
+
+- **Giddy:** pass — the single entitlement gate (`UserEntitlement`) is preserved; `SubscriptionTier` correctly
+  demoted to display-only with schema markers (SOT-ADR D472-6); reprice via seed/config, not a new ladder. Disjoint
+  from 0474; clean rebase.
+- **Doug:** pass — gates green on the merged state (typecheck, **877 unit**, build); **no live Stripe touched** (the
+  account-gate fence held — STOPPED before any product/price creation); no migration (comment-only schema). Seeds
+  don't auto-run on deploy, so the push is data-safe.
+- **Kaizen aggregate:** 8/10 — the fence discipline (stop at the wrong-account gate) is the standout.
 
 ## ADR / ubiquitous-language check
 
+- **No new ADR** — `SubscriptionTier`/`UserBrandSubscription` deprecation-for-gating is **SOT-ADR D472-6** (already
+  ratified); this session implemented it (schema `///` markers + a 0-gating-reads audit). The Stripe product
+  structure (2 products / 3 prices; $45 = a second Elite price) is a recommendation in `BBL_STRIPE_PRODUCTS_SPEC.md`,
+  to confirm at the live "show me" gate. No new domain terms.
+
 ## Reflections
 
+- **Stop at the account gate, don't guess.** The Stripe CLI being authed to the wrong portfolio account (Tuff Buffs,
+  not BBL) could have created products in the wrong account. Stopping — staging the code + a dry-run instead — was
+  the right fence; live-money operations get a human gate, every time.
+- **Disjoint parallel tracks rebase clean.** S1/S2 were prestaged on disjoint files and it held — 0473 rebased onto
+  0474 with zero conflicts. Scoping parallel lanes by file is what makes the merge free.
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| SESSION-file gate | `## Task log` has 4 `SESSION_0473_TASK` rows |
+| Gates (session, base) | typecheck 0; comp-grants 5✓; rank-progression 16✓; lineage-membership 5✓; oxfmt/oxlint clean; `prisma validate`; build exit 0 |
+| Gates (re-run, merged onto 0474) | typecheck clean; **full unit suite 877/0**; `next build` green |
+| Live Stripe fence | STOPPED — CLI authed to Tuff Buffs (`acct_1T065aPm73j3q757`), not BBL; no product/price created |
+| Migration | none — schema change is comment-only (`///` deprecation markers); `prisma validate` 🚀 |
+| Hostile close review | SESSION_0473_REVIEW_01 + Giddy/Doug pass (8/10) |
+| Review & Recommend | next = SESSION_0475 (follows 0474's block); 0473's remaining = operator live-Stripe step |
+| Git hygiene | committed + rebased clean onto main; **pushed `737868ed`**; merged worktree `../ronin-0473` + branch removed |
+| Memory sweep | none new (tier model in `[[bbl-membership-tier-model-0472]]`; D472-6 in SOT-ADR) |
+| Next session unblock | the *agent* lane is done; the remaining live-Stripe step is an operator manual action (noted) |
+
+> **Closed by claude-session-0474** (the parallel track-B session) at the operator's request, after landing +
+> verifying 0473's code on `main`. TASK_02's live-Stripe step remains an open operator action.
