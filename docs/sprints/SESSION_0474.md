@@ -218,6 +218,12 @@ show the **BJJ** rank (the tree's own discipline), NOT "highest awarded by sortO
 systems — ADR 0035 known limitation); drawer + directory show the member's *other* discipline ranks. **(2)** Remove
 the YAGNI `selectedRank`/`LineageTreeMember.rankAwardId` (~38 files + Prisma migration; repoint live uses to
 awarded-truth, delete the admin dropdown + dead plumbing). **(3)** Apply the lineage doc consolidation (survey list below).
+**(4)** **Avatar = ONE SSR-image primitive (WWAD).** Today there are two avatar components with different behavior —
+the timeline's `CardAvatar` server-renders the `<img>` while the design-system `Avatar` (Radix) defers it to
+client-load (no image in the initial HTML → an initials-then-pop on the cards/board/mobile). Apple/FB/YouTube
+SSR the avatar image with a graceful skeleton/initials fallback shown ONLY on missing/errored image. Consolidate
+to one `Avatar` that renders the `<img>` server-side, used by every surface (kill the `CardAvatar` divergence).
+Shared-design-system blast radius — its own careful pass. Same theme as (1)/(2): one source, rendered identically everywhere.
 
 ### Inputs to read
 
