@@ -10,45 +10,52 @@
  * named as blocked-on-operator) and SESSION_0403 TASK_01.
  *
  * ── What it creates ────────────────────────────────────────────────────────
- * Two paid tiers (operator decision SESSION_0403 — Legend is comp-only, never
- * sold), each with a Monthly + Annual `PricingPlan`, amounts sourced from the
- * monorepo BBLApp (`wordpress/blackbeltlegacy-payments.php::resolve_tier_amount`,
- * USD cents) and mapped onto the Baseline lineage entitlement spine:
+ * The ratified BBL membership-tier model (SOT-ADR D13 / SESSION_0472 D472-1,2;
+ * reprice landed SESSION_0473 TASK_02). THREE annual-only `PricingPlan`s on two
+ * Stripe products, mapped onto the Baseline lineage entitlement spine:
  *
- *   BBL "Premium"    → LINEAGE_PREMIUM          $9.99/mo (999),  $59.99/yr (5999)
- *   BBL "Instructor" → LINEAGE_PREMIUM + ELITE  $29.99/mo (2999), $299/yr (29900)
+ *   "Premium Member"          → LINEAGE_PREMIUM   $35/yr (3500)
+ *   "Elite Member"            → LINEAGE_ELITE     $65/yr (6500)
+ *   "Elite — Black Belt rate" → LINEAGE_ELITE     $45/yr (4500), verified-BB only
+ *
+ * Monthly billing is dropped (annual-only). The $45 Elite price is a verified-black-
+ * belt rate ($45 < $65 — intentional supply-side subsidy, D472-1): it grants the
+ * SAME LINEAGE_ELITE entitlement and carries `metadata.eligibility = "black_belt"`,
+ * which the read model + /lineage/join filter with `isBlackBeltRateEligible`
+ * (TASK_03) — rank gates the PRICE, never the features.
  *
  * Entitlement grants are cumulative (ELITE plans also grant PREMIUM) via the
  * canonical `getLineageCompEntitlementKeys` helper, so a PAID member and a
  * COMPED member at the same tier carry the identical entitlement-key signal
- * (the read model the tier-gating epic relies on).
+ * (the read model the tier-gating epic relies on). The comp-only LINEAGE_LEGEND
+ * entitlement row is also ensured up-front (TASK_01) so `grantUserComp(LEGEND)` works.
  *
  * Each plan carries `metadata.surface = "lineage_membership"` so
  * `findLineageMembershipPlans` (server/web/billing/lineage-membership.ts) lists
- * it on `/lineage/join`.
+ * it on `/lineage/join`. Prior lineage-membership plans NOT in the current set
+ * (the old monthly/annual rows) are deactivated (archived) on each run.
  *
  * ── Stripe price IDs (real, BBL account) ───────────────────────────────────
- * `findLineageMembershipPlans` only returns plans with a non-null
- * `stripePriceId`, so each row needs the BBL **account's** real `price_…` id.
- * Those do not exist in code — the operator creates the products/prices in the
+ * `findLineageMembershipPlans` only returns plans with a non-null `stripePriceId`,
+ * so each row needs the BBL **account's** real `price_…` id (ADR 0030 — BBL transacts
+ * on its OWN account; NOT Baseline/Tuff Buffs). The operator creates the prices in the
  * BBL Stripe account (see docs/product/black-belt-legacy/BBL_STRIPE_PRODUCTS_SPEC.md)
- * and supplies the ids via env. This script reads them from env and refuses to
- * seed sellable rows without them (use --allow-missing-price-ids to stage
- * not-yet-sellable rows, or --dry-run to preview).
+ * and supplies the ids via env. This script reads them from env and refuses to seed
+ * sellable rows without them (use --allow-missing-price-ids to stage not-yet-sellable
+ * rows, or --dry-run to preview).
  *
- *   BBL_STRIPE_PRODUCT_PREMIUM        prod_… (optional; display/admin only)
- *   BBL_STRIPE_PRICE_PREMIUM_MONTHLY  price_…  (999/mo)
- *   BBL_STRIPE_PRICE_PREMIUM_ANNUAL   price_…  (5999/yr)
- *   BBL_STRIPE_PRODUCT_ELITE          prod_… (optional)
- *   BBL_STRIPE_PRICE_ELITE_MONTHLY    price_…  (2999/mo)
- *   BBL_STRIPE_PRICE_ELITE_ANNUAL     price_…  (29900/yr)
+ *   BBL_STRIPE_PRODUCT_PREMIUM              prod_… (optional; display/admin only)
+ *   BBL_STRIPE_PRICE_PREMIUM_ANNUAL        price_…  (3500/yr → Premium $35)
+ *   BBL_STRIPE_PRODUCT_ELITE               prod_… (optional; shared by both Elite prices)
+ *   BBL_STRIPE_PRICE_ELITE_ANNUAL          price_…  (6500/yr → Elite $65)
+ *   BBL_STRIPE_PRICE_ELITE_BLACKBELT_ANNUAL price_…  (4500/yr → Elite Black Belt rate $45)
  *
  * Idempotent: upserts by (brand, organizationId, name); re-running after the
  * operator supplies real price ids backfills them onto the existing rows.
  *
  * Usage (from apps/web):
  *   bun run scripts/seed-bbl-lineage-pricing.ts --dry-run
- *   BBL_STRIPE_PRICE_PREMIUM_MONTHLY=price_… (…all four…) \
+ *   BBL_STRIPE_PRICE_PREMIUM_ANNUAL=price_… (…all three…) \
  *     bun run scripts/seed-bbl-lineage-pricing.ts
  *   bun run scripts/seed-bbl-lineage-pricing.ts --org-id <cuid>
  *   bun run scripts/seed-bbl-lineage-pricing.ts --allow-missing-price-ids
@@ -64,6 +71,7 @@ import { PrismaClient } from "../.generated/prisma/client"
 import {
   getLineageCompEntitlementKeys,
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
   type LineageCompTier,
 } from "../lib/entitlements/lineage-comp"
@@ -87,7 +95,20 @@ const LINEAGE_MEMBERSHIP_SURFACE = "lineage_membership"
 const ENTITLEMENT_NAMES: Record<string, string> = {
   [LINEAGE_PREMIUM_ENTITLEMENT_KEY]: "Black Belt Legacy — Premium",
   [LINEAGE_ELITE_ENTITLEMENT_KEY]: "Black Belt Legacy — Elite",
+  [LINEAGE_LEGEND_ENTITLEMENT_KEY]: "Black Belt Legacy — Legend",
 }
+
+// The full BBL lineage entitlement set. PREMIUM/ELITE are also ensured lazily by
+// the per-plan grant loop, but LEGEND is comp-only (no plan grants it), so without
+// an explicit up-front ensure the `LINEAGE_LEGEND` row never exists and
+// `grantUserComp(tier: LEGEND)` throws "Entitlement not found" (SESSION_0473 TASK_01;
+// the gap D472-6 found in prodsnap). Seeding all three here makes running this seed
+// against prod self-healing for the comp path.
+const BBL_BASE_ENTITLEMENT_KEYS = [
+  LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+  LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
+] as const
 
 interface PlanDef {
   /** Display name; also the idempotency key (brand + org + name). */
@@ -105,74 +126,70 @@ interface PlanDef {
   summary: string
   features: string[]
   ctaLabel: string
+  /**
+   * When true, this price is only offered to a verified BJJ black belt (the $45
+   * "Black Belt rate" Elite price). Materialized into plan metadata as
+   * `eligibility: "black_belt"`; the read model + `/lineage/join` filter it with
+   * `isBlackBeltRateEligible` (SESSION_0473 TASK_03). The plan still grants the
+   * normal LINEAGE_ELITE entitlement — rank gates the PRICE, never the features.
+   */
+  requiresBlackBelt?: boolean
 }
 
-// Amounts (USD cents) sourced from the monorepo BBLApp:
-//   wordpress/blackbeltlegacy-payments.php::resolve_tier_amount
-//   member_premium → { monthly: 999,  yearly: 5999 }
-//   instructor     → { monthly: 2999, yearly: 29900 }
-// Tier mapping is the SESSION_0403 operator decision (2 paid tiers; Legend comp-only).
+// Amounts (USD cents) — the ratified BBL membership-tier model (SOT-ADR D13 /
+// SESSION_0472 D472-1,2). ANNUAL-ONLY (monthly dropped). Three plans on two Stripe
+// products: Premium ($35), Elite ($65), and a second Elite price at the verified-
+// black-belt rate ($45 < $65 — intentional supply-side subsidy, D472-1). Customer
+// copy below is a DRAFT pending operator confirm; internal entitlement keys stay.
 const BBL_LINEAGE_PLANS: PlanDef[] = [
   {
-    name: "Black Belt Legacy — Premium (Monthly)",
+    name: "Premium Member",
     tier: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
-    pricingModel: "MONTHLY",
-    amountCents: 999,
-    intervalMonths: 1,
-    priceIdEnv: "BBL_STRIPE_PRICE_PREMIUM_MONTHLY",
+    pricingModel: "ANNUAL",
+    amountCents: 3500,
+    intervalMonths: 12,
+    priceIdEnv: "BBL_STRIPE_PRICE_PREMIUM_ANNUAL",
     productIdEnv: "BBL_STRIPE_PRODUCT_PREMIUM",
     sortOrder: 10,
-    summary: "Full member card, technique library, and unlimited favorites.",
+    summary: "Full public profile, members-only video library, and certificate download.",
     features: [
-      "Full lineage member card (photo, bio, links, attachments)",
-      "Complete technique library",
-      "Unlimited favorites + video downloads",
+      "Full public profile (bio, links, rank history, QR)",
+      "Members-only video library",
+      "Certificate download",
+      "Submit your rank for verification",
     ],
     ctaLabel: "Join Premium",
   },
   {
-    name: "Black Belt Legacy — Premium (Annual)",
-    tier: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
-    pricingModel: "ANNUAL",
-    amountCents: 5999,
-    intervalMonths: 12,
-    priceIdEnv: "BBL_STRIPE_PRICE_PREMIUM_ANNUAL",
-    productIdEnv: "BBL_STRIPE_PRODUCT_PREMIUM",
-    sortOrder: 11,
-    summary: "Premium membership billed yearly (best value).",
-    features: ["Everything in Premium", "Two months free vs. monthly billing"],
-    ctaLabel: "Join Premium — Annual",
-  },
-  {
-    name: "Black Belt Legacy — Elite (Monthly)",
+    name: "Elite Member",
     tier: LINEAGE_ELITE_ENTITLEMENT_KEY,
-    pricingModel: "MONTHLY",
-    amountCents: 2999,
-    intervalMonths: 1,
-    priceIdEnv: "BBL_STRIPE_PRICE_ELITE_MONTHLY",
+    pricingModel: "ANNUAL",
+    amountCents: 6500,
+    intervalMonths: 12,
+    priceIdEnv: "BBL_STRIPE_PRICE_ELITE_ANNUAL",
     productIdEnv: "BBL_STRIPE_PRODUCT_ELITE",
     sortOrder: 20,
-    summary: "Instructor tier — create techniques, manage students and lineage.",
+    summary: "Everything in Premium plus the Instructor / School-Owner Hub.",
     features: [
       "Everything in Premium",
-      "Publish technique posts",
-      "Invite + track students, instructor dashboard",
-      "Lineage tree management",
+      "Instructor / School-Owner Hub",
+      "Manage your academy, students, and lineage",
     ],
     ctaLabel: "Become an Instructor",
   },
   {
-    name: "Black Belt Legacy — Elite (Annual)",
+    name: "Elite — Black Belt rate",
     tier: LINEAGE_ELITE_ENTITLEMENT_KEY,
     pricingModel: "ANNUAL",
-    amountCents: 29900,
+    amountCents: 4500,
     intervalMonths: 12,
-    priceIdEnv: "BBL_STRIPE_PRICE_ELITE_ANNUAL",
+    priceIdEnv: "BBL_STRIPE_PRICE_ELITE_BLACKBELT_ANNUAL",
     productIdEnv: "BBL_STRIPE_PRODUCT_ELITE",
     sortOrder: 21,
-    summary: "Instructor tier billed yearly (best value).",
-    features: ["Everything in Elite", "Two months free vs. monthly billing"],
-    ctaLabel: "Become an Instructor — Annual",
+    requiresBlackBelt: true,
+    summary: "The Elite tier at the verified-black-belt rate.",
+    features: ["Everything in Elite", "Discounted rate for verified BJJ black belts"],
+    ctaLabel: "Join at the Black Belt rate",
   },
 ]
 
@@ -203,6 +220,27 @@ async function main() {
     console.log(`📍 Org (flag): ${organizationId}`)
   }
 
+  // ── Ensure the full BBL lineage entitlement set exists (incl. comp-only LEGEND). ──
+  // The per-plan loop below only ensures keys a plan grants (PREMIUM/ELITE); LEGEND is
+  // comp-only, so it is ensured here so `grantUserComp(tier: LEGEND)` resolves the row.
+  if (!isDryRun) {
+    for (const key of BBL_BASE_ENTITLEMENT_KEYS) {
+      await db.entitlement.upsert({
+        where: { brand_key: { brand: BRAND, key } },
+        update: {},
+        create: {
+          brand: BRAND,
+          key,
+          name: ENTITLEMENT_NAMES[key] ?? key,
+          description: "Black Belt Legacy lineage membership tier (paid or comped).",
+        },
+      })
+    }
+    console.log(
+      `🔑 Ensured ${BBL_BASE_ENTITLEMENT_KEYS.length} BBL entitlements (PREMIUM, ELITE, LEGEND).`,
+    )
+  }
+
   // ── Validate price ids up front (real BBL-account price_… from env). ──
   const missing = BBL_LINEAGE_PLANS.filter(p => !process.env[p.priceIdEnv]).map(p => p.priceIdEnv)
   if (missing.length > 0) {
@@ -230,6 +268,7 @@ async function main() {
   let created = 0
   let updated = 0
   let grantsCreated = 0
+  let archived = 0
 
   for (const plan of BBL_LINEAGE_PLANS) {
     const stripePriceId = process.env[plan.priceIdEnv] ?? null
@@ -240,6 +279,9 @@ async function main() {
       summary: plan.summary,
       features: plan.features,
       ctaLabel: plan.ctaLabel,
+      // The verified-black-belt rate carries an eligibility marker; the read model
+      // + /lineage/join filter it with isBlackBeltRateEligible (SESSION_0473 TASK_03).
+      ...(plan.requiresBlackBelt ? { eligibility: "black_belt" as const } : {}),
     }
 
     const label =
@@ -330,9 +372,35 @@ async function main() {
     return
   }
 
+  // ── Archive prior BBL lineage-membership plans not in the new set. ──
+  // The reprice relabels the plans (Premium/Elite Member, Black Belt rate), so the
+  // old monthly/annual rows would otherwise linger as active + sellable on
+  // /lineage/join. Deactivate any lineage_membership plan whose name is not in the
+  // current set (SESSION_0473 TASK_02 / D472-2 "archive old prices"). NOTE: this only
+  // flips PricingPlan.isActive — archiving the matching Stripe *prices* is a separate
+  // operator/CLI step (the price ids stay valid until archived in Stripe).
+  const keepNames = new Set(BBL_LINEAGE_PLANS.map(p => p.name))
+  const priorPlans = await db.pricingPlan.findMany({
+    where: { brand: BRAND, organizationId, isActive: true },
+    select: { id: true, name: true, metadata: true },
+  })
+  for (const prior of priorPlans) {
+    const meta = prior.metadata
+    const isMembership =
+      typeof meta === "object" &&
+      meta !== null &&
+      !Array.isArray(meta) &&
+      (meta as Record<string, unknown>).surface === LINEAGE_MEMBERSHIP_SURFACE
+    if (isMembership && !keepNames.has(prior.name)) {
+      await db.pricingPlan.update({ where: { id: prior.id }, data: { isActive: false } })
+      archived++
+      console.log(`   📦 Archived (deactivated): ${prior.name}`)
+    }
+  }
+
   console.log(
     `\n🎉 Done. Plans created: ${created}, updated: ${updated} (of ${BBL_LINEAGE_PLANS.length}); ` +
-      `entitlement grants created: ${grantsCreated}.`,
+      `entitlement grants created: ${grantsCreated}; old plans archived: ${archived}.`,
   )
   console.log(
     "   Next: confirm /lineage/join lists the plans on the BBL deployment, then run the BBL-account\n" +

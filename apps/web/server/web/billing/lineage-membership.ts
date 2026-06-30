@@ -7,6 +7,8 @@ type LineageMembershipPlanMetadata = {
   summary: string | null
   features: string[]
   ctaLabel: string
+  /** $45 "Black Belt rate" Elite price — offered only to a verified BJJ black belt. */
+  requiresBlackBelt: boolean
 }
 
 export type LineageMembershipPlan = {
@@ -21,6 +23,7 @@ export type LineageMembershipPlan = {
   summary: string | null
   features: string[]
   ctaLabel: string
+  requiresBlackBelt: boolean
   entitlementKeys: string[]
 }
 
@@ -41,6 +44,7 @@ export const parseLineageMembershipPlanMetadata = (
       ? metadata.features.filter((feature): feature is string => typeof feature === "string")
       : [],
     ctaLabel: typeof metadata.ctaLabel === "string" ? metadata.ctaLabel : "Join membership",
+    requiresBlackBelt: metadata.eligibility === "black_belt",
   }
 }
 
@@ -95,8 +99,20 @@ export const findLineageMembershipPlans = async (
         summary: metadata.summary,
         features: metadata.features,
         ctaLabel: metadata.ctaLabel,
+        requiresBlackBelt: metadata.requiresBlackBelt,
         entitlementKeys: plan.entitlementGrants.map(grant => grant.entitlement.key),
       },
     ]
   })
 }
+
+/**
+ * Drop the verified-black-belt-rate plan(s) for members who are not eligible.
+ * The $45 "Black Belt rate" Elite price is offered only to a verified BJJ black belt
+ * (SESSION_0473 TASK_03 / D472-1); everyone else sees the $65 Elite price. Pass the
+ * viewer's `isBlackBeltRateEligible(...)` result (from their belt progressions).
+ */
+export const filterPlansForBlackBeltEligibility = (
+  plans: LineageMembershipPlan[],
+  isBlackBeltEligible: boolean,
+): LineageMembershipPlan[] => plans.filter(plan => !plan.requiresBlackBelt || isBlackBeltEligible)

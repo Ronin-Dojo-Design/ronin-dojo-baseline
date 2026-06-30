@@ -2585,6 +2585,11 @@ model Style {
 // Models — Subscriptions
 // ---------------------------------------------------------------------------
 
+/// DEPRECATED FOR GATING (SESSION_0473 TASK_04 / SOT-ADR D472-6). This is NOT an
+/// access gate — `UserEntitlement` (the `LINEAGE_*` entitlement keys) is the single
+/// gate for every paid/comped capability. SubscriptionTier is admin display/CRUD only
+/// (`/app/subscription-tiers`). Audit (SESSION_0473): 0 gating reads, and BBL prod has
+/// 0 `UserBrandSubscription` rows. Do not add gating reads here; gate on entitlements.
 model SubscriptionTier {
   id          String   @id @default(cuid(2))
   code        String
@@ -2602,6 +2607,10 @@ model SubscriptionTier {
   @@index([brand, level])
 }
 
+/// DEPRECATED FOR GATING (SESSION_0473 TASK_04 / SOT-ADR D472-6). NOT an access gate —
+/// `UserEntitlement` is the single gate. This row records an admin-assigned tier for
+/// display only (`/app/subscriptions`); nothing in the gating path reads it (audit:
+/// 0 non-admin reads; BBL prod has 0 rows). Gate on entitlements, never on this.
 model UserBrandSubscription {
   id        String             @id @default(cuid(2))
   brand     Brand

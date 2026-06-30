@@ -12,6 +12,7 @@ installSafeActionMocks({ brand: "BBL" })
 
 import {
   LINEAGE_ELITE_ENTITLEMENT_KEY,
+  LINEAGE_LEGEND_ENTITLEMENT_KEY,
   LINEAGE_PREMIUM_ENTITLEMENT_KEY,
 } from "~/lib/entitlements/lineage-comp"
 import { grantUserComp, revokeUserComp } from "~/server/admin/entitlements/actions"
@@ -91,6 +92,7 @@ async function createMembership(userId: string) {
 beforeAll(async () => {
   await ensureEntitlement(LINEAGE_PREMIUM_ENTITLEMENT_KEY, "Lineage Premium")
   await ensureEntitlement(LINEAGE_ELITE_ENTITLEMENT_KEY, "Lineage Elite")
+  await ensureEntitlement(LINEAGE_LEGEND_ENTITLEMENT_KEY, "Lineage Legend")
 })
 
 afterAll(async () => {
@@ -228,6 +230,43 @@ describe("lineage comp grants", () => {
     for (const grant of grants) {
       expect(grant.status).toBe("ACTIVE")
       expect(grant.endsAt?.toISOString()).toBe("2026-07-01T12:00:00.000Z")
+    }
+  })
+
+  it("grants a legend comp as premium + elite + legend (SESSION_0473 TASK_01)", async () => {
+    const admin = await createUser("legend-admin", "admin")
+    const grantee = await createUser("legend-grantee")
+
+    setTestSession({ id: admin.id, role: "admin" })
+    const result = await grantUserComp({
+      userId: grantee.id,
+      tier: LINEAGE_LEGEND_ENTITLEMENT_KEY,
+      reason: "Legend gift",
+    })
+
+    // Regression for D472-6 / SESSION_0473 TASK_01: before the LINEAGE_LEGEND
+    // Entitlement row was seeded, this threw "Entitlement LINEAGE_LEGEND not found
+    // for brand BBL". The cumulative key set means a Legend comp grants all three.
+    expect(result?.serverError).toBeUndefined()
+    expect(result?.data?.grants).toHaveLength(3)
+
+    const grants = await db.userEntitlement.findMany({
+      where: {
+        userId: grantee.id,
+        sourceType: "MANUAL_GRANT",
+        sourceId: `grant:${admin.id}:legend-gift`,
+      },
+      include: { entitlement: { select: { key: true } } },
+    })
+
+    expect(grants.map(grant => grant.entitlement.key).sort()).toEqual([
+      LINEAGE_ELITE_ENTITLEMENT_KEY,
+      LINEAGE_LEGEND_ENTITLEMENT_KEY,
+      LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+    ])
+    for (const grant of grants) {
+      expect(grant.status).toBe("ACTIVE")
+      expect(grant.endsAt).toBeNull()
     }
   })
 

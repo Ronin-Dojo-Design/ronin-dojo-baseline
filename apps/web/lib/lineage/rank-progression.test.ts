@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 import { describe, test } from "node:test"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 import {
+  type BeltProgression,
   BELT_PROMOTION_POINTS,
   buildAchievementsUnlocked,
   buildBeltProgressions,
+  isBlackBeltRateEligible,
   totalProgressionPoints,
 } from "./rank-progression"
 
@@ -267,5 +269,95 @@ describe("totalProgressionPoints", () => {
     })
     const progressions = buildBeltProgressions([a, b])
     assert.equal(totalProgressionPoints(progressions), 2 * BELT_PROMOTION_POINTS)
+  })
+})
+
+// SESSION_0473 TASK_03 — BBL "Black Belt rate" eligibility predicate.
+// `makeAward` always stamps slug "bjj", so the discipline-scoping branches use a
+// minimal direct `prog()` fixture; the happy path runs the real buildBeltProgressions.
+function prog(
+  disciplineSlug: string | null,
+  levels: Array<[name: string, status: "earned" | "current" | "locked"]>,
+): BeltProgression {
+  return {
+    rankSystem: {
+      id: "rs",
+      name: "System",
+      discipline:
+        disciplineSlug === null
+          ? null
+          : { id: "d", name: "Discipline", slug: disciplineSlug, code: null },
+    },
+    levels: levels.map(([name, status], i) => ({
+      rank: { id: `r${i}`, name, shortName: null, colorHex: null, sortOrder: i },
+      status,
+      awardedAt: null,
+    })),
+    currentLevelIndex: null,
+    earnedCount: levels.filter(([, status]) => status !== "locked").length,
+    totalLevels: levels.length,
+    points: 0,
+  }
+}
+
+describe("isBlackBeltRateEligible", () => {
+  test("true for an awarded BJJ black belt (through buildBeltProgressions)", () => {
+    const blackAward = makeAward({
+      id: "a-black",
+      rankId: "rank-black",
+      rankName: "Black Belt",
+      rankSortOrder: 5,
+      awardedAt: new Date("2020-01-01"),
+    })
+    assert.equal(isBlackBeltRateEligible(buildBeltProgressions([blackAward])), true)
+  })
+
+  test("false when the highest awarded BJJ rank is brown", () => {
+    assert.equal(isBlackBeltRateEligible([prog("bjj", [["Brown Belt", "current"]])]), false)
+  })
+
+  test("false when a black belt exists but was never awarded (locked)", () => {
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("bjj", [
+          ["Brown Belt", "current"],
+          ["Black Belt", "locked"],
+        ]),
+      ]),
+      false,
+    )
+  })
+
+  test("true for BJJ coral and red belts (black-belt-and-above)", () => {
+    assert.equal(
+      isBlackBeltRateEligible([prog("bjj", [["Coral Belt (Red/Black) - 7th Degree", "current"]])]),
+      true,
+    )
+    assert.equal(
+      isBlackBeltRateEligible([prog("bjj", [["Red Belt - 10th Degree (Grand Master)", "earned"]])]),
+      true,
+    )
+  })
+
+  test("false for a black belt in a non-BJJ discipline", () => {
+    assert.equal(isBlackBeltRateEligible([prog("karate", [["Black Belt", "current"]])]), false)
+  })
+
+  test("false when the rank system has no discipline", () => {
+    assert.equal(isBlackBeltRateEligible([prog(null, [["Black Belt", "current"]])]), false)
+  })
+
+  test("false for empty progressions", () => {
+    assert.equal(isBlackBeltRateEligible([]), false)
+  })
+
+  test("multi-system: eligible if ANY BJJ system has an awarded black belt", () => {
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("karate", [["Black Belt", "current"]]),
+        prog("bjj", [["Black Belt", "current"]]),
+      ]),
+      true,
+    )
   })
 })

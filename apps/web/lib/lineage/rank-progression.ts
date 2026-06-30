@@ -259,3 +259,39 @@ export function totalProgressionPoints(progressions: readonly BeltProgression[])
   for (const p of progressions) total += p.points
   return total
 }
+
+/**
+ * BBL "Black Belt rate" eligibility (SESSION_0473 TASK_03 / SOT-ADR D472-1, D472-3).
+ *
+ * Belt rank is a **price** axis, not a feature axis: a verified BJJ black belt is
+ * offered the $45/yr Elite price; everyone else sees the $65/yr Elite price. This
+ * predicate is the eligibility check that gates the PRICE — it never gates features
+ * and never auto-bills (promotion flips eligibility; the member opts in).
+ *
+ * "Verified" = awarded truth: this reads `BeltProgression`s built by
+ * `buildBeltProgressions` from the passport's `rankAwardsEarned` (the AWARDED
+ * `RankAward`s), so a self-declared / pending rank never qualifies. Scoped to BJJ
+ * (the lineage discipline); the degree tiers Black Belt → Coral Belt → Red Belt all
+ * count as black-belt-or-above.
+ */
+const BLACK_BELT_RATE_DISCIPLINE_KEYS = new Set(["bjj"])
+
+function isBlackBeltOrAbove(rank: { name: string }): boolean {
+  // BJJ black-belt-and-above rank names: "Black Belt[ - Nth Degree]",
+  // "Coral Belt (...)", "Red Belt - Nth Degree". White/Blue/Purple/Brown never match.
+  return /\b(black|coral|red)\s+belt\b/i.test(rank.name)
+}
+
+export function isBlackBeltRateEligible(progressions: readonly BeltProgression[]): boolean {
+  return progressions.some(progression => {
+    const disciplineKey =
+      progression.rankSystem.discipline?.slug ?? progression.rankSystem.discipline?.code ?? null
+    if (!disciplineKey || !BLACK_BELT_RATE_DISCIPLINE_KEYS.has(disciplineKey.toLowerCase())) {
+      return false
+    }
+    return progression.levels.some(
+      level =>
+        (level.status === "earned" || level.status === "current") && isBlackBeltOrAbove(level.rank),
+    )
+  })
+}

@@ -6,7 +6,7 @@ import { type DayOfWeek, PrismaClient } from "~/.generated/prisma/client"
  *
  * Production-safe seed for platform-level data missing from production:
  *   - 6 system Roles
- *   - 12 Entitlements (S3_UPLOAD, LINEAGE_PREMIUM, LINEAGE_ELITE for all brands)
+ *   - 16 Entitlements (S3_UPLOAD, LINEAGE_PREMIUM, LINEAGE_ELITE, LINEAGE_LEGEND for all brands)
  *   - 4 system Tournament Roles
  *   - 6 system Gamification Event Types
  *   - 6 Subscription Tiers (1 universal FREE + 5 BBL)
@@ -143,6 +143,12 @@ async function main() {
       name: "Lineage Elite",
       description:
         "Elite lineage-tree access entitlement; grants the premium entitlement set plus elite extras.",
+    },
+    {
+      key: "LINEAGE_LEGEND",
+      name: "Lineage Legend",
+      description:
+        "Legend lineage-tree access entitlement (comp-only — Dirty Dozen / invited legends); grants the elite entitlement set plus legend extras. Defined here so `grantUserComp(tier: LEGEND)` can resolve the row (SESSION_0473 TASK_01).",
     },
   ] as const
   let entCreated = 0
