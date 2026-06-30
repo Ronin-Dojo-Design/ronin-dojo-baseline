@@ -74,6 +74,12 @@ Single source of truth is the frontmatter `status:` field.
 Remove `selectedRank`, make the shown rank discipline-scoped (BBL = BJJ), and unify the avatar onto one SSR-image
 primitive — proven on the live DOM + a Prisma migration, gates green, no behavior regression on the verified roster.
 
+> **⚠️ KEY INVARIANT (read before TASK_01/02).** The FINAL shown-rank rule is **discipline-scoped** (BBL tree/board/
+> cards = the **BJJ** rank), NOT global "highest awarded by `sortOrder`". `memberTopRank` is the **one resolver** that
+> answers "what belt" — TASK_02 makes it **discipline-aware**. So **every reader must route through `memberTopRank`
+> (the resolver), NEVER a raw `rankAwardsEarned[0]`** — a raw `[0]` bypasses the discipline-scoping and silently
+> re-creates the "highest-awarded-across-systems" bug ADR 0035 §3 flagged. One source, read everywhere (LR 0008).
+
 ### Tasks
 
 #### SESSION_0475_TASK_01 — Remove `selectedRank` / `selectedRankAward` (YAGNI; display-dead)
@@ -83,10 +89,15 @@ primitive — proven on the live DOM + a Prisma migration, gates green, no behav
   already display-dead (ADR 0035 + 0474 removed its last display readers); only the admin "Selected rank" dropdown
   still writes it, with zero readers.
 - **Steps (order matters — repoint live readers BEFORE deleting the field, or typecheck cascades):**
-  1. **Repoint the live non-display readers to awarded-truth (the top award):** `to-lineage-visual.ts` timeline
-     `promotionDate`; `bbl-galaxy-from-lineage.ts` date; `students-carousel.tsx` rank; `use-drawer-profile.ts`
-     `deriveDrawerProfileView` panel-rank; the public `lineage-node-profile-form.tsx` promotion-date read/gate →
-     all to `node.passport.rankAwardsEarned[0]` (the top award; the profile payload still joins all awards).
+  1. **Repoint the live non-display readers off `selectedRankAward` — THROUGH the resolver, not a raw `[0]`** (see
+     the KEY INVARIANT above): `to-lineage-visual.ts` timeline `promotionDate`; `bbl-galaxy-from-lineage.ts` date;
+     `students-carousel.tsx` rank; `use-drawer-profile.ts` `deriveDrawerProfileView` panel-rank; the public
+     `lineage-node-profile-form.tsx` promotion-date read/gate. **Rank readers** call `memberTopRank(node, …)` (the
+     resolver TASK_02 makes discipline-aware, so they inherit the BJJ-scoping). **Date readers** take the `awardedAt`
+     of the award `memberTopRank` selects — NOT a hardcoded `rankAwardsEarned[0]` (the profile payload still joins all
+     awards; this matters once a member is multi-discipline). If a clean shared accessor doesn't exist, add a tiny
+     `memberTopRankAward(node, disciplineId?)` helper next to `memberTopRank` so both the rank + the date come from
+     one discipline-scoped source.
   2. **Delete the write-path:** `app/app/lineage/_components/lineage-selected-rank-select.tsx`,
      `updateLineageTreeMemberSelectedRank` action + its schema (`server/admin/lineage/{actions,schema}.ts`), the
      `[treeId]/page.tsx` render; remove the `rankAwardId` param from `create-lineage-member.ts` + its callers.
