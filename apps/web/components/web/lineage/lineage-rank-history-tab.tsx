@@ -10,18 +10,11 @@ import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
 import { LineageRankProgressionPanel } from "~/components/web/lineage/lineage-rank-progression-panel"
+import { nameInitials } from "~/lib/identity/passport-display"
 import { cx } from "~/lib/utils"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
-
-function initials(name: string | null | undefined): string {
-  if (!name) return "?"
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
-  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
-}
 
 function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "Unknown date"
@@ -175,7 +168,7 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
               {awardedBy.image && (
                 <AvatarImage src={awardedBy.image} alt={awardedBy.name ?? "Awarder"} />
               )}
-              <AvatarFallback>{initials(awardedBy.name)}</AvatarFallback>
+              <AvatarFallback>{nameInitials(awardedBy.name)}</AvatarFallback>
             </Avatar>
             <span className="text-sm">{awardedBy.name ?? "Unnamed awarder"}</span>
           </Stack>

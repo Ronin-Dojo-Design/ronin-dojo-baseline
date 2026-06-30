@@ -154,13 +154,45 @@ test.describe("Lineage public rank-redaction E2E", () => {
       const drawerDialog = page.getByRole("dialog")
       await expect(drawerDialog).toBeVisible()
 
-      // Member-A's rank label MUST appear — proves the redaction is targeted
-      // and not a blanket break of rank rendering.
-      await expect(drawerDialog).toContainText(fixture.memberA.rankName)
+      // Member-A's SHOWN rank (the highest AWARDED belt) MUST appear — proves the redaction
+      // is targeted and not a blanket break of rank rendering. (Display = awarded truth: the
+      // drawer shows the higher awarded belt, not the lower `selectedRank` — ADR 0035.)
+      await expect(drawerDialog).toContainText(fixture.memberA.awardedTopRankName)
 
       await page.getByRole("tab", { name: "Rank History" }).click()
       await expect(drawerDialog.getByText("No rank history yet")).toHaveCount(0)
-      await expect(drawerDialog).toContainText(fixture.memberA.rankName)
+      await expect(drawerDialog).toContainText(fixture.memberA.awardedTopRankName)
+    } finally {
+      await context.close()
+    }
+  })
+
+  // SESSION_0474 — guards the Meyer/Casey regression (a lower WP-import / `selectedRank`
+  // belt floating over the higher AWARDED belt) + the claim-badge removal from the tree.
+  test("board shows the highest AWARDED belt (not the lower selectedRank) and no Claimable badge", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const page = await context.newPage()
+
+    try {
+      await createAuthenticatedSession(page, fixture.viewerUserId)
+      await page.goto(`/lineage/${fixture.treeSlug}?view=board`)
+      await expect(page.getByRole("heading", { name: fixture.treeName })).toBeVisible({
+        timeout: 30_000,
+      })
+
+      // member-A holds a HIGHER awarded belt while their `selectedRank` points at the lower
+      // one. Display = awarded truth (ADR 0035): the board must render the higher belt…
+      await expect(page.getByText(fixture.memberA.awardedTopRankName).first()).toBeVisible({
+        timeout: 15_000,
+      })
+      // …and NEVER the lower `selectedRank` belt (the exact stale-pointer bug we fixed).
+      await expect(page.getByText(fixture.memberA.rankName)).toHaveCount(0)
+
+      // Claim affordance is drawer/directory-only — the seeded `isClaimable` member-B must
+      // NOT show a "Claimable" badge on the tree/board.
+      await expect(page.getByText("Claimable", { exact: true })).toHaveCount(0)
     } finally {
       await context.close()
     }

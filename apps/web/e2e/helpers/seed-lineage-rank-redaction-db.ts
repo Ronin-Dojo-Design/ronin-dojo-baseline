@@ -250,6 +250,29 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     },
   })
 
+  // SESSION_0474 awarded-truth guard: member-A ALSO holds a HIGHER awarded belt
+  // (sortOrder 100), while their `selectedRank` (memberA.rankAwardId below) stays
+  // pinned to the LOWER award. Display MUST show the highest AWARDED rank (ADR 0035) —
+  // not the deprecated `selectedRank`. This is the Meyer/Casey regression guard.
+  const rankATop = await prisma.rank.create({
+    data: {
+      brand: TEST_BRAND,
+      rankSystemId: visibleRankSystem.id,
+      sortOrder: 100,
+      name: `${TAG_PREFIX} Visible Coral Belt ${runId}`,
+      shortName: `VCB${runId.slice(-4)}`,
+      colorHex: "#b91c1c",
+    },
+  })
+
+  const rankAwardATop = await prisma.rankAward.create({
+    data: {
+      passportId: memberAEntry.passport.id,
+      rankId: rankATop.id,
+      awardedAt: new Date(Date.UTC(2024, 0, 1)),
+    },
+  })
+
   const rankAwardB = await prisma.rankAward.create({
     data: {
       passportId: memberBEntry.passport.id,
@@ -299,6 +322,9 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       rankAwardId: rankAwardB.id,
       visualSortOrder: 20,
       visualGroupId: publicGroup.id,
+      // SESSION_0474: claimable so the OLD code would have rendered a "Claimable" badge on
+      // the board — the spec asserts it now does NOT (claim affordance is drawer/directory-only).
+      isClaimable: true,
     },
   })
 
@@ -321,6 +347,9 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       rankAwardId: rankAwardA.id,
       rankName: rankA.name,
       rankShortName: rankA.shortName ?? "",
+      // The HIGHER awarded rank — what every display surface must show (awarded truth),
+      // even though `selectedRank` (rankAwardId) points at the lower `rankName`.
+      awardedTopRankName: rankATop.name,
       rankSystemName: visibleRankSystem.name,
       disciplineName: discipline.name,
     },
@@ -339,8 +368,8 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     nodeIds: [memberAEntry.node.id, memberBEntry.node.id],
     memberIds: [memberA.id, memberB.id],
     groupIds: [publicGroup.id],
-    rankIds: [rankA.id, rankB.id],
-    rankAwardIds: [rankAwardA.id, rankAwardB.id],
+    rankIds: [rankA.id, rankATop.id, rankB.id],
+    rankAwardIds: [rankAwardA.id, rankAwardATop.id, rankAwardB.id],
     rankSystemId: visibleRankSystem.id,
     rankSystemIds: [visibleRankSystem.id, hiddenRankSystem.id],
     disciplineId: discipline.id,

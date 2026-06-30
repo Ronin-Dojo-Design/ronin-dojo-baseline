@@ -87,7 +87,7 @@ export async function LineageTreeSection({ brand, disciplineCode }: LineageTreeS
           >
             Claim a profile
           </Button>
-          <Note>Claimable profiles are marked on the tree.</Note>
+          <Note>Open a profile to see if it can be claimed.</Note>
         </Stack>
       )}
 

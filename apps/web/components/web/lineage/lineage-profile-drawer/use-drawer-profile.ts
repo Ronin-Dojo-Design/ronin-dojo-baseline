@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { passportDisplayName } from "~/lib/identity/passport-display"
+import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
 import { pickLineageClaimStatus, resolveLineageTrustStatus } from "~/lib/lineage/trust-status"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 import type { SelectedRankAward } from "./drawer-types"
@@ -25,13 +25,8 @@ export function useDesktopProfilePanel() {
   return isDesktop
 }
 
-export function initials(name: string | null | undefined): string {
-  if (!name) return "?"
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
-  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
-}
+/** Avatar-fallback initials — re-exported from the canonical identity seam. */
+export const initials = nameInitials
 
 export function formatDate(date: Date | string | null | undefined): string | null {
   if (!date) return null

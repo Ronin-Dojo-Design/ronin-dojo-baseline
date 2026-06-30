@@ -27,7 +27,7 @@ mock.module("~/env", () => ({
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
-installSafeActionMocks({ brand: "BBL" })
+const { setRateLimited } = installSafeActionMocks({ brand: "BBL" })
 
 const uploadCalls: { path: string }[] = []
 
@@ -62,6 +62,7 @@ const validFile = () =>
 
 beforeEach(() => {
   uploadCalls.length = 0
+  setRateLimited(false)
 })
 
 describe("uploadAndPromotePassportAvatar — auth gate", () => {
@@ -91,6 +92,17 @@ describe("uploadAndPromotePassportAvatar — auth gate", () => {
     const videoFile = new File([new Uint8Array([1])], "clip.mp4", { type: "video/mp4" })
     const result = await uploadAndPromotePassportAvatar({ file: videoFile })
     expect(result?.validationErrors).toBeDefined()
+    expect(uploadCalls.length).toBe(0)
+  })
+
+  it("blocks (before any upload) when the avatar_upload IP rate-limit trips", async () => {
+    const { uploadAndPromotePassportAvatar } = await import("~/server/web/actions/passport-avatar")
+    setTestSession(TEST_USER)
+    setRateLimited(true)
+
+    const result = await uploadAndPromotePassportAvatar({ file: validFile() })
+    expect(result?.serverError).toBe("Too many avatar uploads. Please try again in a bit.")
+    // Gate trips before the passport lookup / R2 upload — no storage write happens.
     expect(uploadCalls.length).toBe(0)
   })
 

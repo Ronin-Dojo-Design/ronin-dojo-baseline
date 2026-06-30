@@ -39,7 +39,11 @@ export const FREE_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = {
   tier: "free",
   canRenderFullCard: false,
   features: {
-    avatar: false,
+    // @changed SESSION_0474 (S2, D472-15) — the free tier's immediate value: a free
+    // member shows their avatar + name + (self-declared) belt and stays listed under
+    // their instructor. The full card (school label, bio preview, honor-strip avatar)
+    // stays Premium+ — only the identity avatar is granted free.
+    avatar: true,
     school: false,
     verificationBadge: true,
     claimBadge: true,

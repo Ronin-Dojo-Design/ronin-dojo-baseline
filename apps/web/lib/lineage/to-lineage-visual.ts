@@ -4,19 +4,11 @@ import type {
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
 import {
-  memberAvatarSrc,
   memberBeltColor,
   memberRankLabel,
-  memberSchoolLabel,
-  nodeDisplayName,
-  type SelectedRank,
+  resolveLineageMemberView,
 } from "~/lib/lineage/canvas-model"
-import {
-  type LineageTrustStatus,
-  pickLineageClaimStatus,
-  resolveLineageClaimBadgeStatus,
-  resolveLineageTrustStatus,
-} from "~/lib/lineage/trust-status"
+import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
 
 export type LineageVisualNode = {
   id: string
@@ -52,20 +44,6 @@ export type LineageSecondaryLink = {
   colorHex: string | null
 }
 
-function adaptSelectedRank(
-  selectedRankAward: LineageTreeMemberRow["selectedRankAward"],
-): SelectedRank | null {
-  if (!selectedRankAward) return null
-  return {
-    id: selectedRankAward.rank.id,
-    name: selectedRankAward.rank.name,
-    shortName: selectedRankAward.rank.shortName,
-    colorHex: selectedRankAward.rank.colorHex,
-    sortOrder: selectedRankAward.rank.sortOrder,
-    disciplineName: selectedRankAward.rank.rankSystem?.discipline?.name ?? null,
-  }
-}
-
 export function toLineageVisual(
   members: LineageTreeMemberRow[],
   options: {
@@ -79,32 +57,21 @@ export function toLineageVisual(
 
   const nodes: LineageVisualNode[] = members.map(member => {
     const { node } = member
-    const selectedRank = adaptSelectedRank(member.selectedRankAward)
-    const claimStatus = pickLineageClaimStatus(node.claimRequests ?? [])
-    const trustStatus = resolveLineageTrustStatus({
-      verificationStatus: node.verificationStatus,
-      isVerified: node.isVerified,
-      isPlaceholder: node.passport?.user == null,
-      claimStatus,
-    })
-    const claimable =
-      resolveLineageClaimBadgeStatus({
-        isClaimable: member.isClaimable ?? false,
-        claimStatus,
-      }) === "claimable"
+    // Same single resolver every other surface uses — one person, one ruleset.
+    const view = resolveLineageMemberView(node, { isClaimable: member.isClaimable })
 
     return {
       id: member.id,
       nodeId: node.id,
-      displayName: nodeDisplayName(node),
+      displayName: view.displayName,
       slug: node.slug,
-      avatar: memberAvatarSrc(node),
-      colorHex: memberBeltColor(node, selectedRank),
-      rankLabel: memberRankLabel(node, selectedRank),
-      schoolLabel: memberSchoolLabel(node),
-      trustStatus,
+      avatar: view.avatarSrc,
+      colorHex: view.beltColor,
+      rankLabel: view.rankLabel,
+      schoolLabel: view.schoolLabel,
+      trustStatus: view.trustStatus,
       isFocal: member.id === mainMemberId,
-      claimable,
+      claimable: view.claimBadgeStatus === "claimable",
       primaryVisualParentMemberId: member.primaryVisualParentMemberId,
       visualGroupId: member.visualGroupId,
       promotionDate: member.selectedRankAward?.awardedAt
@@ -129,12 +96,11 @@ export function toLineageVisual(
     if (!fromMember || !toMember) continue
     if (toMember.primaryVisualParentMemberId === fromMember.id) continue
 
-    const fromSelectedRank = adaptSelectedRank(fromMember.selectedRankAward)
     secondaryLinks.push({
       fromMemberId: fromMember.id,
       toMemberId: toMember.id,
-      rankLabel: memberRankLabel(fromMember.node, fromSelectedRank),
-      colorHex: memberBeltColor(fromMember.node, fromSelectedRank),
+      rankLabel: memberRankLabel(fromMember.node),
+      colorHex: memberBeltColor(fromMember.node),
     })
   }
 

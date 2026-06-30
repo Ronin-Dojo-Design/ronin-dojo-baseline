@@ -1,4 +1,11 @@
-import { passportDisplayName } from "~/lib/identity/passport-display"
+import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
+import {
+  type LineageClaimBadgeStatus,
+  type LineageTrustStatus,
+  pickLineageClaimStatus,
+  resolveLineageClaimBadgeStatus,
+  resolveLineageTrustStatus,
+} from "~/lib/lineage/trust-status"
 import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 
 /**
@@ -54,39 +61,44 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
 }
 
 /**
- * Belt color hex for the member's *shown* rank = their highest **awarded** belt
- * (`rankAwardsEarned[0]`, now ordered by Rank.sortOrder desc). Null → no swatch.
+ * THE member's *shown* rank = their highest **awarded** belt (`rankAwardsEarned[0]`,
+ * ordered by Rank.sortOrder desc; `take: 1` in the payload). The single source for
+ * "what belt are you" across every surface (card, rows, mobile, timeline, honor strip,
+ * canvas). Display = awarded truth, full stop (ADR 0035) — the deprecated
+ * `selectedRankAward`/`selectedRank` pointer (stale WP-import data) must NEVER drive it.
+ * Null → no rank.
+ */
+export function memberTopRank(node: LineageNodeRow) {
+  return node.passport?.rankAwardsEarned?.[0]?.rank ?? null
+}
+
+/**
+ * Belt color hex for the member's shown rank. Null → no swatch. Verification is a
+ * SEPARATE axis (`node.isVerified`) and never filters which belt shows.
  *
- * @param selectedRank DEPRECATED for display (SESSION_0430). `LineageTreeMember.
- * selectedRankAward` is being repurposed as a *pending claim* (set at registration/
- * claim, promoted to an awarded RankAward on admin-verify), so it must NOT override
- * the displayed awarded rank — that decoupling is the whole point. Param kept only
- * for caller-signature stability; slated for removal with the FK. Display = awarded
- * truth, full stop (the leak that mis-ranked the founders read off this override).
+ * @param selectedRank DEPRECATED for display (SESSION_0430) — kept only for caller
+ * signature stability; the displayed belt is awarded truth (`memberTopRank`).
  */
 export function memberBeltColor(
   node: LineageNodeRow,
   _selectedRank?: SelectedRank | null,
 ): string | null {
-  return node.passport?.rankAwardsEarned?.[0]?.rank.colorHex ?? null
+  return memberTopRank(node)?.colorHex ?? null
 }
 
 /**
- * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's *shown* rank =
- * their highest **awarded** belt. Null → no rank. See `memberBeltColor` for why
- * `selectedRank` no longer participates (SESSION_0430 claim→award decoupling).
+ * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's shown rank.
+ * Null → no rank. See `memberTopRank` (ADR 0035 awarded-truth).
  */
 export function memberRankLabel(
   node: LineageNodeRow,
   _selectedRank?: SelectedRank | null,
 ): string | null {
-  const latestRankAward = node.passport?.rankAwardsEarned?.[0]
-  if (!latestRankAward?.rank) return null
+  const rank = memberTopRank(node)
+  if (!rank) return null
 
-  return `${latestRankAward.rank.name}${
-    latestRankAward.rank.rankSystem?.discipline?.name
-      ? ` · ${latestRankAward.rank.rankSystem.discipline.name}`
-      : ""
+  return `${rank.name}${
+    rank.rankSystem?.discipline?.name ? ` · ${rank.rankSystem.discipline.name}` : ""
   }`
 }
 
@@ -104,6 +116,57 @@ export function memberSchoolLabel(node: LineageNodeRow): string | null {
     node.passport?.user?.memberships?.[0]?.organization?.name ??
     null
   )
+}
+
+/**
+ * The member presentation read-model — avatar, belt (highest awarded), school, the
+ * single verification status, and the claim affordance — all in one shape.
+ */
+export type LineageMemberView = {
+  displayName: string
+  avatarSrc: string | null
+  beltColor: string | null
+  rankLabel: string | null
+  schoolLabel: string | null
+  /** The ONE verification axis: `node.isVerified` (ADR 0035). NOT per-award. */
+  trustStatus: LineageTrustStatus
+  /** Claim affordance — surfaced ONLY on the drawer + directory, never on the tree. */
+  claimBadgeStatus: LineageClaimBadgeStatus | null
+}
+
+/**
+ * THE single source of truth for how one lineage member renders. Every surface —
+ * board card, compact rows, mobile list, View A timeline, drawer — derives its
+ * presentation from this one function, so a person looks identical everywhere and
+ * there is exactly one place to change the rules.
+ *
+ * Verification is the single `node.isVerified` axis (ADR 0035 §5; `RankAward.
+ * verificationStatus` is vestigial and never drives display). Belt = highest awarded
+ * rank by sortOrder. `isClaimable` is the per-viewer claim affordance from the tree
+ * payload — consumed only by surfaces that show it (drawer/directory).
+ */
+export function resolveLineageMemberView(
+  node: LineageNodeRow,
+  opts: { isClaimable?: boolean | null } = {},
+): LineageMemberView {
+  const claimStatus = pickLineageClaimStatus(node.claimRequests)
+  return {
+    displayName: nodeDisplayName(node),
+    avatarSrc: memberAvatarSrc(node),
+    beltColor: memberBeltColor(node),
+    rankLabel: memberRankLabel(node),
+    schoolLabel: memberSchoolLabel(node),
+    trustStatus: resolveLineageTrustStatus({
+      verificationStatus: node.verificationStatus,
+      isVerified: node.isVerified,
+      isPlaceholder: node.passport?.user == null,
+      claimStatus,
+    }),
+    claimBadgeStatus: resolveLineageClaimBadgeStatus({
+      isClaimable: opts.isClaimable ?? false,
+      claimStatus,
+    }),
+  }
 }
 
 export function sortMembers(a: CanvasMember, b: CanvasMember): number {
@@ -192,13 +255,7 @@ export function buildDescendantCounts(
 }
 
 /**
- * Display initials for a name string — mirrors the avatar fallback used by
- * `LineageNodeCard`, kept here so compact rows don't reach into the card.
+ * Display initials for a member's name (avatar fallback). Thin alias over the
+ * canonical `nameInitials` identity seam so lineage callers keep one import.
  */
-export function memberInitials(name: string | null | undefined): string {
-  if (!name) return "?"
-  const parts = name.trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return "?"
-  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
-  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
-}
+export const memberInitials = nameInitials

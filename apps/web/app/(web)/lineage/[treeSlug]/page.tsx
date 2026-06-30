@@ -231,7 +231,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
           <Button variant="secondary" size="sm" render={<Link href="/lineage/join" />}>
             Claim a profile
           </Button>
-          <Note>Claimable profiles are marked on the tree.</Note>
+          <Note>Open a profile to see if it can be claimed.</Note>
         </Stack>
       )}
 

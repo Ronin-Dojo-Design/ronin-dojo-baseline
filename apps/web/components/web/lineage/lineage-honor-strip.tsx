@@ -14,6 +14,7 @@ import {
   type CanvasMember,
   memberAvatarSrc,
   memberInitials,
+  memberTopRank,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -21,12 +22,14 @@ import { cx } from "~/lib/utils"
 const HONOR_STRIP_LIMIT = 6
 
 function rankScore(member: CanvasMember) {
-  return member.selectedRank?.sortOrder ?? 0
+  // Awarded truth (ADR 0035) — NOT the deprecated `selectedRank` (stale WP-import data
+  // that mis-ranked Meyer/Casey to their lower import belt).
+  return memberTopRank(member.node)?.sortOrder ?? 0
 }
 
 function honorMembers(members: CanvasMember[]) {
   return members
-    .filter(member => member.selectedRank)
+    .filter(member => memberTopRank(member.node))
     .sort((a, b) => {
       const scoreDelta = rankScore(b) - rankScore(a)
       if (scoreDelta !== 0) return scoreDelta
@@ -82,8 +85,9 @@ export function LineageHonorStrip({
             const displayName = nodeDisplayName(member.node)
             const avatarSrc = memberAvatarSrc(member.node)
             const isSelected = member.id === selectedMemberId
-            const beltColor = member.selectedRank?.colorHex ?? null
-            const rankLabel = member.selectedRank?.name ?? null
+            const topRank = memberTopRank(member.node)
+            const beltColor = topRank?.colorHex ?? null
+            const rankLabel = topRank?.name ?? null
 
             return (
               <CarouselSlide key={member.id} width={248}>

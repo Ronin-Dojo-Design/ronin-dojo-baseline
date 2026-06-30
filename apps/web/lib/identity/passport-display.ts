@@ -26,3 +26,17 @@ export type PassportNameSource =
 export function passportDisplayName(passport: PassportNameSource): string | null {
   return passport?.displayName ?? passport?.user?.name ?? null
 }
+
+/**
+ * Avatar-fallback initials for a display name: first + last initial, else the
+ * first two letters of a single name, else "?". One seam so every person surface
+ * (lineage card/rows/timeline, drawer, rank history, promotion events) renders the
+ * same fallback — collapses the four identical copies fallow flagged (SESSION_0474).
+ */
+export function nameInitials(name: string | null | undefined): string {
+  if (!name) return "?"
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return "?"
+  if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase()
+  return `${parts[0]![0]}${parts[parts.length - 1]![0]}`.toUpperCase()
+}

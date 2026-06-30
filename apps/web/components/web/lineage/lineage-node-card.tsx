@@ -6,25 +6,16 @@ import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
-import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
+import { LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
 import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
 import {
-  memberAvatarSrc,
-  memberBeltColor,
   memberInitials,
-  memberRankLabel,
-  memberSchoolLabel,
-  nodeDisplayName,
+  resolveLineageMemberView,
   type SelectedRank,
 } from "~/lib/lineage/canvas-model"
-import {
-  pickLineageClaimStatus,
-  resolveLineageClaimBadgeStatus,
-  resolveLineageTrustStatus,
-} from "~/lib/lineage/trust-status"
 import { cx } from "~/lib/utils"
 import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
@@ -54,31 +45,17 @@ type LineageNodeCardProps = {
 export function LineageNodeCard({
   node,
   isRoot,
-  isClaimable,
-  selectedRank,
   onSelect,
   showActions = true,
   canChangePromoter,
   onChangePromoter,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
 }: LineageNodeCardProps) {
-  const displayName = nodeDisplayName(node)
-  const avatarSrc = memberAvatarSrc(node)
+  // One person, one ruleset — every surface derives presentation from this resolver
+  // (avatar, highest-awarded belt, school, the single verification status).
+  const { displayName, avatarSrc, rankLabel, schoolLabel, beltColor, trustStatus } =
+    resolveLineageMemberView(node)
   const canRenderFullCard = renderPolicy.canRenderFullCard
-  const claimStatus = pickLineageClaimStatus(node.claimRequests)
-  const trustStatus = resolveLineageTrustStatus({
-    verificationStatus: node.verificationStatus,
-    isVerified: node.isVerified,
-    isPlaceholder: node.passport?.user == null,
-    claimStatus,
-  })
-  const claimBadgeStatus = resolveLineageClaimBadgeStatus({ isClaimable, claimStatus })
-
-  // Shown rank/belt/school come from the shared member view-model (selected rank
-  // award wins, else latest overall award) — see lib/lineage/canvas-model.ts.
-  const rankLabel = memberRankLabel(node, selectedRank)
-  const schoolLabel = memberSchoolLabel(node)
-  const beltColor = memberBeltColor(node, selectedRank)
   const cardStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
   // The card body opens the drawer for everyone, so the actions menu only earns
   // its place for the editor-exclusive "Change promoter" action — consistent with
@@ -150,9 +127,7 @@ export function LineageNodeCard({
             <Note className="max-w-full truncate text-xs">{schoolLabel}</Note>
           )}
 
-          {(renderPolicy.features.verificationBadge ||
-            renderPolicy.features.claimBadge ||
-            isRoot) && (
+          {(renderPolicy.features.verificationBadge || isRoot) && (
             <Stack size="xs" wrap className="mt-auto min-h-5">
               {renderPolicy.features.verificationBadge && (
                 <LineageTrustBadge status={trustStatus} />
@@ -161,9 +136,6 @@ export function LineageNodeCard({
                 <Badge variant="primary" size="sm">
                   Root
                 </Badge>
-              )}
-              {renderPolicy.features.claimBadge && claimBadgeStatus && (
-                <LineageClaimBadge status={claimBadgeStatus} />
               )}
             </Stack>
           )}

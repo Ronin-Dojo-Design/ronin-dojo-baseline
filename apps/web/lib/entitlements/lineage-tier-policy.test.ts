@@ -17,7 +17,11 @@ describe("lineage listing render policy", () => {
 
     expect(policy.tier).toBe("free")
     expect(policy.canRenderFullCard).toBe(false)
-    expect(policy.features.avatar).toBe(false)
+    // SESSION_0474 (S2): the free tier shows its avatar (immediate value) while the
+    // rest of the full card (school, bio preview, honor-strip avatar) stays Premium+.
+    expect(policy.features.avatar).toBe(true)
+    expect(policy.features.school).toBe(false)
+    expect(policy.features.honorStripAvatar).toBe(false)
     expect(policy.features.verificationBadge).toBe(true)
     expect(policy.features.claimBadge).toBe(true)
   })

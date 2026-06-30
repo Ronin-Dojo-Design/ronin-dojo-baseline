@@ -16,15 +16,13 @@ import {
   buildChildGroups,
   type CanvasMember,
   type ChildGroup,
-  memberAvatarSrc,
-  memberBeltColor,
   memberInitials,
-  memberRankLabel,
-  nodeDisplayName,
+  resolveLineageMemberView,
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 import type { LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
+import { LineageTrustBadge } from "./lineage-trust-badge"
 
 /**
  * Org-chart "board" layout — compact, inline, expandable child rows.
@@ -188,10 +186,9 @@ function LineageCompactChildRow({
   const [manualExpanded, setManualExpanded] = useState<boolean | null>(null)
   const expanded = hasChildren && (manualExpanded ?? autoExpanded)
 
-  const displayName = nodeDisplayName(member.node)
-  const avatarSrc = memberAvatarSrc(member.node)
-  const rankLabel = memberRankLabel(member.node, member.selectedRank)
-  const beltColor = memberBeltColor(member.node, member.selectedRank)
+  const { displayName, avatarSrc, rankLabel, beltColor, trustStatus } = resolveLineageMemberView(
+    member.node,
+  )
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 
   return (
@@ -259,6 +256,10 @@ function LineageCompactChildRow({
             )}
           </Stack>
         </button>
+
+        {renderPolicy.features.verificationBadge && (
+          <LineageTrustBadge status={trustStatus} className="shrink-0" />
+        )}
 
         {!expanded && descendantCount > 0 && (
           <Badge

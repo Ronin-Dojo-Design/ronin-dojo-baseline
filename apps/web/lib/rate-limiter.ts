@@ -101,6 +101,15 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(15, "1 h"), // 15 evidence uploads per hour per IP
       }),
+      // @added SESSION_0474 (S2, D472-8) — the free tier's avatar upload. Mirrors
+      // `evidence_upload`: IP-keyed + fail-closed so a single network can't mint many
+      // free accounts to flood R2 storage with avatar uploads. Lower cap than evidence
+      // (avatar change is a rare action) but generous enough for a few retries.
+      avatar_upload: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(10, "1 h"), // 10 avatar uploads per hour per IP
+      }),
     }
   : null
 
@@ -131,6 +140,7 @@ export const getIP = async () => {
  *  - `claim`           — IP-keyed public claim attempts (account-takeover adjacent)
  *  - `invite`          — invite-link generation (privilege grant)
  *  - `evidence_upload` — public, UNAUTHENTICATED upload (storage-abuse surface)
+ *  - `avatar_upload`   — free-tier avatar upload, IP-keyed (storage-abuse surface)
  *  - `teaser_signup`   — public, UNAUTHENTICATED email capture (spam surface)
  *  - `email_notify`    — gates auth-email / notification sends (mail-flood surface)
  *  - `submission` / `report` — public IP-keyed submit/report (spam surface)
@@ -147,6 +157,7 @@ const FAIL_CLOSED_BUCKETS: ReadonlySet<string> = new Set([
   "claim",
   "invite",
   "evidence_upload",
+  "avatar_upload",
   "teaser_signup",
   "email_notify",
   "submission",

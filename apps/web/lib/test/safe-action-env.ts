@@ -144,6 +144,10 @@ export const installSafeActionMocks = (options: SafeActionMockOptions = {}): Saf
 
   mock.module("~/lib/rate-limiter", () => ({
     isRateLimited: async () => rateLimitState.limited,
+    // `getIP` is replaced too (whole-module mock) — return the same IP the mocked
+    // `next/headers` would yield (ipState) so IP-keyed actions (avatar_upload,
+    // evidence_upload) resolve a faithful caller IP under the harness.
+    getIP: async () => ipState.value,
   }))
 
   return {

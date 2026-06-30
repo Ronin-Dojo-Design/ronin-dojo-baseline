@@ -103,7 +103,8 @@ export const lineageNodeRowPayload = {
       },
       // Single most-recent RankAward across any rank-system so the tree card
       // can show "Black Belt — BJJ" without a separate query. Drawer payload
-      // joins more.
+      // joins more. Display = highest awarded belt; verification is a separate
+      // node-level axis (ADR 0035) and never filters the award shown here.
       rankAwardsEarned: {
         select: {
           id: true,

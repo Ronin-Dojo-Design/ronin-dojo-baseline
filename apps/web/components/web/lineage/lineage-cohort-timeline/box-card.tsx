@@ -107,9 +107,9 @@ export function LineageBoxCard({
         <span className="text-base leading-none">⋮</span>
       </button>
 
-      {node.claimable && (
-        <span className="absolute right-12 top-4 rounded-full border border-indigo-300/30 bg-indigo-500/15 px-1.5 py-0.5 text-[0.5rem] font-bold uppercase tracking-[0.06em] text-indigo-100">
-          Claimable
+      {node.trustStatus === "unverified" && (
+        <span className="absolute right-12 top-4 rounded-full border border-white/15 bg-white/10 px-1.5 py-0.5 text-[0.5rem] font-bold uppercase tracking-[0.06em] text-white/70">
+          Unverified
         </span>
       )}
 

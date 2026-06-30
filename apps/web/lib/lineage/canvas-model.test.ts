@@ -10,6 +10,7 @@ import {
   memberRankLabel,
   memberSchoolLabel,
   nodeDisplayName,
+  resolveLineageMemberView,
   sortMembers,
 } from "~/lib/lineage/canvas-model"
 import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage/payloads"
@@ -202,9 +203,11 @@ describe("member view-model derivations", () => {
         directoryProfile: null,
         rankAwardsEarned: [
           {
+            verificationStatus: "VERIFIED",
             rank: {
               name: "Black Belt",
               colorHex: "#111111",
+              sortOrder: 8,
               rankSystem: { discipline: { name: "Brazilian Jiu-Jitsu" } },
             },
           },
@@ -260,5 +263,48 @@ describe("member view-model derivations", () => {
     node.passport.affiliations = []
     node.passport.user!.memberships = []
     assert.equal(memberSchoolLabel(node), null)
+  })
+})
+
+describe("resolveLineageMemberView — the one ruleset every surface shares", () => {
+  function withAward(node: LineageNodeRow, name: string, color: string) {
+    node.passport.rankAwardsEarned = [
+      {
+        rank: {
+          name,
+          colorHex: color,
+          sortOrder: 8,
+          rankSystem: { discipline: { name: "Brazilian Jiu-Jitsu" } },
+        },
+      },
+    ] as never
+    return node
+  }
+
+  test("verified member → verified trust, highest awarded belt, no claim badge", () => {
+    // Verification is `node.isVerified` (ADR 0035) — NOT a per-award field.
+    const node = withAward(makeNode({ id: "v", name: "Verified" }), "Black Belt", "#111111")
+    node.isVerified = true
+    node.verificationStatus = "VERIFIED"
+    const view = resolveLineageMemberView(node)
+    assert.equal(view.trustStatus, "verified")
+    assert.equal(view.rankLabel, "Black Belt · Brazilian Jiu-Jitsu")
+    assert.equal(view.beltColor, "#111111")
+    assert.equal(view.claimBadgeStatus, null)
+  })
+
+  test("fresh member (node not verified) → unverified trust, belt still shows", () => {
+    // makeNode defaults: isVerified false, verificationStatus UNVERIFIED, has a linked user.
+    const node = withAward(makeNode({ id: "u", name: "Fresh" }), "Purple Belt", "#7c3aed")
+    const view = resolveLineageMemberView(node)
+    assert.equal(view.trustStatus, "unverified")
+    assert.equal(view.rankLabel, "Purple Belt · Brazilian Jiu-Jitsu")
+    assert.equal(view.beltColor, "#7c3aed")
+  })
+
+  test("claimable placeholder → claim badge surfaces (drawer/directory only)", () => {
+    const node = makeNode({ id: "c", slug: "placeholder" }) // no name → user null → placeholder
+    const view = resolveLineageMemberView(node, { isClaimable: true })
+    assert.equal(view.claimBadgeStatus, "claimable")
   })
 })

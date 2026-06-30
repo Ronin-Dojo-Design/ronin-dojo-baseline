@@ -22,6 +22,8 @@ export interface LineageRankRedactionFixture {
     rankAwardId: string
     rankName: string
     rankShortName: string
+    /** The HIGHER awarded rank — display must show this (awarded truth), not the lower `selectedRank`. */
+    awardedTopRankName: string
     rankSystemName: string
     disciplineName: string
   }

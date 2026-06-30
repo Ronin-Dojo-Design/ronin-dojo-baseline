@@ -9,6 +9,7 @@ import {
   buildChildGroups,
   type CanvasMember,
   type ChildGroup,
+  memberBeltColor,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
 import {
@@ -159,7 +160,8 @@ export function LineageBranch({
   // arbitrary-value class baked into the hover cluster supplies the `--color-primary` fallback via
   // `var(--belt-tint, var(--color-primary))`, so rankless members get the brand primary glow with
   // no inline-style work needed here.
-  const beltTintColor = member.selectedRank?.colorHex ?? null
+  // Awarded truth (ADR 0035) — not the deprecated `selectedRank` stale-import field.
+  const beltTintColor = memberBeltColor(member.node)
 
   return (
     <div

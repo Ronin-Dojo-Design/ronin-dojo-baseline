@@ -1,5 +1,6 @@
 "use client"
 
+import { ShieldOffIcon } from "lucide-react"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { relativeLuminance } from "~/lib/lineage/belt-color"
 import type { LineageVisualNode } from "~/lib/lineage/to-lineage-visual"
@@ -35,6 +36,9 @@ export function LeafRow({
         <span className="shrink-0 text-[0.6rem] font-semibold tabular-nums text-white/35">
           {promotionYear(node.promotionDate)}
         </span>
+      )}
+      {node.trustStatus === "unverified" && (
+        <ShieldOffIcon aria-label="Unverified" className="size-3 shrink-0 text-white/40" />
       )}
       <BeltSwatch variant="bar" colorHex={node.colorHex} />
     </button>

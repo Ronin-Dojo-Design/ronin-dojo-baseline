@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckIcon, ChevronRightIcon, ShieldOffIcon, TreePineIcon } from "lucide-react"
+import { ChevronRightIcon, TreePineIcon } from "lucide-react"
 import { type CSSProperties, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
@@ -12,16 +12,13 @@ import {
 } from "~/lib/entitlements/lineage-tier-policy"
 import {
   type CanvasMember,
-  memberAvatarSrc,
-  memberBeltColor,
   memberInitials,
-  memberRankLabel,
-  memberSchoolLabel,
-  nodeDisplayName,
+  resolveLineageMemberView,
 } from "~/lib/lineage/canvas-model"
 import { flattenLineage } from "~/lib/lineage/flatten-lineage"
 import { cx } from "~/lib/utils"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
+import { LineageTrustBadge } from "./lineage-trust-badge"
 
 type LineageMobileListProps = {
   members: CanvasMember[]
@@ -69,11 +66,8 @@ export function LineageMobileList({
 
       <ol className="w-full min-w-0 space-y-2">
         {flattenedMembers.map(({ member, depth }) => {
-          const displayName = nodeDisplayName(member.node)
-          const avatarSrc = memberAvatarSrc(member.node)
-          const rankLabel = memberRankLabel(member.node, member.selectedRank)
-          const schoolLabel = memberSchoolLabel(member.node)
-          const beltColor = memberBeltColor(member.node, member.selectedRank)
+          const { displayName, avatarSrc, rankLabel, schoolLabel, beltColor, trustStatus } =
+            resolveLineageMemberView(member.node)
           const indentPx = Math.min(depth * 16, 48)
           const isSelected = member.id === selectedMemberId
           const onPath = selectedPathMemberIds.has(member.id)
@@ -154,16 +148,9 @@ export function LineageMobileList({
                 </Button>
 
                 <Stack size="xs" wrap={false} className="shrink-0 items-center">
-                  {renderPolicy.features.verificationBadge &&
-                    (member.node.isVerified ? (
-                      <Badge variant="success" size="sm" prefix={<CheckIcon />}>
-                        <span className="sr-only">Verified</span>
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" size="sm" prefix={<ShieldOffIcon />}>
-                        <span className="sr-only">Unverified</span>
-                      </Badge>
-                    ))}
+                  {renderPolicy.features.verificationBadge && (
+                    <LineageTrustBadge status={trustStatus} />
+                  )}
                   <ChevronRightIcon aria-hidden className="size-4 text-muted-foreground" />
                   {/* Row tap opens the drawer for everyone, so the actions menu only
                       earns its place when it carries the editor-exclusive "Change

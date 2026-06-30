@@ -15,6 +15,7 @@ describe("rate-limiter fail-closed classification (RISK #5)", () => {
       "claim",
       "invite",
       "evidence_upload",
+      "avatar_upload",
       "teaser_signup",
       "email_notify",
       "submission",
