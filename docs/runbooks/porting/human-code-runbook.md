@@ -4,12 +4,14 @@ slug: human-code-runbook
 type: reference
 status: active
 created: 2026-06-09
-updated: 2026-06-10
-last_agent: claude-session-0359
+updated: 2026-06-30
+last_agent: claude-session-0474
 pairs_with:
   - docs/knowledge/wiki/concepts/passport-and-shells.md
   - docs/knowledge/wiki/repo-truth-index.md
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
+  - docs/architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md
+  - docs/runbooks/sops/lineage-data-wiring-flow.md
   - docs/architecture/ubiquitous-language.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -63,8 +65,11 @@ Each belt group (`*_belt_promotion_date`, `who_promoted_you_to_*`, `where_you_we
 | `where_you_were_promoted_to_<belt>` | `RankAward.location` (free text) or `RankAward.organization` (linked school) |
 | `<belt>_pictures` | `RankAward.mediaUrls` |
 
-Imported promotions are `source = STATED`, `verificationStatus = IMPORTED` (assertions until verified). The
-person's **current belt is derived** — the highest *verified* award — never stored as a single field.
+Imported promotions are `source = STATED`, `verificationStatus = IMPORTED`. The person's **current belt is
+derived** — the highest **awarded** belt by rank order (`Rank.sortOrder`) — never stored as a single field.
+Whether that belt is *verified* is a **separate yes/no flag** (`LineageNode.isVerified`), not a filter on which
+belt shows; the per-award `verificationStatus` column is **not used for display** (ADR 0035; SESSION_0474). See
+§8 below for the full walkthrough.
 
 ## `bbl_member` school → `Affiliation`
 
@@ -196,6 +201,69 @@ edited the post and it saved, but the site cache kept serving the old version un
 "it saved but didn't show" ≠ "it didn't save."** First check whether the *view* refreshed (a cache/`revalidatePath`
 issue), before suspecting the save. A hard browser refresh that shows the new value is the tell — the data was
 there all along. (See `[[admin-app-migration-revalidate-paths]]` and the glossary "Router Cache" entry.)
+
+### 8. Worked example — how one person's belt renders on every surface (SESSION_0474)
+
+This session fixed a real bug: **David Meyer showed "Black Belt – 5th Degree" in the honor strip but "Coral
+Belt – 7th Degree" on his card** — the same person, two different belts on the same page. Walking through *why*
+teaches the single most important pattern in the lineage code: **one read-model, read everywhere.**
+
+**Idea 1 — the current belt is DERIVED, never stored.** There is no `currentBelt` column. A person has many
+`RankAward` rows (one per promotion); the belt you *see* is **computed** = their highest awarded rank.
+(WordPress analogy: instead of a `current_belt` Pod field you keep hand-updating, the site always recomputes it
+from the promotion list — so it can never go stale or disagree with the record.) The function:
+
+```ts
+// lib/lineage/canvas-model.ts
+export function memberTopRank(node) {
+  return node.passport?.rankAwardsEarned?.[0]?.rank ?? null   // [0] = highest; the query sorts that way
+}
+```
+
+`[0]` is the top because the database query asks for the awards **sorted highest-belt-first, take 1**:
+
+```ts
+// server/web/lineage/payloads.ts  (the DTO / payload — §3's "safe client shape")
+rankAwardsEarned: {
+  orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+  take: 1,
+}
+```
+
+**Idea 2 — ONE resolver feeds every surface.** A person appears on ~6 surfaces (the board card, the dense child
+rows, the mobile list, the cinematic timeline, the drawer). Before this session, each surface computed its own
+avatar/belt/verified-badge — and they drifted apart. We collapsed them into **one function** that returns the
+whole **view-model** (everything a surface needs to draw a person — §3):
+
+```ts
+// lib/lineage/canvas-model.ts — THE one ruleset
+export function resolveLineageMemberView(node) {
+  return { displayName, avatarSrc, beltColor, rankLabel,   // ← belt fields all come from memberTopRank
+           schoolLabel, trustStatus, claimBadgeStatus }
+}
+```
+
+Every surface now calls `resolveLineageMemberView(node)` and renders what it returns. **One place decides how a
+person looks; change the rule once, every surface updates.**
+
+**The bug, exactly.** The honor strip ("Top ranked") and the canvas tree were NOT reading `memberTopRank`. They
+read a *different, deprecated* field — `selectedRank` — a leftover "pick which belt to display" override that
+still pointed at Meyer's old WordPress-import belt (Black 5th) instead of his real top award (Coral 7th). So the
+honor strip disagreed with his card. **The fix was essentially one line each: make those two surfaces read the
+same resolver as everyone else.** That is the whole lesson — *when every surface reads one source they cannot
+disagree; the moment one surface reads its own field, it drifts.*
+
+**Idea 3 — "verified" is ONE flag, not many.** "Is this person's rank verified?" = a single field,
+`LineageNode.isVerified` (true/false) → shown as one **Verified / Unverified** chip. It is NOT computed per
+award. (We briefly tried a per-award `verificationStatus` and it made founders show "Verified AND Unverified" at
+once — two sources disagreeing *again*. We deleted it.) One question, one field, one answer everywhere.
+
+**The pattern to take away:** for any "what do we show for X?" question, find the **one** function that answers
+it and make every surface call that function. If you ever see two places showing different things for the same
+record, the cause is almost always *two of them reading two different fields* — and the fix is never "patch the
+wrong one," it's "point them both at the one source." (Same family as §7's cache lesson; canon:
+[ADR 0035](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md),
+[`lineage-data-wiring-flow`](../sops/lineage-data-wiring-flow.md), `[[lineage-rank-display-awarded-truth]]`.)
 
 ## See also
 

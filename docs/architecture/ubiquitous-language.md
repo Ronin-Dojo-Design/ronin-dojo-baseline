@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-29
-last_agent: claude-session-0472
+updated: 2026-06-30
+last_agent: claude-session-0474
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -317,9 +317,9 @@ The **ORGANIZATION-only** claim system (SESSION_0354; narrowed by ADR 0036 P5, S
 
 ### LineageVerificationStatus
 
-The new verification state for lineage nodes and relationships.
+The per-`RankAward` verification enum (`PENDING`, `VERIFIED`, `DISPUTED`). It exists as data but is **not used for display**.
 
-Values are `PENDING`, `VERIFIED`, and `DISPUTED`. Legacy `isVerified` remains during the migration window but should be replaced by verificationStatus in new code.
+The **canonical display verification axis is `node.isVerified`** — binary `Verified` / `Unverified` on the public canvas (tree / board / cards), per ADR 0035 §5. Do **not** "replace `isVerified` with verificationStatus" — that earlier guidance is reversed. `verificationStatus` is vestigial for presentation; the multi-state resolver survives only on the drawer + `/directory` facet.
 
 ## Membership shells
 

@@ -5,9 +5,9 @@ type: file
 status: active
 lifecycle: WIP
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-30
 author: Brian + Claude
-last_agent: claude-session-0428
+last_agent: claude-session-0474
 pairs_with:
 
   - docs/epics/post-launch-clean-repo-001.md
@@ -87,7 +87,7 @@ flowchart TD
 | Galaxy field | Source | Notes |
 | --- | --- | --- |
 | `displayName` / `photoUrl` | member `node.passport` (→ account fallback) | same chain as the public Passport DTO |
-| `rankLabel` | `selectedRankAward ?? rankAwardsEarned[0]` → `rank.name · discipline` | — |
+| `rankLabel` | highest AWARDED rank (`memberTopRank` / `rankAwardsEarned[0]` by `Rank.sortOrder` desc) → `rank.name · discipline` | `selectedRankAward` no longer participates (ADR 0035) |
 | `role` / `generation` | visual parent chain depth | deterministic layout |
 | `orbitIndex/Total` | `visualSortOrder` within generation band | — |
 | `groupId/Label` | `LineageVisualGroup` (public labels only) | `showPublicLabel` honored |

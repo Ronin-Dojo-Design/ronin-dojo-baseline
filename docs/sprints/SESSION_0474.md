@@ -2,10 +2,10 @@
 title: "SESSION 0474 — S2: BBL free-tier render + avatar + rate-limit (parallel track B)"
 slug: session-0474
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-29
-updated: 2026-06-29
-last_agent: claude-session-0472
+updated: 2026-06-30
+last_agent: claude-session-0474
 sprint: S49
 pairs_with:
   - docs/sprints/SESSION_0472.md
@@ -123,7 +123,7 @@ Free-tier render policy (avatar + self-belt + listing) + the `avatar_upload` IP 
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0474_TASK_01 | done | Free render policy: avatar flip (`?view=board` cards) + self-belt + listing |
-| SESSION_0474_TASK_02 | done | Prefer-verified rank resolver (universal) + root-card unverified belt badge |
+| SESSION_0474_TASK_02 | done | Rank/verification display — SHIPPED: highest-awarded rank + single `node.isVerified` axis via one `resolveLineageMemberView` resolver (prefer-verified approach reverted per ADR 0035 grill); fixed Meyer/Casey `selectedRank` regression |
 | SESSION_0474_TASK_03 | done | `avatar_upload` IP rate-limit bucket (fail-closed) wired into the avatar action |
 
 ## What landed
@@ -202,22 +202,101 @@ ADR 0035, ADR pass deferred to S3/S4); the listing display reads `rankAwardsEarn
 
 - None at plan-lock. Self-contained; no operator input required to start (browser-proof on `bbl.local`).
 
+> **What ACTUALLY shipped (post-grill, supersedes `What landed` / `Decisions` above — see the header banner):**
+> belt = highest **awarded** rank by `Rank.sortOrder` (`memberTopRank`); ONE verification axis `node.isVerified`
+> (binary); `RankAward.verificationStatus` vestigial; Claimable removed from tree/board/cards; one
+> `resolveLineageMemberView` resolver every surface reads; honor strip + canvas branch repointed off `selectedRank`
+> (fixes Meyer/Casey). Pushed (`eb963036`), prod deploy SUCCESS + smoke-verified live. Canon: ADR 0035 +
+> [[bbl-verification-claim-display-model]] + [`learning-record-0008`](../learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md).
+
 ## Next session
 
 ### Goal
 
-TBD at bow-out (likely: S3 — fresh-member rank-submission door, which renders these pending nodes).
+The lineage rank-display refinement + cleanup: **(1)** make the shown rank **discipline-scoped** — BBL tree/board/cards
+show the **BJJ** rank (the tree's own discipline), NOT "highest awarded by sortOrder" (meaningless across rank
+systems — ADR 0035 known limitation); drawer + directory show the member's *other* discipline ranks. **(2)** Remove
+the YAGNI `selectedRank`/`LineageTreeMember.rankAwardId` (~38 files + Prisma migration; repoint live uses to
+awarded-truth, delete the admin dropdown + dead plumbing). **(3)** Apply the lineage doc consolidation (survey list below).
+
+### Inputs to read
+
+- [[lineage-rank-display-and-selectedrank-removal]] (the full plan) · ADR 0035 · `human-code-runbook` §8 (the read-model).
+- The doc-consolidation survey (this session): `lineage-hub.md` mental model, `lineage-listing-runbook.md` §trust-badges,
+  `lineage-rank-promotion-sync-rules.md`, `directory-page.md`, `sop-e2e-user-lifecycle.md` §5/§15 (rank on-ramp) still
+  describe pre-0474 behavior; `architecture/lineage/SESSION_0263_*` are `_archive/` candidates (hub already flags them).
 
 ### First task
 
-TBD at bow-out.
+`selectedRank` removal — schema migration first (drop `rankAwardId` + relation + `@@index`), then repoint the live
+non-display uses (`to-lineage-visual` promotionDate, `bbl-galaxy-from-lineage`, `students-carousel`, `deriveDrawerProfileView`
+panel rank, the public node-edit form's promotion-date) to the top **awarded** award, then delete the admin "Selected rank"
+dropdown + the `SelectedRank`/`CanvasMember.selectedRank` plumbing. Then the discipline-scoped resolver.
 
 ## Review log
 
+### SESSION_0474_REVIEW_01 — S2 render slice → display-model unification + correction
+
+- **Reviewed tasks:** TASK_01 (free avatar — done), TASK_02 (rank/verification display — done, but the *approach*
+  reverted mid-session, see below), TASK_03 (avatar_upload rate-limit — done).
+- **Verdict:** the slice grew, correctly, into the session that gave the lineage display its real shape. TASK_02 was
+  built twice: first as a per-award `RankAward.verificationStatus` "prefer-verified" resolver + belt badge (D474-1..3),
+  then **reverted** after the operator's grill showed it contradicted ADR 0035 §5 (per-award verification is vestigial)
+  and made founders show "Verified AND Unverified." Shipped model = the ADR 0035 canon: highest **awarded** rank +
+  single `node.isVerified` axis, via ONE `resolveLineageMemberView` resolver. Also fixed a **pre-existing** regression
+  (honor strip + canvas branch read the stale `selectedRank` → Meyer/Casey mis-ranked) and consolidated `initials` 4→1.
+- **Score:** 8/10 — strong consolidation + a real prod bug fixed, verify-don't-assert discipline (live smoke + e2e
+  guard). −2 because I shipped a wrong second-verification-axis mid-session that the grill (not my own check) caught;
+  the lesson is [`learning-record-0008`](../learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md).
+- **Follow-up:** `selectedRank` removal + discipline-scoped rank → next session (memory staged); 6 lineage docs to
+  update + 2 to archive (survey); 1 pre-existing unrelated e2e failure (`admin/membership-detail` 404) flagged, not fixed.
+
 ## Hostile close review
+
+- **Giddy:** pass — the shipped state is one resolver read everywhere (DRY), ADR-0035-aligned after the revert, no new
+  authz axis (the second verification axis was *removed*). The self-inflicted second-source-of-truth is the session's
+  real finding, owned in LR 0008. Doc consolidation routed (survey), not silently dropped.
+- **Doug:** pass — prod deploy SUCCESS + **smoke-verified on blackbeltlegacy.com** (Meyer renders Coral 7th live, no
+  error); lineage e2e **12/12** + a new awarded-truth-vs-selectedRank + no-Claimable-on-board guard; admin regression
+  sweep = 0 regressions; `next build` green. The one red e2e (`admin/membership-detail` 404) is pre-existing/unrelated.
+- **Desi:** pass — consistency is now structural (every surface = `resolveLineageMemberView`); Claimable correctly
+  scoped to drawer + directory; the cinematic timeline keeps its idiom while sharing the data rule.
+- **Kaizen aggregate:** 8/10 — the ding is the mid-session wrong-model that the grill caught, not a shipped defect.
 
 ## ADR / ubiquitous-language check
 
+- **No new ADR** — the model **reverted onto ADR 0035** (rank display = awarded truth; `node.isVerified` the single
+  axis; `RankAward.verificationStatus` vestigial). A *mint-early/verify-late* amendment (self-declared belt on the
+  S3 on-ramp) is deferred for a formal ADR pass at S3/S4 — the single point all the rank docs should then cite.
+- **Ubiquitous language updated** — the `LineageVerificationStatus` entry was **backwards** ("`isVerified` should be
+  replaced by `verificationStatus`") and is being corrected this close (`node.isVerified` = canonical display axis).
+- **Deprecation logged** — `selectedRank`/`selectedRankAward` is display-dead; full removal staged for next session.
+
 ## Reflections
 
+- **Consistency is one source read everywhere, not N surfaces kept in sync.** The Meyer/Casey bug + my self-inflicted
+  double-badge are the *same* bug: two surfaces reading two fields for one record. The fix and the prevention are both
+  "one resolver." (Full lesson: LR 0008.)
+- **A partial migration off a deprecated field is the bug's nest.** ADR 0035 fixed the cards but left two surfaces on
+  `selectedRank` — a 44-session-old loaded gun. Finish the sweep, or the divergence survives.
+- **"Display-dead" ≠ "cheap to remove."** `selectedRank` looked like a dead FK; it was 38 files (live promotionDate,
+  edit-form, galaxy tendrils). Map the footprint before estimating; split schema-touching cleanup out of a verified push.
+- **The grill is load-bearing.** Three operator grills this session each *shrank* the build and corrected a wrong
+  assumption I'd have shipped (verification = rank-not-node; selectedRank = YAGNI; BJJ-scoped not highest-awarded).
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `human-code-runbook` (updated→0630, +pairs_with ADR0035/lineage-data-wiring); LR 0008 created; 4 lineage docs corrected (agent) + frontmatter bumped; `SESSION_0474` status→closed |
+| Backlinks/index sweep | LR 0008 ↔ ADR0035/LR0007/human-code-runbook; wiki index session row added; bbl page-specs moved + 14 links repointed |
+| Wiki lint | `bun run wiki:lint` — **0 errors** (~18 warnings, cosmetic frontmatter — pre-existing + 3 from the fold) |
+| Kaizen reflection | `## Reflections` present (4) + `learning-record-0008` |
+| Hostile close review | SESSION_0474_REVIEW_01 + Giddy/Doug/Desi pass (8/10) |
+| Code-quality gate | shipped code is reuse-first (one resolver + helpers); no new Class-A god-module — `LineageNodeCard` *shrank* 129→102 |
+| Runtime verification (Doug) | prod smoke (Meyer Coral 7th live) + lineage e2e 12/12 + new guard + admin 0-regression sweep |
+| Review & Recommend | next session written (selectedRank removal + discipline-scoped rank + doc consolidation); memory staged |
+| Memory sweep | 2 memories: `bbl-verification-claim-display-model`, `lineage-rank-display-and-selectedrank-removal` |
+| Next session unblock check | unblocked — selectedRank removal is self-contained (footprint mapped); no operator input needed |
+| Git hygiene | `main`; code push `eb963036` (deploy SUCCESS); docs close = single docs-only commit, hash reported at bow-out / see git log |
+| Graphify update | run before the close commit — count reported in chat / see SESSION graphify line |

@@ -4,8 +4,8 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-24
-last_agent: claude-session-0444
+updated: 2026-06-30
+last_agent: claude-session-0474
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
@@ -49,8 +49,9 @@ LineageTree (brand + scopeType + visibility + isPublished + isClaimable)
   |       |
   |       +--> LineageNode (1:1 User) -------------------+
   |                |                                     |
-  |                +--> visibility / verificationStatus  |
-  |                +--> isVerified (legacy fallback)     |
+  |                +--> visibility                       |
+  |                +--> isVerified (canonical/only display verification axis — ADR 0035 §5)  |
+  |                +--> verificationStatus (per-RankAward enum — DATA only, never displayed)  |
   |                +--> claimRequests [PassportClaimRequest]  (ADR 0036 P5 — person claims unified; LineageClaimRequest retired)
   |                                                       |
   +--> LineageVisualGroup (PROMOTION_DATE / RANK / ...)   |
@@ -67,7 +68,7 @@ User --> RankAward (canonical promotion fact; ADR 0016) --> Rank --> RankSystem
 flowchart TD
     LT[LineageTree\nbrand + scopeType + visibility + isPublished] --> TM[LineageTreeMember\nisClaimable, public-rank flags]
     TM --> LN[LineageNode\n1:1 User]
-    LN --> VS[visibility / verificationStatus / isVerified]
+    LN --> VS[visibility / isVerified canonical display axis\nverificationStatus = data-only]
     LN --> CR[PassportClaimRequest]
     LT --> VG[LineageVisualGroup]
     LT --> AG[LineageTreeAccess\nTREE_ADMIN / EDITOR]
@@ -109,30 +110,50 @@ interchangeable — see drift `D-020`.
 
 ---
 
-## 3. Trust + claim status derivation (SESSION_0349)
+## 3. Trust + claim status derivation (binary on canvas; multi-state on drawer/directory — ADR 0035 §5, updated SESSION_0474)
 
-Trust badges are **presentation over existing fields** — no trust schema. One pure resolver
-(`lib/lineage/trust-status.ts`) drives every public surface.
+Trust badges are **presentation over existing fields** — no trust schema.
+
+**Two display contexts, two models:**
+
+- **Tree / board / cards (the public canvas):** the verification axis is **binary** — `node.isVerified` →
+  `Verified` / `Unverified`. The multi-state ladder and the `Claimable` badge were **removed from the canvas**
+  (SESSION_0474). `RankAward.verificationStatus` is **vestigial — never displayed** (ADR 0035 §5).
+- **Drawer + `/directory` facet only:** the multi-state resolver (`lib/lineage/trust-status.ts`) and the
+  `Claimable` badge survive **here** (richer surfaces with room for `Disputed` / `Claimed` / `Claim pending`).
 
 ```text
+CANVAS (tree / board / card) display axis — binary
+--------------------------------------------------
+LineageNode.isVerified == true   -> [Verified]
+LineageNode.isVerified == false  -> [Unverified]
+(no Claimable badge on the canvas; verificationStatus not read)
+
+Belt shown = highest AWARDED rank by Rank.sortOrder
+  -> memberTopRank / resolveLineageMemberView  (one resolver, every surface; ADR 0035)
+
+DRAWER + /directory facet ONLY — multi-state resolver survives here
+------------------------------------------------------------------
 Inputs (already-public fields only)            Priority resolve            Badge
-------------------------------------           ----------------            -----
 LineageNode.verificationStatus == DISPUTED  -> disputed                 -> [Disputed]
-verificationStatus == VERIFIED || isVerified-> verified                 -> [Verified]
+isVerified                                  -> verified                 -> [Verified]
 latest claim status == APPROVED             -> claimed                  -> [Claimed]
 claim status == PENDING | NEEDS_INFO        -> claim-pending            -> [Claim pending]
 User.isPlaceholder == true                  -> imported                 -> [Imported]
 (otherwise)                                 -> unverified               -> [Unverified]
-
 Secondary: LineageTreeMember.isClaimable / tree.isClaimable -> claimable -> [Claimable]
 ```
 
 ```mermaid
 flowchart TD
-    IN[Public fields:\nverificationStatus, isVerified,\nisPlaceholder, claim status, isClaimable] --> R[resolveLineageTrustStatus]
+    N[LineageNode] --> CTX{display context}
+    CTX -->|tree / board / card| BIN{node.isVerified}
+    BIN -->|true| V1[Verified]
+    BIN -->|false| V2[Unverified]
+    CTX -->|drawer + /directory facet| R[resolveLineageTrustStatus]
     R --> D{priority}
     D -->|DISPUTED| B1[Disputed]
-    D -->|VERIFIED / isVerified| B2[Verified]
+    D -->|isVerified| B2[Verified]
     D -->|claim APPROVED| B3[Claimed]
     D -->|claim PENDING/NEEDS_INFO| B4[Claim pending]
     D -->|isPlaceholder| B5[Imported]
@@ -142,8 +163,11 @@ flowchart TD
 
 ### Key rule
 
-The resolver receives status flags only. Claim **evidence**, claimant notes, reviewer notes, and reviewer identity are
-never selected into public payloads. `RankAward` has no trust/dispute enum (BBL-RANK-004 — future).
+The public **canvas** verification axis is the single binary `node.isVerified` (ADR 0035 §5); `RankAward.verificationStatus`
+is vestigial and never displayed, and the `Claimable` badge is gone from tree/board/cards (drawer + `/directory` only).
+Belt = highest **awarded** rank by `Rank.sortOrder` via `memberTopRank` / `resolveLineageMemberView` (one resolver, every
+surface). The drawer/directory resolver receives status flags only. Claim **evidence**, claimant notes, reviewer notes, and
+reviewer identity are never selected into public payloads.
 
 ---
 

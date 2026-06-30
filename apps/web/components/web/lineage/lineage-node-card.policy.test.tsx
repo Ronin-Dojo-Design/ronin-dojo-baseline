@@ -81,7 +81,7 @@ const node = {
 } as LineageNodeRow
 
 describe("LineageNodeCard tier policy", () => {
-  it("renders free listings with name, rank, and public trust/claim badges (avatar + school gated; drawer opens for everyone)", () => {
+  it("renders free listings with name, rank, avatar, and the verified badge (school gated; claim badge moved to drawer/directory; drawer opens for everyone)", () => {
     const html = renderToStaticMarkup(
       <LineageNodeCard
         node={node}
@@ -94,11 +94,14 @@ describe("LineageNodeCard tier policy", () => {
 
     expect(html).toContain("Public Name")
     expect(html).toContain("Black Belt")
-    // SESSION_0349: free lineage cards DO show public trust/claim badges...
+    // Free cards show the single node-level trust badge (Verified/Unverified)...
     expect(html).toContain("Verified")
-    expect(html).toContain("Claimable")
-    // ...while avatar + school stay tier-gated (drawer *contents* gate).
-    expect(html).not.toContain("https://images.test/passport.jpg")
+    // ...but NOT the Claim badge — claim affordance moved to the drawer + directory only (SESSION_0474).
+    expect(html).not.toContain("Claimable")
+    // SESSION_0474: the free tier now shows the avatar (its immediate value). The Radix AvatarImage src
+    // loads client-side so it's absent from static markup — we assert the avatar BLOCK via its fallback
+    // initials (present only when the avatar feature is on). School stays tier-gated.
+    expect(html).toContain(">PN<")
     expect(html).not.toContain("Hidden School")
     // SESSION_0356: the drawer now opens for EVERYONE — tier gates the drawer's
     // contents (LineageProfileDetailRenderPolicy), not whether it opens. So a free

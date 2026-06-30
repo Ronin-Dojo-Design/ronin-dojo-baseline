@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-24
-last_agent: claude-session-0444
+updated: 2026-06-30
+last_agent: claude-session-0474
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -40,8 +40,10 @@ Lineage is a **dual model** — keep these axes distinct:
   (`fromNode` = promoter → `toNode` = promoted), forming a **multi-parent** graph. A practitioner can
   hold Blue ← Prof A, Purple/Brown ← Prof B @ another school, Black ← Prof C — all first-class.
 - **Display (projection):** `LineageTreeMember` projects the graph into one org-chart per tree —
-  `primaryVisualParentMemberId` (single visual parent) + `selectedRankAward` (which belt the card shows)
-  + `isCollapsedDefault`. The tree never owns promotion truth.
+  `primaryVisualParentMemberId` (single visual parent) + `isCollapsedDefault`. The belt the card shows =
+  the highest **AWARDED** rank by `Rank.sortOrder` (via `memberTopRank` / `resolveLineageMemberView` — one
+  resolver, every surface; ADR 0035). `selectedRankAward` is a **deprecated** pending-claim pointer, no longer
+  a "which belt to show" override, and is slated for removal. The tree never owns promotion truth.
 - **Affiliation (separate axis):** `Membership → Organization` = where they train now, independent of
   who promoted them.
 - **Branch heads (display role, ADR 0037):** a *branch head* is a real person-node (instructor / school
