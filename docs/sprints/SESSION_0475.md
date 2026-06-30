@@ -174,7 +174,16 @@ primitive — proven on the live DOM + a Prisma migration, gates green, no behav
 - **App-code push = CI matrix + BBL prod deploy.** Run `cd apps/web && bun run build` + the **full** `bun run test`
   (not just touched files — 0474's CI red was a full-suite-only failure) before proposing the push.
 - **Avatar is shared-design-system blast radius** — `Avatar` is used everywhere, not just lineage. Verify a sample of
-  non-lineage avatar surfaces (directory, nav, profile) after the change.
+  non-lineage avatar surfaces (directory, nav, profile) after the change. **Preserve the placeholder fallback chain:**
+  the SSR `<img>` src stays `passport.avatarUrl ?? passport.user?.image ?? <initials>` (accountless placeholders have
+  `user == null`) — the resolver already does this; don't regress it when moving the `<img>` server-side.
+- **Claim/attach is orthogonal to `selectedRank` — don't conflate them.** The claim flow (`claim-finalize.ts` →
+  `attachAccount` sets `Passport.userId`; `mintAssertedRankAward` mints from `PassportClaimRequest.claimedRank`) does
+  NOT touch `LineageTreeMember.rankAwardId`, so removing `selectedRank` can't break claiming. The
+  `create-lineage-member` `rankAwardId` param is consumed by `billing/actions.ts` + `admin/users/actions.ts` (NOT the
+  claim path) — smoke **those two callers** + a claim/attach round-trip after the removal, and confirm the
+  claim-minted `RankAward` still flows into the discipline-scoped `memberTopRank` (a freshly-claimed member's belt
+  renders on the tree).
 
 ### Scope guard
 
