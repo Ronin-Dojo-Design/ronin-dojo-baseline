@@ -380,7 +380,7 @@ Use this file only as historical context for early wiki adoption.
 ## SESSION_0429 — 2026-06-21 — design-system component batch + Mammoth-Rebuild CRM epic
 
 - **Design system (Desi pass):** `component-design-system.{md,html}` + shared `scripts/lib/bbl-doc-theme.ts` (one token set — accent `#E52421`, Poppins/Inter, 1-2-3 step; gold flagged off-brand) + dark/light inversion (`prefers-color-scheme` + `data-theme`, accent `#FF4D49` on dark). Restyled the orchestration-hub + loop-poster generators; added the `orchestration-hub.md` runbook.
-- **Component library specs (PWCC series):** `files/bbl-admin-task-board.md` (PWCC-001), `files/m-card-pattern.md` (PWCC-002), `files/three-level-magnetic-drawer.md` (PWCC-003), `files/admin-kanban-board.md` (PWCC-007), `files/mammoth-crm-bindings.md` (PWCC-004/005/006) — all brand-/content-agnostic with PWCC cloud handoffs.
+- **Component library specs (PWCC series):** `product/black-belt-legacy/page-specs/bbl-admin-task-board.md` (PWCC-001), `files/m-card-pattern.md` (PWCC-002), `files/three-level-magnetic-drawer.md` (PWCC-003), `files/admin-kanban-board.md` (PWCC-007), `files/mammoth-crm-bindings.md` (PWCC-004/005/006) — all brand-/content-agnostic with PWCC cloud handoffs.
 - **Mammoth-Rebuild CRM epic:** `docs/epics/mammoth-rebuild-crm-001.md` — HubSpot-replacement assembled from the library; PWCC register; cross-brand (dark/orange) proof.
 - **Inventory + index:** `custom-component-inventory.md` rows (MagneticDrawer, MCard) + bumped `updated`; `wiki/index.md` rows for all new pages + SESSION_0428/0429.
 - **Tooling:** declared `marked` as a root devDependency so the advertised `docs:hub` generator runs from a clean checkout (Codex review #137).

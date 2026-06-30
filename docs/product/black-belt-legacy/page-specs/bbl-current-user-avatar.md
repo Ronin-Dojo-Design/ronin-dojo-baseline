@@ -8,7 +8,7 @@ updated: 2026-06-19
 author: Brian + Claude
 last_agent: claude-session-0416
 pairs_with:
-  - knowledge/wiki/files/bbl-nav-sheet
+  - product/black-belt-legacy/page-specs/bbl-nav-sheet
 backlinks:
   - sprints/SESSION_0416
 wiring:

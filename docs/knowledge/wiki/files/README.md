@@ -75,19 +75,19 @@ owner/admin ──bypass gate──> /me · Admin (unredacted)
 | Spec | Flow | Lifecycle |
 | --- | --- | --- |
 | [public-passport-dto](public-passport-dto.md) | Passport → `projectPublicPassport` → all public surfaces (one redaction gate) | WIP — #134 / #135 |
-| [bbl-galaxy-data-flow](bbl-galaxy-data-flow.md) | published lineage → galaxy graph → R3F viewer + real drawer | WIP — #133 |
+| [bbl-galaxy-data-flow](../../../product/black-belt-legacy/page-specs/bbl-galaxy-data-flow.md) | published lineage → galaxy graph → R3F viewer + real drawer | WIP — #133 |
 | [feature-request-dialog](feature-request-dialog.md) | feedback/feature widget → `Report(Feedback)` → operator notify | MVP_LIVE |
 
 ## Component / page / query specs
 
 | Area | Pages |
 | --- | --- |
-| Identity / Passport | [bbl-current-user-avatar](bbl-current-user-avatar.md) · [bbl-type-system](bbl-type-system.md) |
+| Identity / Passport | [bbl-current-user-avatar](../../../product/black-belt-legacy/page-specs/bbl-current-user-avatar.md) · [bbl-type-system](../../../product/black-belt-legacy/page-specs/bbl-type-system.md) |
 | Directory | [directory-page](directory-page.md) · [directory-queries](directory-queries.md) · [directory-schema](directory-schema.md) · [directory-list-component](directory-list-component.md) · [directory-listing-component](directory-listing-component.md) · [directory-query-component](directory-query-component.md) |
 | Disciplines | [discipline-detail-page](discipline-detail-page.md) · [discipline-queries](discipline-queries.md) |
 | Schools / Orgs | [schools-detail-page](schools-detail-page.md) · [schools-queries](schools-queries.md) · [organizations-list-page](organizations-list-page.md) · [organization-detail-page](organization-detail-page.md) · [organization-new-page](organization-new-page.md) · [create-organization-form](create-organization-form.md) · [join-organization-button](join-organization-button.md) |
 | Courses | [courses-listing-page](courses-listing-page.md) |
-| BBL surfaces | [bbl-home-landing](bbl-home-landing.md) · [bbl-join-landing-composition](bbl-join-landing-composition.md) · [bbl-join-form-wizard](bbl-join-form-wizard.md) · [bbl-nav-sheet](bbl-nav-sheet.md) · [bbl-footer](bbl-footer.md) |
+| BBL surfaces | [bbl-home-landing](../../../product/black-belt-legacy/page-specs/bbl-home-landing.md) · [bbl-join-landing-composition](../../../product/black-belt-legacy/page-specs/bbl-join-landing-composition.md) · [bbl-join-form-wizard](../../../product/black-belt-legacy/page-specs/bbl-join-form-wizard.md) · [bbl-nav-sheet](../../../product/black-belt-legacy/page-specs/bbl-nav-sheet.md) · [bbl-footer](../../../product/black-belt-legacy/page-specs/bbl-footer.md) |
 | Data / baseline | [schema-prisma](schema-prisma.md) · [seed-ts](seed-ts.md) · [dirstarter-l1-baseline](dirstarter-l1-baseline.md) |
 
 ## Add a new spec

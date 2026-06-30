@@ -12,7 +12,7 @@ pairs_with:
 
   - docs/runbooks/sops/lineage-data-wiring-flow.md
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
-  - docs/knowledge/wiki/files/bbl-galaxy-data-flow.md
+  - docs/product/black-belt-legacy/page-specs/bbl-galaxy-data-flow.md
 backlinks:
 
   - docs/knowledge/wiki/index.md

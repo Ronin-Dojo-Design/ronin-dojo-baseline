@@ -8,7 +8,7 @@ updated: 2026-06-19
 author: Brian + Claude
 last_agent: claude-session-0416
 pairs_with:
-  - knowledge/wiki/files/bbl-join-landing-composition
+  - product/black-belt-legacy/page-specs/bbl-join-landing-composition
 backlinks:
   - sprints/SESSION_0416
 wiring:

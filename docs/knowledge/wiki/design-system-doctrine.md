@@ -10,7 +10,7 @@ pairs_with:
   - docs/architecture/decisions/0040-design-system-doctrine-and-card-architecture.md
   - docs/learning/ddd/learning-records/0006-design-systems-and-ui-kits.md
   - docs/knowledge/wiki/files/design-system-grid-ratio-hierarchy.md
-  - docs/knowledge/wiki/files/bbl-type-system.md
+  - docs/product/black-belt-legacy/page-specs/bbl-type-system.md
   - docs/runbooks/design/baseline-design-system.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -378,7 +378,7 @@ confidently-wrong imported design system (deleted this session). Researched agai
 [ADR 0040](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md); narrated in
 [Learning Record 0006](../../learning/ddd/learning-records/0006-design-systems-and-ui-kits.md). Absorbs +
 supersedes the scattered fragments ([grid/ratio/hierarchy](files/design-system-grid-ratio-hierarchy.md),
-[type system](files/bbl-type-system.md), [component-design-system](component-design-system.md),
+[type system](../../product/black-belt-legacy/page-specs/bbl-type-system.md), [component-design-system](component-design-system.md),
 [baseline-design-system](../../runbooks/design/baseline-design-system.md)), which now point here.
 Also grounded in Ousterhout's *A Philosophy of Software Design* (deep modules — the card surface is the deep
 module; pull complexity down into tokens + primitives).

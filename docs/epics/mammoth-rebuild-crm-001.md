@@ -14,7 +14,7 @@ pairs_with:
   - docs/business/leads/hubspot-integration-best-practices.md
   - docs/sprints/SESSION_0425.md
   - docs/knowledge/wiki/files/m-card-pattern.md
-  - docs/knowledge/wiki/files/bbl-admin-task-board.md
+  - docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md
   - docs/knowledge/wiki/files/three-level-magnetic-drawer.md
   - docs/knowledge/wiki/component-design-system.md
 backlinks:
@@ -96,7 +96,7 @@ extend the series.
 
 | PWCC | Component | Spec | Lifecycle | CRM role |
 | --- | --- | --- | --- | --- |
-| PWCC-001 | AdminTaskBoard (Todoist model) | [spec](../knowledge/wiki/files/bbl-admin-task-board.md) | PLANNED | pipeline + tasks/activities |
+| PWCC-001 | AdminTaskBoard (Todoist model) | [spec](../product/black-belt-legacy/page-specs/bbl-admin-task-board.md) | PLANNED | pipeline + tasks/activities |
 | PWCC-002 | m-card (roster/rank/task/loop) | [spec](../knowledge/wiki/files/m-card-pattern.md) | PLANNED | contact/company/deal cards + lists |
 | PWCC-003 | three-level magnetic drawer | [spec](../knowledge/wiki/files/three-level-magnetic-drawer.md) | PLANNED | record detail + build-proof explorer |
 | PWCC-007 | AdminKanban (reusable column board + intake + automations) | [spec](../knowledge/wiki/files/admin-kanban-board.md) | PLANNED | the CRM pipeline engine (any project) |

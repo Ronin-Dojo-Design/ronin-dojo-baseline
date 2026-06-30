@@ -105,5 +105,5 @@ flowchart TD
 
 PR #133 (slice 1 prototype + slice 2 public DTO/drawer + verified-only). Spec:
 `docs/product/black-belt-legacy/BBL-Galaxy-spec.md` (lands with PR #133). Should converge on the
-[public Passport DTO](public-passport-dto.md) for its identity fields (epic
+[public Passport DTO](../../../knowledge/wiki/files/public-passport-dto.md) for its identity fields (epic
 [post-launch-clean-repo-001](../../../epics/post-launch-clean-repo-001.md)).

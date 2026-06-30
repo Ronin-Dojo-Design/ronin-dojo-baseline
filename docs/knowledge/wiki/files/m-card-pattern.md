@@ -12,7 +12,7 @@ last_agent: claude-session-0430
 pairs_with:
 
   - docs/knowledge/wiki/files/public-passport-dto.md
-  - docs/knowledge/wiki/files/bbl-admin-task-board.md
+  - docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md
   - docs/knowledge/wiki/component-design-system.md
   - docs/knowledge/wiki/files/_template/SPEC_TEMPLATE.md
 backlinks:
@@ -107,7 +107,7 @@ actions — and only the *binding* differs:
 | --- | --- | --- | --- |
 | `roster` | `projectDirectoryProfileListItem` / `LineageNodeRow` / `projectOwnProfile` | `mapToRosterCard()` | members, instructors, schools, lineage nodes — tree / passport / directory / detail |
 | `rank` | `Rank` + grouped `RankAward` / curriculum | `mapRankGroupToCard()` | **belt-by-belt groupings**, rank curriculum cards, per-belt technique checklists |
-| `task` | AdminTaskBoard task JSON ([spec](bbl-admin-task-board.md)) | `mapTaskToCard()` | **list-maker / task-maker** cards, the operator board rows |
+| `task` | AdminTaskBoard task JSON ([spec](../../../product/black-belt-legacy/page-specs/bbl-admin-task-board.md)) | `mapTaskToCard()` | **list-maker / task-maker** cards, the operator board rows |
 | `loop` | orchestration loop step (`docs/protocols/*`, `docs/rituals/*`) | `mapLoopStepToCard()` | **PR-review→score→fix** loop cards, bow-in/out steps |
 | `generic` | any `{ title, media, tags }` | passthrough | listings, catalog, fallback |
 
@@ -301,5 +301,5 @@ Spec authored SESSION_0428 (PWCC: Petey plan / Cody build target / Desi parity p
 Dirstarter base" request plus the belt/curriculum/task/loop use-case set. Grounded in the apps/web
 card and DTO sweep (directory payloads/projection, the 5 existing cards, `components/common/card.tsx`
 base, the four public surfaces). Unifies the [public Passport DTO](public-passport-dto.md),
-[AdminTaskBoard](bbl-admin-task-board.md), and [design system](../component-design-system.md).
+[AdminTaskBoard](../../../product/black-belt-legacy/page-specs/bbl-admin-task-board.md), and [design system](../component-design-system.md).
 Implementation handed to the cloud lightweight coding agent.

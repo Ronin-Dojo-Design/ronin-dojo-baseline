@@ -38,7 +38,7 @@ tags: [admin, task-board, todoist, bbl, spec, flow, ui]
 <!-- LIGHTWEIGHT spec. Value = the wireframes + wiring map + status taxonomy + JSON schema, not prose. -->
 
 > **RETIRED (SESSION_0461, G-003).** This localStorage Todoist board was collapsed into the unified,
-> DB-backed [Loop Board](loop-board.md) — one board, one engine. `/admin/task-board` now redirects to
+> DB-backed [Loop Board](../../../knowledge/wiki/files/loop-board.md) — one board, one engine. `/admin/task-board` now redirects to
 > `/app/loop-board`; the `lib/task-board` engine + Todoist renderer are deleted; the operator's per-browser
 > `bbl_admin_taskboard_v1` tasks migrate once into `KanbanCard` (source=`task`). Operator task management
 > now happens on the loop-board via the kernel's quick-add/intake. Kept for history; do not build against it.
@@ -340,7 +340,7 @@ one release, then mark it `deprecated` in the catalog.
 
 ## PWCC port spec + cloud handoff
 
-Streamlined for the [PWCC pipeline](../component-porting/plawywright-component-conversion-method/PWCC-ASCII-flow-component-port-pipeline.md)
+Streamlined for the [PWCC pipeline](../../../knowledge/wiki/component-porting/plawywright-component-conversion-method/PWCC-ASCII-flow-component-port-pipeline.md)
 plus the cloud-sweep handoff (mirrors `codex-cloud-bbl-waves-2-4.md`). The cloud lightweight coding
 agent owns the build; this is its brief.
 
@@ -396,7 +396,7 @@ agent owns the build; this is its brief.
 
 ```text
 Work in ronin-dojo-monorepo (BBL brand). Build AdminTaskBoard per
-baseline:docs/knowledge/wiki/files/bbl-admin-task-board.md (this spec).
+baseline:docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md (this spec).
 
 Read first: the spec's wireframes, lean JSON, status taxonomy, bottom-nav/MAB + spacing rhythm,
 and the File transfer work table. Reuse the cited components — do not rebuild primitives.

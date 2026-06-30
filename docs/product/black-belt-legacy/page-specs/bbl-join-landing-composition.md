@@ -8,8 +8,8 @@ updated: 2026-06-24
 author: Brian + Claude
 last_agent: claude-session-0444
 pairs_with:
-  - knowledge/wiki/files/bbl-home-landing
-  - knowledge/wiki/files/bbl-join-form-wizard
+  - product/black-belt-legacy/page-specs/bbl-home-landing
+  - product/black-belt-legacy/page-specs/bbl-join-form-wizard
 backlinks:
   - sprints/SESSION_0416
 wiring:

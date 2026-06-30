@@ -696,18 +696,18 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [schools/queries.ts](files/schools-queries.md) | file | active |
 | [schools/[slug]/page.tsx](files/schools-detail-page.md) | file | active |
 | [courses/page.tsx](files/courses-listing-page.md) | file | active |
-| [(home)/bbl-join-landing.tsx](files/bbl-home-landing.md) | file | active |
-| [join-legacy-landing.tsx (landing composition)](files/bbl-join-landing-composition.md) | file | active |
-| [join-legacy-form.tsx (claim wizard)](files/bbl-join-form-wizard.md) | file | active |
-| [_components/bbl-footer.tsx](files/bbl-footer.md) | file | active |
-| [nav/nav-sheet.tsx](files/bbl-nav-sheet.md) | file | active |
-| [BBL type system (fonts + tokens)](files/bbl-type-system.md) | file | active |
+| [(home)/bbl-join-landing.tsx](../../product/black-belt-legacy/page-specs/bbl-home-landing.md) | file | active |
+| [join-legacy-landing.tsx (landing composition)](../../product/black-belt-legacy/page-specs/bbl-join-landing-composition.md) | file | active |
+| [join-legacy-form.tsx (claim wizard)](../../product/black-belt-legacy/page-specs/bbl-join-form-wizard.md) | file | active |
+| [_components/bbl-footer.tsx](../../product/black-belt-legacy/page-specs/bbl-footer.md) | file | active |
+| [nav/nav-sheet.tsx](../../product/black-belt-legacy/page-specs/bbl-nav-sheet.md) | file | active |
+| [BBL type system (fonts + tokens)](../../product/black-belt-legacy/page-specs/bbl-type-system.md) | file | active |
 | [Design System — 12-grid, golden ratio & hierarchy](files/design-system-grid-ratio-hierarchy.md) | file | active |
-| [current-user-avatar.ts (avatar seam)](files/bbl-current-user-avatar.md) | file | active |
+| [current-user-avatar.ts (avatar seam)](../../product/black-belt-legacy/page-specs/bbl-current-user-avatar.md) | file | active |
 | [_components/feature-request-dialog.tsx (DojoBots widget)](files/feature-request-dialog.md) | file | active — `lifecycle: MVP_LIVE` |
 | [Public Passport DTO (canonical public identity projection)](files/public-passport-dto.md) | file | active — `lifecycle: WIP`; spec/flow (issue #134, PR #135) |
-| [BBL Galaxy data flow](files/bbl-galaxy-data-flow.md) | file | active — `lifecycle: WIP`; spec/flow (PR #133) |
-| [AdminTaskBoard (BBL operator task board — Todoist model)](files/bbl-admin-task-board.md) | file | active — `lifecycle: PLANNED`; spec/flow (SESSION_0428); absorbs monorepo AdminTaskForge |
+| [BBL Galaxy data flow](../../product/black-belt-legacy/page-specs/bbl-galaxy-data-flow.md) | file | active — `lifecycle: WIP`; spec/flow (PR #133) |
+| [AdminTaskBoard (BBL operator task board — Todoist model)](../../product/black-belt-legacy/page-specs/bbl-admin-task-board.md) | file | active — `lifecycle: PLANNED`; spec/flow (SESSION_0428); absorbs monorepo AdminTaskForge |
 | [m-card (content- & brand-agnostic roster/rank/task/loop card)](files/m-card-pattern.md) | file | active — `lifecycle: WIP`; PWCC-002; one card contract on Dirstarter base, kind→DTO. Slice 1 built: `kind=roster` on `/directory/profiles` (PR #150). |
 | [three-level magnetic drawer (content-agnostic canvas)](files/three-level-magnetic-drawer.md) | file | active — `lifecycle: PLANNED`; PWCC-003; 3 detents + infinite m-card list; Todoist→cinematic chrome |
 | [AdminKanban (reusable column board + intake + automations)](files/admin-kanban-board.md) | file | active — `lifecycle: PLANNED`; PWCC-007; config-driven CRM pipeline + lead intake + follow-up automations; Desi pass + reusable Cody loop |

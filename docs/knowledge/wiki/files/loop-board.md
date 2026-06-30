@@ -12,7 +12,7 @@ pairs_with:
 
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/knowledge/wiki/files/admin-kanban-board.md
-  - docs/knowledge/wiki/files/bbl-admin-task-board.md
+  - docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md
   - docs/learning/ddd/learning-records/0004-projection-to-stored-table-without-drift.md
 backlinks:
 
@@ -149,4 +149,4 @@ free + never stale) over deploy-time fs; `readOnly` projection over a bespoke re
 columns over ledger columns; generic mobile carousel added to the kernel. Phase B (editable DB overlay +
 `AdminTaskBoard` consolidation) deferred to the DB-separation lane (lands on BBL's own DB). Reuses the
 PWCC-007 [AdminKanban](admin-kanban-board.md) kernel + the m-card; AdminTaskForge is already absorbed
-(see [bbl-admin-task-board](bbl-admin-task-board.md)).
+(see [bbl-admin-task-board](../../../product/black-belt-legacy/page-specs/bbl-admin-task-board.md)).

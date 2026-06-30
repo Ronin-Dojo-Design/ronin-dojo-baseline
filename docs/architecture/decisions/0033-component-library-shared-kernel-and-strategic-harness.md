@@ -10,7 +10,7 @@ pairs_with:
   - docs/epics/mammoth-rebuild-crm-001.md
   - docs/epics/post-launch-clean-repo-001.md
   - docs/knowledge/wiki/files/admin-kanban-board.md
-  - docs/knowledge/wiki/files/bbl-admin-task-board.md
+  - docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md
   - docs/knowledge/wiki/files/m-card-pattern.md
   - docs/knowledge/wiki/component-design-system.md
 backlinks:

@@ -9,7 +9,7 @@ updated: 2026-06-21
 author: Brian + Desi
 last_agent: claude-session-0421
 pairs_with:
-  - docs/knowledge/wiki/files/bbl-type-system.md
+  - docs/product/black-belt-legacy/page-specs/bbl-type-system.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -29,7 +29,7 @@ tags:
 
 > The **layout + proportion + hierarchy** layer of the design system. Complements the canonical
 > token set + 1-2-3 rhythm + 4px spacing scale in `component-design-system` (lands with PR #137)
-> and the type ladder in [`bbl-type-system`](bbl-type-system.md). PWCC: TBD (slot into the spec
+> and the type ladder in [`bbl-type-system`](../../../product/black-belt-legacy/page-specs/bbl-type-system.md). PWCC: TBD (slot into the spec
 > catalog when PR #137 lands — don't pre-assign and collide with that branch's numbering).
 
 ## 1 — The 12-column grid (structure)
@@ -56,7 +56,7 @@ tags:
 
 ## 3 — Visual hierarchy (the ladder + levers)
 
-Canonical type ladder (from `components/common/heading.tsx`; defer to [`bbl-type-system`](bbl-type-system.md) for tokens):
+Canonical type ladder (from `components/common/heading.tsx`; defer to [`bbl-type-system`](../../../product/black-belt-legacy/page-specs/bbl-type-system.md) for tokens):
 
 | Role | Class | Use |
 | --- | --- | --- |
