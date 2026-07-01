@@ -4,8 +4,8 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-30
-last_agent: claude-session-0474
+updated: 2026-07-01
+last_agent: claude-session-0490
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -42,8 +42,10 @@ Lineage is a **dual model** — keep these axes distinct:
 - **Display (projection):** `LineageTreeMember` projects the graph into one org-chart per tree —
   `primaryVisualParentMemberId` (single visual parent) + `isCollapsedDefault`. The belt the card shows =
   the highest **AWARDED** rank by `Rank.sortOrder` (via `memberTopRank` / `resolveLineageMemberView` — one
-  resolver, every surface; ADR 0035). `selectedRankAward` is a **deprecated** pending-claim pointer, no longer
-  a "which belt to show" override, and is slated for removal. The tree never owns promotion truth.
+  resolver, every surface; ADR 0035). `selectedRankAward` was **removed** end-to-end (SESSION_0475 dropped
+  `LineageTreeMember.rankAwardId`) — it is no longer a "which belt to show" override and no longer exists.
+  A member's **pending** belt now lives as a `RANK_PROMOTION` claim record, never on the tree (see Claim &
+  verification below). The tree never owns promotion truth.
 - **Affiliation (separate axis):** `Membership → Organization` = where they train now, independent of
   who promoted them.
 - **Branch heads (display role, ADR 0037):** a *branch head* is a real person-node (instructor / school
@@ -82,6 +84,7 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 ## Claim & verification
 
 - **Live flow (ADR 0036):** person claims are ONE Passport-keyed `PassportClaimRequest` (lineage + directory doors are thin adapters). Submit via `submit-passport-claim.ts` (or the join-wizard `createJoinLegacyInterest` door); review at **`/app/lineage/claims/[id]`** (`ClaimReviewDetail`); approve → `finalizePassportClaim` (account→Passport attach + node entitlements + `claimedRankId`→`RankAward`). **SESSION_0441:** registered rank/school/instructor/tree picks persist as typed FK refs on the claim and render as resolved links in the "Lineage selections" card. See ADR 0036 + the [directory hub](directory-org-profile-hub.md) for the org-claim sibling.
+- **Belt-verification on-ramp (ADR 0035 Amendment 1; SESSION_0486–0490):** how an *already-owned* member's rank is established/raised. `PassportClaimRequest` carries a `type` discriminator `PassportClaimType {IDENTITY, RANK_PROMOTION}`. A member self-declaring a belt **above** their verified ceiling files a PENDING `RANK_PROMOTION` claim (`submitRankPromotionClaim`, oRPC `promotion.submit`; the onboarding `setPassportRank` now files this claim rather than minting an award) — **never** a `RankAward`, so a pending belt cannot leak onto the tree as awarded truth (§4/§5 reaffirmed). An instructor (resource-scoped `claim.review` grant) or admin (`claims.manage`) approves in **`/app/claims`**; approve → `finalizeRankPromotion` mints a **VERIFIED** `RankAward` (`mintAssertedRankAward`) and flips `node.isVerified` if the member was still unverified (also placing a fresh self-registrant under their declared instructor). A belt **at/below** the ceiling backfills a `VERIFIED`-by-implication award directly (so it can carry a `RankMilestone`); the ceiling rises only via an approved claim, so self-promotion stays structurally impossible. `RankAward` remains the canonical promotion fact.
 - [Lineage Claim Workflow + Evidence Review](../../architecture/lineage/lineage-claim-workflow-evidence-review.md)
 - [BBL BJJ Rank Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md)
 

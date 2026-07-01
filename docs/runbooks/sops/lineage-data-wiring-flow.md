@@ -4,8 +4,8 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-30
-last_agent: claude-session-0474
+updated: 2026-07-01
+last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
@@ -62,6 +62,7 @@ LineageRelationship (edge: PROMOTED_BY / INSTRUCTOR_STUDENT / ...)
         optional rankAwardId (mirrors the promotion)
 
 User --> RankAward (canonical promotion fact; ADR 0016) --> Rank --> RankSystem
+         ^ sources: admin/import  OR  RANK_PROMOTION claim -> approve -> VERIFIED award (B1, ADR 0035 Am.1)
 ```
 
 ```mermaid
@@ -224,26 +225,38 @@ header fields; it never widens a private field. `/organizations` is retained for
 
 ## 5. Claim → review → tier (unified PassportClaimRequest for person claims; ProfileClaimRequest for orgs — ADR 0036 P5)
 
+`PassportClaimRequest` carries a `type PassportClaimType {IDENTITY, RANK_PROMOTION}` (migration
+`20260701010000_add_passport_claim_type`). **IDENTITY** = the existing account→Passport claim (ADR 0036).
+**RANK_PROMOTION** = a belt promotion on an already-owned Passport (ADR 0035 Amendment 1) — approve mints only a
+VERIFIED award, no identity attach / comp.
+
 ```text
-Visitor clicks Claim (node or tree)
-  |
-  v
-Auth check -> sign in if needed
-  |
-  v
-PassportClaimRequest created (status PENDING) + evidence (URL/text/media)
-  (both lineage-node + directory-person doors write this ONE record, keyed on passportId;
-   reviewed via reviewPassportClaim → finalizePassportClaim. Org claims stay in ProfileClaimRequest.)
-  |
-  v
-Admin / tree-admin review
-  +--> APPROVED  -> node ownership OR LineageTreeAccess grant
-  +--> DENIED    -> reviewerNote stored (private)
-  +--> NEEDS_INFO-> claimant adds evidence -> back to review
-  +--> CANCELLED -> claimant withdrew
-  |
-  v (if approved AND tier > Free)
-Stripe checkout (createStripeCheckout) -> webhook -> UserEntitlement tier flag
+Visitor clicks Claim (node or tree)          Member self-declares a belt (belt journey)
+  |                                             |
+  v                                             v
+Auth check -> sign in if needed              submitRankPromotionClaim (oRPC promotion.submit)
+  |                                             |  server/web/claims/submit-rank-promotion-claim.ts
+  v                                             v
+PassportClaimRequest{type: IDENTITY}         PassportClaimRequest{type: RANK_PROMOTION,
+  created (status PENDING) + evidence           claimedRankId, evidence} (status PENDING)
+  (both lineage-node + directory-person          (setPassportRank now FILES this claim; it no
+   doors write this ONE record, keyed on          longer mints an UNVERIFIED award on self-report)
+   passportId. Org claims stay in                |
+   ProfileClaimRequest.)                          |
+  |                                               |
+  +---------------------+-------------------------+
+                        v
+        Admin / tree-admin review (applyPassportClaimReview branches on claim.type)
+          +--> APPROVED (IDENTITY)       -> node ownership OR LineageTreeAccess grant
+          +--> APPROVED (RANK_PROMOTION) -> finalizeRankPromotion -> mintAssertedRankAward
+          |        (server/admin/lineage/claim-finalize.ts) -> VERIFIED RankAward
+          |        {source: STATED, verificationStatus: VERIFIED} — award only, no attach/comp
+          +--> DENIED    -> reviewerNote stored (private)
+          +--> NEEDS_INFO-> claimant adds evidence -> back to review
+          +--> CANCELLED -> claimant withdrew
+          |
+          v (IDENTITY approved AND tier > Free)
+        Stripe checkout (createStripeCheckout) -> webhook -> UserEntitlement tier flag
 ```
 
 ```mermaid
@@ -251,9 +264,12 @@ flowchart TD
     C[Claim node/tree] --> A{Signed in?}
     A -->|No| SI[Sign in] --> F[Claim form + evidence]
     A -->|Yes| F
-    F --> CRR[PassportClaimRequest PENDING]
-    CRR --> REV{Admin review}
-    REV -->|APPROVED| OWN[Ownership / LineageTreeAccess]
+    F --> CRI[PassportClaimRequest\ntype: IDENTITY PENDING]
+    P[Self-declare belt\nsubmitRankPromotionClaim] --> CRP[PassportClaimRequest\ntype: RANK_PROMOTION PENDING]
+    CRI --> REV{Admin review\nbranches on claim.type}
+    CRP --> REV
+    REV -->|APPROVED · IDENTITY| OWN[Ownership / LineageTreeAccess]
+    REV -->|APPROVED · RANK_PROMOTION| MINT[finalizeRankPromotion → mintAssertedRankAward\nVERIFIED RankAward source: STATED]
     REV -->|DENIED| REJ[reviewerNote private]
     REV -->|NEEDS_INFO| MORE[Add evidence] --> REV
     OWN -->|tier > Free| CHK[Stripe checkout] --> WH[Webhook → UserEntitlement]

@@ -5,7 +5,7 @@ type: plan
 status: active
 created: 2026-07-01
 updated: 2026-07-01
-last_agent: claude-session-0476
+last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/dev-environment/autonomous-sessions.md
   - docs/sprints/SESSION_0477.md
@@ -163,6 +163,14 @@ backlinks:
   for the autonomous build** (needs design). After Slice 6, hand back — do NOT attempt Slice 7 autonomously.
 
 ## Belt Verification Subsystem — Block-A build spec (DESIGNED SESSION_0486, grill-ratified)
+
+> **BUILD PROGRESS (as of SESSION_0490):** the verification SPINE is on `main` — **V1** schema (0487) ·
+> **V2** `submitRankPromotionClaim` + `promotion.submit` oRPC (0488) · **V3** `finalizeRankPromotion` +
+> the `applyPassportClaimReview` type-branch (0489) · **V4-partial** `setPassportRank` → pending claim,
+> closing the pre-existing hole (0490). Remaining = the **belt-PR rebase**: land held #178–181 (Slices 2–5:
+> `RankMilestone` + belt CRUD + cards + tab) and rework them to consume the spine (the "Reworks to the held
+> slices" below), wire `evidence → RankMilestone` in `finalizeRankPromotion`, then **V5** (`/app/claims`
+> surfaces promotions) + **V6** (proof → unhold). See SESSION_0490's `Next session` for the dispatch block.
 
 > **Why this block exists.** SESSION_0484's ship-it review held belt PRs **#178–#181**: the epic (Slices 2–5)
 > models a self-declared belt as an **`UNVERIFIED` `RankAward` minted on self-declare**, and the belt UI reads

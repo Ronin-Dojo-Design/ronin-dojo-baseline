@@ -4,8 +4,8 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-06-06
-last_agent: codex-session-0349
+updated: 2026-07-01
+last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
   - docs/runbooks/sop-data-and-wiring-flows.md
@@ -118,8 +118,11 @@ Public trust badges are presentation over existing lineage and claim fields, not
 - `LineageTreeMember.isClaimable` / tree claimability can drive the secondary `Claimable` badge where the surface has
   that context.
 
-`RankAward` still has no verification/dispute enum. Rank-specific disputed promotion facts remain `BBL-RANK-004` and
-need a later schema decision.
+`RankAward` **does** carry a `verificationStatus` enum — `RankAwardVerificationStatus {UNVERIFIED, VERIFIED, DISPUTED, IMPORTED}` — and it is now actively set (a promotion-approve mints a **VERIFIED** award; see the belt-verification on-ramp below). It is **data-only, never a display axis**: `node.isVerified` (`LineageNode.isVerified`) is the single per-member trust badge, and no per-belt verification badge is rendered (ADR 0035 §5 + Amendment 1 §2 — re-adding a per-award render axis is the double-badge bug LR 0008 caught). `DISPUTED` is an admin-flagging state, not a render state.
+
+### Belt-verification on-ramp (ADR 0035 Amendment 1; SESSION_0486–0490)
+
+An already-owned member self-declaring a belt **above** their verified ceiling files a PENDING `PassportClaimRequest{type: RANK_PROMOTION}` (`PassportClaimType {IDENTITY, RANK_PROMOTION}`) — **not** a `RankAward` — via `submitRankPromotionClaim` (oRPC `promotion.submit`; onboarding `setPassportRank` now files this claim instead of minting an award). An instructor (resource-scoped `claim.review`) or admin (`claims.manage`) approves in `/app/claims`; approve → `finalizeRankPromotion` mints a **VERIFIED** `RankAward` and flips `node.isVerified` if still unverified. A pending belt is a claim record, so it can never leak onto the tree as awarded truth. See the [lineage hub](lineage-hub.md#claim--verification) and `docs/petey-plan-0477-belt-journey-crm-epic.md`.
 
 Tier code now recognizes `free`, `premium`, `elite`, and `legend`; `basic` is retired from the product tier ladder.
 `legend` is the all-features, free-for-life cohort tier. SESSION_0349 added limited policy/helper support only; broad

@@ -136,16 +136,66 @@ Single source of truth is the frontmatter `status:` field.
 
 ### Goal
 
-**Belt-PR rebase.** Bring held #178–181 (belt-journey Slices 2–5: `RankMilestone` + belt CRUD + cards + tab)
-onto the new `main` and rework them to consume the verification spine (V1–V4): the belt-CRUD's award-ensure →
-backfill VERIFIED-implied ≤ ceiling / above-ceiling → `promotion.submit`; belt card "Locked → request promotion";
-wire `PassportClaimEvidence → RankMilestone` media in `finalizeRankPromotion`; then **V5** (`/app/claims` shows
-promotions) + **V6** (Playwright proof → unholds the belt PRs).
+**Belt-PR REBASE — land held #178–181 on the verification spine, then V5 + V6 → unhold.** The verification spine
+(V1 schema → V2 submit → V3 finalize → V4 onboarding) is on `main` but UI-less. The member-facing belt journey
+(`RankMilestone` + belt CRUD + `BeltEditCard` + the "Belts" tab) is the held epic Slices 2–5 (PRs #178–181, on
+`auto/session-0479/0480/0481`). Bring them onto the new `main` and **rework them to B1** so they consume the spine
+instead of minting `UNVERIFIED` awards. This is the workstream that makes the subsystem usable + unholds the PRs.
 
-### First task
+### First task (dispatch-ready prompt block)
 
-Rebase `auto/session-0479` (RankMilestone + migration) onto `main`, resolving against the V1 migration; then
-Slice 3's `upsertBeltMilestone`/`updateRankAwardFact` per the plan's "reworks to held slices".
+```
+DISPATCH SETUP: from /Users/brianscott/dev/ronin-dojo-app run
+`git fetch origin && git worktree add -b session-NNNN-belt-rebase ../ronin-NNNN origin/main`,
+then cd ../ronin-NNNN and /worktree-setup (bun install → copy .env → prisma generate).
+⚠ After ANY rebase that touches package.json/bun.lock, re-run `bun install` (a concurrent
+session added remark-gfm; stale node_modules false-fails tsc). Shared index docs append-only;
+on push reject → pull --rebase → retry. Local prodsnap DB is SHARED across worktrees — hand-author
+migrations + verify via `migrate diff` shadow-replay; NEVER `migrate dev` (it wants a reset).
+
+/bow-in. READ FIRST: docs/petey-plan-0477-belt-journey-crm-epic.md (the "Belt Verification Subsystem"
+block + "Reworks to the held slices"), ADR 0035 Amendment 1, [[belt-verification-subsystem-b1-model]],
+and SESSION_0487–0490 (the spine, on main). The design is LOCKED (B1 · A1 · C-implied · soft-gate).
+
+REBASE + REWORK, in order (each a reviewed PR; per-slice gate before commit):
+1. Rebase `auto/session-0479` (RankMilestone model + `MediaAttachment.rankMilestoneId` + migration)
+   onto `main`. The `add_rank_milestone` migration is additive + independent of V1's
+   `add_passport_claim_type` — no conflict; keep both. `prisma validate` + shadow-replay diff.
+2. Rebase Slice 3 belt CRUD (`upsertBeltMilestone`/`updateRankAwardFact`/the belt award-ensure) and
+   REWORK to B1: the enrichment award-ensure mints a **VERIFIED-by-implication** award ONLY when
+   `rank.sortOrder ≤ verified ceiling`; **above-ceiling throws → the UI routes to `promotion.submit`**
+   (the V2 oRPC on main). DELETE any UNVERIFIED-award creation. Fact-edit rule: date/promoter/school
+   editable on self-added backfill awards; read-only on IMPORTED / promotion-minted awards.
+3. Rebase Slice 4 (`BeltEditCard`/`BeltJourneyGrid`): the above-ceiling card becomes a
+   **"Locked — request promotion"** CTA that calls `promotion.submit` (with the cert/instructor photo
+   soft-gate), NOT an editable card that mints an award.
+4. Wire `PassportClaimEvidence → RankMilestone` media in `finalizeRankPromotion`
+   (`server/admin/lineage/claim-finalize.ts`) — now that `RankMilestone` is on main (deferred at V3,
+   SESSION_0489). On approve, materialize the claim's certificate/instructor photos onto the minted
+   award's milestone.
+5. Rebase Slice 5 (mount the "Belts" tab on `/app/profile`).
+
+THEN:
+6. **Slice V5** — surface `RANK_PROMOTION` claims in `/app/claims` (extend the queue query + review UI:
+   show the asserted belt swatch + evidence; wire Approve/Deny/Needs-info to `applyPassportClaimReview`,
+   which already branches to `finalizeRankPromotion`). Reuse the `claim.review` resource grant (instructor)
+   + `claims.manage` (admin). Notify the member on decision.
+7. **Slice V6 (Doug proof gate — the bar that unholds #178–181):** Playwright — a self-declared belt
+   NEVER renders as verified; promotion end-to-end (submit → queue → RBAC-instructor approve → VERIFIED
+   award + milestone media + ceiling rises); ZERO regression to the awarded-truth rank display (0474/0475),
+   NO per-belt pill (ADR 0035 §5 reaffirmed, no double-badge); RBAC scope enforced. On green, finalize
+   ADR 0035 Amendment 1 to `accepted` + mirror its terms into `ubiquitous-language.md`.
+
+Also carry from SESSION_0484 during the rebase: country round-trip data-loss fix, `Hint`→`Note`,
+first-run empty state; flywheel/CRM hardening (partial-unique index on normalized school name, atomic
+`demandCount`, scope fuzzy match to placeholder orgs); `/app/leads-pipeline` nav link.
+
+BOUNDARIES: explicit per-push authorization; ../ronin-dojo-monorepo READ-ONLY; schema PRs human-reviewed.
+```
+
+**Spine reference (already on `main`, consume — do not rebuild):** `submitRankPromotionClaim` +
+`promotion.submit` oRPC (V2) · `finalizeRankPromotion` + the `applyPassportClaimReview` type-branch (V3) ·
+`setPassportRank` → pending claim (V4) · `PassportClaimType {IDENTITY, RANK_PROMOTION}` (V1).
 
 ## Review log
 

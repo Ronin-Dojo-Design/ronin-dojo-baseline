@@ -4,8 +4,8 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-26
-last_agent: claude-session-0449
+updated: 2026-07-01
+last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/resend-setup-runbook.md
@@ -202,21 +202,51 @@ Membership remains community/admin state; paid access is represented by `UserEnt
 
 # 5. Rank lifecycle
 
+> **⚠ Belt-verification update (SESSION_0486–0490, ADR 0035 Amendment 1).** A **self-declared** belt is
+> **no longer written as a `RankAward`.** It files a **PENDING `PassportClaimRequest` of `type: RANK_PROMOTION`**;
+> only instructor/admin approval mints a **VERIFIED** `RankAward` (via the existing `mintAssertedRankAward`).
+> **The onboarding/belt path never creates an `UNVERIFIED` `RankAward` anymore** — this closed the launch-safety
+> hole where a self-declared belt used to surface as the member's rank. `node.isVerified` stays the ONE
+> per-member trust flag (ADR 0035 §5 reaffirmed; `RankAward.verificationStatus` is NOT a display axis).
+
 ```text
-Course / instructor / org process
-               |
-               v
-         Rank award decision
-               |
-               v
-           RankAward
-               |
-               v
-Membership rank updates
-               |
-               v
-Directory / tournament eligibility can change
+Instructor / org award decision      Member self-declares belt (onboarding wizard)
+               |                                     |
+               v                                     v
+           RankAward (VERIFIED)      PENDING PassportClaimRequest (RANK_PROMOTION)
+               |                                     |
+               |                     instructor (claim.review) / admin (claims.manage)
+               |                     approves in /app/claims → finalizeRankPromotion
+               |                                     |
+               |                     mintAssertedRankAward → VERIFIED RankAward
+               |                     (flips node.isVerified if still unverified —
+               |                      first promotion also verifies the person)
+               +-----------------+-------------------+
+                                 |
+                                 v
+                       Membership rank updates
+                                 |
+                                 v
+              Directory / tournament eligibility can change
 ```
+
+## Self-declared belt → verification on-ramp (SESSION_0486–0490)
+
+`setPassportRank` (`server/web/onboarding/actions.ts`) — the profile-enhancement wizard's "declare your
+belt" step — files a pending `RANK_PROMOTION` claim via `submitRankPromotionClaim` instead of upserting an
+`UNVERIFIED` award. The wizard tells the member "pending verification by your instructor."
+
+Submit guards:
+
+- **Own Passport only** (derived from `userId`).
+- Belt must be **above the member's verified ceiling** (`pickTopAwardInDiscipline`).
+- **One open promotion at a time.**
+- Optional (soft-gate) certificate / instructor-photo evidence.
+
+Approval (`finalizeRankPromotion`) mints the VERIFIED `RankAward` and flips `node.isVerified` if it was
+still unverified — first promotion also verifies the person (the SESSION_0474 on-ramp). See
+[`petey-plan-0477-belt-journey-crm-epic.md`](../../petey-plan-0477-belt-journey-crm-epic.md) and
+[`ADR 0035`](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md) (Amendment 1).
 
 ## Important rule
 

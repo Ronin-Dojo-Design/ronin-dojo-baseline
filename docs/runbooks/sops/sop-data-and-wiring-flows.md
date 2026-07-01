@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-26
-last_agent: claude-session-0449
+updated: 2026-07-01
+last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/sop-e2e-user-lifecycle.md
   - docs/runbooks/local-dev-auth-storage.md
@@ -225,6 +225,17 @@ flowchart TD
 > `schoolName`), with Baseline **`Membership`** as a fallback during the consolidation transition.
 > `Membership` is Baseline enrollment/community state (paying is a separate `UserEntitlement`
 > layer — ADR 0019); it is **not** the BBL school source. See `passport-and-shells.md`.
+>
+> **RankAward creation (updated SESSION_0490, ADR 0035 Amendment 1).** Besides admin/import, a member's
+> belt now reaches a `RankAward` via a **RANK_PROMOTION claim → approve → mint VERIFIED award** (path B1):
+> `setPassportRank` no longer mints an `UNVERIFIED` award on self-report — it files a pending
+> `PassportClaimRequest{type: RANK_PROMOTION, claimedRankId, evidence}` (via `submitRankPromotionClaim`,
+> oRPC `promotion.submit`). On approve, `applyPassportClaimReview` branches on `claim.type` and calls
+> `finalizeRankPromotion → mintAssertedRankAward` → a **VERIFIED** `RankAward` (`source: STATED`,
+> `verificationStatus: VERIFIED`). So the belt-journey path only ever produces VERIFIED awards; a
+> self-declared belt is a claim record until verified. `RankAward.verificationStatus` stays **data-only
+> / never a display axis** (ADR 0035 §5) — `node.isVerified` is the one display trust flag. Full flow:
+> [`lineage-data-wiring-flow.md`](lineage-data-wiring-flow.md) §5.
 
 ```text
 User
@@ -236,7 +247,8 @@ User
  +--> RankAward(s) (rank/promotion source; current rank derived)
  |     +--> Rank
  |     +--> source (STATED | EARNED)
- |     +--> verificationStatus (UNVERIFIED | VERIFIED | DISPUTED | IMPORTED)
+ |     +--> verificationStatus (UNVERIFIED | VERIFIED | DISPUTED | IMPORTED — DATA only, never displayed)
+ |     |      belt-journey path (RANK_PROMOTION claim → approve) mints VERIFIED only; no UNVERIFIED self-report award
  |
  +--> Affiliation(s) (display-only person↔org: linked org OR free-text schoolName)
  |
