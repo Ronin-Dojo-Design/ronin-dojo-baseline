@@ -22,13 +22,18 @@ export async function DashboardBeltsTab() {
 
   const data = await loadBeltTabData(session.user.id)
 
+  // First-run empty state: no Passport yet (nothing to hang a journey on) or an empty
+  // ladder. A member WITH a Passport but no BJJ award is NOT empty under B1 — they get
+  // the full ladder with "Request promotion" CTAs (ceiling: null → every belt requestable),
+  // so they can request their first belt for their instructor to verify.
   if (!data || data.ranks.length === 0) {
     return (
       <Card hover={false}>
         <CardHeader direction="column" size="xs">
           <H6 render={props => <h2 {...props}>{props.children}</h2>}>No belt journey yet</H6>
           <CardDescription>
-            Your belt journey will appear here once you have a rank on your BJJ passport.
+            Finish setting up your profile to start your belt journey — then you can request your
+            belts for your instructor to verify.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -40,6 +45,7 @@ export async function DashboardBeltsTab() {
       <BeltJourneyTab
         ranks={data.ranks}
         ceiling={data.ceiling}
+        passportId={data.passportId}
         promoterOptions={data.promoterOptions}
         schoolOptions={data.schoolOptions}
       />

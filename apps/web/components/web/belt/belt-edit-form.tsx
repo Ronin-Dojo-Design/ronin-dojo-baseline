@@ -10,7 +10,6 @@ import {
   EMPTY_CREATABLE_VALUE,
 } from "~/components/common/creatable-combobox"
 import { DialogFooter, DialogHeader, DialogTitle } from "~/components/common/dialog"
-import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
 import { Note } from "~/components/common/note"
@@ -231,7 +230,9 @@ export function BeltEditForm({
         )}
 
         {!factEditable && card && (
-          <Hint>These belt facts are verified and can no longer be edited here.</Hint>
+          <Note className="text-xs">
+            These belt facts are verified and can no longer be edited here.
+          </Note>
         )}
       </Stack>
 
@@ -264,10 +265,10 @@ export function BeltEditForm({
           ))}
         </Stack>
       ) : (
-        <Hint>
+        <Note className="text-xs">
           Save your story first to start adding belt, instructor, certificate, and competition
           photos.
-        </Hint>
+        </Note>
       )}
 
       <DialogFooter>

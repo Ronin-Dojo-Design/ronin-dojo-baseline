@@ -62,6 +62,21 @@ export function isRankLocked(rankSortOrder: number, ceiling: number | null): boo
 }
 
 /**
+ * May the member REQUEST a promotion for this belt? (B1 — ADR 0035 Amendment 1.)
+ * A locked (above-ceiling) belt is exactly one the member has NOT been awarded, so
+ * it routes to a `RANK_PROMOTION` claim (`promotion.submit`) rather than a self-mint.
+ * A belt at/below the ceiling is enrichable, not requestable — self-promotion stays
+ * structurally impossible (the ceiling only rises through an approved promotion).
+ *
+ * This is exactly the `locked` condition; it is named separately so the card's
+ * intent reads clearly (a locked card is now an actionable promotion CTA, not a
+ * dead-end) and so the predicate is unit-tested against the promotion flow.
+ */
+export function canRequestPromotion(rankSortOrder: number, ceiling: number | null): boolean {
+  return isRankLocked(rankSortOrder, ceiling)
+}
+
+/**
  * Derive the card's status badge:
  * - `locked`   — above the ceiling (takes precedence; a locked belt is never editable);
  * - `completed`— unlocked AND the member has a card with a story or any media;
@@ -84,9 +99,6 @@ export const BELT_STATUS_LABEL: Record<BeltCardStatus, string> = {
   locked: "Locked",
   completed: "Completed",
 }
-
-/** The tooltip shown on a locked card's disabled action. */
-export const BELT_LOCKED_TOOLTIP = "Your instructor needs to promote you to unlock this."
 
 /**
  * Whether the promotion FACT fields (date / promoter / school) are editable for a

@@ -68,6 +68,8 @@ export type BeltTabData = {
   ranks: BeltRankViewModel[]
   /** The member's awarded ceiling `sortOrder`; `null` = no BJJ award (all locked). */
   ceiling: number | null
+  /** The member's own Passport id — the upload target for a promotion soft-gate photo (B1). */
+  passportId: string
   /** Registered promoter options (id = Passport/node ref) for the creatable combobox. */
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
@@ -142,6 +144,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
   return {
     ranks,
     ceiling,
+    passportId: passport.id,
     promoterOptions: joinOptions.instructors.map(o => ({ id: o.id, name: o.name })),
     schoolOptions: joinOptions.schools.map(o => ({ id: o.id, name: o.name })),
   }

@@ -19,11 +19,13 @@ import type { BeltRankViewModel } from "./belt-view-model"
 export function BeltJourneyTab({
   ranks,
   ceiling,
+  passportId,
   promoterOptions,
   schoolOptions,
 }: {
   ranks: BeltRankViewModel[]
   ceiling: number | null
+  passportId: string
   promoterOptions: CreatableOption[]
   schoolOptions: CreatableOption[]
 }) {
@@ -37,13 +39,27 @@ export function BeltJourneyTab({
     return mediaId ? { mediaId } : null
   }, [])
 
+  // The promotion-request soft-gate photo has no milestone yet → upload against the
+  // member's own `passport` (seam #2), which mints a mediaId we pass as claim evidence.
+  const onUploadPassport = useCallback(async (file: File, pid: string) => {
+    const result = await uploadWebMedia({
+      target: { kind: "passport", id: pid },
+      file,
+      isPublic: true,
+    })
+    const mediaId = result?.data?.mediaId
+    return mediaId ? { mediaId } : null
+  }, [])
+
   return (
     <BeltJourneyGrid
       ranks={ranks}
       ceiling={ceiling}
+      passportId={passportId}
       promoterOptions={promoterOptions}
       schoolOptions={schoolOptions}
       onUpload={onUpload}
+      onUploadPassport={onUploadPassport}
     />
   )
 }

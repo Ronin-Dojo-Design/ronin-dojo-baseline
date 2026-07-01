@@ -1,15 +1,13 @@
 "use client"
 
-import { PencilIcon } from "lucide-react"
+import { LockIcon, PencilIcon } from "lucide-react"
 import type { CSSProperties } from "react"
 import { Badge } from "~/components/common/badge"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
-import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 import {
-  BELT_LOCKED_TOOLTIP,
   BELT_STATUS_LABEL,
   type BeltCardStatus,
   type BeltRankViewModel,
@@ -49,12 +47,19 @@ export function BeltEditCard({
   vm,
   ceiling,
   onOpen,
+  onRequestPromotion,
 }: {
   vm: BeltRankViewModel
   /** The member's awarded ceiling `sortOrder`; `null` = no discipline award. */
   ceiling: number | null
   /** Fired when an UNLOCKED card is activated (open the edit surface). */
   onOpen: (rankId: string) => void
+  /**
+   * Fired when a LOCKED (above-ceiling) card's "Request promotion" CTA is activated
+   * (B1 — opens the `promotion.submit` flow). Omit → the locked card has no CTA (a
+   * read-only ladder view); with it, a locked belt becomes actionable, not a dead end.
+   */
+  onRequestPromotion?: (rankId: string) => void
 }) {
   const status = deriveBeltStatus(vm, ceiling)
   const locked = status === "locked"
@@ -65,16 +70,29 @@ export function BeltEditCard({
 
   const actionLabel = status === "completed" ? "Edit" : "Add your story"
 
-  const action = (
+  // Above-ceiling → an actionable "Request promotion" CTA (B1), not a disabled button.
+  // Enrichable belts → the edit surface.
+  const action = locked ? (
+    onRequestPromotion ? (
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        prefix={<LockIcon />}
+        onClick={() => onRequestPromotion(vm.rank.id)}
+      >
+        Request promotion
+      </Button>
+    ) : null
+  ) : (
     <Button
       type="button"
       size="sm"
       variant={status === "completed" ? "secondary" : "primary"}
-      disabled={locked}
       prefix={<PencilIcon />}
       onClick={() => onOpen(vm.rank.id)}
     >
-      {locked ? "Locked" : actionLabel}
+      {actionLabel}
     </Button>
   )
 
@@ -119,7 +137,7 @@ export function BeltEditCard({
       ) : (
         <p className="relative w-full text-sm text-muted-foreground">
           {locked
-            ? "Awarded belts unlock as your instructor promotes you."
+            ? "Above your verified rank — request a promotion for your instructor to review."
             : "Share the story of this belt — dates, your promoter, and photos."}
         </p>
       )}
@@ -130,23 +148,11 @@ export function BeltEditCard({
         </span>
       )}
 
-      <div className="relative mt-auto flex w-full items-center justify-end border-t border-border/60 pt-3">
-        {locked ? (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                // A disabled <button> swallows hover, so wrap in a span for the tip.
-                <span tabIndex={0} className="inline-flex">
-                  {action}
-                </span>
-              }
-            />
-            <TooltipContent>{BELT_LOCKED_TOOLTIP}</TooltipContent>
-          </Tooltip>
-        ) : (
-          action
-        )}
-      </div>
+      {action && (
+        <div className="relative mt-auto flex w-full items-center justify-end border-t border-border/60 pt-3">
+          {action}
+        </div>
+      )}
     </Card>
   )
 }

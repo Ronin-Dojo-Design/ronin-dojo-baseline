@@ -4,6 +4,7 @@ import type { BeltCardOutput } from "~/server/belt/schemas"
 import {
   beltDateLabel,
   type BeltRankViewModel,
+  canRequestPromotion,
   deriveBeltStatus,
   isCardFactEditable,
   isRankLocked,
@@ -47,6 +48,19 @@ describe("isRankLocked (self-promotion invariant, Locked #5)", () => {
   })
   it("locks EVERY rank when the member holds no discipline award (null ceiling)", () => {
     expect(isRankLocked(1, null)).toBe(true)
+  })
+})
+
+describe("canRequestPromotion (B1 above-ceiling promotion CTA, Amendment 1)", () => {
+  it("is true ABOVE the ceiling (a belt the member has not been awarded → route to a claim)", () => {
+    expect(canRequestPromotion(5, 3)).toBe(true)
+  })
+  it("is false AT or BELOW the ceiling (enrichable, not requestable — no self-promotion)", () => {
+    expect(canRequestPromotion(3, 3)).toBe(false)
+    expect(canRequestPromotion(1, 3)).toBe(false)
+  })
+  it("is true for EVERY belt when the member holds no discipline award (null ceiling → first-belt request)", () => {
+    expect(canRequestPromotion(1, null)).toBe(true)
   })
 })
 
