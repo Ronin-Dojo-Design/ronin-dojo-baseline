@@ -4,9 +4,9 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-06-26
-last_agent: claude-session-0449
-use_count: 2
+updated: 2026-07-01
+last_agent: claude-session-0475
+use_count: 3
 pairs_with:
   - docs/runbooks/database.md
   - docs/runbooks/prisma-workflow.md
@@ -222,4 +222,20 @@ cd apps/web && bunx prisma db push --accept-data-loss && bunx prisma generate &&
 
 ## Production migration (Neon)
 
-**NOT covered here.** Production uses `prisma migrate deploy` (not `db push`). See `deploy.md` runbook (to be created). Never run `--accept-data-loss` against production.
+**Prod migrations auto-apply on deploy — you do NOT run them by hand.** The `apps/web`
+`package.json` `prebuild` hook (`bun run db:migrate deploy` → `prisma migrate deploy`) runs against
+Neon prod during the Vercel build, applying every committed migration file that hasn't run yet
+(see §"When to use `migrate dev` vs …" above, and [`deployment.md`](../deploy/deployment.md) §"prebuild").
+
+Consequences:
+
+- **The migration FILE must be committed and pushed** or prod applies nothing — `migrate deploy` only
+  runs files already in `prisma/migrations/`. Author it locally with `prisma migrate dev` first.
+- **If the migration errors, the Vercel BUILD fails** (and the deploy is skipped) — so a bad migration
+  can't silently corrupt prod, but it will block the deploy. Verify it applies on `ronindojo_prodsnap`
+  before pushing.
+- The code is forward-safe if a *drop-column* migration hasn't run yet: Prisma only reads/writes the
+  columns in the schema, so an extra prod column is ignored until `migrate deploy` removes it.
+- **Never** run `prisma migrate reset`, `db push`, or `--accept-data-loss` against production. For an
+  out-of-band manual apply (rare), use `DATABASE_URL="<neon>" bunx prisma migrate deploy`
+  (see [`deployment.md`](../deploy/deployment.md) §"Production database operations").
