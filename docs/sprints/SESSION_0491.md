@@ -88,10 +88,10 @@ boundary + the #178–181 PR lifecycle).
 
 ### Drift logged
 
-- **ADR-number collision:** held branch `auto/session-0479` (#178) introduces
-  `docs/architecture/decisions/0042-rank-award-fact-vs-member-milestone.md`, but `0042` is already taken on
-  `main` by `0042-canonical-blog-surface-post-over-contentatom.md` (session 0485). Renumber the belt ADR to
-  **`0043`** during the Slice-2 rebase; fix its cross-references. (Logged for the bow-out drift-register sweep.)
+- **ADR-number collision (RESOLVED this session):** held branch `auto/session-0479` (#178) introduced an ADR
+  numbered `0042` (`…/0042-rank-award-fact-vs-member-milestone.md`), but `0042` is already taken on `main` by
+  `0042-canonical-blog-surface-post-over-contentatom.md` (session 0485). Renumbered the belt ADR to **`0043`**
+  during the Slice-2 rebase and fixed all cross-references. (Logged for the bow-out drift-register sweep.)
 
 ## Petey plan
 
