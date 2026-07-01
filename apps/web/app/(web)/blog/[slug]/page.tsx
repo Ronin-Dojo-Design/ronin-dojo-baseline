@@ -4,6 +4,7 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
+import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
 import { extractHeadingsFromMarkdown, Markdown } from "~/components/web/markdown"
@@ -133,6 +134,20 @@ export default async function (props: Props) {
           )}
         </Section.Sidebar>
       </Section>
+
+      {/* Post-read CTA into the claim loop — the highest-intent moment (BBL north star). */}
+      <section className="flex flex-col items-center gap-6 border-t py-12 text-center">
+        <Intro alignment="center">
+          <IntroTitle size="h2">Your lineage is part of the story</IntroTitle>
+          <IntroDescription>
+            Document your promotions, verify your rank, and connect to the network these pioneers
+            built.
+          </IntroDescription>
+        </Intro>
+        <JoinCtaButton variant="fancy" size="lg">
+          Build Your Legacy
+        </JoinCtaButton>
+      </section>
 
       <Nav title={post.title} className="self-start" />
 

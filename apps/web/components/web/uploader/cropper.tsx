@@ -36,12 +36,12 @@ const createCroppedImage = async (imageSrc: string, pixelCrop: Area): Promise<Fi
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
       b => (b ? resolve(b) : reject(new Error("Canvas toBlob failed"))),
-      "image/jpeg",
+      "image/webp",
       0.9,
     ),
   )
 
-  return new File([blob], "avatar.jpg", { type: "image/jpeg" })
+  return new File([blob], "avatar.webp", { type: "image/webp" })
 }
 
 type ImageCropperProps = {

@@ -306,6 +306,30 @@ crisp at natural size instead of upscaling to a blur.
 | Landing "BBL Posts Feed" promo copy | ADR 0042 | operator marketing call |
 | Higher-res `david-meyer` / `john-will` photos (157×200) | this session | content sourcing |
 
+## Phase 3 — Prod seed (LIVE) + recommendations (operator: "do prod seed and the recommendations now")
+
+- **⚡ Prod seed — DONE. The Dirty Dozen is LIVE on `blackbeltlegacy.com/blog`.** Ran
+  `bun --env-file=<canonical>/.env.prod run scripts/seed-dirty-dozen-post.ts` against the Neon prod DB
+  (verified the connection target was Neon, not local, before writing — the script's `dotenv/config` does not
+  override the `--env-file` `DATABASE_URL`). Prod now has **exactly 1** `Post` (slug, Published, 2026-05-30,
+  hero, author Brian, `Brand.BBL`). Live check: `/blog` + `/blog/[slug]` → 200 with hero + all 6 pioneer
+  photos. **Note:** it renders via the *currently-deployed* (pre-session) code — the TOC / remark-gfm / styled
+  wrapper polish + the `/posts`→`/blog` redirect + footer changelog land only on the (still-held) code push.
+- **Recommendations implemented (3):**
+  - **Media picker in the post editor** (`post-form.tsx`) — replaced the bare `imageUrl` URL input with an
+    Upload button (reuses the existing `uploadMedia` → R2 action, the same one the content media library uses)
+    + a live preview; the URL stays editable for paste. No schema change.
+  - **End-of-article claim CTA** (`[slug]/page.tsx`) — a post-read CTA into the claim loop (BBL north star),
+    reusing `JoinCtaButton` (opens the global Join modal; degrades to `/lineage/join`). Verified live.
+  - **Uploads → webp** (`uploader/cropper.tsx`) — canvas output flipped `image/jpeg` → `image/webp` (0.9).
+- **Held with reason (NOT built):**
+  - **`Post` categories/tags wiring** — feasible (`findCategoryList`/`findTagList` exist), but building
+    taxonomy UI + payload + render for a **1-post blog is speculative (YAGNI)**; Giddy offered "delete" as an
+    equal option (a migration). Left as a **product decision** for when post volume grows.
+  - **`MediaAttachment.postId` migration** (Giddy R2 full pipeline) — **held for merge-safety**: the parallel
+    belt lane is mid-migration on the shared local DB (the documented `migrate dev` reset-trap). The light
+    media picker covers the immediate authoring need; do the migration once the lanes merge.
+
 ## Review log
 
 - Self-review (Cody-style) + a hostile close pass (below). Gates: `bun run build` exit 0, oxlint/oxfmt clean,
