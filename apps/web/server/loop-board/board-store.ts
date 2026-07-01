@@ -13,6 +13,7 @@
 import { revalidatePath } from "next/cache"
 import type { BoardState } from "@ronin-dojo/ui-kit/kanban"
 import { requirePermission } from "~/lib/auth-guard"
+import { LOOP_BOARD_CONFIG_ID } from "~/lib/loop-board/board-config"
 import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 import { db } from "~/services/db"
 import {
@@ -22,6 +23,7 @@ import {
   legacyTaskToCreate,
   rowToBoardCard,
 } from "./map-card"
+import { markLedgerCardDone } from "./mark-done-core"
 
 async function assertLoopBoardAccess() {
   await requirePermission(APP_AREA_PERMISSIONS.loopBoard)
@@ -78,6 +80,32 @@ export async function saveBoard(state: BoardState): Promise<void> {
     ),
   )
   revalidatePath("/app/loop-board")
+}
+
+/**
+ * Mark a projected ledger card **done** by its stable `sourceRef` (the ledger-scoped `CODE:id`, e.g.
+ * `GL:G-003` / `RISK:#9`) — the OUTBOUND half of the read-path loop (SESSION_0476). A bow-out step calls
+ * this after a session resolves a backlog item, moving the card into the terminal `done` stage so the
+ * operator's board reflects the session's work (closing the write-only gap: nothing else takes a card off
+ * the backlog programmatically). This is a normal persisted edit — exactly what dragging a card to Done
+ * does — so it obeys the same "the table owns card state" rule and never conflicts with the insert-only
+ * projection (learning 0004): the importer skips an already-present card, so a done card stays done.
+ *
+ * Matching: cards are keyed by the `(configId, source, sourceRef)` unique. A ledger card carries
+ * `source="ledger"` and `sourceRef=CODE:id`, so `(LOOP_BOARD_CONFIG_ID, "ledger", sourceRef)` is exact —
+ * an `updateMany` (no throw on zero rows) is used so a stale/unknown `sourceRef` is a clean no-op, and the
+ * returned count tells the caller whether a card was actually moved. Returns the number of cards updated
+ * (0 = no matching open card, 1 = moved to done). `sourceRef` is NOT globally unique in the schema, but is
+ * unique within `(configId, source)`, so at most one row matches.
+ */
+export async function markCardDone(
+  sourceRef: string,
+  configId: string = LOOP_BOARD_CONFIG_ID,
+): Promise<number> {
+  await assertLoopBoardAccess()
+  const count = await markLedgerCardDone(sourceRef, configId)
+  revalidatePath("/app/loop-board")
+  return count
 }
 
 /**
