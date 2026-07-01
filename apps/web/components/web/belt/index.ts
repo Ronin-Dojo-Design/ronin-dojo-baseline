@@ -5,6 +5,7 @@
 export { BeltEditCard } from "./belt-edit-card"
 export { BeltEditForm } from "./belt-edit-form"
 export { BeltJourneyGrid } from "./belt-journey-grid"
+export { BeltJourneyTab } from "./belt-journey-tab"
 export { BeltMediaGallery } from "./belt-media-gallery"
 export {
   beltDateLabel,

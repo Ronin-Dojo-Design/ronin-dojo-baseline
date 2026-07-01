@@ -168,9 +168,15 @@ const updateRankAwardFact = beltProcedure
         data.organizationId = null
         data.location = schoolName
         // Freetext school → capture the demand as a deduped school-outreach lead
-        // (Slice 1). Never sends outreach — the invite is an operator click.
+        // (Slice 1). Never sends outreach — the invite is an operator click. The
+        // country (Locked #7) belongs to the school, so it rides here → sets the
+        // placeholder Organization.country (ignored on a registered-org pick).
         if (schoolName) {
-          await emitSchoolLead({ schoolName, source: "belt-journey" })
+          await emitSchoolLead({
+            schoolName,
+            source: "belt-journey",
+            country: input.school?.country ?? null,
+          })
         }
       }
     }

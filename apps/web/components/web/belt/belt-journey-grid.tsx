@@ -34,8 +34,8 @@ export function BeltJourneyGrid({
   ceiling: number | null
   promoterOptions: CreatableOption[]
   schoolOptions: CreatableOption[]
-  /** Per-file R2 upload (mints a mediaId); omit to render read-only galleries. */
-  onUpload?: (file: File) => Promise<{ mediaId: string } | null>
+  /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
+  onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
 }) {
   const sorted = useMemo(
     () => [...ranks].sort((a, b) => a.rank.sortOrder - b.rank.sortOrder),

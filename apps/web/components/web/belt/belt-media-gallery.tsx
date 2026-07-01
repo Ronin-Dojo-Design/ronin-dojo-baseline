@@ -45,11 +45,13 @@ export function BeltMediaGallery({
   /** Already-resolved media (URL + ids) for this purpose. */
   items: BeltMediaItem[]
   /**
-   * Uploads a file to R2 and returns the minted `mediaId`. Supplied by the mount
-   * (Slice 5) because the upload pipeline is a server action, not an oRPC call.
-   * Omit to render a read-only gallery.
+   * Uploads a file to R2 (against the `rankMilestone` media target) and returns the
+   * minted `mediaId`. Supplied by the mount (Slice 5) because the upload pipeline is
+   * a server action, not an oRPC call. Receives the milestone id so the upload lands
+   * on the right FK; the subsequent `attachMilestoneMedia` then sets the purpose
+   * (idempotent — the upload already created the attachment). Omit → read-only gallery.
    */
-  onUpload?: (file: File) => Promise<{ mediaId: string } | null>
+  onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /** Fired after any attach/detach so the parent can refresh the card view-model. */
   onChanged?: () => void
 }) {
@@ -64,7 +66,7 @@ export function BeltMediaGallery({
 
     setIsBusy(true)
     try {
-      const uploaded = await onUpload(file)
+      const uploaded = await onUpload(file, rankMilestoneId)
       if (!uploaded) return
       await client.belt.attachMilestoneMedia({
         rankMilestoneId,

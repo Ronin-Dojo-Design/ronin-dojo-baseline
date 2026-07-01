@@ -78,8 +78,8 @@ export function BeltEditForm({
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
   schoolOptions: CreatableOption[]
-  /** Per-file R2 upload (mints a mediaId); omit to render read-only galleries. */
-  onUpload?: (file: File) => Promise<{ mediaId: string } | null>
+  /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
+  onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /** Fired with the fresh card after any successful save. */
   onSaved?: (card: BeltCardOutput) => void
   onClose?: () => void
@@ -154,7 +154,7 @@ export function BeltEditForm({
           ? undefined
           : school.id
             ? { organizationId: school.id }
-            : { name: school.label || null },
+            : { name: school.label || null, country: country || null },
       })
       onSaved?.(next)
       toast.success("Belt details saved.")

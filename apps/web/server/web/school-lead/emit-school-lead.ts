@@ -38,6 +38,13 @@ type EmitSchoolLeadInput = {
   schoolName: string
   memberEmail?: string | null
   source: string
+  /**
+   * ISO 3166-1 alpha-2 country for the school (Petey Plan 0477 Locked #7 — country
+   * belongs to the SCHOOL, not the award). Only ever SETS a placeholder org's
+   * `country` on CREATE; a matched/existing org's country is left untouched (we
+   * never overwrite an org's own data from an unverified member freetext entry).
+   */
+  country?: string | null
 }
 
 export type EmitSchoolLeadResult = {
@@ -164,6 +171,7 @@ async function bumpSchoolLead(
 async function createPlaceholderOrganization(
   tx: SchoolLeadTransaction,
   schoolName: string,
+  country: string | null,
 ): Promise<SchoolLeadOrganization> {
   return tx.organization.create({
     data: {
@@ -181,6 +189,9 @@ async function createPlaceholderOrganization(
       }),
       type: "SCHOOL",
       ownerId: null,
+      // Country only lands on a NEW placeholder org (Locked #7); undefined keeps
+      // the schema default rather than nulling it out.
+      ...(country ? { country } : {}),
     },
     select: { id: true, name: true },
   })
@@ -189,6 +200,7 @@ async function createPlaceholderOrganization(
 async function resolveOrganization(
   tx: SchoolLeadTransaction,
   schoolName: string,
+  country: string | null,
 ): Promise<{ organization: SchoolLeadOrganization; createdOrganization: boolean }> {
   const organizations = await tx.organization.findMany({
     where: { brand: Brand.BBL },
@@ -199,7 +211,7 @@ async function resolveOrganization(
   return matchedOrganization
     ? { organization: matchedOrganization, createdOrganization: false }
     : {
-        organization: await createPlaceholderOrganization(tx, schoolName),
+        organization: await createPlaceholderOrganization(tx, schoolName, country),
         createdOrganization: true,
       }
 }
@@ -254,6 +266,8 @@ export async function emitSchoolLead(input: EmitSchoolLeadInput): Promise<EmitSc
     throw new Error("School name is required")
   }
 
+  const country = input.country?.trim().toUpperCase() || null
+
   const options = {
     schoolName,
     memberEmail: input.memberEmail?.trim().toLowerCase() || null,
@@ -265,7 +279,7 @@ export async function emitSchoolLead(input: EmitSchoolLeadInput): Promise<EmitSc
     const matchedOpenLead = await findMatchedOpenLead(tx, schoolName)
     if (matchedOpenLead) return bumpSchoolLead(tx, matchedOpenLead, options, "lead")
 
-    const { organization, createdOrganization } = await resolveOrganization(tx, schoolName)
+    const { organization, createdOrganization } = await resolveOrganization(tx, schoolName, country)
     const existingLead = await findExistingLeadForOrganization(tx, organization.id)
     if (existingLead) return bumpSchoolLead(tx, existingLead, options, "organization")
 
