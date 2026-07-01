@@ -2967,6 +2967,16 @@ model ProfileClaimRequest {
   @@index([claimantUserId, status])
 }
 
+// @added SESSION_0487 (petey-plan-0477 Slice V1; ADR 0035 Amendment 1 / ADR 0036) — claim-type
+// discriminant. IDENTITY = the account→Passport claim (the original ADR 0036 flow). RANK_PROMOTION =
+// an already-owned member asserting a belt above their verified ceiling; finalize (Slice V3) branches
+// on this to run ONLY the rank-mint branch (no account-attach), flipping the asserted rank to a
+// VERIFIED RankAward via mintAssertedRankAward. No UNVERIFIED RankAward is ever created (B1, ADR 0035 §5).
+enum PassportClaimType {
+  IDENTITY
+  RANK_PROMOTION
+}
+
 // ---------------------------------------------------------------------------
 // Models — Unified Passport-keyed person claim (ADR 0036, SESSION_0437)
 // ---------------------------------------------------------------------------
@@ -2985,6 +2995,9 @@ model ProfileClaimRequest {
 model PassportClaimRequest {
   id           String                    @id @default(cuid(2))
   status       LineageClaimStatus        @default(PENDING)
+  // Claim kind (Slice V1). Existing rows default to IDENTITY (the ADR 0036 account→Passport claim);
+  // RANK_PROMOTION = an already-owned member's belt-promotion request (finalize branches on this, V3).
+  type         PassportClaimType         @default(IDENTITY)
   // relationship is optional: the lineage door does not capture one (parity
   // with LineageClaimRequest); the directory-person door passes it through.
   relationship ProfileClaimRelationship?
