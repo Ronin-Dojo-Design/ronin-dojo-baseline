@@ -152,6 +152,19 @@ export async function authorizeMediaTarget({
       return isAdminOfPassportOwnerOrg(db, brand, user.id, passport.userId)
     }
 
+    case "rankMilestone": {
+      // A belt-journey milestone is member-owned: only the Passport that owns the
+      // milestone's RankAward may attach/detach its media (Petey Plan 0477 Locked
+      // #1 — always member-editable, never delegated). Mirrors the self-Passport
+      // branch above, walked one hop through RankMilestone → RankAward → passport.
+      const milestone = await db.rankMilestone.findFirst({
+        where: { id: target.id },
+        select: { rankAward: { select: { passport: { select: { userId: true } } } } },
+      })
+      if (!milestone) return false
+      return milestone.rankAward.passport.userId === user.id
+    }
+
     case "promotionEvent": {
       const [event, scope] = await Promise.all([
         db.promotionEvent.findFirst({

@@ -42,6 +42,13 @@ export const updateRankAwardFactInput = z.object({
     .object({
       organizationId: cuid.nullish(),
       name: z.string().max(200).nullish(),
+      /**
+       * ISO 3166-1 alpha-2 country for the school (Locked #7 — country belongs to
+       * the SCHOOL, so it rides on the school entry, NOT a top-level award field).
+       * Only consumed on the FREETEXT path → `emitSchoolLead` sets the placeholder
+       * `Organization.country`; ignored when a registered `organizationId` is picked.
+       */
+      country: z.string().length(2).nullish(),
     })
     .nullish(),
 })
