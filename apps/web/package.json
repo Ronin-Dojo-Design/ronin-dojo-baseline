@@ -82,6 +82,7 @@
     "react-email": "^6.3.3",
     "react-hook-form": "^7.76.1",
     "react-markdown": "10.1.0",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.12.4",
     "rss": "^1.2.2",
     "satori": "^0.26.0",

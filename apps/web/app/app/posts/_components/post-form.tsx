@@ -3,9 +3,11 @@
 import { slugify } from "@dirstack/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
-import { EyeIcon, PencilIcon } from "lucide-react"
+import { EyeIcon, PencilIcon, UploadIcon } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { type ComponentProps, use, useState } from "react"
+import { useAction } from "next-safe-action/hooks"
+import { type ComponentProps, use, useRef, useState } from "react"
 import { toast } from "sonner"
 import { PostStatus } from "~/.generated/prisma/browser"
 import { RelationSelector } from "~/components/admin/relation-selector"
@@ -37,6 +39,8 @@ import { upsertPost } from "~/server/admin/posts/actions"
 import type { findPostById } from "~/server/admin/posts/queries"
 import { postSchema } from "~/server/admin/posts/schema"
 import type { findToolList } from "~/server/admin/tools/queries"
+import { uploadMedia } from "~/server/web/actions/media"
+import { ALLOWED_MIMETYPES } from "~/server/web/shared/schema"
 
 type PostFormProps = ComponentProps<"form"> & {
   post?: NonNullable<Awaited<ReturnType<typeof findPostById>>>
@@ -92,6 +96,32 @@ export function PostForm({
     callback: slugify,
     enabled: !post,
   })
+
+  // Hero-image upload → R2 (reuses the same `uploadMedia` action as the content
+  // media library). Writes the returned URL into the `imageUrl` field, which stays
+  // editable so a URL can still be pasted directly.
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const uploadImage = useAction(uploadMedia, {
+    onSuccess: ({ data }) => {
+      setIsUploadingImage(false)
+      if (!data) return
+      form.setValue("imageUrl", data, { shouldDirty: true, shouldValidate: true })
+      toast.success("Image uploaded")
+    },
+    onError: ({ error }) => {
+      setIsUploadingImage(false)
+      toast.error(error.serverError ?? "Image upload failed")
+    },
+  })
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setIsUploadingImage(true)
+    uploadImage.execute({ file, path: `posts/${post?.id ?? "new"}` })
+    event.target.value = "" // allow re-selecting the same file
+  }
 
   const handleSubmit = form.handleSubmit(data => {
     action.execute(data)
@@ -196,10 +226,40 @@ export function PostForm({
           name="imageUrl"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
-              <FormControl>
-                <Input type="url" {...field} />
-              </FormControl>
+              <FormLabel>Hero image</FormLabel>
+              <Stack size="sm" className="items-start">
+                <FormControl>
+                  <Input type="url" placeholder="Paste a URL or upload…" {...field} />
+                </FormControl>
+                <Button
+                  type="button"
+                  size="md"
+                  variant="secondary"
+                  prefix={<UploadIcon />}
+                  isPending={isUploadingImage}
+                  onClick={() => imageInputRef.current?.click()}
+                >
+                  Upload
+                </Button>
+              </Stack>
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept={ALLOWED_MIMETYPES.join(",")}
+                onChange={handleImageUpload}
+                className="hidden"
+                title="Upload hero image"
+              />
+              {field.value && (
+                <Image
+                  src={field.value}
+                  alt="Hero preview"
+                  width={320}
+                  height={180}
+                  className="mt-2 h-24 w-auto rounded-md object-cover"
+                  unoptimized
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}

@@ -5,7 +5,7 @@
  *
  * Routes are mapped to the current platform:
  * legacy register modal → /lineage/join · profile/tree links → /lineage ·
- * posts → /posts · schools → /schools · school register → /organizations/new ·
+ * posts → /blog (SESSION_0485: /posts retired) · schools → /schools · school register → /organizations/new ·
  * techniques → /techniques. Email-capture "More Info" → /about.
  */
 
@@ -15,7 +15,8 @@ export const BBL_ROUTES = {
   join: "/lineage/join",
   lineage: "/lineage",
   directory: "/directory",
-  posts: "/posts",
+  // SESSION_0485: /posts retired → canonical blog is /blog (ADR 0042).
+  posts: "/blog",
   schools: "/schools",
   schoolRegister: "/organizations/new",
   techniques: "/techniques",
@@ -431,7 +432,7 @@ export const promos: PromoContent[] = [
     description:
       "Members share techniques, tips, seminars, and Q&A in one verified feed. Follow instructors, save favorites, and stay connected to your lineage as it evolves.",
     image: BBL_IMAGES.heroNoGi,
-    primaryCta: { label: "Browse Posts", href: BBL_ROUTES.posts },
+    primaryCta: { label: "Read the Blog", href: BBL_ROUTES.posts },
     secondaryCta: { label: "Register Now", href: BBL_ROUTES.register },
     benefitsHeading: "Member Benefits",
     benefits: [

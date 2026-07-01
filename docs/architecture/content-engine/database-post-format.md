@@ -1,6 +1,13 @@
 # Database Post Format for Content Atoms
 
-Status: Proposed
+> **⚠ Superseded for BBL's public blog by [ADR 0042](../decisions/0042-canonical-blog-surface-post-over-contentatom.md) (SESSION_0485).**
+> This doc proposes rendering the public blog off `ContentVariant(channel=BLOG)`. BBL instead ratified the
+> Dirstarter-native **`Post` / `/blog`** as the canonical public editorial blog, with `ContentAtom` /
+> `ContentVariant` retained as the internal content-ops engine (live for YouTube). The doc's core premise —
+> *DB-backed posts, not MDX-as-source* — still holds; only the "which model backs the public blog" answer
+> changed (`Post`, not `ContentVariant`). Treat this as historical for the content-engine lane.
+
+Status: Superseded (public blog) — see ADR 0042
 Owner lane: Content Engine / AtomCenter
 Primary brands: RONIN_DOJO_DESIGN, BASELINE_MARTIAL_ARTS, BBL, WEKAF
 

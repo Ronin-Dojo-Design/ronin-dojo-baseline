@@ -4,10 +4,10 @@ import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
-import Markdown from "react-markdown"
-import { Prose } from "~/components/common/prose"
+import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
 import { Stack } from "~/components/common/stack"
 import { AdCard, AdCardSkeleton } from "~/components/web/ads/ad-card"
+import { extractHeadingsFromMarkdown, Markdown } from "~/components/web/markdown"
 import { Nav } from "~/components/web/nav"
 import { StructuredData } from "~/components/web/structured-data"
 import { TableOfContents } from "~/components/web/table-of-contents"
@@ -58,6 +58,7 @@ export default async function (props: Props) {
   const { post, breadcrumbs, structuredData } = await getData(props)
   const t = await getTranslations()
   const format = await getFormatter()
+  const headings = extractHeadingsFromMarkdown(post.content)
 
   return (
     <>
@@ -98,20 +99,23 @@ export default async function (props: Props) {
               alt={post.title}
               width={1200}
               height={630}
-              loading="eager"
+              priority
+              sizes="(min-width: 768px) 66vw, 100vw"
               className="w-full h-auto aspect-video object-cover rounded-lg"
             />
           )}
 
-          <Prose>
-            <Markdown>{post.content}</Markdown>
-          </Prose>
+          <Markdown code={post.content} />
         </Section.Content>
 
         <Section.Sidebar className="max-h-(--sidebar-max-height)">
           <Suspense fallback={<AdCardSkeleton />}>
             <AdCard type="BlogPost" />
           </Suspense>
+
+          {blogConfig.tableOfContents.enabled && !!headings.length && (
+            <TableOfContents headings={headings} />
+          )}
 
           {blogConfig.toolsMentioned.enabled && !!post.tools.length && (
             <TableOfContents
@@ -130,6 +134,20 @@ export default async function (props: Props) {
           )}
         </Section.Sidebar>
       </Section>
+
+      {/* Post-read CTA into the claim loop — the highest-intent moment (BBL north star). */}
+      <section className="flex flex-col items-center gap-6 border-t py-12 text-center">
+        <Intro alignment="center">
+          <IntroTitle size="h2">Your lineage is part of the story</IntroTitle>
+          <IntroDescription>
+            Document your promotions, verify your rank, and connect to the network these pioneers
+            built.
+          </IntroDescription>
+        </Intro>
+        <JoinCtaButton variant="fancy" size="lg">
+          Build Your Legacy
+        </JoinCtaButton>
+      </section>
 
       <Nav title={post.title} className="self-start" />
 

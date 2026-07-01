@@ -42,6 +42,7 @@ const FOOTER_SECTIONS = [
     title: "Explore",
     links: [
       { label: "Lineage", href: "/lineage" },
+      { label: "Changelog", href: "/changelog" },
       // Curriculum + Techniques hidden for launch (SESSION_0417).
     ],
   },

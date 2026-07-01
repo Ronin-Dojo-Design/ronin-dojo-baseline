@@ -26,14 +26,17 @@ const img = ({ className, ...props }: ComponentProps<"img">) => {
     throw new TypeError("Image src and alt are required")
   }
 
+  // No fixed width/height — inline images keep their intrinsic aspect ratio
+  // (portrait headshots were being squashed to 16:9). `max-w-full` caps large
+  // images at the column while letting small/low-res source photos render at
+  // their natural size (centered) instead of upscaling to a blur.
+  // `loading="lazy"` since these sit below the LCP hero.
   return (
     <img
       src={props.src}
       alt={props.alt}
-      width={1280}
-      height={720}
       loading="lazy"
-      className={cx("w-full rounded-lg", className)}
+      className={cx("mx-auto h-auto max-w-full rounded-lg", className)}
     />
   )
 }

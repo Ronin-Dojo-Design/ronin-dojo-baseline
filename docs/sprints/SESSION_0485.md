@@ -2,10 +2,10 @@
 title: "SESSION 0485 — Blog vs posts surface consolidation + footer changelog link + first post (Dirty Dozen)"
 slug: session-0485
 type: session--implement
-status: pending
+status: in-progress
 created: 2026-07-01
 updated: 2026-07-01
-last_agent: claude-session-0484
+last_agent: claude-session-0485
 sprint: S49
 pairs_with:
   - docs/product/black-belt-legacy/posts/dirty-dozen-first-post.md
@@ -137,40 +137,250 @@ admin authoring surface + the Tiptap gap (SESSION_0446). Article: docs/product/b
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0485_TASK_01 | pending | Footer → link the existing `/changelog` route (independent, ship first) |
-| SESSION_0485_TASK_02 | pending | Review `Post`/`/blog` vs `ContentAtom+Variant`/`/posts`; decide BBL's canonical surface + consolidation plan |
-| SESSION_0485_TASK_03 | pending | Publish "The Dirty Dozen" as the first post on the canonical surface (2026-05-30) |
+| SESSION_0485_TASK_01 | done | Footer → "Changelog" link added to `BblFooter` Explore column → existing `/changelog` route |
+| SESSION_0485_TASK_02 | done | Ratified `Post`/`/blog` as canonical blog; kept `ContentAtom` engine; retired `/posts` (301 → `/blog`) + deleted orphaned public reader. ADR 0042 |
+| SESSION_0485_TASK_03 | done | "The Dirty Dozen" published as the first `Post` on `/blog` (2026-05-30, **author Tony Hua**, renders live) |
 
 ## What landed
 
+- **TASK_01 — Footer changelog link.** Added `{ label: "Changelog", href: "/changelog" }` to the
+  `BblFooter` **Explore** column (the browse/content column, alongside Lineage). Reachable on every `(web)`
+  page. Points at the existing feature-log `/changelog` ("What's New") route — no route built.
+- **TASK_02 — Canonical blog decision (ADR 0042).** Reviewed both DB-backed surfaces against the
+  Dirstarter-first doctrine + the `ContentAtom` origin in the legacy monorepo
+  (`RoninDashboard/content-engine/CONTENT_ATOM_CANON.md` — a content-**repurposing engine**, "atoms are
+  canonical, variants are derived," never a blog) + live DB state (Post = 0 rows; ContentVariant = 5
+  published, **all YouTube**, zero BLOG-channel; 4 atoms). **Ratified: `Post`/`/blog` = canonical editorial
+  blog; `ContentAtom`/`ContentVariant` retained as the internal content-ops engine (live for YouTube — not
+  retired; `/app/content` admin stays).** Retired the empty public `/posts` BLOG reader: `301 → /blog`,
+  deleted the route + orphaned public read/render code, repointed nav + landing CTA, resolved the
+  `pages.blog` i18n namespace collision. Zero content on the losing route → clean redirect, no migration.
+- **TASK_03 — First post published.** "The Dirty Dozen" (slug `the-dirty-dozen-pioneers-bjj`, `Brand.BBL`,
+  `publishedAt 2026-05-30`, author Brian) seeded via `scripts/seed-dirty-dozen-post.ts` through the app's
+  own extended Prisma client (same path as `upsertPost`; not raw SQL). The article doc is the single source
+  of truth; the seed strips the duplicate H1 + date line (rendered from `title`/`publishedAt`) and preserves
+  the prose verbatim (7 H2 subheads). Renders live on `/blog` and `/blog/the-dirty-dozen-pioneers-bjj`.
+
 ## Decisions resolved
+
+- **Surface fork → `Post`/`/blog`.** The atom/variant system did **not** earn its complexity *as a blog*
+  (it earns it as a content-ops/repurposing engine, which it already serves). Not competing tools —
+  different tools. See ADR 0042.
+- **`/posts` disposition → 301-retire now** (operator-ratified: full consolidation). The prestage leaned
+  this way ("loser 301s to winner"); I surfaced the new nuance (the landing markets `/posts` as a future
+  "BBL Posts Feed" member community feed; operator had kept both "to compare") and the operator confirmed
+  consolidation.
+- **Authoring path.** No Tiptap anywhere in the repo (SESSION_0446 "gap" was mis-stated for this repo); the
+  real `Post` editor is the markdown `content` textarea in `app/app/posts/_components/post-form.tsx`. The
+  seed uses the identical create path. Editor/read path confirmed working via live render.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
+| `apps/web/app/(web)/_components/bbl-footer.tsx` | + Changelog link in the Explore column (TASK_01) |
+| `apps/web/next.config.ts` | + permanent `301` redirects `/posts` and `/posts/:slug*` → `/blog` |
+| `apps/web/components/web/nav/nav-sheet.tsx` | Primary nav `/posts` (key `posts`) → `/blog` (key `blog`) |
+| `apps/web/app/(web)/(home)/bbl/bbl-landing-content.ts` | `BBL_ROUTES.posts` → `/blog`; CTA label "Browse Posts" → "Read the Blog"; header comment |
+| `apps/web/app/(web)/posts/**` | **Deleted** — public `/posts` route retired |
+| `apps/web/server/web/content-posts/**` | **Deleted** — orphaned public read path (queries/payloads/test) |
+| `apps/web/components/web/content-posts/**` | **Deleted** — orphaned public render components |
+| `apps/web/scripts/seed-dirty-dozen-post.ts` | **New** — repeatable, idempotent first-post seed (reads the article doc) |
+| `docs/architecture/decisions/0042-canonical-blog-surface-post-over-contentatom.md` | **New** — ADR 0042 |
+
+_Kept (not touched): `ContentAtom`/`ContentVariant` models, `server/admin/content/*`, `/app/content` admin
+— the content-ops engine (live for YouTube/social)._
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| Seed → DB | `Post` created: slug `the-dirty-dozen-pioneers-bjj`, status `Published`, `publishedAt 2026-05-30`, author Brian Scott, content 6184 chars, 7 H2s, no leaked H1/date |
+| `GET /blog` (dev :3006) | `200` — lists the post, author "Brian Scott" |
+| `GET /blog/the-dirty-dozen-pioneers-bjj` | `200` — full article, title + "Bob Bass" + 8 `<h2>` (7 subheads + author) |
+| `grep web/content-posts` (post-delete) | 0 remaining references (cleanly orphaned before delete) |
+| `bun run build` | **exit 0** — compiled + TypeScript clean + 182 static pages. Route table: `/blog` + `/blog/[slug]` present, public `/posts` gone, `/app/posts/*` admin kept |
+| `GET /posts` + `/posts/anything-old` (prod `next start`) | **308** permanent redirect → `/blog` (both) |
+| `GET /blog/the-dirty-dozen-pioneers-bjj` (prod) | `200` — full render; screenshot captured |
+| Footer changelog link (prod `/blog`) | `href="/changelog"` present |
+
+_Note: Next emits **308** (Permanent Redirect) for `permanent: true` — the modern equivalent of a 301
+(method-preserving, SEO-equivalent)._
 
 ## Open decisions / blockers
 
-- Surface fork (TASK_02) to resolve at bow-in.
+- **⚠ BLOCKER — the post is seeded to LOCAL prodsnap only, not prod.** `Post` is DB data, not code. The
+  push deploys the *surface* (footer link, `/posts`→`/blog` redirect, consolidation) — but **prod `/blog`
+  will render empty** until the seed runs against the prod (Neon) DB. Two ways to make the Dirty Dozen live
+  on `blackbeltlegacy.com`: (a) run `scripts/seed-dirty-dozen-post.ts` against prod via the gitignored
+  `.env.prod` overlay (`bun --env-file` — see [[env-prod-overlay-and-prodsnap]]; **prod write → needs
+  explicit operator authorization**), or (b) author it in the prod `/app/posts/new` admin editor (paste the
+  doc body). Recommend (a) — idempotent, already verified. **This is separate from the code push.**
+- **Landing copy follow-up (operator, non-blocking).** The "BBL Posts Feed" promo still describes a
+  *member community feed* ("members share techniques, tips, seminars, Q&A") while its CTA now points at the
+  editorial `/blog`. Either re-copy the promo to describe the blog, or build the member feed later and
+  repoint. Not rewritten unilaterally (marketing copy is the operator's). Logged in ADR 0042 §Consequences.
+- Minor: the now-unused `navigation.posts` i18n key and the generic (non-BBL) `footer.tsx` `has("posts")`
+  gate were left in place (harmless; BBL renders `BblFooter`/`nav-sheet`, not those).
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+1. **First** — make the Dirty Dozen live on prod (run the seed against the prod DB; see the ⚠ blocker) +
+   confirm `blackbeltlegacy.com/blog` renders it and `/posts` 301s. 2. Operator's landing-copy call on the
+   "BBL Posts Feed" promo (re-copy for the editorial blog **or** greenlight the member community feed as a
+   distinct surface) + optional hero/OG image for the post. 3. Then rejoin the operator's board top —
+   **FI-001 / G-001 (Brian Truelson first-tester onboarding, P0)** is the prioritized next lane.
+
+## Phase 2 — Images + render parity + cross-agent review (operator follow-up)
+
+Operator asked: images in the article; see how Dirstarter does it; Desi design review + Dirstarter surfaces to
+repurpose; `/fallow-fix-loop`; WWAD / would-FB-YouTube-ship-it; Doug verification; Giddy hard scrutiny; and
+"what admin posts add-surfaces do we have/need?" Dispatched **Desi + Giddy + Doug** as parallel read-only
+sub-agents; all three converged.
+
+### The load-bearing finding (Desi P0 + Giddy R1) — render parity
+
+BBL's `app/(web)/blog/[slug]/page.tsx` rendered content through **raw `react-markdown`** (no components),
+while the app's own styled `~/components/web/markdown` wrapper was a **stripped fork** of the Dirstarter
+template (dropped `remark-gfm`, heading-id injection, `extractHeadingsFromMarkdown`, real TOC) and was used
+**only in the admin preview** — so authors previewed one renderer and readers saw a worse one, and GFM
+(tables/strikethrough) silently rendered as literal text. **Fixed:** re-aligned `markdown.tsx` to the template
+baseline (restored `remark-gfm` + slug-anchored heading ids + `extractHeadingsFromMarkdown`, composed with
+BBL's `MDXComponents`), repointed `[slug]` at the wrapper (`<Markdown code={…} />`, dropped the redundant
+`<Prose>`), fed the sidebar TOC from headings (kept tools as a secondary block), and set the hero to
+`priority` + `sizes` for LCP.
+
+### Images (the ask)
+
+Hero via `Post.imageUrl` (`next/image`, auto webp/avif) + inline `![alt](…)` images rendered by the wrapper.
+Used **local BBL brand assets** (no R2 upload): hero + a photo per pioneer (Rigan, Bob Bass, Haueter, Williams,
+Meyer, Will), authored into the article doc (SoT) and re-seeded. Fixed `MDXComponents.img` to drop the
+hard-coded `1280×720` (portraits were squashed) and to `mx-auto max-w-full` so low-res source photos render
+crisp at natural size instead of upscaling to a blur.
+
+### Operator corrections (in-session)
+
+- **MDX→DB:** confirmed DB-based (`Post.content` markdown, server-rendered — not MDX files), per
+  `database-post-format.md` (SESSION_0211). That doc proposed `ContentVariant` as the blog model; **ADR 0042
+  chose `Post`** → added a **superseded banner** to the doc so a future session doesn't follow the stale proposal.
+- **webp:** `next/image` already serves the hero as webp/avif; the upload cropper does canvas work but outputs
+  **jpeg** (`cropper.tsx:39`, one-line flip to webp = deferred uploads win); inline raw-`<img>` jpgs are small
+  (7–122KB), modest webp upside → flagged, not done.
+- **Hero crop:** `bob-and-rigan.jpg` was **239×330** (tiny portrait) → 16:9 `object-cover` cropped their heads.
+  Swapped to **`coral-belt-celebration.jpg` (1920×968 landscape)** — no crop, high-res, thematically the
+  lineage's masters together.
+
+### Doug's missed-ref (P2) + fallow
+
+- **`components/common/search.tsx:136`** — the app-wide Cmd+K command palette still linked `/posts` (my
+  hostile-close pass missed it; the 308 caught it but it's an incomplete consolidation). **Repointed → `/blog`
+  / `navigation.blog`.**
+- **`fallow audit`:** clean for this diff — no new complexity/dup/dead-code. (Flagged items are pre-existing:
+  `search.tsx`/`nav-sheet.tsx` large components I barely touched; the page-data boilerplate dup shared across
+  `advertise`/`programs`/`submit`/`blog`; the seed script's "unreachable file" is the standard false-positive
+  for standalone `scripts/*.ts`.)
+
+### "Admin posts add-surfaces we have / need" (the operator's question)
+
+- **Have:** `/app/posts` (list) · `/app/posts/new` · `/app/posts/[id]` (title, auto-slug, description,
+  **markdown `content` with live Preview**, `imageUrl` as a URL field, status Draft/Scheduled/Published,
+  tools). Separate `/app/media` R2 uploader (`media-uploader.tsx` → `uploadMediaToLibrary`). Scheduling works.
+- **Need (deferred, ranked — see below):** a **media picker/upload in the post editor** (today `imageUrl` is
+  paste-a-URL; `/app/media` isn't wired in); **categories/tags** in the form + read payload (schema has them,
+  neither authors nor renders them today — Giddy R3); routing `Post` images through the **`MediaAttachment`/R2
+  pipeline** (alt text, dimensions/CLS, reuse — Giddy R2, 1 migration). Markdown-textarea editor is a
+  **defensible WWAD-lean choice** for a low-volume editorial blog (no rich-WYSIWYG needed; SESSION_0446
+  "Tiptap gap" was mis-stated for this repo).
+
+### Deferred (with recommendations — NOT in this diff)
+
+| Item | Source | Why deferred |
+| --- | --- | --- |
+| `MediaAttachment.postId` + `attachableEntityType` `post` + media picker in post-form | Giddy R2 (Slice B) | 1 migration — **schema-merge risk with the parallel belt lane**; separable |
+| Wire (or delete) `Post.categories`/`tags` in form + `postOnePayload` | Giddy R3 | operator decision (wire vs drop); no post needs it yet |
+| End-of-article claim CTA (reuse `lineage/join`) | Desi P1 | high-value funnel add; own slice |
+| Uploads → webp (`cropper.tsx` → `image/webp`) | operator/webp | one-line, but an uploads concern, not this article |
+| Related posts / author-bio card / share button | Desi P2 | YAGNI at N=1 |
+| Landing "BBL Posts Feed" promo copy | ADR 0042 | operator marketing call |
+| Higher-res `david-meyer` / `john-will` photos (157×200) | this session | content sourcing |
+
+## Phase 3 — Prod seed (LIVE) + recommendations (operator: "do prod seed and the recommendations now")
+
+- **⚡ Prod seed — DONE. The Dirty Dozen is LIVE on `blackbeltlegacy.com/blog`.** Ran
+  `bun --env-file=<canonical>/.env.prod run scripts/seed-dirty-dozen-post.ts` against the Neon prod DB
+  (verified the connection target was Neon, not local, before writing — the script's `dotenv/config` does not
+  override the `--env-file` `DATABASE_URL`). Prod now has **exactly 1** `Post` (slug, Published, 2026-05-30,
+  hero, author Brian, `Brand.BBL`). Live check: `/blog` + `/blog/[slug]` → 200 with hero + all 6 pioneer
+  photos. **Note:** it renders via the *currently-deployed* (pre-session) code — the TOC / remark-gfm / styled
+  wrapper polish + the `/posts`→`/blog` redirect + footer changelog land only on the (still-held) code push.
+- **Byline reassigned → Tony Hua** (operator request). Post `author` changed off Brian to Tony Hua
+  (`tonyhua08@gmail.com`, BBL admin) on local + prod; `AUTHOR_EMAIL` in the seed updated + the author now set
+  on the seed's update path (not just create) so a re-run reasserts it. Verified live: the
+  `blackbeltlegacy.com` byline reads "Tony Hua".
+- **Recommendations implemented (3):**
+  - **Media picker in the post editor** (`post-form.tsx`) — replaced the bare `imageUrl` URL input with an
+    Upload button (reuses the existing `uploadMedia` → R2 action, the same one the content media library uses)
+    + a live preview; the URL stays editable for paste. No schema change.
+  - **End-of-article claim CTA** (`[slug]/page.tsx`) — a post-read CTA into the claim loop (BBL north star),
+    reusing `JoinCtaButton` (opens the global Join modal; degrades to `/lineage/join`). Verified live.
+  - **Uploads → webp** (`uploader/cropper.tsx`) — canvas output flipped `image/jpeg` → `image/webp` (0.9).
+- **Held with reason (NOT built):**
+  - **`Post` categories/tags wiring** — feasible (`findCategoryList`/`findTagList` exist), but building
+    taxonomy UI + payload + render for a **1-post blog is speculative (YAGNI)**; Giddy offered "delete" as an
+    equal option (a migration). Left as a **product decision** for when post volume grows.
+  - **`MediaAttachment.postId` migration** (Giddy R2 full pipeline) — **held for merge-safety**: the parallel
+    belt lane is mid-migration on the shared local DB (the documented `migrate dev` reset-trap). The light
+    media picker covers the immediate authoring need; do the migration once the lanes merge.
 
 ## Review log
 
+- Self-review (Cody-style) + a hostile close pass (below). Gates: `bun run build` exit 0, oxlint/oxfmt clean,
+  touched tests 6/6 pass, wiki:lint 0 err. Live-render + prod-`next start` redirect verification + screenshot.
+
 ## Hostile close review
+
+| Adversarial question | Verdict |
+| --- | --- |
+| Did retiring `/posts` break a live URL / SEO? | **No.** DB proof: 0 published `BLOG`-channel variants → `/posts` was empty. `301 → /blog`, `/posts/:slug*` covered, `/posts` dropped from the sitemap. No live URL lost. |
+| Did I retire a system another surface needs? | **No.** `ContentAtom`/`ContentVariant` model + `/app/content` admin + the 4 atoms / 5 live YouTube variants are untouched. Only the public reader (imported **solely** by the 2 deleted `/posts` route files) was removed — 0 remaining importers. |
+| Is the post correct + singular? | **Yes.** Exactly 1 `Post` at the canonical slug, `Published`, `2026-05-30`, author Brian, verbatim prose (7 H2s, no leaked H1/date). The early slug-clobber (extension re-slugged from title on update) was caught + fixed; no duplicate. |
+| Prod-deploy safety? | **Surface safe; data gap flagged.** Code deploys cleanly; the *post row* is local-only → ⚠ blocker above. Not a silent gap. |
+| Concurrency (parallel belt lane)? | **Disjoint.** Nothing in `server/belt`, `components/web/belt`, onboarding, or lineage. Worktree-isolated. |
 
 ## ADR / ubiquitous-language check
 
+- **ADR 0042** written (`Post`/`/blog` = canonical editorial blog; `ContentAtom` = content-ops engine;
+  `/posts` retired). Added to the wiki-index ADR table. Supersedes the SESSION_0416 "keep both to compare"
+  holding pattern.
+- **Ubiquitous language sharpened:** "blog" (editorial articles, `Post`) is now distinct from the
+  content-ops "**engine**" (`ContentAtom` → channel **variants**) and from the aspirational "member community
+  feed" (unbuilt). These were conflated under one `pages.blog` namespace; now separated.
+
 ## Reflections
 
+- **The prestage's "301 the loser" was directionally right but under-scoped the fork.** Reading the actual
+  surfaces revealed the landing markets `/posts` as a *member community feed* — a third concept. Surfacing
+  that to the operator (rather than blind-executing the 301) was the right call; they still chose
+  consolidation, but now with eyes open + a copy follow-up logged.
+- **Data vs code is the trap.** The whole lane felt "done" at green build + live local render — but a Post is
+  DB data. The push ships the surface; the *post* needs a prod seed. Hostile review caught it; a lean close
+  would have shipped an empty prod blog.
+- **Two seed gotchas worth remembering:** the `uniqueSlugsExtension` re-slugs from `title` on update unless
+  `slug` is passed (clobbered my canonical slug once); and `import.meta.dir` is Bun-only → fails Next's tsc
+  (use `fileURLToPath(new URL(…, import.meta.url))` in scripts the build type-checks).
+
 ## Full close evidence
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS — 3 tasks, all done |
+| `bun run build` | **exit 0** — compiled, TypeScript clean, 182 static pages (run twice; final after all edits) |
+| oxlint / oxfmt --check | clean (5 changed files) |
+| Touched tests (`--parallel=1`) | 6 pass / 0 fail (`config/seo.test.ts`, `server/web/posts/queries.test.ts`) |
+| wiki:lint | 0 err / 16 warn (all pre-existing; none in touched docs) |
+| Fallow delta | 0 introduced findings |
+| Graphify | nodes=12060 · edges=26198 |
+| Git | branch `session-0485-blog` · committed `34b0bf7f` · **held at push gate** |
+| Diff | 27 files · +305 / −1251 (net −946; mostly the content-posts deletion) |
