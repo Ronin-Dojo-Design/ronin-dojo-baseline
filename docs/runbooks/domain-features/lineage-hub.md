@@ -4,17 +4,19 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-06-30
-last_agent: claude-session-0474
+updated: 2026-07-01
+last_agent: codex-session-0479
 domain: lineage
 pairs_with:
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
+  - docs/architecture/decisions/0042-rank-award-fact-vs-member-milestone.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
   - docs/petey-plan-0305.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
 backlinks:
   - docs/runbooks/README.md
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0479.md
 ---
 
 # Lineage Domain Hub
@@ -60,11 +62,12 @@ Authority + sync rules are governed by **ADR 0016** below — read it before tou
 ## Data model & decisions
 
 - [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — `RankAward` canonical; `PROMOTED_BY` mirror; tree never owns truth. **Authoritative.**
+- [ADR 0042 — RankAward fact vs member-owned RankMilestone](../../architecture/decisions/0042-rank-award-fact-vs-member-milestone.md) — Belt Journey story/media enrichment is 1:1 with `RankAward` and never owns rank authority.
 - [ADR 0037 — Branch heads & visual placement seeded from provenance](../../architecture/decisions/0037-lineage-branch-heads-and-visual-placement.md) — branch head = display role + branch-scoped editor; one brand-agnostic `rigan-machado-lineage` tree; finalize seeds a student's `primaryVisualParentMemberId` from the `INSTRUCTOR_STUDENT` edge.
 - [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — create/update/delete promotion flows, conflict rules, verification, visual-group sync.
 - [Lineage Prisma Schema Patch Proposal](../../architecture/lineage/lineage-prisma-schema-patch-proposal.md) — the v1 schema patch shape.
 - [Promotion Event Model — design + plan](../../architecture/lineage/promotion-event-model.md) — **draft/staged (SESSION_0316).** First-class `PromotionEvent` (belt ceremony) grouping multiple `RankAward`s with a shared media gallery; discipline-agnostic; flagged the most important cross-brand domain logic. Build via dedicated ADR + epic.
-- Schema: `apps/web/prisma/schema.prisma` — `LineageNode`, `LineageRelationship`, `LineageTree`, `LineageTreeMember`, `LineageVisualGroup`, `PassportClaimRequest` (unified person-claim SoT, ADR 0036 P5 — both lineage + directory doors write it; reviewed via `reviewPassportClaim`/`finalizePassportClaim`), `LineageTreeAccess`, `RankAward`. (`LineageClaimRequest` is retired as the live writer — read-only for legacy stragglers until dropped.)
+- Schema: `apps/web/prisma/schema.prisma` — `LineageNode`, `LineageRelationship`, `LineageTree`, `LineageTreeMember`, `LineageVisualGroup`, `PassportClaimRequest` (unified person-claim SoT, ADR 0036 P5 — both lineage + directory doors write it; reviewed via `reviewPassportClaim`/`finalizePassportClaim`), `LineageTreeAccess`, `RankAward`, `RankMilestone`. (`LineageClaimRequest` is retired as the live writer — read-only for legacy stragglers until dropped.)
 
 ## Requirements & port specs
 
