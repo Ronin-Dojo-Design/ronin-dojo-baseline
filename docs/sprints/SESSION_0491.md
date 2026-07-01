@@ -264,9 +264,9 @@ belt surfaces make serial safer. Cody builds each slice; Doug owns TASK_07.
 | --- | --- | --- |
 | SESSION_0491_TASK_01 | landed | Rebased Slices 2–5 onto spine; conflicts resolved; ADR 0042→0043; shadow-replay clean; typecheck green |
 | SESSION_0491_TASK_02 | landed | Slice 3 B1 rework — VERIFIED-by-implication backfill, no UNVERIFIED awards, authorship-based fact-edit gate; 14+13+14 tests green (commit f1c0cef2) |
-| SESSION_0491_TASK_03 | in-progress | Slice 4 card CTA → promotion.submit + carried 0484 form items |
-| SESSION_0491_TASK_04 | in-progress | Wire evidence→RankMilestone in finalizeRankPromotion |
-| SESSION_0491_TASK_05 | in-progress | Confirm Belts tab mount + loader post-rework |
+| SESSION_0491_TASK_03 | landed | Above-ceiling card → "Request promotion" CTA + soft-gate photo modal (`belt-promotion-request.tsx`); Hint→Note + first-run empty state applied; country round-trip re-scoped (no award column — needs schema, deferred) (commit c26dd955) |
+| SESSION_0491_TASK_04 | landed | evidence→RankMilestone in finalizeRankPromotion + additive `mediaId` on promotion.submit; 7 finalize + 6 submit tests green (commit 40366de7) |
+| SESSION_0491_TASK_05 | landed | Belts tab loader confirmed post-rework (folded into c26dd955) |
 | SESSION_0491_TASK_06 | pending | V5 — /app/claims surfaces RANK_PROMOTION |
 | SESSION_0491_TASK_07 | pending | V6 — Playwright proof gate + ADR 0035 Amendment 1 → accepted |
 
