@@ -1,5 +1,6 @@
 import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
+import { promotion } from "~/server/promotion/router"
 
 const ping = publicProcedure.handler(() => {
   return { status: "ok" as const, timestamp: new Date().toISOString() }
@@ -27,6 +28,7 @@ export const appRouter = {
     brand,
   },
   lineage,
+  promotion,
 }
 
 export type AppRouter = typeof appRouter
