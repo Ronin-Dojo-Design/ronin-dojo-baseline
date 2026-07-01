@@ -233,6 +233,79 @@ _Note: Next emits **308** (Permanent Redirect) for `permanent: true` — the mod
    distinct surface) + optional hero/OG image for the post. 3. Then rejoin the operator's board top —
    **FI-001 / G-001 (Brian Truelson first-tester onboarding, P0)** is the prioritized next lane.
 
+## Phase 2 — Images + render parity + cross-agent review (operator follow-up)
+
+Operator asked: images in the article; see how Dirstarter does it; Desi design review + Dirstarter surfaces to
+repurpose; `/fallow-fix-loop`; WWAD / would-FB-YouTube-ship-it; Doug verification; Giddy hard scrutiny; and
+"what admin posts add-surfaces do we have/need?" Dispatched **Desi + Giddy + Doug** as parallel read-only
+sub-agents; all three converged.
+
+### The load-bearing finding (Desi P0 + Giddy R1) — render parity
+
+BBL's `app/(web)/blog/[slug]/page.tsx` rendered content through **raw `react-markdown`** (no components),
+while the app's own styled `~/components/web/markdown` wrapper was a **stripped fork** of the Dirstarter
+template (dropped `remark-gfm`, heading-id injection, `extractHeadingsFromMarkdown`, real TOC) and was used
+**only in the admin preview** — so authors previewed one renderer and readers saw a worse one, and GFM
+(tables/strikethrough) silently rendered as literal text. **Fixed:** re-aligned `markdown.tsx` to the template
+baseline (restored `remark-gfm` + slug-anchored heading ids + `extractHeadingsFromMarkdown`, composed with
+BBL's `MDXComponents`), repointed `[slug]` at the wrapper (`<Markdown code={…} />`, dropped the redundant
+`<Prose>`), fed the sidebar TOC from headings (kept tools as a secondary block), and set the hero to
+`priority` + `sizes` for LCP.
+
+### Images (the ask)
+
+Hero via `Post.imageUrl` (`next/image`, auto webp/avif) + inline `![alt](…)` images rendered by the wrapper.
+Used **local BBL brand assets** (no R2 upload): hero + a photo per pioneer (Rigan, Bob Bass, Haueter, Williams,
+Meyer, Will), authored into the article doc (SoT) and re-seeded. Fixed `MDXComponents.img` to drop the
+hard-coded `1280×720` (portraits were squashed) and to `mx-auto max-w-full` so low-res source photos render
+crisp at natural size instead of upscaling to a blur.
+
+### Operator corrections (in-session)
+
+- **MDX→DB:** confirmed DB-based (`Post.content` markdown, server-rendered — not MDX files), per
+  `database-post-format.md` (SESSION_0211). That doc proposed `ContentVariant` as the blog model; **ADR 0042
+  chose `Post`** → added a **superseded banner** to the doc so a future session doesn't follow the stale proposal.
+- **webp:** `next/image` already serves the hero as webp/avif; the upload cropper does canvas work but outputs
+  **jpeg** (`cropper.tsx:39`, one-line flip to webp = deferred uploads win); inline raw-`<img>` jpgs are small
+  (7–122KB), modest webp upside → flagged, not done.
+- **Hero crop:** `bob-and-rigan.jpg` was **239×330** (tiny portrait) → 16:9 `object-cover` cropped their heads.
+  Swapped to **`coral-belt-celebration.jpg` (1920×968 landscape)** — no crop, high-res, thematically the
+  lineage's masters together.
+
+### Doug's missed-ref (P2) + fallow
+
+- **`components/common/search.tsx:136`** — the app-wide Cmd+K command palette still linked `/posts` (my
+  hostile-close pass missed it; the 308 caught it but it's an incomplete consolidation). **Repointed → `/blog`
+  / `navigation.blog`.**
+- **`fallow audit`:** clean for this diff — no new complexity/dup/dead-code. (Flagged items are pre-existing:
+  `search.tsx`/`nav-sheet.tsx` large components I barely touched; the page-data boilerplate dup shared across
+  `advertise`/`programs`/`submit`/`blog`; the seed script's "unreachable file" is the standard false-positive
+  for standalone `scripts/*.ts`.)
+
+### "Admin posts add-surfaces we have / need" (the operator's question)
+
+- **Have:** `/app/posts` (list) · `/app/posts/new` · `/app/posts/[id]` (title, auto-slug, description,
+  **markdown `content` with live Preview**, `imageUrl` as a URL field, status Draft/Scheduled/Published,
+  tools). Separate `/app/media` R2 uploader (`media-uploader.tsx` → `uploadMediaToLibrary`). Scheduling works.
+- **Need (deferred, ranked — see below):** a **media picker/upload in the post editor** (today `imageUrl` is
+  paste-a-URL; `/app/media` isn't wired in); **categories/tags** in the form + read payload (schema has them,
+  neither authors nor renders them today — Giddy R3); routing `Post` images through the **`MediaAttachment`/R2
+  pipeline** (alt text, dimensions/CLS, reuse — Giddy R2, 1 migration). Markdown-textarea editor is a
+  **defensible WWAD-lean choice** for a low-volume editorial blog (no rich-WYSIWYG needed; SESSION_0446
+  "Tiptap gap" was mis-stated for this repo).
+
+### Deferred (with recommendations — NOT in this diff)
+
+| Item | Source | Why deferred |
+| --- | --- | --- |
+| `MediaAttachment.postId` + `attachableEntityType` `post` + media picker in post-form | Giddy R2 (Slice B) | 1 migration — **schema-merge risk with the parallel belt lane**; separable |
+| Wire (or delete) `Post.categories`/`tags` in form + `postOnePayload` | Giddy R3 | operator decision (wire vs drop); no post needs it yet |
+| End-of-article claim CTA (reuse `lineage/join`) | Desi P1 | high-value funnel add; own slice |
+| Uploads → webp (`cropper.tsx` → `image/webp`) | operator/webp | one-line, but an uploads concern, not this article |
+| Related posts / author-bio card / share button | Desi P2 | YAGNI at N=1 |
+| Landing "BBL Posts Feed" promo copy | ADR 0042 | operator marketing call |
+| Higher-res `david-meyer` / `john-will` photos (157×200) | this session | content sourcing |
+
 ## Review log
 
 - Self-review (Cody-style) + a hostile close pass (below). Gates: `bun run build` exit 0, oxlint/oxfmt clean,

@@ -127,13 +127,13 @@ export const Search = () => {
     commandSections.push({
       name: t("navigation.quick_links"),
       // Mirror the right-nav (NavSheet) working set — lineage/directory/members/
-      // schools/posts. Curriculum/Techniques/Blog/About are hidden for launch.
+      // schools/blog. Curriculum/Techniques/About are hidden for launch.
       items: [
         { label: t("navigation.lineage"), onSelect: () => navigateTo("/lineage") },
         { label: t("navigation.directory"), onSelect: () => navigateTo("/directory") },
         { label: t("navigation.members"), onSelect: () => navigateTo("/members") },
         { label: t("navigation.schools"), onSelect: () => navigateTo("/schools") },
-        { label: t("navigation.posts"), onSelect: () => navigateTo("/posts") },
+        { label: t("navigation.blog"), onSelect: () => navigateTo("/blog") },
       ],
     })
   }

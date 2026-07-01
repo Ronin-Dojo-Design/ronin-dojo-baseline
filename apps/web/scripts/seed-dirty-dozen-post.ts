@@ -44,6 +44,7 @@ function parseArticle(raw: string) {
   const title = field("title")
   const slug = field("slug")
   const publishDate = field("publishDate")
+  const heroImage = field("heroImage") ?? null
   if (!title || !slug || !publishDate) {
     throw new Error("Article frontmatter must have title, slug, publishDate")
   }
@@ -55,12 +56,12 @@ function parseArticle(raw: string) {
     .replace(/^\n+/, "") // leading blank lines
     .trimEnd()
 
-  return { title, slug, publishDate, content }
+  return { title, slug, publishDate, heroImage, content }
 }
 
 async function main() {
   const raw = readFileSync(ARTICLE_PATH, "utf8")
-  const { title, slug, publishDate, content } = parseArticle(raw)
+  const { title, slug, publishDate, heroImage, content } = parseArticle(raw)
 
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
   const db = new PrismaClient({ adapter }).$extends(uniqueSlugsExtension)
@@ -90,6 +91,7 @@ async function main() {
       description: DESCRIPTION,
       content,
       plainText,
+      imageUrl: heroImage,
       status: PostStatus.Published,
       publishedAt,
       brand: Brand.BBL,
