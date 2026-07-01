@@ -162,8 +162,154 @@ backlinks:
 - Auto-triage/assign leads, draft outreach, escalate stale deals via agent handoffs. **Net-new + out-of-scope
   for the autonomous build** (needs design). After Slice 6, hand back — do NOT attempt Slice 7 autonomously.
 
+## Belt Verification Subsystem — Block-A build spec (DESIGNED SESSION_0486, grill-ratified)
+
+> **Why this block exists.** SESSION_0484's ship-it review held belt PRs **#178–#181**: the epic (Slices 2–5)
+> models a self-declared belt as an **`UNVERIFIED` `RankAward` minted on self-declare**, and the belt UI reads
+> `node.isVerified` for its trust indicator — so a self-asserted belt renders as **VERIFIED** and there is no
+> approval path to make it real. The SESSION_0486 grill ratified the fix. It is **not** the "per-belt unverified
+> display axis" the hold note first imagined — that path (call it B2) re-opens the exact decision the
+> **SESSION_0474 grill + [[learning-record-0008]] + ADR 0035 §4/§5** closed (a per-award `verificationStatus`
+> display axis produced the founder double-badge bug). The ratified path (**B1**) keeps `RankAward` = trusted
+> awarded-truth **always**, so a pending belt has no award to leak and the display axis is never reintroduced.
+>
+> **This supersedes the UNVERIFIED-award assumption in Slices 2–5** — see "Reworks to the held slices" below.
+> The ADR deliverable is an **amendment to ADR 0035** that *reaffirms* §5 (records why B2 was rejected) and
+> *extends* §4 with a `RANK_PROMOTION` claim type — drafted alongside this block (SESSION_0486).
+
+### Grill-ratified decisions (LOCKED — SESSION_0486)
+
+1. **B1 — claim-record model.** A self-declared belt awaiting verification lives on a **`RANK_PROMOTION`
+   `PassportClaimRequest`** (`claimedRankId` + photo evidence), **not** as a `RankAward`. Approve → the existing
+   `mintAssertedRankAward` creates a **`VERIFIED`** award (`source: STATED`, `verificationStatus: VERIFIED`) →
+   the member then enriches it. **No `UNVERIFIED` `RankAward` is ever produced by the belt-journey feature.**
+   Every displayed award is trusted (`VERIFIED` | `IMPORTED`); `UNVERIFIED`/`DISPUTED` stay in the enum but are
+   **not** produced here and **not** a display axis (ADR 0035 §5 reaffirmed). Aligns with the 0474 grill:
+   "pending self-declared rank lives on the claim/registration record, NOT as a `RankAward`."
+2. **A1 — extend `PassportClaimRequest`.** Add `type PassportClaimType { IDENTITY, RANK_PROMOTION }`
+   (`@default(IDENTITY)`); reuse `claimedRankId`, `PassportClaimEvidence`, the `/app/claims` queue, the
+   `LineageClaimStatus` state machine, and the review UX. **Branch `finalizePassportClaim` on `type`** — a
+   promotion runs **only** the rank-mint branch (the passport is already owned → no account-attach/comp/etc.).
+   Not a new god-table and not a greenfield model (ADR 0034 mantra): the promotion reuses the identity-claim's
+   `claimedRank → mintAssertedRankAward` machinery verbatim.
+3. **C-implied mint — the one self-service award path, hard-gated.** Enriching a belt **at/below the verified
+   ceiling** that has no award row yet (e.g. a verified purple adding a white-belt story) self-service-mints a
+   **`VERIFIED`-by-implication** award (`source: STATED`), **gated `rank.sortOrder ≤ ceiling`**; dates/promoters
+   are self-reported enrichment (the rank is implied by the higher verified rank). **A belt above the ceiling
+   cannot be minted this way — it routes to a `RANK_PROMOTION` claim.** `setPassportRank`'s ungated create path
+   is removed/hard-gated to this backfill. Self-promotion stays structurally impossible; the ceiling rises
+   **only** through an approved promotion claim.
+4. **Soft-gate photo evidence → milestone.** A promotion request **prompts** for a certificate/instructor photo
+   (speeds review) but does **not** hard-require one (older/informal promotions may lack it; the reviewer
+   decides). On submit → `PassportClaimEvidence`; on approve → the photos **materialize as `RankMilestone` media**
+   (`purpose ∈ {certificate, instructor}`) on the newly-minted award's milestone — the verification submission
+   doubles as the journey-photo capture.
+5. **Approver = the existing resource-scoped `claim.review` grant** (no new permission). Global admins via
+   `claims.manage`; a member's **RBAC-enabled instructor** via the `claim.review` grant already carried by every
+   `LineageTreeAccess` role (`TREE_ADMIN`/`EDITOR`/`BRANCH_EDITOR`/`NODE_EDITOR`, roles.ts:89–94). The promotion
+   claim's node/tree context scopes which instructor may review — this IS the "admin/RBAC-instructor" on-ramp.
+6. **Verification is one person+rank event.** Approving a **first** promotion for an unverified self-registrant
+   flips `node.isVerified` **and** mints the award **and** places them under their declared instructor (the 0474
+   on-ramp; reuse the identity-finalize branches conditionally). For an **already-verified** member's promotion,
+   it mints only the new `VERIFIED` award (node already verified; comp already granted → idempotent no-op).
+
+### The verification slices (one per session, in order — Block A)
+
+#### Slice V1 — Schema: `PassportClaimType` + `PassportClaimRequest.type` + migration
+
+- **What:** add `enum PassportClaimType { IDENTITY RANK_PROMOTION }`; add `type PassportClaimType @default(IDENTITY)`
+  to `PassportClaimRequest` (schema.prisma:2985). **Hand-author the migration** (additive: new enum + a
+  non-null column with a default; existing rows backfill to `IDENTITY` via the default — no data migration).
+  Read `schema-migration.md` + `[[prisma-prod-migration-flow]]` first; commit the file (auto-applies on deploy).
+- **Done:** `prisma validate` + generate clean; migration applies on a fresh DB; existing claims read `IDENTITY`.
+- **Gate:** typecheck · `prisma validate` · wiki:lint 0. Schema PR → human review.
+
+#### Slice V2 — `submitRankPromotionClaim` oRPC (member, own-passport) + evidence soft-gate
+
+- **What (own-Passport `authedProcedure`):** `submitRankPromotionClaim({ rankId, note?, instructorRef?,
+  evidence[] })` — creates a `PassportClaimRequest { type: RANK_PROMOTION, passportId (own), claimedRankId,
+  claimantUserId, brand, node/tree context, evidence }`. **Guards:** own passport only; `claimedRank.sortOrder >
+  verified ceiling` (you cannot file a promotion for a belt you already hold — that's backfill, Slice V4); **one
+  open `RANK_PROMOTION` per passport** (reject a second open one). Evidence photos via R2 → `PassportClaimEvidence`
+  (soft-gate: allowed to submit without, but the form prompts). Reuse `submitPassportClaim`'s core, branch on type.
+- **Done + Gate:** procedure + Zod in/out + rateLimit meta; unit tests (own-only · above-ceiling-only · one-open ·
+  submit-without-photo allowed). typecheck · oxlint/oxfmt · tests · next build · wiki:lint 0 · fallow 0.
+
+#### Slice V3 — Branch `finalizePassportClaim` for `RANK_PROMOTION`
+
+- **What:** in `claim-finalize.ts` branch on `claim.type`. **`RANK_PROMOTION`:** assert `passport.userId != null`
+  (already owned → **no** `attachAccount`); `mintAssertedRankAward(claimedRankId)` → `VERIFIED` (reuse existing);
+  **materialize `PassportClaimEvidence` → `RankMilestone` media** (`certificate`/`instructor`) on the minted
+  award's milestone (create the milestone if absent — presupposes the fact, epic Locked-decision 1); **idempotent
+  comp** (grant only if absent); if `node.isVerified == false` (first-claim self-registrant) → flip it + run the
+  `trainedUnder`/tree branches (reuse). **`IDENTITY`:** unchanged (full attach). Reject/needs-info path unchanged.
+- **Done + Gate:** promotion-finalize creates exactly the `VERIFIED` award + milestone media + (conditionally)
+  the node flip; an already-verified member's promotion does **not** re-attach/re-comp. Tests for both branches.
+  Full gate.
+
+#### Slice V4 — Rework the held belt CRUD to B1 (remove UNVERIFIED-award creation; gate to backfill)
+
+- **What (supersedes epic Slice 3's `upsertBeltMilestone`/`updateRankAwardFact`/`setPassportRank`):**
+  - **Backfill mint (C-implied):** ensuring a `RankAward` for enrichment mints it **`VERIFIED`** (`source:
+    STATED`) **only when `sortOrder ≤ verified ceiling`**; above-ceiling **throws** (UI routes to Slice V2).
+  - **Delete `setPassportRank`'s ungated path** (onboarding/actions.ts:19) — repoint its onboarding caller: a
+    brand-new member's first rank = a `RANK_PROMOTION` claim (pending), not an ungated award.
+  - **Fact-edit rule:** date/promoter/school are member-editable on **self-added backfill awards** (their own
+    enrichment); **read-only** on `IMPORTED` and instructor-approved (`RANK_PROMOTION`-minted) awards. (Mark the
+    editable-source distinction — `awardedByPassportId == null && source == STATED && not from a claim`. Pick the
+    cleanest marker at build; the epic's "UNVERIFIED-only" rule no longer applies since no UNVERIFIED awards exist.)
+  - **Belt card states:** at/below ceiling → Add/Completed (enrichable); **above ceiling → "Locked — request
+    promotion"** CTA opening the Slice V2 flow (replaces the epic's editable-UNVERIFIED-award card).
+- **Done + Gate:** hard invariant tests — cannot mint above ceiling · cannot edit an imported/approved award's
+  fact · above-ceiling card shows the promotion CTA not an edit form · no code path creates an `UNVERIFIED` award.
+  Full gate.
+
+#### Slice V5 — `/app/claims` queue + review UI carries `RANK_PROMOTION`
+
+- **What:** extend the claims queue query + review surface to list `RANK_PROMOTION` claims (show the asserted
+  belt swatch + evidence photos + claimant); wire **Approve / Needs-info / Deny** to the Slice V3 finalize.
+  Reuse the resource-scoped `claim.review` gate so a student's RBAC-instructor sees their students' promotions
+  (node/tree-scoped), and `claims.manage` for global admins. Notify the member on decision (reuse the claim
+  notification seam; **no autonomous email beyond the existing claim-decision notice**).
+- **Done + Gate:** an instructor with `claim.review` on the student's tree can approve a promotion → award +
+  milestone appear; a non-scoped user cannot. Full gate.
+
+#### Slice V6 — Verify (Doug proof gate — the launch-safety bar)
+
+- **What (Playwright behavior + source proof):** (1) a self-declared belt **never renders as verified** anywhere
+  (there is no award until approved); (2) promotion end-to-end — submit (± photo) → queue → RBAC-instructor
+  approve → **`VERIFIED`** award + milestone media + ceiling rises; (3) **zero regression** to the awarded-truth
+  rank display (0474/0475) — tree/drawer/directory belts unchanged, **no per-belt pill** (ADR 0035 §5 reaffirmed,
+  no double-badge); (4) `setPassportRank` above-ceiling is rejected; (5) RBAC scope — a non-instructor cannot
+  approve. **This slice is the gate that unholds #178–#181.**
+- **Done + Gate:** green gates + all five proofs + the drafted ADR 0035 amendment finalized to `accepted`.
+
+### Reworks to the held slices (what B1 changes in #178–#181 before they merge)
+
+- **Slice 2 (`RankMilestone`)** — unchanged (still 1:1 with `RankAward`, cascade). ✅ Keep.
+- **Slice 3 (belt oRPC)** — `upsertBeltMilestone` / `updateRankAwardFact` / `setPassportRank` **reworked by
+  Slice V4** (mint `VERIFIED`-implied ≤ ceiling; no `UNVERIFIED` awards; above-ceiling → claim). The epic's
+  "`UNVERIFIED`-only fact edit" rule is **retired**.
+- **Slice 4 (`BeltEditCard`/grid)** — the above-ceiling card becomes **"Locked — request promotion"** (CTA →
+  Slice V2), not an editable card that mints an `UNVERIFIED` award. Locked-state copy already exists; repoint the
+  action.
+- **Slice 5 (tab mount)** — unchanged mount; the read-model already reads awarded truth (all `VERIFIED`/`IMPORTED`).
+- **Also carried from SESSION_0484 (non-verification, apply during the belt-PR rebase):** country round-trip
+  data-loss fix, `Hint`→`Note`, first-run empty state; flywheel/CRM hardening (partial-unique index on normalized
+  school name, atomic `demandCount`, scope fuzzy match to placeholder orgs), `/app/leads-pipeline` nav link.
+
+### Verification-block parallelism
+
+- **V1 first** (schema). **V2 + V3** after V1 (V3 needs the type; V2/V3 can pair). **V4** after V1 (independent of
+  V2/V3 — it's the belt-CRUD rework; coordinate the `RankAward`-ensure change with V3's mint). **V5** after V3
+  (queue wires the finalize). **V6** last (proof). One coherent lane — do inline; no fan-out.
+
 ## When the plan is exhausted — hand back
 
 After Slice 6, **stop and hand back** (do not invent work). The operator reviews the stacked PRs (merge
 bottom-up into `main`), then designs + unlocks Slice 7 (agent-driven lead automation). Ping via
 `scripts/notify.sh` if configured.
+
+**Belt-verification block (V1–V6):** designed + grill-ratified at **SESSION_0486** (parent SESSION_0484); Block A
+builds it, then rebases + unholds #178–#181 through the Slice V4 reworks. Do **not** build V1–V6 and the design
+pass concurrently — the design pass (0486) runs first; this block is its output.
