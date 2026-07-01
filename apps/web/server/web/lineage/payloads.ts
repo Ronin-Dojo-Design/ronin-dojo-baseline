@@ -134,13 +134,12 @@ export const lineageNodeRowPayload = {
           },
           ...rankAwardPromoterPayload,
         },
-        // "Current rank" = highest belt by Rank.sortOrder, with awardedAt as the
-        // tiebreak. A plain `awardedAt desc` floats NULL-dated awards to [0]
-        // (Postgres NULLS FIRST in DESC), which under-ranked 7/10 multi-award
-        // founders to a lower belt (SESSION_0430). Matches the correct precedent
-        // at server/web/disciplines/top-ranked-queries.ts.
+        // Ordered highest belt first (Rank.sortOrder desc, awardedAt as tiebreak — a plain
+        // `awardedAt desc` floats NULL-dated awards to [0] via Postgres NULLS-FIRST, which
+        // under-ranked 7/10 multi-award founders, SESSION_0430). NO `take` — see the comment
+        // above: the discipline-scoped resolver `.find()`s within the tree's discipline, so
+        // truncating to the global top award blanks multi-discipline members.
         orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
-        take: 1,
       },
       // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
       // Affiliation is display-only person↔org; `memberSchoolLabel` reads this first.

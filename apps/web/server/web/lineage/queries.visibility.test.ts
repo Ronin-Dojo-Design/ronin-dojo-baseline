@@ -182,6 +182,20 @@ describe("lineage public payload allowlists", () => {
     expect(payloads.includes("claimRequests")).toBe(true)
     expect(payloads.includes('"status":true')).toBe(true)
   })
+
+  // SESSION_0475: the tree/board/cards resolve the shown belt with
+  // `memberTopRank(node, disciplineId)`, which `.find()`s the highest award IN the tree's
+  // discipline. A `take: 1` here would load only the member's GLOBAL top award (by
+  // cross-system sortOrder) → `.find(tree discipline)` misses → a BLANK belt for any
+  // multi-discipline member whose top-sorting belt is in another discipline (e.g. Andre
+  // Lima's TKD 8th Dan out-sorting his BJJ 3rd-degree). This guards the payload→resolver seam.
+  it("lineageNodeRowPayload.rankAwardsEarned loads ALL awards (no `take`) so discipline-scoping isn't truncated", () => {
+    const passportSelect = (lineageNodeRowPayload.passport as { select: Record<string, unknown> })
+      .select
+    const rankAwardsEarned = passportSelect.rankAwardsEarned as Record<string, unknown>
+    expect(rankAwardsEarned).toBeTruthy()
+    expect("take" in rankAwardsEarned).toBe(false)
+  })
 })
 
 describe("lineage tree visibility materialization", () => {
