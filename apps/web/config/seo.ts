@@ -18,7 +18,7 @@ const STATIC_SITEMAP_ROUTES: readonly StaticRoute[] = [
   { path: "/organizations", priority: 0.7, changeFrequency: "daily" },
   { path: "/organizations/new", priority: 0.45, changeFrequency: "monthly" },
   { path: "/events", priority: 0.65, changeFrequency: "daily" },
-  { path: "/posts", priority: 0.65, changeFrequency: "daily" },
+  // SESSION_0485: /posts retired (301 → /blog; ADR 0042). /blog is the canonical blog.
   { path: "/blog", priority: 0.65, changeFrequency: "daily" },
   { path: "/curriculum", priority: 0.75, changeFrequency: "weekly" },
   { path: "/techniques", priority: 0.75, changeFrequency: "weekly" },

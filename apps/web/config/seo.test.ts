@@ -14,7 +14,8 @@ describe("sitemapRoutesForBrand", () => {
     expect(paths).toContain("/schools")
     expect(paths).toContain("/organizations")
     expect(paths).toContain("/events")
-    expect(paths).toContain("/posts")
+    // SESSION_0485: /posts retired (301 → /blog; ADR 0042) — must NOT be in the sitemap.
+    expect(paths).not.toContain("/posts")
     expect(paths).toContain("/blog")
     expect(paths).toContain("/curriculum")
     expect(paths).toContain("/techniques")

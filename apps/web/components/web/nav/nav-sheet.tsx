@@ -41,15 +41,16 @@ type NavSheetProps = {
   userAvatarUrl?: string | null
 }
 
-// Curated BBL nav (SESSION_0416 operator). Posts + Blog both kept for now to
-// compare. Organizations / Disciplines / Tournaments / Courses / Gear / Merch cut.
+// Curated BBL nav (SESSION_0416 operator). SESSION_0485: the /posts vs /blog fork
+// resolved — `Post` / `/blog` is the canonical blog (/posts 301s to it; ADR 0042).
+// Organizations / Disciplines / Tournaments / Courses / Gear / Merch cut.
 const PRIMARY_NAV_ITEMS = [
   { href: "/lineage/join", key: "lineage", icon: GitBranchIcon },
   { href: "/directory", key: "directory", icon: ContactRoundIcon },
   { href: "/members", key: "members", icon: UsersIcon },
   { href: "/schools", key: "schools", icon: SchoolIcon },
-  { href: "/posts", key: "posts", icon: NewspaperIcon },
-  // Curriculum / Techniques / Blog hidden for launch (SESSION_0417) — routes still
+  { href: "/blog", key: "blog", icon: NewspaperIcon },
+  // Curriculum / Techniques hidden for launch (SESSION_0417) — routes still
   // exist; re-add here to resurface in nav.
 ] satisfies Array<{
   href: string

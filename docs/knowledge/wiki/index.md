@@ -187,6 +187,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0039 — Baseline restored as `apps/baseline` (own deploy + DB)](../../architecture/decisions/0039-baseline-as-apps-baseline.md) | decision | accepted |
 | [ADR 0040 — Design-system doctrine + card architecture (one surface, named cards)](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md) | decision | accepted |
 | [ADR 0041 — Agent roster as a dispatch layer + the Kanban board as the session driver](../../architecture/decisions/0041-agent-roster-dispatch-and-kanban-as-session-driver.md) | decision | accepted |
+| [ADR 0042 — Canonical public blog = `Post`/`/blog`; `ContentAtom` stays the content-ops engine](../../architecture/decisions/0042-canonical-blog-surface-post-over-contentatom.md) | decision | accepted |
 
 ## Learning Records
 
