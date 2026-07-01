@@ -1705,7 +1705,6 @@ async function main() {
   //    Each tree is published + public so /lineage renders them.
   // ---------------------------------------------------------------------
 
-
   type TreeSeed = {
     brands?: SeedBrand[]
     slug: string
