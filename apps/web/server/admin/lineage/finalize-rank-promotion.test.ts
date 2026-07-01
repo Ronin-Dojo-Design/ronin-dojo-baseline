@@ -73,6 +73,61 @@ async function aBjjRankId(tx: Tx): Promise<string> {
   return rank.id
 }
 
+/** A Media row (owned by `uploaderId`) usable as evidence-photo / attachment media. */
+async function makeMedia(tx: Tx, uploaderId: string): Promise<string> {
+  const media = await tx.media.create({
+    data: {
+      id: uid("media"),
+      brand: "BBL",
+      type: "IMAGE",
+      url: `https://example.com/${uid("photo")}.jpg`,
+      uploadedById: uploaderId,
+    },
+    select: { id: true },
+  })
+  return media.id
+}
+
+/** A RANK_PROMOTION claim on `passportId` with the given evidence rows (label + optional mediaId). */
+async function makePromotionClaim(
+  tx: Tx,
+  {
+    passportId,
+    claimantUserId,
+    claimedRankId,
+    evidence = [],
+  }: {
+    passportId: string
+    claimantUserId: string
+    claimedRankId: string
+    evidence?: { label?: string | null; mediaId?: string | null; url?: string | null }[]
+  },
+): Promise<string> {
+  const claim = await tx.passportClaimRequest.create({
+    data: {
+      id: uid("claim"),
+      type: "RANK_PROMOTION",
+      passportId,
+      claimantUserId,
+      brand: "BBL",
+      claimedRankId,
+      ...(evidence.length
+        ? {
+            evidence: {
+              create: evidence.map(e => ({
+                label: e.label ?? null,
+                url: e.url ?? null,
+                mediaId: e.mediaId ?? null,
+              })),
+            },
+          }
+        : {}),
+    },
+    select: { id: true },
+  })
+  return claim.id
+}
+
 describe("finalizeRankPromotion (petey-plan-0477 Slice V3)", () => {
   it("mints a VERIFIED RankAward for the claimed belt and verifies the member's node", async () => {
     await inRolledBackTx(async tx => {
@@ -160,6 +215,112 @@ describe("finalizeRankPromotion (petey-plan-0477 Slice V3)", () => {
 
       expect(result.rankAwardId).not.toBeNull()
       expect(result.nodeVerified).toBe(false)
+    })
+  })
+
+  // --- TASK_04: PassportClaimEvidence → RankMilestone media materialization ------------------
+
+  it("materializes photo evidence onto the minted award's RankMilestone, purpose from label", async () => {
+    await inRolledBackTx(async tx => {
+      const actor = await tx.user.create({
+        data: { id: uid("actor5"), name: uid("Actor5"), email: `${uid("actor5")}@test.local` },
+      })
+      const member = await makeMember(tx)
+      const rankId = await aBjjRankId(tx)
+      const certMedia = await makeMedia(tx, member.userId)
+      const instrMedia = await makeMedia(tx, member.userId)
+
+      const claimId = await makePromotionClaim(tx, {
+        passportId: member.passportId,
+        claimantUserId: member.userId,
+        claimedRankId: rankId,
+        evidence: [
+          { label: "Certificate photo", mediaId: certMedia },
+          { label: "Instructor photo", mediaId: instrMedia },
+          // A url-only row carries no photo → must NOT create a milestone attachment.
+          { label: "Link", url: "https://example.com/proof" },
+        ],
+      })
+
+      const result = await finalizeRankPromotion(tx, {
+        claim: { id: claimId, passportId: member.passportId, claimedRankId: rankId },
+        actorUserId: actor.id,
+      })
+      expect(result.rankAwardId).not.toBeNull()
+
+      const milestone = await tx.rankMilestone.findUnique({
+        where: { rankAwardId: result.rankAwardId as string },
+        select: { id: true },
+      })
+      expect(milestone).not.toBeNull()
+
+      const attachments = await tx.mediaAttachment.findMany({
+        where: { rankMilestoneId: milestone!.id },
+        select: { mediaId: true, purpose: true },
+      })
+      // Exactly the two photo rows materialized — the url-only row is skipped.
+      expect(attachments).toHaveLength(2)
+      const byMedia = new Map(
+        attachments.map((a: { mediaId: string; purpose: string | null }) => [a.mediaId, a.purpose]),
+      )
+      expect(byMedia.get(certMedia)).toBe("certificate")
+      expect(byMedia.get(instrMedia)).toBe("instructor")
+    })
+  })
+
+  it("is idempotent — re-approving does not duplicate the milestone media", async () => {
+    await inRolledBackTx(async tx => {
+      const actor = await tx.user.create({
+        data: { id: uid("actor6"), name: uid("Actor6"), email: `${uid("actor6")}@test.local` },
+      })
+      const member = await makeMember(tx)
+      const rankId = await aBjjRankId(tx)
+      const media = await makeMedia(tx, member.userId)
+
+      const claimId = await makePromotionClaim(tx, {
+        passportId: member.passportId,
+        claimantUserId: member.userId,
+        claimedRankId: rankId,
+        evidence: [{ label: "cert", mediaId: media }],
+      })
+      const claim = { id: claimId, passportId: member.passportId, claimedRankId: rankId }
+
+      await finalizeRankPromotion(tx, { claim, actorUserId: actor.id })
+      await finalizeRankPromotion(tx, { claim, actorUserId: actor.id })
+
+      const count = await tx.mediaAttachment.count({ where: { mediaId: media } })
+      expect(count).toBe(1)
+    })
+  })
+
+  it("mints the award with NO milestone media when the promotion has no photo evidence", async () => {
+    await inRolledBackTx(async tx => {
+      const actor = await tx.user.create({
+        data: { id: uid("actor7"), name: uid("Actor7"), email: `${uid("actor7")}@test.local` },
+      })
+      const member = await makeMember(tx)
+      const rankId = await aBjjRankId(tx)
+
+      const claimId = await makePromotionClaim(tx, {
+        passportId: member.passportId,
+        claimantUserId: member.userId,
+        claimedRankId: rankId,
+        // Only a url-only row — no uploaded photo, so nothing to materialize.
+        evidence: [{ label: "Link only", url: "https://example.com/proof" }],
+      })
+
+      const result = await finalizeRankPromotion(tx, {
+        claim: { id: claimId, passportId: member.passportId, claimedRankId: rankId },
+        actorUserId: actor.id,
+      })
+      expect(result.rankAwardId).not.toBeNull()
+
+      // No photo evidence → no milestone is created (materialize returns early).
+      const milestone = await tx.rankMilestone.findUnique({
+        where: { rankAwardId: result.rankAwardId as string },
+        select: { id: true },
+      })
+      expect(milestone).toBeNull()
     })
   })
 })

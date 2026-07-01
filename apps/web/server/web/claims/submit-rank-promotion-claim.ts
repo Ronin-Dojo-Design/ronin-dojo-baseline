@@ -36,8 +36,17 @@ export type SubmitRankPromotionClaimInput = {
   claimedRankId: string
   brand: Brand
   claimantNote?: string | null
-  /** Soft-gate: certificate / instructor photo (label/url/text). Encouraged, not required. */
-  evidence?: { label?: string | null; url?: string | null; text?: string | null }[]
+  /**
+   * Soft-gate: certificate / instructor photo. Encouraged, not required. A `mediaId`
+   * carries an uploaded photo (materializes onto the milestone on approve, Slice V3);
+   * label/url/text carry a link or note. Any subset may be present.
+   */
+  evidence?: {
+    label?: string | null
+    url?: string | null
+    text?: string | null
+    mediaId?: string | null
+  }[]
 }
 
 /**
@@ -124,6 +133,7 @@ export async function submitRankPromotionClaim(
                 label: item.label ?? null,
                 url: item.url ?? null,
                 text: item.text ?? null,
+                mediaId: item.mediaId ?? null,
               })),
             },
           }
