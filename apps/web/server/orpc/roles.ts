@@ -43,7 +43,13 @@ const PUBLIC_GRANTS = ["health.read", "lineage.read"] as const
 
 // Permissions for any signed-in user, on top of the public ones. Roles are
 // flat (no inheritance), so the public grants are spread in explicitly.
-const USER_GRANTS = [...PUBLIC_GRANTS] as const
+//
+// `belt.*` is the member-facing belt-journey surface (Slice 3 — Petey Plan 0477):
+// every signed-in user may enrich their OWN belt cards. The permission gate only
+// asserts "a signed-in member"; the own-Passport ownership + self-promotion
+// ceiling are enforced per-call inside `server/belt/router.ts` (a role grant is
+// global and cannot express per-resource ownership — SOT-ADR D4).
+const USER_GRANTS = [...PUBLIC_GRANTS, "belt.manage"] as const
 
 // Ronin `tournament_director` (from `lib/safe-actions.ts`'s
 // `tournamentAdminActionClient`): a signed-in user plus tournament authority.
