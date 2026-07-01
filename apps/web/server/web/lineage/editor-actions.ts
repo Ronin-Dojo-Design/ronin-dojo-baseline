@@ -41,7 +41,6 @@ type EditorGraphMember = {
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
   visualSortOrder: number
-  rankAwardId: string | null
 }
 
 type EditorVisualGroup = {
@@ -202,7 +201,6 @@ async function getEditorTreeContext({
             primaryVisualParentMemberId: true,
             visualGroupId: true,
             visualSortOrder: true,
-            rankAwardId: true,
           },
         },
         visualGroups: {
@@ -429,7 +427,10 @@ export const applyLineagePromotionRelationshipUpdate = async ({
         throw new Error(LINEAGE_EDITOR_ERROR.CLEAR_PROMOTER_REQUIRES_TREE_EDITOR)
       }
 
-      const rankAwardId = input.rankAwardId ?? member.rankAwardId
+      // The award tying the PROMOTED_BY edge (`LineageRelationship.rankAwardId`) is the
+      // one the modal selects (defaulting to the member's shown/top awarded rank). There is
+      // no member-level rank pointer to fall back to (ADR 0035 — awarded truth).
+      const rankAwardId = input.rankAwardId ?? null
       const verificationStatus = input.verificationStatus ?? "PENDING"
       const auditNote = String(input.auditNote ?? "").trim()
       if (rankAwardId) {

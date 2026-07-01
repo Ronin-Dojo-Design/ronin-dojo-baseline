@@ -24,7 +24,6 @@ type Member = {
   visualSortOrder: number
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
-  selectedRankAward?: unknown
   node: unknown
 }
 
@@ -48,15 +47,6 @@ const member = (
   visualSortOrder: opts.sort ?? 0,
   primaryVisualParentMemberId: opts.parent ?? null,
   visualGroupId: opts.group ?? null,
-  selectedRankAward: opts.rankName
-    ? {
-        awardedAt: opts.awardYear ? new Date(Date.UTC(opts.awardYear, 0, 1)) : null,
-        rank: {
-          name: opts.rankName,
-          rankSystem: { discipline: opts.discipline ? { name: opts.discipline } : null },
-        },
-      }
-    : null,
   node: {
     slug: `slug-${id}`,
     isVerified: opts.verified ?? true,
@@ -95,7 +85,7 @@ const member = (
 })
 
 const build = (members: Member[], visualGroups: unknown[] = []): LineageTreePublicResult =>
-  ({ members, visualGroups }) as unknown as LineageTreePublicResult
+  ({ members, visualGroups, tree: { disciplineId: null } }) as unknown as LineageTreePublicResult
 
 describe("lineageTreeToGalaxyGraph", () => {
   it("derives generation + role from the visual parent chain", () => {

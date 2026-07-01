@@ -257,6 +257,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
                 claimStateByNodeId={claimStateByNodeId}
                 treeSlug={treeSlug}
                 isTreeClaimable={result.tree.isClaimable}
+                disciplineId={result.tree.disciplineId}
                 initialFocusId={focus ?? null}
                 canManage={canManage}
               />
@@ -270,6 +271,7 @@ export default async function LineageTreePage({ params, searchParams }: Props) {
               claimStateByNodeId={claimStateByNodeId}
               treeSlug={treeSlug}
               isTreeClaimable={result.tree.isClaimable}
+              disciplineId={result.tree.disciplineId}
               renderPolicy={renderPolicy}
             />
           )}

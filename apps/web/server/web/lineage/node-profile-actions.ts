@@ -47,16 +47,30 @@ export const applyLineageNodeProfileUpdate = async ({
     select: {
       id: true,
       slug: true,
+      // Discipline-scoped surface — the promotion date edits the member's shown rank IN
+      // THIS DISCIPLINE (ADR 0035 §3), not the global highest.
+      disciplineId: true,
       members: {
         where: { nodeId: input.nodeId },
         take: 1,
         select: {
           id: true,
-          rankAwardId: true,
           node: {
             select: {
               id: true,
               passportId: true,
+              passport: {
+                select: {
+                  // Pre-ordered by Rank.sortOrder desc; discipline filter applied in JS below.
+                  rankAwardsEarned: {
+                    select: {
+                      id: true,
+                      rank: { select: { rankSystem: { select: { disciplineId: true } } } },
+                    },
+                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                  },
+                },
+              },
             },
           },
         },
@@ -100,9 +114,13 @@ export const applyLineageNodeProfileUpdate = async ({
       data: { bio: input.bio },
     })
 
-    if (input.promotionDate !== undefined && member.rankAwardId) {
+    const awards = member.node.passport.rankAwardsEarned
+    const shownRankAward = tree.disciplineId
+      ? (awards.find(award => award.rank.rankSystem?.disciplineId === tree.disciplineId) ?? null)
+      : (awards[0] ?? null)
+    if (input.promotionDate !== undefined && shownRankAward) {
       await tx.rankAward.update({
-        where: { id: member.rankAwardId },
+        where: { id: shownRankAward.id },
         data: { awardedAt: input.promotionDate },
       })
     }

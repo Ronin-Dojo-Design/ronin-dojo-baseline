@@ -44,6 +44,7 @@ export function LineageBranch({
   onSelect,
   onChangePromoter,
   renderPolicy,
+  disciplineId,
   visited,
   generation,
   siblingIndex,
@@ -66,6 +67,7 @@ export function LineageBranch({
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
   renderPolicy: LineageListingRenderPolicy
+  disciplineId?: string | null
   visited: Set<string>
   generation: number
   siblingIndex: number
@@ -160,8 +162,8 @@ export function LineageBranch({
   // arbitrary-value class baked into the hover cluster supplies the `--color-primary` fallback via
   // `var(--belt-tint, var(--color-primary))`, so rankless members get the brand primary glow with
   // no inline-style work needed here.
-  // Awarded truth (ADR 0035) — not the deprecated `selectedRank` stale-import field.
-  const beltTintColor = memberBeltColor(member.node)
+  // Awarded truth (ADR 0035) — the highest awarded RankAward in the tree's discipline.
+  const beltTintColor = memberBeltColor(member.node, disciplineId)
 
   return (
     <div
@@ -210,13 +212,13 @@ export function LineageBranch({
               node={member.node}
               isRoot={isRoot}
               isClaimable={member.isClaimable}
-              selectedRank={member.selectedRank}
               onSelect={onSelect}
               canChangePromoter={editMode && canEditPlacement}
               onChangePromoter={
                 onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined
               }
               renderPolicy={renderPolicy}
+              disciplineId={disciplineId}
             />
           </div>
         </div>
@@ -251,6 +253,7 @@ export function LineageBranch({
               onSelect={onSelect}
               onChangePromoter={onChangePromoter}
               renderPolicy={renderPolicy}
+              disciplineId={disciplineId}
               visited={nextVisited}
               generation={generation + 1}
               reduceMotion={reduceMotion}
@@ -289,6 +292,7 @@ function LineageChildGroupColumn({
   onSelect,
   onChangePromoter,
   renderPolicy,
+  disciplineId,
   visited,
   generation,
   reduceMotion,
@@ -311,6 +315,7 @@ function LineageChildGroupColumn({
   onSelect: (nodeId: string) => void
   onChangePromoter?: (nodeId: string) => void
   renderPolicy: LineageListingRenderPolicy
+  disciplineId?: string | null
   visited: Set<string>
   generation: number
   reduceMotion: boolean
@@ -375,6 +380,7 @@ function LineageChildGroupColumn({
               onSelect={onSelect}
               onChangePromoter={onChangePromoter}
               renderPolicy={renderPolicy}
+              disciplineId={disciplineId}
               visited={visited}
               generation={generation}
               siblingIndex={index}

@@ -661,7 +661,6 @@ function makeMember(overrides: {
       id: `node-${overrides.id}`,
       visibility: overrides.visibility ?? "PUBLIC",
     },
-    selectedRankAward: null,
   } as unknown as LineageTreeMemberRow
 }
 

@@ -74,6 +74,7 @@ export function LineageTreeCanvas({
   canManageGroups = false,
   defaultLayout,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
+  disciplineId,
 }: LineageTreeCanvasProps) {
   const reduceMotion = useReducedMotion()
   const { layout, setLayout, isMobileListViewport, isTouch, layoutTouchedRef } =
@@ -152,6 +153,7 @@ export function LineageTreeCanvas({
           selectedMemberId={model.selectedMemberId}
           onSelect={onSelect}
           renderPolicy={renderPolicy}
+          disciplineId={disciplineId}
         />
 
         <div
@@ -208,6 +210,7 @@ export function LineageTreeCanvas({
                 canChangePromoter={editMode && canEditPlacement}
                 onChangePromoter={onChangePromoter}
                 renderPolicy={renderPolicy}
+                disciplineId={disciplineId}
               />
             ) : layout === "board" ? (
               <Stack size="lg" direction="column" className="mx-auto w-full max-w-2xl md:max-w-4xl">
@@ -226,6 +229,7 @@ export function LineageTreeCanvas({
                     onChangePromoter={onChangePromoter}
                     canChangePromoter={editMode && canEditPlacement}
                     renderPolicy={renderPolicy}
+                    disciplineId={disciplineId}
                   />
                 ))}
               </Stack>
@@ -251,6 +255,7 @@ export function LineageTreeCanvas({
                     onSelect={onSelect}
                     onChangePromoter={onChangePromoter}
                     renderPolicy={renderPolicy}
+                    disciplineId={disciplineId}
                     visited={new Set()}
                     generation={0}
                     siblingIndex={index}

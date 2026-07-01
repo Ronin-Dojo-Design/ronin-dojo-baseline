@@ -326,7 +326,6 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
     data: {
       treeId: tree.id,
       nodeId: publicEntry.node.id,
-      rankAwardId: rankAward.id,
       visualSortOrder: 10,
       visualGroupId: publicGroup.id,
     },

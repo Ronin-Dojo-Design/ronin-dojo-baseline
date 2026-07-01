@@ -68,4 +68,6 @@ export type LineageTreeCanvasProps = {
    */
   defaultLayout?: LineageLayout
   renderPolicy?: LineageListingRenderPolicy
+  /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+  disciplineId?: string | null
 }

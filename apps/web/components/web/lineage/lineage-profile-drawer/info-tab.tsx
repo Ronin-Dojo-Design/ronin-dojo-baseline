@@ -22,6 +22,7 @@ export function InfoTab({
   instructorRelationship,
   students,
   onSelectStudent,
+  disciplineId,
 }: {
   profile: LineageNodeProfile
   currentRank: NonNullable<DrawerRankAward>["rank"] | null
@@ -31,6 +32,7 @@ export function InfoTab({
   instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
   students?: LineageTreeMemberRow[]
   onSelectStudent?: (memberId: string) => void
+  disciplineId?: string | null
 }) {
   // Promoter identity prefers the historical Passport promoter (SESSION_0391),
   // falling back to the real-account actor that performed the award.
@@ -160,7 +162,11 @@ export function InfoTab({
       {students && students.length > 0 && onSelectStudent && (
         <>
           <Separator />
-          <StudentsCarousel students={students} onSelectStudent={onSelectStudent} />
+          <StudentsCarousel
+            students={students}
+            onSelectStudent={onSelectStudent}
+            disciplineId={disciplineId}
+          />
         </>
       )}
     </Stack>

@@ -381,30 +381,6 @@ export const lineageTreeMemberPayload = {
   treeId: true,
   nodeId: true,
   node: { select: lineageNodeRowPayload },
-  selectedRankAward: {
-    select: {
-      id: true,
-      awardedAt: true,
-      rank: {
-        select: {
-          id: true,
-          name: true,
-          shortName: true,
-          colorHex: true,
-          sortOrder: true,
-          rankSystem: {
-            select: {
-              id: true,
-              name: true,
-              discipline: {
-                select: { id: true, name: true, slug: true, code: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
 } satisfies Prisma.LineageTreeMemberSelect
 
 export const lineageTreePublicPayload = {

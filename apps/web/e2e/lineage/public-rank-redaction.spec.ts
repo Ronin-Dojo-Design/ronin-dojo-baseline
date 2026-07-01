@@ -36,9 +36,8 @@ function memberBRankSecrets(f: LineageRankRedactionFixture): string[] {
   // Only assert on fields that are UNIQUE to member-B's rank.
   // rankSystemName and disciplineName are shared with member-A and would
   // legitimately appear in the page via member-A's positive-control rendering.
-  // The production payload only selects {id, name, shortName, colorHex} on
-  // selectedRankAward.rank (apps/web/server/web/lineage/payloads.ts:289), so
-  // rankName + rankShortName are sufficient leak indicators.
+  // The production payload only selects {id, name, shortName, colorHex} on the
+  // awarded rank, so rankName + rankShortName are sufficient leak indicators.
   return [f.memberB.rankName, f.memberB.rankShortName].filter(Boolean)
 }
 
@@ -156,7 +155,7 @@ test.describe("Lineage public rank-redaction E2E", () => {
 
       // Member-A's SHOWN rank (the highest AWARDED belt) MUST appear — proves the redaction
       // is targeted and not a blanket break of rank rendering. (Display = awarded truth: the
-      // drawer shows the higher awarded belt, not the lower `selectedRank` — ADR 0035.)
+      // drawer shows the higher awarded belt, not the member's lower award — ADR 0035.)
       await expect(drawerDialog).toContainText(fixture.memberA.awardedTopRankName)
 
       await page.getByRole("tab", { name: "Rank History" }).click()
@@ -167,9 +166,9 @@ test.describe("Lineage public rank-redaction E2E", () => {
     }
   })
 
-  // SESSION_0474 — guards the Meyer/Casey regression (a lower WP-import / `selectedRank`
-  // belt floating over the higher AWARDED belt) + the claim-badge removal from the tree.
-  test("board shows the highest AWARDED belt (not the lower selectedRank) and no Claimable badge", async ({
+  // SESSION_0474 — guards the Meyer/Casey regression (a lower awarded belt floating over the
+  // higher AWARDED belt) + the claim-badge removal from the tree.
+  test("board shows the highest AWARDED belt (not a lower award) and no Claimable badge", async ({
     browser,
   }) => {
     const context = await browser.newContext({ storageState: { cookies: [], origins: [] } })
@@ -182,12 +181,12 @@ test.describe("Lineage public rank-redaction E2E", () => {
         timeout: 30_000,
       })
 
-      // member-A holds a HIGHER awarded belt while their `selectedRank` points at the lower
-      // one. Display = awarded truth (ADR 0035): the board must render the higher belt…
+      // member-A holds a HIGHER awarded belt AND a lower awarded belt. Display = awarded
+      // truth (ADR 0035): the board must render the higher belt…
       await expect(page.getByText(fixture.memberA.awardedTopRankName).first()).toBeVisible({
         timeout: 15_000,
       })
-      // …and NEVER the lower `selectedRank` belt (the exact stale-pointer bug we fixed).
+      // …and NEVER the lower-awarded belt (the exact Meyer/Casey mis-rank we fixed).
       await expect(page.getByText(fixture.memberA.rankName)).toHaveCount(0)
 
       // Claim affordance is drawer/directory-only — the seeded `isClaimable` member-B must

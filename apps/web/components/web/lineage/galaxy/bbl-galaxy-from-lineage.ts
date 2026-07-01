@@ -1,3 +1,4 @@
+import { memberTopRankAward } from "~/lib/lineage/canvas-model"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import type { LineageTreePublicResult } from "~/server/web/lineage/payloads"
 import type {
@@ -63,6 +64,9 @@ const computeGenerations = (members: MemberRow[]): Map<string, number> => {
 
 export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGalaxyGraph => {
   const { visualGroups } = result
+  // The galaxy is a discipline-scoped surface (this BBL tree = BJJ); scope the timeline
+  // year to the member's shown rank IN THIS DISCIPLINE (ADR 0035 §3).
+  const disciplineId = result.tree.disciplineId
 
   // Verified-only galaxy (spec security rule: no disputed/unverified public stars). The
   // query already scopes to PUBLIC; this drops any unverified node so `verifiedStatus` is
@@ -95,7 +99,8 @@ export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGa
     const orbitIndex = band.findIndex(candidate => candidate.id === member.id)
     const passport = member.node.passport
     const groupId = member.visualGroupId ?? undefined
-    const awardedAt = member.selectedRankAward?.awardedAt
+    // Timeline year = the awardedAt of the member's shown (top awarded) rank (ADR 0035).
+    const awardedAt = memberTopRankAward(member.node, disciplineId)?.awardedAt
 
     // Delegate identity to the canonical public passport projector (showRanks: true for
     // the public lineage galaxy view). `LineageNodeRow.passport` is a structural superset

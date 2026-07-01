@@ -4,8 +4,8 @@
  * Run: cd apps/web && bun test server/web/lineage/create-lineage-member.test.ts
  *
  * Integration test against the local DB; fixtures are tagged + torn down. Verifies that placing a
- * person creates a LineageNode + LineageTreeMember (with selectedRankAward + visual parent) and the
- * canonical PROMOTED_BY LineageRelationship referencing the stated award, and enforces the guards.
+ * person creates a LineageNode + LineageTreeMember (visual parent) and the canonical PROMOTED_BY
+ * LineageRelationship referencing the stated award (ADR 0016), and enforces the guards.
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
@@ -116,7 +116,7 @@ afterAll(async () => {
 })
 
 describe("createLineageMember", () => {
-  it("places a person under a parent: member (with selectedRankAward + visual parent) + PROMOTED_BY edge", async () => {
+  it("places a person under a parent: member (visual parent) + PROMOTED_BY edge carrying the rank award", async () => {
     const result = await createLineageMember({
       db,
       brand: TEST_BRAND,
@@ -132,12 +132,12 @@ describe("createLineageMember", () => {
 
     const member = await db.lineageTreeMember.findUnique({
       where: { id: result.memberId },
-      select: { rankAwardId: true, primaryVisualParentMemberId: true, nodeId: true, treeId: true },
+      select: { primaryVisualParentMemberId: true, nodeId: true, treeId: true },
     })
     expect(member?.treeId).toBe(fx.treeId)
-    expect(member?.rankAwardId).toBe(fx.childRankAwardId)
     expect(member?.primaryVisualParentMemberId).toBe(fx.parentMemberId)
 
+    // The rank award rides the PROMOTED_BY edge (ADR 0016), not the member row (ADR 0035).
     const relationship = await db.lineageRelationship.findUnique({
       where: { id: result.relationshipId as string },
       select: { type: true, fromNodeId: true, toNodeId: true, rankAwardId: true },
@@ -196,9 +196,8 @@ describe("createLineageMember", () => {
 
     const member = await db.lineageTreeMember.findUnique({
       where: { id: result.memberId },
-      select: { primaryVisualParentMemberId: true, rankAwardId: true },
+      select: { primaryVisualParentMemberId: true },
     })
     expect(member?.primaryVisualParentMemberId).toBeNull()
-    expect(member?.rankAwardId).toBeNull()
   })
 })

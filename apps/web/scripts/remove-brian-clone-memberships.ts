@@ -46,7 +46,6 @@ type MemberRow = {
   showRankPublic: boolean
   isClaimable: boolean
   isCollapsedDefault: boolean
-  rankAwardId: string | null
   primaryVisualParentMemberId: string | null
   visualGroupId: string | null
   createdAt: string
@@ -91,7 +90,6 @@ const MEMBER_SELECT = {
   showRankPublic: true,
   isClaimable: true,
   isCollapsedDefault: true,
-  rankAwardId: true,
   primaryVisualParentMemberId: true,
   visualGroupId: true,
   createdAt: true,
@@ -107,7 +105,6 @@ function toMemberRow(m: Record<string, unknown>): MemberRow {
     showRankPublic: m.showRankPublic as boolean,
     isClaimable: m.isClaimable as boolean,
     isCollapsedDefault: m.isCollapsedDefault as boolean,
-    rankAwardId: (m.rankAwardId as string | null) ?? null,
     primaryVisualParentMemberId: (m.primaryVisualParentMemberId as string | null) ?? null,
     visualGroupId: (m.visualGroupId as string | null) ?? null,
     createdAt: (m.createdAt as Date).toISOString(),
@@ -253,7 +250,6 @@ async function rollback(file: string) {
           showRankPublic: m.showRankPublic,
           isClaimable: m.isClaimable,
           isCollapsedDefault: m.isCollapsedDefault,
-          rankAwardId: m.rankAwardId,
           primaryVisualParentMemberId: m.primaryVisualParentMemberId,
           visualGroupId: m.visualGroupId,
           createdAt: new Date(m.createdAt),

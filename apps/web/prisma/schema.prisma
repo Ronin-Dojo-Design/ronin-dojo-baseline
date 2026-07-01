@@ -2173,7 +2173,6 @@ model RankAward {
   promotionEvent   PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
   promotionEventId String?
 
-  lineageTreeMembers   LineageTreeMember[]
   lineageRelationships LineageRelationship[]
   gamificationEvents   GamificationEvent[]
   // @added   SESSION_0289 (2026-05-29)
@@ -2755,9 +2754,6 @@ model LineageTreeMember {
   node   LineageNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
   nodeId String
 
-  selectedRankAward RankAward? @relation(fields: [rankAwardId], references: [id], onDelete: SetNull)
-  rankAwardId       String?
-
   primaryVisualParent         LineageTreeMember?  @relation("LineageVisualParent", fields: [primaryVisualParentMemberId], references: [id], onDelete: SetNull)
   primaryVisualParentMemberId String?
   visualChildren              LineageTreeMember[] @relation("LineageVisualParent")
@@ -2772,7 +2768,6 @@ model LineageTreeMember {
   @@unique([treeId, nodeId])
   @@index([treeId, primaryVisualParentMemberId])
   @@index([treeId, visualGroupId, visualSortOrder])
-  @@index([rankAwardId])
 }
 
 // @added   migration 20260517_lineage_tree_v1 (2026-05-17)
@@ -2861,8 +2856,8 @@ model LineageClaimRequest {
   // registration/claim time (PENDING state). It is NOT a RankAward — it cannot display on the
   // tree. Admin-verify creates the awarded RankAward from this field (claim→award lifecycle).
   // See ADR 0035 §4 for the structural reason: a claimed rank on the claim record cannot
-  // structurally leak onto the tree as if awarded (the exact failure mode of the old
-  // selectedRankAward display override).
+  // structurally leak onto the tree as if awarded (the exact failure mode of the
+  // selectedRankAward display override, removed in SESSION_0475).
   claimedRank    Rank?       @relation("ClaimedRank", fields: [claimedRankId], references: [id], onDelete: SetNull)
   claimedRankId  String?
 

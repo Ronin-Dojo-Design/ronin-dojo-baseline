@@ -63,6 +63,8 @@ type CompactSharedProps = {
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
   renderPolicy?: LineageListingRenderPolicy
+  /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+  disciplineId?: string | null
 }
 
 type LineageCompactChildListProps = CompactSharedProps & {
@@ -164,6 +166,7 @@ function LineageCompactChildRow({
   depth,
   visited,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
+  disciplineId,
   ...shared
 }: CompactSharedProps & {
   member: CanvasMember
@@ -188,6 +191,7 @@ function LineageCompactChildRow({
 
   const { displayName, avatarSrc, rankLabel, beltColor, trustStatus } = resolveLineageMemberView(
     member.node,
+    { disciplineId },
   )
   const rowStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
 
@@ -293,6 +297,7 @@ function LineageCompactChildRow({
           visited={new Set(visited).add(member.id)}
           {...shared}
           renderPolicy={renderPolicy}
+          disciplineId={disciplineId}
         />
       )}
     </div>

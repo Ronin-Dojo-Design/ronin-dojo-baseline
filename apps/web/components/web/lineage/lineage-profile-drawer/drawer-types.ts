@@ -1,25 +1,6 @@
 import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 
-/** The award the drawer focuses on (from a clicked rank in the tree); null = current. */
-export type SelectedRankAward = {
-  id: string
-  awardedAt: Date | null
-  rank: {
-    id: string
-    name: string
-    shortName: string | null
-    colorHex: string | null
-    sortOrder?: number | null
-    rankSystem?: {
-      id: string
-      name: string
-      discipline?: { id: string; name: string; slug: string; code: string | null } | null
-      ranks?: { id: string; sortOrder: number }[] | null
-    } | null
-  } | null
-} | null
-
 export type LineageProfileDrawerTab = "info" | "lineage" | "rank-history"
 
 // Phase 3c: identity is Passport-rooted. Earned rank awards hang off
@@ -37,7 +18,6 @@ export type LineageProfileDrawerProps = {
   promoterChangeContext?:
     | import("~/components/web/lineage/promoter-change-modal").PromoterChangeContext
     | null
-  selectedRankAward?: SelectedRankAward
   isClaimable?: boolean
   isTreeClaimable?: boolean
   /**
@@ -70,4 +50,10 @@ export type LineageProfileDrawerProps = {
   students?: LineageTreeMemberRow[]
   /** Swap the drawer to a tapped student — recursive drill-down. */
   onSelectStudent?: (memberId: string) => void
+  /**
+   * The tree's discipline — scopes the *students carousel* belts to this discipline
+   * (the students are tree members; ADR 0035 §3). The focal member's own header rank is
+   * intentionally NOT scoped here (the drawer shows their full multi-discipline rank).
+   */
+  disciplineId?: string | null
 }

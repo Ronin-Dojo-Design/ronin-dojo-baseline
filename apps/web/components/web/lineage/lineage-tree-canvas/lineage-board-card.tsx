@@ -28,6 +28,7 @@ export function LineageBoardCard({
   onChangePromoter,
   canChangePromoter,
   renderPolicy,
+  disciplineId,
 }: {
   member: CanvasMember
   childrenByParentId: Map<string | null, CanvasMember[]>
@@ -41,6 +42,7 @@ export function LineageBoardCard({
   onChangePromoter?: (nodeId: string) => void
   canChangePromoter: boolean
   renderPolicy: LineageListingRenderPolicy
+  disciplineId?: string | null
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
   const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
@@ -55,11 +57,11 @@ export function LineageBoardCard({
         node={member.node}
         isRoot={isRoot}
         isClaimable={member.isClaimable}
-        selectedRank={member.selectedRank}
         onSelect={onSelect}
         canChangePromoter={canChangePromoter}
         onChangePromoter={onChangePromoter ? () => onChangePromoter(member.nodeId) : undefined}
         renderPolicy={renderPolicy}
+        disciplineId={disciplineId}
       />
 
       {renderPolicy.features.bioPreview && bio && (
@@ -81,6 +83,7 @@ export function LineageBoardCard({
             canChangePromoter={canChangePromoter}
             onChangePromoter={onChangePromoter}
             renderPolicy={renderPolicy}
+            disciplineId={disciplineId}
           />
         </div>
       )}

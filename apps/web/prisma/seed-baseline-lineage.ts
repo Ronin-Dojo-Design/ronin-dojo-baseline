@@ -769,8 +769,9 @@ async function ensureLineageRelationship(
 /**
  * Upsert a BJJ RankAward (global promotion fact). Looks up the BJJ rank by
  * shortName, then findFirst on (userId, rankId) — the @@unique key — and
- * creates or refreshes. Returns the RankAward id so the tree member can point
- * its selectedRankAward at it. FS-0006: never createMany on a nullable-unique.
+ * creates or refreshes. Returns the RankAward id (consumed by PromotionEvent
+ * linking). Display reads the highest awarded RankAward (ADR 0035).
+ * FS-0006: never createMany on a nullable-unique.
  */
 async function ensureRankAward(
   passportId: string,
@@ -1566,8 +1567,8 @@ async function main() {
 
   // ---------------------------------------------------------------------
   // 3b. RankAwards (SESSION_0316). Global promotion facts — one per BJJ
-  //     figure, linking the awarding promoter. Keyed by recipient userId so
-  //     the rigan tree can point each member's selectedRankAward at it.
+  //     figure, linking the awarding promoter. Display reads the highest
+  //     awarded RankAward per member (ADR 0035 — awarded truth).
   // ---------------------------------------------------------------------
   // SESSION_0318 data-quality correction: Chris Haueter was previously seeded as a
   // coral belt (CB7). He is a 6th Degree BLACK belt (BK6). Repoint any stale coral
@@ -1635,9 +1636,9 @@ async function main() {
   }
 
   // SESSION_0433 B2: Jerry Smith — delete stale CB7 award. SESSION_0430 prod correction.
-  // The correct rank (BK0 base Black Belt) is seeded by RANK_AWARD_SEEDS below.
-  // LineageTreeMember.rankAwardId is explicitly nulled before delete (onDelete: SetNull
-  // handles it, but explicit is safer). No-op on a fresh DB.
+  // The correct rank (BK0 base Black Belt) is seeded by RANK_AWARD_SEEDS below. Display is
+  // awarded truth (ADR 0035), so deleting the stale higher award is what corrects the shown
+  // belt. No-op on a fresh DB.
   {
     const jerryId = passportIdByKey.get("jerry-smith")
     if (jerryId) {
@@ -1649,10 +1650,6 @@ async function main() {
         select: { id: true },
       })
       if (staleCoral) {
-        await db.lineageTreeMember.updateMany({
-          where: { rankAwardId: staleCoral.id },
-          data: { rankAwardId: null },
-        })
         await db.rankAward.delete({ where: { id: staleCoral.id } })
         console.log("   Jerry Smith correction: stale CB7 award deleted")
       }
@@ -1708,10 +1705,6 @@ async function main() {
   //    Each tree is published + public so /lineage renders them.
   // ---------------------------------------------------------------------
 
-  type SelectedRankAwardSeed = {
-    disciplineCode: string
-    rankShortName: string
-  }
 
   type TreeSeed = {
     brands?: SeedBrand[]
@@ -1722,8 +1715,6 @@ async function main() {
     memberKeys: string[]
     /** Visual parent mapping: childKey → parentKey. */
     parentMap: Record<string, string>
-    /** Per-tree selected rank award mapping: member key → rank lookup. */
-    selectedRankAwards?: Record<string, SelectedRankAwardSeed>
     /** Per-member claimable override: member key → isClaimable. */
     isClaimable?: Record<string, boolean>
   }
@@ -1777,33 +1768,6 @@ async function main() {
         "brian-truelson": "bill-hosken",
         OWNER: "bob-bass",
         // tim-wolchek: intentionally omitted — null parent (independent root-level instructor)
-      },
-      selectedRankAwards: {
-        "carlos-gracie-sr": { disciplineCode: "bjj", rankShortName: "R10" },
-        "carlos-gracie-jr": { disciplineCode: "bjj", rankShortName: "R9" },
-        "rigan-machado": { disciplineCode: "bjj", rankShortName: "R9" },
-        "bob-bass": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "rick-williams": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "erik-paulson": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "casey-olsen": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "rick-minter": { disciplineCode: "bjj", rankShortName: "CB7" },
-        // @updated SESSION_0433 — Poznik is BK5, not CB7 (SESSION_0430 C2).
-        poznik: { disciplineCode: "bjj", rankShortName: "BK5" },
-        "renato-magno": { disciplineCode: "bjj", rankShortName: "CB7" },
-        // @added SESSION_0433 — Rikki Rockett BK4 (SESSION_0430 B3).
-        "rikki-rockett": { disciplineCode: "bjj", rankShortName: "BK4" },
-        "david-meyer": { disciplineCode: "bjj", rankShortName: "CB7" },
-        "chris-haueter": { disciplineCode: "bjj", rankShortName: "BK6" },
-        "john-will": { disciplineCode: "bjj", rankShortName: "CB7" },
-        // @updated SESSION_0433 — Hosken is BK5 (SESSION_0430 B1).
-        "bill-hosken": { disciplineCode: "bjj", rankShortName: "BK5" },
-        // @updated SESSION_0433 — Jerry Smith is BK0 base Black Belt (SESSION_0430 B2).
-        "jerry-smith": { disciplineCode: "bjj", rankShortName: "BK0" },
-        "brian-truelson": { disciplineCode: "bjj", rankShortName: "BK1" },
-        OWNER: { disciplineCode: "bjj", rankShortName: "BK1" },
-        // @added SESSION_0386 — colors rorion's secondary slink (R9 red belt).
-        "rorion-gracie": { disciplineCode: "bjj", rankShortName: "R9" },
-        // tim-wolchek: no BJJ rank — renders with neutral colorHex
       },
       // SESSION_0316: Carlos Sr & Jr are historical roots — not claimable.
       // Everyone else (Rigan, the Dozen, Truelson, OWNER) is claimable.
@@ -1917,30 +1881,6 @@ async function main() {
           continue
         }
 
-        // SESSION_0316/0392: look the selected RankAward up by the MEMBER's own
-        // Passport (was hardcoded to owner.id, which only worked for OWNER).
-        const memberPassportId = passportIdByKey.get(key)
-        const selectedRankSeed = ts.selectedRankAwards?.[key]
-        const selectedRankAward =
-          selectedRankSeed && memberPassportId
-            ? await db.rankAward.findFirst({
-                where: {
-                  passportId: memberPassportId,
-                  rank: {
-                    shortName: selectedRankSeed.rankShortName,
-                    rankSystem: { discipline: { code: selectedRankSeed.disciplineCode } },
-                  },
-                },
-                select: { id: true },
-              })
-            : null
-
-        if (selectedRankSeed && !selectedRankAward) {
-          console.log(
-            `   ⚠️  RankAward not found for tree=${treeBrand}/${ts.slug} key=${key} discipline=${selectedRankSeed.disciplineCode} rank=${selectedRankSeed.rankShortName}`,
-          )
-        }
-
         const isClaimable = ts.isClaimable?.[key]
         const parentKey = ts.parentMap[key]
         const parentMemberId = parentKey ? (treeMemberIdByKey.get(parentKey) ?? null) : null
@@ -1951,7 +1891,6 @@ async function main() {
             id: true,
             visualSortOrder: true,
             primaryVisualParentMemberId: true,
-            rankAwardId: true,
             isClaimable: true,
           },
         })
@@ -1960,7 +1899,6 @@ async function main() {
           const updateData: {
             visualSortOrder?: number
             primaryVisualParentMemberId?: string | null
-            rankAwardId?: string
             isClaimable?: boolean
           } = {}
           if (member.visualSortOrder !== i) {
@@ -1968,9 +1906,6 @@ async function main() {
           }
           if (member.primaryVisualParentMemberId !== parentMemberId) {
             updateData.primaryVisualParentMemberId = parentMemberId
-          }
-          if (selectedRankAward && member.rankAwardId !== selectedRankAward.id) {
-            updateData.rankAwardId = selectedRankAward.id
           }
           if (isClaimable !== undefined && member.isClaimable !== isClaimable) {
             updateData.isClaimable = isClaimable
@@ -1983,7 +1918,6 @@ async function main() {
                 id: true,
                 visualSortOrder: true,
                 primaryVisualParentMemberId: true,
-                rankAwardId: true,
                 isClaimable: true,
               },
             })
@@ -2003,14 +1937,12 @@ async function main() {
             nodeId,
             visualSortOrder: i,
             primaryVisualParentMemberId: parentMemberId,
-            rankAwardId: selectedRankAward?.id ?? null,
             ...(isClaimable !== undefined ? { isClaimable } : {}),
           },
           select: {
             id: true,
             visualSortOrder: true,
             primaryVisualParentMemberId: true,
-            rankAwardId: true,
             isClaimable: true,
           },
         })

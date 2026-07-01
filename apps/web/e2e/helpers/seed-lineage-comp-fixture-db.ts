@@ -234,7 +234,6 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
         id: `${TAG_PREFIX}-${runId}-${slugify(instructorLabel)}-member`,
         treeId: tree.id,
         nodeId: instructor.node.id,
-        rankAwardId: rankAward.id,
         visualSortOrder: instructorEntries.length * 1000,
       },
     })
@@ -287,7 +286,6 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
             id: `${TAG_PREFIX}-${runId}-${slugify(label)}-member`,
             treeId: tree.id,
             nodeId: student.node.id,
-            rankAwardId: rankAward.id,
             primaryVisualParentMemberId: instructor.member.id,
             visualGroupId: group.id,
             visualSortOrder: studentIndex * 10,
@@ -383,9 +381,17 @@ async function readLineageCompFixtureState(
           node: { select: { passport: { select: { userId: true } } } },
         },
       },
-      selectedRankAward: {
+      node: {
         select: {
-          rank: { select: { name: true } },
+          passport: {
+            select: {
+              rankAwardsEarned: {
+                select: { rank: { select: { name: true } } },
+                orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                take: 1,
+              },
+            },
+          },
         },
       },
     },
@@ -408,7 +414,7 @@ async function readLineageCompFixtureState(
     // Phase 3c: nodes are Passport-rooted; group by the instructor's account id (passport.userId)
     // so callers can still index by the instructor User id.
     const instructorUserId = member.primaryVisualParent?.node.passport?.userId
-    const rankName = member.selectedRankAward?.rank.name
+    const rankName = member.node.passport?.rankAwardsEarned[0]?.rank.name
     if (!instructorUserId || !rankName) continue
 
     studentCountByInstructorAndRank[instructorUserId] ??= {}

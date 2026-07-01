@@ -30,20 +30,9 @@ export const toggleLineageTreeMemberClaimabilitySchema = z.object({
   isClaimable: z.boolean(),
 })
 
-export const updateLineageTreeMemberSelectedRankSchema = z.object({
-  treeId: z.string().min(1),
-  memberId: z.string().min(1),
-  rankAwardId: z
-    .union([z.string().min(1), z.literal("__clear__")])
-    .transform(value => (value === "__clear__" ? null : value)),
-})
-
 export type ToggleLineageTreeClaimabilitySchema = z.infer<
   typeof toggleLineageTreeClaimabilitySchema
 >
 export type ToggleLineageTreeMemberClaimabilitySchema = z.infer<
   typeof toggleLineageTreeMemberClaimabilitySchema
->
-export type UpdateLineageTreeMemberSelectedRankSchema = z.input<
-  typeof updateLineageTreeMemberSelectedRankSchema
 >
