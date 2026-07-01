@@ -26,7 +26,7 @@ const ARTICLE_PATH = fileURLToPath(
     import.meta.url,
   ),
 )
-const AUTHOR_EMAIL = "mrbscott@gmail.com" // Brian — BBL admin
+const AUTHOR_EMAIL = "tonyhua08@gmail.com" // Tony Hua — BBL admin (public byline)
 const DESCRIPTION =
   "The first twelve non-Brazilians to earn a Brazilian Jiu-Jitsu black belt — and why so many of the Dirty Dozen came through Rigan Machado's lineage."
 
@@ -85,6 +85,7 @@ async function main() {
 
     // `slug` is included so the uniqueSlugsExtension keeps our canonical slug on update
     // (it derives the slug from `slug || name || title`, so omitting it would re-slug the title).
+    // `author` is set on both create AND update so a re-run reassigns the byline.
     const data = {
       title,
       slug,
@@ -95,11 +96,12 @@ async function main() {
       status: PostStatus.Published,
       publishedAt,
       brand: Brand.BBL,
+      author: { connect: { id: author.id } },
     }
 
     const post = existing
       ? await db.post.update({ where: { id: existing.id }, data })
-      : await db.post.create({ data: { ...data, author: { connect: { id: author.id } } } })
+      : await db.post.create({ data })
 
     console.log(
       JSON.stringify(

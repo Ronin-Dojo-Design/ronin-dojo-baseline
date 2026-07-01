@@ -139,7 +139,7 @@ admin authoring surface + the Tiptap gap (SESSION_0446). Article: docs/product/b
 | --- | --- | --- |
 | SESSION_0485_TASK_01 | done | Footer → "Changelog" link added to `BblFooter` Explore column → existing `/changelog` route |
 | SESSION_0485_TASK_02 | done | Ratified `Post`/`/blog` as canonical blog; kept `ContentAtom` engine; retired `/posts` (301 → `/blog`) + deleted orphaned public reader. ADR 0042 |
-| SESSION_0485_TASK_03 | done | "The Dirty Dozen" published as the first `Post` on `/blog` (2026-05-30, author Brian, renders live) |
+| SESSION_0485_TASK_03 | done | "The Dirty Dozen" published as the first `Post` on `/blog` (2026-05-30, **author Tony Hua**, renders live) |
 
 ## What landed
 
@@ -315,6 +315,10 @@ crisp at natural size instead of upscaling to a blur.
   hero, author Brian, `Brand.BBL`). Live check: `/blog` + `/blog/[slug]` → 200 with hero + all 6 pioneer
   photos. **Note:** it renders via the *currently-deployed* (pre-session) code — the TOC / remark-gfm / styled
   wrapper polish + the `/posts`→`/blog` redirect + footer changelog land only on the (still-held) code push.
+- **Byline reassigned → Tony Hua** (operator request). Post `author` changed off Brian to Tony Hua
+  (`tonyhua08@gmail.com`, BBL admin) on local + prod; `AUTHOR_EMAIL` in the seed updated + the author now set
+  on the seed's update path (not just create) so a re-run reasserts it. Verified live: the
+  `blackbeltlegacy.com` byline reads "Tony Hua".
 - **Recommendations implemented (3):**
   - **Media picker in the post editor** (`post-form.tsx`) — replaced the bare `imageUrl` URL input with an
     Upload button (reuses the existing `uploadMedia` → R2 action, the same one the content media library uses)
