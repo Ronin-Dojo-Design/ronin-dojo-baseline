@@ -278,11 +278,33 @@ consolidation. All operator-ratified; no forks opened.
 
 ## Open decisions / blockers
 
-- **None.** All gates green; single-discipline live roster means zero display change. **One deliberate scope boundary:**
-  the SESSION_0263 physical archive was kept in-place (D475-4) — flag if you'd rather move the files.
-- **Claim → render round-trip** (claim placeholder → approve → minted BJJ award renders on the tree): the pieces are
-  each verified in isolation (claim-finalize mints from `claimedRank`; `memberTopRank` renders awarded truth), but the
-  full end-to-end wasn't exercised on live prod data. Low risk; worth a one-shot manual confirm post-deploy.
+- **None blocking.** ⚠️ **Correction to an earlier assumption:** the roster is **NOT** single-discipline — the operator
+  confirmed multiple cross-discipline black belts (Andre Lima = BJJ Black 3rd + TKD 8th Dan, + others). The
+  `/fallow-fix-loop` (below) caught that this made TASK_02 **live-broken** (a `take: 1` on the tree-card payload
+  starved the discipline `.find()`), now fixed + proven. So this session DOES change live display — it fixes members
+  who would otherwise blank out.
+- **One deliberate scope boundary:** the SESSION_0263 physical archive was kept in-place (D475-4) — flag if you'd
+  rather move the files.
+- **Claim → render round-trip** verified in pieces (claim-finalize mints from `claimedRank`; `memberTopRank` renders
+  awarded truth), not full-live-end-to-end. Low risk; worth a one-shot manual confirm post-deploy.
+
+## Fallow-fix-loop (post-build quality pass)
+
+Ran `/fallow-fix-loop` on the diff (operator-requested — "it's a biggie"). `fallow audit` + `fallow health`: the diff
+is a **net −168 lines**; **0 findings introduced** (127 inherited complexity findings excluded; the dead-code
+"unused files/exports" are false positives from bun hoisting `node_modules` to the workspace root; the clones are
+pre-existing). Repo maintainability **89.8 (good)**. Four parallel review agents (correctness / threading / avatar /
+cleanup) surfaced one **CRITICAL** confirmed bug + minor cleanups:
+
+| Fix | Detail |
+| --- | --- |
+| **CRITICAL — `take: 1` defeated discipline-scoping** | `memberTopRank(node, disciplineId)` `.find()`s the tree-discipline award, but `lineageNodeRowPayload.rankAwardsEarned` still had `take: 1` → it loaded only the member's GLOBAL top award. A multi-discipline member whose top-sorting belt is in another discipline → `.find(BJJ)` null → **blank belt** on tree/board/cards/mobile/honor-strip/galaxy. **Live bug** (roster has cross-discipline black belts). Fix: dropped `take: 1`. **Proven live** — bumped Andre Lima's real TKD above his BJJ + fabricated a global-top non-BJJ award for Meyer → the board keeps showing the BJJ belt; both reverted. |
+| DRY | Extracted `pickTopAwardInDiscipline(awards, disciplineId)` (the identical discipline-filter was inlined in node-profile query + action). |
+| Avatar robustness | Two XOR callers (`author`, `content-post`) now render the fallback always (broken image → initials, not an empty circle); `AvatarImage` tracks the failed *src* so a later src-change re-shows the image. |
+| Accepted-with-reason | `panel*` drawer aliases (harmless; renaming touches `drawer-header`), parentless-add `rankAwardId` (belt is awarded truth). |
+
+Re-verify after fixes: typecheck 0 · touched-area tests 63/0 · oxlint/oxfmt clean · live board+timeline still SSR 75
+avatar `<img>` + render belts · discipline-scope proven on real (Andre) + fabricated (Meyer) multi-discipline data.
 
 ## Next session
 
