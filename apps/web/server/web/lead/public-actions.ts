@@ -25,6 +25,7 @@ import {
   submitPassportClaim,
 } from "~/server/web/claims/submit-passport-claim"
 import { leadPayload } from "~/server/web/lead/payloads"
+import { emitSchoolLead } from "~/server/web/school-lead/emit-school-lead"
 import {
   claimAcceptNextPath,
   FREE_SIGNUP_NEXT_PATH,
@@ -482,6 +483,14 @@ export const createJoinLegacyInterest = publicActionClient
       },
       select: leadPayload,
     })
+
+    if (!schoolOrgId && schoolName) {
+      await emitSchoolLead({
+        schoolName,
+        memberEmail: parsedInput.email,
+        source: "join-the-legacy",
+      })
+    }
 
     // Claiming an EXISTING placeholder node should not spawn a second pending
     // "Legacy Profile" Tool — that's a duplicate identity an admin would have to
