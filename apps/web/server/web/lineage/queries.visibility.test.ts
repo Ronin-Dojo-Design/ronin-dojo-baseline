@@ -39,7 +39,6 @@ function member({
   sortOrder = 0,
   showRanks = true,
   rankAwards = [],
-  selectedRankAward = null,
 }: {
   id: string
   nodeId: string
@@ -49,7 +48,6 @@ function member({
   sortOrder?: number
   showRanks?: boolean
   rankAwards?: unknown[]
-  selectedRankAward?: unknown
 }) {
   return {
     id,
@@ -61,7 +59,6 @@ function member({
     visualGroupId: groupId,
     treeId: "tree-1",
     nodeId,
-    selectedRankAward,
     node: {
       id: nodeId,
       slug: nodeId,
@@ -185,6 +182,20 @@ describe("lineage public payload allowlists", () => {
     expect(payloads.includes("claimRequests")).toBe(true)
     expect(payloads.includes('"status":true')).toBe(true)
   })
+
+  // SESSION_0475: the tree/board/cards resolve the shown belt with
+  // `memberTopRank(node, disciplineId)`, which `.find()`s the highest award IN the tree's
+  // discipline. A `take: 1` here would load only the member's GLOBAL top award (by
+  // cross-system sortOrder) → `.find(tree discipline)` misses → a BLANK belt for any
+  // multi-discipline member whose top-sorting belt is in another discipline (e.g. Andre
+  // Lima's TKD 8th Dan out-sorting his BJJ 3rd-degree). This guards the payload→resolver seam.
+  it("lineageNodeRowPayload.rankAwardsEarned loads ALL awards (no `take`) so discipline-scoping isn't truncated", () => {
+    const passportSelect = (lineageNodeRowPayload.passport as { select: Record<string, unknown> })
+      .select
+    const rankAwardsEarned = passportSelect.rankAwardsEarned as Record<string, unknown>
+    expect(rankAwardsEarned).toBeTruthy()
+    expect("take" in rankAwardsEarned).toBe(false)
+  })
 })
 
 describe("lineage tree visibility materialization", () => {
@@ -218,16 +229,6 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC" as LineageVisibility,
           showRanks: false,
           rankAwards: [{ id: "rank-award-1", awardedAt: "2020-01-01" }],
-          selectedRankAward: {
-            id: "rank-award-1",
-            awardedAt: "2020-01-01",
-            rank: {
-              id: "rank-1",
-              name: "Hidden Black Belt",
-              shortName: "HBB",
-              colorHex: "#000000",
-            },
-          },
         }),
       ],
       visualGroups: [],
@@ -236,40 +237,6 @@ describe("lineage tree visibility materialization", () => {
     const result = materializeLineageTreeResult(hiddenRankTree as never)
 
     expect(result.members[0]?.node.passport?.rankAwardsEarned).toEqual([])
-    expect(result.members[0]?.selectedRankAward).toBeNull()
-  })
-
-  it("preserves selectedRankAward when the public profile shows ranks", () => {
-    const visibleRankTree = {
-      ...publicTree,
-      defaultRootMemberId: "rank-shown-member",
-      members: [
-        member({
-          id: "rank-shown-member",
-          nodeId: "rank-shown-node",
-          visibility: "PUBLIC" as LineageVisibility,
-          showRanks: true,
-          selectedRankAward: {
-            id: "rank-award-2",
-            awardedAt: "2021-01-01",
-            rank: {
-              id: "rank-2",
-              name: "Visible Black Belt",
-              shortName: "VBB",
-              colorHex: "#222222",
-            },
-          },
-        }),
-      ],
-      visualGroups: [],
-    }
-
-    const result = materializeLineageTreeResult(visibleRankTree as never)
-
-    expect(result.members[0]?.selectedRankAward).toMatchObject({
-      id: "rank-award-2",
-      rank: { shortName: "VBB" },
-    })
   })
 
   it("widens viewer scope without ever including PRIVATE in shared public paths", () => {

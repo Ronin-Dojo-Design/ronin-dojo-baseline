@@ -157,14 +157,6 @@ export const findLineageTreeDetail = async (treeId: string) => {
           id: true,
           isClaimable: true,
           visualSortOrder: true,
-          rankAwardId: true,
-          selectedRankAward: {
-            select: {
-              id: true,
-              awardedAt: true,
-              rank: { select: { name: true, shortName: true, sortOrder: true } },
-            },
-          },
           node: {
             select: {
               id: true,

@@ -6,6 +6,7 @@ import type {
 import {
   memberBeltColor,
   memberRankLabel,
+  memberTopRankAward,
   resolveLineageMemberView,
 } from "~/lib/lineage/canvas-model"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
@@ -26,8 +27,8 @@ export type LineageVisualNode = {
   visualGroupId: string | null
   /**
    * Promotion provenance (the lineage USP) — when this member was promoted to
-   * their shown rank. ISO date string from the selected RankAward, or null when
-   * the date is unknown. The timeline orders + dates the tree off this.
+   * their shown rank. ISO date string from the top **awarded** RankAward, or null
+   * when the date is unknown. The timeline orders + dates the tree off this.
    */
   promotionDate: string | null
   /**
@@ -50,15 +51,20 @@ export function toLineageVisual(
     mainMemberId?: string | null
     relationships?: Pick<LineageRelationshipRow, "fromNodeId" | "toNodeId" | "type">[]
     visualGroups?: Pick<LineageVisualGroupRow, "id" | "label">[]
+    /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+    disciplineId?: string | null
   } = {},
 ): { nodes: LineageVisualNode[]; secondaryLinks: LineageSecondaryLink[] } {
-  const { mainMemberId, relationships = [], visualGroups = [] } = options
+  const { mainMemberId, relationships = [], visualGroups = [], disciplineId } = options
   const groupLabelById = new Map(visualGroups.map(group => [group.id, group.label]))
 
   const nodes: LineageVisualNode[] = members.map(member => {
     const { node } = member
     // Same single resolver every other surface uses — one person, one ruleset.
-    const view = resolveLineageMemberView(node, { isClaimable: member.isClaimable })
+    const view = resolveLineageMemberView(node, { isClaimable: member.isClaimable, disciplineId })
+    // Promotion date = the awardedAt of the member's shown (top awarded, discipline-scoped)
+    // rank — the same awarded-truth source the belt reads (ADR 0035).
+    const topAwardedAt = memberTopRankAward(node, disciplineId)?.awardedAt ?? null
 
     return {
       id: member.id,
@@ -74,9 +80,7 @@ export function toLineageVisual(
       claimable: view.claimBadgeStatus === "claimable",
       primaryVisualParentMemberId: member.primaryVisualParentMemberId,
       visualGroupId: member.visualGroupId,
-      promotionDate: member.selectedRankAward?.awardedAt
-        ? new Date(member.selectedRankAward.awardedAt).toISOString()
-        : null,
+      promotionDate: topAwardedAt ? new Date(topAwardedAt).toISOString() : null,
       visualGroupLabel: member.visualGroupId
         ? (groupLabelById.get(member.visualGroupId) ?? null)
         : null,
@@ -99,8 +103,8 @@ export function toLineageVisual(
     secondaryLinks.push({
       fromMemberId: fromMember.id,
       toMemberId: toMember.id,
-      rankLabel: memberRankLabel(fromMember.node),
-      colorHex: memberBeltColor(fromMember.node),
+      rankLabel: memberRankLabel(fromMember.node, disciplineId),
+      colorHex: memberBeltColor(fromMember.node, disciplineId),
     })
   }
 

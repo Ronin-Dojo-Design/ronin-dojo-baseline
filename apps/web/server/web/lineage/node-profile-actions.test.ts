@@ -190,7 +190,6 @@ beforeAll(async () => {
       id: tag("member"),
       treeId: tree.id,
       nodeId: node.id,
-      rankAwardId: rankAward.id,
       visualSortOrder: 0,
     },
   })
@@ -289,7 +288,7 @@ describe("lineage node profile editing — logic", () => {
     expect(editable?.node.id).toBe(fx!.nodeId)
     expect(editable?.node.passport?.displayName).toBe("Original Display Name")
     expect(editable?.member.id).toBe(fx!.memberId)
-    expect(editable?.member.selectedRankAward?.awardedAt?.toISOString()).toBe(
+    expect(editable?.member.currentRankAward?.awardedAt?.toISOString()).toBe(
       new Date(Date.UTC(2020, 0, 1)).toISOString(),
     )
 

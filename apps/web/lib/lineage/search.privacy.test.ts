@@ -51,7 +51,6 @@ function member({
     visualGroupId: null,
     treeId: "tree-1",
     nodeId,
-    selectedRankAward: null,
     node: {
       id: nodeId,
       slug: nodeId,

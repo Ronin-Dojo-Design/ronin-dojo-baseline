@@ -19,15 +19,6 @@ import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage
  * Extracted from `lineage-tree-canvas.tsx` at SESSION_0312 (Phase 3a).
  */
 
-export type SelectedRank = {
-  id: string
-  name: string
-  shortName: string | null
-  colorHex: string | null
-  sortOrder?: number | null
-  disciplineName?: string | null
-}
-
 export type CanvasMember = {
   id: string
   nodeId: string
@@ -37,7 +28,6 @@ export type CanvasMember = {
   visualGroupId: string | null
   isClaimable?: boolean
   isCollapsedDefault: boolean
-  selectedRank?: SelectedRank | null
 }
 
 export type ChildGroup = {
@@ -61,40 +51,49 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
 }
 
 /**
- * THE member's *shown* rank = their highest **awarded** belt (`rankAwardsEarned[0]`,
- * ordered by Rank.sortOrder desc; `take: 1` in the payload). The single source for
- * "what belt are you" across every surface (card, rows, mobile, timeline, honor strip,
- * canvas). Display = awarded truth, full stop (ADR 0035) — the deprecated
- * `selectedRankAward`/`selectedRank` pointer (stale WP-import data) must NEVER drive it.
- * Null → no rank.
+ * THE member's *shown* rank award. `rankAwardsEarned` is pre-ordered by Rank.sortOrder
+ * desc, so `[0]` is the member's highest awarded belt overall.
+ *
+ * **Discipline-scoped (ADR 0035 §3).** "Highest by sortOrder" is meaningless ACROSS rank
+ * systems (sortOrder is per-system), so a discipline-scoped surface — the lineage
+ * tree/board/cards, which carry the tree's `disciplineId` — MUST pass that `disciplineId`
+ * to get the highest belt *within that discipline* (e.g. a BJJ tree shows the BJJ rank, not
+ * a TKD dan that happens to sort higher). The multi-discipline surfaces (drawer, directory)
+ * pass nothing → highest awarded overall. The single awarded-truth source every surface
+ * reads — both for "what belt are you" (`.rank`) and "when were you promoted" (`.awardedAt`).
+ * Null → no (matching) award.
  */
-export function memberTopRank(node: LineageNodeRow) {
-  return node.passport?.rankAwardsEarned?.[0]?.rank ?? null
+export function memberTopRankAward(node: LineageNodeRow, disciplineId?: string | null) {
+  const awards = node.passport?.rankAwardsEarned ?? []
+  if (!disciplineId) return awards[0] ?? null
+  // Pre-sorted by sortOrder desc → the first award in this discipline is its top belt.
+  return awards.find(award => award.rank.rankSystem?.discipline?.id === disciplineId) ?? null
+}
+
+/**
+ * THE member's *shown* rank = the rank of their top awarded belt (discipline-scoped when
+ * a `disciplineId` is given — see `memberTopRankAward`). The single source for "what belt
+ * are you" across every surface (card, rows, mobile, timeline, honor strip, canvas). Null
+ * → no rank.
+ */
+export function memberTopRank(node: LineageNodeRow, disciplineId?: string | null) {
+  return memberTopRankAward(node, disciplineId)?.rank ?? null
 }
 
 /**
  * Belt color hex for the member's shown rank. Null → no swatch. Verification is a
  * SEPARATE axis (`node.isVerified`) and never filters which belt shows.
- *
- * @param selectedRank DEPRECATED for display (SESSION_0430) — kept only for caller
- * signature stability; the displayed belt is awarded truth (`memberTopRank`).
  */
-export function memberBeltColor(
-  node: LineageNodeRow,
-  _selectedRank?: SelectedRank | null,
-): string | null {
-  return memberTopRank(node)?.colorHex ?? null
+export function memberBeltColor(node: LineageNodeRow, disciplineId?: string | null): string | null {
+  return memberTopRank(node, disciplineId)?.colorHex ?? null
 }
 
 /**
  * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's shown rank.
- * Null → no rank. See `memberTopRank` (ADR 0035 awarded-truth).
+ * Null → no rank. See `memberTopRank` (ADR 0035 awarded-truth, discipline-scoped).
  */
-export function memberRankLabel(
-  node: LineageNodeRow,
-  _selectedRank?: SelectedRank | null,
-): string | null {
-  const rank = memberTopRank(node)
+export function memberRankLabel(node: LineageNodeRow, disciplineId?: string | null): string | null {
+  const rank = memberTopRank(node, disciplineId)
   if (!rank) return null
 
   return `${rank.name}${
@@ -142,19 +141,20 @@ export type LineageMemberView = {
  *
  * Verification is the single `node.isVerified` axis (ADR 0035 §5; `RankAward.
  * verificationStatus` is vestigial and never drives display). Belt = highest awarded
- * rank by sortOrder. `isClaimable` is the per-viewer claim affordance from the tree
- * payload — consumed only by surfaces that show it (drawer/directory).
+ * rank, scoped to `opts.disciplineId` on discipline-scoped surfaces (the tree/board/cards
+ * pass the tree's discipline; drawer/directory omit it for multi-discipline display).
+ * `isClaimable` is the per-viewer claim affordance — consumed only by surfaces that show it.
  */
 export function resolveLineageMemberView(
   node: LineageNodeRow,
-  opts: { isClaimable?: boolean | null } = {},
+  opts: { isClaimable?: boolean | null; disciplineId?: string | null } = {},
 ): LineageMemberView {
   const claimStatus = pickLineageClaimStatus(node.claimRequests)
   return {
     displayName: nodeDisplayName(node),
     avatarSrc: memberAvatarSrc(node),
-    beltColor: memberBeltColor(node),
-    rankLabel: memberRankLabel(node),
+    beltColor: memberBeltColor(node, opts.disciplineId),
+    rankLabel: memberRankLabel(node, opts.disciplineId),
     schoolLabel: memberSchoolLabel(node),
     trustStatus: resolveLineageTrustStatus({
       verificationStatus: node.verificationStatus,

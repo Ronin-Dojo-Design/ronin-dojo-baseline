@@ -250,10 +250,9 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     },
   })
 
-  // SESSION_0474 awarded-truth guard: member-A ALSO holds a HIGHER awarded belt
-  // (sortOrder 100), while their `selectedRank` (memberA.rankAwardId below) stays
-  // pinned to the LOWER award. Display MUST show the highest AWARDED rank (ADR 0035) —
-  // not the deprecated `selectedRank`. This is the Meyer/Casey regression guard.
+  // Awarded-truth guard (SESSION_0474, simplified SESSION_0475): member-A holds TWO
+  // awarded belts — a lower one (rankAwardA) and a HIGHER one (sortOrder 100). Display
+  // MUST show the highest AWARDED rank (ADR 0035). This is the Meyer/Casey regression guard.
   const rankATop = await prisma.rank.create({
     data: {
       brand: TEST_BRAND,
@@ -309,7 +308,6 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     data: {
       treeId: tree.id,
       nodeId: memberAEntry.node.id,
-      rankAwardId: rankAwardA.id,
       visualSortOrder: 10,
       visualGroupId: publicGroup.id,
     },
@@ -319,7 +317,6 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     data: {
       treeId: tree.id,
       nodeId: memberBEntry.node.id,
-      rankAwardId: rankAwardB.id,
       visualSortOrder: 20,
       visualGroupId: publicGroup.id,
       // SESSION_0474: claimable so the OLD code would have rendered a "Claimable" badge on
@@ -344,11 +341,10 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       nodeId: memberAEntry.node.id,
       memberId: memberA.id,
       displayName: memberAEntry.displayName,
-      rankAwardId: rankAwardA.id,
       rankName: rankA.name,
       rankShortName: rankA.shortName ?? "",
-      // The HIGHER awarded rank — what every display surface must show (awarded truth),
-      // even though `selectedRank` (rankAwardId) points at the lower `rankName`.
+      // The HIGHER awarded rank — what every display surface must show (awarded truth);
+      // `rankName` above is the member's LOWER award, which must NOT win.
       awardedTopRankName: rankATop.name,
       rankSystemName: visibleRankSystem.name,
       disciplineName: discipline.name,
@@ -358,7 +354,6 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       nodeId: memberBEntry.node.id,
       memberId: memberB.id,
       displayName: memberBEntry.displayName,
-      rankAwardId: rankAwardB.id,
       rankName: rankB.name,
       rankShortName: rankB.shortName ?? "",
       rankSystemName: hiddenRankSystem.name,

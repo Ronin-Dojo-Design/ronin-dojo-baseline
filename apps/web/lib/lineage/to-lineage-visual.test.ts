@@ -46,26 +46,6 @@ function makeMember({
     primaryVisualParentMemberId: parentId,
     visualGroupId: groupId,
     isClaimable,
-    selectedRankAward: colorHex
-      ? {
-          id: `ra-${id}`,
-          awardedAt: new Date(),
-          rank: {
-            id: `rank-${id}`,
-            name: rankName,
-            shortName: null,
-            colorHex,
-            sortOrder: 10,
-            rankSystem: disciplineName
-              ? {
-                  id: "rs-1",
-                  name: "BJJ",
-                  discipline: { id: "d-1", name: disciplineName, slug: "bjj", code: "BJJ" },
-                }
-              : null,
-          },
-        }
-      : null,
     node: {
       id: nodeId,
       slug: id,
@@ -136,7 +116,7 @@ describe("toLineageVisual", () => {
     assert.equal(nodes[0]!.displayName, "Passport Name")
   })
 
-  test("maps colorHex and rankLabel from selectedRankAward", () => {
+  test("maps colorHex and rankLabel from the highest awarded rank", () => {
     const m = makeMember({
       id: "m1",
       colorHex: "#1a1a1a",

@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import { LineageAvatarAction } from "~/app/app/lineage/_components/lineage-avatar-action"
 import { LineageClaimabilityToggle } from "~/app/app/lineage/_components/lineage-claimability-toggle"
-import { LineageSelectedRankSelect } from "~/app/app/lineage/_components/lineage-selected-rank-select"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -185,12 +184,6 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
                     </Note>
                   )}
                 </Stack>
-
-                <LineageSelectedRankSelect
-                  treeId={tree.id}
-                  member={member}
-                  label={`Select display rank for ${displayName(member)}`}
-                />
 
                 <Stack size="xs" className="items-center">
                   <LineageClaimabilityToggle

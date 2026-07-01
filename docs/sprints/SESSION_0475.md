@@ -2,10 +2,10 @@
 title: "SESSION 0475 — Lineage rank-display refinement: discipline-scoped rank + selectedRank removal + one-SSR-avatar"
 slug: session-0475
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-30
 updated: 2026-06-30
-last_agent: claude-session-0474
+last_agent: claude-session-0475
 sprint: S49
 pairs_with:
   - docs/sprints/SESSION_0474.md
@@ -200,45 +200,234 @@ read-model) + SESSION_0474 (the resolver + the surfaces). cody-preflight.md befo
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0475_TASK_01 | pending | Remove `selectedRank`/`selectedRankAward` (schema migration + repoint live readers + delete dropdown/plumbing) |
-| SESSION_0475_TASK_02 | pending | Discipline-scoped `memberTopRank` (BBL tree/cards = BJJ; drawer/directory multi-discipline) |
-| SESSION_0475_TASK_03 | pending | One SSR-image avatar primitive (kill the `CardAvatar` divergence) |
-| SESSION_0475_TASK_04 | pending | Apply the remaining 0474 lineage doc-staleness corrections + archive SESSION_0263_* |
+| SESSION_0475_TASK_01 | done | Removed `selectedRankAward` end-to-end (schema migration + repointed live readers + deleted dropdown/plumbing). **Kept** the `create-lineage-member` param — it feeds the separate `LineageRelationship.rankAwardId`. |
+| SESSION_0475_TASK_02 | done | `memberTopRank(node, disciplineId?)` is the ONE discipline-aware resolver; all tree surfaces pass `tree.disciplineId` (BBL=BJJ); drawer/directory omit it. Unit-tested a BJJ+TKD holder. |
+| SESSION_0475_TASK_03 | done | Design-system `Avatar` now SSRs the `<img>` (initials fallback only on missing/errored); `CardAvatar` folded onto it. Live-verified 75 SSR imgs on board + timeline. |
+| SESSION_0475_TASK_04 | done | Corrected the two code-referencing doc-staleness items (rank-promotion-sync-rules verification inversion; tree-runbook CanvasMember/belt-source). SESSION_0263 archive kept in-place (HRR-005; lineage-hub already flags them). |
 
 ## What landed
 
+Three coupled lineage-display refinements — **one source, rendered identically everywhere** — plus the doc
+consolidation. All operator-ratified; no forks opened.
+
+- **TASK_01 — `selectedRankAward` removed.** Dropped the display-dead `LineageTreeMember.rankAwardId` override
+  end-to-end (57 files): hand-authored the Prisma migration (`DropForeignKey` + `DropIndex` + `DropColumn`),
+  repointed the 5 live readers (View-A `promotionDate`, galaxy timeline-year, students-carousel rank, drawer
+  `panelRank`, the public node-edit promotion-date read+write) to the top **awarded** RankAward via a new
+  `memberTopRankAward` helper, deleted the admin "Selected rank" dropdown + `updateLineageTreeMemberSelectedRank`
+  action/schema + the `selectedRankAward` payload/plumbing/redaction, and updated ~15 tests + the seed + 2 scripts.
+- **TASK_02 — discipline-scoped shown rank.** `memberTopRank(node, disciplineId?)` / `memberTopRankAward(node,
+  disciplineId?)` / `resolveLineageMemberView(node, {disciplineId})` are the ONE resolver; when a `disciplineId`
+  is passed it returns the highest awarded belt *in that discipline* (ADR 0035 §3), else the global highest. All
+  tree surfaces (View A, board root+compact, mobile, honor strip, galaxy, students carousel, secondary links)
+  thread `tree.disciplineId` from the page down; the drawer header + directory omit it (multi-discipline). No
+  reader uses a raw `rankAwardsEarned[0]` — even the admin promotion-date edit form is discipline-scoped.
+- **TASK_03 — one SSR-image avatar.** The design-system `Avatar` now renders its `<img>` server-side (layered over
+  an initials fallback shown only on missing/errored image); `CardAvatar` (the cinematic timeline's belt-ring
+  avatar) folded onto it. Kills the initials-then-pop on the ~26 Avatar surfaces without touching their compound API.
+- **TASK_04 — docs.** Corrected the inverted `isVerified`-derived-from-`verificationStatus` claim in
+  `lineage-rank-promotion-sync-rules.md` and the stale `CanvasMember.selectedRank` / belt-source note in
+  `lineage-tree-runbook.md`.
+
 ## Decisions resolved
+
+- **D475-1 — the `create-lineage-member` `rankAwardId` param STAYS (correction to the prestage wording).** The param
+  fed TWO columns: `LineageTreeMember.rankAwardId` (the selectedRank — removed) **and** `LineageRelationship.rankAwardId`
+  (the PROMOTED_BY edge's award, ADR 0016 — kept). Dropping the param would sever the promotion-edge→award link, so
+  only the member-level write was removed. The prestage note also listed `billing/actions.ts` as a caller — it isn't:
+  the only `createLineageMember` caller is `server/admin/users/actions.ts`; `billing/actions.ts` has
+  `createLineageMembershipCheckout` (a different function that never touches the column).
+- **D475-2 — the admin promotion-date edit form is discipline-scoped too** (not just display). The node-profile
+  query/action filter the awards to the tree's discipline in JS (Prisma can't reference the sibling `tree.disciplineId`
+  in a nested `where`), so the "never a raw `[0]`" invariant holds for the editorial path as well.
+- **D475-3 — `CardAvatar` folded, not deleted.** Its belt-ring/glow is a legitimate timeline idiom; it now wraps the
+  shared `Avatar` for the image/initials so there's one img-rendering primitive with no behavior divergence.
+- **D475-4 — SESSION_0263 archived in-place, not moved.** Physically moving the two files would churn ~9 inbound
+  links (sprints, lineage-hub, import-map, wiki index) for marginal benefit; HRR-005 prefers mark-superseded-in-place,
+  and lineage-hub already flags them.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
+| `apps/web/prisma/schema.prisma` + `migrations/20260630000000_drop_lineage_tree_member_selected_rank/` | Drop `LineageTreeMember.rankAwardId` + FK + index + the `RankAward.lineageTreeMembers` back-relation; hand-authored migration |
+| `apps/web/lib/lineage/canvas-model.ts` | `memberTopRankAward`/`memberTopRank`/`memberBeltColor`/`memberRankLabel`/`resolveLineageMemberView` discipline-aware; `SelectedRank` type + `CanvasMember.selectedRank` removed |
+| `apps/web/lib/lineage/to-lineage-visual.ts` | promotionDate ← top awarded award; `disciplineId` option threaded to belt + secondary links |
+| `apps/web/server/web/lineage/{payloads,queries,node-profile-queries,node-profile-actions,editor-actions,create-lineage-member}.ts` | Drop `selectedRankAward` payload/redaction; repoint node-edit promotion-date (discipline-scoped); drop member `rankAwardId` select/write (keep relationship award) |
+| `apps/web/server/admin/lineage/{actions,schema,queries}.ts` + `app/app/lineage/{[treeId]/page,_components/lineage-selected-rank-select}` | Delete the "Selected rank" write-path + dropdown + redaction |
+| `apps/web/components/web/lineage/**` (node-card, board-card, branch, canvas index+types, compact-list, mobile-list, honor-strip, students-carousel, view-a-island, tree-board, drawer index/types/info-tab/use-drawer-profile/rank-history-tab, galaxy) | Thread `disciplineId`; drop `selectedRank` prop/plumbing; drawer no longer takes `selectedRankAward` |
+| `apps/web/components/common/avatar.tsx` + `.../lineage-cohort-timeline/card-avatar.tsx` | SSR `<img>` primitive + CardAvatar folded onto it |
+| `apps/web/prisma/seed-baseline-lineage.ts` · `scripts/{import-bbl-members-full,remove-brian-clone-memberships}.ts` | Drop `selectedRankAwards` seeding + member `rankAwardId` writes (RankAward creation kept) |
+| `apps/web/**/*.test.ts` (~11) + `e2e/helpers/*` + `e2e/lineage/public-rank-redaction.spec.ts` | Updated for the removed field; +discipline-scoping unit test (BJJ+TKD); rank-redaction fixture simplified to two-award |
+| `docs/architecture/lineage/lineage-rank-promotion-sync-rules.md` · `docs/runbooks/domain-features/lineage-tree-runbook.md` | Staleness corrections |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `bun run typecheck` | clean (0 errors) |
+| `oxlint` (touched areas) | clean (2 pre-existing warnings, unrelated) |
+| `cd apps/web && bun run build` | ✓ compiled 39.3s + 181/181 static pages |
+| `bun run test` (full suite, `--parallel=1`) | **877 pass / 0 fail** across 140 files |
+| `bun run wiki:lint` | 0 errors (17 pre-existing cosmetic warnings) |
+| `prisma migrate deploy` (local prodsnap) | migration applies; client regenerated |
+| Live DOM — BBL board (`?view=board`) | **75 SSR `data-slot="avatar-image"` `<img>`** in initial HTML (was 0 via Base UI) — no initials-pop |
+| Live DOM — BBL View A timeline | 75 SSR avatar `<img>` via shared Avatar; belt-ring glow preserved; Meyer→Coral renders; no error boundary |
+| Discipline-scoping (unit) | BJJ+TKD holder → BJJ on the tree, both reachable, no-discipline = highest overall, unknown discipline = null |
+| Claim orthogonality (integration) | `claim-finalize.test.ts` 7 pass — claim mints RankAward from `claimedRank`, never the removed column |
 
 ## Open decisions / blockers
 
-- None at plan-lock. Self-contained; no operator input required to start (the model is ratified; browser-proof on `bbl.local`).
+- **None blocking.** ⚠️ **Correction to an earlier assumption:** the roster is **NOT** single-discipline — the operator
+  confirmed multiple cross-discipline black belts (Andre Lima = BJJ Black 3rd + TKD 8th Dan, + others). The
+  `/fallow-fix-loop` (below) caught that this made TASK_02 **live-broken** (a `take: 1` on the tree-card payload
+  starved the discipline `.find()`), now fixed + proven. So this session DOES change live display — it fixes members
+  who would otherwise blank out.
+- **One deliberate scope boundary:** the SESSION_0263 physical archive was kept in-place (D475-4) — flag if you'd
+  rather move the files.
+- **Claim → render round-trip** verified in pieces (claim-finalize mints from `claimedRank`; `memberTopRank` renders
+  awarded truth), not full-live-end-to-end. Low risk; worth a one-shot manual confirm post-deploy.
+
+## Fallow-fix-loop (post-build quality pass)
+
+Ran `/fallow-fix-loop` on the diff (operator-requested — "it's a biggie"). `fallow audit` + `fallow health`: the diff
+is a **net −168 lines**; **0 findings introduced** (127 inherited complexity findings excluded; the dead-code
+"unused files/exports" are false positives from bun hoisting `node_modules` to the workspace root; the clones are
+pre-existing). Repo maintainability **89.8 (good)**. Four parallel review agents (correctness / threading / avatar /
+cleanup) surfaced one **CRITICAL** confirmed bug + minor cleanups:
+
+| Fix | Detail |
+| --- | --- |
+| **CRITICAL — `take: 1` defeated discipline-scoping** | `memberTopRank(node, disciplineId)` `.find()`s the tree-discipline award, but `lineageNodeRowPayload.rankAwardsEarned` had `take: 1` → it loaded only the member's GLOBAL top award. A multi-discipline member whose top-sorting belt is in another discipline → `.find(BJJ)` null → **blank belt** on tree/board/cards/mobile/honor-strip/galaxy. **Live bug** (operator confirmed cross-discipline black belts: Andre Lima BJJ 3rd + TKD 8th Dan). ⚠️ **First fix attempt (c992ce80) only edited the comment, not the `take: 1` line — and the "proof" was a false positive (`html.includes(rankName)` matched OTHER members' Black-Belt cards, not Andre's).** The **merge-gate review pass caught both.** Real fix (397ae85a): removed `take: 1` + a regression test asserting the payload has no `take` (proven to fail when re-added) + a **correct** payload→resolver-seam proof (load Andre via the exact production payload with TKD bumped global-top → payload loads 2 awards, `memberTopRank(andre, BJJ)` returns his BJJ belt). |
+| DRY | Extracted `pickTopAwardInDiscipline(awards, disciplineId)` (the identical discipline-filter was inlined in node-profile query + action). |
+| Avatar robustness | Two XOR callers (`author`, `content-post`) now render the fallback always (broken image → initials, not an empty circle); `AvatarImage` tracks the failed *src* so a later src-change re-shows the image. |
+| Accepted-with-reason | `panel*` drawer aliases (harmless; renaming touches `drawer-header`), parentless-add `rankAwardId` (belt is awarded truth), + 3 Desi LOW polish items (a11y `aria-hidden` on the avatar fallback needs screen-reader verification; 2 doc-notes) deferred to a follow-up. |
+
+## Pre-push review passes (operator-requested: pr-review-score-fix + hostile-close-review + WWAD)
+
+- **PR review → score → fix (merge-gate, all_hands):** first pass **FAIL 4/10** — caught that c992ce80's `take: 1`
+  removal was never applied (comment lied) and the proof was invalid. Blocking issue B1 fixed (real removal + regression
+  test + valid seam proof); N1 (commit-integrity) addressed by the honest fix commit; N2/N3 non-blocking. **Re-gate: PASS**
+  (binary accelerator now yes/yes/yes; the one blocker resolved and guarded).
+- **WWAD — "Would Apple/Facebook/YouTube ship this?" (Desi): SHIP, 9/10.** "What a senior design-systems team ships —
+  fewer pieces, used better; ratify the rule then conform." Praised the SSR avatar (`failedSrc` not a boolean), the
+  one-resolver model, the complete delete, and ruled the `disciplineId` prop-thread "the honest simplest thing — Apple
+  would ship it" (conforms to the existing `renderPolicy` river; a lone context would be YAGNI). 3 LOW polish items, deferred.
+
+Re-verify after all fixes: typecheck 0 · touched-area tests 29/0 (+full suite at push) · oxfmt clean · live board renders
+75 SSR avatars + belts (Andre shows his belt) · discipline-scope proven correctly via the payload→resolver seam + a
+regression test that bites.
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out (likely: the lineage Instructor Hub epic — SESSION_0472 build plan S6+ — or whatever the operator pins).
+TBD — operator to pin. Candidates: the lineage **Instructor Hub** epic (SESSION_0472 build plan S6+), or the S3
+fresh-member rank-submission door (renders the pending/unverified nodes this lane's model supports).
 
 ### First task
 
-TBD at bow-out.
+TBD at bow-in.
 
 ## Review log
 
+### SESSION_0475_REVIEW_01 — the lineage-display cleanup lane
+
+- **Reviewed:** TASK_01 (removal), TASK_02 (discipline-scope), TASK_03 (avatar), TASK_04 (docs) — all done.
+- **Verdict:** the lane the prestage teed up landed whole and reuse-first — one `memberTopRank` resolver every
+  surface reads, one `Avatar` primitive every surface renders. The single non-trivial judgment call (keep the
+  `create-lineage-member` param) was caught by cody-preflight reading the live code, not by following the plan
+  wording — the param feeds a *second, kept* column (`LineageRelationship.rankAwardId`).
+- **Score:** 9/10 — clean, verified end-to-end (877 tests + live DOM), and the plan's "never a raw `[0]`" invariant
+  is airtight (even the editorial promotion-date path is discipline-scoped). −1 for the claim→render round-trip
+  proven only in pieces, not live-end-to-end.
+- **Follow-up:** operator to pin next lane; optionally live-confirm the claim→approve→belt-render round-trip.
+
 ## Hostile close review
+
+- **Giddy:** pass — the shipped state is DRY by construction (one resolver, one avatar primitive), ADR-0035-aligned,
+  and adds no new authz/verification axis. The migration is minimal + correct (drops only the member column; the
+  PROMOTED_BY edge's award is untouched). The `create-lineage-member` param was *not* blindly dropped — the diff
+  shows it still feeds the relationship. No god-component: the disciplineId threading is plain props alongside the
+  existing `renderPolicy` chain.
+- **Doug:** pass — full `bun run test` **877/0**, `next build` green, migration applies on prodsnap, and the avatar
+  SSR + belt render were proven on the **live BBL tree** (75 `<img>` in the initial HTML on both board and timeline;
+  no error boundary). Claim path regression-checked (claim-finalize 7/7). The one gap (live claim→render round-trip)
+  is flagged, not hidden.
+- **Desi:** pass — consistency is now structural: every belt reads `memberTopRank`, every avatar renders through the
+  one SSR primitive, the cinematic timeline keeps its belt-ring idiom while sharing the img/initials logic. No
+  initials-then-pop on the cards/board/mobile.
+- **Kaizen aggregate:** 9/10.
+
+### SESSION_0475_REVIEW_02 — pre-push hostile re-review (supersedes REVIEW_01's 9/10)
+
+> REVIEW_01's 9/10 was **too generous — it missed the `take: 1` data-truncation bug entirely** (so did the
+> "877 tests + live DOM" that it leaned on). The operator's push for more review (pr-review-score-fix +
+> hostile-close + WWAD) is what surfaced it. Re-reviewing honestly.
+
+**The 8 questions:**
+1. **Plan sanity:** the plan was sound, but it rested on a wrong assumption ("single-discipline roster") that made a
+   real feature (discipline-scoping) look inert — so the shipped TASK_02 was **live-broken** for multi-discipline
+   members, and my first "fix" edited a comment instead of the code. The plan didn't cause this; my execution +
+   verification discipline did.
+2. **Dirstarter compliance:** extends the baseline (Prisma select shapes, Base-UI-free avatar primitive); no bypass.
+3. **Security:** no new authz/data-path surface; the migration drops a display-dead column; claim path untouched.
+4. **Data integrity:** the migration drops the FK/index/column cleanly; the `LineageRelationship` award is preserved.
+5. **Lifecycle proof:** the discipline-scoped belt is now proven at the payload→resolver seam on real (Andre) data,
+   not just a hand-fed unit fixture; a regression test guards the payload shape.
+6. **Verification honesty:** ⚠️ this is the session's real failure — I claimed a fix + a live proof that were **both
+   invalid** (comment-not-code; whole-board `includes`). Caught by the merge-gate pass, not by me. Now corrected with
+   a seam-level proof + a biting regression test.
+7. **Workflow honesty:** lane/worktree/task-IDs/review-log followed; the review passes are recorded here, not hidden.
+8. **Merge readiness:** ready **after** the real fix + re-gate PASS; would NOT have been ready at c992ce80.
+
+**Kaizen (3):**
+1. *Safe/secure + tests that prove it:* provably correct now (seam proof + regression test + full suite + live render);
+   the a11y double-labeling on the avatar fallback is *documented, not yet SR-proven* (deferred with the exact fix).
+2. *Failed steps preventable:* **three** — (a) editing the comment not the code, (b) a proof that checked the whole
+   board not the target card, (c) trusting green gates over the untested payload→resolver seam. Prevention: when a fix
+   is "remove line X," `grep` the line is gone before claiming it; a positive proof must isolate the *specific*
+   subject; and a data-shape change needs a test at the shape's consuming seam, not only a pure-function test.
+3. *Confidence at 100 / 1k / 10k:* 9 / 9 / 8 — the tree query now loads all awards per member (few per person, bounded);
+   the −8 at 10k is the only unproven-at-scale axis (payload size for a hypothetical many-award member), acceptable.
+
+**Kaizen aggregate: 8/10.** The −2 vs REVIEW_01 is the invalid-fix + invalid-proof that a review caught, not I —
+recorded as debt, not hidden. The shipped code is correct and guarded; the *process* earned the ding.
 
 ## ADR / ubiquitous-language check
 
+- **No new ADR.** This finishes the model ADR 0035 already ratified: display = highest **awarded** rank; the
+  "known limitation" in §3 (cross-rank-system sortOrder) is now *closed in code* via the discipline-scoped resolver.
+  `selectedRankAward` is fully removed (ADR 0035 called it "deprecated-for-display, slated for removal once the
+  claim flow lands" — the claim flow landed at ADR 0036, so this removal completes that consequence).
+- **Ubiquitous language:** `selectedRank` / `selectedRankAward` retired from the codebase (kept only in historical
+  sprint records + LR 0008). "Shown rank" = discipline-scoped highest awarded belt. `LineageRelationship.rankAwardId`
+  clarified as the **promotion-edge's award** (distinct from the removed member override).
+
 ## Reflections
 
+- **The plan's footprint was right; its wording had one trap.** "Remove the `rankAwardId` param" would have deleted a
+  legitimate second column's write. Reading the live code (cody-preflight) beat trusting the mapped plan — the two
+  `rankAwardId`s (member override vs promotion-edge award) look identical at a grep but are different facts.
+- **Centralize first, then scope.** Because TASK_01 already funnelled every reader through `memberTopRank`, making it
+  discipline-aware in TASK_02 was a one-function change + prop-threading — no reader had to be re-audited. The order
+  (remove the deprecated field → then scope the clean resolver) is why the invariant held.
+- **SSR-vs-defer is invisible in a screenshot but obvious in the HTML.** The avatar "pop" wasn't a styling bug — it
+  was a *missing `<img>` in the SSR payload*. Verifying by counting `<img>` tags in the raw SSR HTML (not just a
+  screenshot) is what proved the fix.
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Bow-in ritual | opening.md followed; own worktree `../ronin-0475` bootstrapped (bun install → `.env` copy → prisma generate + migrate) |
+| Task numbering | `SESSION_0475_TASK_01..04` in the Task log, all `done` |
+| Code-quality gate | reuse-first: one `memberTopRank` resolver + one `Avatar` primitive; no new Class-A module; `LineageNodeCard`/`CardAvatar` shrank |
+| Runtime verification (Doug) | full `bun run test` 877/0; `next build` ✓; live BBL board+timeline SSR-img proof; claim-finalize 7/7 |
+| Migration | hand-authored `20260630000000_drop_lineage_tree_member_selected_rank`; `prisma validate` + `migrate deploy` clean on prodsnap |
+| Hostile close review | REVIEW_01 + Giddy/Doug/Desi pass (9/10) |
+| ADR / language check | no new ADR (completes ADR 0035 §3 + the selectedRankAward removal consequence); language retired |
+| Memory sweep | updated `lineage-rank-display-and-selectedrank-removal` (SHIPPED); see close chat |
+| Wiki lint | `bun run wiki:lint` — 0 errors |
+| Git hygiene | 3 conventional commits (rank / avatar / docs) + this docs close; rebased onto origin/main; **one push at close on operator go** |
+| Graphify update | run at close (count reported in chat) |

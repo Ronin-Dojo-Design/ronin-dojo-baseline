@@ -139,7 +139,6 @@ beforeAll(async () => {
       id: tag("member"),
       treeId: tree.id,
       nodeId: node.id,
-      rankAwardId: rankAward.id,
       visualSortOrder: 0,
     },
   })

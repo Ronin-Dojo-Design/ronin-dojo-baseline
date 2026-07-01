@@ -7,6 +7,20 @@ import { db } from "~/services/db"
  * Author: Cody / SESSION_0184 TASK_01.
  */
 
+/**
+ * The member's shown award = the highest awarded belt (the array is pre-ordered by
+ * `Rank.sortOrder desc`) IN the given discipline (ADR 0035 §3), or the global highest
+ * when no `disciplineId` is given. Operates on the award array (not a `LineageNodeRow`)
+ * so the server edit-path callers — which select the lean scalar `rank.rankSystem.disciplineId`
+ * — share the same rule as `memberTopRankAward`. See SESSION_0475.
+ */
+export function pickTopAwardInDiscipline<
+  T extends { rank: { rankSystem: { disciplineId: string | null } | null } },
+>(awards: T[], disciplineId: string | null): T | null {
+  if (!disciplineId) return awards[0] ?? null
+  return awards.find(award => award.rank.rankSystem?.disciplineId === disciplineId) ?? null
+}
+
 export type EditableLineageNodeProfile = {
   tree: {
     id: string
@@ -23,7 +37,8 @@ export type EditableLineageNodeProfile = {
   }
   member: {
     id: string
-    selectedRankAward: {
+    /** The member's shown (highest awarded) rank award — awarded truth, ADR 0035. */
+    currentRankAward: {
       id: string
       awardedAt: Date | null
     } | null
@@ -79,17 +94,15 @@ export const getEditableLineageNodeProfile = async ({
       id: true,
       name: true,
       slug: true,
+      // This tree is a discipline-scoped surface — the editable "promotion date" is the
+      // awardedAt of the member's shown rank IN THIS DISCIPLINE (ADR 0035 §3), not the
+      // global highest across rank systems.
+      disciplineId: true,
       members: {
         where: { nodeId },
         take: 1,
         select: {
           id: true,
-          selectedRankAward: {
-            select: {
-              id: true,
-              awardedAt: true,
-            },
-          },
           node: {
             select: {
               id: true,
@@ -98,6 +111,16 @@ export const getEditableLineageNodeProfile = async ({
                 select: {
                   displayName: true,
                   avatarUrl: true,
+                  // Pre-ordered by Rank.sortOrder desc; the discipline filter happens in JS
+                  // (Prisma can't reference the sibling `tree.disciplineId` in a nested where).
+                  rankAwardsEarned: {
+                    select: {
+                      id: true,
+                      awardedAt: true,
+                      rank: { select: { rankSystem: { select: { disciplineId: true } } } },
+                    },
+                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                  },
                 },
               },
             },
@@ -111,6 +134,11 @@ export const getEditableLineageNodeProfile = async ({
   if (!tree || !member) {
     return null
   }
+
+  const currentRankAward = pickTopAwardInDiscipline(
+    member.node.passport.rankAwardsEarned,
+    tree.disciplineId,
+  )
 
   const accessGrant = await findActiveLineageNodeProfileAccess({
     treeId: tree.id,
@@ -129,10 +157,19 @@ export const getEditableLineageNodeProfile = async ({
       name: tree.name,
       slug: tree.slug,
     },
-    node: member.node,
+    node: {
+      id: member.node.id,
+      bio: member.node.bio,
+      passport: {
+        displayName: member.node.passport.displayName,
+        avatarUrl: member.node.passport.avatarUrl,
+      },
+    },
     member: {
       id: member.id,
-      selectedRankAward: member.selectedRankAward,
+      currentRankAward: currentRankAward
+        ? { id: currentRankAward.id, awardedAt: currentRankAward.awardedAt }
+        : null,
     },
   }
 }

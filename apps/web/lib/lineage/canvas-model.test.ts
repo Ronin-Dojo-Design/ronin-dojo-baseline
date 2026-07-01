@@ -8,6 +8,8 @@ import {
   memberBeltColor,
   memberInitials,
   memberRankLabel,
+  memberTopRank,
+  memberTopRankAward,
   memberSchoolLabel,
   nodeDisplayName,
   resolveLineageMemberView,
@@ -226,25 +228,72 @@ describe("member view-model derivations", () => {
     assert.equal(memberAvatarSrc(node), null)
   })
 
-  test("memberBeltColor: highest awarded belt ([0]); selectedRank is ignored (SESSION_0430)", () => {
+  test("memberBeltColor: highest awarded belt ([0]) — display = awarded truth (ADR 0035)", () => {
     const node = makeRichNode()
-    // selectedRank no longer overrides — display = awarded truth.
-    assert.equal(memberBeltColor(node, { colorHex: "#abcabc" } as never), "#111111")
     assert.equal(memberBeltColor(node), "#111111")
     node.passport.rankAwardsEarned = []
     assert.equal(memberBeltColor(node), null)
   })
 
-  test("memberRankLabel: highest awarded belt with discipline; selectedRank ignored (SESSION_0430)", () => {
+  test("memberRankLabel: highest awarded belt with discipline (ADR 0035)", () => {
     const node = makeRichNode()
-    // selectedRank no longer wins — always the highest awarded RankAward.
-    assert.equal(
-      memberRankLabel(node, { name: "Coral Belt", disciplineName: "BJJ" } as never),
-      "Black Belt · Brazilian Jiu-Jitsu",
-    )
     assert.equal(memberRankLabel(node), "Black Belt · Brazilian Jiu-Jitsu")
     node.passport.rankAwardsEarned = []
     assert.equal(memberRankLabel(node), null)
+  })
+
+  // ADR 0035 §3: a multi-discipline holder (Andre Lima = BJJ Black 3rd + TKD 8th Dan). The
+  // TKD dan sorts higher globally, so a discipline-scoped surface MUST pass its discipline.
+  function makeMultiDisciplineNode(): LineageNodeRow {
+    return {
+      passport: {
+        // Payload contract: pre-ordered by Rank.sortOrder desc → TKD (20) before BJJ (8).
+        rankAwardsEarned: [
+          {
+            id: "ra-tkd",
+            awardedAt: new Date(Date.UTC(2024, 0, 1)),
+            rank: {
+              name: "8th Dan",
+              colorHex: "#tkd",
+              sortOrder: 20,
+              rankSystem: { discipline: { id: "disc-tkd", name: "Taekwondo" } },
+            },
+          },
+          {
+            id: "ra-bjj",
+            awardedAt: new Date(Date.UTC(2020, 0, 1)),
+            rank: {
+              name: "Black Belt",
+              colorHex: "#bjj",
+              sortOrder: 8,
+              rankSystem: { discipline: { id: "disc-bjj", name: "Brazilian Jiu-Jitsu" } },
+            },
+          },
+        ],
+      },
+    } as unknown as LineageNodeRow
+  }
+
+  test("discipline-scoped rank: the BJJ tree shows BJJ; the drawer (no discipline) shows highest overall", () => {
+    const node = makeMultiDisciplineNode()
+
+    // Discipline-scoped surface (the BBL tree carries the BJJ discipline) → the BJJ rank,
+    // NOT the globally-higher TKD dan.
+    assert.equal(memberTopRank(node, "disc-bjj")?.name, "Black Belt")
+    assert.equal(memberTopRankAward(node, "disc-bjj")?.id, "ra-bjj")
+    assert.equal(memberBeltColor(node, "disc-bjj"), "#bjj")
+    assert.equal(memberRankLabel(node, "disc-bjj"), "Black Belt · Brazilian Jiu-Jitsu")
+
+    // The member's OTHER discipline is reachable by its own id.
+    assert.equal(memberTopRank(node, "disc-tkd")?.name, "8th Dan")
+
+    // No discipline (drawer / directory — multi-discipline) → highest awarded overall (TKD).
+    assert.equal(memberTopRank(node)?.name, "8th Dan")
+    assert.equal(memberTopRankAward(node)?.id, "ra-tkd")
+
+    // A discipline the member holds no award in → null (no leak from another system).
+    assert.equal(memberTopRank(node, "disc-judo"), null)
+    assert.equal(memberBeltColor(node, "disc-judo"), null)
   })
 
   test("memberSchoolLabel prefers current Affiliation (org, then free-text), else Membership, else null", () => {

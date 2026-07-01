@@ -11,11 +11,7 @@ import {
   FREE_LINEAGE_LISTING_RENDER_POLICY,
   type LineageListingRenderPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
-import {
-  memberInitials,
-  resolveLineageMemberView,
-  type SelectedRank,
-} from "~/lib/lineage/canvas-model"
+import { memberInitials, resolveLineageMemberView } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 import { LineageMemberActionsMenu } from "./lineage-member-actions-menu"
@@ -34,12 +30,13 @@ type LineageNodeCardProps = {
   node: LineageNodeRow
   isRoot?: boolean
   isClaimable?: boolean
-  selectedRank?: SelectedRank | null
   onSelect: (nodeId: string) => void
   showActions?: boolean
   canChangePromoter?: boolean
   onChangePromoter?: () => void
   renderPolicy?: LineageListingRenderPolicy
+  /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+  disciplineId?: string | null
 }
 
 export function LineageNodeCard({
@@ -50,11 +47,12 @@ export function LineageNodeCard({
   canChangePromoter,
   onChangePromoter,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
+  disciplineId,
 }: LineageNodeCardProps) {
   // One person, one ruleset — every surface derives presentation from this resolver
-  // (avatar, highest-awarded belt, school, the single verification status).
+  // (avatar, highest-awarded belt in the tree's discipline, school, verification status).
   const { displayName, avatarSrc, rankLabel, schoolLabel, beltColor, trustStatus } =
-    resolveLineageMemberView(node)
+    resolveLineageMemberView(node, { disciplineId })
   const canRenderFullCard = renderPolicy.canRenderFullCard
   const cardStyle = beltColor ? ({ "--rank-color": beltColor } as CSSProperties) : undefined
   // The card body opens the drawer for everyone, so the actions menu only earns

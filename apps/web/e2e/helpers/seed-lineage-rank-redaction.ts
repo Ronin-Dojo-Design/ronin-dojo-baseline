@@ -19,10 +19,9 @@ export interface LineageRankRedactionFixture {
     nodeId: string
     memberId: string
     displayName: string
-    rankAwardId: string
     rankName: string
     rankShortName: string
-    /** The HIGHER awarded rank — display must show this (awarded truth), not the lower `selectedRank`. */
+    /** The HIGHER awarded rank — display must show this (awarded truth), not the lower `rankName`. */
     awardedTopRankName: string
     rankSystemName: string
     disciplineName: string
@@ -32,7 +31,6 @@ export interface LineageRankRedactionFixture {
     nodeId: string
     memberId: string
     displayName: string
-    rankAwardId: string
     rankName: string
     rankShortName: string
     rankSystemName: string

@@ -55,9 +55,6 @@ import { db } from "~/services/db"
  */
 const PUBLIC_VISIBILITY_SCOPE: LineageVisibility[] = [LineageVisibility.PUBLIC]
 
-const shouldShowPublicRanks = (node: LineageNodeRow | LineageNodeProfile) =>
-  node.passport?.directoryProfile?.showRanks !== false
-
 /**
  * Resolve the visibility scope for a viewer.
  *
@@ -433,10 +430,7 @@ export const materializeLineageTreeResult = (
         }
       }
     }
-    const selectedRankAward = shouldShowPublicRanks(normalizedMember.node)
-      ? normalizedMember.selectedRankAward
-      : null
-    return { ...normalizedMember, node: redactedNode, selectedRankAward }
+    return { ...normalizedMember, node: redactedNode }
   })
 
   const normalizedGroups = tree.visualGroups

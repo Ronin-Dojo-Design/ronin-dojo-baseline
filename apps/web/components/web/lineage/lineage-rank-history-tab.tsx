@@ -11,7 +11,6 @@ import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
 import { LineageRankProgressionPanel } from "~/components/web/lineage/lineage-rank-progression-panel"
 import { nameInitials } from "~/lib/identity/passport-display"
-import { cx } from "~/lib/utils"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
@@ -50,13 +49,7 @@ function sourceBadge(profile: LineageNodeProfile) {
   )
 }
 
-export function LineageRankHistoryTab({
-  profile,
-  selectedRankAwardId,
-}: {
-  profile: LineageNodeProfile
-  selectedRankAwardId?: string | null
-}) {
+export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile }) {
   const awards = profile.passport?.rankAwardsEarned ?? []
 
   if (awards.length === 0) {
@@ -92,18 +85,14 @@ export function LineageRankHistoryTab({
 
       <Stack direction="column" size="sm">
         {awards.map(award => (
-          <RankAwardRow
-            key={award.id}
-            award={award}
-            isSelected={award.id === selectedRankAwardId}
-          />
+          <RankAwardRow key={award.id} award={award} />
         ))}
       </Stack>
     </Stack>
   )
 }
 
-function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boolean }) {
+function RankAwardRow({ award }: { award: RankAward }) {
   const rankStyle = award.rank.colorHex
     ? ({ "--rank-color": award.rank.colorHex } as CSSProperties)
     : undefined
@@ -115,10 +104,7 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
 
   return (
     <article
-      className={cx(
-        "relative overflow-hidden rounded-md border bg-background p-3",
-        isSelected && "border-primary bg-primary/5 ring-1 ring-primary/30",
-      )}
+      className="relative overflow-hidden rounded-md border bg-background p-3"
       style={rankStyle}
     >
       {award.rank.colorHex && (
@@ -137,11 +123,6 @@ function RankAwardRow({ award, isSelected }: { award: RankAward; isSelected: boo
           {award.rank.rankSystem.discipline?.name && (
             <Badge variant="outline" size="sm">
               {award.rank.rankSystem.discipline.name}
-            </Badge>
-          )}
-          {isSelected && (
-            <Badge variant="primary" size="sm">
-              Selected
             </Badge>
           )}
         </Stack>

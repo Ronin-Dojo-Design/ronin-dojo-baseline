@@ -67,6 +67,12 @@ type Props = {
   claimStateByNodeId?: Record<string, ClaimViewerState>
   treeSlug?: string
   isTreeClaimable?: boolean
+  /**
+   * The tree's discipline (ADR 0035 §3). This tree is a discipline-scoped surface, so the
+   * shown belt is the member's highest rank IN THIS DISCIPLINE — passed through to the
+   * resolver so a multi-discipline holder shows the right belt (BBL tree = BJJ).
+   */
+  disciplineId?: string | null
   initialFocusId?: string | null
   /** Tree owner / platform admin — gates the "Open in editor" card action. */
   canManage?: boolean
@@ -263,6 +269,7 @@ export function LineageViewAIsland({
   claimStateByNodeId,
   treeSlug,
   isTreeClaimable = false,
+  disciplineId,
   initialFocusId,
   canManage = false,
 }: Props) {
@@ -308,8 +315,9 @@ export function LineageViewAIsland({
         mainMemberId: initialMemberId,
         relationships,
         visualGroups,
+        disciplineId,
       }),
-    [members, initialMemberId, relationships, visualGroups],
+    [members, initialMemberId, relationships, visualGroups, disciplineId],
   )
 
   const nodeByMemberId = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes])
@@ -756,7 +764,7 @@ export function LineageViewAIsland({
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         profile={drawerProfile}
-        selectedRankAward={drawerMember?.selectedRankAward ?? null}
+        disciplineId={disciplineId}
         isClaimable={drawerMember?.isClaimable ?? false}
         isTreeClaimable={isTreeClaimable}
         viewerClaimState={drawerMember ? claimStateByNodeId?.[drawerMember.nodeId] : undefined}

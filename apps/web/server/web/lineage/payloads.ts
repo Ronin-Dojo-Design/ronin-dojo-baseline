@@ -101,10 +101,14 @@ export const lineageNodeRowPayload = {
           },
         },
       },
-      // Single most-recent RankAward across any rank-system so the tree card
-      // can show "Black Belt — BJJ" without a separate query. Drawer payload
-      // joins more. Display = highest awarded belt; verification is a separate
+      // The member's awarded belts (ordered highest-first). Display reads the top
+      // one via `memberTopRank(node, disciplineId?)`; verification is a separate
       // node-level axis (ADR 0035) and never filters the award shown here.
+      // ⚠ NO `take` — the discipline-scoped resolver `.find()`s the highest award
+      //   IN the tree's discipline (ADR 0035 §3), so a `take: 1` here would hand it
+      //   only the GLOBAL top award and blank out any multi-discipline member whose
+      //   top belt is in another discipline. Rank awards per person are few, so
+      //   loading all is cheap; the tree card still reads only `[0]` / the first match.
       rankAwardsEarned: {
         select: {
           id: true,
@@ -130,13 +134,12 @@ export const lineageNodeRowPayload = {
           },
           ...rankAwardPromoterPayload,
         },
-        // "Current rank" = highest belt by Rank.sortOrder, with awardedAt as the
-        // tiebreak. A plain `awardedAt desc` floats NULL-dated awards to [0]
-        // (Postgres NULLS FIRST in DESC), which under-ranked 7/10 multi-award
-        // founders to a lower belt (SESSION_0430). Matches the correct precedent
-        // at server/web/disciplines/top-ranked-queries.ts.
+        // Ordered highest belt first (Rank.sortOrder desc, awardedAt as tiebreak — a plain
+        // `awardedAt desc` floats NULL-dated awards to [0] via Postgres NULLS-FIRST, which
+        // under-ranked 7/10 multi-award founders, SESSION_0430). NO `take` — see the comment
+        // above: the discipline-scoped resolver `.find()`s within the tree's discipline, so
+        // truncating to the global top award blanks multi-discipline members.
         orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
-        take: 1,
       },
       // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
       // Affiliation is display-only person↔org; `memberSchoolLabel` reads this first.
@@ -381,30 +384,6 @@ export const lineageTreeMemberPayload = {
   treeId: true,
   nodeId: true,
   node: { select: lineageNodeRowPayload },
-  selectedRankAward: {
-    select: {
-      id: true,
-      awardedAt: true,
-      rank: {
-        select: {
-          id: true,
-          name: true,
-          shortName: true,
-          colorHex: true,
-          sortOrder: true,
-          rankSystem: {
-            select: {
-              id: true,
-              name: true,
-              discipline: {
-                select: { id: true, name: true, slug: true, code: true },
-              },
-            },
-          },
-        },
-      },
-    },
-  },
 } satisfies Prisma.LineageTreeMemberSelect
 
 export const lineageTreePublicPayload = {

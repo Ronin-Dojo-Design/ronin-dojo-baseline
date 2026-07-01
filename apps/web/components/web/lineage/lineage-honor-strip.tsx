@@ -21,17 +21,17 @@ import { cx } from "~/lib/utils"
 
 const HONOR_STRIP_LIMIT = 6
 
-function rankScore(member: CanvasMember) {
-  // Awarded truth (ADR 0035) — NOT the deprecated `selectedRank` (stale WP-import data
-  // that mis-ranked Meyer/Casey to their lower import belt).
-  return memberTopRank(member.node)?.sortOrder ?? 0
+function rankScore(member: CanvasMember, disciplineId?: string | null) {
+  // Awarded truth (ADR 0035) — the highest awarded RankAward in the tree's discipline
+  // (SESSION_0475 removed the `selectedRank` override that once mis-ranked Meyer/Casey).
+  return memberTopRank(member.node, disciplineId)?.sortOrder ?? 0
 }
 
-function honorMembers(members: CanvasMember[]) {
+function honorMembers(members: CanvasMember[], disciplineId?: string | null) {
   return members
-    .filter(member => memberTopRank(member.node))
+    .filter(member => memberTopRank(member.node, disciplineId))
     .sort((a, b) => {
-      const scoreDelta = rankScore(b) - rankScore(a)
+      const scoreDelta = rankScore(b, disciplineId) - rankScore(a, disciplineId)
       if (scoreDelta !== 0) return scoreDelta
       if (a.visualSortOrder !== b.visualSortOrder) return a.visualSortOrder - b.visualSortOrder
       return nodeDisplayName(a.node).localeCompare(nodeDisplayName(b.node))
@@ -54,14 +54,16 @@ export function LineageHonorStrip({
   selectedMemberId,
   onSelect,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
+  disciplineId,
 }: {
   members: CanvasMember[]
   selectedMemberId: string | null
   onSelect: (nodeId: string) => void
   renderPolicy?: LineageListingRenderPolicy
+  disciplineId?: string | null
 }) {
   const reduceMotion = useReducedMotion()
-  const featuredMembers = honorMembers(members)
+  const featuredMembers = honorMembers(members, disciplineId)
 
   if (featuredMembers.length === 0) return null
 
@@ -85,7 +87,7 @@ export function LineageHonorStrip({
             const displayName = nodeDisplayName(member.node)
             const avatarSrc = memberAvatarSrc(member.node)
             const isSelected = member.id === selectedMemberId
-            const topRank = memberTopRank(member.node)
+            const topRank = memberTopRank(member.node, disciplineId)
             const beltColor = topRank?.colorHex ?? null
             const rankLabel = topRank?.name ?? null
 

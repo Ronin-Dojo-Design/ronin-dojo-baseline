@@ -48,6 +48,9 @@ type LineageTreeBoardProps = {
   visualGroups?: LineageVisualGroupRow[]
   defaultRootMemberId?: string | null
 
+  /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+  disciplineId?: string | null
+
   /**
    * Optional explicit canvas layout (tree | board). When omitted, the canvas
    * chooses a responsive default: board below md, tree at/above md.
@@ -96,6 +99,7 @@ export function LineageTreeBoard({
   members,
   visualGroups,
   defaultRootMemberId,
+  disciplineId,
   defaultLayout,
   treeId,
   treeSlug,
@@ -177,7 +181,9 @@ export function LineageTreeBoard({
       ? {
           treeId,
           memberId: selectedMember.id,
-          currentRankAwardId: selectedMember.selectedRankAward?.id ?? null,
+          // Awarded truth (ADR 0035): the promoter-change modal defaults to the member's
+          // shown (top awarded) rank — the same award every surface displays.
+          currentRankAwardId: selectedProfile.passport?.rankAwardsEarned?.[0]?.id ?? null,
           rankAwards: selectedProfile.passport?.rankAwardsEarned ?? [],
           candidates: members
             .filter(
@@ -217,6 +223,7 @@ export function LineageTreeBoard({
         canEditPlacement={capability?.canEditTree ?? false}
         canManageGroups={capability?.canManageGroups ?? false}
         renderPolicy={effectiveRenderPolicy}
+        disciplineId={disciplineId}
       />
 
       <LineageProfileDrawer
@@ -226,13 +233,7 @@ export function LineageTreeBoard({
         }}
         profile={selectedProfile}
         promoterChangeContext={promoterChangeContext}
-        // SESSION_0430: the drawer header/history must reflect awarded truth (highest
-        // RankAward), NOT the LineageTreeMember.selectedRankAward pointer — that FK is
-        // being repurposed as a pending *claim* (set at registration/claim, awarded on
-        // admin-verify) and must not drive display. Pass null so the header defaults to
-        // the highest awarded belt. Admin promoter-change still reads selectedMember
-        // .selectedRankAward directly (above), so the editorial path is unaffected.
-        selectedRankAward={null}
+        disciplineId={disciplineId}
         isClaimable={selectedMember?.isClaimable}
         isTreeClaimable={isTreeClaimable}
         viewerClaimState={selectedNodeId ? claimStateByNodeId?.[selectedNodeId] : undefined}

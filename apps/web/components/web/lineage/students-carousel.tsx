@@ -9,7 +9,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { H6 } from "~/components/common/heading"
-import { memberAvatarSrc, memberInitials, nodeDisplayName } from "~/lib/lineage/canvas-model"
+import {
+  memberAvatarSrc,
+  memberInitials,
+  memberTopRank,
+  nodeDisplayName,
+} from "~/lib/lineage/canvas-model"
 import type { LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 
 type BeltGroup = {
@@ -21,16 +26,15 @@ type BeltGroup = {
 }
 
 /**
- * Group students by their shown belt rank (selected award, else latest award —
- * mirrors `memberBeltColor`), most-senior first. Keyed by rank name (both rank
- * shapes carry it); unranked sorts last.
+ * Group students by their shown belt rank (highest awarded in the tree's discipline —
+ * the same awarded-truth source `memberTopRank`/`memberBeltColor` use, ADR 0035),
+ * most-senior first. Keyed by rank name; unranked sorts last.
  */
-function groupByBelt(students: LineageTreeMemberRow[]): BeltGroup[] {
+function groupByBelt(students: LineageTreeMemberRow[], disciplineId?: string | null): BeltGroup[] {
   const byKey = new Map<string, BeltGroup>()
 
   for (const student of students) {
-    const rank =
-      student.selectedRankAward?.rank ?? student.node.passport?.rankAwardsEarned?.[0]?.rank ?? null
+    const rank = memberTopRank(student.node, disciplineId)
     const key = rank?.name ?? "__unranked__"
 
     const group = byKey.get(key) ?? {
@@ -59,9 +63,11 @@ function groupByBelt(students: LineageTreeMemberRow[]): BeltGroup[] {
 export function StudentsCarousel({
   students,
   onSelectStudent,
+  disciplineId,
 }: {
   students: LineageTreeMemberRow[]
   onSelectStudent: (memberId: string) => void
+  disciplineId?: string | null
 }) {
   if (students.length === 0) return null
 
@@ -69,7 +75,7 @@ export function StudentsCarousel({
     <section aria-label="Students">
       <H6 className="mb-2 text-muted-foreground uppercase tracking-wide">Students</H6>
       <Accordion type="multiple" className="flex flex-col gap-2">
-        {groupByBelt(students).map(group => (
+        {groupByBelt(students, disciplineId).map(group => (
           <AccordionItem key={group.key} value={group.key}>
             <AccordionTrigger className="p-3!">
               <span className="flex min-w-0 items-center gap-2">

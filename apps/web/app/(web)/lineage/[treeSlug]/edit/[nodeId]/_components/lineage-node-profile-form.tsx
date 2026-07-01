@@ -30,7 +30,7 @@ const toDate = (value: Date | string | null | undefined) => {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-/** Initial form values — promotion date only when the member has a selected rank award. */
+/** Initial form values — promotion date only when the member has a rank award. */
 function nodeFormDefaults(
   profile: EditableLineageNodeProfile,
   canEditPromotionDate: boolean,
@@ -42,12 +42,12 @@ function nodeFormDefaults(
     bio: str(profile.node.bio),
     avatarUrl: str(profile.node.passport.avatarUrl),
     promotionDate: canEditPromotionDate
-      ? toDate(profile.member.selectedRankAward?.awardedAt ?? null)
+      ? toDate(profile.member.currentRankAward?.awardedAt ?? null)
       : null,
   }
 }
 
-/** Submit payload — promotion date is only carried when the member has a selected rank award. */
+/** Submit payload — promotion date is only carried when the member has a rank award. */
 function buildPayload(
   values: FormValues,
   canEditPromotionDate: boolean,
@@ -68,7 +68,7 @@ type Props = {
 
 export function LineageNodeProfileForm({ profile }: Props) {
   const router = useRouter()
-  const canEditPromotionDate = Boolean(profile.member.selectedRankAward)
+  const canEditPromotionDate = Boolean(profile.member.currentRankAward)
 
   const { execute, isExecuting } = useAction(updateLineageNodeProfile, {
     onSuccess: () => {
@@ -105,7 +105,7 @@ export function LineageNodeProfileForm({ profile }: Props) {
           <DateField control={form.control} name="promotionDate" label="Promotion date" />
         ) : (
           <Note className="self-end">
-            Promotion date is unavailable because this tree member has no selected rank award.
+            Promotion date is unavailable because this tree member has no rank award yet.
           </Note>
         )}
 
@@ -129,7 +129,7 @@ export function LineageNodeProfileForm({ profile }: Props) {
 
         {canEditPromotionDate && (
           <Note className="sm:col-span-2">
-            Promotion date updates the selected rank award for this tree member.
+            Promotion date updates this member&apos;s current (highest awarded) rank award.
           </Note>
         )}
 

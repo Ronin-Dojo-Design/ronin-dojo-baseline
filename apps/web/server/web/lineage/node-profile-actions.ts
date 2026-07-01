@@ -3,7 +3,10 @@
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
-import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
+import {
+  findActiveLineageNodeProfileAccess,
+  pickTopAwardInDiscipline,
+} from "~/server/web/lineage/node-profile-queries"
 import {
   type UpdateLineageNodeProfileInput,
   updateLineageNodeProfileSchema,
@@ -47,16 +50,30 @@ export const applyLineageNodeProfileUpdate = async ({
     select: {
       id: true,
       slug: true,
+      // Discipline-scoped surface — the promotion date edits the member's shown rank IN
+      // THIS DISCIPLINE (ADR 0035 §3), not the global highest.
+      disciplineId: true,
       members: {
         where: { nodeId: input.nodeId },
         take: 1,
         select: {
           id: true,
-          rankAwardId: true,
           node: {
             select: {
               id: true,
               passportId: true,
+              passport: {
+                select: {
+                  // Pre-ordered by Rank.sortOrder desc; discipline filter applied in JS below.
+                  rankAwardsEarned: {
+                    select: {
+                      id: true,
+                      rank: { select: { rankSystem: { select: { disciplineId: true } } } },
+                    },
+                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                  },
+                },
+              },
             },
           },
         },
@@ -100,9 +117,13 @@ export const applyLineageNodeProfileUpdate = async ({
       data: { bio: input.bio },
     })
 
-    if (input.promotionDate !== undefined && member.rankAwardId) {
+    const shownRankAward = pickTopAwardInDiscipline(
+      member.node.passport.rankAwardsEarned,
+      tree.disciplineId,
+    )
+    if (input.promotionDate !== undefined && shownRankAward) {
       await tx.rankAward.update({
-        where: { id: member.rankAwardId },
+        where: { id: shownRankAward.id },
         data: { awardedAt: input.promotionDate },
       })
     }

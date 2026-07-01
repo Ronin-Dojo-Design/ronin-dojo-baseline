@@ -19,11 +19,7 @@ import { cx } from "~/lib/utils"
 import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 import { DrawerIdentityHeader } from "./drawer-header"
-import type {
-  LineageProfileDrawerProps,
-  LineageProfileDrawerTab,
-  SelectedRankAward,
-} from "./drawer-types"
+import type { LineageProfileDrawerProps, LineageProfileDrawerTab } from "./drawer-types"
 import { InfoTab } from "./info-tab"
 import { deriveDrawerProfileView, useDesktopProfilePanel } from "./use-drawer-profile"
 
@@ -57,7 +53,6 @@ export function LineageProfileDrawer({
   onOpenChange,
   profile,
   promoterChangeContext,
-  selectedRankAward,
   isClaimable,
   isTreeClaimable,
   viewerClaimState,
@@ -69,6 +64,7 @@ export function LineageProfileDrawer({
   contentClassName,
   students,
   onSelectStudent,
+  disciplineId,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -98,7 +94,6 @@ export function LineageProfileDrawer({
           <DrawerBody
             profile={profile}
             promoterChangeContext={promoterChangeContext ?? null}
-            selectedRankAward={selectedRankAward ?? null}
             isClaimable={isClaimable}
             isTreeClaimable={isTreeClaimable}
             viewerClaimState={viewerClaimState}
@@ -109,6 +104,7 @@ export function LineageProfileDrawer({
             onTabChange={onTabChange}
             students={students}
             onSelectStudent={onSelectStudent}
+            disciplineId={disciplineId}
           />
         )}
       </DrawerContent>
@@ -119,7 +115,6 @@ export function LineageProfileDrawer({
 function DrawerBody({
   profile,
   promoterChangeContext,
-  selectedRankAward,
   isClaimable,
   isTreeClaimable,
   viewerClaimState,
@@ -130,10 +125,10 @@ function DrawerBody({
   onTabChange,
   students,
   onSelectStudent,
+  disciplineId,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
-  selectedRankAward: SelectedRankAward
   isClaimable?: boolean
   isTreeClaimable?: boolean
   viewerClaimState?: ClaimViewerState
@@ -144,8 +139,9 @@ function DrawerBody({
   onTabChange?: (tab: LineageProfileDrawerTab) => void
   students?: LineageTreeMemberRow[]
   onSelectStudent?: (memberId: string) => void
+  disciplineId?: string | null
 }) {
-  const view = deriveDrawerProfileView(profile, selectedRankAward)
+  const view = deriveDrawerProfileView(profile)
   const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
   const claimState = effectiveClaimState(viewerClaimState, profile)
 
@@ -182,6 +178,7 @@ function DrawerBody({
             instructorRelationship={instructorRelationship}
             students={students}
             onSelectStudent={onSelectStudent}
+            disciplineId={disciplineId}
           />
         </TabsContent>
 
@@ -190,10 +187,7 @@ function DrawerBody({
         </TabsContent>
 
         <TabsContent value="rank-history" className="flex-1 overflow-y-auto p-6 mt-0">
-          <LineageRankHistoryTab
-            profile={profile}
-            selectedRankAwardId={selectedRankAward?.id ?? null}
-          />
+          <LineageRankHistoryTab profile={profile} />
         </TabsContent>
       </Tabs>
 

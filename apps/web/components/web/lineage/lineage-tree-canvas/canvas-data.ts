@@ -25,16 +25,6 @@ export function normalizeMembers(members: LineageTreeMemberRow[] | undefined): C
     visualGroupId: member.visualGroupId,
     isClaimable: member.isClaimable,
     isCollapsedDefault: member.isCollapsedDefault,
-    selectedRank: member.selectedRankAward?.rank
-      ? {
-          id: member.selectedRankAward.rank.id,
-          name: member.selectedRankAward.rank.name,
-          shortName: member.selectedRankAward.rank.shortName,
-          colorHex: member.selectedRankAward.rank.colorHex,
-          sortOrder: member.selectedRankAward.rank.sortOrder,
-          disciplineName: member.selectedRankAward.rank.rankSystem?.discipline?.name ?? null,
-        }
-      : null,
   }))
 }
 

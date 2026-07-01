@@ -29,6 +29,8 @@ type LineageMobileListProps = {
   canChangePromoter?: boolean
   onChangePromoter?: (nodeId: string) => void
   renderPolicy?: LineageListingRenderPolicy
+  /** The tree's discipline — scopes the shown belt to this discipline (ADR 0035 §3). */
+  disciplineId?: string | null
 }
 
 export function LineageMobileList({
@@ -40,6 +42,7 @@ export function LineageMobileList({
   canChangePromoter,
   onChangePromoter,
   renderPolicy = FREE_LINEAGE_LISTING_RENDER_POLICY,
+  disciplineId,
 }: LineageMobileListProps) {
   const flattenedMembers = useMemo(
     () => flattenLineage(members, { roots: rootMembers }),
@@ -67,7 +70,7 @@ export function LineageMobileList({
       <ol className="w-full min-w-0 space-y-2">
         {flattenedMembers.map(({ member, depth }) => {
           const { displayName, avatarSrc, rankLabel, schoolLabel, beltColor, trustStatus } =
-            resolveLineageMemberView(member.node)
+            resolveLineageMemberView(member.node, { disciplineId })
           const indentPx = Math.min(depth * 16, 48)
           const isSelected = member.id === selectedMemberId
           const onPath = selectedPathMemberIds.has(member.id)

@@ -20,7 +20,9 @@ export type CreateLineageMemberInput = {
   treeId: string
   /** Optional visual + promotion parent (an existing member of the tree). */
   parentMemberId?: string | null
-  /** The stated RankAward to surface on the node + tie to the PROMOTED_BY edge. */
+  /** The RankAward to tie to the PROMOTED_BY edge (`LineageRelationship.rankAwardId`,
+   *  the canonical promotion fact, ADR 0016). Does not drive the member's shown belt —
+   *  that is awarded truth (ADR 0035). */
   rankAwardId?: string | null
 }
 
@@ -37,9 +39,9 @@ export type CreateLineageMemberResult = {
  * Before SESSION_0358, `LineageNode` / `LineageTreeMember` were created only by seeds + test
  * fixtures; the lineage editor only *updates* members that already exist (it throws MEMBER_NOT_FOUND
  * otherwise). This helper fills that gap: it upserts the person's `LineageNode` (userId is unique),
- * creates a `LineageTreeMember` (selecting the stated RankAward + a visual parent, appended after
- * existing siblings), and — when a parent is given — records the canonical `PROMOTED_BY`
- * `LineageRelationship` referencing that award (ADR 0016: RankAward is the canonical promotion fact).
+ * creates a `LineageTreeMember` (a visual parent, appended after existing siblings), and — when a
+ * parent is given — records the canonical `PROMOTED_BY` `LineageRelationship` referencing the stated
+ * award (ADR 0016: RankAward is the canonical promotion fact).
  *
  * Designed to run INSIDE an existing transaction (pass the tx client) so add-person stays ONE action.
  * Admin authority is assumed (callers are `adminActionClient`); brand-ownership of the tree is
@@ -103,14 +105,14 @@ export const createLineageMember = async ({
   })
   const visualSortOrder = (lastSibling?.visualSortOrder ?? -1) + 1
 
-  // 5. Create the tree member (selectedRankAward surfaces the stated belt on the canvas).
+  // 5. Create the tree member. The shown belt comes from awarded truth (the passport's
+  //    highest RankAward, ADR 0035) — the member row carries no rank pointer of its own.
   const member = await db.lineageTreeMember.create({
     data: {
       treeId,
       nodeId: node.id,
       primaryVisualParentMemberId: parentMemberId ?? null,
       visualSortOrder,
-      ...(rankAwardId ? { rankAwardId } : {}),
     },
     select: { id: true, nodeId: true },
   })

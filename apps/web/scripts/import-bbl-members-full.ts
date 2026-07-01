@@ -481,7 +481,6 @@ async function main() {
     // For the rest of the per-person work we need a passportId. In dry-run with
     // a not-yet-existing passport we can't look up satellites, so we record the
     // plan and continue (resolution of "already exists" is simply unknown).
-    let rankAwardId: string | null = null
     if (passportId) {
       // 2. DirectoryProfile.
       const existingProfile = await db.directoryProfile.findUnique({
@@ -538,12 +537,10 @@ async function main() {
             where: { passportId, rankId },
             select: { id: true },
           })
-          if (existingAward) {
-            rankAwardId = existingAward.id
-          } else {
+          if (!existingAward) {
             rankAwardsCreated++
             if (!isDryRun) {
-              const created = await db.rankAward.create({
+              await db.rankAward.create({
                 data: {
                   passportId,
                   rankId,
@@ -551,9 +548,7 @@ async function main() {
                   verificationStatus: "IMPORTED",
                   notes: RANKAWARD_IMPORT_NOTE,
                 },
-                select: { id: true },
               })
-              rankAwardId = created.id
             }
           }
         }
@@ -591,7 +586,8 @@ async function main() {
         }
       }
 
-      // 6. LineageTreeMember — with rankAwardId.
+      // 6. LineageTreeMember. The shown belt is awarded truth (the passport's highest
+      //    RankAward, ADR 0035); the member row carries no rank pointer.
       if (treeId && node) {
         const existingMember = await db.lineageTreeMember.findUnique({
           where: { treeId_nodeId: { treeId, nodeId: node.id } },
@@ -608,7 +604,6 @@ async function main() {
                 nodeId: node.id,
                 isClaimable: true,
                 visualSortOrder: sortOrder,
-                rankAwardId,
               },
               select: { id: true },
             })

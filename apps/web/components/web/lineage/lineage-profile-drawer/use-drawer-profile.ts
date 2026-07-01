@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
 import { pickLineageClaimStatus, resolveLineageTrustStatus } from "~/lib/lineage/trust-status"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
-import type { SelectedRankAward } from "./drawer-types"
 
 /** Desktop (≥768px) renders the drawer as a side panel instead of a modal bottom-sheet. */
 export function useDesktopProfilePanel() {
@@ -66,22 +65,17 @@ export function rankProgressPercent(
 }
 
 /**
- * Derive every display value the drawer needs from the profile + selected award.
- * Pure data shaping — keeps the presentation components free of derivation logic.
+ * Derive every display value the drawer needs from the profile. Pure data shaping —
+ * keeps the presentation components free of derivation logic. The panel rank is the
+ * member's shown (highest awarded) rank — awarded truth, ADR 0035.
  */
-export function deriveDrawerProfileView(
-  profile: LineageNodeProfile,
-  selectedRankAward: SelectedRankAward,
-) {
+export function deriveDrawerProfileView(profile: LineageNodeProfile) {
   const rankAwards = profile.passport?.rankAwardsEarned ?? []
   const currentAward = rankAwards[0] ?? null
   const currentRank = currentAward?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
-  const selectedProfileAward = selectedRankAward?.id
-    ? (rankAwards.find(award => award.id === selectedRankAward.id) ?? null)
-    : null
-  const panelAward = selectedProfileAward ?? currentAward
-  const panelRank = panelAward?.rank ?? selectedRankAward?.rank ?? currentRank
+  const panelAward = currentAward
+  const panelRank = currentRank
   const claimStatus = pickLineageClaimStatus(profile.claimRequests)
 
   return {
