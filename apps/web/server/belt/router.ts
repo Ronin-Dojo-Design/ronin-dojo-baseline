@@ -56,10 +56,18 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
 }
 
 /**
- * `upsertBeltMilestone(rankId, { story })` — ensure the member's self-report
- * `RankAward` for `rankId` exists (UNVERIFIED / STATED, gated `<= ceiling`),
- * then upsert its 1:1 `RankMilestone`. Reuses the `setPassportRank` upsert shape
- * on `@@unique([passportId, rankId])`. Returns the enriched card.
+ * `upsertBeltMilestone(rankId, { story })` — ensure the member's backfill
+ * `RankAward` for `rankId` exists, then upsert its 1:1 `RankMilestone`. Returns
+ * the enriched card.
+ *
+ * B1 (ADR 0035 Amendment 1 — C-implied mint): the ensured award is **VERIFIED**
+ * by implication, NOT `UNVERIFIED`. This path is hard-gated to `sortOrder <=`
+ * the member's verified ceiling (below), so the member demonstrably already holds
+ * an equal-or-higher awarded belt — a lower belt is implied-true, not a
+ * self-declaration awaiting review. A belt ABOVE the ceiling cannot reach this
+ * path (it throws FORBIDDEN below); the UI routes those to `promotion.submit`
+ * (the V2 spine oRPC). No belt-journey path ever mints an `UNVERIFIED` award, so
+ * there is no display axis and nothing can leak onto the tree (ADR 0035 §5).
  */
 const upsertBeltMilestone = beltProcedure
   .input(upsertBeltMilestoneInput)
@@ -92,7 +100,10 @@ const upsertBeltMilestone = beltProcedure
           passportId,
           rankId: input.rankId,
           source: "STATED",
-          verificationStatus: "UNVERIFIED",
+          // VERIFIED-by-implication: gated `<= ceiling`, so a higher/equal awarded
+          // belt already vouches for this one. `awardedById` stays null → this is a
+          // self-added backfill (fact-editable; see `isFactEditable`).
+          verificationStatus: "VERIFIED",
         },
         update: {},
         select: { id: true },
@@ -113,10 +124,11 @@ const upsertBeltMilestone = beltProcedure
 
 /**
  * `updateRankAwardFact(rankAwardId, { awardedAt, promoter, school })` — edit the
- * promotion FACT of an OWN, UNVERIFIED award. NEVER changes `rankId` (not an
- * input). Verified/imported/disputed → FORBIDDEN (Locked #5). Promoter/school
- * each accept a typed FK OR freetext; freetext school → `emitSchoolLead` +
- * stored on `location`; freetext promoter name → stored on `notes`.
+ * promotion FACT of an OWN, self-added backfill award. NEVER changes `rankId`
+ * (not an input). B1: editable only for self-added STATED backfills; a
+ * promotion-minted / imported / disputed award is authority-owned → FORBIDDEN
+ * (`isFactEditable`). Promoter/school each accept a typed FK OR freetext; freetext
+ * school → `emitSchoolLead` + stored on `location`; freetext promoter → `notes`.
  */
 const updateRankAwardFact = beltProcedure
   .input(updateRankAwardFactInput)
@@ -125,14 +137,20 @@ const updateRankAwardFact = beltProcedure
 
     const award = await db.rankAward.findUnique({
       where: { id: input.rankAwardId },
-      select: { id: true, passportId: true, verificationStatus: true },
+      select: {
+        id: true,
+        passportId: true,
+        source: true,
+        verificationStatus: true,
+        awardedById: true,
+      },
     })
     if (!award || award.passportId !== passportId) {
       throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
     }
-    if (!isFactEditable(award.verificationStatus)) {
+    if (!isFactEditable(award)) {
       throw new ORPCError("FORBIDDEN", {
-        message: "A verified belt's promotion facts are read-only",
+        message: "This belt was verified by an instructor and its facts are read-only",
       })
     }
 

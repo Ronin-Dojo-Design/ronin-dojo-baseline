@@ -5,7 +5,7 @@ import {
   beltDateLabel,
   type BeltRankViewModel,
   deriveBeltStatus,
-  isFactEditableStatus,
+  isCardFactEditable,
   isRankLocked,
   isWhiteBelt,
 } from "./belt-view-model"
@@ -25,7 +25,8 @@ function card(over: Partial<BeltCardOutput> = {}): BeltCardOutput {
     rankName: "Belt 1",
     rankSortOrder: 1,
     colorHex: null,
-    verificationStatus: "UNVERIFIED",
+    verificationStatus: "VERIFIED",
+    isFactEditable: true,
     awardedAt: null,
     promoterName: null,
     awardedByPassportId: null,
@@ -80,16 +81,16 @@ describe("deriveBeltStatus", () => {
   })
 })
 
-describe("isFactEditableStatus (mirrors server isFactEditable)", () => {
-  it("is editable ONLY when UNVERIFIED", () => {
-    expect(isFactEditableStatus("UNVERIFIED")).toBe(true)
+describe("isCardFactEditable (reflects the server's authoritative flag, B1)", () => {
+  it("is editable when the card's server-computed isFactEditable is true", () => {
+    expect(isCardFactEditable(card({ isFactEditable: true }))).toBe(true)
   })
-  it("is read-only for verified/imported/disputed/absent", () => {
-    expect(isFactEditableStatus("VERIFIED")).toBe(false)
-    expect(isFactEditableStatus("IMPORTED")).toBe(false)
-    expect(isFactEditableStatus("DISPUTED")).toBe(false)
-    expect(isFactEditableStatus(null)).toBe(false)
-    expect(isFactEditableStatus(undefined)).toBe(false)
+  it("is read-only when the card's isFactEditable is false (promotion-minted / imported)", () => {
+    expect(isCardFactEditable(card({ isFactEditable: false }))).toBe(false)
+  })
+  it("is read-only for an absent card (no award to edit)", () => {
+    expect(isCardFactEditable(null)).toBe(false)
+    expect(isCardFactEditable(undefined)).toBe(false)
   })
 })
 

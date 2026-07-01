@@ -1,4 +1,4 @@
-import type { RankAwardVerificationStatus } from "~/.generated/prisma/client"
+import type { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 
 /**
  * Pure belt-journey gating logic (Slice 3 — Petey Plan 0477 Locked #5).
@@ -50,15 +50,38 @@ export function isWithinCeiling(targetSortOrder: number, ceiling: number | null)
   return ceiling !== null && targetSortOrder <= ceiling
 }
 
+/** The minimal award shape the fact-edit gate needs (B1 — ADR 0035 Amendment 1). */
+export type FactEditableAward = {
+  source: RankAwardSource
+  verificationStatus: RankAwardVerificationStatus
+  awardedById: string | null
+}
+
 /**
- * May the promotion FACT (date / promoter / school) be edited? Only while the
- * award is UNVERIFIED. Once a reviewer marks it VERIFIED — or it arrived as an
- * IMPORTED / DISPUTED record — the fact is authority-owned and read-only to the
- * member (Locked #5: "verified fact → 403"). Deny-by-default: anything other
- * than UNVERIFIED is not editable.
+ * May the promotion FACT (date / promoter / school) be edited? (B1 — ADR 0035
+ * Amendment 1.) Under B1 there are **no UNVERIFIED awards**: a self-added backfill
+ * mints VERIFIED-by-implication, and an approved promotion mints VERIFIED via
+ * `mintAssertedRankAward`. So "editable" can no longer key off `UNVERIFIED` — it
+ * keys off **who authored the award**:
+ *
+ * - **Self-added backfill** (`source === "STATED"` and NO approver actor —
+ *   `awardedById === null`): the member's own enrichment; date/promoter/school are
+ *   theirs to edit.
+ * - **Promotion-minted** (`mintAssertedRankAward` stamps `awardedById =` the
+ *   approving instructor/admin): authority-owned → read-only.
+ * - **IMPORTED / DISPUTED**: authority/legacy records → read-only.
+ *
+ * Deny-by-default: anything that is not a clean self-added STATED award is locked.
+ * The member's own promoter edit writes `awardedByPassportId` / `notes`, never
+ * `awardedById`, so editing a fact never flips an award out of the editable class.
  */
-export function isFactEditable(status: RankAwardVerificationStatus): boolean {
-  return status === "UNVERIFIED"
+export function isFactEditable(award: FactEditableAward): boolean {
+  return (
+    award.source === "STATED" &&
+    award.awardedById === null &&
+    award.verificationStatus !== "IMPORTED" &&
+    award.verificationStatus !== "DISPUTED"
+  )
 }
 
 /**

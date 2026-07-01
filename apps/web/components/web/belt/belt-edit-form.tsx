@@ -23,7 +23,7 @@ import {
   beltDateLabel,
   type BeltMediaItem,
   type BeltRankViewModel,
-  isFactEditableStatus,
+  isCardFactEditable,
   isWhiteBelt,
 } from "./belt-view-model"
 import { CountrySelect } from "./country-select"
@@ -32,9 +32,10 @@ import { CountrySelect } from "./country-select"
  * The belt-journey EDIT SURFACE (Slice 4 — Petey Plan 0477 §Slice 4), opened from
  * an unlocked `BeltEditCard`. Two field groups:
  *
- * - FACT fields (date, promoter, school, country) — editable ONLY while the award
- *   is UNVERIFIED (`isFactEditableStatus`); otherwise rendered read-only with a
- *   "verified" note. Promoter + school are the resolve-or-create `CreatableCombobox`
+ * - FACT fields (date, promoter, school, country) — editable ONLY for a self-added
+ *   backfill (`card.isFactEditable`, B1); a promotion-minted / imported award is
+ *   authority-owned → rendered read-only with a "verified" note. Promoter + school
+ *   are the resolve-or-create `CreatableCombobox`
  *   (a registered pick stores its ref id; freetext stores text → the oRPC turns a
  *   freetext school into a school-lead). Wired to `client.belt.updateRankAwardFact`.
  * - MILESTONE fields (story + the 4 media galleries) — ALWAYS editable (member-owned).
@@ -86,7 +87,7 @@ export function BeltEditForm({
 }) {
   const card = vm.card
   const white = isWhiteBelt(vm.rank.sortOrder, minSortOrder)
-  const factEditable = isFactEditableStatus(card?.verificationStatus)
+  const factEditable = isCardFactEditable(card)
 
   const [story, setStory] = useState(card?.milestone?.story ?? "")
   const [awardedAt, setAwardedAt] = useState(toDateInputValue(card?.awardedAt ?? null))

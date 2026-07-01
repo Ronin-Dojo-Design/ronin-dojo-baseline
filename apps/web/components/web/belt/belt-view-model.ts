@@ -89,13 +89,14 @@ export const BELT_STATUS_LABEL: Record<BeltCardStatus, string> = {
 export const BELT_LOCKED_TOOLTIP = "Your instructor needs to promote you to unlock this."
 
 /**
- * Whether the promotion FACT fields (date / promoter / school) are editable —
- * true only while the award is UNVERIFIED (mirrors `isFactEditable` on the
- * server; a verified/imported/disputed fact is authority-owned and read-only).
- * An absent card has no award yet, so there is nothing to edit → `false`.
+ * Whether the promotion FACT fields (date / promoter / school) are editable for a
+ * card. B1 (ADR 0035 Amendment 1): the server computes this authoritatively
+ * (`BeltCardOutput.isFactEditable` — true only for a self-added STATED backfill;
+ * false for promotion-minted / imported / disputed awards). The client just
+ * reflects it. An absent card has no award to edit → `false`.
  */
-export function isFactEditableStatus(verificationStatus: string | null | undefined): boolean {
-  return verificationStatus === "UNVERIFIED"
+export function isCardFactEditable(card: BeltCardOutput | null | undefined): boolean {
+  return card?.isFactEditable ?? false
 }
 
 /**

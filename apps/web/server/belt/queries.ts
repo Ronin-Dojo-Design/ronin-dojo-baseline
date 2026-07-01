@@ -1,5 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
-import type { GateAward } from "~/server/belt/belt-gate"
+import { type GateAward, isFactEditable } from "~/server/belt/belt-gate"
 import type { BeltCardOutput } from "~/server/belt/schemas"
 import { db } from "~/services/db"
 
@@ -17,10 +17,12 @@ type BeltDb = Pick<typeof db, "discipline" | "passport" | "rankAward">
 /** Awards selected in the shape the gate + card view both consume. */
 export const gateAwardSelect = {
   id: true,
+  source: true,
   verificationStatus: true,
   awardedAt: true,
   notes: true,
   location: true,
+  awardedById: true,
   awardedByPassportId: true,
   organizationId: true,
   rankId: true,
@@ -113,6 +115,11 @@ export function toBeltCard(award: MemberAward): BeltCardOutput {
     rankSortOrder: award.rank.sortOrder,
     colorHex: award.rank.colorHex,
     verificationStatus: award.verificationStatus,
+    isFactEditable: isFactEditable({
+      source: award.source,
+      verificationStatus: award.verificationStatus,
+      awardedById: award.awardedById,
+    }),
     awardedAt: award.awardedAt,
     promoterName: award.notes,
     awardedByPassportId: award.awardedByPassportId,

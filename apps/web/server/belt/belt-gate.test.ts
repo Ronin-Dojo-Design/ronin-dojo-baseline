@@ -77,15 +77,42 @@ describe("isWithinCeiling — a member CANNOT create/edit a rank above their cei
   })
 })
 
-describe("isFactEditable — a member CANNOT edit a VERIFIED award's fact", () => {
-  it("allows editing an UNVERIFIED award", () => {
-    expect(isFactEditable("UNVERIFIED")).toBe(true)
+describe("isFactEditable (B1) — only a self-added STATED backfill is editable", () => {
+  it("ALLOWS editing a self-added backfill award (STATED, VERIFIED-by-implication, no approver)", () => {
+    expect(
+      isFactEditable({ source: "STATED", verificationStatus: "VERIFIED", awardedById: null }),
+    ).toBe(true)
   })
 
-  it("DENIES editing a VERIFIED / IMPORTED / DISPUTED award (deny-by-default)", () => {
-    expect(isFactEditable("VERIFIED")).toBe(false)
-    expect(isFactEditable("IMPORTED")).toBe(false)
-    expect(isFactEditable("DISPUTED")).toBe(false)
+  it("ALLOWS editing a legacy UNVERIFIED self-report (STATED, no approver) for back-compat", () => {
+    expect(
+      isFactEditable({ source: "STATED", verificationStatus: "UNVERIFIED", awardedById: null }),
+    ).toBe(true)
+  })
+
+  it("DENIES editing a promotion-minted award (STATED + VERIFIED but stamped with an approver)", () => {
+    expect(
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedById: "u-approver",
+      }),
+    ).toBe(false)
+  })
+
+  it("DENIES editing an IMPORTED or DISPUTED award (authority/legacy records, deny-by-default)", () => {
+    expect(
+      isFactEditable({ source: "STATED", verificationStatus: "IMPORTED", awardedById: null }),
+    ).toBe(false)
+    expect(
+      isFactEditable({ source: "STATED", verificationStatus: "DISPUTED", awardedById: null }),
+    ).toBe(false)
+  })
+
+  it("DENIES editing an EARNED award (not a self-added STATED backfill)", () => {
+    expect(
+      isFactEditable({ source: "EARNED", verificationStatus: "VERIFIED", awardedById: null }),
+    ).toBe(false)
   })
 })
 

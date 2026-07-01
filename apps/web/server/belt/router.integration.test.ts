@@ -12,8 +12,10 @@
  * is skipped — the same seam RSC uses). Proves the four non-negotiable invariants
  * end-to-end:
  *
- *   1. a member CANNOT create/enrich a rank ABOVE their ceiling (no self-promotion)
- *   2. a member CANNOT edit a VERIFIED award's fact
+ *   1. a member CANNOT create/enrich a rank ABOVE their ceiling (no self-promotion);
+ *      a backfill at/below the ceiling mints VERIFIED-by-implication, never UNVERIFIED (B1)
+ *   2. a member CANNOT edit an authority-owned award's fact (IMPORTED / promotion-minted);
+ *      a self-added backfill's fact IS editable
  *   3. a member CANNOT delete their TOP award
  *   4. a member edits ONLY their own Passport (no cross-Passport reach)
  *   + rankId is never changed by an update (the fact edit has no rankId input)
@@ -69,8 +71,8 @@ type Fixtures = {
   purpleRankId: string
   brownRankId: string
   // member awards
-  whiteAwardId: string // VERIFIED (fact read-only)
-  blueAwardId: string // UNVERIFIED, = member's BJJ top (the ceiling)
+  whiteAwardId: string // VERIFIED-by-implication self-backfill (fact EDITABLE, B1)
+  blueAwardId: string // IMPORTED awarded truth = member's BJJ top (the ceiling; fact READ-ONLY)
   // another passport's award + milestone (ownership boundary)
   otherAwardId: string
   otherMilestoneId: string
@@ -98,7 +100,9 @@ beforeAll(async () => {
   const purpleRankId = await bjjRankId("Purple Belt")
   const brownRankId = await bjjRankId("Brown Belt")
 
-  // Member's AWARDED belts: white (VERIFIED) + blue (UNVERIFIED) → ceiling = blue.
+  // Member's belts (B1): blue is the IMPORTED awarded-truth ceiling (read-only);
+  // white is a self-added VERIFIED-by-implication backfill below it (fact editable).
+  // No `awardedById` on white → self-added; the IMPORTED status alone locks blue.
   const whiteAward = await db.rankAward.create({
     data: {
       passportId: memberPassport.id,
@@ -113,7 +117,7 @@ beforeAll(async () => {
       passportId: memberPassport.id,
       rankId: blueRankId,
       source: "STATED",
-      verificationStatus: "UNVERIFIED",
+      verificationStatus: "IMPORTED",
     },
     select: { id: true },
   })
@@ -124,7 +128,7 @@ beforeAll(async () => {
       passportId: otherPassport.id,
       rankId: purpleRankId,
       source: "STATED",
-      verificationStatus: "UNVERIFIED",
+      verificationStatus: "VERIFIED",
     },
     select: { id: true },
   })
@@ -184,19 +188,25 @@ const expectCode = async (promise: Promise<unknown>, code: "FORBIDDEN" | "NOT_FO
 }
 
 describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () => {
-  it("ALLOWS enriching a belt AT the ceiling (blue)", async () => {
+  it("ALLOWS enriching the IMPORTED ceiling belt (blue) — milestone editable, award stays read-only", async () => {
     const card = await member().upsertBeltMilestone({
       rankId: fx.blueRankId,
       story: "my blue journey",
     })
     expect(card.rankId).toBe(fx.blueRankId)
-    expect(card.verificationStatus).toBe("UNVERIFIED")
+    // The award is awarded truth; enriching adds a milestone but never re-verifies it.
+    expect(card.verificationStatus).toBe("IMPORTED")
+    expect(card.isFactEditable).toBe(false)
     expect(card.milestone?.story).toBe("my blue journey")
   })
 
-  it("ALLOWS enriching a belt BELOW the ceiling (white — award already exists, no promotion)", async () => {
+  it("enriches a self-added backfill BELOW the ceiling (white) — VERIFIED-by-implication, fact editable (B1)", async () => {
     const card = await member().upsertBeltMilestone({ rankId: fx.whiteRankId, story: "day one" })
     expect(card.rankId).toBe(fx.whiteRankId)
+    // B1: a backfill at/below the ceiling is VERIFIED-by-implication, never UNVERIFIED,
+    // and — being self-added (no approver) — its facts remain member-editable.
+    expect(card.verificationStatus).toBe("VERIFIED")
+    expect(card.isFactEditable).toBe(true)
     expect(card.milestone?.story).toBe("day one")
   })
 
@@ -216,14 +226,14 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
   })
 })
 
-describe("belt.updateRankAwardFact — verified-only + never-changes-rankId + ownership", () => {
-  it("ALLOWS a fact edit on an UNVERIFIED own award (blue) and NEVER changes rankId", async () => {
+describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId + ownership", () => {
+  it("ALLOWS a fact edit on a self-added backfill (white) and NEVER changes rankId", async () => {
     const before = await db.rankAward.findUniqueOrThrow({
-      where: { id: fx.blueAwardId },
+      where: { id: fx.whiteAwardId },
       select: { rankId: true },
     })
     const card = await member().updateRankAwardFact({
-      rankAwardId: fx.blueAwardId,
+      rankAwardId: fx.whiteAwardId,
       awardedAt: new Date("2022-06-01"),
       promoter: { name: "Prof. Freetext" },
       school: { name: tag("Freetext BJJ Academy") },
@@ -233,7 +243,7 @@ describe("belt.updateRankAwardFact — verified-only + never-changes-rankId + ow
     expect(card.schoolName).toBe(tag("Freetext BJJ Academy"))
 
     const after = await db.rankAward.findUniqueOrThrow({
-      where: { id: fx.blueAwardId },
+      where: { id: fx.whiteAwardId },
       select: { rankId: true },
     })
     expect(after.rankId).toBe(before.rankId) // and at the DB layer
@@ -249,10 +259,10 @@ describe("belt.updateRankAwardFact — verified-only + never-changes-rankId + ow
     expect(lead).not.toBeNull()
   })
 
-  it("DENIES a fact edit on a VERIFIED award (white → FORBIDDEN)", async () => {
+  it("DENIES a fact edit on an IMPORTED award (blue, awarded truth → FORBIDDEN)", async () => {
     await expectCode(
       member().updateRankAwardFact({
-        rankAwardId: fx.whiteAwardId,
+        rankAwardId: fx.blueAwardId,
         awardedAt: new Date("2020-01-01"),
       }),
       "FORBIDDEN",

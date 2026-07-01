@@ -27,10 +27,12 @@ import { db } from "~/services/db"
 /** Awards + their milestone media joined to the resolvable `Media` fields. */
 const beltTabAwardSelect = {
   id: true,
+  source: true,
   verificationStatus: true,
   awardedAt: true,
   notes: true,
   location: true,
+  awardedById: true,
   awardedByPassportId: true,
   organizationId: true,
   rankId: true,

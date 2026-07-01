@@ -16,7 +16,7 @@ export {
   type BeltRankRef,
   type BeltRankViewModel,
   deriveBeltStatus,
-  isFactEditableStatus,
+  isCardFactEditable,
   isRankLocked,
   isWhiteBelt,
 } from "./belt-view-model"
