@@ -145,18 +145,64 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | Page | Type | Status |
 | --- | --- | --- |
 | [decisions/](../../architecture/decisions/) | decision | various |
-| [ADR 0009 Mobile Auth Strategy](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
-| [ADR 0010 Cache Strategy](../../architecture/decisions/0010-cache-strategy.md) | decision | proposed |
-| [ADR 0011 Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
-| [ADR 0012 Admin CRUD Routing Pattern](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
-| [ADR 0014 Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | proposed |
-| [ADR 0015 Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
-| [ADR 0016 Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
-| [ADR 0017 Enable pnpm pre/post lifecycle scripts](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) | decision | accepted |
-| [ADR 0018 ContentAtom Canonical Relations](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
-| [ADR 0019 Membership Lifecycle Ownership](../../architecture/decisions/0019-membership-lifecycle-ownership.md) | decision | accepted |
-| [ADR 0020 Registration Recipient userId XOR Guest](../../architecture/decisions/0020-registration-recipient-userid-or-guest.md) | decision | accepted |
-| [ADR 0023 Generic Profile Claim (member/org)](../../architecture/decisions/0023-generic-profile-claim.md) | decision | accepted |
+| [ADR 0001 — Dirstarter (Next.js + Prisma) over WPGraphQL + JWT](../../architecture/decisions/0001-dirstarter-vs-wpgraphql.md) | decision | accepted |
+| [ADR 0002 — Expo for mobile](../../architecture/decisions/0002-expo-for-mobile.md) | decision | see file |
+| [ADR 0003 — No WordPress](../../architecture/decisions/0003-no-wordpress.md) | decision | see file |
+| [ADR 0004 — Multi-brand encoded as `brand` column](../../architecture/decisions/0004-multi-brand-as-column.md) | decision | accepted (single-brand collapse) |
+| [ADR 0005 — Legacy stack stays at tuffbuffs.com](../../architecture/decisions/0005-legacy-coexistence.md) | decision | see file |
+| [ADR 0006 — Multi-domain hosting on one Vercel deployment](../../architecture/decisions/0006-multi-domain-hosting.md) | decision | see file |
+| [ADR 0007 — BBL one-time migration from legacy to new stack](../../architecture/decisions/0007-bbl-migration.md) | decision | see file |
+| [ADR 0008 — Brand switcher: admins + multi-brand members only](../../architecture/decisions/0008-brand-switcher.md) | decision | accepted |
+| [ADR 0009 — Mobile Auth Strategy: Better-Auth Mobile SDK](../../architecture/decisions/0009-mobile-auth-strategy.md) | decision | accepted |
+| [ADR 0010 — Cache strategy for auth-scoped queries](../../architecture/decisions/0010-cache-strategy.md) | decision | see file |
+| [ADR 0011 — Entitlement-First Commerce](../../architecture/decisions/0011-entitlement-first-commerce.md) | decision | accepted |
+| [ADR 0012 — Admin CRUD routing: flat with filter](../../architecture/decisions/0012-admin-crud-routing-pattern.md) | decision | accepted |
+| [ADR 0012 — Tier-Based Entitlement Auto-Grant via Stripe Webhook (dup number)](../../architecture/decisions/0012-tier-auto-grant.md) | decision | accepted |
+| [ADR 0013 — Tool→Listing Pattern Repurposing](../../architecture/decisions/0013-tool-listing-repurposing.md) | decision | accepted |
+| [ADR 0014 — Stripe Product Policy](../../architecture/decisions/0014-stripe-product-policy.md) | decision | accepted |
+| [ADR 0015 — Domain Hosting Infrastructure](../../architecture/decisions/0015-domain-hosting-infrastructure.md) | decision | accepted |
+| [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) | decision | accepted |
+| [ADR 0017 — pnpm pre/post scripts so Vercel runs `prisma migrate deploy`](../../architecture/decisions/0017-pnpm-pre-post-scripts.md) | decision | accepted |
+| [ADR 0018 — ContentAtom owns tags/tools/media for variant posts](../../architecture/decisions/0018-content-atom-canonical-relations.md) | decision | accepted |
+| [ADR 0019 — Membership = community state; UserEntitlement owns access](../../architecture/decisions/0019-membership-lifecycle-ownership.md) | decision | accepted |
+| [ADR 0020 — Registration recipient userId XOR guest, keyed by recipientKey](../../architecture/decisions/0020-registration-recipient-userid-or-guest.md) | decision | accepted |
+| [ADR 0021 — Brand-aware magic links + request-origin email links](../../architecture/decisions/0021-brand-aware-magic-links.md) | decision | accepted |
+| [ADR 0022 — Brand Chrome Resolution](../../architecture/decisions/0022-brand-chrome-resolution.md) | decision | accepted |
+| [ADR 0023 — Generic Profile Claim (member/org)](../../architecture/decisions/0023-generic-profile-claim.md) | decision | accepted |
+| [ADR 0024 — Data layer: next-safe-action vs oRPC + TanStack Query](../../architecture/decisions/0024-orpc-vs-next-safe-action.md) | decision | proposed (full-oRPC per SOT-ADR D3) |
+| [ADR 0025 — Passport identity source of truth (+ Affiliation, brand-color SoT)](../../architecture/decisions/0025-passport-identity-source-of-truth.md) | decision | accepted |
+| [ADR 0026 — Lineage View A engine: vendored donatso fork](../../architecture/decisions/0026-lineage-view-a-engine-donatso-fork.md) | decision | superseded by 0027 |
+| [ADR 0027 — Lineage View A: custom cohort-timeline (retire family-chart)](../../architecture/decisions/0027-lineage-view-a-custom-cohort-timeline.md) | decision | accepted |
+| [ADR 0028 — Shared Listing card + additive cross-entity taxonomy](../../architecture/decisions/0028-shared-listing-card-and-taxonomy.md) | decision | accepted |
+| [ADR 0029 — Polymorphic Bookmark + shared ListingDetail chrome](../../architecture/decisions/0029-polymorphic-bookmark-and-listing-detail.md) | decision | accepted |
+| [ADR 0030 — Per-brand Stripe account (BBL on its own account)](../../architecture/decisions/0030-per-brand-stripe-account.md) | decision | accepted |
+| [ADR 0031 — Lifecycle email dry-run gate](../../architecture/decisions/0031-lifecycle-email-dry-run-gate.md) | decision | accepted |
+| [ADR 0032 — Social-sign-in pending claim binding](../../architecture/decisions/0032-social-signin-pending-claim.md) | decision | accepted |
+| [ADR 0033 — Component library as a shared kernel + strategic-harness posture](../../architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md) | decision | accepted |
+| [ADR 0034 — One monorepo platform + per-product Vercel deploys](../../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md) | decision | accepted |
+| [ADR 0035 — Lineage rank display from awarded truth; `selectedRankAward` → pending claim](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md) | decision | accepted |
+| [ADR 0036 — Unified Passport-keyed person claim](../../architecture/decisions/0036-unified-passport-claim.md) | decision | accepted |
+| [ADR 0037 — Lineage branch heads & visual placement seeded from provenance](../../architecture/decisions/0037-lineage-branch-heads-and-visual-placement.md) | decision | accepted |
+| [ADR 0038 — Per-product database separation](../../architecture/decisions/0038-per-product-database-separation.md) | decision | accepted |
+| [ADR 0039 — Baseline restored as `apps/baseline` (own deploy + DB)](../../architecture/decisions/0039-baseline-as-apps-baseline.md) | decision | accepted |
+| [ADR 0040 — Design-system doctrine + card architecture (one surface, named cards)](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md) | decision | accepted |
+
+## Learning Records
+
+The **Giddy learning records** — durable *lessons* of past sessions (the reasoning behind a fix, not the
+fix). Bow-in (`opening.md` §3b) skims these for any record touching the current lane. Full index +
+maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learning/ddd/learning-records/README.md).
+
+| Page | Type | Lesson |
+| --- | --- | --- |
+| [LR 0008 — One source read everywhere; "display-dead" isn't "removable"](../../learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md) | learning | Consistency = one resolver read everywhere, not N surfaces hand-synced; a zero-reader field can still be load-bearing. |
+| [LR 0007 — The discoverability heuristic; "built" isn't "pointed"](../../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md) | learning | Dead-code heuristics over-flag the load-bearing; an artifact does nothing until the read-path points at it. |
+| [LR 0006 — Design systems & UI kits](../../learning/ddd/learning-records/0006-design-systems-and-ui-kits.md) | learning | One foundation + a few single-purpose pieces; tokens are the contract. |
+| [LR 0005 — Extract the L1 down, don't clean-room it](../../learning/ddd/learning-records/0005-extract-the-l1-down-dont-cleanroom-it.md) | learning | When the kernel can't import an app L1, extract it down instead of reinventing. |
+| [LR 0004 — Projection → stored table without drift](../../learning/ddd/learning-records/0004-projection-to-stored-table-without-drift.md) | learning | Promoting a read-model to a table needs one write path + backfill or it drifts. |
+| [LR 0003 — Context mapping & database-per-context](../../learning/ddd/learning-records/0003-context-mapping-and-database-per-context.md) | learning | Draw the bounded-context boundary; a DB per context keeps the seam honest. |
+| [LR 0002 — The shared kernel, in practice](../../learning/ddd/learning-records/0002-shared-kernel-in-practice.md) | learning | What belongs in the kernel vs a product; tokens travel, Tailwind doesn't. |
+| [LR 0001 — Bounded contexts, ubiquitous language, shared kernel](../../learning/ddd/learning-records/0001-bounded-contexts-and-shared-kernel.md) | learning | The DDD foundation the roster's vocabulary rests on. |
 
 ## Sessions
 
@@ -553,6 +599,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION_0430](../../sprints/SESSION_0430.md) | session--open | closed — **Lineage rank read-model reconciled (ADR 0035) + roster data corrections.** Grilled out the real model: the drawer's "current rank" had three disagreeing sources — `awardedAt desc` NULLS-FIRST ordering, the `selectedRankAward` editorial override, and a corrupt base-"Black Belt" `sortOrder` (31) — under-ranking 7/10 founders. Decision: structured `RankAward` canonical, bio narrative-only, display = highest *awarded* belt by sortOrder, `selectedRankAward` → **pending claim** (claim record `rankId` → admin-verify creates the award; FI-006). Code (3 payload orderings + `canvas-model` + drawer) + prodsnap data script (sortOrder ladder; Bill Hosken/Jerry Smith/Rikki/Andre Lima/Rorion award fixes; 2 duplicate merges) — live-verified (Meyer → Coral 7th). Track B: operator playbook validated; §6.7 router reconciled. D-029; FI-006/FI-007 (directory-form cover-photo/avatar). Prod-apply pending. |
 | [SESSION_0429](../../sprints/SESSION_0429.md) | session--open | closed — **Design-system component batch + Mammoth-Rebuild CRM epic (PR #137).** Desi brand pass: one token set + `component-design-system.{md,html}` + shared `bbl-doc-theme.ts` (accent `#E52421`, no gold) + dark/light inversion. Specced a brand-/content-agnostic component library: AdminTaskBoard (PWCC-001), m-card (PWCC-002), three-level magnetic drawer (PWCC-003), AdminKanban + intake + automations (PWCC-007), each with a PWCC cloud handoff. Opened the **Mammoth-Rebuild CRM** (HubSpot-replacement) epic + bindings PWCC-004/005/006 (Petey orchestration). Subscribed to PR #137; diagnosed + re-kicked a transient `@prisma/client` `bun install` flake. Docs/spec only; `wiki:lint` 0 errors. |
 | [SESSION_0428](../../sprints/SESSION_0428.md) | session--open | closed — **Feedback-widget wiring + PR-backlog triage + BBL Galaxy v1 + canonical public Passport DTO.** Feedback widget now persists **and** notifies the operator inbox (`notifyAdminOfFeedback` → welcome@blackbeltlegacy.com, Reply-To submitter) + 390px toast suppression on `/lineage/join` (PR #130, merged). Cleared the open-PR backlog under the Giddy merge strategy: merged #125/#126/#128/#129; closed #122/#123 (already-on-main duplicates) + #60 (superseded). BBL Galaxy v1 rebuilt fresh on main — slice 1 flag-gated R3F prototype + slice 2 public-safe DTO projection + real lineage profile drawer, verified-only (PR #133, draft). Cross-surface DTO parity audit → canonical `publicPassportPayload` + `projectPublicPassport` base (PR #135, draft) + ADR/handoff plan (issue #134). (Sessions 0420–0427 not indexed here — prior cloud-PR closes; not backfilled.) |
+| [SESSION_0476](../../sprints/SESSION_0476.md) | session--implement | in-progress — **PRE-STAGED (S49): close the loops.** From a 4-agent Petey read-path audit (is the roster/Kanban/docs infra wired for bow-in, or pull-only?). Root cause: only `CLAUDE.md`/`MEMORY.md`/`ledger-backlog.ts` are push; the rest is pull. **Tier-1 landed at 0474 tail** (learning-records + ADRs into bow-in §3b; default Graphify query; LR index; ADR-table backfill). This session = Tier 2/3: make Cody/Doug/Petey real agentTypes + auto-dispatch from `petey-plan`; make the DB Kanban board the **driver** (operator-ratified — board→bow-in, next-block seeded from backlog, bow-out marks cards done); router + allowed-vs-never = named bow-in read. See `[[readpath-push-vs-pull-audit]]`. |
 | [SESSION_0475](../../sprints/SESSION_0475.md) | session--implement | in-progress — **PRE-STAGED (S49): lineage rank-display refinement.** Follows SESSION_0474's next-session block; all decisions ratified at 0474 (no open forks), footprint mapped in `[[lineage-rank-display-and-selectedrank-removal]]`. (1) **Discipline-scoped rank** — BBL tree/board/cards show the **BJJ** rank (tree's discipline), not "highest awarded by `sortOrder`" (ADR 0035 known limitation); drawer + directory keep multi-discipline. (2) **`selectedRank`/`LineageTreeMember.rankAwardId` removal** (~38 files + Prisma migration; repoint live readers to awarded-truth, delete admin dropdown + dead plumbing). (3) **One SSR-image avatar primitive** (kill the `CardAvatar` vs Radix-`Avatar` divergence — WWAD). (4) remaining lineage doc-staleness corrections. Dispatchable now. |
 | [SESSION_0474](../../sprints/SESSION_0474.md) | session--implement | closed — **SHIPPED: lineage member-display unification + free avatar + `avatar_upload` rate-limit (S49, S2).** Collapsed every lineage surface onto ONE `resolveLineageMemberView` resolver; belt = highest **awarded** rank by `Rank.sortOrder` (`memberTopRank`); verification = the single `node.isVerified` axis (binary; `RankAward.verificationStatus` vestigial — ADR 0035 §5); Claimable removed from tree/board/cards (drawer + directory only); free-tier avatar on; `initials` deduped 4→1. **Fixed the Meyer/Casey regression** (honor strip + canvas branch read the stale `selectedRank`). Mid-session reverted a wrong per-award "prefer-verified" axis (operator grill → [`LR 0008`](../../learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md)). Pushed `eb963036`, prod deploy SUCCESS + smoke-verified; lineage e2e 12/12; +`human-code-runbook` §8 teaching the read-model. **Next:** `selectedRank` removal (~38 files + migration) + discipline-scoped rank (BBL=BJJ). |
 | [SESSION_0473](../../sprints/SESSION_0473.md) | session--implement | closed — **CODE LANDED + verified + pushed (`737868ed`); live Stripe = open operator action (S49, S1 / track A).** Done: seeded `LINEAGE_LEGEND` entitlement (base catalog + BBL pricing-seed self-heal; fixes `grantUserComp(LEGEND)` throwing) · `isBlackBeltRateEligible` predicate (BJJ; Black/Coral/Red) + `filterPlansForBlackBeltEligibility` read-model · `SubscriptionTier`/`UserBrandSubscription` deprecated-for-gating (0 gating reads; schema `///` markers). Reprice **code + dry-run** ready (3 annual plans $35/$65/$45). **TASK_02 BLOCKED — Stripe CLI authed to "Tuff Buffs" (`acct_1T065aPm73j3q757`), not BBL** → STOPPED before any live product/price creation (operator: `stripe login --project-name bbl` + create live prices + off-prod rehearsal + 0-payer re-confirm first). Rebased clean onto 0474 (disjoint); merged worktree removed. Ran parallel with SESSION_0474. |

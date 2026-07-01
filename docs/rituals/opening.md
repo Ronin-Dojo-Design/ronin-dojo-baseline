@@ -140,11 +140,13 @@ Only the ones that bear on today's task:
 
 Don't bulk-read. Reach for these as the work surfaces a need.
 
-### 3b. Check FAILED_STEPS log + Drift Register
+### 3b. Check FAILED_STEPS log + Drift Register + recent Learning Records / ADRs
 
 Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). Check for any `open` or `mitigated` entries in the area you're about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.
 
 Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) for open drift entries relevant to today's lane. If a drift item directly affects the task, note it in the SESSION file.
+
+Then skim the **Giddy learning records** ([`docs/learning/ddd/learning-records/`](../learning/ddd/learning-records/README.md)) and recent **ADRs** ([`docs/architecture/decisions/`](../architecture/decisions/)) for any entry that touches today's lane — quick surface: `ls -t docs/learning/ddd/learning-records/ docs/architecture/decisions/ | head`. A learning record encodes the *lesson* of a past session (why a fix took the shape it did); an ADR encodes a ratified decision. This is the **anti-rediscovery layer**: skipping the record that touches your lane re-incurs the lesson it was written to prevent — [LR 0007](../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md) is literally about this "built-not-pointed" failure. Read the one(s) on your lane; don't bulk-read.
 
 ### 3c. Graphify-first discovery for search-heavy lanes
 
@@ -161,7 +163,7 @@ Then open the exact files Graphify identifies and verify them by direct source/d
 
 **Doc discovery aids (optional, not gates):** when a task touches an operational area, start from the [runbooks domain hub](../runbooks/README.md) and jump to the relevant module instead of guessing filenames. For doc-only, full-text lookup, regenerate and search the navigator: `bun run docs:nav` then open `docs/index.html`. Division of labor — Graphify answers "what *code* relates to X"; the navigator answers "what *docs* exist about X."
 
-Record the query and selected files in the SESSION file if Graphify changes what you open. Skip this for small, obvious, single-file tasks. Graphify is a navigation aid, not proof.
+**Make a cheap query the default — not only for search-heavy lanes:** for *any* lane touching a named domain or entity, run one budget-capped `graphify query "<lane nouns>" --budget 1500` before planning. Graphify indexes the **docs** too — ledger rows, ADRs, and learning records surface as nodes, not just code (proven: a query for a drift topic returns the `D-NNN` rows themselves) — so this is the cheapest way to pull captured knowledge you'd otherwise have to already know to name. Record the query and selected files in the SESSION file if it changes what you open. Skip only for a truly trivial single-file edit. Graphify is a navigation aid, not proof.
 
 ### 3d. Domain-hub-first for feature lanes (read before grilling/planning)
 
