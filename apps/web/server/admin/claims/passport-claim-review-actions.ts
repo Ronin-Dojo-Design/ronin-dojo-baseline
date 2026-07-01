@@ -5,6 +5,7 @@ import { adminActionClient } from "~/lib/safe-actions"
 import {
   cancelSiblingPassportClaims,
   finalizePassportClaim,
+  finalizeRankPromotion,
 } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
@@ -69,6 +70,7 @@ export const applyPassportClaimReview = async ({
         select: {
           id: true,
           status: true,
+          type: true,
           passportId: true,
           treeId: true,
           nodeId: true,
@@ -109,37 +111,52 @@ export const applyPassportClaimReview = async ({
       const reviewTimestamp = new Date()
 
       if (input.decision === "APPROVED") {
-        const finalized = await finalizePassportClaim(tx, {
-          claim: {
-            id: claim.id,
-            claimantUserId: claim.claimantUserId,
-            passportId: claim.passportId,
-            passportUserId: claim.passport.userId,
-            claimedRankId: claim.claimedRankId,
-            claimedSchoolId: claim.claimedSchoolId,
-            trainedUnderNodeId: claim.trainedUnderNodeId,
-            representTreeId: claim.representTreeId,
-            treeId: claim.treeId,
-            nodeId: claim.nodeId,
-          },
-          brand,
-          actorUserId: reviewerUserId,
-          compOverride: input.comp ?? null,
-          now: reviewTimestamp,
-        })
-        accessGrantId = finalized.accessGrantId
-        compGrantIds = finalized.compGrantIds
-        ownershipTransferred = finalized.ownershipTransferred
-        passportAccountAttached = finalized.passportAccountAttached
-        rankAwardId = finalized.rankAwardId
+        if (claim.type === "RANK_PROMOTION") {
+          // A promotion verifies a BELT on the member's already-owned Passport — no identity
+          // attach, no comp, no sibling-cancel (an owned Passport has no rival open claim, and
+          // the submit guard already caps it to one open promotion). Just mint the VERIFIED award.
+          const finalized = await finalizeRankPromotion(tx, {
+            claim: {
+              id: claim.id,
+              passportId: claim.passportId,
+              claimedRankId: claim.claimedRankId,
+            },
+            actorUserId: reviewerUserId,
+          })
+          rankAwardId = finalized.rankAwardId
+        } else {
+          const finalized = await finalizePassportClaim(tx, {
+            claim: {
+              id: claim.id,
+              claimantUserId: claim.claimantUserId,
+              passportId: claim.passportId,
+              passportUserId: claim.passport.userId,
+              claimedRankId: claim.claimedRankId,
+              claimedSchoolId: claim.claimedSchoolId,
+              trainedUnderNodeId: claim.trainedUnderNodeId,
+              representTreeId: claim.representTreeId,
+              treeId: claim.treeId,
+              nodeId: claim.nodeId,
+            },
+            brand,
+            actorUserId: reviewerUserId,
+            compOverride: input.comp ?? null,
+            now: reviewTimestamp,
+          })
+          accessGrantId = finalized.accessGrantId
+          compGrantIds = finalized.compGrantIds
+          ownershipTransferred = finalized.ownershipTransferred
+          passportAccountAttached = finalized.passportAccountAttached
+          rankAwardId = finalized.rankAwardId
 
-        // Gap 2: a won Passport auto-cancels every other open claim on it.
-        cancelledSiblingClaimIds = await cancelSiblingPassportClaims(tx, {
-          passportId: claim.passportId,
-          winnerClaimId: claim.id,
-          reviewerUserId,
-          now: reviewTimestamp,
-        })
+          // Gap 2: a won Passport auto-cancels every other open claim on it.
+          cancelledSiblingClaimIds = await cancelSiblingPassportClaims(tx, {
+            passportId: claim.passportId,
+            winnerClaimId: claim.id,
+            reviewerUserId,
+            now: reviewTimestamp,
+          })
+        }
       }
 
       const updated = await tx.passportClaimRequest.update({

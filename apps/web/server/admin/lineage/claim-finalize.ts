@@ -592,6 +592,73 @@ export const finalizePassportClaim = async (
   }
 }
 
+/** The minimal claim shape a promotion finalize needs — the member's Passport + the asserted belt. */
+export type FinalizeRankPromotionInput = {
+  id: string
+  /** The member's OWN Passport (a promotion is never an identity attach). */
+  passportId: string
+  /** The belt asserted above the ceiling; approval mints it as a VERIFIED award. */
+  claimedRankId?: string | null
+}
+
+export type FinalizeRankPromotionResult = {
+  rankAwardId: string | null
+  /** True when this approval flipped an as-yet-unverified node the member owns (first-promotion verify). */
+  nodeVerified: boolean
+}
+
+/**
+ * Approve a `RANK_PROMOTION` claim (petey-plan-0477 Slice V3; ADR 0035 Amendment 1, B1).
+ *
+ * Deliberately NOT `finalizePassportClaim`: that path assumes an UNCLAIMED placeholder and
+ * runs the identity attach (delete signup Passport + `attachAccount`), the `CLAIMANT_HAS_NODE`
+ * guard, NODE_EDITOR grants, and the Elite comp — every one of which is wrong for a promotion,
+ * which is on the member's ALREADY-owned Passport. A promotion verifies a **belt**, not an
+ * identity, so this does exactly two things and nothing else:
+ *
+ *   1. Mint the asserted belt as a **VERIFIED** `RankAward` (reuse `mintAssertedRankAward`,
+ *      idempotent on `[passportId, rankId]`). This is the whole point — a self-declared belt
+ *      that lived only on the claim record becomes awarded truth (ADR 0035 §4/§5: no UNVERIFIED
+ *      award ever existed to leak; the pending belt was never on the tree).
+ *   2. If the member's node is still unverified, flip `isVerified` — approving a member's first
+ *      promotion also verifies the person (the SESSION_0474 on-ramp). A verified member is a
+ *      no-op. `LineageNode.isVerified` stays the ONE per-member trust flag (never a per-belt axis).
+ *
+ * Deferred (belt-PR rebase): materialize the claim's `PassportClaimEvidence` (certificate /
+ * instructor photos) into `RankMilestone` media — `RankMilestone` is the held Slice-2 model and
+ * is not on `main` yet, so the evidence stays on the claim record until it lands. No comp grant
+ * (a routine promotion is not a lineage-claim comp trigger; the member's entitlement comes from
+ * their tier). The caller owns the status flip + audit.
+ */
+export const finalizeRankPromotion = async (
+  tx: Tx,
+  { claim, actorUserId }: { claim: FinalizeRankPromotionInput; actorUserId: string },
+): Promise<FinalizeRankPromotionResult> => {
+  let rankAwardId: string | null = null
+  if (claim.claimedRankId) {
+    rankAwardId = await mintAssertedRankAward(tx, {
+      passportId: claim.passportId,
+      claimedRankId: claim.claimedRankId,
+      actorUserId,
+    })
+  }
+
+  // Approving the promotion verifies the person too, but only flips an as-yet-unverified node the
+  // member owns (a first promotion); an already-verified founder is untouched. `passportId` is
+  // @unique on LineageNode, so there is at most one.
+  let nodeVerified = false
+  const node = await tx.lineageNode.findUnique({
+    where: { passportId: claim.passportId },
+    select: { id: true, isVerified: true },
+  })
+  if (node && !node.isVerified) {
+    await tx.lineageNode.update({ where: { id: node.id }, data: { isVerified: true } })
+    nodeVerified = true
+  }
+
+  return { rankAwardId, nodeVerified }
+}
+
 /**
  * Gap 2 (ADR 0036 §3): when a claim on a Passport is finalized as the winner, auto-cancel every
  * OTHER claimant's open claim (PENDING / NEEDS_INFO) on the same Passport so a won identity can no
