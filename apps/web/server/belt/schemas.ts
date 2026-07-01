@@ -1,0 +1,92 @@
+import { z } from "zod"
+
+/**
+ * Belt-journey oRPC in/out schemas (Slice 3 — Petey Plan 0477).
+ *
+ * `rankId` / `rankAwardId` are never remapped by any mutation (Locked #5 —
+ * `updateRankAwardFact` NEVER changes `rankId`); the id inputs only IDENTIFY the
+ * row, they don't move it.
+ */
+
+const cuid = z.string().min(1).max(191)
+
+/** Media purpose convention (Locked #2) — a shared-column string, not an enum. */
+export const MILESTONE_MEDIA_PURPOSES = [
+  "belt",
+  "instructor",
+  "certificate",
+  "competition",
+] as const
+export type MilestoneMediaPurpose = (typeof MILESTONE_MEDIA_PURPOSES)[number]
+
+export const upsertBeltMilestoneInput = z.object({
+  rankId: cuid,
+  story: z.string().max(5000).nullish(),
+})
+
+/**
+ * Promoter + school each accept a TYPED FK (match) OR freetext (miss → lead).
+ * Both keys are optional/nullish so a partial fact edit (e.g. only the date)
+ * leaves the others untouched; passing `null` explicitly clears a value.
+ */
+export const updateRankAwardFactInput = z.object({
+  rankAwardId: cuid,
+  awardedAt: z.coerce.date().nullish(),
+  promoter: z
+    .object({
+      awardedByPassportId: cuid.nullish(),
+      name: z.string().max(200).nullish(),
+    })
+    .nullish(),
+  school: z
+    .object({
+      organizationId: cuid.nullish(),
+      name: z.string().max(200).nullish(),
+    })
+    .nullish(),
+})
+
+export const attachMilestoneMediaInput = z.object({
+  rankMilestoneId: cuid,
+  mediaId: cuid,
+  purpose: z.enum(MILESTONE_MEDIA_PURPOSES),
+})
+
+export const detachMilestoneMediaInput = z.object({
+  rankMilestoneId: cuid,
+  mediaId: cuid,
+})
+
+export const deleteRankAwardInput = z.object({
+  rankAwardId: cuid,
+})
+
+/** Enriched belt card returned by the mutating procedures (the read model). */
+export const beltCardOutput = z.object({
+  rankAwardId: z.string(),
+  rankId: z.string(),
+  rankName: z.string(),
+  rankSortOrder: z.number(),
+  colorHex: z.string().nullable(),
+  verificationStatus: z.string(),
+  awardedAt: z.coerce.date().nullable(),
+  promoterName: z.string().nullable(),
+  awardedByPassportId: z.string().nullable(),
+  schoolName: z.string().nullable(),
+  organizationId: z.string().nullable(),
+  milestone: z
+    .object({
+      id: z.string(),
+      story: z.string().nullable(),
+      media: z.array(
+        z.object({
+          attachmentId: z.string(),
+          mediaId: z.string(),
+          purpose: z.string().nullable(),
+        }),
+      ),
+    })
+    .nullable(),
+})
+
+export type BeltCardOutput = z.infer<typeof beltCardOutput>

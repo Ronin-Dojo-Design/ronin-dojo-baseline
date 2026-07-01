@@ -1,3 +1,4 @@
+import { belt } from "~/server/belt/router"
 import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
 
@@ -19,7 +20,8 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
  * smoke; entity routers join here as surfaces migrate off next-safe-action,
  * mirroring upstream's flat `server/<entity>/router.ts` aggregation. Phase 1c
  * (SESSION_0364) adds the first migrated read surface: `lineage` (the public
- * tree-by-slug read).
+ * tree-by-slug read). SESSION_0480 (Belt Journey Slice 3) adds `belt` — the
+ * member-facing, own-Passport belt-journey mutations.
  */
 export const appRouter = {
   ping,
@@ -27,6 +29,7 @@ export const appRouter = {
     brand,
   },
   lineage,
+  belt,
 }
 
 export type AppRouter = typeof appRouter
