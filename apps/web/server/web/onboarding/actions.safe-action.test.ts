@@ -1,11 +1,11 @@
 /**
- * End-to-end safe-action test for `setPassportRank` (the member-facing rank-award
- * seam the profile-enhancement wizard writes through). Drives the export through
- * the full `userActionClient` middleware chain (auth + db + revalidate) via the
- * shared harness, and stubs the email seam so the action never reaches Resend.
+ * End-to-end safe-action test for `setPassportRank` (the member-facing belt-declaration
+ * seam the profile-enhancement wizard writes through). B1 (petey-plan-0477 Slice V4): the
+ * wizard now files a pending `RANK_PROMOTION` claim (no displaying `RankAward`). Drives the
+ * export through the full `userActionClient` middleware chain (auth + db + revalidate) via
+ * the shared harness, and stubs the email seam so the action never reaches Resend.
  *
- * Run: cd apps/web && bun test --timeout 90000 \
- *        server/web/onboarding/actions.safe-action.test.ts
+ * Run: cd apps/web && bun run test server/web/onboarding/actions.safe-action.test.ts
  */
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
@@ -20,6 +20,7 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 // suite hermetic if the action chain ever grows a notification.
 mock.module("~/lib/email", () => ({ sendEmail: mock(async () => undefined) }))
 
+import { SUBMIT_RANK_PROMOTION_CLAIM_ERROR } from "~/server/web/claims/submit-rank-promotion-claim"
 import { setPassportRank } from "~/server/web/onboarding/actions"
 import { db } from "~/services/db"
 
@@ -94,6 +95,10 @@ beforeAll(async () => {
 
 afterAll(async () => {
   if (!fx) return
+  await db.passportClaimEvidence.deleteMany({
+    where: { claimRequest: { passportId: fx.passportId } },
+  })
+  await db.passportClaimRequest.deleteMany({ where: { passportId: fx.passportId } })
   await db.rankAward.deleteMany({ where: { passportId: fx.passportId } })
   await db.rank.deleteMany({ where: { id: fx.rankId } })
   await db.rankSystem.deleteMany({ where: { id: fx.rankSystemId } })
@@ -110,7 +115,7 @@ describe("setPassportRank — safe-action wrapper", () => {
     expect(result?.data).toBeUndefined()
   })
 
-  it("creates a self-reported (STATED/UNVERIFIED) RankAward for the caller's Passport", async () => {
+  it("files a PENDING RANK_PROMOTION claim (and NO displaying award) for the caller", async () => {
     setTestSession({ id: fx!.userId, role: "user" })
 
     const result = await setPassportRank({
@@ -121,27 +126,33 @@ describe("setPassportRank — safe-action wrapper", () => {
     })
 
     expect(result?.serverError).toBeUndefined()
-    expect(result?.data?.id).toBeTruthy()
+    expect(result?.data?.claimId).toBeTruthy()
 
+    // B1 (ADR 0035 Amendment 1): a self-declared belt is NEVER minted as an award — it can't
+    // surface as the member's awarded rank until an instructor approves it.
     const award = await db.rankAward.findFirst({
       where: { passportId: fx!.passportId, rankId: fx!.rankId },
     })
-    expect(award?.source).toBe("STATED")
-    expect(award?.verificationStatus).toBe("UNVERIFIED")
-    expect(award?.notes).toBe("Professor Example")
-    expect(award?.location).toBe("Example Academy")
+    expect(award).toBeNull()
+
+    const claim = await db.passportClaimRequest.findFirst({
+      where: { passportId: fx!.passportId, type: "RANK_PROMOTION" },
+    })
+    expect(claim?.status).toBe("PENDING")
+    expect(claim?.claimedRankId).toBe(fx!.rankId)
+    expect(claim?.claimantNote).toContain("Professor Example")
+    expect(claim?.claimantNote).toContain("Example Academy")
   })
 
-  it("upserts on re-run (one award per passport+rank) rather than throwing", async () => {
+  it("rejects a second declaration while a promotion is already pending (one open per member)", async () => {
     setTestSession({ id: fx!.userId, role: "user" })
 
     const result = await setPassportRank({ rankId: fx!.rankId, promotedBy: "Professor Updated" })
-    expect(result?.serverError).toBeUndefined()
+    expect(result?.serverError).toBe(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
 
-    const awards = await db.rankAward.findMany({
-      where: { passportId: fx!.passportId, rankId: fx!.rankId },
+    const claims = await db.passportClaimRequest.findMany({
+      where: { passportId: fx!.passportId, type: "RANK_PROMOTION" },
     })
-    expect(awards.length).toBe(1)
-    expect(awards[0]?.notes).toBe("Professor Updated")
+    expect(claims.length).toBe(1)
   })
 })

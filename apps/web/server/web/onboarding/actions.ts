@@ -1,50 +1,43 @@
 "use server"
 
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
+import { submitRankPromotionClaim } from "~/server/web/claims/submit-rank-promotion-claim"
 import { setPassportRankSchema } from "./schemas"
 
 /**
- * Set the signed-in member's current belt from the profile-enhancement wizard.
+ * Declare the signed-in member's belt from the profile-enhancement wizard.
  *
- * Reuses the existing `RankAward` model (no migration): the earner is the
- * account's Passport, `source: STATED` + `verificationStatus: UNVERIFIED` mark
- * it as a self-reported rank awaiting verification — the same shape the admin
- * add-person flow writes (`server/admin/users/actions.ts`). `RankAward` is
- * `@@unique([passportId, rankId])`, so we upsert: re-running the wizard for the
- * same belt updates the promotion date/promoter/school rather than throwing.
+ * B1 (petey-plan-0477 Slice V4; ADR 0035 Amendment 1): a self-declared belt is NOT written as a
+ * displaying `RankAward`. It files a pending `RANK_PROMOTION` `PassportClaimRequest` — the belt
+ * stays unverified (it never renders as the member's awarded rank) until an instructor approves
+ * it, which mints the VERIFIED award (`finalizeRankPromotion`, Slice V3). This closes the
+ * pre-existing hole where the wizard minted an `UNVERIFIED` award that still surfaced as the
+ * member's rank (the trust badge reads `node.isVerified`, not the award). See SESSION_0484.
  *
- * NOTE (flagged in PR): baseline had no member-facing rank-award seam — only the
- * admin one — so this thin action is the new seam. It introduces no schema change.
+ * `Brand.BBL` per the single-brand collapse (ADR 0034; `userActionClient` carries no brand, unlike
+ * `adminActionClient`). The wizard's promoter / school / date become the reviewer's context note.
  */
 export const setPassportRank = userActionClient
   .inputSchema(setPassportRankSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const passport = await db.passport.findUnique({
-      where: { userId: user.id },
-      select: { id: true },
-    })
-    if (!passport) throw new Error("PASSPORT_NOT_FOUND")
-
     const { rankId, awardedAt, promotedBy, schoolName } = parsedInput
-    const data = {
-      awardedAt: awardedAt ?? null,
-      notes: promotedBy?.trim() ? promotedBy.trim() : null,
-      location: schoolName?.trim() ? schoolName.trim() : null,
-    }
+    const note =
+      [
+        promotedBy?.trim() ? `Promoted by ${promotedBy.trim()}` : null,
+        schoolName?.trim() ? `at ${schoolName.trim()}` : null,
+        awardedAt ? `on ${awardedAt.toISOString().slice(0, 10)}` : null,
+      ]
+        .filter(Boolean)
+        .join(" ") || null
 
-    const award = await db.rankAward.upsert({
-      where: { passportId_rankId: { passportId: passport.id, rankId } },
-      create: {
-        passportId: passport.id,
-        rankId,
-        source: "STATED",
-        verificationStatus: "UNVERIFIED",
-        ...data,
-      },
-      update: data,
-      select: { id: true },
+    const { claimId } = await submitRankPromotionClaim(db, {
+      claimantUserId: user.id,
+      claimedRankId: rankId,
+      brand: Brand.BBL,
+      claimantNote: note,
     })
 
     revalidate({ paths: ["/me", "/app/profile"] })
-    return award
+    return { claimId, status: "pending" as const }
   })

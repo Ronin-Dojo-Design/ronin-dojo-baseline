@@ -123,7 +123,8 @@ export function ProfileEnhancementWizard({
 
     const values = form.getValues()
 
-    // Belt (optional but the wizard's primary purpose): write a RankAward.
+    // Belt (optional but the wizard's primary purpose): file a pending RANK_PROMOTION claim (B1,
+    // petey-plan-0477) — an instructor verifies it before it becomes the member's awarded rank.
     // Avatar is already saved directly by AvatarUploader → uploadAndPromotePassportAvatar.
     if (values.rankId) {
       const res = await rankAction.executeAsync({
@@ -133,9 +134,12 @@ export function ProfileEnhancementWizard({
         schoolName: values.schoolName || undefined,
       })
       if (res?.serverError) {
-        toast.error("Couldn't save your belt. Please try again.")
+        toast.error(res.serverError)
         return
       }
+      toast.success("Belt submitted — pending verification by your instructor.")
+      onComplete()
+      return
     }
 
     toast.success("Profile updated.")
