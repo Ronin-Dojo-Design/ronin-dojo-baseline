@@ -15,11 +15,8 @@ export const Author = ({ name, image, title, prefix, url, note, ...props }: Auth
   return (
     <Stack size="sm" wrap={false} {...props}>
       <Avatar className="rounded-full group-hover:[&[href]]:brightness-90">
-        {image ? (
-          <AvatarImage src={image} alt={`${name}'s profile`} />
-        ) : (
-          <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
-        )}
+        {image && <AvatarImage src={image} alt={`${name}'s profile`} />}
+        <AvatarFallback>{name.slice(0, 1).toUpperCase()}</AvatarFallback>
       </Avatar>
 
       <div className="flex-1 text-sm/normal text-secondary-foreground">

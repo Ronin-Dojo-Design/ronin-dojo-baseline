@@ -7,6 +7,20 @@ import { db } from "~/services/db"
  * Author: Cody / SESSION_0184 TASK_01.
  */
 
+/**
+ * The member's shown award = the highest awarded belt (the array is pre-ordered by
+ * `Rank.sortOrder desc`) IN the given discipline (ADR 0035 §3), or the global highest
+ * when no `disciplineId` is given. Operates on the award array (not a `LineageNodeRow`)
+ * so the server edit-path callers — which select the lean scalar `rank.rankSystem.disciplineId`
+ * — share the same rule as `memberTopRankAward`. See SESSION_0475.
+ */
+export function pickTopAwardInDiscipline<
+  T extends { rank: { rankSystem: { disciplineId: string | null } | null } },
+>(awards: T[], disciplineId: string | null): T | null {
+  if (!disciplineId) return awards[0] ?? null
+  return awards.find(award => award.rank.rankSystem?.disciplineId === disciplineId) ?? null
+}
+
 export type EditableLineageNodeProfile = {
   tree: {
     id: string
@@ -121,10 +135,10 @@ export const getEditableLineageNodeProfile = async ({
     return null
   }
 
-  const awards = member.node.passport.rankAwardsEarned
-  const currentRankAward = tree.disciplineId
-    ? (awards.find(award => award.rank.rankSystem?.disciplineId === tree.disciplineId) ?? null)
-    : (awards[0] ?? null)
+  const currentRankAward = pickTopAwardInDiscipline(
+    member.node.passport.rankAwardsEarned,
+    tree.disciplineId,
+  )
 
   const accessGrant = await findActiveLineageNodeProfileAccess({
     treeId: tree.id,

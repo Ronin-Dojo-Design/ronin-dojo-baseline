@@ -26,21 +26,19 @@ function Avatar({ className, ...props }: ComponentProps<"span">) {
   return (
     <span
       data-slot="avatar"
-      className={cx(
-        "relative flex size-10 shrink-0 overflow-clip rounded-md bg-accent",
-        className,
-      )}
+      className={cx("relative flex size-10 shrink-0 overflow-clip rounded-md bg-accent", className)}
       {...props}
     />
   )
 }
 
 function AvatarImage({ className, src, alt = "", ...props }: ComponentProps<"img">) {
-  // `failed` flips only on a real load error (client-side); on the server and on the happy
-  // path the `<img>` renders, so it is present in the SSR HTML. When absent (no src) or
-  // errored, the layered `AvatarFallback` shows through.
-  const [failed, setFailed] = useState(false)
-  if (!src || failed) return null
+  // We track the *src that failed*, not a boolean, so a later `src` change (client re-render)
+  // shows the new image instead of staying blank. On the server and on the happy path the
+  // `<img>` renders, so it is present in the SSR HTML (no initials-then-pop). When absent (no
+  // src) or errored, the layered `AvatarFallback` shows through.
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
+  if (!src || failedSrc === src) return null
 
   return (
     // eslint-disable-next-line @next/next/no-img-element -- public avatar URLs, no Next loader here
@@ -48,7 +46,7 @@ function AvatarImage({ className, src, alt = "", ...props }: ComponentProps<"img
       data-slot="avatar-image"
       src={src}
       alt={alt}
-      onError={() => setFailed(true)}
+      onError={() => setFailedSrc(typeof src === "string" ? src : null)}
       className={cx("absolute inset-0 size-full object-cover", className)}
       {...props}
     />

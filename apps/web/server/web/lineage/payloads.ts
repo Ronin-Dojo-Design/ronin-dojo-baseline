@@ -101,10 +101,14 @@ export const lineageNodeRowPayload = {
           },
         },
       },
-      // Single most-recent RankAward across any rank-system so the tree card
-      // can show "Black Belt — BJJ" without a separate query. Drawer payload
-      // joins more. Display = highest awarded belt; verification is a separate
+      // The member's awarded belts (ordered highest-first). Display reads the top
+      // one via `memberTopRank(node, disciplineId?)`; verification is a separate
       // node-level axis (ADR 0035) and never filters the award shown here.
+      // ⚠ NO `take` — the discipline-scoped resolver `.find()`s the highest award
+      //   IN the tree's discipline (ADR 0035 §3), so a `take: 1` here would hand it
+      //   only the GLOBAL top award and blank out any multi-discipline member whose
+      //   top belt is in another discipline. Rank awards per person are few, so
+      //   loading all is cheap; the tree card still reads only `[0]` / the first match.
       rankAwardsEarned: {
         select: {
           id: true,

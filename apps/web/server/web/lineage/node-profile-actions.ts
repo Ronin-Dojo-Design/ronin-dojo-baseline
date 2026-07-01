@@ -3,7 +3,10 @@
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
-import { findActiveLineageNodeProfileAccess } from "~/server/web/lineage/node-profile-queries"
+import {
+  findActiveLineageNodeProfileAccess,
+  pickTopAwardInDiscipline,
+} from "~/server/web/lineage/node-profile-queries"
 import {
   type UpdateLineageNodeProfileInput,
   updateLineageNodeProfileSchema,
@@ -114,10 +117,10 @@ export const applyLineageNodeProfileUpdate = async ({
       data: { bio: input.bio },
     })
 
-    const awards = member.node.passport.rankAwardsEarned
-    const shownRankAward = tree.disciplineId
-      ? (awards.find(award => award.rank.rankSystem?.disciplineId === tree.disciplineId) ?? null)
-      : (awards[0] ?? null)
+    const shownRankAward = pickTopAwardInDiscipline(
+      member.node.passport.rankAwardsEarned,
+      tree.disciplineId,
+    )
     if (input.promotionDate !== undefined && shownRankAward) {
       await tx.rankAward.update({
         where: { id: shownRankAward.id },

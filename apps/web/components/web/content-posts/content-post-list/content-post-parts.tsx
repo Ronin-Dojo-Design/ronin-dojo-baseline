@@ -98,13 +98,10 @@ export const PostAuthor = ({
   return (
     <Stack size="sm" wrap={false} className={cx("min-w-0", className)}>
       <Avatar className="size-6 rounded-full">
-        {author.image ? (
-          <AvatarImage src={author.image} alt={author.name} />
-        ) : (
-          <AvatarFallback className="text-2xs">
-            {author.name.slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        )}
+        {author.image && <AvatarImage src={author.image} alt={author.name} />}
+        <AvatarFallback className="text-2xs">
+          {author.name.slice(0, 1).toUpperCase()}
+        </AvatarFallback>
       </Avatar>
       <span className="truncate text-secondary-foreground text-sm">{author.name}</span>
     </Stack>
