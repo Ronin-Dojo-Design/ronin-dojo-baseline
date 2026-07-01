@@ -4,8 +4,8 @@ slug: review-recommend
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-04-27
-last_agent: copilot-session-0012
+updated: 2026-06-30
+last_agent: claude-session-0476
 pairs_with:
   - docs/protocols/petey-plan.md
   - docs/rituals/closing.md
@@ -55,6 +55,14 @@ Read `docs/architecture/program-plan.md`. Identify:
 
 ### 4. Produce the recommendation
 
+**Seed from the ranked backlog first.** Unless the operator has pinned a `/goal`, the `Goal` + `First task` are
+seeded from the **top-ranked open backlog item** — the operator's `/app/loop-board` board order
+(`cd apps/web && bun scripts/board-backlog.ts --top=10`) takes precedence, falling back to the ledger rank
+(`bun scripts/ledger-backlog.ts`) when the board is empty/unreachable. This connects the next-block to the live
+backlog instead of authoring it from the boundary registry + program plan alone (structurally disconnected from
+what's actually queued — the gap SESSION_0476 closed). Steps 2 (boundary registry) and 3 (program plan) then
+sanity-check and contextualize that pick, they no longer *originate* it.
+
 Write into the SESSION file's `Next session` section:
 
 ```markdown
@@ -83,7 +91,7 @@ This saves tokens at the next bow-in — the agent doesn't need to re-derive the
 
 1. **Recommend, don't decide.** The user approves the next-target.
 2. **One recommendation, with alternatives.** Don't present five options and ask the user to figure it out.
-3. **Connect to the program plan.** Every recommendation should trace to a sprint deliverable or an open boundary.
+3. **Connect to the backlog + program plan.** Every recommendation should trace to a top-ranked open backlog item (board card / ledger row), a sprint deliverable, or an open boundary — in that precedence.
 4. **Don't expand scope.** If the review surfaces new work, add it to `Open decisions / blockers` — don't absorb it into the recommendation.
 
 ## Cross-references

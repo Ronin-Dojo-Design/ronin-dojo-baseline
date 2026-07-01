@@ -4,8 +4,8 @@ slug: agents-readme
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
+updated: 2026-06-30
+last_agent: claude-session-0476
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -46,7 +46,7 @@ All six personas are now active per WORKFLOW_5.0.md:
 | Desi | UX + design consistency | Screen→backend contract verification |
 | Brandon | Brand + marketing rollout | Launch narrative, messaging per brand |
 
-> Petey and Cody have dedicated role files. Giddy, Doug, Desi, and Brandon are defined in [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) § Persona responsibilities and invoked as review voices during the review pass loop.
+> Petey, Cody, Doug, Giddy, and Desi now have dedicated `.claude/agents/*.md` agentType configs — dispatchable directly via the Agent tool's `subagent_type` (in addition to the prose persona docs here). Brandon remains a prose-only review voice defined in [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) § Persona responsibilities, invoked during the review pass loop.
 
 ## Active rituals + protocols
 
@@ -72,4 +72,4 @@ These docs describe *what* we're building. The Dashboard above describes *how*.
 - [../architecture/program-plan.md](../architecture/program-plan.md) — 12-sprint MVP plan, layer model, brand sequencing
 - [../architecture/plan-vs-current.md](../architecture/plan-vs-current.md) — ChatGPT plan's behavioral spec vs. current schema
 - [../architecture/source/chatgpt-original-plan.md](../architecture/source/chatgpt-original-plan.md) — full GPT plan (sections 1–7 are the spec)
-- [../architecture/decisions/](../architecture/decisions/) — ADRs 0001–0008
+- [../architecture/decisions/](../architecture/decisions/) — ADRs 0001–0041

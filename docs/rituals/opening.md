@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-29
-last_agent: claude-session-0470
+updated: 2026-06-30
+last_agent: claude-session-0476
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
@@ -87,7 +87,15 @@ Run the aggregator instead of hand-scanning eight files:
 ```bash
 bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK/TD
 bun scripts/ledger-backlog.ts --ledger=WL   # one ledger · --top=N to cap · --json for tooling
+( cd apps/web && bun scripts/board-backlog.ts --top=10 )  # the operator's PRIORITIZED board — open KanbanCards in board order
 ```
+
+The **board-backlog** line is the inbound half of the DB Kanban loop (SESSION_0476): it reads the operator's
+`/app/loop-board` prioritization back out (`KanbanCard`, `stage != done`, in board `order`), so **the
+operator's drag-to-prioritize sets this session's candidate order** — not just the raw ledger rank. It must run
+from `apps/web` (needs `.env` + a reachable DB); in a fresh worktree with no DB it prints a clean one-liner and
+is safely skipped. When the board and the ledger scan disagree, the **board wins** (it encodes the operator's
+explicit ordering); fall back to the ledger rank when the board is empty/unreachable.
 
 Then **bundle on one coherence axis** so the session is one reviewable lane, not a grab-bag:
 
@@ -184,13 +192,21 @@ State the task in chat (or in your notes) before you start. Be explicit:
 - Why this task now? (one sentence connecting to program plan or user request)
 - What does "done" look like?
 
-To pick the right skill/loop for the task type, consult the **task → workflow router** in
-[`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) §1 (the one-glance map of how this repo runs
-agents — routing, the roster, the ledgers, the trust boundaries, the verification gates).
+**Classify, then dispatch — don't role-play the roster.** First do a **named read** of the **task → workflow
+router** (§1) and the **allowed-vs-never table** (§4) in
+[`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) — a read, not a pointer: these are session-wide
+routing + trust-boundary rules, not just skill-selection. Classify this task against the router, then
+**dispatch the matched flow as real sub-agents** via the `Agent` tool's `subagent_type` (the roster lives in
+`.claude/agents/*.md`):
 
-If the task is unclear, multi-part, or has unresolved decisions: invoke [Petey](../agents/petey.md) to plan first, using the [Petey Plan protocol](../protocols/petey-plan.md).
+- **Unclear / multi-part / open decisions →** dispatch [`petey`](../agents/petey.md) ([Petey Plan protocol](../protocols/petey-plan.md)) to plan and **grill the open forks first**, then Petey dispatches `cody` (build) → `doug` (verify) per the plan's `Parallelism` section.
+- **Clear build →** dispatch [`cody`](../agents/cody.md) to execute — **Cody completes the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code** — then [`doug`](../agents/doug.md) to verify the diff.
+- **Other lanes** (bug → `/diagnose`, review → `/code-review`, cleanup → `/fallow-fix-loop`, new client → `/new-client-recipe`, …) → run the router's matched skill/loop.
 
-If the task is clear: invoke [Cody](../agents/cody.md) (or yourself) to execute. **Cody must complete the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code.**
+Reserve fan-out for genuinely-disjoint work; a one-file change is a single inline Cody, not a fleet (CLAUDE.md
+rule). **Dispatch builds and verifies — it never pushes/merges/deploys**; hold at the push gate for the
+operator's explicit word (explicit-push-authorization). The lead may still act inline for a single coherent
+change, but the roster is now a real dispatch layer, not a set of hats.
 
 ### 4b. Number tasks in the SESSION file
 

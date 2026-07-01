@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-29
-last_agent: claude-session-0466
+updated: 2026-06-30
+last_agent: claude-session-0476
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -35,24 +35,31 @@ Any of: "Bow out" / "Close session" / "End session" / task complete / hitting a 
 
 ## One close, one status
 
-> **SESSION_0241 simplification:** Quick close and full close are merged into one ritual. Every session runs the same steps. Optional deep items (Reflections, hostile review, evidence artifact, memory sweep) are flagged inline — do them when useful, skip when not. Status is `closed` (not `closed-quick` or `closed-full`).
-
-| Status | Meaning |
-| --- | --- |
-| `in-progress` | Session is active |
-| `closed` | Session is done — all required steps completed |
-
-Legacy values `closed-quick`, `closed-full`, and `closed-unclean` are accepted in old SESSION files but should not be used in new ones.
-
-## Mode contract
-
-Every session runs the full closing ritual below. The "optional" items (Reflections, hostile review, evidence table, memory sweep) are always available and recommended at end-of-day, end-of-sprint, after milestones, or when the session touched schema/auth/payments/deployment/production data/governance protocols. Skipping them is fine for back-to-back implementation sessions that touch only code files.
+One ritual, one status: `in-progress` → `closed` (SESSION_0241 merged quick/full). Every session runs the steps
+below; the **optional deep items** (Reflections, hostile review, evidence table, memory sweep) are flagged inline
+— always recommended at end-of-day / end-of-sprint / after a milestone / when the session touched
+schema/auth/payments/deploy/prod-data/governance, and skippable for back-to-back code-only sessions. Legacy
+`closed-quick` / `closed-full` / `closed-unclean` are read-only in old SESSION files; don't use them in new ones.
 
 ## Close steps
 
-### 1. Pause the work
+### 1. Run the close gate runner first
 
-Stop typing. If a tool call is mid-flight, let it finish. If a build is running, decide whether to wait for it or abandon and note the abandonment in step 3.
+Before hand-writing anything, run the one deterministic close-pass:
+
+```bash
+bash scripts/bow-out-gates.sh
+```
+
+It runs every gate in one shot — task-log check, format-fix on touched files, `wiki:lint`, `next build` (only
+if `apps/web/**` changed), `graphify update` (capturing the node/edge/community count), git state, ledger
+cross-off **candidate detection**, the board-backlog next-pick list, the fallow introduced-findings delta, and
+the hostile-review trigger — then prints a **pre-filled `## Full close evidence` table** (deterministic cells
+already filled) and an **`## LLM remainder checklist`** of only the judgment work left. It is read-mostly
+(auto-fixes formatting only) and **never commits or pushes**. Spend your tokens on the checklist remainder, not
+on re-running gates by hand.
+
+(If a tool call or build is mid-flight, let it finish first; note any abandoned build in step 2.)
 
 ### 2. Update the SESSION file
 
@@ -115,19 +122,18 @@ bun run wiki:lint
 
 If wiki-lint fails, record the exact error/warning count and whether failures are pre-existing or introduced by this session. Do not write "wiki-lint ran" without the command result.
 
-#### 3d. Incremental markdown formatting fix (G8 / R8)
+#### 3d. Incremental formatting fix (G8 / R8)
 
-For every file in `Files touched`, fix any markdown formatting violations (blank lines around headings and lists per guardrail G8). This is incremental cleanup — only fix files you already touched this session, not the whole repo. Over time this brings all docs to compliance without a dedicated batch session.
+Handled by the step-1 gate runner — it auto-fixes formatting on the files you touched (`oxfmt` on code; markdown
+stays check-only via `wiki:lint`). Incremental by design: only touched files, never a repo-wide batch.
 
 ### 4. Git hygiene
 
-> **Sequencing note (SESSION_0140, hardened SESSION_0304 / FS-0025):** In full close mode, defer this step until after steps 6–8 (Reflections, Review & Recommend, ADR check, Memory sweep, Next session unblock). This lets the evidence artifact (step 6a) and all review content be written *before* the first commit, avoiding a two-pass commit cycle. **Single-push order (mandatory — do not regress to a second `fill close evidence` commit):**
->
-> 1. Finish all SESSION-file content **including** the graphify stats (run step 4b *before* committing — see below).
-> 2. The **only** value you cannot write pre-commit is the commit hash itself. Do **not** chase it with a second commit. In the evidence table, the Git-hygiene hash cell reads `reported at bow-out — see git log`, and you state the actual hash in the **bow-out chat response**.
-> 3. `git add -A` → one commit → one push. Done.
->
-> In quick close mode, run git hygiene here as written.
+> **Single-push order (FS-0025) — defer this step to LAST.** Finish all SESSION-file content first (the step-1
+> gate runner already ran graphify + captured its count into the evidence table, so the tree is final). Then
+> `git add -A` → one commit → one push. The only value you can't write pre-commit is the commit hash — don't
+> chase it with a second commit; the evidence cell reads `see git log` and you state the hash in the bow-out
+> chat response.
 
 Before committing:
 
@@ -162,17 +168,13 @@ Record in the SESSION evidence table whether the local build gate was run and it
 follow-up cost lever: the per-push Playwright **×3** matrix is the biggest remaining GHA spend — trimming
 it to chromium-only per-push with the full ×3 on a nightly/label is the structural win.)
 
-### 4b. Graphify update (if installed)
+### 4b. Graphify update (run by the step-1 gate runner)
 
-If the session changed tracked files and Graphify is installed locally, refresh the repo graph so the next bow-in starts from the current work.
-
-> **Run order (SESSION_0304 / FS-0025):** In **full close**, run `graphify update` **before the close commit**, not after. `.graphify/` is git-ignored and Graphify indexes the **working tree** (not the commit), so the tree is already final after step 2's doc edits — running it first means the node/edge/community count can be written into the SESSION file and captured by the single close commit. Running it *after* the commit is what historically forced the second `fill close evidence` push (FS-0025). In **quick close**, run it after git hygiene as before.
-
-```bash
-GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .
-```
-
-Skip only if Graphify is not installed or no files changed. Record the node/edge/community count in the SESSION file (it will not force a second commit when run in the order above). See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) for full usage.
+The step-1 gate runner already ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` and captured the
+node/edge/community count into the evidence table. This runs **before** the commit on purpose (FS-0025):
+`.graphify/` is git-ignored and indexes the working tree, so a pre-commit run avoids the second "fill close
+evidence" push. Nothing to do here unless the runner reported Graphify unavailable — then run it manually or
+record "skipped." See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md).
 
 **Docs Navigator** ([docs-navigator runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never commit it.** `docs/index.html` is generated (~7 MB) and git-ignored; run `bun run docs:nav` whenever you want to browse the latest docs. It is not a close gate and must not enter a commit (it would churn megabytes every session).
 
@@ -206,7 +208,9 @@ This is the kaizen-style note from the legacy system, kept lightweight.
 
 ### 6a. Evidence artifact (optional)
 
-For sessions that warrant extra proof, add this block to the SESSION file:
+The step-1 gate runner **pre-fills the deterministic cells** of this table (task-log, format, wiki:lint, build,
+graphify, git state) — paste its output and fill only the judgment cells (Kaizen, Hostile review, Class-A score,
+Review & Recommend, Memory sweep). The schema:
 
 ```markdown
 ## Full close evidence
@@ -252,7 +256,7 @@ when the diff is docs / config / thin-wrapper only.
 
 Run the [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md). This is the hard pass that checks plan sanity, Dirstarter alignment, security, data integrity, verification honesty, and WORKFLOW 5.0 compliance. If the session touched a Dirstarter baseline layer, check live `https://dirstarter.com/docs` pages and cite the sources in `TASK_REVIEW_LOG`.
 
-Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file. Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
+Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file. **Seed the `Next session → Goal + First task` from the top-ranked open backlog item** — the operator's `/app/loop-board` board order (`cd apps/web && bun scripts/board-backlog.ts --top=10`) first, falling back to the ledger rank — unless the operator pinned a `/goal`; the boundary registry + program plan then contextualize the pick (SESSION_0476 closed the gap where the next-block was authored disconnected from the live backlog). Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
 
 At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
 
@@ -303,10 +307,25 @@ verified). This keeps the ledgers a live backlog whose open items shrink as sess
 half (bow-in pulls 3–5 open ledger items as the session's tasks) is the [Loop of Loops](../protocols/loop-of-loops-ledger-driven-sessions.md)
 design (P1). Skip rows the session didn't touch.
 
-**AdminKanban reminder.** The operator's task-board (`app/.../task-board`) is a client-side (localStorage) board
-— it can't be synced from a session today. If the session resolved items the operator tracks there, **remind the
-operator to move the cards** (a DB-backed projection is the [Loop of Loops](../protocols/loop-of-loops-ledger-driven-sessions.md)
-P3 target). Don't edit `lib/task-board/seed.ts` to "update tasks" — that's the demo/test fixture, not the live board.
+**DB board cross-off (outbound to `/app/loop-board`).** For every ledger item flipped above that is **also a
+card on the DB Kanban board**, move the card into the terminal `done` stage so the operator's board visibly
+shrinks with the session — the outbound half SESSION_0476 built (it was write-only/insert-only before, so nothing
+took a card off the backlog programmatically):
+
+```bash
+cd apps/web && bun scripts/board-mark-done.ts GL:G-003 WL-P2-19   # sourceRefs = the ledger-scoped CODE:id
+```
+
+Pass the resolved items' stable `sourceRef`s (each `CODE:id`, matching `board-backlog.ts --json`'s rows). It is a
+clean no-op for any ref not currently on the board (returns count 0), and the insert-only importer keeps a
+done card done. This is the headless twin of the in-app `markCardDone` server action (which needs an
+authenticated session and can't run from a bow-out CLI). Skip if the session resolved nothing board-tracked.
+
+**No parallel board exists.** The old per-browser localStorage `AdminTaskBoard` was **retired** (SESSION_0461,
+G-003): `/admin/task-board` is now a redirect stub to `/app/loop-board`, and any per-browser tasks migrate into
+`KanbanCard` on first visit via the one-time `apps/web/lib/loop-board/parse-legacy-tasks.ts` parser. So there is
+**one board** — the DB `/app/loop-board` handled above. There is no live localStorage board to remind the
+operator about and no `lib/task-board/seed.ts` to edit.
 
 ### 7. Memory sweep
 

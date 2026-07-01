@@ -4,8 +4,8 @@ slug: agent-systems-map
 type: concept
 status: active
 created: 2026-06-29
-updated: 2026-06-29
-last_agent: claude-session-0468
+updated: 2026-06-30
+last_agent: claude-session-0476
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/rituals/opening.md
@@ -100,7 +100,10 @@ plus the [goals ledger](goals-ledger.md), aggregated by `scripts/ledger-backlog.
 Completed/Active/Blocked board). The per-session [`SESSION_NNNN.md`](../../sprints/_template/SESSION_TEMPLATE.md)
 is the canonical record (the cross-session `project-log` was retired); the
 [loop-of-loops](../../protocols/loop-of-loops-ledger-driven-sessions.md) makes the ledgers *the* backlog that
-`/bow-in` bundles. This is "ledgers don't forget" as built infrastructure.
+`/bow-in` bundles. **SESSION_0476 closed the DB board's loop** (it was a write-only projection before): bow-in
+reads its operator-set order (`apps/web/scripts/board-backlog.ts`) and bow-out marks resolved cards done
+(`apps/web/scripts/board-mark-done.ts`), so drag-to-prioritize now drives session candidate order. This is
+"ledgers don't forget" as built infrastructure.
 
 ## 4. Trust boundaries — "what should the agent *never* be allowed to do?"
 
