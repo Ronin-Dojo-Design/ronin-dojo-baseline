@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-06-30
-last_agent: claude-session-0474
+updated: 2026-07-01
+last_agent: codex-session-0479
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -14,12 +14,14 @@ pairs_with:
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
+  - docs/architecture/decisions/0042-rank-award-fact-vs-member-milestone.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0025.md
   - docs/sprints/SESSION_0029.md
   - docs/sprints/SESSION_0033.md
   - docs/sprints/SESSION_0178.md
+  - docs/sprints/SESSION_0479.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -222,13 +224,30 @@ Use Rank because not all martial arts or certifications use belts.
 
 ### RankAward
 
-A rank promotion record awarded to a User.
+A rank promotion fact awarded to a Passport.
 
-RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It also supports promotion photos/videos via `mediaUrls`, links to `GamificationEvent` for point tracking, and is the canonical promotion fact for lineage.
+RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It links to
+`GamificationEvent` for point tracking and is the canonical promotion fact for lineage. Legacy `mediaUrls` are
+deprecated; Belt Journey media/story enrichment lives on `RankMilestone` plus `MediaAttachment`.
 
 Former name: `Progress`.
 
 Do not use `Progress` in new code.
+
+### Belt Journey
+
+The member-facing experience for telling the story of a person's rank progression belt by belt.
+
+Belt Journey is UX language. It does not create rank authority, verification, privacy, or promotion facts. Its data
+enrichment is stored in `RankMilestone`; rank truth remains `RankAward`.
+
+### RankMilestone
+
+A member-owned enrichment record attached 1:1 to a `RankAward`.
+
+RankMilestone stores editable story text and Belt Journey media attachments for one awarded rank. It is always
+subordinate to `RankAward`: it has no `rankId`, no verification status, and no authority to promote, demote, verify,
+or dispute a rank fact. Deleting the owning RankAward deletes the milestone.
 
 ### RankAwardSource
 
