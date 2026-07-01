@@ -8,7 +8,14 @@ export const MAX_WEB_UPLOAD_BYTES = 25 * 1024 * 1024
  * `MediaAttachTargetKind` via the `satisfies` check below.
  */
 export const mediaAttachTargetSchema = z.object({
-  kind: z.enum(["promotionEvent", "technique", "organization", "course", "passport"]),
+  kind: z.enum([
+    "promotionEvent",
+    "technique",
+    "organization",
+    "course",
+    "passport",
+    "rankMilestone",
+  ]),
   id: z.string().min(1),
 })
 

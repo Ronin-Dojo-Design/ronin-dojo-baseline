@@ -8,6 +8,11 @@ import type { Prisma } from "~/.generated/prisma/client"
  * `course` and `passport` resolvers exist (see media-authorization.ts) but have
  * no UI consumer yet — they are wired here so the next surface is a thin mount,
  * not a new pipeline (SESSION_0322 plan, "factor reusable helper").
+ *
+ * `rankMilestone` (SESSION_0482 — Petey Plan 0477 Slice 5) resolves ownership
+ * through `RankMilestone → RankAward → Passport.userId`; the belt-journey media
+ * galleries upload through this pipeline to mint a `mediaId`, then link it via the
+ * belt oRPC `attachMilestoneMedia` (idempotent — no double-attach).
  */
 export type MediaAttachTargetKind =
   | "promotionEvent"
@@ -15,6 +20,7 @@ export type MediaAttachTargetKind =
   | "organization"
   | "course"
   | "passport"
+  | "rankMilestone"
 
 export type MediaAttachTarget = {
   kind: MediaAttachTargetKind
@@ -28,6 +34,7 @@ export const MEDIA_TARGET_ENTITY_TYPE: Record<MediaAttachTargetKind, string> = {
   organization: "Organization",
   course: "Course",
   passport: "Passport",
+  rankMilestone: "RankMilestone",
 }
 
 /**
@@ -47,12 +54,19 @@ export function mediaTargetWhere(target: MediaAttachTarget): Prisma.MediaAttachm
       return { courseId: target.id }
     case "passport":
       return { passportId: target.id }
+    case "rankMilestone":
+      return { rankMilestoneId: target.id }
   }
 }
 
 type MediaTargetCreateData = Pick<
   Prisma.MediaAttachmentUncheckedCreateInput,
-  "promotionEventId" | "techniqueId" | "organizationId" | "courseId" | "passportId"
+  | "promotionEventId"
+  | "techniqueId"
+  | "organizationId"
+  | "courseId"
+  | "passportId"
+  | "rankMilestoneId"
 >
 
 /** Typed create fragment that sets the single FK column for a target. */
@@ -68,5 +82,7 @@ export function mediaTargetCreateData(target: MediaAttachTarget): MediaTargetCre
       return { courseId: target.id }
     case "passport":
       return { passportId: target.id }
+    case "rankMilestone":
+      return { rankMilestoneId: target.id }
   }
 }
