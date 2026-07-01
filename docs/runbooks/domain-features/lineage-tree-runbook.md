@@ -188,7 +188,7 @@ disputed / imported); (c) **native grouped-cohort** framing (the Dirty Dozen).
 | Area | Today | File |
 | --- | --- | --- |
 | Layout | **1D depth-bucket BFS**, rows by generation, **±5 depth clamp**, sort-by-name. Not a 2D tidy-tree. | `lib/lineage/tree-layout.ts` |
-| Canvas model | `CanvasMember` (single `primaryVisualParentMemberId` + `visualGroupId` + `selectedRank` + `isCollapsedDefault`); child grouping; **descendant counts** for collapse badges; belt color / avatar / school resolution. | `lib/lineage/canvas-model.ts` |
+| Canvas model | `CanvasMember` (single `primaryVisualParentMemberId` + `visualGroupId` + `isCollapsedDefault`); child grouping; **descendant counts** for collapse badges; belt color / avatar / school resolution. Belt = highest **awarded** rank via `memberTopRank(node, disciplineId)`, discipline-scoped to the tree (ADR 0035; the `selectedRank` override was removed SESSION_0475). | `lib/lineage/canvas-model.ts` |
 | Connectors | SVG overlay edges + **selected-path trace** animation + connector grow-in (reduced-motion gated). | `lib/lineage/connector-geometry.ts` |
 | Canvas UI | Pinch-zoom (mobile), dnd-kit **reparent** in edit mode, generation-stagger entrance, auto-fit. | `components/web/lineage/lineage-tree-canvas.tsx` |
 | Node card | Belt-color band (data-driven `Rank.colorHex`), avatar, rank label, claim CTA. | `components/web/lineage/lineage-node-card.tsx` |

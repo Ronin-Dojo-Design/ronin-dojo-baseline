@@ -101,7 +101,12 @@ The sync action must keep status consistent:
 - New editor-created promotion defaults to `PENDING` unless the editor selects another status.
 - Approved rank-action flows may create `VERIFIED` relationships when the editor has verification capability.
 - `DISPUTED` status is public and must show a badge.
-- `isVerified` remains a transitional legacy flag and should be derived from `verificationStatus == VERIFIED` during the migration window.
+- The `verificationStatus` above governs the **promotion edge** (`LineageRelationship`) only.
+- **Member display trust is the single `LineageNode.isVerified` flag** — binary Verified/Unverified, the
+  canonical display axis (ADR 0035 §5). It is **not** derived from any `verificationStatus`.
+  `RankAward.verificationStatus` is **vestigial and never drives display** (SESSION_0474/0475 — the
+  `selectedRankAward` display override that once did was removed; belt = highest *awarded* rank, scoped to
+  the tree's discipline).
 
 ## Visual Group Sync
 
