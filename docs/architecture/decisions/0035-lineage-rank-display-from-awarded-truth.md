@@ -5,10 +5,11 @@ type: adr
 status: accepted
 created: 2026-06-22
 updated: 2026-07-01
-last_agent: claude-session-0486
+last_agent: claude-session-0491
 pairs_with:
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/architecture/decisions/0036-unified-passport-claim.md
+  - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
   - docs/sprints/SESSION_0430.md
   - docs/sprints/SESSION_0486.md
   - docs/petey-plan-0477-belt-journey-crm-epic.md
@@ -17,6 +18,7 @@ pairs_with:
   - docs/knowledge/wiki/wiring-ledger.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0479.md
 ---
 
 # ADR 0035 — Lineage rank display from awarded truth; `selectedRankAward` → pending claim
@@ -81,6 +83,8 @@ matters — deliberately deferred (YAGNI).
 
 - Display now reflects awarded truth everywhere (drawer, canvas, focus card, directory, public
   passport). The 7 under-ranked founders render correctly; Meyer shows Coral 7th · Rigan Machado · Jan 17 2026.
+- [ADR 0043](0043-rank-award-fact-vs-member-milestone.md) preserves this display rule: Belt Journey stories and
+  media live in `RankMilestone`, while rank display continues to derive from `RankAward`.
 - The claim→award lifecycle (registration rank picker → pending claim → admin-verify → `RankAward`)
   is a forward build lane (POST_LAUNCH_SOT `FI-006`), not built in SESSION_0430.
 - A one-time data-correction script (`apps/web/scripts/data/SESSION_0430-bbl-rank-corrections.sql`)

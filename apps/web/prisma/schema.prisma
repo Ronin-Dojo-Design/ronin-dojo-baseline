@@ -2137,6 +2137,7 @@ model RankAward {
   awardedAt          DateTime?
   notes              String?
   location           String?
+  /// @deprecated Use RankMilestone + MediaAttachment.rankMilestoneId for belt journey media/story enrichment.
   mediaUrls          Json?
   source             RankAwardSource             @default(STATED)
   verificationStatus RankAwardVerificationStatus @default(UNVERIFIED)
@@ -2178,6 +2179,9 @@ model RankAward {
   // @added   SESSION_0289 (2026-05-29)
   // @why     Wire MediaAttachment back-relation (D4)
   mediaAttachments     MediaAttachment[]
+  // @added   SESSION_0479 (2026-07-01)
+  // @why     Belt Journey enrichment lives beside the canonical RankAward fact, not inside it.
+  milestone            RankMilestone?
 
   @@unique([passportId, rankId])
   @@index([passportId, awardedAt])
@@ -2186,6 +2190,21 @@ model RankAward {
   @@index([awardedByPassportId])
   @@index([organizationId])
   @@index([promotionEventId])
+}
+
+// @added SESSION_0479 (2026-07-01) — member-owned belt journey enrichment.
+// RankAward remains the canonical promotion fact (ADR 0016); this model stores editable story/media
+// enrichment only and carries no verification or rank authority.
+model RankMilestone {
+  id        String   @id @default(cuid(2))
+  story     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rankAward   RankAward @relation(fields: [rankAwardId], references: [id], onDelete: Cascade)
+  rankAwardId String    @unique
+
+  media MediaAttachment[]
 }
 
 // ---------------------------------------------------------------------------
@@ -3638,6 +3657,7 @@ model MediaAttachment {
   techniqueId           String?
   eventId               String?
   rankAwardId           String?
+  rankMilestoneId       String?
   courseId              String?
   organizationId        String?
   contentAtomId         String?
@@ -3652,6 +3672,7 @@ model MediaAttachment {
   technique           Technique?           @relation(fields: [techniqueId], references: [id])
   event               Event?               @relation(fields: [eventId], references: [id])
   rankAward           RankAward?           @relation(fields: [rankAwardId], references: [id])
+  rankMilestone       RankMilestone?       @relation(fields: [rankMilestoneId], references: [id])
   course              Course?              @relation(fields: [courseId], references: [id])
   organization        Organization?        @relation(fields: [organizationId], references: [id])
   contentAtom         ContentAtom?         @relation(fields: [contentAtomId], references: [id])
@@ -3663,6 +3684,7 @@ model MediaAttachment {
   @@index([techniqueId])
   @@index([eventId])
   @@index([rankAwardId])
+  @@index([rankMilestoneId])
   @@index([courseId])
   @@index([organizationId])
   @@index([contentAtomId])

@@ -4,15 +4,17 @@ slug: adr-0016
 type: adr
 status: accepted
 created: 2026-05-17
-updated: 2026-05-30
-last_agent: codex-session-0351
+updated: 2026-07-01
+last_agent: codex-session-0479
 pairs_with:
   - docs/architecture/lineage/lineage-prisma-schema-patch-proposal.md
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
   - docs/architecture/ubiquitous-language.md
+  - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
   - docs/sprints/SESSION_0178.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0479.md
 ---
 
 # ADR 0016 - Lineage Promotion Source of Truth
@@ -133,3 +135,11 @@ Decisions locked in the SESSION_0318 grill that constrain this model:
 Consumed by the April 10, 2026 Coral Belt Ceremony seed and a read-only Rank-History event link in
 SESSION_0318. The dedicated event/gallery page, media upload, event editor, and permission model are
 deferred to a later epic per `docs/architecture/lineage/promotion-event-model.md`.
+
+### SESSION_0479 (2026-07-01) — RankMilestone enrichment beside the award fact
+
+Added `RankMilestone` as a 1:1, member-owned enrichment record for a `RankAward`, plus
+`MediaAttachment.rankMilestoneId` for Belt Journey media. The core decision above is unchanged:
+`RankAward` remains the canonical promotion fact. A milestone has no rank authority, verification status, or
+privacy state; it stores editable story/media enrichment only and cascades when its owning award is deleted.
+See [ADR 0043](0043-rank-award-fact-vs-member-milestone.md).
