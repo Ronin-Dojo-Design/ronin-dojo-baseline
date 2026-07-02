@@ -96,6 +96,16 @@ export const applyPassportClaimReview = async ({
         throw new Error(CLAIM_REVIEW_ERROR.NOT_REVIEWABLE)
       }
 
+      // SESSION_0492 FIX 1 (CRITICAL, defense-in-depth): a member may never review
+      // their OWN belt promotion — for ANY decision. The assert door already blocks
+      // this for the `reviewPassportClaim` action, but this guards every OTHER caller
+      // of `applyPassportClaimReview` that bypasses the assert. Re-checked here inside
+      // the tx on the freshly-read row so the state used for authz matches the state
+      // about to mutate (closes the FIX 5 TOCTOU seam for self-review too).
+      if (claim.type === "RANK_PROMOTION" && claim.claimantUserId === reviewerUserId) {
+        throw new Error(CLAIM_REVIEW_ERROR.SELF_REVIEW)
+      }
+
       const before = {
         claimId: claim.id,
         passportId: claim.passportId,
@@ -281,12 +291,23 @@ const assertCanReviewPassportClaim = async ({
 
   const claim = await db.passportClaimRequest.findFirst({
     where: { id: claimId, brand },
-    select: { type: true, passportId: true },
+    select: { type: true, passportId: true, claimantUserId: true },
   })
 
   // Missing claim or non-promotion claim → the exact refusal the old admin-only
   // middleware gave a non-admin, before any claim detail could leak.
   if (!claim || claim.type !== "RANK_PROMOTION") {
+    throw new Error(NOT_AUTHORIZED)
+  }
+
+  // SESSION_0492 FIX 1 (CRITICAL): a claimant may NEVER review their own promotion.
+  // Every claimed member holds own-node NODE_EDITOR, which carries `claim.review`
+  // scoped to their own node — so without this the resource check below (and a
+  // `claims.manage` holder) would let a member self-approve an above-ceiling belt
+  // into a VERIFIED award + flip `isVerified`. Placed BEFORE both the `claims.manage`
+  // and resource-scope gates so the self-review block is unconditional. Same opaque
+  // `NOT_AUTHORIZED` shape — never leak that it was a self-review at the authz door.
+  if (claim.claimantUserId === user.id) {
     throw new Error(NOT_AUTHORIZED)
   }
 

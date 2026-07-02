@@ -20,6 +20,7 @@ mock.module("next/cache", () => ({
   updateTag: () => {},
 }))
 
+import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import { db } from "~/services/db"
 import { applyPassportClaimReview } from "./passport-claim-review-actions"
 
@@ -187,5 +188,69 @@ describe("applyPassportClaimReview — directory-only person (ADR 0036 un-stub)"
         input: { claimId: denied.id, decision: "APPROVED" },
       }),
     ).rejects.toThrow()
+  })
+
+  // SESSION_0492 FIX 1 (CRITICAL, apply-layer defense-in-depth): the assert door guards the
+  // action, but `applyPassportClaimReview` is a direct-callable seam — it must ALSO refuse a
+  // self-review, for ANY decision, so a caller that bypasses the assert cannot self-approve.
+  it("rejects a member reviewing their OWN RANK_PROMOTION claim (apply-layer guard, both decisions)", async () => {
+    const ownerUserId = fx!.otherClaimantUserId
+    const ownedPassport = await db.passport.create({
+      data: { id: tag("own-pp"), displayName: tag("Own Person"), userId: ownerUserId },
+      select: { id: true },
+    })
+    const makeSelfPromo = async () =>
+      db.passportClaimRequest.create({
+        data: {
+          type: "RANK_PROMOTION",
+          passportId: ownedPassport.id,
+          claimantUserId: ownerUserId,
+          brand: TEST_BRAND,
+          status: "PENDING",
+        },
+        select: { id: true },
+      })
+
+    const approveClaim = await makeSelfPromo()
+    await expect(
+      applyPassportClaimReview({
+        db,
+        brand: TEST_BRAND,
+        reviewerUserId: ownerUserId,
+        input: { claimId: approveClaim.id, decision: "APPROVED" },
+      }),
+    ).rejects.toThrow(CLAIM_REVIEW_ERROR.SELF_REVIEW)
+
+    const denyClaim = await makeSelfPromo()
+    await expect(
+      applyPassportClaimReview({
+        db,
+        brand: TEST_BRAND,
+        reviewerUserId: ownerUserId,
+        input: { claimId: denyClaim.id, decision: "DENIED" },
+      }),
+    ).rejects.toThrow(CLAIM_REVIEW_ERROR.SELF_REVIEW)
+
+    // Both self-review attempts left the claims untouched and minted no award.
+    for (const c of [approveClaim, denyClaim]) {
+      const after = await db.passportClaimRequest.findUnique({
+        where: { id: c.id },
+        select: { status: true },
+      })
+      expect(after?.status).toBe("PENDING")
+    }
+    const award = await db.rankAward.findFirst({
+      where: { passportId: ownedPassport.id },
+      select: { id: true },
+    })
+    expect(award).toBeNull()
+
+    // Teardown for this test's extra fixtures.
+    await db.passportClaimRequest.deleteMany({ where: { passportId: ownedPassport.id } })
+    await db.passport.update({
+      where: { id: ownedPassport.id },
+      data: { user: { disconnect: true } },
+    })
+    await db.passport.delete({ where: { id: ownedPassport.id } })
   })
 })

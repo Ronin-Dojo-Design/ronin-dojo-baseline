@@ -63,12 +63,16 @@ type Fixture = {
   member1: MemberFixture
   member2: MemberFixture
   member3: MemberFixture
+  /** A claimant who holds own-node NODE_EDITOR (carries claim.review on their OWN node). */
+  selfReviewer: MemberFixture
   instructorUserId: string
   outsiderUserId: string
   adminUserId: string
   promoClaim1Id: string
   promoClaim2Id: string
   promoClaim3Id: string
+  /** selfReviewer's OWN promotion claim — they must NOT be able to approve it. */
+  selfPromoClaimId: string
   identityClaimId: string
   identityPassportId: string
 }
@@ -138,6 +142,8 @@ beforeAll(async () => {
   const member1 = await createMember("member1", tree.id)
   const member2 = await createMember("member2", tree.id)
   const member3 = await createMember("member3", tree.id)
+  // The self-review exploit fixture: a claimed member holding own-node NODE_EDITOR.
+  const selfReviewer = await createMember("selfrev", tree.id)
 
   // The instructor's resource-scoped grant: TREE_EDITOR carries `claim.review` tree-wide.
   await db.lineageTreeAccess.create({
@@ -146,6 +152,22 @@ beforeAll(async () => {
       treeId: tree.id,
       userId: instructor.id,
       role: "TREE_EDITOR",
+      grantedById: admin.id,
+    },
+  })
+
+  // SESSION_0492 FIX 1: the PROD-SHAPED grant every claimed member holds — own-node
+  // NODE_EDITOR, scoped to their OWN node/member, which carries `claim.review`. This is
+  // exactly the grant `resolvePromotionClaimResources` + `canForResource` would match,
+  // so WITHOUT the self-review block this member could approve their own promotion.
+  await db.lineageTreeAccess.create({
+    data: {
+      id: tag("selfrev-grant"),
+      treeId: tree.id,
+      userId: selfReviewer.userId,
+      role: "NODE_EDITOR",
+      nodeId: selfReviewer.nodeId,
+      memberId: selfReviewer.memberId,
       grantedById: admin.id,
     },
   })
@@ -170,6 +192,8 @@ beforeAll(async () => {
   const promoClaim1Id = await createPromotionClaim(member1, rank.id, media.id)
   const promoClaim2Id = await createPromotionClaim(member2, rank.id)
   const promoClaim3Id = await createPromotionClaim(member3, rank.id)
+  // The self-reviewer's OWN promotion claim (claimantUserId === selfReviewer.userId).
+  const selfPromoClaimId = await createPromotionClaim(selfReviewer, rank.id)
 
   // An IDENTITY claim (unowned placeholder Passport) — must STAY admin-only.
   const identityPassport = await db.passport.create({
@@ -193,12 +217,14 @@ beforeAll(async () => {
     member1,
     member2,
     member3,
+    selfReviewer,
     instructorUserId: instructor.id,
     outsiderUserId: outsider.id,
     adminUserId: admin.id,
     promoClaim1Id,
     promoClaim2Id,
     promoClaim3Id,
+    selfPromoClaimId,
     identityClaimId: identityClaim.id,
     identityPassportId: identityPassport.id,
   }
@@ -250,6 +276,31 @@ describe("reviewPassportClaim — RANK_PROMOTION instructor-scoped review (Slice
     expect(claim?.status).toBe("PENDING")
     const award = await db.rankAward.findFirst({
       where: { passportId: fx.member1.passportId },
+      select: { id: true },
+    })
+    expect(award).toBeNull()
+  })
+
+  it("SESSION_0492 FIX 1 (CRITICAL): a claimant holding own-node NODE_EDITOR CANNOT approve their OWN promotion — claim untouched, no award", async () => {
+    if (!fx) throw new Error("fixture not initialized")
+    // The prod-shaped exploit identity: this member's NODE_EDITOR grant carries
+    // `claim.review` scoped to their own node — the exact grant the resource check
+    // would otherwise match. The self-review block must reject BEFORE that check.
+    setTestSession({ id: fx.selfReviewer.userId, role: "user" })
+
+    const result = await reviewPassportClaim({ claimId: fx.selfPromoClaimId, decision: "APPROVED" })
+
+    expect(result?.serverError).toBe("User not authorized")
+    expect(result?.data).toBeUndefined()
+
+    // Claim stayed PENDING and NO VERIFIED award was minted (no isVerified flip either).
+    const claim = await db.passportClaimRequest.findUnique({
+      where: { id: fx.selfPromoClaimId },
+      select: { status: true },
+    })
+    expect(claim?.status).toBe("PENDING")
+    const award = await db.rankAward.findFirst({
+      where: { passportId: fx.selfReviewer.passportId },
       select: { id: true },
     })
     expect(award).toBeNull()
