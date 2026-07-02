@@ -74,7 +74,12 @@ export default async function ({ children }: LayoutProps<"/">) {
               <TooltipProvider delay={250}>
                 <SearchProvider>
                   <BrandProvider brand={Brand.BBL} logoUrl={brandSettings?.logoUrl ?? null}>
-                    <ThemeProvider attribute="class" disableTransitionOnChange>
+                    <ThemeProvider
+                      attribute="class"
+                      defaultTheme="dark"
+                      enableSystem={false}
+                      disableTransitionOnChange
+                    >
                       {children}
                       <Toaster />
                       <Search />
