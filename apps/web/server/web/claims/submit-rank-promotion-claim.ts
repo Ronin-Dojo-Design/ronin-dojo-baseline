@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { pickTopAwardInDiscipline } from "~/server/web/lineage/node-profile-queries"
 
 /**
@@ -23,6 +24,9 @@ export const SUBMIT_RANK_PROMOTION_CLAIM_ERROR = {
   NOT_A_PROMOTION:
     "That belt is at or below your verified rank — add its story from your Belt Journey instead.",
   DUPLICATE_OPEN_PROMOTION: "You already have a belt-promotion request awaiting review.",
+  // SESSION_0492 FIX 2 (HIGH): the evidence `mediaId` must be a photo the claimant
+  // uploaded themselves — never a foreign / private Media id, and never a stale/absent id.
+  EVIDENCE_MEDIA_NOT_OWNED: "One of your evidence photos could not be found. Re-upload it.",
 } as const
 
 /** Prisma client / `$transaction` tx surface (callers pass `ctx.db` or `tx`). */
@@ -116,6 +120,18 @@ export async function submitRankPromotionClaim(
   })
   if (existingOpen) {
     throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
+  }
+
+  // FIX 2 (HIGH): every evidence row carrying a `mediaId` must reference a photo the
+  // CLAIMANT uploaded (`Media.uploadedById === claimantUserId`). Without this, a caller
+  // could attach a foreign / private Media id as "evidence" — disclosing it to reviewers
+  // — or a nonexistent id that would only surface as a raw Prisma P2003 500 on create.
+  for (const item of input.evidence ?? []) {
+    if (!item.mediaId) continue
+    const owned = await resolveOwnedMedia(db, item.mediaId, input.claimantUserId)
+    if (!owned) {
+      throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+    }
   }
 
   const claim = await db.passportClaimRequest.create({

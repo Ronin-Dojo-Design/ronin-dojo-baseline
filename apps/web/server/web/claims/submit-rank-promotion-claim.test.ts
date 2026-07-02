@@ -210,4 +210,59 @@ describe("submitRankPromotionClaim core (petey-plan-0477 Slice V2)", () => {
       }),
     ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.PASSPORT_NOT_FOUND)
   })
+
+  // SESSION_0492 FIX 2 (HIGH): evidence mediaId must be a photo the CLAIMANT uploaded.
+  describe("evidence mediaId ownership guard", () => {
+    beforeAll(async () => {
+      // Clear any open promotion so the DUPLICATE_OPEN guard doesn't mask the media error
+      // (the ownership check runs after the duplicate check, before create).
+      await db.passportClaimRequest.updateMany({
+        where: { passportId: fx!.memberPassportId, type: "RANK_PROMOTION", status: "PENDING" },
+        data: { status: "DENIED" },
+      })
+    })
+
+    it("rejects a FOREIGN mediaId (owned by another user), persisting no claim", async () => {
+      // A real Media row owned by a DIFFERENT user than the claimant.
+      const foreign = await db.media.create({
+        data: {
+          id: tag("foreign-media"),
+          brand: TEST_BRAND,
+          type: "IMAGE",
+          url: "https://example.com/foreign.jpg",
+          uploadedById: fx!.noPassportUserId,
+        },
+        select: { id: true },
+      })
+
+      const before = await db.passportClaimRequest.count({
+        where: { passportId: fx!.memberPassportId, status: "PENDING" },
+      })
+      await expect(
+        submitRankPromotionClaim(db, {
+          claimantUserId: fx!.memberUserId,
+          claimedRankId: fx!.highRankId,
+          brand: TEST_BRAND,
+          evidence: [{ label: "certificate", mediaId: foreign.id }],
+        }),
+      ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+      const after = await db.passportClaimRequest.count({
+        where: { passportId: fx!.memberPassportId, status: "PENDING" },
+      })
+      expect(after).toBe(before) // no claim created
+
+      await db.media.deleteMany({ where: { id: foreign.id } })
+    })
+
+    it("rejects a NONEXISTENT mediaId cleanly (domain error, not a raw P2003 500)", async () => {
+      await expect(
+        submitRankPromotionClaim(db, {
+          claimantUserId: fx!.memberUserId,
+          claimedRankId: fx!.highRankId,
+          brand: TEST_BRAND,
+          evidence: [{ label: "certificate", mediaId: "media-does-not-exist" }],
+        }),
+      ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+    })
+  })
 })

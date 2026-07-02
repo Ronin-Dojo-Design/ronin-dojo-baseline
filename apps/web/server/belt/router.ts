@@ -20,6 +20,7 @@ import {
   updateRankAwardFactInput,
   upsertBeltMilestoneInput,
 } from "~/server/belt/schemas"
+import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { authedProcedure } from "~/server/orpc/procedure"
 import { emitSchoolLead } from "~/server/web/school-lead/emit-school-lead"
 import { db } from "~/services/db"
@@ -220,6 +221,15 @@ const attachMilestoneMedia = beltProcedure
     })
     if (!milestone || milestone.rankAward.passportId !== passportId) {
       throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
+    }
+
+    // FIX 2 (HIGH): the caller-supplied `mediaId` must be a photo THIS user uploaded
+    // (`Media.uploadedById === user.id`). Without it, a member could attach a foreign /
+    // private Media row to their own milestone (disclosure), or a nonexistent id would
+    // surface as a raw Prisma P2003 500. A friendly NOT_FOUND covers both cases.
+    const ownedMedia = await resolveOwnedMedia(db, input.mediaId, context.user.id)
+    if (!ownedMedia) {
+      throw new ORPCError("NOT_FOUND", { message: "Media not found" })
     }
 
     const existing = await db.mediaAttachment.findFirst({

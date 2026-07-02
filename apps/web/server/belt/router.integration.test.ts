@@ -346,4 +346,45 @@ describe("belt.attachMilestoneMedia / detachMilestoneMedia — ownership", () =>
     await db.mediaAttachment.deleteMany({ where: { mediaId: media.id } })
     await db.media.deleteMany({ where: { id: media.id } })
   })
+
+  // SESSION_0492 FIX 2 (HIGH): a caller-supplied mediaId must be a photo THIS user
+  // uploaded. Even when the milestone IS the caller's own, a foreign/nonexistent
+  // mediaId is refused with a clean NOT_FOUND (never a raw Prisma P2003 500).
+  it("DENIES attaching a FOREIGN mediaId (owned by another user) to an OWN milestone (→ NOT_FOUND)", async () => {
+    // `other()` owns `otherMilestoneId`, so the milestone-ownership check passes and the
+    // media-ownership check is what fires. This media belongs to the MEMBER, not `other`.
+    const foreignMedia = await db.media.create({
+      data: {
+        brand: Brand.BBL,
+        url: `https://example.test/${tag("foreign")}.jpg`,
+        type: "IMAGE",
+        uploadedById: fx.memberUserId,
+      },
+      select: { id: true },
+    })
+    await expectCode(
+      other().attachMilestoneMedia({
+        rankMilestoneId: fx.otherMilestoneId,
+        mediaId: foreignMedia.id,
+        purpose: "certificate",
+      }),
+      "NOT_FOUND",
+    )
+    // Nothing was attached.
+    const attached = await db.mediaAttachment.findFirst({ where: { mediaId: foreignMedia.id } })
+    expect(attached).toBeNull()
+
+    await db.media.deleteMany({ where: { id: foreignMedia.id } })
+  })
+
+  it("DENIES attaching a NONEXISTENT mediaId to an OWN milestone cleanly (→ NOT_FOUND, no 500)", async () => {
+    await expectCode(
+      other().attachMilestoneMedia({
+        rankMilestoneId: fx.otherMilestoneId,
+        mediaId: "media-does-not-exist",
+        purpose: "certificate",
+      }),
+      "NOT_FOUND",
+    )
+  })
 })
