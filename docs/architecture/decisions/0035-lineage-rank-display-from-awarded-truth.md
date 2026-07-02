@@ -105,12 +105,13 @@ matters — deliberately deferred (YAGNI).
 
 ---
 
-## Amendment 1 — Belt promotions extend the claim record; the display axis stays closed (DRAFT — SESSION_0486)
+## Amendment 1 — Belt promotions extend the claim record; the display axis stays closed (ACCEPTED — SESSION_0492)
 
-> **Status of this amendment:** *proposed (draft)*. Designed + grill-ratified at **SESSION_0486** (parent
-> SESSION_0484); **finalized to `accepted` when the belt-verification block (petey-plan-0477 Slices V1–V6)
-> lands and its Slice V6 proof gate is green.** The accepted core (§§1–6 above) is **unchanged** — this
-> amendment *extends* §4 and *reaffirms* §5; it reverses nothing.
+> **Status of this amendment:** *accepted* (SESSION_0492). Designed + grill-ratified at **SESSION_0486**
+> (parent SESSION_0484); its finalize condition — the belt-verification block (petey-plan-0477 Slices
+> V1–V6) landed and its **Slice V6 proof gate is green** (SESSION_0492 — Doug proved all five invariants,
+> including the SESSION_0491 self-approval CRITICAL closed at two layers) — is now met. The accepted core
+> (§§1–6 above) is **unchanged** — this amendment *extends* §4 and *reaffirms* §5; it reverses nothing.
 
 ### Context for the amendment
 
