@@ -1,12 +1,11 @@
 import { Suspense } from "react"
-import { Badge } from "~/components/common/badge"
-import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Heading } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { findPendingClaims } from "~/server/admin/lineage/claim-queries"
+import { claimRowViewModel } from "./_components/claim-row-view-model"
+import { ClaimRow } from "./_components/claim-row"
 
 /**
  * Admin lineage claims list page.
@@ -25,47 +24,9 @@ async function ClaimsContent() {
 
   return (
     <div className="divide-y rounded-lg border">
-      {claims.map(claim => {
-        const subjectName = claim.passport.displayName ?? "Unnamed profile"
-        const isPromotion = claim.type === "RANK_PROMOTION"
-
-        return (
-          <Link
-            key={claim.id}
-            href={`/app/lineage/claims/${claim.id}`}
-            className="flex items-center justify-between gap-4 p-4 hover:bg-muted/50 transition-colors"
-          >
-            <div className="min-w-0 flex-1">
-              <p className="font-medium truncate">
-                {/* A promotion is filed by the member on their OWN Passport — no claimant → subject arrow. */}
-                {isPromotion
-                  ? subjectName
-                  : `${claim.claimant.name ?? claim.claimant.email} → ${subjectName}`}
-              </p>
-              {isPromotion ? (
-                <p className="text-sm text-muted-foreground truncate flex items-center gap-1.5">
-                  <BeltSwatch colorHex={claim.claimedRank?.colorHex} />
-                  Belt promotion → {claim.claimedRank?.name ?? "Unknown belt"}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground truncate">
-                  {claim.tree ? `Tree: ${claim.tree.name}` : "Directory profile (no tree)"}
-                </p>
-              )}
-            </div>
-
-            <div className="flex items-center gap-3 shrink-0">
-              {isPromotion && <Badge variant="soft">Promotion</Badge>}
-              <Badge variant={claim.status === "NEEDS_INFO" ? "outline" : "info"}>
-                {claim.status}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {claim.createdAt.toLocaleDateString()}
-              </span>
-            </div>
-          </Link>
-        )
-      })}
+      {claims.map(claim => (
+        <ClaimRow key={claim.id} vm={claimRowViewModel(claim)} />
+      ))}
     </div>
   )
 }

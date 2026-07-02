@@ -90,59 +90,38 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
           </dl>
         </Card>
 
-        {/* Claimed Rank — for a promotion this IS the claim, so render it prominently. */}
-        {claim.claimedRank &&
-          (isPromotion ? (
-            <Card className="p-4">
-              <Heading
-                render={props => <h2 {...props}>{props.children}</h2>}
-                size="h5"
-                className="mb-2"
-              >
-                Asserted Belt
-              </Heading>
-              <div className="flex items-center gap-3">
-                <BeltSwatch
-                  colorHex={claim.claimedRank.colorHex}
-                  variant="bar"
-                  className="h-4 w-14"
-                />
-                <span className="font-semibold text-base">{claim.claimedRank.name}</span>
-                {claim.claimedRank.shortName && (
-                  <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground mt-2 text-xs">
-                Self-declared above the member's verified ceiling. Approval mints it as a VERIFIED
-                rank award on their belt journey; until then it exists only on this request.
-              </p>
-            </Card>
-          ) : (
-            <Card className="p-4">
-              <Heading
-                render={props => <h2 {...props}>{props.children}</h2>}
-                size="h5"
-                className="mb-2"
-              >
-                Claimed Rank
-              </Heading>
-              <div className="flex items-center gap-2 text-sm">
-                {claim.claimedRank.colorHex && (
-                  <span
-                    className="inline-block h-4 w-4 rounded-full border"
-                    style={{ backgroundColor: claim.claimedRank.colorHex }}
-                  />
-                )}
-                <span className="font-medium">{claim.claimedRank.name}</span>
-                {claim.claimedRank.shortName && (
-                  <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
-                )}
-                <span className="text-muted-foreground text-xs">
-                  — asserted at claim time; approval will create a verified RankAward
-                </span>
-              </div>
-            </Card>
-          ))}
+        {/* Claimed Rank / Asserted Belt — one card; a promotion foregrounds the belt
+            (this IS the claim), an identity claim shows it as supporting context. Both
+            use the L1 `BeltSwatch` off `Rank.colorHex` (ADR 0022) — never a hand-rolled dot. */}
+        {claim.claimedRank && (
+          <Card className="p-4">
+            <Heading
+              render={props => <h2 {...props}>{props.children}</h2>}
+              size="h5"
+              className="mb-2"
+            >
+              {isPromotion ? "Asserted Belt" : "Claimed Rank"}
+            </Heading>
+            <div className="flex items-center gap-3">
+              <BeltSwatch
+                colorHex={claim.claimedRank.colorHex}
+                variant="bar"
+                className={isPromotion ? "h-4 w-14" : "h-4 w-12"}
+              />
+              <span className={isPromotion ? "font-semibold text-base" : "font-medium text-sm"}>
+                {claim.claimedRank.name}
+              </span>
+              {claim.claimedRank.shortName && (
+                <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground mt-2 text-xs">
+              {isPromotion
+                ? "Self-declared above the member's verified ceiling. Approval mints it as a VERIFIED rank award on their belt journey; until then it exists only on this request."
+                : "Asserted at claim time; approval will create a verified RankAward."}
+            </p>
+          </Card>
+        )}
 
         {/* Lineage selections — registered school/instructor/tree the claimant picked in the
             join wizard (SESSION_0441). Resolved to links the steward can verify. A custom

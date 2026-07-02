@@ -1,6 +1,14 @@
 import type { BeltCardOutput } from "~/server/belt/schemas"
 
 /**
+ * One render-ready milestone media item, projected off {@link BeltCardOutput}.
+ * The card now carries the resolved `url`/`type` directly (SESSION_0492 cleanup —
+ * the server joins the `Media` rows), so there is no separate media array to
+ * reconcile. Derived from the card shape so it can never drift from the read model.
+ */
+export type BeltCardMedia = NonNullable<BeltCardOutput["milestone"]>["media"][number]
+
+/**
  * Belt-journey view-model + pure presentation logic (Slice 4 — Petey Plan 0477).
  *
  * The belt UI is presentation-only: Slice 5 loads the member's discipline rank
@@ -23,29 +31,17 @@ export type BeltRankRef = {
   sortOrder: number
 }
 
-/** A milestone media item joined to its resolved URL (Slice 5 supplies the URL). */
-export type BeltMediaItem = {
-  attachmentId: string
-  mediaId: string
-  /** One of the `MILESTONE_MEDIA_PURPOSES` (belt/instructor/certificate/competition). */
-  purpose: string | null
-  /** Resolved R2 URL — the `BeltCardOutput` carries only ids, so Slice 5 joins the Media rows. */
-  url: string
-  type?: "IMAGE" | "VIDEO" | "YOUTUBE" | "DOCUMENT"
-}
-
 /**
  * One rank's belt-journey view-model: the rank ref, plus the member's award/
- * milestone for it (`card`, `null` when they have never enriched this belt), plus
- * the resolved media URLs (the `card.milestone.media` carries ids only). The
- * `ceiling` is the whole grid's — passed once to {@link BeltJourneyGrid}.
+ * milestone for it (`card`, `null` when they have never enriched this belt). The
+ * card's `milestone.media` now carries render-ready `url`/`type` (SESSION_0492 —
+ * no separate media array). The `ceiling` is the whole grid's — passed once to
+ * {@link BeltJourneyGrid}.
  */
 export type BeltRankViewModel = {
   rank: BeltRankRef
   /** The member's enriched card for this rank, or `null` if not yet started. */
   card: BeltCardOutput | null
-  /** Resolved media for `card.milestone.media` (ids → URLs), keyed by attachmentId order. */
-  media: BeltMediaItem[]
 }
 
 /** The three surfaced states of a belt card. */

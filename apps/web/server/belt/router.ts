@@ -6,6 +6,7 @@ import {
   isWithinCeiling,
 } from "~/server/belt/belt-gate"
 import {
+  gateAwardSelect,
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
@@ -48,10 +49,17 @@ const beltProcedure = authedProcedure.meta({
 
 const REVALIDATE_PATHS = ["/app/profile"]
 
-/** Re-read the member's awards and return the card for a given rankAwardId. */
+/**
+ * Re-read the single enriched card for `rankAwardId`. Scoped to the acting
+ * member's `passportId` (the ownership root) so it never returns another member's
+ * award — a caller cannot enrich a card they do not own. One row via `findFirst`
+ * with `gateAwardSelect`, not the whole award list (we only need this one).
+ */
 async function enrichedCard(passportId: string, rankAwardId: string): Promise<BeltCardOutput> {
-  const awards = await getMemberAwards(passportId)
-  const award = awards.find(a => a.id === rankAwardId)
+  const award = await db.rankAward.findFirst({
+    where: { id: rankAwardId, passportId },
+    select: gateAwardSelect,
+  })
   if (!award) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
   return toBeltCard(award)
 }

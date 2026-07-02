@@ -15,7 +15,6 @@ function rankVm(sortOrder: number, card: BeltCardOutput | null): BeltRankViewMod
   return {
     rank: { id: `rank_${sortOrder}`, name: `Belt ${sortOrder}`, colorHex: null, sortOrder },
     card,
-    media: [],
   }
 }
 
@@ -87,7 +86,15 @@ describe("deriveBeltStatus", () => {
         milestone: {
           id: "m1",
           story: null,
-          media: [{ attachmentId: "a", mediaId: "m", purpose: "belt" }],
+          media: [
+            {
+              attachmentId: "a",
+              mediaId: "m",
+              purpose: "belt",
+              url: "https://cdn.example/m.jpg",
+              type: "IMAGE",
+            },
+          ],
         },
       }),
     )

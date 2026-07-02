@@ -113,7 +113,9 @@ export async function submitRankPromotionClaim(
   // CLAIMANT uploaded (`Media.uploadedById === claimantUserId`). Without this, a caller
   // could attach a foreign / private Media id as "evidence" — disclosing it to reviewers
   // — or a nonexistent id that would only surface as a raw Prisma P2003 500 on create.
-  // (Media owner is immutable, so this may run inside the tx below without a TOCTOU risk.)
+  // This ownership check runs on `db` OUTSIDE the create transaction below (it is a pure
+  // read of an immutable field — `Media.uploadedById` never changes — so there is no
+  // TOCTOU window; the create tx guards only the one-open invariant).
   for (const item of input.evidence ?? []) {
     if (!item.mediaId) continue
     const owned = await resolveOwnedMedia(db, item.mediaId, input.claimantUserId)
@@ -122,46 +124,51 @@ export async function submitRankPromotionClaim(
     }
   }
 
-  // FIX 5 (LOW): the "one open promotion" check + create run in ONE transaction so two
-  // concurrent submits can't both pass the check and both create — the check-then-create
-  // race is closed atomically.
-  const claim = await db.$transaction(async (tx: Db) => {
-    const existingOpen = await tx.passportClaimRequest.findFirst({
-      where: {
-        passportId: passport.id,
-        type: "RANK_PROMOTION",
-        status: { in: ["PENDING", "NEEDS_INFO"] },
-      },
-      select: { id: true },
-    })
-    if (existingOpen) {
-      throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
-    }
+  // FIX 5 (LOW) + P3 (SESSION_0492): the "one open promotion" check + create run in ONE
+  // SERIALIZABLE transaction. The check-then-create is a phantom-read race — at the
+  // default (Read Committed) isolation two concurrent submits can each see no open row
+  // and both create (there is no unique index to catch it). Serializable makes the two
+  // conflict so one aborts, closing the residual double-create window atomically.
+  const claim = await db.$transaction(
+    async (tx: Db) => {
+      const existingOpen = await tx.passportClaimRequest.findFirst({
+        where: {
+          passportId: passport.id,
+          type: "RANK_PROMOTION",
+          status: { in: ["PENDING", "NEEDS_INFO"] },
+        },
+        select: { id: true },
+      })
+      if (existingOpen) {
+        throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
+      }
 
-    return tx.passportClaimRequest.create({
-      data: {
-        type: "RANK_PROMOTION",
-        passportId: passport.id,
-        claimantUserId: input.claimantUserId,
-        brand: input.brand,
-        claimedRankId: input.claimedRankId,
-        claimantNote: input.claimantNote ?? null,
-        ...(input.evidence?.length
-          ? {
-              evidence: {
-                create: input.evidence.map(item => ({
-                  label: item.label ?? null,
-                  url: item.url ?? null,
-                  text: item.text ?? null,
-                  mediaId: item.mediaId ?? null,
-                })),
-              },
-            }
-          : {}),
-      },
-      select: { id: true },
-    })
-  })
+      return tx.passportClaimRequest.create({
+        data: {
+          type: "RANK_PROMOTION",
+          passportId: passport.id,
+          claimantUserId: input.claimantUserId,
+          brand: input.brand,
+          claimedRankId: input.claimedRankId,
+          claimantNote: input.claimantNote ?? null,
+          ...(input.evidence?.length
+            ? {
+                evidence: {
+                  create: input.evidence.map(item => ({
+                    label: item.label ?? null,
+                    url: item.url ?? null,
+                    text: item.text ?? null,
+                    mediaId: item.mediaId ?? null,
+                  })),
+                },
+              }
+            : {}),
+        },
+        select: { id: true },
+      })
+    },
+    { isolationLevel: "Serializable" },
+  )
 
   return { claimId: claim.id }
 }

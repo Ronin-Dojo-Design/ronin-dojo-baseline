@@ -5,9 +5,11 @@ export const MAX_WEB_UPLOAD_BYTES = 25 * 1024 * 1024
 
 /**
  * The set of owner entities a web user can attach media to. Kept in sync with
- * `MediaAttachTargetKind` via the `satisfies` check below.
+ * `MediaAttachTargetKind` via the `satisfies` check below. Module-private — only the
+ * composed `uploadWebMediaSchema` / `removeWebMediaSchema` are consumed externally
+ * (SESSION_0492 dead-export trim).
  */
-export const mediaAttachTargetSchema = z.object({
+const mediaAttachTargetSchema = z.object({
   kind: z.enum([
     "promotionEvent",
     "technique",

@@ -10,7 +10,7 @@ import { Hint } from "~/components/common/hint"
 import { Stack } from "~/components/common/stack"
 import { client } from "~/lib/orpc-client"
 import type { MilestoneMediaPurpose } from "~/server/belt/schemas"
-import type { BeltMediaItem } from "./belt-view-model"
+import type { BeltCardMedia } from "./belt-view-model"
 
 /**
  * `BeltMediaGallery` — one purpose-scoped photo gallery for a belt milestone
@@ -26,7 +26,7 @@ import type { BeltMediaItem } from "./belt-view-model"
  * `client.belt.attachMilestoneMedia`. When `onUpload` is omitted the upload
  * control is hidden (read-only gallery).
  *
- * Presentation-only otherwise: it renders the already-resolved {@link BeltMediaItem}
+ * Presentation-only otherwise: it renders the already-resolved {@link BeltCardMedia}
  * URLs the parent hands down and mirrors mutations optimistically.
  */
 export function BeltMediaGallery({
@@ -43,7 +43,7 @@ export function BeltMediaGallery({
   purpose: MilestoneMediaPurpose
   title: string
   /** Already-resolved media (URL + ids) for this purpose. */
-  items: BeltMediaItem[]
+  items: BeltCardMedia[]
   /**
    * Uploads a file to R2 (against the `rankMilestone` media target) and returns the
    * minted `mediaId`. Supplied by the mount (Slice 5) because the upload pipeline is
@@ -56,7 +56,7 @@ export function BeltMediaGallery({
   onChanged?: () => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const [media, setMedia] = useState<BeltMediaItem[]>(items)
+  const [media, setMedia] = useState<BeltCardMedia[]>(items)
   const [isBusy, setIsBusy] = useState(false)
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +92,7 @@ export function BeltMediaGallery({
     }
   }
 
-  const handleDetach = async (item: BeltMediaItem) => {
+  const handleDetach = async (item: BeltCardMedia) => {
     setIsBusy(true)
     try {
       await client.belt.detachMilestoneMedia({ rankMilestoneId, mediaId: item.mediaId })

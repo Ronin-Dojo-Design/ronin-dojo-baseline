@@ -10,13 +10,12 @@ import { z } from "zod"
 
 const cuid = z.string().min(1).max(191)
 
-/** Media purpose convention (Locked #2) — a shared-column string, not an enum. */
-export const MILESTONE_MEDIA_PURPOSES = [
-  "belt",
-  "instructor",
-  "certificate",
-  "competition",
-] as const
+/**
+ * Media purpose convention (Locked #2) — a shared-column string, not an enum.
+ * Module-private: only the `MilestoneMediaPurpose` TYPE and `attachMilestoneMediaInput`
+ * (below) are consumed elsewhere (SESSION_0492 dead-export trim).
+ */
+const MILESTONE_MEDIA_PURPOSES = ["belt", "instructor", "certificate", "competition"] as const
 export type MilestoneMediaPurpose = (typeof MILESTONE_MEDIA_PURPOSES)[number]
 
 export const upsertBeltMilestoneInput = z.object({
@@ -68,8 +67,12 @@ export const deleteRankAwardInput = z.object({
   rankAwardId: cuid,
 })
 
-/** Enriched belt card returned by the mutating procedures (the read model). */
-export const beltCardOutput = z.object({
+/**
+ * Enriched belt card returned by the mutating procedures (the read model).
+ * Module-private schema — only the inferred `BeltCardOutput` type is consumed
+ * externally (SESSION_0492 dead-export trim).
+ */
+const beltCardOutput = z.object({
   rankAwardId: z.string(),
   rankId: z.string(),
   rankName: z.string(),
@@ -96,6 +99,15 @@ export const beltCardOutput = z.object({
           attachmentId: z.string(),
           mediaId: z.string(),
           purpose: z.string().nullable(),
+          /**
+           * Render-ready media the card carries directly (SESSION_0492 cleanup):
+           * the milestone select joins the resolvable `Media` fields, so the
+           * galleries no longer need a separate URL-reconciliation pass. Orphaned
+           * attachments (Media SetNull) are dropped at projection, so `url` is
+           * always present here.
+           */
+          url: z.string(),
+          type: z.enum(["IMAGE", "VIDEO", "YOUTUBE", "DOCUMENT"]),
         }),
       ),
     })

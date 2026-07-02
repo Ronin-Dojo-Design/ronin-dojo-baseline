@@ -1,10 +1,9 @@
 import "server-only"
 
 import type { CreatableOption } from "~/components/common/creatable-combobox"
-import type { BeltMediaItem, BeltRankViewModel } from "~/components/web/belt/belt-view-model"
-import type { MediaType, Prisma } from "~/.generated/prisma/client"
+import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
 import { ceilingSortOrder } from "~/server/belt/belt-gate"
-import { getBjjDisciplineId, toBeltCard, toGateAward } from "~/server/belt/queries"
+import { gateAwardSelect, getBjjDisciplineId, toBeltCard, toGateAward } from "~/server/belt/queries"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { db } from "~/services/db"
@@ -14,54 +13,16 @@ import { db } from "~/services/db"
  *
  * Loads EVERYTHING the belt-journey grid needs in ONE pass (no N+1): the acting
  * member's Passport, their awarded BJJ ranks, the ceiling (`pickTopAwardInDiscipline`,
- * BJJ-scoped, via `ceilingSortOrder`), the full BJJ rank ladder in `sortOrder`, and
- * — the seam Slice 4 delegated — each milestone's `MediaAttachment → Media` rows
- * joined to their `url`/`type` so the galleries render real media, not bare ids.
+ * BJJ-scoped, via `ceilingSortOrder`), and the full BJJ rank ladder in `sortOrder`.
+ * The shared `gateAwardSelect` now joins each milestone's `MediaAttachment → Media`
+ * rows to their `url`/`type`, so `toBeltCard` emits render-ready media directly —
+ * no separate select or URL-reconciliation pass (SESSION_0492 cleanup).
  *
  * BJJ-scoped throughout (BBL is a BJJ lineage product, Locked #5): the ladder, the
  * awards, and therefore the ceiling all come from the BJJ discipline resolved from
  * data (`discipline.code = "bjj"`), never hardcoded. Presentation-only view-models
  * out — no Prisma reaches the client belt components.
  */
-
-/** Awards + their milestone media joined to the resolvable `Media` fields. */
-const beltTabAwardSelect = {
-  id: true,
-  source: true,
-  verificationStatus: true,
-  awardedAt: true,
-  notes: true,
-  location: true,
-  awardedById: true,
-  awardedByPassportId: true,
-  organizationId: true,
-  rankId: true,
-  rank: {
-    select: {
-      name: true,
-      colorHex: true,
-      sortOrder: true,
-      rankSystem: { select: { disciplineId: true } },
-    },
-  },
-  milestone: {
-    select: {
-      id: true,
-      story: true,
-      media: {
-        select: {
-          id: true,
-          mediaId: true,
-          purpose: true,
-          media: { select: { url: true, type: true } },
-        },
-        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-      },
-    },
-  },
-} satisfies Prisma.RankAwardSelect
-
-type BeltTabAward = Prisma.RankAwardGetPayload<{ select: typeof beltTabAwardSelect }>
 
 export type BeltTabData = {
   /** One view-model per BJJ ladder rank in ascending `sortOrder`. */
@@ -74,25 +35,6 @@ export type BeltTabData = {
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
   schoolOptions: CreatableOption[]
-}
-
-/** Reshape the join rows Slice 4's `BeltMediaItem` expects (ids → resolved URL/type). */
-function resolveMedia(award: BeltTabAward): BeltMediaItem[] {
-  const rows = award.milestone?.media ?? []
-  return rows.flatMap(row => {
-    // Drop rows whose Media was removed (SetNull leaves an orphan attachment) —
-    // the gallery has nothing to render without a URL.
-    if (!row.media) return []
-    return [
-      {
-        attachmentId: row.id,
-        mediaId: row.mediaId,
-        purpose: row.purpose,
-        url: row.media.url,
-        type: row.media.type as MediaType,
-      },
-    ]
-  })
 }
 
 /**
@@ -116,7 +58,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
     getBjjRanksForClaimPicker(),
     db.rankAward.findMany({
       where: { passportId: passport.id, rank: { rankSystem: { disciplineId } } },
-      select: beltTabAwardSelect,
+      select: gateAwardSelect,
       orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
     }),
     getJoinWizardOptions(),
@@ -136,8 +78,8 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
         colorHex: rank.colorHex,
         sortOrder: rank.sortOrder,
       },
+      // `toBeltCard` now carries render-ready media on `card.milestone.media`.
       card: award ? toBeltCard(award) : null,
-      media: award ? resolveMedia(award) : [],
     }
   })
 

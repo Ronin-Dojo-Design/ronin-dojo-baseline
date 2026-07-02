@@ -270,8 +270,10 @@ const NOT_AUTHORIZED = "User not authorized"
  * - RANK_PROMOTION claims additionally admit any resource-scoped `claim.review`
  *   grant (TREE_ADMIN / TREE_EDITOR / in-branch BRANCH_EDITOR / matching
  *   NODE_EDITOR) scoped to the member's node/tree — derived at review time via
- *   `resolvePromotionClaimResources` since the claim carries no tree. A member
- *   with no node/tree membership falls back to admin-only.
+ *   `resolvePromotionClaimResources` (grants-first: it is passed the reviewer and
+ *   returns only the trees the reviewer can review) since the claim carries no
+ *   tree. A member with no node/tree membership — or a reviewer with no
+ *   `claim.review` grant on any of the member's trees — falls back to admin-only.
  * - EXCEPT the claimant themselves — a member may never review their OWN promotion
  *   (SESSION_0492 FIX 1), even though their own-node NODE_EDITOR carries `claim.review`.
  *
@@ -316,7 +318,7 @@ const assertCanReviewPassportClaim = async ({
     throw new Error(NOT_AUTHORIZED)
   }
 
-  const resources = await resolvePromotionClaimResources(db, claim.passportId)
+  const resources = await resolvePromotionClaimResources(db, claim.passportId, user.id)
   if (!resources) {
     throw new Error(NOT_AUTHORIZED)
   }

@@ -39,7 +39,16 @@ export const gateAwardSelect = {
       id: true,
       story: true,
       media: {
-        select: { id: true, mediaId: true, purpose: true },
+        // Join the resolvable Media fields so the card carries render-ready
+        // url/type (SESSION_0492 cleanup — subsumes the old `beltTabAwardSelect`
+        // + `resolveMedia` in the belt-tab loader; ids alone forced a URL
+        // reconciliation seam that no longer exists).
+        select: {
+          id: true,
+          mediaId: true,
+          purpose: true,
+          media: { select: { url: true, type: true } },
+        },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
     },
@@ -129,11 +138,22 @@ export function toBeltCard(award: MemberAward): BeltCardOutput {
       ? {
           id: award.milestone.id,
           story: award.milestone.story,
-          media: award.milestone.media.map(m => ({
-            attachmentId: m.id,
-            mediaId: m.mediaId,
-            purpose: m.purpose,
-          })),
+          // Drop rows whose Media was SetNull-orphaned (no url to render), then
+          // carry the resolved url/type — the card is render-ready, no separate
+          // media-resolution pass (SESSION_0492 cleanup).
+          media: award.milestone.media.flatMap(m =>
+            m.media
+              ? [
+                  {
+                    attachmentId: m.id,
+                    mediaId: m.mediaId,
+                    purpose: m.purpose,
+                    url: m.media.url,
+                    type: m.media.type,
+                  },
+                ]
+              : [],
+          ),
         }
       : null,
   }

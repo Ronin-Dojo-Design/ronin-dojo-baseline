@@ -20,7 +20,7 @@ import type { BeltCardOutput, MilestoneMediaPurpose } from "~/server/belt/schema
 import { BeltMediaGallery } from "./belt-media-gallery"
 import {
   beltDateLabel,
-  type BeltMediaItem,
+  type BeltCardMedia,
   type BeltRankViewModel,
   isCardFactEditable,
   isWhiteBelt,
@@ -108,13 +108,13 @@ export function BeltEditForm({
   const [isSaving, setIsSaving] = useState(false)
 
   const mediaByPurpose = useMemo(() => {
-    const map: Record<string, BeltMediaItem[]> = {}
-    for (const item of vm.media) {
+    const map: Record<string, BeltCardMedia[]> = {}
+    for (const item of card?.milestone?.media ?? []) {
       const key = item.purpose ?? "belt"
       ;(map[key] ??= []).push(item)
     }
     return map
-  }, [vm.media])
+  }, [card?.milestone?.media])
 
   const milestoneId = card?.milestone?.id ?? null
 

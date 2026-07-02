@@ -94,3 +94,6 @@ export async function findClaimById(id: string) {
 }
 
 export type ClaimDetail = NonNullable<Awaited<ReturnType<typeof findClaimById>>>
+
+/** One row from the pending-claims queue — the shape the list page renders. */
+export type PendingClaim = Awaited<ReturnType<typeof findPendingClaims>>[number]

@@ -7,7 +7,7 @@ import type { BeltCardOutput } from "~/server/belt/schemas"
 import { BeltEditCard } from "./belt-edit-card"
 import { BeltEditForm } from "./belt-edit-form"
 import { BeltPromotionRequest } from "./belt-promotion-request"
-import type { BeltMediaItem, BeltRankViewModel } from "./belt-view-model"
+import type { BeltRankViewModel } from "./belt-view-model"
 
 /**
  * `BeltJourneyGrid` — the member's belt-by-belt journey (Slice 4 — Petey Plan 0477
@@ -59,9 +59,9 @@ export function BeltJourneyGrid({
   const minSortOrder = sorted[0]?.rank.sortOrder ?? 0
 
   // Local overlay of saved cards so a mutation refreshes the affected belt in place.
-  const [saved, setSaved] = useState<
-    Record<string, { card: BeltCardOutput; media: BeltMediaItem[] }>
-  >({})
+  // The card now carries render-ready `milestone.media` (url/type), so the overlay is
+  // just the returned card — no separate media reconciliation (SESSION_0492 cleanup).
+  const [saved, setSaved] = useState<Record<string, { card: BeltCardOutput }>>({})
   const [openRankId, setOpenRankId] = useState<string | null>(null)
   // The above-ceiling belt whose promotion-request modal is open (B1), or null.
   const [promotionRankId, setPromotionRankId] = useState<string | null>(null)
@@ -70,7 +70,7 @@ export function BeltJourneyGrid({
     () =>
       sorted.map(vm => {
         const override = saved[vm.rank.id]
-        return override ? { ...vm, card: override.card, media: override.media } : vm
+        return override ? { ...vm, card: override.card } : vm
       }),
     [sorted, saved],
   )
@@ -81,21 +81,9 @@ export function BeltJourneyGrid({
     : null
 
   const handleSaved = (rankId: string, card: BeltCardOutput) => {
-    setSaved(current => ({
-      ...current,
-      [rankId]: {
-        card,
-        // Re-derive resolved media from the fresh card ids, keeping any URLs we
-        // already know (the card output carries ids only). Unknown ids drop out
-        // until Slice 5's next server load resolves their URLs.
-        media: (card.milestone?.media ?? []).flatMap(m => {
-          const existing = (saved[rankId]?.media ?? openVm?.media ?? []).find(
-            x => x.mediaId === m.mediaId,
-          )
-          return existing ? [{ ...existing, purpose: m.purpose }] : []
-        }),
-      },
-    }))
+    // The returned card already carries render-ready `milestone.media` (url/type),
+    // so the overlay is the card as-is — no URL reconciliation (SESSION_0492 cleanup).
+    setSaved(current => ({ ...current, [rankId]: { card } }))
   }
 
   return (
