@@ -267,7 +267,7 @@ belt surfaces make serial safer. Cody builds each slice; Doug owns TASK_07.
 | SESSION_0491_TASK_03 | landed | Above-ceiling card → "Request promotion" CTA + soft-gate photo modal (`belt-promotion-request.tsx`); Hint→Note + first-run empty state applied; country round-trip re-scoped (no award column — needs schema, deferred) (commit c26dd955) |
 | SESSION_0491_TASK_04 | landed | evidence→RankMilestone in finalizeRankPromotion + additive `mediaId` on promotion.submit; 7 finalize + 6 submit tests green (commit 40366de7) |
 | SESSION_0491_TASK_05 | landed | Belts tab loader confirmed post-rework (folded into c26dd955) |
-| SESSION_0491_TASK_06 | pending | V5 — /app/claims surfaces RANK_PROMOTION |
+| SESSION_0491_TASK_06 | landed | V5 — queue/detail render promotions (belt swatch + photo evidence, comp hidden); review door reworked to userActionClient + in-action authz (admin byte-identical, IDENTITY admin-only, RANK_PROMOTION admits `claims.manage` / resource-scoped `claim.review` via `resolvePromotionClaimResources`); promotion decisions notify the member (derived nodeId); 6+4+4 tests green (commit 11371433) |
 | SESSION_0491_TASK_07 | pending | V6 — Playwright proof gate + ADR 0035 Amendment 1 → accepted |
 
 ## What landed
