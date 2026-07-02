@@ -598,6 +598,9 @@ export const convertLead = userActionClient
         try {
           const loginUrl = `${siteConfig.url}/login`
           await sendEmail({
+            // FI-014: pass the brand so the sender identity is BBL, not the brandless
+            // Baseline env default (which surfaced as "Baseline Martial Arts" in Gmail).
+            brand: Brand.BBL,
             to: lead.email as string,
             subject: `Welcome to ${brandConfig.name} — Set Up Your Account`,
             react: EmailMagicLink({ to: lead.email as string, url: loginUrl }),
