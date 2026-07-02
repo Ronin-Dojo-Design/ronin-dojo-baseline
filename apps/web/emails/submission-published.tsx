@@ -4,9 +4,12 @@ import { Text } from "@react-email/components"
 import type { Tool } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { EmailActionNudge } from "~/emails/components/action-nudge"
-import { EmailButton } from "~/emails/components/button"
+import {
+  BblEmailButton,
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 import { EmailFeatureNudge } from "~/emails/components/feature-nudge"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 
 type EmailProps = EmailWrapperProps & {
   tool: Tool
@@ -31,9 +34,9 @@ export const EmailSubmissionPublished = ({ tool, ...props }: EmailProps) => {
         tools like yours!
       </Text>
 
-      <EmailButton href={toolUrl}>
+      <BblEmailButton href={toolUrl}>
         Check out {tool.name} on {siteConfig.name}
-      </EmailButton>
+      </BblEmailButton>
 
       <EmailActionNudge tool={tool} />
       <EmailFeatureNudge tool={tool} />

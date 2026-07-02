@@ -8,8 +8,11 @@ import "dotenv/config"
 import { formatDate } from "@dirstack/utils"
 import { Section, Text } from "@react-email/components"
 import { siteConfig } from "~/config/site"
-import { EmailButton } from "~/emails/components/button"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailButton,
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 type EmailProps = EmailWrapperProps & {
   firstName?: string | null
@@ -46,7 +49,7 @@ export const EmailInviteNotification = ({
         </Text>
       </Section>
 
-      <EmailButton href={inviteUrl}>Accept invitation</EmailButton>
+      <BblEmailButton href={inviteUrl}>Accept invitation</BblEmailButton>
 
       <Text className="text-sm text-gray-600">
         If the button doesn&apos;t open, paste this link into your browser:

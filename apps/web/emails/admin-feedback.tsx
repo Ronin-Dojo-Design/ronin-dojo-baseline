@@ -1,8 +1,8 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
-import { EmailButton } from "~/emails/components/button"
 import {
+  BblEmailButton,
   BblEmailWrapper as EmailWrapper,
   type BblEmailWrapperProps as EmailWrapperProps,
 } from "~/emails/components/bbl-wrapper"
@@ -38,7 +38,7 @@ export const EmailAdminFeedback = ({
         {message}
       </Text>
 
-      <EmailButton href={adminReportsUrl}>View in admin reports</EmailButton>
+      <BblEmailButton href={adminReportsUrl}>View in admin reports</BblEmailButton>
     </EmailWrapper>
   )
 }

@@ -1,8 +1,8 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
-import { EmailButton } from "~/emails/components/button"
 import {
+  BblEmailButton,
   BblEmailWrapper as EmailWrapper,
   type BblEmailWrapperProps as EmailWrapperProps,
 } from "~/emails/components/bbl-wrapper"
@@ -47,7 +47,7 @@ export const EmailAdminBblJoinLegacy = ({
       <Text>Lineage claim created: {claimCreated ? "yes" : "not yet"}</Text>
       {checkoutUrl && <Text>Lineage membership follow-up: {checkoutUrl}</Text>}
 
-      <EmailButton href={adminLeadUrl}>Review lead</EmailButton>
+      <BblEmailButton href={adminLeadUrl}>Review lead</BblEmailButton>
     </EmailWrapper>
   )
 }

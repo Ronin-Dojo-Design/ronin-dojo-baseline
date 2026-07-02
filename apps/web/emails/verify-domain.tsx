@@ -3,7 +3,10 @@ import "dotenv/config"
 import { Preview, Section, Text } from "@react-email/components"
 import { claimsConfig } from "~/config/claims"
 import { siteConfig } from "~/config/site"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 type EmailProps = EmailWrapperProps & {
   otp: string

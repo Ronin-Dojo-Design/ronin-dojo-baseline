@@ -1,7 +1,7 @@
 import { Hr, Link, Text } from "@react-email/components"
 import type { Tool } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
-import { EmailButton } from "~/emails/components/button"
+import { BblEmailButton } from "~/emails/components/bbl-wrapper"
 
 type EmailFeatureNudgeProps = {
   tool: Tool
@@ -40,7 +40,7 @@ export const EmailFeatureNudge = ({ tool, showButton }: EmailFeatureNudgeProps) 
         ))}
       </ul>
 
-      {showButton && <EmailButton href={link}>Boost {tool.name}'s visibility</EmailButton>}
+      {showButton && <BblEmailButton href={link}>Boost {tool.name}'s visibility</BblEmailButton>}
     </>
   )
 }

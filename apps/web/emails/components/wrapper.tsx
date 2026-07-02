@@ -5,28 +5,29 @@ import {
   Head,
   Hr,
   Html,
-  Img,
-  Link,
   Preview,
-  Section,
   pixelBasedPreset,
   Tailwind,
   Text,
 } from "@react-email/components"
-import { siteConfig } from "~/config/site"
 
 export type EmailWrapperProps = ContainerProps & {
   to: string
   preview?: string
 }
 
-// FI-011: brand-canonical asset base + the WHITE BBL mark, matching `bbl-wrapper.tsx`.
-// The generic wrapper previously pointed at `${siteConfig.url}/logo.png` — the generic
-// Dirstarter mark (and a localhost URL in dev), which rendered wrong/broken on the white
-// body. Absolute URL (relative paths don't resolve in mail clients).
-const BBL_ASSET_BASE = "https://blackbeltlegacy.com"
-const BBL_LOGO_WHITE = `${BBL_ASSET_BASE}/brand/blackbeltlegacy/bbl-logo-white.png`
-
+/**
+ * Brand-neutral transactional shell.
+ *
+ * SESSION_0492 (wrapper consolidation): every BBL / member-facing / system email
+ * moved to `bbl-wrapper.tsx` (`BblEmailWrapper`). This generic shell is now used
+ * ONLY by the TuffBuffs merch emails (`merch-order-confirmation`,
+ * `merch-shipment-notification`) — a SEPARATE product. It must therefore carry NO
+ * Black Belt Legacy branding: no BBL logo, no BBL asset base, no BBL name in the
+ * footer. The templates that use it (TuffBuffs) supply their own wordmark in the
+ * body copy. Keeping it minimal and brand-neutral avoids misbranding TuffBuffs as
+ * BBL (the prior FI-011 fix had baked the BBL white mark into this shell).
+ */
 export const EmailWrapper = ({ to, preview, children, ...props }: EmailWrapperProps) => {
   return (
     <Html>
@@ -39,36 +40,19 @@ export const EmailWrapper = ({ to, preview, children, ...props }: EmailWrapperPr
 
       <Tailwind config={{ presets: [pixelBasedPreset] }}>
         <Body className="mx-auto my-auto bg-background font-sans">
-          <Container className="w-full max-w-[560px] mx-auto px-8 pb-4" {...props}>
-            {/* Dark header band so the WHITE BBL mark reads (FI-011). Inline bg survives
-                clients that drop class-based backgrounds. */}
-            <Section
-              className="-mx-8 mb-4 bg-neutral-950 px-8 py-6 text-center"
-              style={{ backgroundColor: "#0a0a0a" }}
-            >
-              <Link href={BBL_ASSET_BASE} className="inline-block">
-                <Img
-                  src={BBL_LOGO_WHITE}
-                  alt="Black Belt Legacy"
-                  width="112"
-                  height="64"
-                  className="mx-auto h-12 w-auto"
-                />
-              </Link>
-            </Section>
-
+          <Container className="mx-auto w-full max-w-[560px] px-8 py-8" {...props}>
             {children}
 
             <Hr />
 
             <Text className="text-xs/normal text-gray-500">
               This email was intended for <span className="text-black">{to}</span>. If you were not
-              expecting this email, you can ignore it. If you are concerned about your accounts
-              safety, please reply to this email to get in touch with us.
+              expecting this email, you can ignore it. If you are concerned about your
+              account&apos;s safety, please reply to this email to get in touch with us.
             </Text>
 
             <Text className="text-xs/normal text-gray-500">
-              Any questions? Please feel free to reach us at {siteConfig.email}.
+              Any questions? Just reply to this email — we&apos;re happy to help.
             </Text>
           </Container>
         </Body>

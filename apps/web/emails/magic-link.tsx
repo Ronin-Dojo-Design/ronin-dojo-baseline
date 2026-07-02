@@ -2,8 +2,11 @@ import "dotenv/config"
 
 import { Text } from "@react-email/components"
 import { siteConfig } from "~/config/site"
-import { EmailButton } from "~/emails/components/button"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailButton,
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 type EmailProps = EmailWrapperProps & {
   url: string
@@ -16,7 +19,7 @@ export const EmailMagicLink = ({ url, ...props }: EmailProps) => {
 
       <Text>Please click the magic link below to sign in to your account.</Text>
 
-      <EmailButton href={url}>Sign in to {siteConfig.name}</EmailButton>
+      <BblEmailButton href={url}>Sign in to {siteConfig.name}</BblEmailButton>
 
       <Text>or copy and paste this URL into your browser:</Text>
 
