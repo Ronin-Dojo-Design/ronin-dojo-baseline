@@ -261,18 +261,27 @@ export type PrintfulFailureNotificationParams = {
 
 export type LifecycleTier = "free" | "premium" | "elite" | "legend"
 
-const LIFECYCLE_FEATURES: Record<LifecycleTier, string[]> = {
-  free: ["Free: claim + verification badge only."],
+// FI-012: member-facing benefit copy. These strings render into lifecycle emails
+// (e.g. the claim-approved welcome), so they must read to a member — NOT the internal
+// tier-spec shorthand ("Premium+", "comp-gift tier", "Elite/Legend inherit Premium")
+// that previously leaked into the inbox. Exported as the SINGLE source so the admin
+// email-preview catalog renders the exact strings a real email sends.
+export const LIFECYCLE_FEATURES: Record<LifecycleTier, string[]> = {
+  free: ["Your claimed profile and a verified badge on the lineage tree."],
   premium: [
-    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
+    "A full profile: your photo, school, bio, rank history, and social links.",
+    "Your place on the lineage tree, connected to your students and instructors.",
+    "A shareable profile link and QR code.",
   ],
   elite: [
-    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
-    "Elite/Legend inherit Premium (Elite = comp-gift tier).",
+    "A full profile: your photo, school, bio, rank history, and social links.",
+    "Your place on the lineage tree, connected to your students and instructors.",
+    "A shareable profile link and QR code.",
   ],
   legend: [
-    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
-    "Elite/Legend inherit Premium (Elite = comp-gift tier).",
+    "A full profile: your photo, school, bio, rank history, and social links.",
+    "Your place on the lineage tree, connected to your students and instructors.",
+    "A shareable profile link and QR code.",
   ],
 }
 

@@ -1,7 +1,11 @@
 import { render } from "@react-email/components"
 import type { ReactElement } from "react"
 import { EmailLifecycleNotification, type LifecycleLineItem } from "~/emails/lifecycle-notification"
-import type { LifecycleEmailKind, LifecycleTier } from "~/lib/notifications"
+import {
+  LIFECYCLE_FEATURES,
+  type LifecycleEmailKind,
+  type LifecycleTier,
+} from "~/lib/notifications"
 
 /**
  * Admin-facing catalog of the lifecycle email library (`lib/notifications.ts`).
@@ -42,16 +46,10 @@ type LifecycleCatalogEntry = {
 const PROFILE_URL = "https://blackbeltlegacy.com/me"
 const BILLING_URL = "https://blackbeltlegacy.com/app/membership"
 
-// Mirrors LIFECYCLE_FEATURES in `lib/notifications.ts` so the preview renders the
-// same "what this tier includes" block a real lifecycle email would.
-const PREMIUM_FEATURE =
-  "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share)."
-const TIER_FEATURES: Record<LifecycleTier, string[]> = {
-  free: ["Free: claim + verification badge only."],
-  premium: [PREMIUM_FEATURE],
-  elite: [PREMIUM_FEATURE, "Elite/Legend inherit Premium (Elite = comp-gift tier)."],
-  legend: [PREMIUM_FEATURE, "Elite/Legend inherit Premium (Elite = comp-gift tier)."],
-}
+// FI-012: single-sourced from `lib/notifications.ts` so the admin preview renders the
+// EXACT "what this tier includes" strings a real lifecycle email sends — no drifting
+// duplicate copy (which is how the internal tier-spec jargon leaked to members).
+const TIER_FEATURES = LIFECYCLE_FEATURES
 
 export const LIFECYCLE_CATALOG: LifecycleCatalogEntry[] = [
   {
