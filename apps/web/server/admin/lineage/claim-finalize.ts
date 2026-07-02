@@ -227,9 +227,23 @@ const mintAssertedRankAward = async (
 ): Promise<string> => {
   const existing = await tx.rankAward.findFirst({
     where: { passportId, rankId: claimedRankId },
-    select: { id: true },
+    select: { id: true, verificationStatus: true, awardedById: true },
   })
-  if (existing) return existing.id
+  if (existing) {
+    // SESSION_0492 FIX 4 (MED): an award may already exist for this rank when it was
+    // minted between submit and approve (e.g. admin add-person seeded an UNVERIFIED
+    // award). Approval is authoritative, so bring the existing award UP to the approved
+    // state — VERIFIED + stamp the approver as `awardedById` (which also locks it
+    // read-only via `isFactEditable`). Idempotent: re-approving an already-VERIFIED,
+    // already-stamped award writes the same values (a no-op-equivalent).
+    if (existing.verificationStatus !== "VERIFIED" || existing.awardedById !== actorUserId) {
+      await tx.rankAward.update({
+        where: { id: existing.id },
+        data: { verificationStatus: "VERIFIED", awardedById: actorUserId },
+      })
+    }
+    return existing.id
+  }
 
   const created = await tx.rankAward.create({
     data: {

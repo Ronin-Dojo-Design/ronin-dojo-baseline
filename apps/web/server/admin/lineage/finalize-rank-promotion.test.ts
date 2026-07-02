@@ -180,6 +180,45 @@ describe("finalizeRankPromotion (petey-plan-0477 Slice V3)", () => {
     })
   })
 
+  it("FIX 4 — approving a promotion whose award already exists (unverified) flips it to VERIFIED + stamps awardedById", async () => {
+    await inRolledBackTx(async tx => {
+      const actor = await tx.user.create({
+        data: { id: uid("actor4b"), name: uid("Actor4b"), email: `${uid("actor4b")}@test.local` },
+      })
+      const member = await makeMember(tx)
+      const rankId = await aBjjRankId(tx)
+
+      // A pre-existing award for the SAME rank, minted between submit and approve
+      // (e.g. admin add-person) — still UNVERIFIED and unstamped.
+      const pre = await tx.rankAward.create({
+        data: {
+          passportId: member.passportId,
+          rankId,
+          source: "STATED",
+          verificationStatus: "UNVERIFIED",
+        },
+        select: { id: true },
+      })
+
+      const result = await finalizeRankPromotion(tx, {
+        claim: { id: uid("claim4b"), passportId: member.passportId, claimedRankId: rankId },
+        actorUserId: actor.id,
+      })
+
+      // Same award row (no duplicate), now brought up to the approved state.
+      expect(result.rankAwardId).toBe(pre.id)
+      const after = await tx.rankAward.findUnique({
+        where: { id: pre.id },
+        select: { verificationStatus: true, awardedById: true },
+      })
+      expect(after!.verificationStatus).toBe("VERIFIED")
+      expect(after!.awardedById).toBe(actor.id)
+
+      const count = await tx.rankAward.count({ where: { passportId: member.passportId, rankId } })
+      expect(count).toBe(1)
+    })
+  })
+
   it("is idempotent — a second approval returns the same award, no duplicate", async () => {
     await inRolledBackTx(async tx => {
       const actor = await tx.user.create({
