@@ -7,10 +7,16 @@
  * belt-fixture DB writes live here; the spec calls them via `seed-belt-journey.ts`.
  *
  * The fixture is DELIBERATELY minimal — two BJJ awards + one uncovered ladder rank —
- * so it exercises every gating branch the spec asserts:
- *   - White belt  → UNVERIFIED (fact editable; below the ceiling → enrichable)
- *   - Blue belt   → VERIFIED   (the TOP award → ceiling; fact read-only; delete blocked)
- *   - Purple belt → NO award   (above the ceiling → locked)
+ * so it exercises every gating branch the spec asserts (B1 — ADR 0035 Amendment 1):
+ *   - White belt  → self-added STATED (`awardedById === null`; below the ceiling →
+ *                   fact-editable per `isFactEditable`; enrichable)
+ *   - Blue belt   → promotion-minted VERIFIED (`awardedById` = the approving
+ *                   instructor; the TOP award → ceiling; fact read-only; delete blocked)
+ *   - Purple belt → NO award   (above the ceiling → routes to the promotion flow)
+ *
+ * Under B1 there are NO `UNVERIFIED` awards (no code path mints one) and a
+ * promotion-minted award is stamped with the approver's `awardedById`, so the
+ * fixture mirrors those two prod shapes exactly rather than the pre-B1 world.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
@@ -27,6 +33,8 @@ const TAG_PREFIX = "session-0482-belt-e2e"
 export type BeltJourneyFixture = {
   userId: string
   passportId: string
+  /** The approving instructor's User id — stamped onto the promotion-minted Blue award. */
+  instructorUserId: string
   whiteRankId: string
   whiteRankName: string
   blueRankId: string
@@ -81,25 +89,41 @@ async function seed(): Promise<BeltJourneyFixture> {
   const passportId = user.passport?.id
   if (!passportId) throw new Error("BELT_E2E_PASSPORT_MISSING")
 
-  // White belt — UNVERIFIED: below the ceiling, its promotion facts are editable.
+  // The approving instructor — a distinct User so the Blue award's `awardedById`
+  // mirrors the prod promotion mint (approver ≠ the member; self-approval is blocked).
+  const instructor = await prisma.user.create({
+    data: {
+      name: `${TAG_PREFIX}-instructor-${uid}`,
+      email: `${TAG_PREFIX}-instructor-${uid}@test.local`,
+      emailVerified: true,
+    },
+    select: { id: true },
+  })
+
+  // White belt — self-added STATED backfill: `awardedById === null`, so under B1's
+  // `isFactEditable` its promotion facts are the member's to edit (below the ceiling
+  // → enrichable). No `UNVERIFIED` state exists under B1, so this is the editable shape.
   const whiteAward = await prisma.rankAward.create({
     data: {
       passportId,
       rankId: white.id,
       source: "STATED",
-      verificationStatus: "UNVERIFIED",
+      verificationStatus: "VERIFIED",
     },
     select: { id: true },
   })
 
-  // Blue belt — VERIFIED: the member's TOP award → the ceiling. Its facts are
-  // read-only (authority-owned) and it cannot be deleted via self-service.
+  // Blue belt — promotion-minted VERIFIED: the member's TOP award → the ceiling.
+  // Stamped with the approving instructor's `awardedById` (mirrors `mintAssertedRankAward`),
+  // so `isFactEditable` reads it as authority-owned → read-only; it also cannot be
+  // deleted via self-service.
   const blueAward = await prisma.rankAward.create({
     data: {
       passportId,
       rankId: blue.id,
       source: "STATED",
       verificationStatus: "VERIFIED",
+      awardedById: instructor.id,
     },
     select: { id: true },
   })
@@ -107,6 +131,7 @@ async function seed(): Promise<BeltJourneyFixture> {
   return {
     userId: user.id,
     passportId,
+    instructorUserId: instructor.id,
     whiteRankId: white.id,
     whiteRankName: white.name,
     blueRankId: blue.id,
@@ -126,7 +151,7 @@ async function cleanup(fixture?: BeltJourneyFixture) {
   const userIds = users.map(u => u.id)
   const passportIds = users.map(u => u.passport?.id).filter((id): id is string => Boolean(id))
   if (fixture) {
-    userIds.push(fixture.userId)
+    userIds.push(fixture.userId, fixture.instructorUserId)
     passportIds.push(fixture.passportId)
   }
   if (userIds.length === 0 && passportIds.length === 0) return

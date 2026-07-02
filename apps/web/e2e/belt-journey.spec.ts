@@ -10,8 +10,8 @@ import {
  * Belt-journey behavior spec (Slice 5 — Petey Plan 0477 §Slice 5).
  *
  * Proves the four gating invariants of the member belt UI at `/app/profile?tab=belts`:
- *   1. enrich a belt AT/BELOW the ceiling (White, UNVERIFIED) — editable;
- *   2. a belt ABOVE the ceiling (Purple, no award) — LOCKED;
+ *   1. enrich a belt AT/BELOW the ceiling (White, self-added) — editable;
+ *   2. a belt ABOVE the ceiling (Purple, no award) — routes to the promotion flow;
  *   3. a VERIFIED belt's promotion FACTS (Blue, the top award) — READ-ONLY;
  *   4. deleting the TOP award (Blue) — BLOCKED.
  *
@@ -54,7 +54,7 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
     return page.locator(`[data-testid="belt-edit-card"][data-rank-id="${rankId}"]`)
   }
 
-  test("a belt at/below the ceiling is enrichable (White, UNVERIFIED)", async ({ page }) => {
+  test("a belt at/below the ceiling is enrichable (White, self-added)", async ({ page }) => {
     const white = cardForRank(page, fixture.whiteRankId)
     await expect(white).toBeVisible()
     // Below the ceiling → not locked; its action opens the edit surface.
@@ -72,12 +72,27 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
     await expect(page.getByText("Story saved.")).toBeVisible({ timeout: 15_000 })
   })
 
-  test("a belt above the ceiling is locked (Purple, no award)", async ({ page }) => {
+  test("a belt above the ceiling routes to the promotion flow (Purple, no award)", async ({
+    page,
+  }) => {
     const purple = cardForRank(page, fixture.purpleRankId)
     await expect(purple).toBeVisible()
     await expect(purple).toHaveAttribute("data-status", "locked")
-    // The locked action is disabled — clicking it must not open the edit dialog.
-    await expect(purple.getByRole("button", { name: "Locked" })).toBeDisabled()
+    // B1: an above-ceiling belt is NOT a dead disabled button — it exposes an ENABLED
+    // "Request promotion" CTA that files a RANK_PROMOTION claim (never a self-mint).
+    const requestCta = purple.getByRole("button", { name: "Request promotion" })
+    await expect(requestCta).toBeEnabled()
+    await requestCta.click()
+
+    // Clicking it opens the promotion-request modal (not the fact-edit surface).
+    const dialog = page.getByRole("dialog")
+    await expect(dialog).toBeVisible({ timeout: 15_000 })
+    await expect(
+      dialog.getByRole("heading", {
+        name: new RegExp(`Request your ${fixture.purpleRankName}`, "i"),
+      }),
+    ).toBeVisible()
+    await expect(dialog.getByRole("button", { name: "Submit request" })).toBeVisible()
   })
 
   test("a verified belt's promotion facts are read-only (Blue, top award)", async ({ page }) => {
