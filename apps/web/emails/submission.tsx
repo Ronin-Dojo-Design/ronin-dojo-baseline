@@ -2,8 +2,11 @@ import "dotenv/config"
 
 import { Text } from "@react-email/components"
 import type { Tool } from "~/.generated/prisma/client"
+import {
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 import { EmailExpediteNudge } from "~/emails/components/expedite-nudge"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 import { calculateQueueDuration } from "~/lib/products"
 
 type EmailProps = EmailWrapperProps & {

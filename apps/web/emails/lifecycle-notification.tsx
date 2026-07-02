@@ -86,8 +86,9 @@ EmailLifecycleNotification.PreviewProps = {
     { label: "Amount", value: "$99.00 USD" },
   ],
   features: [
-    "Free: claim + verification badge only.",
-    "Premium+: full card (avatar/school/bio) + full profile (location, organizations, rank history, email, social links, QR share).",
+    "A full profile: your photo, school, bio, rank history, and social links.",
+    "Your place on the lineage tree, connected to your students and instructors.",
+    "A shareable profile link and QR code.",
   ],
   ctaLabel: "View your profile",
   ctaUrl: "https://blackbeltlegacy.com/me",

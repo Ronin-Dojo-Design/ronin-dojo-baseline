@@ -2,7 +2,7 @@ import { Text } from "@react-email/components"
 import type { PropsWithChildren } from "react"
 import type { Tool } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
-import { EmailButton } from "~/emails/components/button"
+import { BblEmailButton } from "~/emails/components/bbl-wrapper"
 import { isToolWithinExpediteThreshold } from "~/lib/tools"
 
 type EmailExpediteNudgeProps = PropsWithChildren<{
@@ -24,7 +24,7 @@ export const EmailExpediteNudge = ({ children, tool }: EmailExpediteNudgeProps) 
         submission, you have the option to skip the queue.
       </Text>
 
-      <EmailButton href={link}>Publish {tool.name} within 24 hours</EmailButton>
+      <BblEmailButton href={link}>Publish {tool.name} within 24 hours</BblEmailButton>
     </>
   )
 }

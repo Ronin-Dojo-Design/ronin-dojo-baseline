@@ -1,8 +1,11 @@
 import "dotenv/config"
 
 import { Text } from "@react-email/components"
-import { EmailButton } from "~/emails/components/button"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailButton,
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 type EmailProps = EmailWrapperProps & {
   recipientName?: string | null
@@ -33,7 +36,7 @@ export const EmailBblLiveTestInvite = ({
         until a steward approves it.
       </Text>
 
-      <EmailButton href={joinUrl}>Start the live claim test</EmailButton>
+      <BblEmailButton href={joinUrl}>Start the live claim test</BblEmailButton>
 
       <Text>
         Reply to this email with any certificates, school references, or context that should be

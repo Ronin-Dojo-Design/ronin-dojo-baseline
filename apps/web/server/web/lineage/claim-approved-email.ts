@@ -46,7 +46,9 @@ export function scheduleClaimApprovedEmail({
         heading: "Your Profile Is Claimed",
         intro:
           "It's official — your profile on Black Belt Legacy is yours: claimed, verified, and live. Welcome to the lineage.",
-        tier: "elite",
+        // FI-012: a claim confirmation should NOT render a tier/feature table. Passing a
+        // `tier` here pasted the internal tier-spec block into the member's inbox; the
+        // claim-approved email is a welcome, not a pricing sheet.
         ctaLabel: "View My Profile",
         ctaUrl: BBL_PROFILE_URL,
         rateLimitKey: `claim:${nodeId}:${userId}`,

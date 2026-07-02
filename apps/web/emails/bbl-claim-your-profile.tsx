@@ -60,11 +60,12 @@ export const EmailBblClaimYourProfile = ({
           How to claim your profile — 3 steps
         </Text>
         <Text className="mb-0 mt-3 text-[14px] leading-7 text-neutral-800">
-          <strong>1.</strong> Click the button below to open your profile page.
+          <strong>1.</strong> Click the button below — it signs you in instantly, no password to set
+          up or remember.
           <br />
-          <strong>2.</strong> Create your password — takes about 60 seconds.
+          <strong>2.</strong> Confirm your details and add a photo if you like.
           <br />
-          <strong>3.</strong> Confirm your details, add a photo if you like, and you&apos;re done.
+          <strong>3.</strong> That&apos;s it — your profile is claimed and live.
         </Text>
         <Text className="mb-0 mt-2 text-[13px] text-neutral-500">
           Once you&apos;re in, you can see your students in the lineage tree and edit anything that

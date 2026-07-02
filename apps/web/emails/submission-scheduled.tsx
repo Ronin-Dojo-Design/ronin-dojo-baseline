@@ -5,8 +5,11 @@ import { addHours, differenceInDays, format, formatDistanceToNowStrict } from "d
 import type { Tool } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
 import { EmailActionNudge } from "~/emails/components/action-nudge"
+import {
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 import { EmailExpediteNudge } from "~/emails/components/expedite-nudge"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
 
 type EmailProps = EmailWrapperProps & {
   tool: Tool

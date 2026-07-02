@@ -45,6 +45,7 @@ export function useJoinWizard({
       represent: "",
       representTreeId: "",
       evidenceUrl: "",
+      avatarUrl: "",
       bio: "",
       profileUrl: "",
       instagramUrl: "",

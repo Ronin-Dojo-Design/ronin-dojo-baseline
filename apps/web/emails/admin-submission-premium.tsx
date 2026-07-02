@@ -3,8 +3,11 @@ import "dotenv/config"
 import { Text } from "@react-email/components"
 import type { Tool } from "~/.generated/prisma/client"
 import { siteConfig } from "~/config/site"
-import { EmailButton } from "~/emails/components/button"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailButton,
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 type EmailProps = EmailWrapperProps & {
   tool: Tool
@@ -20,9 +23,9 @@ export const EmailAdminSubmissionPremium = ({ tool, ...props }: EmailProps) => {
         of {tool.name}. You should review and approve it as soon as possible.
       </Text>
 
-      <EmailButton href={`${siteConfig.url}/admin/tools/${tool.slug}`}>
+      <BblEmailButton href={`${siteConfig.url}/admin/tools/${tool.slug}`}>
         Review {tool.name}
-      </EmailButton>
+      </BblEmailButton>
     </EmailWrapper>
   )
 }

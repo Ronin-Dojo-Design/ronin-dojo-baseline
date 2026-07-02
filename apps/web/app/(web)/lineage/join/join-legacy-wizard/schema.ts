@@ -61,6 +61,9 @@ export const joinLegacyFormSchema = z.object({
   represent: optionalTrimmedString(500),
   representTreeId: optionalTrimmedString(64),
   evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
+  // FI-010a: guest-staged profile photo (R2 URL from `uploadJoinLegacyAvatar`). Carried
+  // through submit so the photo is no longer discarded after the magic-link round-trip.
+  avatarUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: optionalTrimmedString(2000),
   profileUrl: httpUrlSchema.optional().or(z.literal("")),
   instagramUrl: httpUrlSchema.optional().or(z.literal("")),

@@ -58,7 +58,14 @@ export const BblEmailWrapper = ({
 }: BblEmailWrapperProps) => {
   return (
     <Html>
-      <Head />
+      <Head>
+        {/* FI-011: this is a light-scheme email. Declaring the scheme (and NOT opting into
+            dark) tells iOS Mail / Apple Mail to leave our colors alone instead of blindly
+            inverting the near-black header band to near-white — which stranded the WHITE
+            logo on a white background ("LEGACY white-on-white"). */}
+        <meta name="color-scheme" content="light only" />
+        <meta name="supported-color-schemes" content="light" />
+      </Head>
       {preview && <Preview>{preview}</Preview>}
 
       <Tailwind config={{ presets: [pixelBasedPreset] }}>
@@ -67,8 +74,13 @@ export const BblEmailWrapper = ({
             className="mx-auto w-full max-w-[600px] overflow-hidden rounded-2xl border border-solid border-neutral-200 bg-white"
             {...props}
           >
-            {/* Cinematic header band */}
-            <Section className="bg-neutral-950 px-8 py-8 text-center">
+            {/* Cinematic header band. FI-011: the dark background is also set inline via
+                `style` (not only the compiled class) so mail clients that drop class-based
+                backgrounds can't leave the white logo on white. */}
+            <Section
+              className="bg-neutral-950 px-8 py-8 text-center"
+              style={{ backgroundColor: "#0a0a0a" }}
+            >
               <Link href={ASSET_BASE} className="inline-block">
                 <Img
                   src={LOGO_WHITE}
@@ -79,8 +91,13 @@ export const BblEmailWrapper = ({
                 />
               </Link>
             </Section>
-            {/* Brand-red accent rule */}
-            <Section className="h-[3px] bg-red-600 leading-[3px]">&nbsp;</Section>
+            {/* Brand-red accent rule (inline bg — FI-011: survives class-stripping clients) */}
+            <Section
+              className="h-[3px] bg-red-600 leading-[3px]"
+              style={{ backgroundColor: "#dc2626" }}
+            >
+              &nbsp;
+            </Section>
 
             <Section className="px-8 py-7 text-[15px] leading-relaxed text-neutral-800">
               {children}
@@ -117,10 +134,18 @@ export const BblEmailHeading = ({ children }: { children: React.ReactNode }) => 
   </Heading>
 )
 
-/** Brand-red call-to-action button. */
-export const BblEmailButton = ({ className, ...props }: ButtonProps) => (
+/**
+ * Brand-red call-to-action button.
+ *
+ * FI-011: the brand-red background + white text are ALSO set inline via `style`, not
+ * only the compiled Tailwind classes. iOS Mail's dark-mode transform + clients that
+ * drop class-based backgrounds were desaturating the button to a grey/washed-out
+ * "disabled" look; inline colors are the bulletproof-button standard for mail clients.
+ */
+export const BblEmailButton = ({ className, style, ...props }: ButtonProps) => (
   <Button
     className={`my-5 rounded-md bg-red-600 px-6 py-3 text-center text-sm font-bold text-white no-underline ${className ?? ""}`}
+    style={{ backgroundColor: "#dc2626", color: "#ffffff", ...style }}
     {...props}
   />
 )

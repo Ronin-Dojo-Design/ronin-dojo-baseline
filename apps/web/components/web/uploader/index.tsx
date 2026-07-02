@@ -4,6 +4,8 @@ import { lazy, Suspense, useCallback, useRef, useState } from "react"
 import { XIcon } from "lucide-react"
 import { Button } from "~/components/common/button"
 import { cx } from "~/lib/utils"
+import type { uploadAndPromotePassportAvatar } from "~/server/web/actions/passport-avatar"
+import type { uploadJoinLegacyAvatar } from "~/server/web/lead/public-actions"
 import { BeltPreview } from "./belt-preview"
 import { usePhotoUpload } from "./use-photo-upload"
 import type { UploaderPhase } from "./types"
@@ -30,6 +32,12 @@ export type AvatarUploaderProps = {
   rankColorHex?: string | null
   /** Called with the new R2 URL after a successful upload + promotion. */
   onAvatarUrl?: (url: string) => void
+  /**
+   * Optional upload-action override (SESSION_0492 FI-010a). Defaults to the auth-gated
+   * `uploadAndPromotePassportAvatar`; the guest Join-the-Legacy wizard passes the public
+   * `uploadJoinLegacyAvatar` so a not-yet-signed-in guest can stage a profile photo.
+   */
+  uploadAction?: typeof uploadAndPromotePassportAvatar | typeof uploadJoinLegacyAvatar
   disabled?: boolean
   className?: string
   size?: "sm" | "lg"
@@ -48,6 +56,7 @@ export function AvatarUploader({
   initialAvatarUrl,
   rankColorHex,
   onAvatarUrl,
+  uploadAction,
   disabled = false,
   className,
   size = "lg",
@@ -67,7 +76,10 @@ export function AvatarUploader({
     [onAvatarUrl],
   )
 
-  const { upload, isPending, serverError } = usePhotoUpload({ onAvatarUrl: handleSuccess })
+  const { upload, isPending, serverError } = usePhotoUpload({
+    onAvatarUrl: handleSuccess,
+    uploadAction,
+  })
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

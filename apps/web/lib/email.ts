@@ -3,7 +3,6 @@ import { render } from "@react-email/components"
 import type { CreateEmailOptions, CreateEmailResponse } from "resend"
 import wretch from "wretch"
 import { Brand } from "~/.generated/prisma/client"
-import { siteConfig } from "~/config/site"
 import { env, isProd } from "~/env"
 import { resend } from "~/services/resend"
 
@@ -46,15 +45,21 @@ const BRAND_CONFIGURED_SENDER_EMAIL: Record<Brand, string | undefined> = {
   WEKAF: env.RESEND_SENDER_EMAIL_WEKAF,
 }
 
+// FI-014 (brand-leak P0): a brandless `sendEmail` MUST resolve to BBL, never to the raw
+// `RESEND_SENDER_EMAIL` env (whose default is `welcome@baselinemartialarts.com`). A BBL
+// signup dispatched through a brand-omitting call site was rendering a Baseline sender
+// identity in Gmail ("Welcome to Baseline Martial Arts") even though the copy was BBL.
+// Single-brand platform → BBL is the only correct default (CLAUDE.md: multi-brand is dead).
+const resolveBrand = (brand?: Brand): Brand => brand ?? Brand.BBL
+
 export const getBrandSenderName = (brand?: Brand) => {
-  return brand ? BRAND_SENDER_NAME[brand] : siteConfig.name
+  return BRAND_SENDER_NAME[resolveBrand(brand)]
 }
 
 export const getBrandSenderEnvVar = (brand: Brand) => BRAND_SENDER_ENV_VAR[brand]
 
 export const getConfiguredBrandSenderEmail = (brand?: Brand) => {
-  if (!brand) return env.RESEND_SENDER_EMAIL
-  return BRAND_CONFIGURED_SENDER_EMAIL[brand]
+  return BRAND_CONFIGURED_SENDER_EMAIL[resolveBrand(brand)]
 }
 
 export const isBrandSenderConfigured = (brand: Brand) => {
@@ -62,23 +67,25 @@ export const isBrandSenderConfigured = (brand: Brand) => {
 }
 
 export const getBrandSenderEmail = (brand?: Brand) => {
-  if (!brand) return env.RESEND_SENDER_EMAIL ?? env.NEXT_PUBLIC_SITE_EMAIL
-
+  const resolved = resolveBrand(brand)
   return (
-    BRAND_CONFIGURED_SENDER_EMAIL[brand] ??
-    (brand === Brand.BASELINE_MARTIAL_ARTS ? env.RESEND_SENDER_EMAIL : undefined) ??
-    BRAND_DEFAULT_SENDER_EMAIL[brand]
+    BRAND_CONFIGURED_SENDER_EMAIL[resolved] ??
+    (resolved === Brand.BASELINE_MARTIAL_ARTS ? env.RESEND_SENDER_EMAIL : undefined) ??
+    BRAND_DEFAULT_SENDER_EMAIL[resolved]
   )
 }
 
 const getBrandSenderEmailForSend = (brand?: Brand) => {
-  if (brand && isProd && !isBrandSenderConfigured(brand)) {
+  // FI-014: resolve brandless → BBL before the prod-config guard too, so a brand-omitting
+  // send is validated (and sent) as BBL rather than silently escaping to the Baseline env.
+  const resolved = resolveBrand(brand)
+  if (isProd && !isBrandSenderConfigured(resolved)) {
     throw new Error(
-      `Missing ${getBrandSenderEnvVar(brand)}. Verify the ${BRAND_DEFAULT_SENDER_EMAIL[brand].split("@")[1]} Resend domain before sending ${getBrandSenderName(brand)} email.`,
+      `Missing ${getBrandSenderEnvVar(resolved)}. Verify the ${BRAND_DEFAULT_SENDER_EMAIL[resolved].split("@")[1]} Resend domain before sending ${getBrandSenderName(resolved)} email.`,
     )
   }
 
-  return getBrandSenderEmail(brand)
+  return getBrandSenderEmail(resolved)
 }
 
 export const getBrandSenderAddress = (brand?: Brand, senderEmail = getBrandSenderEmail(brand)) => {

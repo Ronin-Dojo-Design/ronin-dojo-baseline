@@ -2,7 +2,10 @@ import "dotenv/config"
 
 import { Text } from "@react-email/components"
 import type { DataSubjectRequestStatus, DataSubjectRequestType } from "~/.generated/prisma/client"
-import { EmailWrapper, type EmailWrapperProps } from "~/emails/components/wrapper"
+import {
+  BblEmailWrapper as EmailWrapper,
+  type BblEmailWrapperProps as EmailWrapperProps,
+} from "~/emails/components/bbl-wrapper"
 
 const STATUS_LABEL: Record<DataSubjectRequestStatus, string> = {
   PENDING: "Pending",

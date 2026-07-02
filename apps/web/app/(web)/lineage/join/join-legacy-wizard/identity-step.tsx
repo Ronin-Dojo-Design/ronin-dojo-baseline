@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { AvatarUploader } from "~/components/web/uploader"
+import { uploadJoinLegacyAvatar } from "~/server/web/lead/public-actions"
 import { bblPortalFontClass, discoveryLabels, roleLabels } from "./constants"
 import type { JoinLegacyFormValues } from "./schema"
 import { StepShell } from "./step-shell"
@@ -32,10 +33,20 @@ export function IdentityStep({
       title="Identity and contact"
       description="Your public legacy starts with private contact details stewards can verify. We only publish profile details after review."
     >
-      {/* Avatar upload — fires to R2 + Passport when signed in; gracefully
-          deferred for guests (the action returns an auth error, shown inline). */}
+      {/* Avatar upload (FI-010a): the wizard is guest-capable, so this uses the PUBLIC
+          `uploadJoinLegacyAvatar` action (not the auth-gated Passport-promote one that
+          silently failed for guests) and writes the staged R2 URL into the form's
+          `avatarUrl`. It rides `createJoinLegacyInterest` onto the lead so the photo
+          survives the magic-link round-trip instead of being discarded. */}
       <div className="flex flex-col items-center gap-1 pb-2">
-        <AvatarUploader size="lg" onAvatarUrl={() => {}} />
+        <AvatarUploader
+          size="lg"
+          uploadAction={uploadJoinLegacyAvatar}
+          initialAvatarUrl={form.watch("avatarUrl") || undefined}
+          onAvatarUrl={url =>
+            form.setValue("avatarUrl", url, { shouldDirty: true, shouldValidate: true })
+          }
+        />
         <p className="text-xs text-muted-foreground">
           Optional — add a profile photo now or after joining.
         </p>
