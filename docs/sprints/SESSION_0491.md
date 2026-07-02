@@ -2,9 +2,9 @@
 title: "SESSION 0491 — Belt-PR REBASE: land held #178–181 on the verification spine + rework to B1 → V5/V6 → unhold"
 slug: session-0491
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-01
-updated: 2026-07-01
+updated: 2026-07-02
 last_agent: claude-session-0491
 sprint: S49
 pairs_with:
@@ -268,42 +268,282 @@ belt surfaces make serial safer. Cody builds each slice; Doug owns TASK_07.
 | SESSION_0491_TASK_04 | landed | evidence→RankMilestone in finalizeRankPromotion + additive `mediaId` on promotion.submit; 7 finalize + 6 submit tests green (commit 40366de7) |
 | SESSION_0491_TASK_05 | landed | Belts tab loader confirmed post-rework (folded into c26dd955) |
 | SESSION_0491_TASK_06 | landed | V5 — queue/detail render promotions (belt swatch + photo evidence, comp hidden); review door reworked to userActionClient + in-action authz (admin byte-identical, IDENTITY admin-only, RANK_PROMOTION admits `claims.manage` / resource-scoped `claim.review` via `resolvePromotionClaimResources`); promotion decisions notify the member (derived nodeId); 6+4+4 tests green (commit 11371433) |
-| SESSION_0491_TASK_07 | pending | V6 — Playwright proof gate + ADR 0035 Amendment 1 → accepted |
+| SESSION_0491_TASK_07 | blocked | V6 — deferred to SESSION_0492: the quality loop found a CRITICAL authz hole + pre-B1 e2e fixtures; proving launch-safety before fixing them would be theater |
+| SESSION_0491_TASK_08 | partial | Operator-ordered quality loop (fallow baseline + 4-finder hostile review) — DIAGNOSIS COMPLETE (1 CRITICAL / 2 HIGH / 4 MED found pre-push); fixes deferred to SESSION_0492 (operator: fresh session) |
 
 ## What landed
 
+- **TASK_01 — the rebase:** held #178–181 (Slices 2–5, ~3.3K lines) cherry-picked onto the spine-carrying
+  `origin/main`. ADR-number collision resolved (**belt ADR 0042 → 0043**, all refs swept); `wiki/index.md` /
+  ADR-0035 / lineage-hub conflicts merged keep-both; `add_rank_milestone` migration verified via
+  `migrate diff` **shadow-replay = "No difference detected"** (never `migrate dev`; shared DB untouched).
+- **TASK_02 — Slice 3 → B1 (the launch-safety core):** `upsertBeltMilestone` mints **VERIFIED-by-implication**
+  (gated `≤ ceiling`) — **no code path creates an UNVERIFIED award**; above-ceiling throws → UI routes to
+  `promotion.submit`. Fact-editability re-keyed off **authorship** (`awardedById === null` = self-backfill
+  editable; stamped = promotion-minted read-only; IMPORTED/DISPUTED locked), exposed as
+  `BeltCardOutput.isFactEditable` (server-computed, client reflects).
+- **TASK_03/05 — belt UI consumes the spine:** above-ceiling `BeltEditCard` → **"Request promotion"** CTA +
+  `BeltPromotionRequest` modal (note + optional cert/instructor photo soft-gate → own-passport upload →
+  `mediaId` evidence). `Hint`→`Note`; B1 first-run empty state (full ladder of request-CTAs, not a dead end).
+  Belts tab loader confirmed post-rework.
+- **TASK_04 — evidence → milestone:** `finalizeRankPromotion` materializes the claim's photo evidence onto the
+  minted award's `RankMilestone` (idempotent, purpose from label); `promotion.submit` evidence gained an
+  additive optional `mediaId` persisted to `PassportClaimEvidence`.
+- **TASK_06 — V5 claims queue:** `/app/lineage/claims` list + detail render promotions (belt swatch, photo
+  evidence, comp block hidden); `reviewPassportClaim` moved to `userActionClient` with in-action authz —
+  IDENTITY stays admin-only byte-identical; RANK_PROMOTION admits `claims.manage` or **resource-scoped
+  `claim.review`** via new `resolvePromotionClaimResources` (Passport→node→tree membership→branch chain);
+  promotion decisions now notify the member (nodeId derived in-tx).
+- **TASK_08 — quality-loop diagnosis (fixes deferred):** fallow baseline on the diff (22 complexity / 23
+  dead-code / 31 dupes; repo health 77 B) + 4 parallel review finders. **Found before push:** 1 CRITICAL,
+  2 HIGH, 4 MED (see Hostile close review). Operator prod-QA added FI-010–013 to `POST_LAUNCH_SOT`.
+- **Goal partially reached, deliberately:** the rebase + B1 rework + V5 are built and verified (100+ tests,
+  `next build` green ×3), but **V6 and the PR unhold did NOT happen** — the quality loop caught a CRITICAL
+  self-approval hole first. Branch held unpushed; fixes are SESSION_0492.
+
 ## Decisions resolved
+
+- **One integrated session branch** (per-slice commits + gates) over 4 force-pushed `auto/*` branches —
+  force-push forbidden; B1 rework crosses slice boundaries. PR shape decided at the push gate.
+- **B1 fact-edit marker = `awardedById`** (no claim FK on RankAward; both backfill and promotion-minted are
+  STATED/VERIFIED — authorship is the only clean discriminator).
+- **Evidence `mediaId` = additive extension of `promotion.submit`** (the existing `PassportClaimEvidence.mediaId`
+  FK; no schema change).
+- **IDENTITY-claim review stays admin-only** in the V5 authz rework (bigger blast radius; out of V5 scope).
+- **Country round-trip re-scoped, not a bug:** `RankAward` has no country column (country belongs to the
+  SCHOOL, Locked #7) — the card can't re-seed the picker without a schema change this lane forbids.
+- **Operator: fixes run in a FRESH session (0492)** — this session closes with the diagnosis routed, not with
+  half-started fixes.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
+| `apps/web/prisma/schema.prisma` + `migrations/20260701000000_add_rank_milestone/` | Slice-2 rebase — `RankMilestone` + `MediaAttachment.rankMilestoneId` (shadow-replay clean) |
+| `apps/web/server/belt/{router,belt-gate,queries,schemas}.ts` (+tests) | Slice-3 rebase + B1 rework (VERIFIED-by-implication mint; authorship fact-gate; `isFactEditable` on the card) |
+| `apps/web/server/router.ts` | register `belt` beside `promotion` |
+| `apps/web/components/web/belt/*` (8 files +tests) | Slice-4 rebase + CTA rework; new `belt-promotion-request.tsx`; `isCardFactEditable`; Hint→Note; empty state |
+| `apps/web/app/(web)/dashboard/belts-tab.tsx` + `app/app/profile/page.tsx` + `server/web/belt/belt-tab-loader.ts` | Slice-5 rebase — Belts tab + one-pass loader (+`passportId` for the promotion upload target) |
+| `apps/web/server/admin/lineage/claim-finalize.ts` (+`finalize-rank-promotion.test.ts`) | evidence→`RankMilestone` materialization on approve |
+| `apps/web/server/promotion/router.ts` + `server/web/claims/submit-rank-promotion-claim.ts` (+test) | additive evidence `mediaId` |
+| `apps/web/server/admin/claims/{passport-claim-review-actions,promotion-claim-resource}.ts` (+3 test files) | V5 authz — scoped `claim.review` door + notification nodeId |
+| `apps/web/server/admin/lineage/claim-queries.ts` + `app/app/lineage/claims/**` | V5 queue/detail promotion rendering |
+| `apps/web/e2e/{belt-journey.spec.ts,helpers/seed-belt-journey*.ts}` | rebased UNCHANGED — **still encode pre-B1 behavior (finding, fix in 0492)** |
+| `docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md` (renamed from 0042) + ADR 0016/0035, `ubiquitous-language.md`, `lineage-hub.md`, `schema-prisma.md`, `wiki/index.md` | Slice-2 docs + renumber sweep + session rows |
+| `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md` | +FI-010–013 (operator prod-QA findings) |
+| `docs/sprints/SESSION_0479–0482.md` (rebased) + `SESSION_0491.md` | session records |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `bun run typecheck` | ✅ 0 errors (re-run after every task) |
+| `bun run test` (belt/promotion/claims scope, `--parallel=1` per file) | ✅ **100+ pass / 0 fail** — belt-gate 14 · belt integration 14 · view-model 16 · finalize-promotion 7 · submit-claim 6 · claim-finalize 7 · claim-review 11+3+3 · promotion-resource 4 · claim-queries 4 · review-rank-promotion 6 (+ 21 identity-regression) |
+| `bun run lint:check` / `format:check` | ✅ 0 errors / clean |
+| `bun run build` (`next build`) | ✅ green ×3 (last: 182 pages, compiled successfully) |
+| `bun run wiki:lint` | ✅ 0 errors / 16 pre-existing warnings |
+| `npx fallow audit --base origin/main` | baseline captured: 22 complexity · 23 dead-code · 31 dupes (fix loop → 0492) |
+| Browser smoke (queue/detail/CTA render) | ❌ NOT done — flagged honestly; part of 0492 verify + V6 |
+| V6 Playwright proof gate | ❌ NOT run — deferred (CRITICAL fix first; e2e fixtures pre-B1) |
 
 ## Open decisions / blockers
 
-Awaiting operator sign-off on the **git strategy** (Open decisions #1) before any branch push / PR action.
+1. **PUSH GATE (operator "go" required):** branch `session-0491-belt-rebase` is 13+ commits ahead, unpushed.
+   **Recommendation: do NOT push until the SESSION_0492 security fixes land** — pushing now would put a known
+   CRITICAL self-approval hole in a PR (even unmerged, it's the reviewable artifact). Push after 0492 TASK_01.
+2. **Git strategy at the gate:** one PR superseding #178–181 (recommended) vs re-split per-slice. Operator call.
+3. **BRANCH/NODE_EDITOR review-UI access (0492 fork):** the V5 action admits scoped instructors, but
+   `requireLineageManagementAccess` (TREE_ADMIN/TREE_EDITOR) locks them out of the queue/detail pages —
+   half-wired. Options: widen the page gate to any `claim.review` holder (scoped list) vs deep-link-only.
+4. **NODE_EDITOR carrying `claim.review` at all** — the CRITICAL's root enabler. The claimant≠reviewer guard
+   fixes self-approval regardless; whether an own-node NODE_EDITOR should review ANY claim is a policy question
+   for the 0492 grill (recommend: keep the grant, add the guard — instructors hold TREE/BRANCH grants).
+5. Cross-file tracer + cleanup finder full transcripts live in the session task outputs; their findings are
+   inventoried below — nothing else blocks.
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+**SESSION_0492 — Fix session: close every quality-loop finding on `session-0491-belt-rebase`, prove the delta,
+run V6, then push on the operator's go.** Security first, then e2e fixtures, then the fallow cleanup batch,
+then V6 + ADR 0035 Amendment 1 → `accepted`. The prod QA lane (FI-010–013) follows as its own lane.
 
-### First task
+### First task (dispatch-ready prompt block)
 
-TBD at bow-out.
+```
+DISPATCH SETUP: work in the EXISTING worktree /Users/brianscott/dev/ronin-0491 (branch
+session-0491-belt-rebase — 13+ commits, clean, bootstrapped, fallow verified). /bow-in; create
+docs/sprints/SESSION_0492.md. READ FIRST: SESSION_0491.md "Hostile close review" (the full findings
+inventory) + [[belt-verification-subsystem-b1-model]]. Do NOT push until fixes land + operator go.
+
+FIX ORDER (each its own commit + gate: typecheck · lint:check · format:check · scoped bun run test ·
+next build):
+1. CRITICAL — self-approval: in assertCanReviewPassportClaim (passport-claim-review-actions.ts),
+   reject RANK_PROMOTION review when claim.claimantUserId === user.id (before the resource check);
+   mirror the guard inside applyPassportClaimReview (defense-in-depth for other callers). Test:
+   claimant with own-node NODE_EDITOR grant CANNOT approve own claim (the exact exploit chain).
+2. HIGH ×2 — mediaId ownership (one fix shape, two seams): before persisting a caller-supplied
+   mediaId, require the Media row exists AND media.uploadedById === caller (else friendly reject,
+   never a P2003 500). Apply in submitRankPromotionClaim evidence AND belt.attachMilestoneMedia.
+   Tests: foreign mediaId rejected on both; nonexistent mediaId rejected cleanly.
+3. MED — deleteRankAward: forbid deleting authority-owned awards (reuse isFactEditable — delete may
+   not exceed edit). Test: promotion-minted/IMPORTED award cannot be deleted.
+4. MED — mintAssertedRankAward existing-award path: on approve, UPDATE the existing award →
+   verificationStatus VERIFIED + stamp awardedById (approval is authoritative). Test covers it.
+5. LOW hardening — move/re-verify the authz claim-read inside the review tx (TOCTOU); wrap
+   submit's one-open check + create in a transaction; delete the dead claims.manage early-return
+   OR make a non-admin claims.manage grant real; fix the stale UNVERIFIED comment
+   (belt-edit-form.tsx:174).
+6. e2e B1 fixtures (V6 precondition): belt-journey.spec.ts:80 "Locked disabled" → enabled "Request
+   promotion" assertions; seed-belt-journey-db.ts — stamp awardedById on the read-only fixture belt,
+   drop the UNVERIFIED mint (impossible state under B1).
+7. FALLOW CLEANUP BATCH (then re-run npx fallow audit --base origin/main and RECORD the delta):
+   a. claims/page.tsx row arrow (CRAP 132) → extract a pure claimRowViewModel + row component.
+   b. enrichedCard: single-row findFirst(id+passportId, gateAwardSelect) — not getMemberAwards.
+   c. promotion-claim-resource: grants-first inversion (fetch reviewer's LineageTreeAccess rows;
+      walk ancestors ONLY when a BRANCH_EDITOR grant exists) — kills the whole-tree load.
+   d. Card media carries url/type (join in gateAwardSelect, emit in toBeltCard) → DELETE
+      beltTabAwardSelect + resolveMedia + BeltRankViewModel.media + the grid's URL reconciliation
+      (subsumes the 28-line select dupe).
+   e. claim-review-detail: merge the duplicated Claimed-Rank/Asserted-Belt cards; use BeltSwatch
+      (kill the hand-rolled dot).
+   f. Dead exports: un-export self-only symbols (gateAwardSelect, beltCardOutput const,
+      MILESTONE_MEDIA_PURPOSES if unconsumed, mediaAttachTargetSchema); trim the belt barrel to
+      what belts-tab.tsx imports (or repoint + delete).
+   DEFERRED-with-reason (named follow-ups, don't do now): MediaTileGrid extraction; CountrySelect →
+   components/common + Intl.DisplayNames; test-fixture dedup ×3; e2e seed-helper dedup.
+8. UI wiring fork (grill the operator first): BRANCH/NODE_EDITOR page access (Open decisions #3/#4).
+9. VERIFY: full scoped test suite + next build + HEADLESS BROWSER pass (queue → detail → approve;
+   belts tab → CTA → submit) — render it, don't assert from source. Then V6 (RUN_BELT_E2E=1 five
+   proofs) + finalize ADR 0035 Amendment 1 → accepted + mirror ubiquitous-language. Then hold at
+   the push gate for the operator's go (one PR superseding #178–181, recommended).
+
+SEPARATE LANE (after or parallel in ANOTHER worktree — prod code, different files): FI-010–013 from
+POST_LAUNCH_SOT (claim-funnel photo-loss + missing password step · email wrapper logo/CTA contrast ·
+FI-002 jargon copy · mobile lineage filter overlap). P0 first: FI-010 repro on mobile.
+
+BOUNDARIES: explicit per-push authorization; no migrate dev (shared DB); ../ronin-dojo-monorepo
+READ-ONLY; no email sends; other worktrees untouched.
+```
 
 ## Review log
 
+### SESSION_0491_REVIEW_01 — quality loop over the whole session diff (TASK_08)
+
+- **Reviewed tasks:** SESSION_0491_TASK_01–06 (the entire branch diff vs origin/main).
+- **Method:** fallow baseline (audit + health) + 4 parallel finder agents (correctness/security,
+  removed-behavior, cross-file tracer, cleanup/WWAD) + independent gate re-runs by the lead.
+- **Verdict:** the build is well-shaped (reuse-first honored: one claim queue, one finalize, one grant, L1
+  primitives; no god-components; the B1 model is DDD-clean — belt/promotion/claims are vertical slices over
+  one spine). But the diff is NOT push-ready: 1 CRITICAL / 2 HIGH security findings + stale e2e fixtures.
+  **Two independent finders converged on the CRITICAL** — high confidence. The loop did exactly its job:
+  caught it before the PR.
+- **Score:** build quality 8/10 · ship-readiness 4/10 until 0492 lands.
+- **Follow-up:** SESSION_0492 fix session (staged above).
+
 ## Hostile close review
+
+- **Giddy (architecture):** **pass with findings** — rebase clean, B1 rework reuses the spine verbatim, the
+  `awardedById` marker is the right discriminator (no new column, no display axis). Flags: the authz walk
+  loads a whole tree per review (scale), the ids-only card media forces a 3-file client reconciliation, and a
+  half-wired capability (action admits scoped reviewers the UI locks out) — all staged for 0492.
+- **Doug (verification honesty / security):** **FAIL until 0492** — a member can self-approve their own belt
+  promotion (CRITICAL, twice-confirmed); caller-supplied mediaIds are never ownership-checked (HIGH ×2);
+  deleteRankAward erases authority-owned history (MED); V6 never ran and the e2e fixtures still assert the
+  pre-B1 world. Unit coverage (100+) is real but browser smoke was not done. The branch must not push as-is.
+- **Desi (UX / brand):** **FAIL on the live product** — operator evidence: claim-funnel photo loss + a
+  promised password step that doesn't exist (the flagship funnel breaking its own instructions), the email
+  wrapper rendering the logo white-on-white with disabled-looking CTAs, internal tier jargon in member copy,
+  and mobile lineage filters overlapping the root card. "Amateur hour" is the accurate review. Routed
+  FI-010–013; the new belt/claims UI itself is consistent (L1 Card/Dialog/BeltSwatch) but unverified in a
+  browser.
+- **Kaizen aggregate:** **6/10** — high build velocity and the process worked (the loop caught a CRITICAL
+  pre-push, which is the system succeeding, not failing) — but the session cannot claim launch-safety, and
+  the live product embarrassed us in the operator's own dojo this same day.
+
+### Findings (severity ≥ medium)
+
+#### SESSION_0491_FINDING_01 — Member can self-approve their own RANK_PROMOTION (CRITICAL)
+
+- **Severity:** high (CRITICAL) · **Task:** SESSION_0491_TASK_06
+- **Evidence:** `apps/web/server/admin/claims/passport-claim-review-actions.ts:267-309` + `promotion-claim-resource.ts:50` + `roles.ts:99` (NODE_EDITOR carries `claim.review`) + `claim-finalize.ts:601-609` (every approved identity claim grants own-node NODE_EDITOR)
+- **Impact:** any claimed member files a promotion then invokes `reviewPassportClaim` on it directly → VERIFIED above-ceiling award + `isVerified` flip. Defeats the entire B1 invariant. Confirmed independently by two finders.
+- **Required follow-up:** 0492 fix #1 (claimant≠reviewer guard, both layers) + exploit-chain test.
+- **Status:** open (branch unpushed — never reached a PR or prod)
+
+#### SESSION_0491_FINDING_02 — Caller-supplied `mediaId` never ownership-validated (HIGH ×2 seams)
+
+- **Severity:** high · **Task:** TASK_04/TASK_06 (evidence) + TASK_02-adjacent (attachMilestoneMedia, rebased Slice 3)
+- **Evidence:** `submit-rank-promotion-claim.ts:129-140`; `server/belt/router.ts:212-246`; renders via `claim-queries.ts` media join + `belt-tab-loader.ts:56`
+- **Impact:** foreign (private, `isPublic=false`) media disclosed to reviewers / attached to the attacker's milestone; nonexistent id → raw P2003 500.
+- **Required follow-up:** 0492 fix #2 (exists + `uploadedById === caller`, both seams). **Status:** open
+
+#### SESSION_0491_FINDING_03 — `deleteRankAward` erases authority-owned awards (MED)
+
+- **Evidence:** `server/belt/router.ts:278-298` (top-award guard only; no `isFactEditable`-class guard)
+- **Impact:** member deletes an instructor-minted/IMPORTED/DISPUTED belt they cannot even edit (cascades milestone+media). **Follow-up:** 0492 fix #3. **Status:** open
+
+#### SESSION_0491_FINDING_04 — Scoped reviewers half-wired: action admits, UI blocks (MED)
+
+- **Evidence:** `passport-claim-review-actions.ts:302-306` vs `lib/auth-guard.ts:67` (`LINEAGE_MANAGEMENT_AREA_ROLES`)
+- **Impact:** the documented BRANCH/NODE-scoped instructor reviewer can't reach the queue/detail pages. **Follow-up:** 0492 #8 (operator fork). **Status:** open
+
+#### SESSION_0491_FINDING_05 — e2e spec + seed encode the pre-B1 world (MED — V6 blocker)
+
+- **Evidence:** `e2e/belt-journey.spec.ts:80` (deleted disabled-"Locked" button), `:83-97` + `e2e/helpers/seed-belt-journey-db.ts:90-105` (UNVERIFIED mint; unstamped VERIFIED belt now fact-editable)
+- **Impact:** V6's own proof suite fails/asserts the wrong model. **Follow-up:** 0492 fix #6. **Status:** open
+
+#### SESSION_0491_FINDING_06 — Approve leaves a pre-existing award untouched (MED, pre-existing sharpened by B1)
+
+- **Evidence:** `claim-finalize.ts` `mintAssertedRankAward` (`if (existing) return existing.id`)
+- **Impact:** an award minted between submit and approve (e.g. admin add-person, still UNVERIFIED) is neither verified nor stamped — an "approved" belt that stays member-editable. **Follow-up:** 0492 fix #4. **Status:** open
+
+*(Prod findings FI-010–013 live in `POST_LAUNCH_SOT.md` — canonical rows; not duplicated here per §6.7.)*
 
 ## ADR / ubiquitous-language check
 
+- **ADR 0035 Amendment 1 stays DRAFT** — correct per its own terms (finalizes to `accepted` only when V6 is
+  green; V6 deferred to 0492). No premature flip.
+- **ADR renumber:** belt fact/milestone ADR landed as **0043** (0042 collision with the blog ADR resolved;
+  all cross-refs swept). No new decision requiring a new ADR — B1 implements the ratified amendment.
+- **Ubiquitous language:** no new terms this session ("VERIFIED-by-implication", "authority-owned" are
+  amendment terms — mirrored into `ubiquitous-language.md` at 0492 when the amendment flips to accepted).
+
 ## Reflections
 
+- **The loop caught what the tests couldn't, before it mattered.** 100+ green tests and three green builds —
+  and still a CRITICAL: the tests seeded the fixture WITHOUT the own-node NODE_EDITOR grant production always
+  creates, so the exploit chain lived exactly in the gap between "tested" and "deployed-shaped". Two
+  independent adversarial finders converged on it from different directions. Adversarial review before push
+  is not ceremony; it is the only thing that saw across the seam.
+- **Authorization widening is where CRITICALs breed.** Moving `reviewPassportClaim` from role-gate to
+  resource-scope was the session's one genuinely new authz surface — and both the CRITICAL (self-scope) and
+  the MED (UI/action mismatch) live precisely there. Widening rule for next time: enumerate WHO GAINS access
+  (not just who keeps it) and write the adversarial test for the gainer FIRST.
+- **The operator's dojo is the fifth finder.** Mikayla's claim attempt surfaced funnel breaks (photo loss,
+  phantom password step) no agent was even looking at — prod QA evidence arrived mid-loop and slotted straight
+  into the ledger. The claim loop is the moat; it deserves a standing mobile e2e, not incidental discovery.
+- **Sequencing worked:** rebase → rework → verify per task kept each blast radius small; the ADR-number
+  collision and Prisma-7 flag rename were absorbed without derailing. And closing on a diagnosis instead of
+  rushing fixes into a 300K-token session was the right call — the fix list is precise, staged, and cheap to
+  execute fresh.
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | POST_LAUNCH_SOT + wiki/index frontmatter bumped (`updated: 2026-07-01`, `last_agent: claude-session-0491`); rebased docs carry their slice authors correctly; ADR 0043 rename swept |
+| Backlinks/index sweep | wiki index: SESSION_0491 row added; 0479–0482 rows landed with the rebase; 0479 row annotated "rebased at 0491"; ADR 0043 row present |
+| Wiki lint | `bun run wiki:lint` → **0 errors / 16 warnings (all pre-existing)** — gate-runner verified |
+| Kaizen reflection | yes — `## Reflections` (4 entries) |
+| Hostile close review | SESSION_0491_REVIEW_01 + Giddy/Doug/Desi verdicts + FINDING_01–06; Doug = FAIL-until-0492 (honest) |
+| Code-quality gate (Class-A) | Class-A modules this session (belt router B1, promotion-claim-resource, belt-promotion-request): quality-loop diagnosis stands in — full `/code-quality` scoring deferred to 0492 post-fix (scoring known-CRITICAL code is noise) |
+| Runtime verification (Doug) | Unit/integration 100+ green ×3 gates; **browser smoke NOT done** (flagged, 0492 #9); V6 NOT run (deferred with reason) |
+| Review & Recommend | yes — Next session = SESSION_0492 fix dispatch (above), staged dispatch-ready |
+| Memory sweep | `belt-verification-subsystem-b1-model` memory updated (V5 + CRITICAL + pipeline state); MEMORY.md index refreshed |
+| Next session unblock check | **UNBLOCKED** — 0492 first task executable immediately in this worktree; only the push itself is operator-gated |
+| Git hygiene | branch `session-0491-belt-rebase` · worktree `../ronin-0491` (kept — branch unmerged, next session continues here) · tree clean pre-close · single close commit — hash reported at bow-out · **push HELD (explicit-push-authorization + open CRITICAL)** |
+| Graphify update | gate runner ran `graphify update .` in this worktree: **12,219 nodes · 26,592 edges · 1,403 communities** |
+| Pre-push build gate | `next build` green (182 pages) — but push deliberately withheld (FINDING_01) |
+| Ledger routing | FI-010–013 → POST_LAUNCH_SOT (prod findings); FINDING_01–06 session-scoped (branch unpushed — never reached main; 0492 fixes pre-push); FS-0011/FS-0012 cross-off candidates NOT flipped (pre-existing mitigated entries this session merely applied) |
