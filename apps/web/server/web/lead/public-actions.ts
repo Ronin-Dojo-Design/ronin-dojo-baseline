@@ -77,6 +77,10 @@ const legacyInterestSchema = z.object({
   represent: z.string().trim().max(500).optional().or(z.literal("")),
   representTreeId: z.string().trim().max(64).optional().or(z.literal("")),
   evidenceUrl: httpUrlSchema.optional().or(z.literal("")),
+  // FI-010a: a guest-staged profile photo (uploaded via `uploadJoinLegacyAvatar` to an
+  // R2 URL). Persisted on the lead so the photo survives the magic-link round-trip for
+  // steward review / later Passport re-bind, instead of being silently discarded.
+  avatarUrl: httpUrlSchema.optional().or(z.literal("")),
   bio: z.string().trim().max(2000).optional().or(z.literal("")),
   profileUrl: httpUrlSchema.optional().or(z.literal("")),
   instagramUrl: httpUrlSchema.optional().or(z.literal("")),
@@ -173,6 +177,35 @@ export const uploadJoinLegacyEvidence = publicActionClient
       `lineage-evidence/${crypto.randomUUID()}`,
       Brand.BBL,
     )
+    return { url }
+  })
+
+/**
+ * Public (unauthenticated) guest AVATAR upload for the Join-the-Legacy intake
+ * (SESSION_0492 FI-010a). Sibling of `uploadJoinLegacyEvidence`: the wizard's
+ * `AvatarUploader` runs for guests (no account/Passport yet), so it CANNOT use the
+ * auth-gated `uploadAndPromotePassportAvatar`. This action uploads the cropped
+ * avatar bytes to R2 under an isolated `lineage-avatar/` prefix and returns the
+ * public URL, which the wizard writes into `avatarUrl` and carries to
+ * `createJoinLegacyInterest` (persisted on the lead for steward review + later
+ * Passport re-bind). Same guardrails as the evidence path: IP rate-limit, hard
+ * server-side byte ceiling, content-sniffed raster-image allowlist (no SVG).
+ */
+export const uploadJoinLegacyAvatar = publicActionClient
+  .inputSchema(evidencePhotoSchema)
+  .action(async ({ parsedInput }) => {
+    if (await isRateLimited(await getIP(), "avatar_upload")) {
+      throw new Error("Too many uploads. Please try again in a bit.")
+    }
+    const buffer = Buffer.from(await parsedInput.file.arrayBuffer())
+    if (buffer.byteLength > EVIDENCE_MAX_BYTES) {
+      throw new Error("Image must be under 8MB.")
+    }
+    const sniffed = await fileTypeFromBuffer(buffer)
+    if (!sniffed || !EVIDENCE_IMAGE_MIMES.has(sniffed.mime)) {
+      throw new Error("Upload a JPEG, PNG, WebP, or AVIF image.")
+    }
+    const url = await uploadToS3Storage(buffer, `lineage-avatar/${crypto.randomUUID()}`, Brand.BBL)
     return { url }
   })
 
@@ -350,6 +383,7 @@ export const createJoinLegacyInterest = publicActionClient
     const trainedUnderNodeId = normalizeOptional(parsedInput.trainedUnderNodeId)
     const representTreeId = normalizeOptional(parsedInput.representTreeId)
     const evidenceUrl = normalizeOptional(parsedInput.evidenceUrl)
+    const avatarUrl = normalizeOptional(parsedInput.avatarUrl)
     const bio = normalizeOptional(parsedInput.bio)
     const profileUrl = normalizeOptional(parsedInput.profileUrl)
     const instagramUrl = normalizeOptional(parsedInput.instagramUrl)
@@ -475,6 +509,9 @@ export const createJoinLegacyInterest = publicActionClient
           representTreeId: representTreeId ?? null,
           currentRankId: currentRankId ?? null,
           evidenceUrl: evidenceUrl ?? null,
+          // FI-010a: guest-staged profile photo URL — persisted so it survives the
+          // magic-link round-trip for steward review / later Passport re-bind.
+          avatarUrl: avatarUrl ?? null,
           profileUrl: profileUrl ?? null,
           instagramUrl: instagramUrl ?? null,
           martialArtsExperience: martialArtsExperience ?? null,
