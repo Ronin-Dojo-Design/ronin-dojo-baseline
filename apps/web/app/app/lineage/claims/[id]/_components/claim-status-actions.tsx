@@ -41,6 +41,10 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
   const [compTier, setCompTier] = useState<"NONE" | LineageCompTier>("NONE")
   const [compTermDays, setCompTermDays] = useState("")
 
+  // Slice V5 (SESSION_0491): a promotion verifies a BELT on an already-owned
+  // Passport — it grants NO comp (B1), so the comp controls are identity-only.
+  const isPromotion = claim.type === "RANK_PROMOTION"
+
   const refresh = () => router.refresh()
 
   const { executeAsync: execApprove, isPending: approvePending } = useAction(reviewPassportClaim, {
@@ -99,37 +103,39 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
           />
         </div>
 
-        <Stack direction="row" className="gap-3">
-          <div className="min-w-56">
-            <Label htmlFor="claim-comp-tier">Comp Tier</Label>
-            <Select
-              value={compTier}
-              onValueChange={value => setCompTier(value as "NONE" | LineageCompTier)}
-            >
-              <SelectTrigger id="claim-comp-tier" className="mt-1">
-                <SelectValue placeholder="No comp" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="NONE">None</SelectItem>
-                <SelectItem value={LINEAGE_PREMIUM_ENTITLEMENT_KEY}>Lineage Premium</SelectItem>
-                <SelectItem value={LINEAGE_ELITE_ENTITLEMENT_KEY}>Lineage Elite</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        {!isPromotion && (
+          <Stack direction="row" className="gap-3">
+            <div className="min-w-56">
+              <Label htmlFor="claim-comp-tier">Comp Tier</Label>
+              <Select
+                value={compTier}
+                onValueChange={value => setCompTier(value as "NONE" | LineageCompTier)}
+              >
+                <SelectTrigger id="claim-comp-tier" className="mt-1">
+                  <SelectValue placeholder="No comp" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="NONE">None</SelectItem>
+                  <SelectItem value={LINEAGE_PREMIUM_ENTITLEMENT_KEY}>Lineage Premium</SelectItem>
+                  <SelectItem value={LINEAGE_ELITE_ENTITLEMENT_KEY}>Lineage Elite</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="min-w-44">
-            <Label htmlFor="claim-comp-term-days">Term Days (optional)</Label>
-            <Input
-              id="claim-comp-term-days"
-              type="number"
-              placeholder="Lifetime"
-              disabled={compTier === "NONE"}
-              value={compTermDays}
-              onChange={event => setCompTermDays(event.target.value)}
-              className="mt-1"
-            />
-          </div>
-        </Stack>
+            <div className="min-w-44">
+              <Label htmlFor="claim-comp-term-days">Term Days (optional)</Label>
+              <Input
+                id="claim-comp-term-days"
+                type="number"
+                placeholder="Lifetime"
+                disabled={compTier === "NONE"}
+                value={compTermDays}
+                onChange={event => setCompTermDays(event.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </Stack>
+        )}
 
         <Stack direction="row" className="gap-2">
           <Button
@@ -141,7 +147,7 @@ export function ClaimStatusActions({ claim }: ClaimStatusActionsProps) {
                 decision: "APPROVED",
                 reviewerNote: reviewerNote || undefined,
                 comp:
-                  compTier === "NONE"
+                  isPromotion || compTier === "NONE"
                     ? undefined
                     : {
                         tier: compTier,

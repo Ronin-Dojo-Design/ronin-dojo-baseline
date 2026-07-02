@@ -1,4 +1,5 @@
 import { Badge } from "~/components/common/badge"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Card } from "~/components/common/card"
 import { Heading } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
@@ -16,9 +17,14 @@ import { ClaimStatusActions } from "./claim-status-actions"
  * component so both surfaces stay in lockstep; `backHref` is the only per-route
  * difference. The Claimant Note carries every field as text; the typed refs
  * (rank/school/instructor/tree) render as resolved, verifiable links.
+ *
+ * Slice V5 (SESSION_0491): a RANK_PROMOTION claim renders the asserted belt
+ * prominently (swatch + name), shows uploaded photo evidence inline, and drops
+ * the identity-only tree copy — the decision buttons are shared unchanged.
  */
 export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; backHref: string }) {
   const subjectName = claim.passport.displayName ?? "Unnamed profile"
+  const isPromotion = claim.type === "RANK_PROMOTION"
 
   return (
     <Wrapper>
@@ -32,7 +38,7 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
             size="h3"
             className="mt-2"
           >
-            Claim: {subjectName}
+            {isPromotion ? `Belt promotion: ${subjectName}` : `Claim: ${subjectName}`}
           </Heading>
         </div>
 
@@ -41,8 +47,9 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
             <div>
               <dt className="text-muted-foreground">Status</dt>
-              <dd>
+              <dd className="flex items-center gap-2">
                 <Badge>{claim.status}</Badge>
+                {isPromotion && <Badge variant="soft">Promotion</Badge>}
               </dd>
             </div>
             <div>
@@ -60,6 +67,9 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
                   <Link href={`/lineage/${claim.tree.slug}`} className="hover:underline">
                     {claim.tree.name}
                   </Link>
+                ) : isPromotion ? (
+                  // A promotion is on the member's own Passport — it carries no tree context.
+                  <span className="text-muted-foreground">Member's own profile</span>
                 ) : (
                   <span className="text-muted-foreground">Directory profile (no tree)</span>
                 )}
@@ -80,33 +90,59 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
           </dl>
         </Card>
 
-        {/* Claimed Rank */}
-        {claim.claimedRank && (
-          <Card className="p-4">
-            <Heading
-              render={props => <h2 {...props}>{props.children}</h2>}
-              size="h5"
-              className="mb-2"
-            >
-              Claimed Rank
-            </Heading>
-            <div className="flex items-center gap-2 text-sm">
-              {claim.claimedRank.colorHex && (
-                <span
-                  className="inline-block h-4 w-4 rounded-full border"
-                  style={{ backgroundColor: claim.claimedRank.colorHex }}
+        {/* Claimed Rank — for a promotion this IS the claim, so render it prominently. */}
+        {claim.claimedRank &&
+          (isPromotion ? (
+            <Card className="p-4">
+              <Heading
+                render={props => <h2 {...props}>{props.children}</h2>}
+                size="h5"
+                className="mb-2"
+              >
+                Asserted Belt
+              </Heading>
+              <div className="flex items-center gap-3">
+                <BeltSwatch
+                  colorHex={claim.claimedRank.colorHex}
+                  variant="bar"
+                  className="h-4 w-14"
                 />
-              )}
-              <span className="font-medium">{claim.claimedRank.name}</span>
-              {claim.claimedRank.shortName && (
-                <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
-              )}
-              <span className="text-muted-foreground text-xs">
-                — asserted at claim time; approval will create a verified RankAward
-              </span>
-            </div>
-          </Card>
-        )}
+                <span className="font-semibold text-base">{claim.claimedRank.name}</span>
+                {claim.claimedRank.shortName && (
+                  <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground mt-2 text-xs">
+                Self-declared above the member's verified ceiling. Approval mints it as a VERIFIED
+                rank award on their belt journey; until then it exists only on this request.
+              </p>
+            </Card>
+          ) : (
+            <Card className="p-4">
+              <Heading
+                render={props => <h2 {...props}>{props.children}</h2>}
+                size="h5"
+                className="mb-2"
+              >
+                Claimed Rank
+              </Heading>
+              <div className="flex items-center gap-2 text-sm">
+                {claim.claimedRank.colorHex && (
+                  <span
+                    className="inline-block h-4 w-4 rounded-full border"
+                    style={{ backgroundColor: claim.claimedRank.colorHex }}
+                  />
+                )}
+                <span className="font-medium">{claim.claimedRank.name}</span>
+                {claim.claimedRank.shortName && (
+                  <Badge variant="outline">{claim.claimedRank.shortName}</Badge>
+                )}
+                <span className="text-muted-foreground text-xs">
+                  — asserted at claim time; approval will create a verified RankAward
+                </span>
+              </div>
+            </Card>
+          ))}
 
         {/* Lineage selections — registered school/instructor/tree the claimant picked in the
             join wizard (SESSION_0441). Resolved to links the steward can verify. A custom
@@ -216,6 +252,16 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
                   )}
                   {ev.text && (
                     <p className="text-muted-foreground whitespace-pre-wrap mt-1">{ev.text}</p>
+                  )}
+                  {/* Slice V5: uploaded photo evidence (certificate / instructor photo) renders
+                      inline — the soft-gate promotion photos the steward is verifying. Raw <img>
+                      matches the belt-media-gallery pattern (arbitrary-dimension user media). */}
+                  {ev.media?.url && ev.media.type === "IMAGE" && (
+                    <img
+                      src={ev.media.url}
+                      alt={ev.label ?? "Evidence photo"}
+                      className="mt-2 max-h-64 rounded border object-contain"
+                    />
                   )}
                 </div>
               ))}

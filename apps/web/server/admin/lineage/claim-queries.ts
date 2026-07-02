@@ -28,8 +28,12 @@ export async function findPendingClaims() {
     select: {
       id: true,
       status: true,
+      // Slice V5 (SESSION_0491): RANK_PROMOTION rows already surfaced here (no type
+      // filter) but without belt context — the queue now renders the asserted belt.
+      type: true,
       createdAt: true,
       claimantNote: true,
+      claimedRank: { select: { name: true, colorHex: true } },
       passport: { select: { displayName: true } },
       tree: { select: { id: true, name: true, slug: true } },
       node: { select: { id: true } },
@@ -47,6 +51,10 @@ export async function findClaimById(id: string) {
     select: {
       id: true,
       status: true,
+      // Slice V5 (SESSION_0491): the review surface branches on the claim kind —
+      // a RANK_PROMOTION shows the asserted belt + photo evidence and hides the
+      // identity-only comp controls.
+      type: true,
       claimantNote: true,
       reviewerNote: true,
       reviewedAt: true,
@@ -74,6 +82,10 @@ export async function findClaimById(id: string) {
           url: true,
           text: true,
           createdAt: true,
+          // Slice V5 (SESSION_0491): promotion evidence rows carry an uploaded photo
+          // via `mediaId` (soft-gate, TASK_04) — join it so the review surface can
+          // render the certificate / instructor photos instead of a bare label.
+          media: { select: { url: true, type: true } },
         },
         orderBy: { createdAt: "asc" },
       },

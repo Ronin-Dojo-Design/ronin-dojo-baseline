@@ -1,13 +1,16 @@
 "use server"
 
-import { type Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
-import { adminActionClient } from "~/lib/safe-actions"
+import { Brand, type LineageClaimStatus } from "~/.generated/prisma/client"
+import { userActionClient } from "~/lib/safe-actions"
 import {
   cancelSiblingPassportClaims,
   finalizePassportClaim,
   finalizeRankPromotion,
 } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
+import type { SessionUser } from "~/server/orpc/context"
+import { can } from "~/server/orpc/permissions"
+import { canForResource } from "~/server/orpc/resource-permissions"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
 import { scheduleClaimRejectedEmail } from "~/server/web/lineage/claim-rejected-email"
 import type { db as appDb } from "~/services/db"
@@ -15,6 +18,7 @@ import {
   type ReviewPassportClaimInput,
   reviewPassportClaimSchema,
 } from "./passport-claim-review-schemas"
+import { resolvePromotionClaimResources } from "./promotion-claim-resource"
 
 /**
  * Unified Passport-claim admin review (ADR 0036, SESSION_0437 P2).
@@ -100,6 +104,20 @@ export const applyPassportClaimReview = async ({
         claimantUserId: claim.claimantUserId,
         status: claim.status,
         evidenceCount: claim._count.evidence,
+      }
+
+      // Slice V5 (SESSION_0491): promotion decisions notify the member. A RANK_PROMOTION
+      // claim carries no nodeId (submit sets only passport/rank/evidence), so resolve the
+      // member's OWN node here — one lookup covering BOTH the approve and deny paths — and
+      // surface it as the result `nodeId` the post-commit email block keys on. A member
+      // with no node notifies nobody (unchanged). Identity claims keep `claim.nodeId`.
+      let notificationNodeId = claim.nodeId
+      if (claim.type === "RANK_PROMOTION") {
+        const memberNode = await tx.lineageNode.findUnique({
+          where: { passportId: claim.passportId },
+          select: { id: true },
+        })
+        notificationNodeId = memberNode?.id ?? null
       }
 
       let accessGrantId: string | null = null
@@ -197,7 +215,7 @@ export const applyPassportClaimReview = async ({
         status: updated.status,
         passportId: claim.passportId,
         claimantUserId: claim.claimantUserId,
-        nodeId: claim.nodeId,
+        nodeId: notificationNodeId,
         accessGrantId,
         compGrantIds,
         ownershipTransferred,
@@ -227,9 +245,78 @@ export const applyPassportClaimReview = async ({
   return result
 }
 
-export const reviewPassportClaim = adminActionClient
+// Same error string the adminActionClient middleware threw before the Slice V5 rework —
+// callers (toasts, tests) see an identical failure shape.
+const NOT_AUTHORIZED = "User not authorized"
+
+/**
+ * Slice V5 (SESSION_0491) review door — the ONLY change from the old hard
+ * `adminActionClient` gate is that a resource-scoped `claim.review` holder may
+ * review a RANK_PROMOTION claim:
+ *
+ * - Platform admins pass unconditionally (byte-identical to the old gate — no
+ *   claim lookup, bogus ids still surface as NOT_FOUND from the apply).
+ * - IDENTITY (and any other non-promotion) claims stay admin-only: their
+ *   finalize does identity-attach + comp — a bigger blast radius than V5 covers.
+ * - RANK_PROMOTION claims additionally admit `claims.manage` holders and any
+ *   `claim.review` grant (TREE_ADMIN / TREE_EDITOR / in-branch BRANCH_EDITOR /
+ *   matching NODE_EDITOR) scoped to the member's node/tree — derived at review
+ *   time via `resolvePromotionClaimResources` since the claim carries no tree.
+ *   A member with no node/tree membership falls back to admin-only.
+ */
+const assertCanReviewPassportClaim = async ({
+  db,
+  user,
+  brand,
+  claimId,
+}: {
+  db: AppDb
+  user: SessionUser
+  brand: Brand
+  claimId: string
+}): Promise<void> => {
+  if (user.role === "admin") {
+    return
+  }
+
+  const claim = await db.passportClaimRequest.findFirst({
+    where: { id: claimId, brand },
+    select: { type: true, passportId: true },
+  })
+
+  // Missing claim or non-promotion claim → the exact refusal the old admin-only
+  // middleware gave a non-admin, before any claim detail could leak.
+  if (!claim || claim.type !== "RANK_PROMOTION") {
+    throw new Error(NOT_AUTHORIZED)
+  }
+
+  if (can(user, "claims.manage")) {
+    return
+  }
+
+  const resources = await resolvePromotionClaimResources(db, claim.passportId)
+  if (!resources) {
+    throw new Error(NOT_AUTHORIZED)
+  }
+
+  for (const resource of resources) {
+    if (await canForResource(db, user, "claim.review", resource)) {
+      return
+    }
+  }
+
+  throw new Error(NOT_AUTHORIZED)
+}
+
+export const reviewPassportClaim = userActionClient
   .inputSchema(reviewPassportClaimSchema)
-  .action(async ({ parsedInput, ctx: { user, db, brand } }) => {
+  .action(async ({ parsedInput, ctx: { user, db } }) => {
+    // The old adminActionClient middleware pinned `brand: Brand.BBL` into ctx;
+    // userActionClient does not, so pin it here — same contract, same value.
+    const brand = Brand.BBL
+
+    await assertCanReviewPassportClaim({ db, user, brand, claimId: parsedInput.claimId })
+
     return applyPassportClaimReview({
       db,
       brand,
