@@ -40,6 +40,9 @@ describe("web post queries", () => {
       status: "Published",
     })
     expect((capturedFindManyArgs as any).select.author).toBeDefined()
+    // The blog feed (SESSION_0492) derives its flair tabs from post categories, so the read model
+    // must surface the categories relation.
+    expect((capturedFindManyArgs as any).select.categories).toBeDefined()
   })
 
   it("keeps single post lookup brand-scoped and selects mentioned tools", async () => {

@@ -7,5 +7,7 @@
   "list_view": "List view",
   "read_time": "{count} min read",
   "written_by": "Written by",
-  "tools_mentioned": "Mentioned in this post"
+  "tools_mentioned": "Mentioned in this post",
+  "filter_by_flair": "Filter posts by category",
+  "flair_all": "All"
 }

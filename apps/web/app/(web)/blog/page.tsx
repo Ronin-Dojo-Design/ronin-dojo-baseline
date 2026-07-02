@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache } from "react"
-import { PostList } from "~/components/web/posts/post-list"
+import { PostFeed } from "~/components/web/posts/post-feed"
 import { StructuredData } from "~/components/web/structured-data"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
@@ -49,7 +49,7 @@ export default async function () {
         <IntroDescription>{metadata.description}</IntroDescription>
       </Intro>
 
-      <PostList posts={posts} />
+      <PostFeed posts={posts} />
 
       <StructuredData data={structuredData} />
     </>
