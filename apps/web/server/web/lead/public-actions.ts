@@ -618,9 +618,12 @@ export const createJoinLegacyInterest = publicActionClient
       membershipPath === "FREE"
         ? "/lineage/join?submitted=true"
         : "/lineage/join?submitted=true#lineage-membership"
+    // FI-015: the join/checkout follow-up link must land on the BBL brand host, not
+    // Baseline. When there's no request context the fallback is BBL (matching the
+    // magic-link origin below and the FI-014 "brandless sends default to BBL" rule).
     const absoluteCheckoutUrl = new URL(
       checkoutUrl,
-      requestOrigin ?? "https://baselinemartialarts.com",
+      requestOrigin ?? "https://blackbeltlegacy.com",
     ).toString()
 
     const email = parsedInput.email.trim().toLowerCase()
