@@ -1,0 +1,132 @@
+"use client"
+
+import { useMemo, useState } from "react"
+import type { CreatableOption } from "~/components/common/creatable-combobox"
+import { Dialog, DialogContent } from "~/components/common/dialog"
+import type { BeltCardOutput } from "~/server/belt/schemas"
+import { BeltEditCard } from "./belt-edit-card"
+import { BeltEditForm } from "./belt-edit-form"
+import { BeltPromotionRequest } from "./belt-promotion-request"
+import type { BeltRankViewModel } from "./belt-view-model"
+
+/**
+ * `BeltJourneyGrid` — the member's belt-by-belt journey (Slice 4 — Petey Plan 0477
+ * §Slice 4). Renders one {@link BeltEditCard} per discipline rank in ascending
+ * `sortOrder` (responsive 1 → 2 → 3 columns). A card is `locked` when its
+ * `sortOrder` exceeds the member's awarded `ceiling`; clicking an UNLOCKED card
+ * opens the edit surface in a `Dialog`.
+ *
+ * B1 (ADR 0035 Amendment 1): a LOCKED (above-ceiling) card is now an actionable
+ * "Request promotion" CTA — clicking it opens {@link BeltPromotionRequest}, which
+ * files a `RANK_PROMOTION` claim (never a self-mint). At/below-ceiling cards stay
+ * enrichable via {@link BeltEditForm}.
+ *
+ * Presentation-only container: Slice 5 loads the ranks + cards + ceiling on the
+ * server (`memberTopRank`, BJJ-scoped) and hands them down. Local state only
+ * mirrors the freshly-returned `BeltCardOutput` after a save so the grid updates
+ * without a full reload — no data is fetched here.
+ */
+export function BeltJourneyGrid({
+  ranks,
+  ceiling,
+  passportId,
+  promoterOptions,
+  schoolOptions,
+  onUpload,
+  onUploadPassport,
+}: {
+  /** One view-model per discipline rank (any order — sorted here by `sortOrder`). */
+  ranks: BeltRankViewModel[]
+  /** The member's awarded ceiling `sortOrder`; `null` = no discipline award. */
+  ceiling: number | null
+  /** The member's own Passport id — the upload target for a promotion soft-gate photo. */
+  passportId: string
+  promoterOptions: CreatableOption[]
+  schoolOptions: CreatableOption[]
+  /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
+  onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
+  /**
+   * Per-file R2 upload against the member's own `passport` target (mints a mediaId) —
+   * the promotion-request soft-gate photo has no milestone yet. Omit → photo upload
+   * hidden in the promotion modal (note-only request still works).
+   */
+  onUploadPassport?: (file: File, passportId: string) => Promise<{ mediaId: string } | null>
+}) {
+  const sorted = useMemo(
+    () => [...ranks].sort((a, b) => a.rank.sortOrder - b.rank.sortOrder),
+    [ranks],
+  )
+  const minSortOrder = sorted[0]?.rank.sortOrder ?? 0
+
+  // Local overlay of saved cards so a mutation refreshes the affected belt in place.
+  // The card now carries render-ready `milestone.media` (url/type), so the overlay is
+  // just the returned card — no separate media reconciliation (SESSION_0492 cleanup).
+  const [saved, setSaved] = useState<Record<string, { card: BeltCardOutput }>>({})
+  const [openRankId, setOpenRankId] = useState<string | null>(null)
+  // The above-ceiling belt whose promotion-request modal is open (B1), or null.
+  const [promotionRankId, setPromotionRankId] = useState<string | null>(null)
+
+  const resolved = useMemo(
+    () =>
+      sorted.map(vm => {
+        const override = saved[vm.rank.id]
+        return override ? { ...vm, card: override.card } : vm
+      }),
+    [sorted, saved],
+  )
+
+  const openVm = openRankId ? (resolved.find(vm => vm.rank.id === openRankId) ?? null) : null
+  const promotionVm = promotionRankId
+    ? (resolved.find(vm => vm.rank.id === promotionRankId) ?? null)
+    : null
+
+  const handleSaved = (rankId: string, card: BeltCardOutput) => {
+    // The returned card already carries render-ready `milestone.media` (url/type),
+    // so the overlay is the card as-is — no URL reconciliation (SESSION_0492 cleanup).
+    setSaved(current => ({ ...current, [rankId]: { card } }))
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {resolved.map(vm => (
+          <BeltEditCard
+            key={vm.rank.id}
+            vm={vm}
+            ceiling={ceiling}
+            onOpen={setOpenRankId}
+            onRequestPromotion={setPromotionRankId}
+          />
+        ))}
+      </div>
+
+      <Dialog open={openRankId !== null} onOpenChange={open => !open && setOpenRankId(null)}>
+        <DialogContent className="max-w-xl">
+          {openVm && (
+            <BeltEditForm
+              key={openVm.rank.id}
+              vm={openVm}
+              minSortOrder={minSortOrder}
+              promoterOptions={promoterOptions}
+              schoolOptions={schoolOptions}
+              onUpload={onUpload}
+              onSaved={card => handleSaved(openVm.rank.id, card)}
+              onClose={() => setOpenRankId(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {promotionVm && (
+        <BeltPromotionRequest
+          key={promotionVm.rank.id}
+          rank={promotionVm.rank}
+          passportId={passportId}
+          open={promotionRankId !== null}
+          onOpenChange={open => !open && setPromotionRankId(null)}
+          onUpload={onUploadPassport}
+        />
+      )}
+    </>
+  )
+}

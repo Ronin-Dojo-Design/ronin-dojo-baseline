@@ -31,6 +31,12 @@ const tag = (name: string) => `s0438-cq-${TS}-${name}`
 let claimantUserId = ""
 let placeholderPassportId = ""
 let nodelessClaimId = ""
+// Slice V5 (SESSION_0491): a member's own belt-promotion claim in the same queue.
+let memberPassportId = ""
+let promotionClaimId = ""
+let promotionRankName = ""
+let evidenceMediaId = ""
+let evidenceMediaUrl = ""
 
 beforeAll(async () => {
   const claimant = await db.user.create({
@@ -58,14 +64,61 @@ beforeAll(async () => {
     select: { id: true },
   })
   nodelessClaimId = claim.id
+
+  // --- Slice V5 fixtures: a RANK_PROMOTION claim (member's own Passport + asserted belt +
+  // photo evidence carried as a Media join on the evidence row). Uses a seeded BJJ rank.
+  const memberPassport = await db.passport.create({
+    data: { id: tag("member-passport"), displayName: tag("Promoting Member"), userId: claimant.id },
+    select: { id: true },
+  })
+  memberPassportId = memberPassport.id
+
+  const rank = await db.rank.findFirst({
+    where: { rankSystem: { discipline: { code: "bjj" } } },
+    select: { id: true, name: true },
+  })
+  if (!rank) throw new Error("Test requires a seeded BJJ rank")
+  promotionRankName = rank.name
+
+  const media = await db.media.create({
+    data: {
+      id: tag("media"),
+      brand: "BBL",
+      type: "IMAGE",
+      url: `https://example.com/${tag("cert")}.jpg`,
+      uploadedById: claimant.id,
+    },
+    select: { id: true, url: true },
+  })
+  evidenceMediaId = media.id
+  evidenceMediaUrl = media.url
+
+  const promotion = await db.passportClaimRequest.create({
+    data: {
+      type: "RANK_PROMOTION",
+      passportId: memberPassport.id,
+      claimantUserId: claimant.id,
+      brand: "BBL",
+      status: "PENDING",
+      claimedRankId: rank.id,
+      evidence: { create: [{ label: "Certificate photo", mediaId: media.id }] },
+    },
+    select: { id: true },
+  })
+  promotionClaimId = promotion.id
 })
 
 afterAll(async () => {
   await db.passportClaimEvidence
-    .deleteMany({ where: { claimRequest: { passportId: placeholderPassportId } } })
+    .deleteMany({
+      where: { claimRequest: { passportId: { in: [placeholderPassportId, memberPassportId] } } },
+    })
     .catch(() => {})
-  await db.passportClaimRequest.deleteMany({ where: { passportId: placeholderPassportId } })
-  await db.passport.deleteMany({ where: { id: placeholderPassportId } })
+  await db.passportClaimRequest.deleteMany({
+    where: { passportId: { in: [placeholderPassportId, memberPassportId] } },
+  })
+  await db.media.deleteMany({ where: { id: evidenceMediaId } })
+  await db.passport.deleteMany({ where: { id: { in: [placeholderPassportId, memberPassportId] } } })
   await db.user.deleteMany({ where: { id: claimantUserId } })
 })
 
@@ -92,5 +145,32 @@ describe("admin person-claim queue (PassportClaimRequest, P5)", () => {
     expect(detail?.node).toBeNull()
     expect(detail?.evidence).toHaveLength(1)
     expect(detail?.evidence[0]?.label).toBe(tag("ev"))
+  })
+
+  // --- Slice V5 (SESSION_0491): RANK_PROMOTION rows carry belt context ----------------------
+
+  it("findPendingClaims surfaces a RANK_PROMOTION row with type + claimedRank populated", async () => {
+    const claims = await findPendingClaims()
+    const row = claims.find(c => c.id === promotionClaimId)
+
+    expect(row).toBeDefined()
+    expect(row?.type).toBe("RANK_PROMOTION")
+    expect(row?.claimedRank?.name).toBe(promotionRankName)
+    // colorHex is selected (may be null for an unstyled rank — the swatch falls back).
+    expect(row?.claimedRank).toHaveProperty("colorHex")
+    // Identity rows still carry their (default) type — additive select, no behavior change.
+    const identityRow = claims.find(c => c.id === nodelessClaimId)
+    expect(identityRow?.type).toBe("IDENTITY")
+  })
+
+  it("findClaimById joins evidence media so promotion photos can render", async () => {
+    const detail = await findClaimById(promotionClaimId)
+
+    expect(detail).not.toBeNull()
+    expect(detail?.type).toBe("RANK_PROMOTION")
+    expect(detail?.claimedRank?.name).toBe(promotionRankName)
+    expect(detail?.evidence).toHaveLength(1)
+    expect(detail?.evidence[0]?.media?.url).toBe(evidenceMediaUrl)
+    expect(detail?.evidence[0]?.media?.type).toBe("IMAGE")
   })
 })

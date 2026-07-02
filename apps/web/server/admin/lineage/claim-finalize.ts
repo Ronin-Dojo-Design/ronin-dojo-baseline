@@ -152,6 +152,68 @@ const grantNodeEditorAccess = async (
 }
 
 /**
+ * petey-plan-0477 Slice V3 (belt-PR rebase, TASK_04): materialize a promotion claim's photo
+ * evidence onto the minted award's `RankMilestone`. The verification submission doubles as the
+ * journey-photo capture (Locked-decision 4, soft-gate) — a certificate/instructor photo the member
+ * uploaded to prove the promotion becomes belt-journey media once the belt is real.
+ *
+ * Only evidence rows carrying a `mediaId` (an uploaded photo) can materialize; url/text-only rows
+ * are a link/note, not a photo, so they are skipped. Ensures the milestone exists (create if absent
+ * — `rankAwardId` is `@unique`, so this is the 1:1 milestone for the just-minted award), then
+ * attaches each photo idempotently (a re-approval must not duplicate an existing attachment).
+ *
+ * `purpose` is derived from the evidence `label`: "cert"→`certificate`, "instructor"→`instructor`,
+ * else `certificate` (the default for an unlabelled promotion photo). The `MediaAttachment.purpose`
+ * column is the shared string convention (Locked #2), matching the belt milestone media galleries.
+ */
+const MILESTONE_MEDIA_DEFAULT_PURPOSE = "certificate"
+
+const purposeFromEvidenceLabel = (label: string | null): string => {
+  const normalized = label?.toLowerCase() ?? ""
+  if (normalized.includes("cert")) return "certificate"
+  if (normalized.includes("instructor")) return "instructor"
+  return MILESTONE_MEDIA_DEFAULT_PURPOSE
+}
+
+const materializeEvidenceToMilestone = async (
+  tx: Tx,
+  { claimId, rankAwardId }: { claimId: string; rankAwardId: string },
+): Promise<void> => {
+  // Only photo evidence (a mediaId) can become milestone media; url/text-only rows are links.
+  const photos: Array<{ mediaId: string | null; label: string | null }> =
+    await tx.passportClaimEvidence.findMany({
+      where: { claimRequestId: claimId, mediaId: { not: null } },
+      select: { mediaId: true, label: true },
+    })
+  if (photos.length === 0) return
+
+  // Ensure the 1:1 milestone for the award exists (rankAwardId is @unique → upsert is safe).
+  const milestone = await tx.rankMilestone.upsert({
+    where: { rankAwardId },
+    create: { rankAwardId },
+    update: {},
+    select: { id: true },
+  })
+
+  for (const photo of photos) {
+    if (!photo.mediaId) continue
+    // Idempotent: a re-approval must not duplicate an existing (milestone, media) attachment.
+    const existing = await tx.mediaAttachment.findFirst({
+      where: { rankMilestoneId: milestone.id, mediaId: photo.mediaId },
+      select: { id: true },
+    })
+    if (existing) continue
+    await tx.mediaAttachment.create({
+      data: {
+        rankMilestoneId: milestone.id,
+        mediaId: photo.mediaId,
+        purpose: purposeFromEvidenceLabel(photo.label),
+      },
+    })
+  }
+}
+
+/**
  * FI-006 (ADR 0035 §4): mint the claimant's asserted RankAward on the claimed Passport. Idempotent —
  * an existing award for that rank is returned untouched. STATED source + VERIFIED (admin vouched).
  */
@@ -165,9 +227,23 @@ const mintAssertedRankAward = async (
 ): Promise<string> => {
   const existing = await tx.rankAward.findFirst({
     where: { passportId, rankId: claimedRankId },
-    select: { id: true },
+    select: { id: true, verificationStatus: true, awardedById: true },
   })
-  if (existing) return existing.id
+  if (existing) {
+    // SESSION_0492 FIX 4 (MED): an award may already exist for this rank when it was
+    // minted between submit and approve (e.g. admin add-person seeded an UNVERIFIED
+    // award). Approval is authoritative, so bring the existing award UP to the approved
+    // state — VERIFIED + stamp the approver as `awardedById` (which also locks it
+    // read-only via `isFactEditable`). Idempotent: re-approving an already-VERIFIED,
+    // already-stamped award writes the same values (a no-op-equivalent).
+    if (existing.verificationStatus !== "VERIFIED" || existing.awardedById !== actorUserId) {
+      await tx.rankAward.update({
+        where: { id: existing.id },
+        data: { verificationStatus: "VERIFIED", awardedById: actorUserId },
+      })
+    }
+    return existing.id
+  }
 
   const created = await tx.rankAward.create({
     data: {
@@ -614,21 +690,23 @@ export type FinalizeRankPromotionResult = {
  * runs the identity attach (delete signup Passport + `attachAccount`), the `CLAIMANT_HAS_NODE`
  * guard, NODE_EDITOR grants, and the Elite comp — every one of which is wrong for a promotion,
  * which is on the member's ALREADY-owned Passport. A promotion verifies a **belt**, not an
- * identity, so this does exactly two things and nothing else:
+ * identity, so this does exactly three things and nothing else:
  *
  *   1. Mint the asserted belt as a **VERIFIED** `RankAward` (reuse `mintAssertedRankAward`,
  *      idempotent on `[passportId, rankId]`). This is the whole point — a self-declared belt
  *      that lived only on the claim record becomes awarded truth (ADR 0035 §4/§5: no UNVERIFIED
  *      award ever existed to leak; the pending belt was never on the tree).
- *   2. If the member's node is still unverified, flip `isVerified` — approving a member's first
+ *   2. Materialize the claim's photo `PassportClaimEvidence` (certificate / instructor photos the
+ *      member uploaded as the soft-gate) onto the minted award's `RankMilestone` as media —
+ *      wired at the belt-PR rebase (TASK_04) now that `RankMilestone` is on `main` (Slice 2). The
+ *      verification submission doubles as the journey-photo capture (Locked-decision 4); a claim
+ *      with no photo evidence simply materializes nothing.
+ *   3. If the member's node is still unverified, flip `isVerified` — approving a member's first
  *      promotion also verifies the person (the SESSION_0474 on-ramp). A verified member is a
  *      no-op. `LineageNode.isVerified` stays the ONE per-member trust flag (never a per-belt axis).
  *
- * Deferred (belt-PR rebase): materialize the claim's `PassportClaimEvidence` (certificate /
- * instructor photos) into `RankMilestone` media — `RankMilestone` is the held Slice-2 model and
- * is not on `main` yet, so the evidence stays on the claim record until it lands. No comp grant
- * (a routine promotion is not a lineage-claim comp trigger; the member's entitlement comes from
- * their tier). The caller owns the status flip + audit.
+ * No comp grant (a routine promotion is not a lineage-claim comp trigger; the member's entitlement
+ * comes from their tier). The caller owns the status flip + audit.
  */
 export const finalizeRankPromotion = async (
   tx: Tx,
@@ -641,6 +719,8 @@ export const finalizeRankPromotion = async (
       claimedRankId: claim.claimedRankId,
       actorUserId,
     })
+    // The submitted photo evidence becomes belt-journey media on the newly-real belt.
+    await materializeEvidenceToMilestone(tx, { claimId: claim.id, rankAwardId })
   }
 
   // Approving the promotion verifies the person too, but only flips an as-yet-unverified node the

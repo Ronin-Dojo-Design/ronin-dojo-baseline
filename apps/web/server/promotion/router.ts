@@ -26,6 +26,13 @@ const submitInput = z.object({
         label: z.string().max(200).nullish(),
         url: z.string().url().max(2000).nullish(),
         text: z.string().max(2000).nullish(),
+        /**
+         * An uploaded photo's `Media` id (the certificate/instructor-photo soft-gate).
+         * On approval, an evidence row that carries a `mediaId` materializes onto the
+         * minted award's `RankMilestone` as `MediaAttachment` media (Slice V3 →
+         * `finalizeRankPromotion`); a row with only url/text carries no photo to attach.
+         */
+        mediaId: z.string().min(1).max(191).nullish(),
       }),
     )
     .max(8)

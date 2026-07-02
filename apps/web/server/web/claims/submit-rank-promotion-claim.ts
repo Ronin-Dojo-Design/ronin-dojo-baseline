@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { pickTopAwardInDiscipline } from "~/server/web/lineage/node-profile-queries"
 
 /**
@@ -23,6 +24,9 @@ export const SUBMIT_RANK_PROMOTION_CLAIM_ERROR = {
   NOT_A_PROMOTION:
     "That belt is at or below your verified rank — add its story from your Belt Journey instead.",
   DUPLICATE_OPEN_PROMOTION: "You already have a belt-promotion request awaiting review.",
+  // SESSION_0492 FIX 2 (HIGH): the evidence `mediaId` must be a photo the claimant
+  // uploaded themselves — never a foreign / private Media id, and never a stale/absent id.
+  EVIDENCE_MEDIA_NOT_OWNED: "One of your evidence photos could not be found. Re-upload it.",
 } as const
 
 /** Prisma client / `$transaction` tx surface (callers pass `ctx.db` or `tx`). */
@@ -36,8 +40,17 @@ export type SubmitRankPromotionClaimInput = {
   claimedRankId: string
   brand: Brand
   claimantNote?: string | null
-  /** Soft-gate: certificate / instructor photo (label/url/text). Encouraged, not required. */
-  evidence?: { label?: string | null; url?: string | null; text?: string | null }[]
+  /**
+   * Soft-gate: certificate / instructor photo. Encouraged, not required. A `mediaId`
+   * carries an uploaded photo (materializes onto the milestone on approve, Slice V3);
+   * label/url/text carry a link or note. Any subset may be present.
+   */
+  evidence?: {
+    label?: string | null
+    url?: string | null
+    text?: string | null
+    mediaId?: string | null
+  }[]
 }
 
 /**
@@ -96,41 +109,66 @@ export async function submitRankPromotionClaim(
     throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.NOT_A_PROMOTION)
   }
 
-  // One open promotion per member — a queued request must resolve before the next.
-  const existingOpen = await db.passportClaimRequest.findFirst({
-    where: {
-      passportId: passport.id,
-      type: "RANK_PROMOTION",
-      status: { in: ["PENDING", "NEEDS_INFO"] },
-    },
-    select: { id: true },
-  })
-  if (existingOpen) {
-    throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
+  // FIX 2 (HIGH): every evidence row carrying a `mediaId` must reference a photo the
+  // CLAIMANT uploaded (`Media.uploadedById === claimantUserId`). Without this, a caller
+  // could attach a foreign / private Media id as "evidence" — disclosing it to reviewers
+  // — or a nonexistent id that would only surface as a raw Prisma P2003 500 on create.
+  // This ownership check runs on `db` OUTSIDE the create transaction below (it is a pure
+  // read of an immutable field — `Media.uploadedById` never changes — so there is no
+  // TOCTOU window; the create tx guards only the one-open invariant).
+  for (const item of input.evidence ?? []) {
+    if (!item.mediaId) continue
+    const owned = await resolveOwnedMedia(db, item.mediaId, input.claimantUserId)
+    if (!owned) {
+      throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+    }
   }
 
-  const claim = await db.passportClaimRequest.create({
-    data: {
-      type: "RANK_PROMOTION",
-      passportId: passport.id,
-      claimantUserId: input.claimantUserId,
-      brand: input.brand,
-      claimedRankId: input.claimedRankId,
-      claimantNote: input.claimantNote ?? null,
-      ...(input.evidence?.length
-        ? {
-            evidence: {
-              create: input.evidence.map(item => ({
-                label: item.label ?? null,
-                url: item.url ?? null,
-                text: item.text ?? null,
-              })),
-            },
-          }
-        : {}),
+  // FIX 5 (LOW) + P3 (SESSION_0492): the "one open promotion" check + create run in ONE
+  // SERIALIZABLE transaction. The check-then-create is a phantom-read race — at the
+  // default (Read Committed) isolation two concurrent submits can each see no open row
+  // and both create (there is no unique index to catch it). Serializable makes the two
+  // conflict so one aborts, closing the residual double-create window atomically.
+  const claim = await db.$transaction(
+    async (tx: Db) => {
+      const existingOpen = await tx.passportClaimRequest.findFirst({
+        where: {
+          passportId: passport.id,
+          type: "RANK_PROMOTION",
+          status: { in: ["PENDING", "NEEDS_INFO"] },
+        },
+        select: { id: true },
+      })
+      if (existingOpen) {
+        throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
+      }
+
+      return tx.passportClaimRequest.create({
+        data: {
+          type: "RANK_PROMOTION",
+          passportId: passport.id,
+          claimantUserId: input.claimantUserId,
+          brand: input.brand,
+          claimedRankId: input.claimedRankId,
+          claimantNote: input.claimantNote ?? null,
+          ...(input.evidence?.length
+            ? {
+                evidence: {
+                  create: input.evidence.map(item => ({
+                    label: item.label ?? null,
+                    url: item.url ?? null,
+                    text: item.text ?? null,
+                    mediaId: item.mediaId ?? null,
+                  })),
+                },
+              }
+            : {}),
+        },
+        select: { id: true },
+      })
     },
-    select: { id: true },
-  })
+    { isolationLevel: "Serializable" },
+  )
 
   return { claimId: claim.id }
 }

@@ -37,6 +37,7 @@ type Fixtures = {
   lowRankId: string // below the ceiling
   midRankId: string // AT the ceiling (the member's awarded belt)
   highRankId: string // above the ceiling — a valid promotion
+  photoMediaId: string // a real Media row for the certificate-photo soft-gate
 }
 
 let fx: Fixtures | null = null
@@ -77,6 +78,19 @@ beforeAll(async () => {
     select: { id: true },
   })
 
+  // A real Media row for the certificate-photo soft-gate (the evidence `mediaId` FK is
+  // SetNull → it must point at an existing Media to link).
+  const photo = await db.media.create({
+    data: {
+      id: tag("photo"),
+      brand: TEST_BRAND,
+      type: "IMAGE",
+      url: "https://example.com/cert-photo.jpg",
+      uploadedById: member.id,
+    },
+    select: { id: true },
+  })
+
   fx = {
     memberUserId: member.id,
     memberPassportId: passport.id,
@@ -84,6 +98,7 @@ beforeAll(async () => {
     lowRankId: low.id,
     midRankId: mid.id,
     highRankId: high.id,
+    photoMediaId: photo.id,
   }
 })
 
@@ -95,17 +110,22 @@ afterAll(async () => {
   await db.passportClaimRequest.deleteMany({ where: { passportId: fx.memberPassportId } })
   await db.rankAward.deleteMany({ where: { passportId: fx.memberPassportId } })
   await db.passport.deleteMany({ where: { id: fx.memberPassportId } })
+  await db.media.deleteMany({ where: { id: fx.photoMediaId } })
   await db.user.deleteMany({ where: { id: { in: [fx.memberUserId, fx.noPassportUserId] } } })
 })
 
 describe("submitRankPromotionClaim core (petey-plan-0477 Slice V2)", () => {
-  it("creates a PENDING RANK_PROMOTION above the ceiling, with evidence", async () => {
+  it("creates a PENDING RANK_PROMOTION above the ceiling, persisting url AND mediaId evidence", async () => {
     const { claimId } = await submitRankPromotionClaim(db, {
       claimantUserId: fx!.memberUserId,
       claimedRankId: fx!.highRankId,
       brand: TEST_BRAND,
       claimantNote: "Promoted at the June seminar",
-      evidence: [{ label: "Certificate", url: "https://example.com/cert.pdf" }],
+      // One url-only link + one uploaded-photo row (the soft-gate cert photo).
+      evidence: [
+        { label: "Certificate", url: "https://example.com/cert.pdf" },
+        { label: "certificate", mediaId: fx!.photoMediaId },
+      ],
     })
 
     const claim = await db.passportClaimRequest.findUnique({
@@ -118,8 +138,17 @@ describe("submitRankPromotionClaim core (petey-plan-0477 Slice V2)", () => {
     expect(claim!.status).toBe("PENDING")
     expect(claim!.passportId).toBe(fx!.memberPassportId)
     expect(claim!.claimedRankId).toBe(fx!.highRankId)
-    expect(claim!.evidence).toHaveLength(1)
-    expect(claim!.evidence[0].url).toBe("https://example.com/cert.pdf")
+    expect(claim!.evidence).toHaveLength(2)
+
+    const urlRow = claim!.evidence.find(e => e.url === "https://example.com/cert.pdf")
+    expect(urlRow).toBeDefined()
+    expect(urlRow!.mediaId).toBeNull()
+
+    // The photo evidence persisted its mediaId FK → it can materialize onto the
+    // RankMilestone on approval (Slice V3 → finalizeRankPromotion).
+    const photoRow = claim!.evidence.find(e => e.mediaId === fx!.photoMediaId)
+    expect(photoRow).toBeDefined()
+    expect(photoRow!.label).toBe("certificate")
   })
 
   it("rejects a belt AT the ceiling (that's backfill, not a promotion)", async () => {
@@ -180,5 +209,60 @@ describe("submitRankPromotionClaim core (petey-plan-0477 Slice V2)", () => {
         brand: TEST_BRAND,
       }),
     ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.PASSPORT_NOT_FOUND)
+  })
+
+  // SESSION_0492 FIX 2 (HIGH): evidence mediaId must be a photo the CLAIMANT uploaded.
+  describe("evidence mediaId ownership guard", () => {
+    beforeAll(async () => {
+      // Clear any open promotion so the DUPLICATE_OPEN guard doesn't mask the media error
+      // (the ownership check runs after the duplicate check, before create).
+      await db.passportClaimRequest.updateMany({
+        where: { passportId: fx!.memberPassportId, type: "RANK_PROMOTION", status: "PENDING" },
+        data: { status: "DENIED" },
+      })
+    })
+
+    it("rejects a FOREIGN mediaId (owned by another user), persisting no claim", async () => {
+      // A real Media row owned by a DIFFERENT user than the claimant.
+      const foreign = await db.media.create({
+        data: {
+          id: tag("foreign-media"),
+          brand: TEST_BRAND,
+          type: "IMAGE",
+          url: "https://example.com/foreign.jpg",
+          uploadedById: fx!.noPassportUserId,
+        },
+        select: { id: true },
+      })
+
+      const before = await db.passportClaimRequest.count({
+        where: { passportId: fx!.memberPassportId, status: "PENDING" },
+      })
+      await expect(
+        submitRankPromotionClaim(db, {
+          claimantUserId: fx!.memberUserId,
+          claimedRankId: fx!.highRankId,
+          brand: TEST_BRAND,
+          evidence: [{ label: "certificate", mediaId: foreign.id }],
+        }),
+      ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+      const after = await db.passportClaimRequest.count({
+        where: { passportId: fx!.memberPassportId, status: "PENDING" },
+      })
+      expect(after).toBe(before) // no claim created
+
+      await db.media.deleteMany({ where: { id: foreign.id } })
+    })
+
+    it("rejects a NONEXISTENT mediaId cleanly (domain error, not a raw P2003 500)", async () => {
+      await expect(
+        submitRankPromotionClaim(db, {
+          claimantUserId: fx!.memberUserId,
+          claimedRankId: fx!.highRankId,
+          brand: TEST_BRAND,
+          evidence: [{ label: "certificate", mediaId: "media-does-not-exist" }],
+        }),
+      ).rejects.toThrow(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.EVIDENCE_MEDIA_NOT_OWNED)
+    })
   })
 })

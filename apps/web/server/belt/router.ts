@@ -1,0 +1,335 @@
+import { ORPCError } from "@orpc/server"
+import {
+  ceilingSortOrder,
+  isFactEditable,
+  isTopAward,
+  isWithinCeiling,
+} from "~/server/belt/belt-gate"
+import {
+  gateAwardSelect,
+  getActingPassportId,
+  getBjjDisciplineId,
+  getMemberAwards,
+  toBeltCard,
+  toGateAward,
+} from "~/server/belt/queries"
+import {
+  attachMilestoneMediaInput,
+  type BeltCardOutput,
+  deleteRankAwardInput,
+  detachMilestoneMediaInput,
+  updateRankAwardFactInput,
+  upsertBeltMilestoneInput,
+} from "~/server/belt/schemas"
+import { resolveOwnedMedia } from "~/server/media/media-ownership"
+import { authedProcedure } from "~/server/orpc/procedure"
+import { emitSchoolLead } from "~/server/web/school-lead/emit-school-lead"
+import { db } from "~/services/db"
+
+/**
+ * Member belt-journey mutations (Slice 3 — Petey Plan 0477 §Slice 3).
+ *
+ * Own-Passport only, all gated to `rank.sortOrder <= ceiling` where the ceiling =
+ * the member's highest AWARDED belt IN the BJJ discipline (Locked #5). The
+ * self-promotion / verified-fact / top-award invariants live as pure predicates
+ * in `./belt-gate.ts`; these handlers resolve the member's awards, then delegate
+ * every gate decision there so nothing here can drift from the tested rules.
+ *
+ * Authorization is TWO layers: `meta.permission = "belt.manage"` (a signed-in
+ * member — role grant, `server/orpc/roles.ts`) plus the per-call ownership root
+ * `getActingPassportId(user.id)` (the acting account's OWN Passport). A flat role
+ * grant cannot express "your own row", so ownership is asserted in-handler and
+ * every write is scoped to that passportId.
+ */
+
+const beltProcedure = authedProcedure.meta({
+  permission: "belt.manage",
+  rateLimit: { points: 120, duration: 60 * 60 },
+})
+
+const REVALIDATE_PATHS = ["/app/profile"]
+
+/**
+ * Re-read the single enriched card for `rankAwardId`. Scoped to the acting
+ * member's `passportId` (the ownership root) so it never returns another member's
+ * award — a caller cannot enrich a card they do not own. One row via `findFirst`
+ * with `gateAwardSelect`, not the whole award list (we only need this one).
+ */
+async function enrichedCard(passportId: string, rankAwardId: string): Promise<BeltCardOutput> {
+  const award = await db.rankAward.findFirst({
+    where: { id: rankAwardId, passportId },
+    select: gateAwardSelect,
+  })
+  if (!award) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+  return toBeltCard(award)
+}
+
+/**
+ * `upsertBeltMilestone(rankId, { story })` — ensure the member's backfill
+ * `RankAward` for `rankId` exists, then upsert its 1:1 `RankMilestone`. Returns
+ * the enriched card.
+ *
+ * B1 (ADR 0035 Amendment 1 — C-implied mint): the ensured award is **VERIFIED**
+ * by implication, NOT `UNVERIFIED`. This path is hard-gated to `sortOrder <=`
+ * the member's verified ceiling (below), so the member demonstrably already holds
+ * an equal-or-higher awarded belt — a lower belt is implied-true, not a
+ * self-declaration awaiting review. A belt ABOVE the ceiling cannot reach this
+ * path (it throws FORBIDDEN below); the UI routes those to `promotion.submit`
+ * (the V2 spine oRPC). No belt-journey path ever mints an `UNVERIFIED` award, so
+ * there is no display axis and nothing can leak onto the tree (ADR 0035 §5).
+ */
+const upsertBeltMilestone = beltProcedure
+  .input(upsertBeltMilestoneInput)
+  .handler(async ({ input, context }) => {
+    const passportId = await getActingPassportId(context.user.id)
+    const disciplineId = await getBjjDisciplineId()
+
+    // Gate the TARGET rank against the member's current ceiling BEFORE any write.
+    const rank = await db.rank.findUnique({
+      where: { id: input.rankId },
+      select: { sortOrder: true, rankSystem: { select: { disciplineId: true } } },
+    })
+    if (!rank) throw new ORPCError("NOT_FOUND", { message: "Rank not found" })
+    if (rank.rankSystem?.disciplineId !== disciplineId) {
+      throw new ORPCError("BAD_REQUEST", { message: "Rank is not in the belt discipline" })
+    }
+
+    const awards = await getMemberAwards(passportId)
+    const ceiling = ceilingSortOrder(awards.map(toGateAward), disciplineId)
+    if (!isWithinCeiling(rank.sortOrder, ceiling)) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "You can only enrich belts at or below your awarded rank",
+      })
+    }
+
+    const rankAwardId = await db.$transaction(async tx => {
+      const award = await tx.rankAward.upsert({
+        where: { passportId_rankId: { passportId, rankId: input.rankId } },
+        create: {
+          passportId,
+          rankId: input.rankId,
+          source: "STATED",
+          // VERIFIED-by-implication: gated `<= ceiling`, so a higher/equal awarded
+          // belt already vouches for this one. `awardedById` stays null → this is a
+          // self-added backfill (fact-editable; see `isFactEditable`).
+          verificationStatus: "VERIFIED",
+        },
+        update: {},
+        select: { id: true },
+      })
+
+      await tx.rankMilestone.upsert({
+        where: { rankAwardId: award.id },
+        create: { rankAwardId: award.id, story: input.story?.trim() || null },
+        update: { story: input.story?.trim() ?? null },
+      })
+
+      return award.id
+    })
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return enrichedCard(passportId, rankAwardId)
+  })
+
+/**
+ * `updateRankAwardFact(rankAwardId, { awardedAt, promoter, school })` — edit the
+ * promotion FACT of an OWN, self-added backfill award. NEVER changes `rankId`
+ * (not an input). B1: editable only for self-added STATED backfills; a
+ * promotion-minted / imported / disputed award is authority-owned → FORBIDDEN
+ * (`isFactEditable`). Promoter/school each accept a typed FK OR freetext; freetext
+ * school → `emitSchoolLead` + stored on `location`; freetext promoter → `notes`.
+ */
+const updateRankAwardFact = beltProcedure
+  .input(updateRankAwardFactInput)
+  .handler(async ({ input, context }) => {
+    const passportId = await getActingPassportId(context.user.id)
+
+    const award = await db.rankAward.findUnique({
+      where: { id: input.rankAwardId },
+      select: {
+        id: true,
+        passportId: true,
+        source: true,
+        verificationStatus: true,
+        awardedById: true,
+      },
+    })
+    if (!award || award.passportId !== passportId) {
+      throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+    }
+    if (!isFactEditable(award)) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "This belt was verified by an instructor and its facts are read-only",
+      })
+    }
+
+    // Build a partial update — undefined keys leave the column untouched; the
+    // rankId is deliberately never in this object.
+    const data: {
+      awardedAt?: Date | null
+      notes?: string | null
+      awardedByPassportId?: string | null
+      location?: string | null
+      organizationId?: string | null
+    } = {}
+
+    if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
+
+    if (input.promoter !== undefined) {
+      if (input.promoter?.awardedByPassportId) {
+        data.awardedByPassportId = input.promoter.awardedByPassportId
+        data.notes = null
+      } else {
+        const name = input.promoter?.name?.trim() || null
+        data.awardedByPassportId = null
+        data.notes = name
+      }
+    }
+
+    if (input.school !== undefined) {
+      if (input.school?.organizationId) {
+        data.organizationId = input.school.organizationId
+        data.location = null
+      } else {
+        const schoolName = input.school?.name?.trim() || null
+        data.organizationId = null
+        data.location = schoolName
+        // Freetext school → capture the demand as a deduped school-outreach lead
+        // (Slice 1). Never sends outreach — the invite is an operator click. The
+        // country (Locked #7) belongs to the school, so it rides here → sets the
+        // placeholder Organization.country (ignored on a registered-org pick).
+        if (schoolName) {
+          await emitSchoolLead({
+            schoolName,
+            source: "belt-journey",
+            country: input.school?.country ?? null,
+          })
+        }
+      }
+    }
+
+    await db.rankAward.update({ where: { id: award.id }, data })
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return enrichedCard(passportId, award.id)
+  })
+
+/**
+ * `attachMilestoneMedia(rankMilestoneId, mediaId, purpose)` — link a Media row to
+ * an OWN milestone via `MediaAttachment.rankMilestoneId` (Slice 2 column). Idempotent.
+ */
+const attachMilestoneMedia = beltProcedure
+  .input(attachMilestoneMediaInput)
+  .handler(async ({ input, context }) => {
+    const passportId = await getActingPassportId(context.user.id)
+
+    const milestone = await db.rankMilestone.findUnique({
+      where: { id: input.rankMilestoneId },
+      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
+    })
+    if (!milestone || milestone.rankAward.passportId !== passportId) {
+      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
+    }
+
+    // FIX 2 (HIGH): the caller-supplied `mediaId` must be a photo THIS user uploaded
+    // (`Media.uploadedById === user.id`). Without it, a member could attach a foreign /
+    // private Media row to their own milestone (disclosure), or a nonexistent id would
+    // surface as a raw Prisma P2003 500. A friendly NOT_FOUND covers both cases.
+    const ownedMedia = await resolveOwnedMedia(db, input.mediaId, context.user.id)
+    if (!ownedMedia) {
+      throw new ORPCError("NOT_FOUND", { message: "Media not found" })
+    }
+
+    const existing = await db.mediaAttachment.findFirst({
+      where: { rankMilestoneId: milestone.id, mediaId: input.mediaId },
+      select: { id: true },
+    })
+    if (existing) {
+      await db.mediaAttachment.update({
+        where: { id: existing.id },
+        data: { purpose: input.purpose },
+      })
+    } else {
+      await db.mediaAttachment.create({
+        data: {
+          rankMilestoneId: milestone.id,
+          mediaId: input.mediaId,
+          purpose: input.purpose,
+        },
+      })
+    }
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return enrichedCard(passportId, milestone.rankAward.id)
+  })
+
+/**
+ * `detachMilestoneMedia(rankMilestoneId, mediaId)` — unlink a Media row from an
+ * OWN milestone. The `Media` row itself is untouched.
+ */
+const detachMilestoneMedia = beltProcedure
+  .input(detachMilestoneMediaInput)
+  .handler(async ({ input, context }) => {
+    const passportId = await getActingPassportId(context.user.id)
+
+    const milestone = await db.rankMilestone.findUnique({
+      where: { id: input.rankMilestoneId },
+      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
+    })
+    if (!milestone || milestone.rankAward.passportId !== passportId) {
+      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
+    }
+
+    await db.mediaAttachment.deleteMany({
+      where: { rankMilestoneId: milestone.id, mediaId: input.mediaId },
+    })
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return enrichedCard(passportId, milestone.rankAward.id)
+  })
+
+/**
+ * `deleteRankAward(rankAwardId)` — delete an OWN award (cascades its milestone +
+ * media attachments). FORBIDDEN if it is the member's current TOP award, since
+ * removing it would drop the self-promotion ceiling (Locked #5).
+ */
+const deleteRankAward = beltProcedure
+  .input(deleteRankAwardInput)
+  .handler(async ({ input, context }) => {
+    const passportId = await getActingPassportId(context.user.id)
+    const disciplineId = await getBjjDisciplineId()
+
+    const awards = await getMemberAwards(passportId)
+    const target = awards.find(a => a.id === input.rankAwardId)
+    if (!target) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+
+    // FIX 3 (MED): delete must not exceed edit. Only a self-added, fact-editable award
+    // (STATED, no approver stamp, not IMPORTED/DISPUTED) may be removed — a
+    // promotion-minted / IMPORTED / DISPUTED award is authority-owned truth, so
+    // erasing it would let a member drop an instructor-verified belt (reuses the SAME
+    // `isFactEditable` predicate the fact-edit path uses).
+    if (!isFactEditable(target)) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "This belt was verified by an instructor and cannot be deleted",
+      })
+    }
+
+    if (isTopAward(input.rankAwardId, awards.map(toGateAward), disciplineId)) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "You cannot delete your current top belt",
+      })
+    }
+
+    await db.rankAward.delete({ where: { id: input.rankAwardId } })
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return { deleted: true as const, rankAwardId: input.rankAwardId }
+  })
+
+export const belt = {
+  upsertBeltMilestone,
+  updateRankAwardFact,
+  attachMilestoneMedia,
+  detachMilestoneMedia,
+  deleteRankAward,
+}

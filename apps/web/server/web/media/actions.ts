@@ -37,6 +37,9 @@ function revalidateForTarget(target: MediaAttachTarget) {
       paths.push("/me")
       tags.push("passport")
       break
+    case "rankMilestone":
+      paths.push("/app/profile")
+      break
     default:
       break
   }

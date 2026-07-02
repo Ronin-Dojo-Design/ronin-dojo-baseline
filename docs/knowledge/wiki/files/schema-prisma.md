@@ -4,13 +4,14 @@ slug: schema-prisma
 type: file
 status: active
 created: 2026-04-25
-updated: 2026-06-26
+updated: 2026-07-01
 author: Brian + Copilot
-last_agent: claude-session-0449
+last_agent: codex-session-0479
 pairs_with:
   - knowledge/wiki/files/seed-ts
   - architecture/data-model
   - architecture/s1-schema-design
+  - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
 parent: architecture/program-plan
 backlinks:
   - sprints/SESSION_0004
@@ -21,6 +22,7 @@ backlinks:
   - docs/knowledge/wiki/files/dirstarter-l1-baseline.md
   - docs/knowledge/wiki/files/discipline-queries.md
   - docs/sprints/SESSION_0152.md
+  - docs/sprints/SESSION_0479.md
 needs_fix:
   - "Single-brand BBL prune (ADR 0034): the 4-brand Brand enum harness + ~170 vestigial getRequestBrand sites are slated for full prune; multi-brand is dead, multi-product is the model"
   - "Tool/Category/Tag NOT removable as plain Dirstarter boilerplate — Tool is repurposed as the join-the-legacy non-claim 'Legacy Profile' record (createJoinLegacyInterest); confirm consumers before any removal"
@@ -37,10 +39,9 @@ tags: [prisma, schema, database, s1]
 
 ## Summary
 
-The Prisma schema defining all database models for the Ronin Dojo platform. **125 models, 87 enums,
-~4127 lines** (59 migrations). Source of truth for the data layer. *(Counts refreshed SESSION_0441;
-enum count +1 at SESSION_0449 for `UserRole`; the prior 109/55/~3500 figure was frozen at
-SESSION_0152.)*
+The Prisma schema defining all database models for the Ronin Dojo platform. **127 models, 88 enums,
+4,216 lines** (63 migrations). Source of truth for the data layer. *(Counts refreshed SESSION_0479 after
+`RankMilestone`; the prior 125/87/~4127 figure was frozen before the latest rank-history migrations.)*
 
 ## Intent
 
@@ -71,7 +72,8 @@ Two sections:
     `lineage_tree_admin` and `guest` are synthetic UI/code labels, never stored.
 - **Organization:** Organization, Discipline, OrganizationDiscipline, Affiliation (school axis,
   separate from Membership)
-- **Ranks:** RankSystem, Rank (`colorHex` belt color), RankAward (canonical promotion fact)
+- **Ranks:** RankSystem, Rank (`colorHex` belt color), RankAward (canonical promotion fact), RankMilestone
+  (Belt Journey story/media enrichment)
 - **Lineage:** LineageTree, LineageTreeMember, LineageNode, LineageRelationship, LineageVisualGroup,
   LineageTreeAccess
 - **Claims (unified, ADR 0036):** **PassportClaimRequest** (THE person-claim record — keyed on
@@ -95,7 +97,7 @@ Two sections:
 - Type-checks: ✅ (`tsc --noEmit` clean)
 - Tested: ◑ (model-level zod/action tests exist per-feature; no whole-schema test)
 - Seeded: ✅ (per-brand seeds run clean)
-- Migration history: ✅ 59 migrations. **⚠ prodsnap/prod drift hazard (SESSION_0441):** the
+- Migration history: ✅ 63 migrations. **⚠ prodsnap/prod drift hazard (SESSION_0441):** the
   hand-stamped `20260622000000_add_claimed_rank_to_lineage_claim_request` is **pending** and marked
   *"DO NOT APPLY in cloud sessions"* — a deploy's `prisma migrate deploy` applies ALL pending
   migrations, so check `prisma migrate status` before any schema-touching push.
