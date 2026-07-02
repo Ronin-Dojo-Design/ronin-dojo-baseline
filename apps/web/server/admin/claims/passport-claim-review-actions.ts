@@ -9,7 +9,6 @@ import {
 } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { SessionUser } from "~/server/orpc/context"
-import { can } from "~/server/orpc/permissions"
 import { canForResource } from "~/server/orpc/resource-permissions"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
 import { scheduleClaimRejectedEmail } from "~/server/web/lineage/claim-rejected-email"
@@ -268,11 +267,17 @@ const NOT_AUTHORIZED = "User not authorized"
  *   claim lookup, bogus ids still surface as NOT_FOUND from the apply).
  * - IDENTITY (and any other non-promotion) claims stay admin-only: their
  *   finalize does identity-attach + comp — a bigger blast radius than V5 covers.
- * - RANK_PROMOTION claims additionally admit `claims.manage` holders and any
- *   `claim.review` grant (TREE_ADMIN / TREE_EDITOR / in-branch BRANCH_EDITOR /
- *   matching NODE_EDITOR) scoped to the member's node/tree — derived at review
- *   time via `resolvePromotionClaimResources` since the claim carries no tree.
- *   A member with no node/tree membership falls back to admin-only.
+ * - RANK_PROMOTION claims additionally admit any resource-scoped `claim.review`
+ *   grant (TREE_ADMIN / TREE_EDITOR / in-branch BRANCH_EDITOR / matching
+ *   NODE_EDITOR) scoped to the member's node/tree — derived at review time via
+ *   `resolvePromotionClaimResources` since the claim carries no tree. A member
+ *   with no node/tree membership falls back to admin-only.
+ * - EXCEPT the claimant themselves — a member may never review their OWN promotion
+ *   (SESSION_0492 FIX 1), even though their own-node NODE_EDITOR carries `claim.review`.
+ *
+ * (`claims.manage` is admin-only — granted solely via the `admin: ["*"]` wildcard,
+ * never to a non-admin role or a resource grant — so the admin short-circuit above
+ * already covers every `claims.manage` holder; there is no separate branch for it.)
  */
 const assertCanReviewPassportClaim = async ({
   db,
@@ -302,17 +307,13 @@ const assertCanReviewPassportClaim = async ({
 
   // SESSION_0492 FIX 1 (CRITICAL): a claimant may NEVER review their own promotion.
   // Every claimed member holds own-node NODE_EDITOR, which carries `claim.review`
-  // scoped to their own node — so without this the resource check below (and a
-  // `claims.manage` holder) would let a member self-approve an above-ceiling belt
-  // into a VERIFIED award + flip `isVerified`. Placed BEFORE both the `claims.manage`
-  // and resource-scope gates so the self-review block is unconditional. Same opaque
-  // `NOT_AUTHORIZED` shape — never leak that it was a self-review at the authz door.
+  // scoped to their own node — so without this the resource check below would let a
+  // member self-approve an above-ceiling belt into a VERIFIED award + flip
+  // `isVerified`. Placed BEFORE the resource-scope gate so the self-review block is
+  // unconditional. Same opaque `NOT_AUTHORIZED` shape — never leak that it was a
+  // self-review at the authz door.
   if (claim.claimantUserId === user.id) {
     throw new Error(NOT_AUTHORIZED)
-  }
-
-  if (can(user, "claims.manage")) {
-    return
   }
 
   const resources = await resolvePromotionClaimResources(db, claim.passportId)

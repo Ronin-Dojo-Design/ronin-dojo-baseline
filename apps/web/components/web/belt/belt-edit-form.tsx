@@ -171,7 +171,10 @@ export function BeltEditForm({
         <DialogTitle>{vm.rank.name}</DialogTitle>
       </DialogHeader>
 
-      {/* FACT fields — editable only while UNVERIFIED */}
+      {/* FACT fields — editable only for a self-added backfill (fact-editable, `factEditable`).
+          B1 (ADR 0035 Amendment 1): there are no UNVERIFIED awards — a self-backfill is
+          VERIFIED-by-implication; a promotion-minted / imported / disputed award is
+          authority-owned and its facts render read-only. */}
       <Stack direction="column" size="md" className="w-full">
         <div className="w-full">
           <Label htmlFor="belt-awarded-at">{beltDateLabel(white)}</Label>

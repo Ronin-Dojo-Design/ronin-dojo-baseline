@@ -109,23 +109,11 @@ export async function submitRankPromotionClaim(
     throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.NOT_A_PROMOTION)
   }
 
-  // One open promotion per member — a queued request must resolve before the next.
-  const existingOpen = await db.passportClaimRequest.findFirst({
-    where: {
-      passportId: passport.id,
-      type: "RANK_PROMOTION",
-      status: { in: ["PENDING", "NEEDS_INFO"] },
-    },
-    select: { id: true },
-  })
-  if (existingOpen) {
-    throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
-  }
-
   // FIX 2 (HIGH): every evidence row carrying a `mediaId` must reference a photo the
   // CLAIMANT uploaded (`Media.uploadedById === claimantUserId`). Without this, a caller
   // could attach a foreign / private Media id as "evidence" — disclosing it to reviewers
   // — or a nonexistent id that would only surface as a raw Prisma P2003 500 on create.
+  // (Media owner is immutable, so this may run inside the tx below without a TOCTOU risk.)
   for (const item of input.evidence ?? []) {
     if (!item.mediaId) continue
     const owned = await resolveOwnedMedia(db, item.mediaId, input.claimantUserId)
@@ -134,28 +122,45 @@ export async function submitRankPromotionClaim(
     }
   }
 
-  const claim = await db.passportClaimRequest.create({
-    data: {
-      type: "RANK_PROMOTION",
-      passportId: passport.id,
-      claimantUserId: input.claimantUserId,
-      brand: input.brand,
-      claimedRankId: input.claimedRankId,
-      claimantNote: input.claimantNote ?? null,
-      ...(input.evidence?.length
-        ? {
-            evidence: {
-              create: input.evidence.map(item => ({
-                label: item.label ?? null,
-                url: item.url ?? null,
-                text: item.text ?? null,
-                mediaId: item.mediaId ?? null,
-              })),
-            },
-          }
-        : {}),
-    },
-    select: { id: true },
+  // FIX 5 (LOW): the "one open promotion" check + create run in ONE transaction so two
+  // concurrent submits can't both pass the check and both create — the check-then-create
+  // race is closed atomically.
+  const claim = await db.$transaction(async (tx: Db) => {
+    const existingOpen = await tx.passportClaimRequest.findFirst({
+      where: {
+        passportId: passport.id,
+        type: "RANK_PROMOTION",
+        status: { in: ["PENDING", "NEEDS_INFO"] },
+      },
+      select: { id: true },
+    })
+    if (existingOpen) {
+      throw new Error(SUBMIT_RANK_PROMOTION_CLAIM_ERROR.DUPLICATE_OPEN_PROMOTION)
+    }
+
+    return tx.passportClaimRequest.create({
+      data: {
+        type: "RANK_PROMOTION",
+        passportId: passport.id,
+        claimantUserId: input.claimantUserId,
+        brand: input.brand,
+        claimedRankId: input.claimedRankId,
+        claimantNote: input.claimantNote ?? null,
+        ...(input.evidence?.length
+          ? {
+              evidence: {
+                create: input.evidence.map(item => ({
+                  label: item.label ?? null,
+                  url: item.url ?? null,
+                  text: item.text ?? null,
+                  mediaId: item.mediaId ?? null,
+                })),
+              },
+            }
+          : {}),
+      },
+      select: { id: true },
+    })
   })
 
   return { claimId: claim.id }
