@@ -594,6 +594,16 @@ export function LineageViewAIsland({
               } as CSSProperties
             }
           >
+            {/* Depth controls — FI-013: at phone width the top-right absolute overlay
+                floated over the root member card, hiding its name/rank. On mobile the
+                controls now flow as an in-canvas bar ABOVE the tree (no overlap); at
+                `sm`+ they restore to the top-right overlay so the desktop layout is
+                unchanged. Same single instance drives both. */}
+            <div className="relative z-20 flex flex-row flex-wrap justify-end gap-2 px-3 pt-3 sm:absolute sm:right-4 sm:top-4 sm:flex-col sm:px-0 sm:pt-0">
+              <DepthStepper label="Ancestry" value={ancestryDepth} onChange={setAncestryDepth} />
+              <DepthStepper label="Progeny" value={progenyDepth} onChange={setProgenyDepth} />
+            </div>
+
             <LineageCohortTimeline
               nodes={nodes}
               focusMemberId={focusMemberId}
@@ -624,16 +634,6 @@ export function LineageViewAIsland({
                 Tap to recenter
               </div>
             )}
-          </div>
-
-          {/* Depth controls — pinned top-right on all breakpoints (SESSION_0411):
-              the canvas now grows with the tree (page-vertical scroll), so a
-              bottom-pinned control would sit at the far bottom of a tall tree and
-              scroll out of reach. Top-right keeps it visible on initial paint and
-              clear of the top-left "Tap to recenter" hint. */}
-          <div className="absolute right-3 top-3 z-20 flex max-w-[calc(100%-1.5rem)] flex-col gap-2 sm:right-4 sm:top-4">
-            <DepthStepper label="Ancestry" value={ancestryDepth} onChange={setAncestryDepth} />
-            <DepthStepper label="Progeny" value={progenyDepth} onChange={setProgenyDepth} />
           </div>
 
           <div className="absolute bottom-3 left-3 z-20 hidden max-w-[calc(100%-1.5rem)] flex-wrap gap-2 sm:bottom-4 sm:left-4 sm:flex">
