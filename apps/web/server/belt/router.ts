@@ -295,6 +295,17 @@ const deleteRankAward = beltProcedure
     const target = awards.find(a => a.id === input.rankAwardId)
     if (!target) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
 
+    // FIX 3 (MED): delete must not exceed edit. Only a self-added, fact-editable award
+    // (STATED, no approver stamp, not IMPORTED/DISPUTED) may be removed — a
+    // promotion-minted / IMPORTED / DISPUTED award is authority-owned truth, so
+    // erasing it would let a member drop an instructor-verified belt (reuses the SAME
+    // `isFactEditable` predicate the fact-edit path uses).
+    if (!isFactEditable(target)) {
+      throw new ORPCError("FORBIDDEN", {
+        message: "This belt was verified by an instructor and cannot be deleted",
+      })
+    }
+
     if (isTopAward(input.rankAwardId, awards.map(toGateAward), disciplineId)) {
       throw new ORPCError("FORBIDDEN", {
         message: "You cannot delete your current top belt",

@@ -302,6 +302,53 @@ describe("belt.deleteRankAward — top-award protection + ownership", () => {
       expect(await db.rankMilestone.findUnique({ where: { id: milestone.id } })).toBeNull()
     }
   })
+
+  // SESSION_0492 FIX 3 (MED): delete must not exceed edit. A promotion-minted award
+  // (awardedById stamped) that is NOT the top award was previously deletable — a
+  // member could erase an instructor-verified belt. Uses a dedicated member so the
+  // fact-editable guard is what fires, independent of the top-award guard.
+  it("DENIES deleting a promotion-minted award (awardedById stamped, non-top → FORBIDDEN)", async () => {
+    const u = await db.user.create({
+      data: { name: tag("fix3"), email: `${tag("fix3")}@test.local` },
+    })
+    const pp = await db.passport.create({
+      data: { displayName: tag("fix3-pp"), userId: u.id },
+      select: { id: true },
+    })
+    // Top award: brown, a self-added editable award (keeps it OFF the fact-editable guard).
+    const topAward = await db.rankAward.create({
+      data: {
+        passportId: pp.id,
+        rankId: fx.brownRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+      select: { id: true },
+    })
+    // Non-top: blue, PROMOTION-MINTED (awardedById stamped by an approver) → authority-owned.
+    const mintedAward = await db.rankAward.create({
+      data: {
+        passportId: pp.id,
+        rankId: fx.blueRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedById: fx.otherUserId, // any approver id → stamped → not fact-editable
+      },
+      select: { id: true },
+    })
+
+    const asFix3 = asMember({ id: u.id, role: "user" })
+    await expectCode(asFix3.deleteRankAward({ rankAwardId: mintedAward.id }), "FORBIDDEN")
+    expect(await db.rankAward.findUnique({ where: { id: mintedAward.id } })).not.toBeNull()
+
+    // Control: the top self-backfill is fact-editable, so only the TOP-award guard blocks it
+    // (proves FIX 3 didn't over-lock); the minted non-top is blocked by FIX 3.
+    await expectCode(asFix3.deleteRankAward({ rankAwardId: topAward.id }), "FORBIDDEN")
+
+    await db.rankAward.deleteMany({ where: { passportId: pp.id } })
+    await db.passport.delete({ where: { id: pp.id } })
+    await db.user.delete({ where: { id: u.id } })
+  })
 })
 
 describe("belt.attachMilestoneMedia / detachMilestoneMedia — ownership", () => {
