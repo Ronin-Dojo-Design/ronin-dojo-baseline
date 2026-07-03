@@ -702,3 +702,7 @@ On the operator's "go": push + PR + squash-merge; watch the Vercel build (migrat
 | Git hygiene | branch session-0493-community-feed, 9 code commits + 1 docs close commit (hash in bow-out chat); worktree kept (unmerged); NOT pushed — explicit-push-authorization |
 | Graphify update | worktree: nodes=12326 edges=26856 communities=1369 (gate runner); canonical checkout refreshed at close |
 
+
+## Post-gate ship record (2026-07-03)
+
+Operator "go" received → executed same-session: pushed → [PR #188](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/188) → squash-merged `55e8af4a` → prod deploy Ready (3 migrations applied on Neon 12:38:52Z, verified) → 3 data scripts dry-run + applied vs prod (64 edges / 89 degrees / 5 secondary colors; idempotency re-proven 0-to-write) → **prod smoke green** (/posts 200; /directory/tony-hua renders the full 5-gen chain; /app/posts 404; /app/blog auth-gated; /blog untouched). Worktree `../ronin-0493` + branch removed (self-clean). **Next session = community feed phase 2 (votes) directly — the prod-verify First task below is DONE.**
