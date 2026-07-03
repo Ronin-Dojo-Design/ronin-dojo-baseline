@@ -35,10 +35,8 @@ export type LineageAncestryRank = {
   colorHex: string | null
   sortOrder: number
   /**
-   * Black-belt degree for the flat-bar stripe rendering.
-   * TODO(SESSION_0493_TASK_01): read `rank.degree` once the additive `Rank.degree Int?`
-   * migration lands (T01 owns all schema.prisma edits this session). Until then the
-   * seam returns null and the swatch renders no stripes.
+   * Black-belt degree for the flat-bar stripe rendering — `Rank.degree` (additive
+   * `Int?`, landed SESSION_0493 TASK_01). Null = no degree stripes.
    */
   degree: number | null
 }
@@ -104,8 +102,7 @@ export const assembleAncestryEntries = (
             name: award.rank.name,
             colorHex: award.rank.colorHex,
             sortOrder: award.rank.sortOrder,
-            // TODO(SESSION_0493_TASK_01): award.rank.degree once Rank.degree lands.
-            degree: null,
+            degree: award.rank.degree ?? null,
           }
         : null,
       disciplineLabel: award?.rank.rankSystem?.discipline?.name ?? null,

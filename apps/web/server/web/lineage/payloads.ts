@@ -121,6 +121,8 @@ export const lineageNodeRowPayload = {
               shortName: true,
               colorHex: true,
               sortOrder: true,
+              // @added SESSION_0493 — degree stripes for the ancestry-timeline flat-bar swatch.
+              degree: true,
               rankSystem: {
                 select: {
                   id: true,
