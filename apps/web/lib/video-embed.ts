@@ -9,33 +9,47 @@
  *
  * FI-007 / WL-P2-15 (SESSION_0434).
  */
-export function toVideoEmbedUrl(raw: string | null | undefined): string | null {
+
+function parseVideoUrl(raw: string | null | undefined): URL | null {
   if (!raw) {
     return null
   }
-
-  let url: URL
   try {
-    url = new URL(raw.trim())
+    return new URL(raw.trim())
   } catch {
     return null
   }
+}
 
+/** YouTube video id from youtu.be/<id>, youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>. */
+function parseYouTubeVideoId(url: URL): string | null {
   const host = url.hostname.replace(/^www\./, "").toLowerCase()
 
-  // YouTube — youtu.be/<id>, youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>
   if (host === "youtu.be") {
-    const id = url.pathname.split("/").filter(Boolean)[0]
-    return id ? `https://www.youtube.com/embed/${id}` : null
+    return url.pathname.split("/").filter(Boolean)[0] ?? null
   }
   if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
     if (url.pathname === "/watch") {
-      const id = url.searchParams.get("v")
-      return id ? `https://www.youtube.com/embed/${id}` : null
+      return url.searchParams.get("v") || null
     }
     const match = url.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)
-    return match ? `https://www.youtube.com/embed/${match[1]}` : null
+    return match ? match[1] : null
   }
+  return null
+}
+
+export function toVideoEmbedUrl(raw: string | null | undefined): string | null {
+  const url = parseVideoUrl(raw)
+  if (!url) {
+    return null
+  }
+
+  const youTubeId = parseYouTubeVideoId(url)
+  if (youTubeId) {
+    return `https://www.youtube.com/embed/${youTubeId}`
+  }
+
+  const host = url.hostname.replace(/^www\./, "").toLowerCase()
 
   // Vimeo — vimeo.com/<id>, player.vimeo.com/video/<id>
   if (host === "vimeo.com") {
@@ -48,4 +62,21 @@ export function toVideoEmbedUrl(raw: string | null | undefined): string | null {
   }
 
   return null
+}
+
+/**
+ * Best-effort static *thumbnail* URL for a user-entered video URL — the community
+ * feed's card media for video-first posts (SESSION_0493 Desi P1). YouTube exposes
+ * predictable thumbnail URLs (`img.youtube.com` — allowed in next.config.ts
+ * `images.remotePatterns`); Vimeo has no static equivalent (oEmbed API only), so
+ * Vimeo returns `null` and callers keep their non-media fallback.
+ */
+export function toVideoThumbnailUrl(raw: string | null | undefined): string | null {
+  const url = parseVideoUrl(raw)
+  if (!url) {
+    return null
+  }
+
+  const youTubeId = parseYouTubeVideoId(url)
+  return youTubeId ? `https://img.youtube.com/vi/${youTubeId}/hqdefault.jpg` : null
 }

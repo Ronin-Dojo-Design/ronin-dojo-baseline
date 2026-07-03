@@ -192,7 +192,20 @@ export const CommunityFeed = ({ posts, styles, viewer }: CommunityFeedProps) => 
               </button>
             </>
           ) : (
-            t("no_posts")
+            <>
+              {t("no_posts")}
+              {/* Launch empty state doubles as the funnel entry — same CTA as the header
+                  button; the create dialog's LoginDialog gate handles logged-out (Desi P1). */}
+              <Button
+                type="button"
+                size="sm"
+                prefix={<PenSquareIcon />}
+                onClick={() => setIsCreateOpen(true)}
+                className="mt-4 flex"
+              >
+                {t("new_post")}
+              </Button>
+            </>
           )}
         </EmptyList>
       )}
@@ -212,14 +225,16 @@ export const CommunityFeed = ({ posts, styles, viewer }: CommunityFeedProps) => 
           </div>
         ))}
 
-      {/* Mobile create-post FAB (the legacy feed's pattern, tokens-only). */}
+      {/* Mobile create-post FAB (the legacy feed's pattern, tokens-only). A true 56px
+          circle (p-4 + 24px icon, affix em-margins reset) in the brand `fancy` variant —
+          the lg-pill default rendered a ~44×36 white-on-dark oval (Desi P1). */}
       <Button
         type="button"
-        size="lg"
-        prefix={<PenSquareIcon />}
+        variant="fancy"
+        prefix={<PenSquareIcon className="mx-0! my-0! size-6!" />}
         onClick={() => setIsCreateOpen(true)}
         aria-label={t("new_post")}
-        className="fixed right-5 bottom-5 z-40 rounded-full shadow-lg md:hidden"
+        className="fixed right-5 bottom-5 z-40 rounded-full p-4 shadow-lg md:hidden"
       />
 
       <CreateCommunityPostDialog

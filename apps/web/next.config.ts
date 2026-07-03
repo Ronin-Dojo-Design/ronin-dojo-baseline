@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "**.r2.dev" },
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
+      // SESSION_0493: community-feed video posts render the YouTube-provided
+      // thumbnail (lib/video-embed.ts `toVideoThumbnailUrl`) as card media.
+      { protocol: "https", hostname: "img.youtube.com" },
     ],
   },
   async redirects() {

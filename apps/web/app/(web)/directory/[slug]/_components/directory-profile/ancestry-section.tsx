@@ -18,7 +18,11 @@ export function AncestrySection({ ancestry }: { ancestry: LineageAncestryEntry[]
   return (
     <Section>
       <H4>Lineage</H4>
-      <LineageAncestryTimeline entries={ancestry} />
+      {/* Section is md:grid-cols-3 — without the span the timeline auto-places into ONE
+          narrow column next to the heading (Desi P1). Heading keeps col 1; timeline 2–3. */}
+      <div className="md:col-span-2">
+        <LineageAncestryTimeline entries={ancestry} />
+      </div>
     </Section>
   )
 }

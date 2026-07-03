@@ -17,9 +17,15 @@ import { cx } from "~/lib/utils"
  * - `flat-bar` — a flat horizontal rank bar (the ancestry-timeline shape,
  *   SESSION_0493). Pass `degree` to render degree stripes toward one end — the
  *   standard BJJ black-belt bar layout. Stripes are white with a faint dark edge so
- *   they read on any data-driven belt color; capped at 10.
+ *   they read on any data-driven belt color. Stripes render for degrees 1–6 only:
+ *   red/coral belts (7th+) don't carry stripe bars in BJJ, and 7–10 stripes read as
+ *   a barcode at this size — the adjacent rank text already states the degree.
+ *
+ * Every belt body carries the `stroke-border` outline UNCONDITIONALLY — a
+ * `#000000` black belt is otherwise invisible on the dark default theme
+ * (SESSION_0493 Desi P0).
  */
-const FLAT_BAR_MAX_STRIPES = 10
+const FLAT_BAR_MAX_STRIPED_DEGREE = 6
 
 export function BeltSwatch({
   colorHex,
@@ -32,35 +38,36 @@ export function BeltSwatch({
   className?: string
   variant?: "dot" | "bar" | "flat-bar"
   shimmer?: boolean
-  /** Degree stripes on the `flat-bar` variant (ignored by `dot`/`bar`). */
+  /** Degree stripes on the `flat-bar` variant, degrees 1–6 (7+ suppressed; ignored by `dot`/`bar`). */
   degree?: number | null
 }) {
   if (variant === "flat-bar") {
     const fill = colorHex ?? "currentColor"
-    const stripeCount = Math.min(Math.max(degree ?? 0, 0), FLAT_BAR_MAX_STRIPES)
+    const clampedDegree = Math.max(degree ?? 0, 0)
+    const stripeCount = clampedDegree > FLAT_BAR_MAX_STRIPED_DEGREE ? 0 : clampedDegree
     return (
       <svg
         aria-hidden="true"
         focusable="false"
-        viewBox="0 0 56 10"
-        className={cx("h-2.5 w-14 shrink-0 overflow-hidden", !colorHex && "text-muted", className)}
+        viewBox="0 0 80 10"
+        className={cx("h-2.5 w-20 shrink-0 overflow-hidden", !colorHex && "text-muted", className)}
       >
         {/* flat belt body */}
         <rect
           x="0.5"
           y="1.5"
-          width="55"
+          width="79"
           height="7"
           rx="1.5"
           fill={fill}
-          className={cx(!colorHex && "stroke-border")}
+          className="stroke-border"
         />
         {/* degree stripes — right-anchored, standard black-belt bar layout */}
         {Array.from({ length: stripeCount }, (_, index) => (
           <rect
             // eslint-disable-next-line react/no-array-index-key -- stripes are positional by definition
             key={index}
-            x={49.5 - index * 4}
+            x={73.5 - index * 4}
             y="1.5"
             width="2.4"
             height="7"
@@ -83,16 +90,9 @@ export function BeltSwatch({
         className={cx("h-3 w-10 shrink-0 overflow-hidden", !colorHex && "text-muted", className)}
       >
         {/* belt body */}
-        <rect
-          x="0.5"
-          y="3"
-          width="39"
-          height="6"
-          rx="3"
-          fill={fill}
-          className={cx(!colorHex && "stroke-border")}
-        />
-        {/* knot + wrap shadow */}
+        <rect x="0.5" y="3" width="39" height="6" rx="3" fill={fill} className="stroke-border" />
+        {/* knot + wrap shadow — the knot overpaints the body outline, so it needs the
+            border stroke too or a black belt's silhouette breaks mid-bar on dark. */}
         <rect
           x="15.5"
           y="1.5"
@@ -100,8 +100,8 @@ export function BeltSwatch({
           height="9"
           rx="1.6"
           fill={fill}
-          stroke="rgba(0,0,0,0.28)"
           strokeWidth="0.6"
+          className="stroke-border"
         />
         <rect x="18.4" y="1.5" width="3.2" height="9" fill="rgba(0,0,0,0.2)" />
         {shimmer && (

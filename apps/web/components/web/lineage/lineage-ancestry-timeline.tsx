@@ -47,8 +47,13 @@ export function LineageAncestryTimeline({ entries }: { entries: LineageAncestryE
             )}
 
             <motion.div
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              // In-view entrance, once (Desi P1). This is a public SEO surface, so SSR
+              // must ship the chain VISIBLE pre-hydration/no-JS: the hidden state lives
+              // in whileInView KEYFRAMES ([0 → 1]) instead of `initial`, which motion
+              // would render as `opacity:0` inline styles on the server.
+              initial={false}
+              whileInView={reduceMotion ? { opacity: 1, y: 0 } : { opacity: [0, 1], y: [8, 0] }}
+              viewport={{ once: true }}
               transition={
                 reduceMotion
                   ? { duration: 0 }
