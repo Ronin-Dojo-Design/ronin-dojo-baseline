@@ -57,7 +57,11 @@ export function BeltSwatch({
   if (variant === "flat-bar") {
     const fill = colorHex ?? "currentColor"
     const clampedDegree = Math.max(degree ?? 0, 0)
-    const stripeCount = clampedDegree > FLAT_BAR_MAX_STRIPED_DEGREE ? 0 : clampedDegree
+    // Panels and stripes never co-render: an alternating belt (coral / red-white Dan)
+    // encodes its degree in the panels themselves — white stripes over white panels
+    // would vanish (Doug P3, SESSION_0493).
+    const stripeCount =
+      secondaryColorHex || clampedDegree > FLAT_BAR_MAX_STRIPED_DEGREE ? 0 : clampedDegree
     return (
       <svg
         aria-hidden="true"

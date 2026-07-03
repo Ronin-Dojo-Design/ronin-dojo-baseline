@@ -33,7 +33,7 @@ export const createCommunityPostSchema = z.object({
     ])
     .optional(),
   // Set by the member-safe `uploadCommunityPostImage` action — the create action additionally
-  // verifies the URL points at OUR media bucket (see `isOwnMediaUrl`).
+  // verifies the URL points at OUR media bucket (see `isAllowedCommunityImageUrl`).
   imageUrl: z.union([z.literal(""), z.string().trim().url().max(500)]).optional(),
   styleId: z.union([z.literal(""), z.string().trim().max(64)]).optional(),
 })
