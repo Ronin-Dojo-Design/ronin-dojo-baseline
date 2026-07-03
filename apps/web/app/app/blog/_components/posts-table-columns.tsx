@@ -4,7 +4,7 @@ import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { ComponentProps } from "react"
 import { type Post, PostStatus } from "~/.generated/prisma/browser"
-import { PostActions } from "~/app/app/posts/_components/post-actions"
+import { PostActions } from "~/app/app/blog/_components/post-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
@@ -53,7 +53,7 @@ export const getColumns = (): ColumnDef<Post>[] => {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
       cell: ({ row }) => {
         const { title, id } = row.original
-        return <DataTableLink href={`/app/posts/${id}`} title={title} />
+        return <DataTableLink href={`/app/blog/${id}`} title={title} />
       },
     },
     {

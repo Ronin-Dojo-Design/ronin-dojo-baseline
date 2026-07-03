@@ -205,7 +205,7 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     },
     {
       title: "Posts",
-      href: "/app/posts",
+      href: "/app/blog",
       prefix: <FileTextIcon />,
       permission: APP_AREA_PERMISSIONS.posts,
     },
@@ -459,7 +459,7 @@ const BblMemberRail = ({
     },
     {
       title: "Feed",
-      href: "/app/posts",
+      href: "/app/blog",
       prefix: <FileTextIcon />,
       permission: APP_AREA_PERMISSIONS.posts,
     },
@@ -471,7 +471,7 @@ const BblMemberRail = ({
     const mobileLinks: Array<NavLink | undefined> = [
       ...links,
       ...(canPost
-        ? [{ title: "Create", href: "/app/posts/new", prefix: <PlusCircleIcon /> } as NavLink]
+        ? [{ title: "Create", href: "/app/blog/new", prefix: <PlusCircleIcon /> } as NavLink]
         : []),
       undefined,
       { title: "Visit Site", href: "#", onClick: onVisitSite, prefix: <ExternalLinkIcon /> },
@@ -532,7 +532,7 @@ const BblMemberRail = ({
             size="lg"
             className="mt-4 w-full"
             prefix={<PlusCircleIcon />}
-            render={<Link href="/app/posts/new" />}
+            render={<Link href="/app/blog/new" />}
           >
             Create
           </Button>

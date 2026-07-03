@@ -3,7 +3,7 @@
 import { EllipsisIcon, TrashIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import type { Post } from "~/.generated/prisma/browser"
-import { PostsDeleteDialog } from "~/app/app/posts/_components/posts-delete-dialog"
+import { PostsDeleteDialog } from "~/app/app/blog/_components/posts-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -41,7 +41,7 @@ export const PostActions = ({ className, post, ...props }: PostActionsProps) => 
         />
 
         <DropdownMenuContent align="end">
-          <DropdownMenuItem render={<Link href={`/app/posts/${post.id}`} />}>Edit</DropdownMenuItem>
+          <DropdownMenuItem render={<Link href={`/app/blog/${post.id}`} />}>Edit</DropdownMenuItem>
           <DropdownMenuItem render={<Link href={`/blog/${post.slug}`} target="_blank" />}>
             View
           </DropdownMenuItem>

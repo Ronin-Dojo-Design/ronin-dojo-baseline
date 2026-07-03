@@ -1,4 +1,4 @@
-import { PostForm } from "~/app/app/posts/_components/post-form"
+import { PostForm } from "~/app/app/blog/_components/post-form"
 import { Wrapper } from "~/components/common/wrapper"
 import { findToolList } from "~/server/admin/tools/queries"
 

@@ -3,7 +3,7 @@
 import type { Table } from "@tanstack/react-table"
 import { TrashIcon } from "lucide-react"
 import type { Post } from "~/.generated/prisma/browser"
-import { PostsDeleteDialog } from "~/app/app/posts/_components/posts-delete-dialog"
+import { PostsDeleteDialog } from "~/app/app/blog/_components/posts-delete-dialog"
 import { Button } from "~/components/common/button"
 
 interface PostsTableToolbarActionsProps {

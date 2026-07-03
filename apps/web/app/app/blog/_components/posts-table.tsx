@@ -4,8 +4,8 @@ import { CircleCheckIcon, CircleDashedIcon, CircleDotIcon, PlusIcon } from "luci
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { type Post, PostStatus } from "~/.generated/prisma/browser"
-import { getColumns } from "~/app/app/posts/_components/posts-table-columns"
-import { PostsTableToolbarActions } from "~/app/app/posts/_components/posts-table-toolbar-actions"
+import { getColumns } from "~/app/app/blog/_components/posts-table-columns"
+import { PostsTableToolbarActions } from "~/app/app/blog/_components/posts-table-toolbar-actions"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
@@ -83,7 +83,7 @@ export function PostsTable({ postsPromise }: PostsTableProps) {
             variant="primary"
             size="md"
             prefix={<PlusIcon />}
-            render={<Link href="/app/posts/new" />}
+            render={<Link href="/app/blog/new" />}
           >
             <div className="max-sm:sr-only">New post</div>
           </Button>
