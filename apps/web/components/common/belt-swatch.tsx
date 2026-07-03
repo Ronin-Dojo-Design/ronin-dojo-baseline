@@ -1,3 +1,4 @@
+import { useId } from "react"
 import { cx } from "~/lib/utils"
 
 /**
@@ -20,12 +21,17 @@ import { cx } from "~/lib/utils"
  *   they read on any data-driven belt color. Stripes render for degrees 1–6 only:
  *   red/coral belts (7th+) don't carry stripe bars in BJJ, and 7–10 stripes read as
  *   a barcode at this size — the adjacent rank text already states the degree.
+ *   Pass `secondaryColorHex` (from `Rank.secondaryColorHex`) to render alternating
+ *   panels — the true coral red/black (7th) · red/white (8th) and Kodokan red-white
+ *   Dan belts. Data-driven; null = solid belt.
  *
  * Every belt body carries the `stroke-border` outline UNCONDITIONALLY — a
  * `#000000` black belt is otherwise invisible on the dark default theme
  * (SESSION_0493 Desi P0).
  */
 const FLAT_BAR_MAX_STRIPED_DEGREE = 6
+/** Alternating-panel count for two-color belts (coral) — even width across the bar. */
+const FLAT_BAR_PANEL_COUNT = 8
 
 export function BeltSwatch({
   colorHex,
@@ -33,6 +39,7 @@ export function BeltSwatch({
   variant = "dot",
   shimmer = false,
   degree = null,
+  secondaryColorHex = null,
 }: {
   colorHex?: string | null
   className?: string
@@ -40,7 +47,13 @@ export function BeltSwatch({
   shimmer?: boolean
   /** Degree stripes on the `flat-bar` variant, degrees 1–6 (7+ suppressed; ignored by `dot`/`bar`). */
   degree?: number | null
+  /** Second panel color for alternating belts (coral) on the `flat-bar` variant; null = solid. */
+  secondaryColorHex?: string | null
 }) {
+  // Unique per instance — several flat-bars render on one page (an ancestry chain),
+  // so the clipPath id must not collide.
+  const clipId = useId()
+
   if (variant === "flat-bar") {
     const fill = colorHex ?? "currentColor"
     const clampedDegree = Math.max(degree ?? 0, 0)
@@ -62,6 +75,37 @@ export function BeltSwatch({
           fill={fill}
           className="stroke-border"
         />
+        {/* alternating second-color panels — coral red/black · red/white (clipped to the body) */}
+        {secondaryColorHex && (
+          <g>
+            <clipPath id={clipId}>
+              <rect x="0.5" y="1.5" width="79" height="7" rx="1.5" />
+            </clipPath>
+            <g clipPath={`url(#${clipId})`}>
+              {Array.from({ length: FLAT_BAR_PANEL_COUNT / 2 }, (_, index) => (
+                <rect
+                  // eslint-disable-next-line react/no-array-index-key -- panels are positional by definition
+                  key={index}
+                  x={0.5 + (79 / FLAT_BAR_PANEL_COUNT) * (index * 2 + 1)}
+                  y="1.5"
+                  width={79 / FLAT_BAR_PANEL_COUNT}
+                  height="7"
+                  fill={secondaryColorHex}
+                />
+              ))}
+            </g>
+            {/* re-stroke the outline over the panels so the silhouette stays unbroken */}
+            <rect
+              x="0.5"
+              y="1.5"
+              width="79"
+              height="7"
+              rx="1.5"
+              fill="none"
+              className="stroke-border"
+            />
+          </g>
+        )}
         {/* degree stripes — right-anchored, standard black-belt bar layout */}
         {Array.from({ length: stripeCount }, (_, index) => (
           <rect

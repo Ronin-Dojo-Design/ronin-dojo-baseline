@@ -92,6 +92,7 @@ export function LineageAncestryTimeline({ entries }: { entries: LineageAncestryE
                     <BeltSwatch
                       variant="flat-bar"
                       colorHex={entry.rank.colorHex}
+                      secondaryColorHex={entry.rank.secondaryColorHex}
                       degree={entry.rank.degree}
                     />
                     <span className="truncate text-muted-foreground text-xs">
