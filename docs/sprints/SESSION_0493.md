@@ -1,9 +1,10 @@
 ---
 title: "SESSION 0493 — BBLApp community posts feed + member profile ancestry timeline"
 slug: session-0493
-type: session--open
+type: session--implement
+status: closed
 created: 2026-07-02
-updated: 2026-07-02
+updated: 2026-07-03
 last_agent: claude-session-0493
 sprint: S49
 pairs_with:
@@ -501,22 +502,203 @@ lanes, verify each on the live DOM + SoT, hold at the push gate.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0493_TASK_01 | done | Schema slice: CommunityPost + Bookmark COMMUNITY_POST subject + Rank.degree — migrations `20260702090000_add_community_post` + `20260702091000_add_rank_degree`, shadow-replay "No difference detected", generate/typecheck/lint/tests green |
-| SESSION_0493_TASK_02 | pending | Giddy schema audit + ADR 0042 amendment content |
-| SESSION_0493_TASK_03 | pending | Write ADR amendment + schema-breakdown-runbook.md |
-| SESSION_0493_TASK_04 | done | Community feed vertical slice: /posts feed (flair tabs + style facet + grid/list + hero band) + /posts/[slug] detail (markdown + video embed + hidden-404) + create dialog (member-safe image upload) + save (COMMUNITY_POST) + share menu + admin hide + 301s deleted; `community.*`/`pages.community` i18n; 2 rate-limit buckets; typecheck/lint/format green, 32 scoped tests pass (GAINER authz suite) |
-| SESSION_0493_TASK_05 | pending | Ancestry timeline vertical slice (/directory/[slug]) |
-| SESSION_0493_TASK_06 | pending | Desi design review |
-| SESSION_0493_TASK_07 | pending | Doug verify (gates + live-DOM + migration rehearsal) |
-| SESSION_0493_TASK_08 | pending | Tail: /app/posts → /app/blog rename |
-| SESSION_0493_TASK_09 | pending | Bow-out + push gate hold |
+| SESSION_0493_TASK_01 | landed | Schema slice: CommunityPost + Bookmark COMMUNITY_POST subject + Rank.degree — migrations `20260702090000_add_community_post` + `20260702091000_add_rank_degree`, shadow-replay "No difference detected" (daf3f413) |
+| SESSION_0493_TASK_02 | landed | Giddy schema audit (11 strengths / 9 weaknesses, all file:line-evidenced) + ADR 0042 Amendment 1 draft; found 3 live bugs in passing (2 frozen `updatedAt`, `PostStatus.Scheduled` never publishes) — chipped for spin-off |
+| SESSION_0493_TASK_03 | landed | ADR 0042 Amendment 1 written (accepted) + `docs/runbooks/schema-breakdown-runbook.md` (the operator-requested schema teaching doc, tkdodo vertical-codebase grounded) |
+| SESSION_0493_TASK_04 | landed | Community feed vertical slice (4dfb4e5d): /posts feed + detail + create (member-safe image upload) + save + share + admin hide + 301s deleted; GAINER authz suite |
+| SESSION_0493_TASK_05 | landed | Ancestry timeline slice (4f08a0c0 + 41ba62d6): recursive PUBLIC-only walk (L+3 queries, cap 12, cycle guard, truncate-not-splice), BeltSwatch flat-bar + degree stripes, integrated after Ranks |
+| SESSION_0493_TASK_06 | landed | Desi review: 1 P0 + 8 P1 (all FIXED, c2ce12db) + P2 backlog routed; parity verdicts 7/10 → ~9 post-fix both surfaces |
+| SESSION_0493_TASK_07 | landed | Doug verify (re-run after rate-limit casualty): **SHIP 9.6** — 1033/0 full suite, build green, zero migration drift, hidden-post leak proven closed, adversarial source review clean |
+| SESSION_0493_TASK_08 | landed | /app/posts → /app/blog rename (410d6dd1) — git mv + 0-residual reference sweep (0451 lesson) |
+| SESSION_0493_TASK_09 | landed | Full bow-out; HELD at push gate for operator go |
+| SESSION_0493_TASK_10 | landed | Data backfill (operator-ratified): 64 INSTRUCTOR_STUDENT edges from visual parents + 89 Rank.degree + 5 secondaryColorHex; 3 idempotent scripts banked for prod |
+
+## What landed
+
+- **Item B — community posts feed LIVE-local at `/posts`** (revived route; ADR 0042 Amendment 1 →
+  accepted). New sibling `CommunityPost` model (NOT a Post kind-union), typed flair
+  (Technique/Tip/Seminar/Q&A), style facet, grid/list, create dialog (desktop + 56px FAB) with
+  member-safe image upload (magic-byte sniff, 8MB cap, own-bucket origin guard, fail-closed rate
+  limit), save via polymorphic `Bookmark` COMMUNITY_POST, client-only share menu, post-moderation
+  (`PUBLISHED|HIDDEN` + admin hide), `/posts` in primary nav as "Community". Editorial `/blog` and
+  community `/posts` permanently distinct.
+- **Item A — ancestry timeline on `/directory/[slug]`** (Tony Hua ×2 request). Recursive server walk
+  UP the INSTRUCTOR_STUDENT provenance edges (PUBLIC-only, depth 12, cycle guard, truncate-not-splice,
+  L+3 query budget); `BeltSwatch` `flat-bar` variant — data-driven belt color + degree stripes (1–6)
+  + **true coral alternating panels** (red/black 7th · red/white 8th via new `Rank.secondaryColorHex`);
+  brand-red italic names, narrative edge captions, owner highlight, `whileInView` + reduced-motion.
+  **Live-DOM verified: Tony → Bob Bass → Rigan → Carlos Jr → Carlos Sr renders with correct belts**
+  (screenshots delivered to operator).
+- **Schema:** 3 additive hand-authored migrations (community_post · rank_degree · rank_secondary_color),
+  each shadow-replay "No difference detected"; local DB applied via `migrate deploy` under the
+  operator-narrowed shared-DB rule.
+- **Data truth restored:** 64 PUBLIC members (incl. Tony) had visual-tree parents but ZERO provenance
+  edges — backfilled from `primaryVisualParentMemberId` (operator-ratified); 89 `Rank.degree` values
+  seeded from canonical names (Gup correctly excluded); 5 alternating-belt secondary colors (2 BJJ
+  coral + 3 Kodokan red-white Dans). All 3 scripts idempotent (re-run = 0 writes) and **banked for prod**.
+- **Docs:** ADR 0042 Amendment 1 (sibling model, /posts revival, one-feed topology, phase cut, RSS
+  deferral, admin rename) + `docs/runbooks/schema-breakdown-runbook.md` — the operator-requested
+  professional schema-design teaching doc (what we do well/poorly with file:line evidence, enums/FKs/
+  polymorphism/uniques-as-invariants, vertical slices + DDD, 10-point schema-PR checklist).
+- **Process:** the 0487 blanket "never apply to the shared DB" rule challenged by the operator →
+  root-caused, narrowed (migrate dev banned always; migrate deploy fine when additive/single-lane),
+  encoded with rationale + new standing memory `rules-must-carry-their-why`.
+
+## Decisions resolved
+
+1. NEW `CommunityPost` sibling model (kind-union rejected) — ADR 0042 Amendment 1.
+2. ONE global feed; school = facet + future profile section; Reddit `r/` namespaces rejected.
+3. `/posts` revived (301s deleted); `/blog`=staff, `/posts`=members; admin `/app/posts`→`/app/blog`.
+4. RSS deferred entirely (`/blog/rss.xml` = cheap editorial follow-up).
+5. `Rank.degree Int?` added + operator-grilled IBJJF explanation; `Rank.secondaryColorHex` added
+   (coral truthfulness, Desi P1 → operator approved).
+6. Both lanes parallel in one worktree; schema serialized in T01.
+7. MVP cut: feed+detail+create+save+share+post-moderation; votes=phase 2; comments+mod-queue=phase 3;
+   no dormant columns.
+8. Edge backfill from visual parents ratified; local-DB `migrate deploy` apply ratified (rule narrowed).
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `apps/web/prisma/schema.prisma` + 3 migrations | CommunityPost + enums, Bookmark COMMUNITY_POST, Rank.degree, Rank.secondaryColorHex |
+| `apps/web/server/web/community/*` (new vertical) | schema/payloads/queries/actions/media-url + 3 test files (GAINER suite) |
+| `apps/web/components/web/community/*` (new, 8 files) | feed/card/row/flair/share/admin-menu/create-dialog/post-type |
+| `apps/web/app/(web)/posts/*` (new) | feed + [slug] detail pages; 301s deleted from `next.config.ts` (+ img.youtube.com remotePattern) |
+| `apps/web/server/web/lineage/ancestry.ts` (+test) | recursive PUBLIC-only ancestry walk (new vertical file) |
+| `apps/web/components/web/lineage/lineage-ancestry-timeline.tsx` (new) + `ancestry-section.tsx` (new) | the timeline + profile section (after Ranks, md:col-span-2) |
+| `apps/web/components/common/belt-swatch.tsx` | flat-bar variant + degree stripes + coral panels + unconditional stroke-border (P0) |
+| `apps/web/server/web/bookmarks/{subject,schema,saved}.ts` | COMMUNITY_POST in the closed polymorphic contract |
+| `apps/web/app/app/blog/*` (renamed from posts) + `sidebar.tsx` + `server/admin/posts/actions.ts` | admin rename + 0-residual sweep |
+| `apps/web/scripts/{backfill-lineage-instructor-edges,seed-rank-degrees,seed-rank-secondary-colors}.ts` (new) | the 3 banked idempotent data scripts |
+| `apps/web/prisma/seed.ts` | coral rows carry secondaryColorHex |
+| `apps/web/components/web/nav/nav-sheet.tsx` + `messages/en/{navigation,community,pages}.json` | Community nav + new i18n namespace |
+| `apps/web/lib/{video-embed.ts,rate-limiter.ts}` (+tests) | toVideoThumbnailUrl helper; 2 rate buckets |
+| `docs/architecture/decisions/0042-*.md` | Amendment 1 (accepted) |
+| `docs/runbooks/schema-breakdown-runbook.md` (new) | schema teaching doc |
+| `docs/sprints/SESSION_0493.md` | this file |
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `bun run typecheck` / `lint` / `format:check` | ✅ clean (lint warnings pre-existing, none in 0493 files) |
+| `bun run test` (full, --parallel=1) | ✅ **1033 pass / 0 fail** (2936 expects, 158 files) |
+| `bun run build` (`next build`) | ✅ green (fresh BUILD_ID timestamp-verified by Doug) |
+| `migrate diff --from-migrations → --to-schema --exit-code` | ✅ "No difference detected." ×3 migrations |
+| Live-DOM (lead, chrome-devtools + fetch) | ✅ tony-hua 5-name chain + coral panels + degree stripes; /posts 200 + FAB + empty-state CTA; /app/blog 307→login; /app/posts 404 |
+| Doug live-DOM + leak probe | ✅ hidden post: 0 feed hits + detail 404; probe row cleaned up; bob-bass claim teaser intact |
+| Doug adversarial source review | ✅ session-derived authorId, admin-gated hide, real-chain tests, walk PUBLIC-pinned |
+| Data scripts idempotency | ✅ all 3 dry-runs report 0 to write post-apply |
+| Desi mockup parity | ✅ 7/10 → ~9 both surfaces after P0+P1 fixes |
+| **Doug verdict** | **SHIP 9.6/10 — no P1/P2 findings** |
+
+## Open decisions / blockers
+
+- **PUSH GATE (operator go required).** One branch `session-0493-community-feed`, 9 commits, push →
+  squash-merge PR → Vercel prod deploy auto-applies the 3 migrations (prebuild migrate deploy). **Deploy
+  order:** merge + verify build green + migrations applied on Neon → then run the 3 data scripts against
+  prod (`bun --env-file=.env.prod scripts/<script>.ts` dry-run first, then `--apply`) → prod smoke
+  (/posts + /directory/tony-hua).
+- P2/P3 polish routed to ledgers (see finding router below): WL row (unconsumed ancestor deep-link
+  seam), D row (pill-tab + post-row duplication with `components/web/posts/*`), POST_LAUNCH_SOT P2
+  bundle (mobile filter/sticky, hero count, form hints, native-share hide, red-name contrast,
+  media-url prefix scope, YouTube id charset, walk-loop DB test, bjj-passport-card ring,
+  bbl-reveal SSR-hidden).
+- Spawned task chips pending operator: frozen `updatedAt` fix (ContentTask/Media) ·
+  `PostStatus.Scheduled` publish path.
+- Board cross-off: none — no board-tracked card resolved by this session (FI-006 claim→award lifecycle
+  is adjacent but its rank-picker scope remains open).
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+Post-gate: verify the prod deploy end-to-end (migrations on Neon, 3 data scripts vs prod, prod smoke of
+`/posts` + the tony-hua timeline), then open **community feed phase 2 — votes** (per ADR 0042 Amendment 1
+phase cut) bundled with the P2 polish batch. Operator board top picks (FI-001/G-001 Brian Truelson P0
+onboarding; FI-006 rank-picker lifecycle) remain the standing alternatives if the operator repoints.
 
 ### First task
 
-TBD at bow-out.
+On the operator's "go": push + PR + squash-merge; watch the Vercel build (migrations auto-apply); verify
+`add_community_post` / `add_rank_degree` / `add_rank_secondary_color` applied on Neon; dry-run then
+`--apply` the 3 data scripts with `--env-file=.env.prod`; prod smoke `/posts` (empty-state + create) and
+`/directory/tony-hua` (5-gen chain, coral panels). Then bow-in 0494 on the phase-2 votes lane.
+
+## Review log
+
+### SESSION_0493_REVIEW_01 — dual-lane build + verify
+
+- **Reviewed tasks:** SESSION_0493_TASK_01–10.
+- **Method:** operator grill (6 forks + 2 data rulings) → parallel Cody builds with serialized schema →
+  independent Desi design review (live SSR) + Doug adversarial verify (re-run on final tree after a
+  rate-limit casualty) + lead live-DOM (chrome-devtools, screenshots delivered).
+- **Dirstarter docs check:** live alignment consulted in pre-flights (content/blog, Prisma, auth chain,
+  media); no baseline replaced — extensions only.
+- **Verdict:** both operator lanes shipped and verified on real data; the data-gap discovery (64
+  edge-less members incl. the feature's requester) was caught by live-data smoke, not tests — and fixed
+  as ratified data backfill. Desi's P0 (invisible black belts on dark) and belt-truthfulness batch
+  (barcode stripes, coral-as-red) landed same-session.
+- **Score:** 9.5/10 aggregate (Doug 9.6 · Desi post-fix ~9).
+- **Follow-up:** phase 2 votes; P2 ledger batch.
+
+## Hostile close review
+
+- **Giddy (architecture):** pass — sibling `CommunityPost` honors the anti-kind-union doctrine (ADR 0040
+  precedent chain now codified in the runbook §3.6); save reused the closed polymorphic contract
+  unchanged; both features are true vertical slices (`server/web/community`, `ancestry.ts`); 3 additive
+  migrations, zero destructive DDL; ADR 0042 Amendment 1 ratified with alternatives-rejected.
+- **Doug (verification):** pass — SHIP 9.6; every gate green on the final tree; leak probe proven with
+  cleanup; scripts idempotent; the one prior verify casualty (rate limit) was re-run clean, not assumed.
+- **Desi (UX/brand):** pass — P0 + all 8 P1s fixed and re-verified; belt bars now tell the truth on the
+  surface built for people who read belts.
+- **Kaizen aggregate:** 9.5/10 — grill-first prevented an ADR collision; live-data smoke caught the
+  empty-timeline-for-the-requester trap that green tests hid.
+
+## ADR / ubiquitous-language check
+
+- **ADR 0042 Amendment 1 → accepted** this session (sibling CommunityPost, /posts revival, one-feed
+  topology, phase cut, RSS deferral, admin rename). Dirstarter proof: content/blog layer builds on the
+  existing `Post`-adjacent idioms; no baseline replaced.
+- **Ubiquitous language:** new terms **community post**, **editorial post**, **post-moderation** defined
+  in the amendment's UL section and mirrored to `ubiquitous-language.md`.
+- No further ADR required (Rank.degree / secondaryColorHex are render-layer additive columns documented
+  in schema comments + the runbook).
+
+## Reflections
+
+- **Green tests can't see empty data.** The ancestry walk was correct, unit-tested, and would have shipped
+  rendering NOTHING for the man who asked for it — Tony (and 63 others) had visual-tree placement but zero
+  provenance edges. The live-data smoke against the prodsnap caught it; the fix was a ratified data
+  backfill, not code. Verify-against-real-data is a different gate than verify-the-code, and both are
+  mandatory for data-driven features.
+- **Rules must carry their why.** The operator hit the blanket "never apply to the shared DB" rule and
+  pushed back hard — correctly. Root-causing it (the real landmine = `migrate dev`'s auto-reset across
+  divergent worktrees) let us keep the invariant and drop the over-reach. Encoded as a standing memory:
+  surface + narrow inherited rules, never silently obey or ignore.
+- **Ops gotchas that masquerade as agent misbehavior:** `bun run lint` is the FIXING variant — it silently
+  re-edits files (the "phantom" regex diff appeared twice before we accepted it with an amended comment);
+  and a background dev server piped through `head` dies of SIGPIPE minutes later (looked like build
+  contention). Both now understood; the lint one is in memory.
+- **Belt truthfulness is product truth.** Coral-as-red wasn't a cosmetic nit — on a lineage-verification
+  platform it overstated Bob Bass's rank to the exact audience that reads belts fluently. Desi's framing
+  ("the belt bar lies") earned the schema column same-session.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0493 (status closed, updated 2026-07-03), ADR 0042 (updated 2026-07-03, last_agent 0493), runbook new with full frontmatter |
+| Backlinks/index sweep | ADR 0042 pairs_with += SESSION_0493; runbook pairs_with 8 ADRs/runbooks; wiki index += SESSION_0493 row |
+| Wiki lint | `bun run wiki:lint` — 0 errors / 21 warnings (pre-existing; none introduced — gate-runner verified) |
+| Kaizen reflection | yes — `## Reflections` (4) |
+| Hostile close review | SESSION_0493_REVIEW_01 + Giddy/Doug/Desi pass, Kaizen 9.5 |
+| Code-quality gate (Class-A) | Community-feed slice + ancestry walk are Class-A: covered by Doug's adversarial source review (SHIP 9.6, no hard-cap) + Desi L1-reuse audit in lieu of a separate /code-quality pass |
+| Runtime verification (Doug) | live-DOM matrix + leak probe + gates on final tree (see Verification) |
+| Review & Recommend | Next session goal written (prod-verify → phase-2 votes); board top picks surfaced |
+| Memory sweep | blog-surface + belt memories updated; new `rules-must-carry-their-why` + lint-autofix gotcha; 0487 memory narrowed |
+| Next session unblock check | BLOCKED ON OPERATOR at the push gate only; everything else staged |
+| Git hygiene | branch session-0493-community-feed, 9 code commits + 1 docs close commit (hash in bow-out chat); worktree kept (unmerged); NOT pushed — explicit-push-authorization |
+| Graphify update | worktree: nodes=12326 edges=26856 communities=1369 (gate runner); canonical checkout refreshed at close |
+
