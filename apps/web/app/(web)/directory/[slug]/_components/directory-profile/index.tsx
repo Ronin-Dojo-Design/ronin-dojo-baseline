@@ -28,12 +28,14 @@ import { VideoIntroSection } from "./video-section"
  * fallback idiom itself. Belt colors stay data-driven (`Rank.colorHex` → `BeltSwatch`).
  *
  * Lazy boundaries: the below-the-fold body sections that ship client JS via `next/link`
- * (Schools/Orgs, Social, Upgrade) are `next/dynamic`-split off the initial bundle with SSR
- * kept (no `ssr: false` — illegal in a Server Component anyway). About + Ranks stay eager.
+ * or `motion/react` (Ancestry, Schools/Orgs, Social, Upgrade) are `next/dynamic`-split off
+ * the initial bundle with SSR kept (no `ssr: false` — illegal in a Server Component anyway).
+ * About + Ranks stay eager.
  *
  * @see docs/runbooks/component-launch-sweep-recipe.md
  */
 
+const AncestrySection = dynamic(() => import("./ancestry-section").then(m => m.AncestrySection))
 const OrganizationsSection = dynamic(() =>
   import("./organizations-section").then(m => m.OrganizationsSection),
 )
@@ -46,6 +48,7 @@ export function DirectoryProfile({
   locationLine,
   viewerClaimState,
   claimFunnelHref,
+  ancestry,
 }: DirectoryProfileView) {
   const { user } = profile
 
@@ -91,6 +94,7 @@ export function DirectoryProfile({
         <AboutSection profile={profile} />
         <VideoIntroSection videoIntroUrl={profile.videoIntroUrl} />
         <RanksSection profile={profile} />
+        <AncestrySection ancestry={ancestry} />
         <OrganizationsSection profile={profile} />
         <SocialSection profile={profile} />
         {!profile.canRenderFullProfile && <UpgradeSection />}

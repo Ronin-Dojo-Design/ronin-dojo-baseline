@@ -6,6 +6,10 @@ import {
   resolveViewerClaimState,
 } from "~/server/web/claims/resolve-viewer-claim-state"
 import { findProfileBySlug } from "~/server/web/directory/queries"
+import {
+  getLineageAncestryForPassport,
+  type LineageAncestryEntry,
+} from "~/server/web/lineage/ancestry"
 import { db } from "~/services/db"
 
 /**
@@ -51,6 +55,13 @@ export type DirectoryProfileView = {
    * still a valid entry. Null when the profile is already claimed (no CTA).
    */
   claimFunnelHref: string | null
+  /**
+   * The member's PUBLIC promotion up-chain, ordered [founder … member] (SESSION_0493
+   * TASK_05). Empty when the person has no PUBLIC lineage node / no public up-chain —
+   * the ancestry section renders nothing. Skipped (empty) for claimable placeholders:
+   * the orchestrator early-returns to the claim teaser before any section renders.
+   */
+  ancestry: LineageAncestryEntry[]
 }
 
 /**
@@ -108,10 +119,14 @@ export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfi
     return null
   }
 
-  const [origin, viewerClaimState, claimFunnelHref] = await Promise.all([
+  const [origin, viewerClaimState, claimFunnelHref, ancestry] = await Promise.all([
     getRequestOrigin(),
     resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
     resolveClaimFunnelHref(profile),
+    // Placeholder profiles early-return to the claim teaser (no sections) — skip the walk.
+    profile.isClaimablePlaceholder
+      ? Promise.resolve([])
+      : getLineageAncestryForPassport(profile.passportId),
   ])
 
   return {
@@ -121,5 +136,6 @@ export async function loadDirectoryProfile(slug: string): Promise<DirectoryProfi
     locationLine: buildLocationLine(profile),
     claimFunnelHref,
     viewerClaimState,
+    ancestry,
   }
 }

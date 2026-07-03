@@ -1,10 +1,11 @@
 import type { BookmarkSubjectType, Prisma } from "~/.generated/prisma/client"
 
 /**
- * Polymorphic Bookmark subject mapping (SESSION_0397). A Bookmark targets exactly one of six
- * nullable FK columns, discriminated by `subjectType`. These helpers translate the generic
- * `{ subjectType, subjectId }` contract used by the actions/UI into the concrete, fully-typed
- * Prisma selectors — keeping the "exactly one set, matching subjectType" invariant in one place.
+ * Polymorphic Bookmark subject mapping (SESSION_0397; COMMUNITY_POST added SESSION_0493). A
+ * Bookmark targets exactly one of the nullable FK columns, discriminated by `subjectType`. These
+ * helpers translate the generic `{ subjectType, subjectId }` contract used by the actions/UI into
+ * the concrete, fully-typed Prisma selectors — keeping the "exactly one set, matching subjectType"
+ * invariant in one place.
  */
 
 export type BookmarkSubject = { subjectType: BookmarkSubjectType; subjectId: string }
@@ -17,6 +18,7 @@ const BOOKMARK_SUBJECT_FK = {
   TECHNIQUE: "techniqueId",
   POST: "postId",
   TREE: "lineageTreeId",
+  COMMUNITY_POST: "communityPostId",
 } as const satisfies Record<BookmarkSubjectType, keyof Prisma.BookmarkUncheckedCreateInput>
 
 /** Prisma compound-unique selector for (user, subject) — drives findUnique/upsert. */
@@ -37,6 +39,8 @@ export function bookmarkSubjectWhereUnique(
       return { userId_postId: { userId, postId: subjectId } }
     case "TREE":
       return { userId_lineageTreeId: { userId, lineageTreeId: subjectId } }
+    case "COMMUNITY_POST":
+      return { userId_communityPostId: { userId, communityPostId: subjectId } }
   }
 }
 

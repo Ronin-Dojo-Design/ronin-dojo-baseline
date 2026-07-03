@@ -704,7 +704,12 @@ async function main() {
     kind: "BELT" | "PRAJIOUD" | "GRADE" | "KYU_DAN" | "OTHER",
     isSystem: boolean,
     brand: "BASELINE_MARTIAL_ARTS" | "BBL" | "RONIN_DOJO_DESIGN" | "WEKAF" | null,
-    ranks: Array<{ name: string; shortName?: string; colorHex?: string }>,
+    ranks: Array<{
+      name: string
+      shortName?: string
+      colorHex?: string
+      secondaryColorHex?: string
+    }>,
   ) {
     const rs = await db.rankSystem.create({
       data: { name, kind, isSystem, brand, disciplineId },
@@ -715,6 +720,7 @@ async function main() {
         name: r.name,
         shortName: r.shortName ?? null,
         colorHex: r.colorHex ?? null,
+        secondaryColorHex: r.secondaryColorHex ?? null,
         isSystem,
         brand,
         rankSystemId: rs.id,
@@ -724,7 +730,12 @@ async function main() {
   }
 
   // --- 1. BJJ — IBJJF Belt System (31 ranks) ---
-  const bjjRanks: Array<{ name: string; shortName: string; colorHex: string }> = []
+  const bjjRanks: Array<{
+    name: string
+    shortName: string
+    colorHex: string
+    secondaryColorHex?: string
+  }> = []
   const bjjBelts = [
     { belt: "White Belt", prefix: "W", hex: "#FFFFFF" },
     { belt: "Blue Belt", prefix: "BL", hex: "#0000FF" },
@@ -749,8 +760,18 @@ async function main() {
     { name: "Black Belt - 4th Degree", shortName: "BK4", colorHex: "#000000" },
     { name: "Black Belt - 5th Degree", shortName: "BK5", colorHex: "#000000" },
     { name: "Black Belt - 6th Degree", shortName: "BK6", colorHex: "#000000" },
-    { name: "Coral Belt (Red/Black) - 7th Degree", shortName: "CB7", colorHex: "#FF0000" },
-    { name: "Coral Belt (Red/White) - 8th Degree", shortName: "CB8", colorHex: "#FF0000" },
+    {
+      name: "Coral Belt (Red/Black) - 7th Degree",
+      shortName: "CB7",
+      colorHex: "#FF0000",
+      secondaryColorHex: "#000000",
+    },
+    {
+      name: "Coral Belt (Red/White) - 8th Degree",
+      shortName: "CB8",
+      colorHex: "#FF0000",
+      secondaryColorHex: "#FFFFFF",
+    },
     { name: "Red Belt - 9th Degree", shortName: "R9", colorHex: "#FF0000" },
     { name: "Red Belt - 10th Degree (Grand Master)", shortName: "R10", colorHex: "#FF0000" },
   )

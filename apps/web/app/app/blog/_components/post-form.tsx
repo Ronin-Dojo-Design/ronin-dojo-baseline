@@ -79,7 +79,7 @@ export function PostForm({
       onSuccess: ({ data }) => {
         if (!data) return
         toast.success(`Post successfully ${post ? "updated" : "created"}`)
-        router.push("/app/posts")
+        router.push("/app/blog")
       },
 
       onError: ({ error }) => {
@@ -304,7 +304,7 @@ export function PostForm({
         />
 
         <div className="flex justify-between gap-4 col-span-full">
-          <Button size="md" variant="secondary" render={<Link href="/app/posts" />}>
+          <Button size="md" variant="secondary" render={<Link href="/app/blog" />}>
             Cancel
           </Button>
 

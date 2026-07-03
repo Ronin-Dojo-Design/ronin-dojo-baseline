@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-06-29
-last_agent: claude-session-0470
+updated: 2026-07-03
+last_agent: claude-session-0493
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -459,6 +459,25 @@ The claim used to ride only the magic-link `callbackURL`, so Google sign-in (the
 | `EmailBblClaimExplainer` | `apps/web/emails/bbl-claim-explainer.tsx` | `{ to }` | Internal/co-founder heads-up explaining the Google-vs-magic-link claim gap + fix + Tony's admin link. Sent via `notifyFounderOfClaimExplainer`. |
 
 ---
+
+## Community feed + ancestry timeline (SESSION_0493)
+
+The `/posts` member community feed (ADR 0042 Amendment 1) and the `/directory/[slug]` ancestry timeline.
+
+| Component | File | Props (shape) | Notable behavior |
+| --- | --- | --- | --- |
+| `CommunityFeed` | `apps/web/components/web/community/community-feed.tsx` | `{ posts, styles, viewer }` | Flair tabs + style facet + grid/list toggle + 56px FAB; unfiltered empty state carries the New-post CTA (launch funnel); `school` facet param accepted at the page, stubbed pending school data |
+| `CommunityPostCard` / `CommunityPostRow` | `.../community-post-card.tsx`, `community-post-row.tsx` | ListingCard/Card adapters | Card = thin `ListingCard` adapter (ADR 0028/0040); YouTube thumb + Play overlay via `toVideoThumbnailUrl`; NO vote UI in MVP (absent, not grayed — phase 2) |
+| `CommunityPostFlair` + `COMMUNITY_POST_TYPE_META` | `.../community-post-flair.tsx`, `post-type.ts` | `{ type }` | Token-mapped flair: technique→info, tip→caution, seminar→warning (no purple token), qa→success; icons carry per-type identity |
+| `CreateCommunityPostDialog` | `.../create-community-post-dialog.tsx` | trigger render | ToolReportDialog idiom; LoginDialog gate for signed-out; member-safe image upload (magic-byte sniff, 8MB, own-bucket guard, fail-closed rate limit) |
+| `CommunityShareMenu` | `.../community-share-menu.tsx` | `{ url, title, text }` | Client-only: copy link / native share / email — harvested from legacy ShareDrawer into a token DropdownMenu (no share primitive existed) |
+| `CommunityPostAdminMenu` | `.../community-post-admin-menu.tsx` | `{ post }` | Admin-only hide/unhide (`adminActionClient`); hidden = out of all public reads + detail 404 for non-admins |
+| `LineageAncestryTimeline` | `apps/web/components/web/lineage/lineage-ancestry-timeline.tsx` | `{ entries: LineageAncestryEntry[] }` | Vertical founder→member chain; brand-red italic names; narrative edge captions; owner highlight; whileInView + once (SSR never ships hidden); reduced-motion honored; renders nothing under 2 entries |
+| `AncestrySection` | `app/(web)/directory/[slug]/_components/directory-profile/ancestry-section.tsx` | `{ ancestry }` | Profile section after Ranks, `md:col-span-2`; skipped for claimable placeholders (teaser early-return) |
+| `BeltSwatch` **`flat-bar` variant** (+ `degree`, `secondaryColorHex` props) | `apps/web/components/common/belt-swatch.tsx` | `{ colorHex, variant, degree?, secondaryColorHex? }` | Flat rank bar; degree stripes 1–6 only (7+ = the belt itself encodes it); TRUE coral alternating panels from `Rank.secondaryColorHex` (panels suppress stripes); unconditional `stroke-border` (black belts visible on dark — Desi P0); `useId` clipPath (multi-instance safe) |
+| `getLineageAncestryForPassport` | `apps/web/server/web/lineage/ancestry.ts` | `(passportId) → LineageAncestryEntry[]` | Recursive PUBLIC-only up-walk (INSTRUCTOR_STUDENT; fromNode=instructor); depth cap 12 + cycle guard; deterministic primary-instructor pick (isVerified desc → createdAt asc → id); truncate-not-splice on visibility gaps; L+3 query budget; "use cache" tagged `lineage-ancestry-{passportId}` |
+| `toVideoThumbnailUrl` | `apps/web/lib/video-embed.ts` | `(url) → string | null` | YouTube hqdefault thumb (shared `parseYouTubeVideoId`); Vimeo → null (flair fallback) |
+| Data scripts ×3 | `apps/web/scripts/{backfill-lineage-instructor-edges,seed-rank-degrees,seed-rank-secondary-colors}.ts` | CLI, `--apply` | Idempotent, dry-run default, reviewed-mapping pattern; banked for prod (run with `--env-file=.env.prod` AFTER the migrations deploy) |
 
 ## How to update this file
 

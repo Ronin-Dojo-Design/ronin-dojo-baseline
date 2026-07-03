@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-27
-last_agent: claude-session-0457
+updated: 2026-07-03
+last_agent: claude-session-0493
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -471,3 +471,16 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Status: OPEN.** Phase-B backfill: place the 4 correctly under the canonical root (provenance edges +
   `primaryVisualParentMemberId`), then the clone trees can be retired. Tracked with WL-P2-21 (clone-membership
   cleanup done SESSION_0457, surgical).
+
+### D-035 — Community feed duplicates the blog feed's pill-tab + row shells (SESSION_0493)
+
+- **What:** `components/web/community/community-feed.tsx` carries verbatim copies of the blog feed's
+  pill-tab/toggle classes (`components/web/posts/post-feed.tsx:52–68`), and `community-post-row.tsx` is a
+  ~85% structural duplicate of `posts/post-row.tsx` (same `Card isRevealed` shell / thumbnail / byline).
+  Deliberate at build time (Desi §5: "the divergences — flair, share, admin — are real"), but two
+  hand-rolled implementations of the same visual pattern WILL drift.
+- **Why it matters:** the third feed (Baseline/WEKAF or any catalog surface) would mint a third copy —
+  the exact horizontal-drift failure the design-system doctrine exists to prevent.
+- **Fix shape:** extract a shared `FeedFilterTabs`/pill-tab helper (a `components/web/ui/*` candidate)
+  consumed by both feeds; consider one slotted feed-row over `Card` behind it.
+- **Status: OPEN** (P2 — extract before any third feed lands).

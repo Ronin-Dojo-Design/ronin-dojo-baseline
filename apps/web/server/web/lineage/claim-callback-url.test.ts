@@ -18,8 +18,9 @@
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 
-// Verbatim from better-auth trusted-origins.mjs `matchesOriginPattern` (allowRelativePaths branch).
-const BA_RELATIVE_CALLBACK_RE = /^\/(?!\/|\\|%2f|%5c)[\w\-.\+/@]*(?:\?[\w\-.\+/=&%@]*)?$/
+// From better-auth trusted-origins.mjs `matchesOriginPattern` (allowRelativePaths branch),
+// modulo oxlint's escape normalization (`\+` → `+` inside character classes — identical regex).
+const BA_RELATIVE_CALLBACK_RE = /^\/(?!\/|\\|%2f|%5c)[\w\-.+/@]*(?:\?[\w\-.+/=&%@]*)?$/
 
 /**
  * What Better Auth's magic-link verify actually validates: it `decodeURIComponent`s the

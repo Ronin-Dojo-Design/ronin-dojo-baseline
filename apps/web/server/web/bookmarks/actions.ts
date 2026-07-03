@@ -14,7 +14,8 @@ import {
 
 // =============================================================================
 // Polymorphic Save actions (SESSION_0397) — Save any listing subject: Tool / person (Passport) /
-// Organization / Technique / Post / LineageTree. The tool Save button (`ListingBookmarkButton`) is now
+// Organization / Technique / Post / LineageTree / CommunityPost (SESSION_0493). The tool Save
+// button (`ListingBookmarkButton`) is now
 // a thin adapter over `ListingSaveButton` (subjectType TOOL), so these two actions back every entity —
 // the old tool-only check/set/removeBookmark actions retired with that consolidation.
 // =============================================================================

@@ -6,6 +6,7 @@ import {
   GitBranchIcon,
   LayoutDashboardIcon,
   LogOutIcon,
+  MessagesSquareIcon,
   NewspaperIcon,
   SchoolIcon,
   ShieldHalfIcon,
@@ -41,14 +42,16 @@ type NavSheetProps = {
   userAvatarUrl?: string | null
 }
 
-// Curated BBL nav (SESSION_0416 operator). SESSION_0485: the /posts vs /blog fork
-// resolved — `Post` / `/blog` is the canonical blog (/posts 301s to it; ADR 0042).
+// Curated BBL nav (SESSION_0416 operator). SESSION_0493 (ADR 0042 Amendment 1): the
+// 0485 `/posts` → `/blog` 301 is deleted — `/posts` is the member community feed
+// (`CommunityPost`, labeled "Community"), a permanent sibling of the editorial `/blog`.
 // Organizations / Disciplines / Tournaments / Courses / Gear / Merch cut.
 const PRIMARY_NAV_ITEMS = [
   { href: "/lineage/join", key: "lineage", icon: GitBranchIcon },
   { href: "/directory", key: "directory", icon: ContactRoundIcon },
   { href: "/members", key: "members", icon: UsersIcon },
   { href: "/schools", key: "schools", icon: SchoolIcon },
+  { href: "/posts", key: "posts", icon: MessagesSquareIcon },
   { href: "/blog", key: "blog", icon: NewspaperIcon },
   // Curriculum / Techniques hidden for launch (SESSION_0417) — routes still
   // exist; re-add here to resurface in nav.

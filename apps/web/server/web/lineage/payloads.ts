@@ -121,6 +121,10 @@ export const lineageNodeRowPayload = {
               shortName: true,
               colorHex: true,
               sortOrder: true,
+              // @added SESSION_0493 — degree stripes + coral panels for the
+              // ancestry-timeline flat-bar swatch.
+              degree: true,
+              secondaryColorHex: true,
               rankSystem: {
                 select: {
                   id: true,

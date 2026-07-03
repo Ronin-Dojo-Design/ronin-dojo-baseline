@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-01
-last_agent: codex-session-0479
+updated: 2026-07-03
+last_agent: claude-session-0493
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -580,6 +580,12 @@ Initial values:
 Brand is currently an enum/column, not a table.
 
 **`BBL` is the only live/active brand** (BBLApp v4.4 — launched June 19, 2026). The enum retains all four for the not-yet-pruned multi-brand harness, so **brand-scoping still applies in code**; the single-brand collapse is a future prune.
+
+## Content surfaces (SESSION_0493 / ADR 0042 Amendment 1)
+
+- **Community post** — a member-authored `CommunityPost` on the `/posts` feed. Post-moderated (`PUBLISHED | HIDDEN`), saveable (`Bookmark` `COMMUNITY_POST`), never editorial.
+- **Editorial post** — a staff-authored `Post` on `/blog`, managed at `/app/blog`. The two never share a table (kind-union rejected).
+- **Post-moderation** — publish-first, hide-on-review (`HIDDEN` by admin action) — as opposed to the pre-moderated editorial workflow.
 
 ## AI naming rules
 

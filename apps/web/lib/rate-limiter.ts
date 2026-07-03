@@ -110,6 +110,21 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(10, "1 h"), // 10 avatar uploads per hour per IP
       }),
+      // @added SESSION_0493 — member community feed (`/posts`, ADR 0042 Amendment 1).
+      // `community_post_write`: actor-keyed create throttle (spam guard on a member-generated
+      // public surface); fail-open like the other authenticated write buckets.
+      community_post_write: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(5, "1 m"), // 5 post creates per minute per member
+      }),
+      // `community_image_upload`: actor-keyed post-image upload (storage-abuse surface, like
+      // evidence/avatar uploads → fail-closed).
+      community_image_upload: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(15, "1 h"), // 15 post-image uploads per hour per member
+      }),
     }
   : null
 
@@ -141,6 +156,7 @@ export const getIP = async () => {
  *  - `invite`          — invite-link generation (privilege grant)
  *  - `evidence_upload` — public, UNAUTHENTICATED upload (storage-abuse surface)
  *  - `avatar_upload`   — free-tier avatar upload, IP-keyed (storage-abuse surface)
+ *  - `community_image_upload` — member post-image upload, actor-keyed (storage-abuse surface)
  *  - `teaser_signup`   — public, UNAUTHENTICATED email capture (spam surface)
  *  - `email_notify`    — gates auth-email / notification sends (mail-flood surface)
  *  - `submission` / `report` — public IP-keyed submit/report (spam surface)
@@ -158,6 +174,7 @@ const FAIL_CLOSED_BUCKETS: ReadonlySet<string> = new Set([
   "invite",
   "evidence_upload",
   "avatar_upload",
+  "community_image_upload",
   "teaser_signup",
   "email_notify",
   "submission",
