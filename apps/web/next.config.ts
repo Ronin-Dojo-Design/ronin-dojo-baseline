@@ -41,20 +41,9 @@ const nextConfig: NextConfig = {
         destination: "/directory/:slug",
         permanent: false,
       },
-      // SESSION_0485: consolidated the two blog surfaces onto `Post` / `/blog`
-      // (canonical editorial blog). The old `ContentVariant` BLOG-channel reader at
-      // `/posts` is retired — 301 to `/blog`. The ContentAtom engine + `/app/content`
-      // admin stay (they drive the YouTube/social variants). See ADR 0042.
-      {
-        source: "/posts",
-        destination: "/blog",
-        permanent: true,
-      },
-      {
-        source: "/posts/:slug*",
-        destination: "/blog",
-        permanent: true,
-      },
+      // SESSION_0493 (ADR 0042 Amendment 1): the SESSION_0485 `/posts` → `/blog` 301s are
+      // deleted — `/posts` revives as the member community feed (`CommunityPost`), a
+      // permanent sibling of the editorial `/blog` (`Post`).
     ]
   },
 

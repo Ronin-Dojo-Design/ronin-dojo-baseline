@@ -71,6 +71,11 @@
     "description": "Stories, lineage history, and technique from the Machado line and the Black Belt Legacy community."
   },
 
+  "community": {
+    "title": "Community Posts",
+    "description": "Techniques, training tips, seminar recaps, and Q&A shared by the {siteName} community."
+  },
+
   "categories": {
     "title": "Browse Categories",
     "description": "Browse all tool categories to find the perfect software for your needs."

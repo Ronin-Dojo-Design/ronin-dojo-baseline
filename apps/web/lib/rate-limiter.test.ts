@@ -16,6 +16,7 @@ describe("rate-limiter fail-closed classification (RISK #5)", () => {
       "invite",
       "evidence_upload",
       "avatar_upload",
+      "community_image_upload",
       "teaser_signup",
       "email_notify",
       "submission",
@@ -34,6 +35,7 @@ describe("rate-limiter fail-closed classification (RISK #5)", () => {
       "waiver_write",
       "lead_write",
       "trial_book",
+      "community_post_write",
       "instructor_search",
       "newsletter",
     ]) {
