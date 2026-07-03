@@ -33,6 +33,8 @@ export type LineageAncestryRank = {
   id: string
   name: string
   colorHex: string | null
+  /** Second panel color for alternating belts (coral red/black · red/white); null = solid. */
+  secondaryColorHex: string | null
   sortOrder: number
   /**
    * Black-belt degree for the flat-bar stripe rendering — `Rank.degree` (additive
@@ -101,6 +103,7 @@ export const assembleAncestryEntries = (
             id: award.rank.id,
             name: award.rank.name,
             colorHex: award.rank.colorHex,
+            secondaryColorHex: award.rank.secondaryColorHex ?? null,
             sortOrder: award.rank.sortOrder,
             degree: award.rank.degree ?? null,
           }

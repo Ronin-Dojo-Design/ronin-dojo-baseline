@@ -1310,17 +1310,21 @@ model RankSystem {
 }
 
 model Rank {
-  id        String   @id @default(cuid(2))
-  sortOrder Int
-  name      String
-  shortName String?
-  colorHex  String?
+  id                String   @id @default(cuid(2))
+  sortOrder         Int
+  name              String
+  shortName         String?
+  colorHex          String?
   // @added SESSION_0493 — degree stripes for black-belt ranks (e.g. 8 = 8th degree);
   // data-driven rendering for BeltSwatch / the lineage ancestry timeline. Null = no degree.
-  degree    Int?
-  isSystem  Boolean  @default(false)
-  brand     Brand?
-  createdAt DateTime @default(now())
+  degree            Int?
+  // @added SESSION_0493 — second belt color for alternating-panel belts (BJJ coral
+  // red/black 7th = #000000, red/white 8th = #FFFFFF; Kodokan red-white Dan belts).
+  // Null = solid belt. Render-layer only, like degree — never rank authority.
+  secondaryColorHex String?
+  isSystem          Boolean  @default(false)
+  brand             Brand?
+  createdAt         DateTime @default(now())
 
   rankSystem   RankSystem @relation(fields: [rankSystemId], references: [id])
   rankSystemId String
