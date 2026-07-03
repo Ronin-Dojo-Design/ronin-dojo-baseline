@@ -14,18 +14,65 @@ import { cx } from "~/lib/utils"
  * - `bar` — a belt graphic (folded belt + knot) for the cinematic lineage explorer.
  *   Pass `shimmer` for a brand specular sweep; the sweep self-disables under
  *   `prefers-reduced-motion` (handled in `app/styles.css` `.belt-shimmer`).
+ * - `flat-bar` — a flat horizontal rank bar (the ancestry-timeline shape,
+ *   SESSION_0493). Pass `degree` to render degree stripes toward one end — the
+ *   standard BJJ black-belt bar layout. Stripes are white with a faint dark edge so
+ *   they read on any data-driven belt color; capped at 10.
  */
+const FLAT_BAR_MAX_STRIPES = 10
+
 export function BeltSwatch({
   colorHex,
   className,
   variant = "dot",
   shimmer = false,
+  degree = null,
 }: {
   colorHex?: string | null
   className?: string
-  variant?: "dot" | "bar"
+  variant?: "dot" | "bar" | "flat-bar"
   shimmer?: boolean
+  /** Degree stripes on the `flat-bar` variant (ignored by `dot`/`bar`). */
+  degree?: number | null
 }) {
+  if (variant === "flat-bar") {
+    const fill = colorHex ?? "currentColor"
+    const stripeCount = Math.min(Math.max(degree ?? 0, 0), FLAT_BAR_MAX_STRIPES)
+    return (
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 56 10"
+        className={cx("h-2.5 w-14 shrink-0 overflow-hidden", !colorHex && "text-muted", className)}
+      >
+        {/* flat belt body */}
+        <rect
+          x="0.5"
+          y="1.5"
+          width="55"
+          height="7"
+          rx="1.5"
+          fill={fill}
+          className={cx(!colorHex && "stroke-border")}
+        />
+        {/* degree stripes — right-anchored, standard black-belt bar layout */}
+        {Array.from({ length: stripeCount }, (_, index) => (
+          <rect
+            // eslint-disable-next-line react/no-array-index-key -- stripes are positional by definition
+            key={index}
+            x={49.5 - index * 4}
+            y="1.5"
+            width="2.4"
+            height="7"
+            fill="rgba(255,255,255,0.92)"
+            stroke="rgba(0,0,0,0.25)"
+            strokeWidth="0.4"
+          />
+        ))}
+      </svg>
+    )
+  }
+
   if (variant === "bar") {
     const fill = colorHex ?? "currentColor"
     return (
