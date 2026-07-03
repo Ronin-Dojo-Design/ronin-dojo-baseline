@@ -163,6 +163,9 @@ model User {
   // Blog
   posts Post[]
 
+  // Community feed (SESSION_0493)
+  communityPosts CommunityPost[]
+
   // GDPR / privacy
   dataSubjectRequests          DataSubjectRequest[] @relation("DataSubjectRequestSubmitter")
   dataSubjectRequestsFulfilled DataSubjectRequest[] @relation("DataSubjectRequestFulfiller")
@@ -348,6 +351,8 @@ enum BookmarkSubjectType {
   TECHNIQUE
   POST
   TREE
+  // @added SESSION_0493 — member community post (/posts), distinct from editorial POST (/blog).
+  COMMUNITY_POST
 }
 
 model Bookmark {
@@ -363,18 +368,21 @@ model Bookmark {
 
   // Polymorphic subject — exactly one set, matching subjectType (enforced in the action).
   // @changed SESSION_0397 — toolId relaxed to optional so non-tool subjects can be saved.
-  tool           Tool?         @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  toolId         String?
-  passport       Passport?     @relation(fields: [passportId], references: [id], onDelete: Cascade)
-  passportId     String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String?
-  technique      Technique?    @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
-  techniqueId    String?
-  post           Post?         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId         String?
-  lineageTree    LineageTree?  @relation(fields: [lineageTreeId], references: [id], onDelete: Cascade)
-  lineageTreeId  String?
+  tool            Tool?          @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId          String?
+  passport        Passport?      @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId      String?
+  organization    Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId  String?
+  technique       Technique?     @relation(fields: [techniqueId], references: [id], onDelete: Cascade)
+  techniqueId     String?
+  post            Post?          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId          String?
+  lineageTree     LineageTree?   @relation(fields: [lineageTreeId], references: [id], onDelete: Cascade)
+  lineageTreeId   String?
+  // @added SESSION_0493 — community feed post subject (subjectType=COMMUNITY_POST).
+  communityPost   CommunityPost? @relation(fields: [communityPostId], references: [id], onDelete: Cascade)
+  communityPostId String?
 
   // Indexes — one (userId, subject) unique per subject type, plus per-FK lookup indexes.
   @@unique([userId, toolId])
@@ -383,6 +391,7 @@ model Bookmark {
   @@unique([userId, techniqueId])
   @@unique([userId, postId])
   @@unique([userId, lineageTreeId])
+  @@unique([userId, communityPostId])
   @@index([userId])
   @@index([userId, subjectType])
   @@index([toolId])
@@ -391,6 +400,7 @@ model Bookmark {
   @@index([techniqueId])
   @@index([postId])
   @@index([lineageTreeId])
+  @@index([communityPostId])
 }
 
 // =============================================================================
@@ -1305,6 +1315,9 @@ model Rank {
   name      String
   shortName String?
   colorHex  String?
+  // @added SESSION_0493 — degree stripes for black-belt ranks (e.g. 8 = 8th degree);
+  // data-driven rendering for BeltSwatch / the lineage ancestry timeline. Null = no degree.
+  degree    Int?
   isSystem  Boolean  @default(false)
   brand     Brand?
   createdAt DateTime @default(now())
@@ -2590,10 +2603,11 @@ model Style {
   approvedBy       User?      @relation("StyleApprovedBy", fields: [approvedByUserId], references: [id])
   approvedByUserId String?
 
-  memberships  Membership[]
-  contentAtoms ContentAtom[]
-  techniques   Technique[]
-  lineageTrees LineageTree[]
+  memberships    Membership[]
+  contentAtoms   ContentAtom[]
+  techniques     Technique[]
+  lineageTrees   LineageTree[]
+  communityPosts CommunityPost[]
 
   @@unique([disciplineId, code])
   @@index([disciplineId, status])
@@ -4111,6 +4125,59 @@ model Post {
   @@index([brand, slug])
   @@index([authorId])
   @@index([publishedAt])
+}
+
+// @added   SESSION_0493 — flair/type of a member community post (/posts feed filter tabs).
+// @wired   server/web/community, app/(web)/posts
+enum CommunityPostType {
+  TECHNIQUE
+  TIP
+  SEMINAR
+  QA
+}
+
+// @added   SESSION_0493 — post-moderation model: publish immediately, admin can hide.
+// Deliberately NOT PostStatus (no Draft/publishedAt) — community posts go live on create.
+enum CommunityPostStatus {
+  PUBLISHED
+  HIDDEN
+}
+
+// @added   SESSION_0493 — member-generated community feed post (/posts), a SIBLING of the
+// editorial `Post` (/blog) per ADR 0042 Amendment 1: staff writes /blog, members post /posts.
+// No kind-union onto Post; engagement (votes/comments) lands here in later additive phases.
+// Author identity = User FK; display name/avatar resolve via Passport at the read layer.
+model CommunityPost {
+  id       String              @id @default(cuid(2))
+  type     CommunityPostType
+  title    String              @db.Citext
+  slug     String              @unique
+  content  String
+  videoUrl String?
+  imageUrl String?
+  status   CommunityPostStatus @default(PUBLISHED)
+
+  // createdAt is the feed sort key (no publishedAt — posts are live on create).
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Brand scoping (ADR 0004)
+  brand Brand
+
+  // Relations
+  author   User    @relation(fields: [authorId], references: [id])
+  authorId String
+  style    Style?  @relation(fields: [styleId], references: [id])
+  styleId  String?
+
+  // Polymorphic Bookmark (Save). subjectType=COMMUNITY_POST.
+  bookmarks Bookmark[]
+
+  // Feed query: (brand, status, createdAt desc) + optional type filter.
+  @@index([brand, status, createdAt(sort: Desc)])
+  @@index([brand, status, type, createdAt(sort: Desc)])
+  @@index([authorId])
+  @@index([styleId])
 }
 
 // @added   migration 20260525 (2026-05-25)

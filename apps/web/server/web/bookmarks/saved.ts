@@ -48,6 +48,7 @@ export async function getSavedListings(userId: string): Promise<SavedListing[]> 
         },
       },
       post: { select: { id: true, slug: true, title: true, description: true } },
+      communityPost: { select: { id: true, slug: true, title: true } },
       lineageTree: {
         select: {
           id: true,
@@ -68,7 +69,7 @@ export async function getSavedListings(userId: string): Promise<SavedListing[]> 
 
 type SavedBookmarkRow = {
   id: string
-  subjectType: "TOOL" | "PERSON" | "ORGANIZATION" | "TECHNIQUE" | "POST" | "TREE"
+  subjectType: "TOOL" | "PERSON" | "ORGANIZATION" | "TECHNIQUE" | "POST" | "TREE" | "COMMUNITY_POST"
   tool: {
     id: string
     slug: string
@@ -100,6 +101,7 @@ type SavedBookmarkRow = {
     discipline: { name: string } | null
   } | null
   post: { id: string; slug: string; title: string; description: string | null } | null
+  communityPost: { id: string; slug: string; title: string } | null
   lineageTree: {
     id: string
     slug: string
@@ -185,6 +187,20 @@ const SUBJECT_MAPPERS: Record<
       description: post.description,
       imageUrl: null,
       initials: initialsOf(post.title),
+      media: "none",
+    },
+  // @added SESSION_0493 — member community post (/posts), distinct from editorial POST (/blog).
+  COMMUNITY_POST: ({ id, communityPost }) =>
+    communityPost && {
+      key: id,
+      subjectType: "COMMUNITY_POST",
+      subjectId: communityPost.id,
+      href: `/posts/${communityPost.slug}`,
+      name: communityPost.title,
+      tagline: null,
+      description: null,
+      imageUrl: null,
+      initials: initialsOf(communityPost.title),
       media: "none",
     },
   TREE: ({ id, lineageTree }) =>

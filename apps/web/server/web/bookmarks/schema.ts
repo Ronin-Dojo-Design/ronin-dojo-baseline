@@ -10,6 +10,7 @@ const bookmarkSubjectTypeSchema = z.enum([
   "TECHNIQUE",
   "POST",
   "TREE",
+  "COMMUNITY_POST",
 ])
 
 export const bookmarkSubjectInputSchema = z.object({
