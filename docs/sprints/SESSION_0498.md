@@ -144,7 +144,7 @@ Land A0 → A2-v1 → A1 (smallest-shippable spine) of Epic A, gated by the oper
 #### SESSION_0498_TASK_03 — A1 storyboard MVP (may slip to fast-follow)
 
 - **Agent:** Cody (build) ← Desi review
-- **What:** compact `can()`-gated scene-card board in `/app` — per-scene field set (image/video URL, quote, bio, order), plus-button add, duplicate-card. Reuse the existing `/app` lineage-editor permission seam (no 5th authz system). Drag-reorder + media-drop = fast-follow.
+- **What:** compact `can()`-gated scene-card board in `/app` — per-scene field set (image/video URL, quote, bio, order), plus-button add, duplicate-card. Reuse the existing `/app` lineage-editor permission seam (no 5th authz system). Drag-reorder + media-drop = fast-follow. **REQUIRED (Giddy A0 P3-4):** every scene mutation MUST revalidate the ancestry cache (`ancestry.ts` is `"use cache"` + `cacheLife("minutes")` — the save path must `revalidateTag` the `lineage-ancestry-*` tag or we get the known "saves but reverts on nav" failure).
 - **Done means:** a working scene-card board authoring `LineageStoryScene` rows via `can()`; or explicitly slipped to fast-follow if session budget is tight (spine proves on seeded data without it).
 - **Depends on:** TASK_01; fork #2 resolved.
 
@@ -222,7 +222,7 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0498_TASK_01 | pending | A0 `LineageStoryScene` migration + read-model projection + founder seed |
+| SESSION_0498_TASK_01 | landed | A0 shipped @ `ede05efe` — model + hand-authored migration (shadow-replay empty-diff/exit-0, `migrate deploy` clean) + ancestry `story` projection (honest L+3→L+4) + 4 founders seeded idempotently. Gates: typecheck 0 err, lint/oxfmt clean, tests 1065/0 (ancestry 12/12, visibility 9/9). Giddy pass-1: 9.4 FIX-THEN-SHIP → P1 (seed clobber/re-arm) fixed create-only + rerun-proven (0 created / 4 skipped) → 9.6 SHIP. |
 | SESSION_0498_TASK_02 | pending | A2-v1 `useScroll` scroll scaffold on the ancestry timeline |
 | SESSION_0498_TASK_03 | pending | A1 `can()`-gated storyboard card-board (may slip) |
 
@@ -242,7 +242,12 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
 
 ## Open decisions / blockers
 
-The 6 grill forks (above) are open pending operator sign-off. Build holds at fork resolution.
+All 6 grill forks resolved at bow-in (see Grill outcome). Mid-build orchestrator decisions + adjacent debt:
+
+- **`quoteAttribution` display semantics (decided, orchestrator):** the seeded `quoteAttribution` strings are *sourcing/provenance notes* ("Widely attributed (fightersmarket / sensobjj)"), not display copy. **A2 renders attribution = the founder's `displayName`** (the plan's "default = displayName at render"); stored `quoteAttribution` stays provenance until A1 lets the operator edit it into real display copy.
+- **Adjacent debt — stray `playing_with_neon` table** in the local prodsnap DB (Neon-starter artifact, outside the datamodel): excluded from the A0 migration, but it will pollute every future `migrate diff` until dropped deliberately. Candidate close-out chore (check whether prod Neon has it too before any drop).
+- **Local tree-slug drift note:** founders live in tree `rigan-machado-bjj-lineage` locally (not the memory's `rigan-machado-lineage`; Rorion is in no tree). Irrelevant to A0 (scenes key by `passportId`) — noted for A2 walk expectations + memory correction at close.
+- **Prisma 7.8 CLI drift (candidate memory at close):** `migrate diff --from-url` / `--shadow-database-url` removed; use `--from-config-datasource` / config-file `shadowDatabaseUrl` (URL resolves via `prisma.config.ts`).
 
 ## Next session
 
@@ -253,3 +258,15 @@ TBD at bow-out.
 ### First task
 
 TBD at bow-out.
+
+## Review log
+
+### SESSION_0498_REVIEW_01 — Giddy pass-1 on A0 (`ede05efe`)
+
+- **Reviewed tasks:** SESSION_0498_TASK_01
+- **Dirstarter docs check:** not applicable — lineage is an ahead-of-baseline capability; A0 extends the repo's own module, replaces no baseline.
+- **Verdict:** 9.4 FIX-THEN-SHIP → **9.6 SHIP after P1 fix.** Dimension scores: schema 9.7, migration 9.7 (prod-safe additive; stray `playing_with_neon` correctly excluded), read-model 9.5 (right seam — `ancestry.ts` not `payloads.ts`; honest L+4), seed 8.7 (the P1), tests 9.4, ADR coherence 9.8 (no new ADR — Epic A ADR waits for the full spine).
+- **P1 (FIXED inline, rerun-proven):** seed upsert `update` block clobbered curated copy + re-armed `enabled` on reseed → create-only semantics (`findUnique` → skip-with-log); reseed now 0 created / 4 skipped.
+- **P3 follow-ups (routed, non-gating):** P3-1 dormant fields (`isBridge`/video/poster) projected in the view with no consumer — trim from `LineageStorySceneView` until A5/A6, define `bridgeCondition` grammar before A6; P3-2 `sceneOrder` in the public view risks a second ordering authority — remove or docblock "walk order is authoritative"; P3-3 sharpest missing test — scene on a PUBLIC node *above* the truncation gap must vanish with the truncated entry; P3-4 → folded into TASK_03 spec (cache revalidation on scene mutation). P3-1/2/3 deferred until A2 lands (same files Cody is building against), then batch with the A2 review round.
+- **Score:** 9.6/10
+- **Follow-up:** P3 batch post-A2; `playing_with_neon` deliberate-drop chore at close.

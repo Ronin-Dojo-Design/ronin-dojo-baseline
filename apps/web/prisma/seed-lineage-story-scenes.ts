@@ -3,9 +3,13 @@
  * Lineage Journey prologue: Carlos Gracie Sr → Carlos Gracie Jr → Rorion Gracie →
  * Rigan Machado (sceneOrder 1–4).
  *
- * Idempotent: upserts by `passportId` (1:1 @unique). Founders are located via their
- * LineageNode slugs (displayName fallback); a missing founder is SKIPPED with a logged
- * warning — this seed NEVER creates person rows (Passport/LineageNode stay untouched).
+ * Idempotent AND create-only: an existing scene row is SKIPPED, never updated — scene
+ * copy is operator-curated (via the A1 storyboard) and `enabled` is the curation
+ * kill-switch feeding a public read path; a reseed must never revert curated copy or
+ * re-arm a deliberately disabled scene (Giddy A0 review P1, SESSION_0498). Founders are
+ * located via their LineageNode slugs (displayName fallback); a missing founder is
+ * SKIPPED with a logged warning — this seed NEVER creates person rows
+ * (Passport/LineageNode stay untouched).
  *
  * Quotes + attribution notes are the ratified SESSION_0498 founder-seed copy table
  * (grill fork #4 — sourced; editable via the A1 storyboard). The Rorion quote is
@@ -54,7 +58,7 @@ const founderScenes = [
 ]
 
 async function main() {
-  let upserted = 0
+  let created = 0
   let skipped = 0
 
   for (const founder of founderScenes) {
@@ -78,15 +82,23 @@ async function main() {
       continue
     }
 
-    const scene = await prisma.lineageStoryScene.upsert({
+    // Create-only: an existing row means the copy is (potentially) operator-curated —
+    // leave it alone entirely. Reseeding must never converge rows back to this table's
+    // values or flip `enabled` back on (Giddy A0 review P1).
+    const existing = await prisma.lineageStoryScene.findUnique({
       where: { passportId: node.passportId },
-      update: {
-        quote: founder.quote,
-        quoteAttribution: founder.quoteAttribution,
-        sceneOrder: founder.sceneOrder,
-        enabled: true,
-      },
-      create: {
+      select: { id: true },
+    })
+    if (existing) {
+      skipped++
+      console.log(
+        `↩️  SKIP ${node.passport.displayName ?? founder.displayName}: scene already exists (${existing.id}) — not overwriting curated copy.`,
+      )
+      continue
+    }
+
+    const scene = await prisma.lineageStoryScene.create({
+      data: {
         passportId: node.passportId,
         quote: founder.quote,
         quoteAttribution: founder.quoteAttribution,
@@ -95,13 +107,13 @@ async function main() {
       },
     })
 
-    upserted++
+    created++
     console.log(
       `✅ Scene ${founder.sceneOrder}: ${node.passport.displayName ?? founder.displayName} (scene ${scene.id}, passport ${node.passportId})`,
     )
   }
 
-  console.log(`Done: ${upserted} scene(s) upserted, ${skipped} skipped.`)
+  console.log(`Done: ${created} scene(s) created, ${skipped} skipped (existing or unfound).`)
 }
 
 main()
