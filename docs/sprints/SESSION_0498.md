@@ -148,6 +148,13 @@ Land A0 → A2-v1 → A1 (smallest-shippable spine) of Epic A, gated by the oper
 - **Done means:** a working scene-card board authoring `LineageStoryScene` rows via `can()`; or explicitly slipped to fast-follow if session budget is tight (spine proves on seeded data without it).
 - **Depends on:** TASK_01; fork #2 resolved.
 
+#### SESSION_0498_TASK_04 — `/app/beta` gated preview area + Lineage Journey preview (operator, mid-session)
+
+- **Agent:** Cody (build) ← same review loop
+- **What:** an admin-gated beta/preview area so the operator + Tony can see in-flight features LIVE (prod) before public GA. New `beta.view` permission key in the EXISTING `can()` flat-roles system (admin `"*"` wildcard covers it — no grant plumbing needed; repo has 4 authz systems, this extends #1, never a 5th). `/app/beta` index (lists beta features) + first tenant `/app/beta/lineage-journey`: renders the full scroll-story sequence for a chosen scened chain **including `enabled: false` scenes** (admin-side query — NOT the public view). GA model: public surface stays data-gated on `enabled`; prod scenes get authored/seeded disabled-first, previewed in beta, flipped live per-scene via the A1 storyboard. Seed gains a `--disabled` flag for prod bring-up.
+- **Done means:** `/app/beta/lineage-journey` renders the journey for a non-admin-invisible chain; non-admin gets redirected; public `/directory/[slug]` unaffected by disabled scenes; gates green.
+- **Depends on:** TASK_02 (scene components), TASK_03 (board = the GA flip surface). RBAC grant/toggle surface for named non-admin testers = **FI-019** (`POST_LAUNCH_SOT.md`), future lane.
+
 ### Parallelism
 
 Sequential — A0 (schema/read-model) is the foundation both A2-v1 and A1 consume. A2-v1 and A1 both read seeded scenes; A1 can slip without blocking A2-v1. Single coherent lane, one worktree, inline Cody (no fan-out — not disjoint).
@@ -283,13 +290,107 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
   live SSR verify on :3498 planned)
 - Mitigation acknowledged: yes
 
+## Pre-flight: SceneStoryboard / storyboard oRPC router (A1)
+
+### 1. Existing component scan
+
+- Searched `components/web/` for: storyboard, scene card, admin board, person picker, combobox
+- Searched `components/common/` for: card, avatar, badge, switch, dialog, input, textarea, combobox
+- Found: `Card`, `Avatar`/`AvatarImage`/`AvatarFallback`, `Badge`, `Button`, `Switch`, `Dialog`
+  family, `Input`, `TextArea`, `Label`, `Note`, `Stack`, `Heading`, `ComboboxSelector` (the
+  searchable id-keyed picker), `CreatableCombobox` (NOT used — scenes attach only to existing
+  Passports, freetext person makes no sense). Nearest oRPC-wired admin form precedent:
+  `components/web/belt/belt-edit-form.tsx` (useState + Label/Input/TextArea + `client.belt.*` +
+  real-error toast). Nearest `/app` card-list precedent: `app/app/lineage/page.tsx` (Card rows in
+  `divide-y` list + inline sm action buttons).
+
+### 2. L1 template scan (via Dirstarter Component Inventory)
+
+- Consulted `docs/knowledge/wiki/dirstarter-component-inventory.md`: yes
+- Consulted `docs/knowledge/wiki/custom-component-inventory.md`: yes (ComboboxSelector/DataSelect
+  decision rule — searchable person picker → `ComboboxSelector`)
+- Closest L1 pattern: §9 admin CRUD is next-safe-action-keyed; the repo's live oRPC admin-form
+  idiom is `belt-edit-form.tsx` — followed instead (ADR 0024 full-oRPC).
+- **Primitive API spot-check:** `ComboboxSelector` (options:{id,name}[], value, onValueChange,
+  placeholder, searchPlaceholder, emptyMessage, clearable, size, id/aria props);
+  `Switch` (Base UI `SwitchPrimitive.Root.Props` — checked, onCheckedChange, disabled, className);
+  `Avatar` (children `AvatarImage(src,alt)`/`AvatarFallback`, className); `Badge`
+  (variant: primary|soft|outline|success|warning|info|danger, size: sm|md|lg); `Button`
+  (variant: primary|secondary|destructive|ghost, size, prefix, suffix, isPending); `Dialog*`
+  (DialogContent/Header/Title/Footer per belt-edit-form); `Heading` (render, size).
+
+### 3. Composition decision
+
+- [x] Composing existing components: Card, Avatar, Badge, Switch, Dialog, Input, TextArea, Label,
+  Note, Stack, Button, Heading, ComboboxSelector — no new primitive; scene cards are the
+  `/app/lineage` Card-row idiom, no god-card.
+
+### 4. Lane docs loaded
+
+- [x] petey-plan-0498 §A1 + SESSION_0498_TASK_03 spec (cache-revalidation requirement, Giddy A0
+  P3-4) + grill fork #2 (MVP depth) read
+- [x] Wiki entries: dirstarter-component-inventory, custom-component-inventory
+- [x] Runbook consulted: sop-test-writing.md (§2 --parallel=1; oRPC precedent
+  `server/belt/router.integration.test.ts` — createRouterClient + injected context)
+
+### 5. Dev environment confirmed
+
+- Dev server command: `npx next dev --turbo -p 3497` (port 3497 — :3499 is Desi's, :3000 not ours)
+- Working directory: `/Users/brianscott/dev/ronin-0498/apps/web`
+- Brand/host for testing: `localhost:3497/app/lineage/storyboard` (founders seeded locally)
+- Verification commands confirmed: `bun run typecheck`, `bun run lint` (fixer — accept writes),
+  `bun run test` (never bare multi-file `bun test`)
+
+### 6. FAILED_STEPS check
+
+- Prior failures in this area: FS-0001 (raw HTML), FS-0008 (props inferred not read — spot-check
+  above), WL-P1-8 / SESSION_0497 P2003 (node-id vs passport-id picker id-space)
+- Mitigation acknowledged: yes — the person picker is PASSPORT-keyed (a NEW `getScenePersonOptions`
+  mirroring `getBeltPromoterOptions`, the passport-keyed precedent; `getInstructorOptions` is the
+  node-keyed do-not-merge twin and is NOT reused); the handler verifies the Passport exists before
+  any FK write (BAD_REQUEST, never a raw P2003); no bare `catch {}` — the client surfaces the real
+  oRPC message (belt-edit-form idiom).
+
+## Pre-flight: Backend — storyboard scene mutations (A1)
+
+### 1. Auth predicates planned
+
+- [x] Session auth required (`authedProcedure` — deny-by-default backstop)
+- [x] Permission: `meta.permission = "lineage.manage"` (the existing `APP_AREA_PERMISSIONS.lineage`
+  key through the ONE `can()` gate — no 5th authz system). Scenes are cross-tree global curation
+  keyed by Passport, so tree-scoped `LineageTreeAccess` grants don't map; the page gate is
+  `requirePermission(APP_AREA_PERMISSIONS.lineage)` so page and procedures agree.
+- [x] Brand: `LineageStoryScene` carries no brand column (passport-keyed); the option source is
+  BBL-pinned like its `getBeltPromoterOptions` precedent.
+
+### 2. Existing action scan
+
+- Searched `server/` for: lineage router, storyboard, story scene, oRPC mutation precedents
+- Related existing: `server/lineage/router.ts` (flat entity router, joins `appRouter.lineage`),
+  `server/belt/router.ts` (the authed-mutation precedent: ORPCError codes, FK-verify-before-write,
+  `context.revalidate`), `server/orpc/revalidate.ts` (paths + tags → `updateTag`)
+- L1 pattern match: oRPC flat router (SOT-ADR D5), not the safe-action chain
+
+### 3. Data flow reference
+
+- Flow: admin curation write path → public ancestry read path. Every mutation revalidates
+  `"lineage"` + `lineage-ancestry-${passportId}` (the `ancestry.ts` `cacheTag` pair) — the
+  SESSION spec requirement (Giddy A0 P3-4; the "saves but reverts on nav" class).
+- Lifecycle stage: operator curation (`/app`), feeding the public `/directory/[slug]` scene walk.
+
+### 4. FAILED_STEPS check
+
+- Prior failures in this area: SESSION_0497 P2003 (WL-P1-8); 0486–0492 lesson — authz widening →
+  the GAINER's adversarial test FIRST (unauthorized member attempting each mutation → denied).
+- Manual Boundary Registry entries: none for this surface.
+
 ## Task log
 
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0498_TASK_01 | landed | A0 shipped @ `ede05efe` — model + hand-authored migration (shadow-replay empty-diff/exit-0, `migrate deploy` clean) + ancestry `story` projection (honest L+3→L+4) + 4 founders seeded idempotently. Gates: typecheck 0 err, lint/oxfmt clean, tests 1065/0 (ancestry 12/12, visibility 9/9). Giddy pass-1: 9.4 FIX-THEN-SHIP → P1 (seed clobber/re-arm) fixed create-only + rerun-proven (0 created / 4 skipped) → 9.6 SHIP. |
 | SESSION_0498_TASK_02 | pending | A2-v1 `useScroll` scroll scaffold on the ancestry timeline |
-| SESSION_0498_TASK_03 | pending | A1 `can()`-gated storyboard card-board (may slip) |
+| SESSION_0498_TASK_03 | built — awaiting review | A1 storyboard MVP — `/app/lineage/storyboard` scene-card board (`requirePermission("lineage.manage")`) + oRPC `lineage.storyboard.{create,update,setEnabled,duplicate,remove}` (`meta.permission = "lineage.manage"`), passport-keyed picker (`getScenePersonOptions`, WL-P1-8 guard: node-id → BAD_REQUEST), every mutation revalidates `"lineage"` + `lineage-ancestry-${passportId}` + the board path. **Latent-bug fix en route:** `server/orpc/revalidate.ts` used `updateTag` — Next 16 hard-throws it in Route Handlers (E872; `/api/rpc` is one) → switched to `revalidateTag(tag, { expire: 0 })` (read-your-writes verified live; `"max"` = one-request-stale SWR, rejected). Tests 13/13 (adversarial authz first); gates typecheck 0 / lint 0 / oxfmt clean / suite 1087/0; live round-trip on :3497 (anon 401 + page 307, create→public page fresh next request, CONFLICT on dupe, disable/delete propagate; founders untouched). |
 
 ## What landed
 
@@ -334,4 +435,12 @@ TBD at bow-out.
 - **P1 (FIXED inline, rerun-proven):** seed upsert `update` block clobbered curated copy + re-armed `enabled` on reseed → create-only semantics (`findUnique` → skip-with-log); reseed now 0 created / 4 skipped.
 - **P3 follow-ups (routed, non-gating):** P3-1 dormant fields (`isBridge`/video/poster) projected in the view with no consumer — trim from `LineageStorySceneView` until A5/A6, define `bridgeCondition` grammar before A6; P3-2 `sceneOrder` in the public view risks a second ordering authority — remove or docblock "walk order is authoritative"; P3-3 sharpest missing test — scene on a PUBLIC node *above* the truncation gap must vanish with the truncated entry; P3-4 → folded into TASK_03 spec (cache revalidation on scene mutation). P3-1/2/3 deferred until A2 lands (same files Cody is building against), then batch with the A2 review round.
 - **Score:** 9.6/10
-- **Follow-up:** P3 batch post-A2; `playing_with_neon` deliberate-drop chore at close.
+- **Follow-up:** P3 batch post-A2 (**DONE** @ `b2673097` — view trimmed to consumed fields, provenance no longer in the RSC flight payload, above-gap truncation test pinned, 1074/0); `playing_with_neon` deliberate-drop chore at close.
+
+### SESSION_0498_REVIEW_02 — Desi pass-1 on A2-v1 (`286c56cb` + `b2673097`)
+
+- **Reviewed tasks:** SESSION_0498_TASK_02
+- **Dirstarter docs check:** not applicable — custom lineage module; token discipline verified (red = `bg-primary`/`decoration-primary`, fixed mono poles documented).
+- **Verdict:** **8.4 — below the 9.5 bar; one Cody fix-pass prescribed.** Architecture right (one `SceneShell` × three token sets, pure scroll map, clean gate); Poppins 800 exact landing parity; palette cycle SSR-verified. Three craft P1s keep it out of "cinematic": (1) shrink mistimed — hero never witnessed large (scale 0.71 at viewport-center); retime `[0.45,1]→[1,0.42]`, chip fade `[0.85,1]`; (2) transform-shrink leaves a ~200–300px dead void mid-scene — transform-only `y` chase on the content stack; (3) `?? entry.avatarUrl` hero fallback renders Rigan's placeholder clip-art full-bleed — drop to `heroImageUrl ?? monogram`. P2: per-palette `badge` token (red-on-red owner chip vanishes), red `muted` → `text-white/90` (AA), scene names as `H5` (document outline), `md:ring-1` strip boundary on dark desktop chrome. Build-flags adjudicated: RM full-width = accept (P3 cosmetic); mini scenes = keep (hold the narrative well).
+- **Score:** 8.4/10
+- **Follow-up:** Cody A2 fix-pass (3×P1 + 4×P2) → Giddy pass-2 → re-score. Routed to A3/Petey: true full-width breakout (collides with sticky sidebar — layout decision), vertical-name-rail flip experiment (explicit deferral — the marker-rotate is a thin token of the operator's H→V note), quote soft length cap in A1 admin. Screenshots in session scratchpad (`desk-*/mob-*/rm-timeline.png`).
