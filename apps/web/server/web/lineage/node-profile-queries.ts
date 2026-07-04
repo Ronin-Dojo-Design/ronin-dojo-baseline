@@ -33,6 +33,8 @@ export type EditableLineageNodeProfile = {
     passport: {
       displayName: string | null
       avatarUrl: string | null
+      /** DirectoryProfile satellite — the country flag source (SESSION_0496 TASK_06). */
+      locationCountry: string | null
     }
   }
   member: {
@@ -111,6 +113,9 @@ export const getEditableLineageNodeProfile = async ({
                 select: {
                   displayName: true,
                   avatarUrl: true,
+                  // Country lives on the DirectoryProfile satellite (SESSION_0496 TASK_06);
+                  // null when the placeholder has no profile yet — the form prefills "".
+                  directoryProfile: { select: { locationCountry: true } },
                   // Pre-ordered by Rank.sortOrder desc; the discipline filter happens in JS
                   // (Prisma can't reference the sibling `tree.disciplineId` in a nested where).
                   rankAwardsEarned: {
@@ -163,6 +168,7 @@ export const getEditableLineageNodeProfile = async ({
       passport: {
         displayName: member.node.passport.displayName,
         avatarUrl: member.node.passport.avatarUrl,
+        locationCountry: member.node.passport.directoryProfile?.locationCountry ?? null,
       },
     },
     member: {

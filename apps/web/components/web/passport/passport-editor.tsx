@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
+import { CountryField } from "~/components/web/belt/country-field"
 import { ProfileHero } from "~/components/web/profile/profile-hero"
 import { initialsOf } from "~/lib/directory/facet-result"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
@@ -327,13 +328,7 @@ function DirectoryProfileForm({
 
           <TextField control={form.control} name="locationRegion" label="State / Region" />
 
-          <TextField
-            control={form.control}
-            name="locationCountry"
-            label="Country (2-letter code)"
-            placeholder="US"
-            maxLength={2}
-          />
+          <CountryField control={form.control} name="locationCountry" label="Country" />
 
           <FormField
             control={form.control}

@@ -8,6 +8,7 @@ import {
   memberBeltColor,
   memberInitials,
   memberRankLabel,
+  memberSchool,
   memberTopRank,
   memberTopRankAward,
   memberSchoolLabel,
@@ -294,6 +295,49 @@ describe("member view-model derivations", () => {
     // A discipline the member holds no award in → null (no leak from another system).
     assert.equal(memberTopRank(node, "disc-judo"), null)
     assert.equal(memberBeltColor(node, "disc-judo"), null)
+  })
+
+  // SESSION_0496 pass-2 (Giddy P2): memberSchool pairs name + logo from ONE org — the new
+  // invariant behind the V2 player card. A surface must never show school A's label with
+  // school B's logo, and a free-text school (no org) must never borrow a membership logo.
+  test("memberSchool: org affiliation pairs name AND logo from the SAME org", () => {
+    const node = makeRichNode()
+    node.passport.affiliations = [
+      {
+        organization: { name: "Rigan Machado Academy", logoUrl: "https://img.test/rma-logo.png" },
+        schoolName: null,
+      },
+    ] as never
+    // Membership org (Gracie Barra) is present too — the affiliation org must win BOTH slots.
+    assert.deepEqual(memberSchool(node), {
+      name: "Rigan Machado Academy",
+      logoUrl: "https://img.test/rma-logo.png",
+    })
+  })
+
+  test("memberSchool: free-text school has no org → logoUrl null (never a borrowed logo)", () => {
+    const node = makeRichNode()
+    node.passport.affiliations = [{ organization: null, schoolName: "Backyard BJJ" }] as never
+    // The membership org has a logo available — it must NOT leak onto the free-text school.
+    node.passport.user!.memberships = [
+      { organization: { name: "Gracie Barra", logoUrl: "https://img.test/gb-logo.png" } },
+    ] as never
+    assert.deepEqual(memberSchool(node), { name: "Backyard BJJ", logoUrl: null })
+  })
+
+  test("memberSchool: membership fallback carries the membership org's own logo", () => {
+    const node = makeRichNode()
+    node.passport.affiliations = []
+    node.passport.user!.memberships = [
+      { organization: { name: "Gracie Barra", logoUrl: "https://img.test/gb-logo.png" } },
+    ] as never
+    assert.deepEqual(memberSchool(node), {
+      name: "Gracie Barra",
+      logoUrl: "https://img.test/gb-logo.png",
+    })
+    // No affiliation and no membership → null (unaffiliated).
+    node.passport.user!.memberships = []
+    assert.equal(memberSchool(node), null)
   })
 
   test("memberSchoolLabel prefers current Affiliation (org, then free-text), else Membership, else null", () => {

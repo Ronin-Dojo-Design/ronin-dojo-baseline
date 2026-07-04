@@ -102,19 +102,36 @@ export function memberRankLabel(node: LineageNodeRow, disciplineId?: string | nu
 }
 
 /**
+ * Current-school identity (name + logo) for the member — the SAME affiliation-first
+ * resolution as `memberSchoolLabel` (linked org, else free-text school, else the latest
+ * Baseline Membership org, D-023), returning the name AND logo from ONE org so a surface
+ * never pairs school A's label with school B's logo (SESSION_0496). A free-text school
+ * has no org → no logo. Null → unaffiliated / not shown.
+ */
+export function memberSchool(
+  node: LineageNodeRow,
+): { name: string; logoUrl: string | null } | null {
+  const affiliation = node.passport?.affiliations?.[0]
+  if (affiliation?.organization) {
+    return { name: affiliation.organization.name, logoUrl: affiliation.organization.logoUrl }
+  }
+  // `!= null` (not truthiness) preserves the original `??` fallback semantics exactly.
+  if (affiliation?.schoolName != null) {
+    return { name: affiliation.schoolName, logoUrl: null }
+  }
+  const membershipOrg = node.passport?.user?.memberships?.[0]?.organization
+  return membershipOrg ? { name: membershipOrg.name, logoUrl: membershipOrg.logoUrl } : null
+}
+
+/**
  * Current-school label for the member. Reads the canonical **Affiliation** axis first
  * (linked org name, else free-text school), falling back to the latest Baseline Membership
  * org during the Passport-consolidation transition (D-023). Null → unaffiliated / not shown.
  * Affiliation is a separate display axis from promotion lineage (passport-and-shells.md).
+ * Thin view over `memberSchool` so name + logo share ONE resolution predicate.
  */
 export function memberSchoolLabel(node: LineageNodeRow): string | null {
-  const affiliation = node.passport?.affiliations?.[0]
-  return (
-    affiliation?.organization?.name ??
-    affiliation?.schoolName ??
-    node.passport?.user?.memberships?.[0]?.organization?.name ??
-    null
-  )
+  return memberSchool(node)?.name ?? null
 }
 
 /**

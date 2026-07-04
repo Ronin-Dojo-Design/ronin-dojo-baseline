@@ -1,6 +1,8 @@
 "use client"
 
+import { useReducedMotion } from "@mantine/hooks"
 import { ClockIcon, UserRoundPlusIcon } from "lucide-react"
+import { LayoutGroup } from "motion/react"
 import dynamic from "next/dynamic"
 import { Button } from "~/components/common/button"
 import {
@@ -65,6 +67,7 @@ export function LineageProfileDrawer({
   students,
   onSelectStudent,
   disciplineId,
+  studentsCarouselVariant,
 }: LineageProfileDrawerProps) {
   const isDesktopPanel = useDesktopProfilePanel()
 
@@ -105,6 +108,7 @@ export function LineageProfileDrawer({
             students={students}
             onSelectStudent={onSelectStudent}
             disciplineId={disciplineId}
+            studentsCarouselVariant={studentsCarouselVariant}
           />
         )}
       </DrawerContent>
@@ -126,6 +130,7 @@ function DrawerBody({
   students,
   onSelectStudent,
   disciplineId,
+  studentsCarouselVariant,
 }: {
   profile: LineageNodeProfile
   promoterChangeContext: PromoterChangeContext | null
@@ -140,13 +145,21 @@ function DrawerBody({
   students?: LineageTreeMemberRow[]
   onSelectStudent?: (memberId: string) => void
   disciplineId?: string | null
+  studentsCarouselVariant?: "v1" | "v2"
 }) {
+  const reduceMotion = useReducedMotion() ?? false
   const view = deriveDrawerProfileView(profile)
   const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
   const claimState = effectiveClaimState(viewerClaimState, profile)
+  // Shared-element morph target key (SESSION_0496, Epic A0.5): pairs the identity-header
+  // avatar with the V2 student-card avatar that opened this profile
+  // (`students-carousel-v2.tsx` uses the same `student-avatar-<nodeId>` id). V2-only and
+  // reduced-motion-off — null renders the header avatar exactly as before.
+  const morphLayoutId =
+    studentsCarouselVariant === "v2" && !reduceMotion ? `student-avatar-${profile.id}` : null
 
   return (
-    <>
+    <LayoutGroup>
       <DrawerIdentityHeader
         view={view}
         isClaimable={isClaimable}
@@ -155,6 +168,7 @@ function DrawerBody({
         isAdmin={isAdmin}
         treeSlug={treeSlug}
         nodeId={nodeId}
+        morphLayoutId={morphLayoutId}
       />
 
       <Tabs
@@ -179,6 +193,7 @@ function DrawerBody({
             students={students}
             onSelectStudent={onSelectStudent}
             disciplineId={disciplineId}
+            studentsCarouselVariant={studentsCarouselVariant}
           />
         </TabsContent>
 
@@ -198,7 +213,7 @@ function DrawerBody({
         treeSlug={treeSlug}
         nodeId={nodeId}
       />
-    </>
+    </LayoutGroup>
   )
 }
 

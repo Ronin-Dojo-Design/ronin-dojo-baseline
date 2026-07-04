@@ -13,6 +13,7 @@ import { env } from "~/env"
 import { BRAND_TRUSTED_ORIGINS, resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
 import { getBrandSenderName, sendEmail } from "~/lib/email"
 import { generateUniqueProfileSlug } from "~/lib/slug"
+import { findJoinLegacyLeadCountry } from "~/server/web/lead/lead-country"
 import { reconcilePendingLineageClaims } from "~/server/web/lineage/reconcile-pending-claims"
 import { db } from "~/services/db"
 
@@ -37,9 +38,19 @@ type AuthEndpointContext = {
   }
 }
 
-async function ensureIdentityShell(userId: string, displayName: string | null) {
+async function ensureIdentityShell(
+  userId: string,
+  displayName: string | null,
+  email?: string | null,
+) {
   const existing = await db.passport.findUnique({ where: { userId } })
   if (existing) return
+
+  // SESSION_0496 TASK_05 — creation-only (after the early return, so the every-sign-in
+  // path pays nothing): seed the profile stub's country from the newest join-the-legacy
+  // lead this email submitted, so the wizard's answer survives the magic-link signup.
+  // Read OUTSIDE the tx (keep it short); never throws — a bad lead must not block signup.
+  const locationCountry = email ? await findJoinLegacyLeadCountry({ email }) : null
 
   const slug = await generateUniqueProfileSlug(
     displayName,
@@ -60,6 +71,7 @@ async function ensureIdentityShell(userId: string, displayName: string | null) {
       data: {
         passportId: passport.id,
         slug,
+        ...(locationCountry ? { locationCountry } : {}),
         // Defaults from schema: visibility=MEMBERS_ONLY, showOrgs=true, showRanks=true
       },
     })
@@ -159,17 +171,20 @@ export const auth = betterAuth({
               : typeof userFromSession?.name === "string"
                 ? userFromSession.name
                 : null
-          await ensureIdentityShell(newUserId, displayName)
+          // Fetched BEFORE ensureIdentityShell (SESSION_0496 TASK_05) so the shell can seed
+          // the profile country from the email's join-the-legacy lead — same single query the
+          // reconcile below already needed, just hoisted.
+          const account = await db.user.findUnique({
+            where: { id: newUserId },
+            select: { email: true, emailVerified: true },
+          })
+          await ensureIdentityShell(newUserId, displayName, account?.email)
 
           // SESSION_0419: claim any email-bound pending lineage node on EVERY successful auth, so
           // a founder who signs in with Google (the email's recommended method, which never carries
           // the node) still claims their profile — not just the magic-link callbackURL path. Runs
           // AFTER ensureIdentityShell (the signup Passport must exist first; finalize swaps it for
           // the node's). Never throws — reconcile swallows per-binding failures so auth can't break.
-          const account = await db.user.findUnique({
-            where: { id: newUserId },
-            select: { email: true, emailVerified: true },
-          })
           await reconcilePendingLineageClaims({
             userId: newUserId,
             email: account?.email,

@@ -51,6 +51,13 @@ export type LineageProfileDrawerProps = {
   /** Swap the drawer to a tapped student — recursive drill-down. */
   onSelectStudent?: (memberId: string) => void
   /**
+   * Students-rail bake-off toggle (SESSION_0496, Epic A0.5): "v2" renders the
+   * `StudentsCarouselV2` player cards (+ the avatar layoutId morph into the identity
+   * header); undefined/"v1" renders the original `StudentsCarousel` — the regression
+   * guarantee. Resolved by the View A island from `?cards=v2`; no settings UI.
+   */
+  studentsCarouselVariant?: "v1" | "v2"
+  /**
    * The tree's discipline — scopes the *students carousel* belts to this discipline
    * (the students are tree members; ADR 0035 §3). The focal member's own header rank is
    * intentionally NOT scoped here (the drawer shows their full multi-discipline rank).

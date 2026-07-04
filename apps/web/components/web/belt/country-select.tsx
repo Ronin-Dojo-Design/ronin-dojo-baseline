@@ -18,12 +18,21 @@ export function CountrySelect({
   value,
   onValueChange,
   placeholder = "Select a country...",
+  // FormControl slot-injects these (CountryField wraps this in FormControl); forward them
+  // so ComboboxSelector can land them on the trigger Button — otherwise `FormLabel htmlFor`
+  // never binds and validation errors are not announced (pass-2 SESSION_0496 fix).
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: {
   /** The currently selected alpha-2 code, or `null`/empty when unset. */
   value: string | null | undefined
   /** Called with the alpha-2 code (or `""` when cleared). */
   onValueChange: (code: string) => void
   placeholder?: string
+  id?: string
+  "aria-describedby"?: string
+  "aria-invalid"?: boolean | "true" | "false" | "grammar" | "spelling"
 }) {
   const options = useMemo(
     () =>
@@ -36,6 +45,9 @@ export function CountrySelect({
 
   return (
     <ComboboxSelector
+      id={id}
+      aria-describedby={ariaDescribedBy}
+      aria-invalid={ariaInvalid}
       options={options}
       value={value ?? null}
       onValueChange={onValueChange}

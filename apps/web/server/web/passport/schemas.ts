@@ -46,7 +46,19 @@ export const updateDirectoryProfileSchema = z.object({
   visibility: DirectoryVisibility.optional(),
   locationCity: z.string().max(100).optional(),
   locationRegion: z.string().max(100).optional(),
-  locationCountry: z.string().length(2).optional(),
+  // ISO 3166-1 alpha-2 from `CountryField` (SESSION_0496). "" is the form's "not set"
+  // (see the note above) and maps to null (clears the column) — the bare
+  // `.length(2).optional()` rejected "", wedging the whole directory form for anyone
+  // with no country set (latent since the raw 2-letter TextField). Letters-only +
+  // uppercase normalization (pass-2): the column is Char(2) and every reader
+  // (`countryFlagEmoji`, `getCountryLabel`) keys off the uppercase code. undefined
+  // must SURVIVE as undefined — Prisma partial updates skip absent fields, null clears.
+  locationCountry: z
+    .string()
+    .regex(/^[A-Za-z]{2}$/, "Use a 2-letter country code")
+    .or(z.literal(""))
+    .nullish()
+    .transform(v => (v ? v.toUpperCase() : v === "" ? null : v)),
   showEmail: z.boolean().optional(),
   showPhone: z.boolean().optional(),
   showOrgs: z.boolean().optional(),

@@ -9,6 +9,7 @@ import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
 import { StudentsCarousel } from "~/components/web/lineage/students-carousel"
+import { StudentsCarouselV2 } from "~/components/web/lineage/students-carousel-v2"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 import type { DrawerAccount, DrawerRankAward } from "./drawer-types"
 import { formatDate, initials } from "./use-drawer-profile"
@@ -23,6 +24,7 @@ export function InfoTab({
   students,
   onSelectStudent,
   disciplineId,
+  studentsCarouselVariant,
 }: {
   profile: LineageNodeProfile
   currentRank: NonNullable<DrawerRankAward>["rank"] | null
@@ -33,6 +35,8 @@ export function InfoTab({
   students?: LineageTreeMemberRow[]
   onSelectStudent?: (memberId: string) => void
   disciplineId?: string | null
+  /** "v2" → the SESSION_0496 player-card rail; undefined/"v1" → the original carousel. */
+  studentsCarouselVariant?: "v1" | "v2"
 }) {
   // Promoter identity prefers the historical Passport promoter (SESSION_0391),
   // falling back to the real-account actor that performed the award.
@@ -162,11 +166,19 @@ export function InfoTab({
       {students && students.length > 0 && onSelectStudent && (
         <>
           <Separator />
-          <StudentsCarousel
-            students={students}
-            onSelectStudent={onSelectStudent}
-            disciplineId={disciplineId}
-          />
+          {studentsCarouselVariant === "v2" ? (
+            <StudentsCarouselV2
+              students={students}
+              onSelectStudent={onSelectStudent}
+              disciplineId={disciplineId}
+            />
+          ) : (
+            <StudentsCarousel
+              students={students}
+              onSelectStudent={onSelectStudent}
+              disciplineId={disciplineId}
+            />
+          )}
         </>
       )}
     </Stack>

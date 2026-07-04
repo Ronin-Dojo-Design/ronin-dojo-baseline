@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/common/select"
+import { CountryField } from "~/components/web/belt/country-field"
 import { AvatarUploader } from "~/components/web/uploader"
 import { uploadJoinLegacyAvatar } from "~/server/web/lead/public-actions"
 import { bblPortalFontClass, discoveryLabels, roleLabels } from "./constants"
@@ -179,6 +180,10 @@ export function IdentityStep({
             </FormItem>
           )}
         />
+
+        {/* Optional — rides the lead intake for steward review (SESSION_0496); the live
+            directory flag is set later via profile edit. */}
+        <CountryField control={form.control} name="country" label="Country" />
 
         <FormField
           control={form.control}

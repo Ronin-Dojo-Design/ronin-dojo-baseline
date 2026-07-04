@@ -4,8 +4,8 @@ slug: post-launch-sot
 type: sot
 status: active
 created: 2026-06-20
-updated: 2026-07-03
-last_agent: claude-session-0493
+updated: 2026-07-04
+last_agent: claude-session-0496
 pairs_with:
   - docs/knowledge/wiki/files/feature-request-dialog.md
   - docs/petey-plan-0419-post-launch-sweep.md
@@ -82,6 +82,8 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 | FI-014 | **Brand-leak: BBL signup received a "Welcome to Baseline Martial Arts" email** (live-user report — Jay Farrell, free join-legacy signup) — sent *from* `welcome@baselinemartialarts.com` with broken logo + no BBL wrapper | bug | P0 | resolved (SESSION_0492, `session-0492-prodqa`) | Root cause = brandless `sendEmail` defaulted to `env.RESEND_SENDER_EMAIL` (Baseline). Fixed: brandless resolves `Brand.BBL` across all sender paths (`lib/email.ts`); `.env.example` flipped; lead-welcome passes BBL. Read-only prod query confirmed Jay = `NEW` Lead, free signup, no org attach → code fix fully covers. Email-audit (Desi) mapped the whole catalog. |
 | FI-015 | **Vestigial Baseline link:** "Advertise on Black Belt Legacy" fallback origin pointed at baselinemartialarts.com | bug | P2 | resolved (SESSION_0492, `session-0492-prodqa`) | `public-actions.ts` fallback origin → blackbeltlegacy.com; link-pass swept email/funnel CTAs, zero member-facing Baseline links remain |
 | FI-016 | **Community feed + ancestry timeline P2/P3 polish batch** (post-SHIP backlog from Desi review + Doug P3s, SESSION_0493): mobile style-filter hidden (`max-sm:hidden`) + no mobile sticky filter bar; hero post-count not filter-aware; create-dialog hints (YouTube/Vimeo-only, title max-length counter); hide native-share item when `navigator.share` unsupported; timeline red-name dark-contrast check; ancestor deep-link seam unconsumed (→ WL-P2-23); community image origin-guard allows any bucket path (scope to `community-posts/` prefix); YouTube id charset validation; ancestry walk loop lacks a direct DB test; `bjj-passport-card` avatar `ring-(--rank-color)` invisible for #000 ranks on dark; `bbl-reveal.tsx` ships SSR-hidden (`initial opacity:0` + whileInView) | polish | P2 | open | Bundle into the community-feed phase-2 (votes) session or a dedicated polish lane |
+| FI-017 | **Claim-finalize strands the surviving profile:** on cross-passport claim approve, `claim-finalize.ts:601-607` deletes the claimant's signup Passport (its DirectoryProfile cascades — a TASK_05-seeded country dies with it) and the placeholder's profile survives as-is — so a SESSION_0496 admin-upserted HIDDEN slug-less stub leaves the new owner directory-invisible until they self-heal in the passport editor | gap | P2 | open (SESSION_0496 Doug/Giddy finding — pre-existing since Phase 3c; SESSION_0496 *improves* it: editable HIDDEN row vs no-row editor-throw) | Scope: finalize normalizes the surviving profile on attach (visibility → MEMBERS_ONLY + slug mint) AND carries over `locationCountry` (+ future profile fields) from the deleted signup profile when the survivor lacks them. Touches the claim core (the moat) — own reviewed slice, not a rider |
+| FI-018 | **StudentsCarousel bake-off resolution:** V1 (default, frozen) vs V2 player-card rail (`?cards=v2`, SESSION_0496) — operator picks the winner; the loser is deleted (time-boxed duplication); if V2 promotes to default it gains its own E2E smoke at the promotion boundary (the 0495 lesson) | decision | P2 | open | Compare live at `/lineage/rigan-machado-lineage?cards=v2`. Promotion lane = default flip + E2E smoke + V1 deletion (incl. WL-P3-26's V1 width trap) + ubiquitous-language entry |
 
 <!-- Append new rows above. Resolve in place: Status → MVP_LIVE (+ link the file-spec) or declined (+ reason). -->
 

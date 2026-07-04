@@ -117,6 +117,28 @@ export const applyLineageNodeProfileUpdate = async ({
       data: { bio: input.bio },
     })
 
+    // SESSION_0496 TASK_06: country lives on the DirectoryProfile satellite. Skip entirely
+    // when the field wasn't sent (undefined) — only the country form carries it.
+    if (input.locationCountry !== undefined) {
+      await tx.directoryProfile.upsert({
+        where: { passportId: member.node.passportId },
+        // HARD REQUIREMENT (pass-2 Giddy — real leak): a steward-created stub must NEVER
+        // enter member-facing directory listings. The schema default (MEMBERS_ONLY) would
+        // list it (`server/web/directory/queries.ts` visibility filter), so the CREATE
+        // branch pins visibility HIDDEN and leaves slug null (no directory URL). The
+        // lineage flag display is unaffected — the lineage payload reads directoryProfile
+        // without a visibility gate.
+        create: {
+          passportId: member.node.passportId,
+          visibility: "HIDDEN",
+          locationCountry: input.locationCountry,
+        },
+        // UPDATE sets ONLY the country — never visibility/slug/show-toggles: an existing
+        // profile's owner-chosen settings must survive a steward country edit.
+        update: { locationCountry: input.locationCountry },
+      })
+    }
+
     const shownRankAward = pickTopAwardInDiscipline(
       member.node.passport.rankAwardsEarned,
       tree.disciplineId,

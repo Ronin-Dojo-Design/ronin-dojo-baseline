@@ -30,7 +30,10 @@ type BeltGroup = {
  * the same awarded-truth source `memberTopRank`/`memberBeltColor` use, ADR 0035),
  * most-senior first. Keyed by rank name; unranked sorts last.
  */
-function groupByBelt(students: LineageTreeMemberRow[], disciplineId?: string | null): BeltGroup[] {
+export function groupByBelt(
+  students: LineageTreeMemberRow[],
+  disciplineId?: string | null,
+): BeltGroup[] {
   const byKey = new Map<string, BeltGroup>()
 
   for (const student of students) {

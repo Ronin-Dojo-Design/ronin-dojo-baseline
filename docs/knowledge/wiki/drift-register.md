@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-03
-last_agent: claude-session-0495
+updated: 2026-07-04
+last_agent: claude-session-0496
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -517,3 +517,15 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix shape:** cursor pagination on both feed queries when volume warrants; the hero-count under-report
   resolves with it.
 - **Status: OPEN** (P3 — deferred until post volume warrants).
+
+### D-038 — Prodsnap re-imports seed-drifted BrandSettings rows (SESSION_0496)
+
+- **What:** prod `BrandSettings.accentColor` for BBL (+ WEKAF) still carries `"51 100% 50%"` (the
+  SESSION_0357 wrong-tear-sheet gold) while the checked-in `scripts/seed-brand-settings.ts` ratifies
+  `accentColor: null` — so **every prodsnap refresh re-imports the drift** into local. SESSION_0496 hit it
+  as a ~1.4:1 selected-row contrast bug that looked like CSS; the root cause was the data layer.
+- **Why it matters:** data-layer fixes leave no diff artifact — until the prod row conforms to the seed,
+  local silently re-drifts on every snapshot and the "fix" un-happens.
+- **Fix shape:** run the ratified seed against prod (TD-003) — kills the drift at source. Local reseed
+  already applied (SESSION_0496).
+- **Status: OPEN** (P2 — resolves with TD-003 at ship).

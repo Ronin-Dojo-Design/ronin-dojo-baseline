@@ -92,3 +92,42 @@ describe("updateDirectoryProfileSchema — coverPhotoUrl / videoIntroUrl", () =>
     expect(r.success).toBe(false)
   })
 })
+
+// SESSION_0496 pass-2 (Giddy P1): locationCountry skip-vs-clear is load-bearing for the
+// Prisma partial update — undefined must stay undefined (field skipped), "" must become
+// null (column cleared). A regression here silently wipes or wedges the directory form.
+describe("updateDirectoryProfileSchema — locationCountry", () => {
+  it("accepts a valid alpha-2 code", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ locationCountry: "US" })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.locationCountry).toBe("US")
+  })
+
+  it("uppercases a lowercase code (readers key off the uppercase code)", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ locationCountry: "br" })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.locationCountry).toBe("BR")
+  })
+
+  it("transforms empty string (form 'not set') to null — clears the column", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ locationCountry: "" })
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.locationCountry).toBeNull()
+  })
+
+  it("keeps undefined as undefined — Prisma skips the field, no accidental clear", () => {
+    const r = updateDirectoryProfileSchema.safeParse({})
+    expect(r.success).toBe(true)
+    if (r.success) expect(r.data.locationCountry).toBeUndefined()
+  })
+
+  it("rejects a 3-letter code", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ locationCountry: "USA" })
+    expect(r.success).toBe(false)
+  })
+
+  it("rejects non-letter input", () => {
+    const r = updateDirectoryProfileSchema.safeParse({ locationCountry: "1!" })
+    expect(r.success).toBe(false)
+  })
+})

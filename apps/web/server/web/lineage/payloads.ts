@@ -93,7 +93,17 @@ export const lineageNodeRowPayload = {
                 select: { id: true, name: true, slug: true },
               },
               organization: {
-                select: { id: true, name: true, slug: true, city: true, state: true },
+                // @added SESSION_0496 — logoUrl on BOTH row-payload org selects so the
+                // V2 student card's school logo comes from the SAME org that
+                // `memberSchoolLabel` resolves (affiliation-first), never a mismatched pair.
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  city: true,
+                  state: true,
+                  logoUrl: true,
+                },
               },
             },
             orderBy: { joinedAt: "desc" as const },
@@ -153,7 +163,8 @@ export const lineageNodeRowPayload = {
           id: true,
           schoolName: true,
           organization: {
-            select: { id: true, name: true, slug: true, city: true, state: true },
+            // @added SESSION_0496 — logoUrl (see the membership org select note above).
+            select: { id: true, name: true, slug: true, city: true, state: true, logoUrl: true },
           },
         },
         orderBy: { updatedAt: "desc" as const },

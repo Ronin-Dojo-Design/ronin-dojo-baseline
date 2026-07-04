@@ -9,6 +9,7 @@ import { AvatarField, DateField, TextAreaField, TextField } from "~/components/c
 import { Form } from "~/components/common/form"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import { CountryField } from "~/components/web/belt/country-field"
 import { updateLineageNodeProfile } from "~/server/web/lineage/node-profile-actions"
 import type { EditableLineageNodeProfile } from "~/server/web/lineage/node-profile-queries"
 import type { UpdateLineageNodeProfileInput } from "~/server/web/lineage/node-profile-schemas"
@@ -20,6 +21,8 @@ type FormValues = {
   bio: string
   avatarUrl: string
   promotionDate?: Date | null
+  /** ISO 3166-1 alpha-2; "" = not set (schema maps it to null). SESSION_0496 TASK_06. */
+  locationCountry: string
 }
 
 const str = (value: string | null | undefined) => value ?? ""
@@ -44,6 +47,7 @@ function nodeFormDefaults(
     promotionDate: canEditPromotionDate
       ? toDate(profile.member.currentRankAward?.awardedAt ?? null)
       : null,
+    locationCountry: str(profile.node.passport.locationCountry),
   }
 }
 
@@ -58,6 +62,7 @@ function buildPayload(
     displayName: values.displayName,
     bio: values.bio,
     avatarUrl: values.avatarUrl,
+    locationCountry: values.locationCountry,
     ...(canEditPromotionDate ? { promotionDate: values.promotionDate ?? null } : {}),
   }
 }
@@ -108,6 +113,9 @@ export function LineageNodeProfileForm({ profile }: Props) {
             Promotion date is unavailable because this tree member has no rank award yet.
           </Note>
         )}
+
+        {/* SESSION_0496 TASK_06: steward-editable country — feeds the V2 card flag. */}
+        <CountryField control={form.control} name="locationCountry" label="Country" />
 
         <AvatarField
           form={form}

@@ -31,7 +31,7 @@ type ComboboxSelectorProps = {
   size?: ButtonProps["size"]
   /** Accessible label for the clear button (when `clearable`). */
   clearLabel?: string
-}
+} & Pick<ButtonProps, "id" | "aria-describedby" | "aria-invalid">
 
 export function ComboboxSelector({
   options,
@@ -43,6 +43,13 @@ export function ComboboxSelector({
   clearable = false,
   size = "md",
   clearLabel = "Clear selection",
+  // FormControl slot-injects these onto its child (id / aria-describedby / aria-invalid).
+  // They MUST land on the trigger Button — the `PopoverTrigger render={<Button/>}` chain
+  // otherwise drops them, so `FormLabel htmlFor` never binds and errors aren't announced
+  // for ANY form combobox (pass-2 SESSION_0496 fix — heals every FormControl consumer).
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
 }: ComboboxSelectorProps) {
   const [open, setOpen] = useState(false)
   const selected = options.find(o => o.id === value)
@@ -54,6 +61,9 @@ export function ComboboxSelector({
         <PopoverTrigger
           render={
             <Button
+              id={id}
+              aria-describedby={ariaDescribedBy}
+              aria-invalid={ariaInvalid}
               variant="secondary"
               size={size}
               role="combobox"

@@ -7,6 +7,7 @@ import {
   ShieldCheckIcon,
   UserRoundCogIcon,
 } from "lucide-react"
+import { motion } from "motion/react"
 import { type CSSProperties, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
@@ -51,16 +52,32 @@ function DrawerHeaderRankBar({ panelRankColor }: { panelRankColor: string | null
   )
 }
 
-/** Avatar with an ambient belt-color glow (the glow self-disables when colorless). */
+/**
+ * Avatar with an ambient belt-color glow (the glow self-disables when colorless).
+ *
+ * `morphLayoutId` (SESSION_0496, Epic A0.5) is the additive shared-element hook: when
+ * set (V2 students rail + motion allowed), the avatar is wrapped in a `motion.span`
+ * keyed by the id so a profile swap remounts it and Motion morphs it from the V2
+ * student card carrying the same `layoutId`. Null → the exact pre-0496 markup.
+ */
 function DrawerHeaderAvatar({
   avatarSrc,
   displayName,
   panelRankColor,
+  morphLayoutId,
 }: {
   avatarSrc: string | null
   displayName: string
   panelRankColor: string | null
+  morphLayoutId?: string | null
 }) {
+  const avatar = (
+    <Avatar className="relative size-16">
+      {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
+      <AvatarFallback>{initials(displayName)}</AvatarFallback>
+    </Avatar>
+  )
+
   return (
     <div className="relative shrink-0">
       {panelRankColor && (
@@ -70,10 +87,13 @@ function DrawerHeaderAvatar({
           style={{ backgroundColor: panelRankColor }}
         />
       )}
-      <Avatar className="relative size-16">
-        {avatarSrc && <AvatarImage src={avatarSrc} alt={displayName} />}
-        <AvatarFallback>{initials(displayName)}</AvatarFallback>
-      </Avatar>
+      {morphLayoutId ? (
+        <motion.span key={morphLayoutId} layoutId={morphLayoutId} className="block">
+          {avatar}
+        </motion.span>
+      ) : (
+        avatar
+      )}
     </div>
   )
 }
@@ -154,6 +174,7 @@ export function DrawerIdentityHeader({
   isAdmin,
   treeSlug,
   nodeId,
+  morphLayoutId,
 }: {
   view: DrawerProfileView
   isClaimable?: boolean
@@ -167,6 +188,8 @@ export function DrawerIdentityHeader({
   isAdmin?: boolean
   treeSlug?: string
   nodeId?: string | null
+  /** Shared-element avatar morph key (V2 students rail) — see `DrawerHeaderAvatar`. */
+  morphLayoutId?: string | null
 }) {
   const {
     displayName,
@@ -203,6 +226,7 @@ export function DrawerIdentityHeader({
             avatarSrc={avatarSrc}
             displayName={displayName}
             panelRankColor={panelRankColor}
+            morphLayoutId={morphLayoutId}
           />
           <Stack size="xs" direction="column" className="min-w-0 flex-1">
             <DrawerTitle>{displayName}</DrawerTitle>

@@ -25,6 +25,20 @@ const nullableDate = z.preprocess(value => {
   return value
 }, z.coerce.date().nullable())
 
+// ISO 3166-1 alpha-2 (SESSION_0496 TASK_06). "" is the form's "not set" → null (clears);
+// undefined must SURVIVE as undefined so the action can skip the DirectoryProfile upsert
+// entirely when the field wasn't sent. Uppercased — readers key off the uppercase code.
+const nullableCountryCode = z
+  .string()
+  .trim()
+  .regex(/^[A-Za-z]{2}$/, "Use a 2-letter country code")
+  .or(z.literal(""))
+  .nullish()
+  .transform(v => (v ? v.toUpperCase() : v === "" ? null : v))
+  // The trailing .optional() marks the KEY optional in the inferred type (same as
+  // promotionDate) — callers that don't carry the field must not be forced to send it.
+  .optional()
+
 export const updateLineageNodeProfileSchema = z.object({
   treeId: z.string().min(1).max(191),
   nodeId: z.string().min(1).max(191),
@@ -32,6 +46,7 @@ export const updateLineageNodeProfileSchema = z.object({
   bio: nullableText(2000),
   avatarUrl: nullableUrl,
   promotionDate: nullableDate.optional(),
+  locationCountry: nullableCountryCode,
 })
 
 export type UpdateLineageNodeProfileInput = z.infer<typeof updateLineageNodeProfileSchema>

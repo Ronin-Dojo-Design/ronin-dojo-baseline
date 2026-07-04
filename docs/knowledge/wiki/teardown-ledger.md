@@ -4,8 +4,8 @@ slug: teardown-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-06-27
-last_agent: claude-session-0457
+updated: 2026-07-04
+last_agent: claude-session-0496
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/closing.md
@@ -59,3 +59,13 @@ decision changes. Route here from the closing-ritual finding router (closing.md 
 - **Tool / how to action if the decision changes:** `apps/web/scripts/purge-non-bbl-baseline-data.ts`
   (transactional, dry-run default; dry-ran on prod + prodsnap with byte-identical BBL integrity, then rolled
   back — banked for the eventual Baseline extraction). See `[[brand-vestige-trim-inventory]]`.
+
+### TD-003 — Prod BrandSettings accent drift — ratified seed re-run (ship-gate)
+
+- **Status:** open (ship-gate item — operator authorized SESSION_0496; execute with the push)
+- **What:** prod `BrandSettings` BBL (+ WEKAF) rows carry stale `accentColor "51 100% 50%"` (gold) vs the
+  checked-in seed's ratified null → dark-theme selected-row contrast ~1.4:1 on every command/menu accent
+  surface (SESSION_0496 root-caused; local reseeded same session).
+- **How to action:** run `scripts/seed-brand-settings.ts` against the prod env (gitignored `.env.prod`
+  overlay per the env-prod runbook — the script needs `import "dotenv/config"` FIRST because `--env-file`
+  REPLACES env), then smoke a combobox selected row on prod. Closes D-038 at source.

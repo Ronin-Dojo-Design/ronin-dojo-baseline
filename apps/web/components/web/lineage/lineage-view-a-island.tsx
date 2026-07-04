@@ -275,6 +275,17 @@ export function LineageViewAIsland({
 }: Props) {
   const reduceMotion = useReducedMotion() ?? false
 
+  // Students-rail bake-off toggle (SESSION_0496, Epic A0.5): `?cards=v2` opts the
+  // drawer into the V2 player-card carousel. Resolved in an effect (not render) so the
+  // SSR pass and first client render agree on "v1" — no hydration mismatch; anything
+  // other than "v2" stays V1, the regression guarantee.
+  const [studentsCarouselVariant, setStudentsCarouselVariant] = useState<"v1" | "v2">("v1")
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("cards") === "v2") {
+      setStudentsCarouselVariant("v2")
+    }
+  }, [])
+
   const initialMemberId = initialFocusId ?? defaultRootMemberId ?? members[0]?.id ?? null
   const [focusMemberId, setFocusMemberId] = useState<string | null>(initialMemberId)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -776,6 +787,7 @@ export function LineageViewAIsland({
         contentClassName={bblPortalTypographyClass}
         students={drawerStudents}
         onSelectStudent={selectStudent}
+        studentsCarouselVariant={studentsCarouselVariant}
       />
     </div>
   )

@@ -40,6 +40,7 @@ export function useJoinWizard({
       schoolName: "",
       schoolOrgId: "",
       location: "",
+      country: "",
       trainedUnder: "",
       trainedUnderNodeId: "",
       represent: "",

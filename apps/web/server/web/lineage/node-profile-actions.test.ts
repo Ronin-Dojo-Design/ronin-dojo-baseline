@@ -328,6 +328,73 @@ describe("lineage node profile editing — logic", () => {
     expect(rankAward?.awardedAt?.toISOString()).toBe(promotionDate.toISOString())
   })
 
+  // SESSION_0496 TASK_06 — the DirectoryProfile country upsert. The CREATE branch must pin
+  // visibility HIDDEN + slug null (the schema default MEMBERS_ONLY would leak the steward
+  // stub into member-facing directory listings); the UPDATE branch must set ONLY the
+  // country — never clobber an owner's visibility/slug.
+  it("locationCountry upsert: create pins HIDDEN + null slug; update touches only the country", async () => {
+    const passport = await db.passport.findUnique({
+      where: { userId: fx!.approvedClaimantUserId },
+      select: { id: true },
+    })
+    expect(passport).not.toBeNull()
+
+    // Pin the skip semantics first: every earlier update omitted locationCountry
+    // (undefined), so no profile stub may exist yet.
+    const before = await db.directoryProfile.findUnique({ where: { passportId: passport!.id } })
+    expect(before).toBeNull()
+
+    const baseInput = {
+      treeId: fx!.treeId,
+      nodeId: fx!.nodeId,
+      displayName: "Updated Display Name",
+      bio: "Updated lineage bio",
+      avatarUrl: "https://example.com/updated-avatar.jpg",
+    }
+
+    // CREATE branch: no profile exists → the upsert creates the HIDDEN, slug-less stub.
+    await applyLineageNodeProfileUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.approvedClaimantUserId,
+      input: { ...baseInput, locationCountry: "BR" },
+    })
+
+    const created = await db.directoryProfile.findUnique({ where: { passportId: passport!.id } })
+    expect(created?.locationCountry).toBe("BR")
+    expect(created?.visibility).toBe("HIDDEN")
+    expect(created?.slug).toBeNull()
+
+    // Simulate an owner-configured profile, then prove the UPDATE branch leaves it alone.
+    await db.directoryProfile.update({
+      where: { passportId: passport!.id },
+      data: { visibility: "PUBLIC", slug: tag("owner-slug") },
+    })
+
+    await applyLineageNodeProfileUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.approvedClaimantUserId,
+      input: { ...baseInput, locationCountry: "US" },
+    })
+
+    const updated = await db.directoryProfile.findUnique({ where: { passportId: passport!.id } })
+    expect(updated?.locationCountry).toBe("US")
+    expect(updated?.visibility).toBe("PUBLIC")
+    expect(updated?.slug).toBe(tag("owner-slug"))
+
+    // null clears the column without touching anything else.
+    await applyLineageNodeProfileUpdate({
+      db,
+      brand: TEST_BRAND,
+      userId: fx!.approvedClaimantUserId,
+      input: { ...baseInput, locationCountry: null },
+    })
+    const cleared = await db.directoryProfile.findUnique({ where: { passportId: passport!.id } })
+    expect(cleared?.locationCountry).toBeNull()
+    expect(cleared?.visibility).toBe("PUBLIC")
+  })
+
   it("denies update when the claimant has an APPROVED claim but no access grant", async () => {
     await expectRejectsWithMessage(
       applyLineageNodeProfileUpdate({

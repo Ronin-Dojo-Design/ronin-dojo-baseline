@@ -56,6 +56,9 @@ export const joinLegacyFormSchema = z.object({
   schoolName: optionalTrimmedString(160),
   schoolOrgId: optionalTrimmedString(64),
   location: optionalTrimmedString(160),
+  // ISO 3166-1 alpha-2 from `CountryField` (SESSION_0496) — review-intake only (rides
+  // the lead notes/meta for stewards); the live directory flag is set via profile edit.
+  country: optionalTrimmedString(2),
   trainedUnder: optionalTrimmedString(500),
   trainedUnderNodeId: optionalTrimmedString(64),
   represent: optionalTrimmedString(500),
@@ -89,6 +92,7 @@ export const STEP_FIELDS: ReadonlyArray<ReadonlyArray<keyof JoinLegacyFormValues
     "phoneE164",
     "role",
     "location",
+    "country",
     "discoverySource",
     "discoverySourceOther",
   ],

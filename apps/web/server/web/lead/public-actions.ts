@@ -7,6 +7,7 @@ import { z } from "zod"
 import { Brand, type Prisma, ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getRequestOrigin } from "~/lib/brand-context"
+import { COUNTRIES, getCountryLabel } from "~/lib/countries"
 import { uploadToS3Storage } from "~/lib/media"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { BBL_FOUNDER_NODE_SLUG, isLifetimeComp } from "~/lib/lineage/dirty-dozen"
@@ -72,6 +73,9 @@ const legacyInterestSchema = z.object({
   schoolName: z.string().trim().max(160).optional().or(z.literal("")),
   schoolOrgId: z.string().trim().max(64).optional().or(z.literal("")),
   location: z.string().trim().max(160).optional().or(z.literal("")),
+  // ISO 3166-1 alpha-2 (SESSION_0496) — review-intake only: rides the lead notes/meta
+  // for stewards, no Lead/claim column. The live directory flag is set via profile edit.
+  country: z.string().trim().max(2).optional().or(z.literal("")),
   trainedUnder: z.string().trim().max(500).optional().or(z.literal("")),
   trainedUnderNodeId: z.string().trim().max(64).optional().or(z.literal("")),
   represent: z.string().trim().max(500).optional().or(z.literal("")),
@@ -101,6 +105,18 @@ const legacyInterestSchema = z.object({
 const normalizeOptional = (value: string | undefined) => {
   const trimmed = value?.trim()
   return trimmed ? trimmed : undefined
+}
+
+/**
+ * SESSION_0496 pass-2: server-side guard for the wizard's country code — the client
+ * CountrySelect only emits known codes, but a direct caller controls the field. Fail-SAFE:
+ * anything that isn't a known ISO 3166-1 alpha-2 code collapses to undefined (the lead
+ * still submits — a bad country must never reject a legacy intake).
+ */
+const normalizeCountryCode = (value: string | undefined) => {
+  const code = value?.trim().toUpperCase()
+  if (!code || !/^[A-Z]{2}$/.test(code)) return undefined
+  return COUNTRIES.some(country => country.code === code) ? code : undefined
 }
 
 const getPublicLeadIp = async () => {
@@ -373,6 +389,7 @@ export const createJoinLegacyInterest = publicActionClient
     const role = parsedInput.role
     const schoolName = normalizeOptional(parsedInput.schoolName)
     const location = normalizeOptional(parsedInput.location)
+    const country = normalizeCountryCode(parsedInput.country)
     const trainedUnder = normalizeOptional(parsedInput.trainedUnder)
     const represent = normalizeOptional(parsedInput.represent)
     // Creatable-combobox refs — a registered pick carries an *Id; a custom entry
@@ -453,6 +470,7 @@ export const createJoinLegacyInterest = publicActionClient
       rankSummary ? `Rank/history: ${rankSummary}` : null,
       schoolName ? `Current school/academy: ${schoolName}` : null,
       location ? `Location: ${location}` : null,
+      country ? `Country: ${getCountryLabel(country)} (${country})` : null,
       trainedUnder ? `Trained under: ${trainedUnder}` : null,
       represent ? `Wants to represent/connect to: ${represent}` : null,
       profileUrl ? `Website/public profile: ${profileUrl}` : null,
@@ -503,6 +521,7 @@ export const createJoinLegacyInterest = publicActionClient
           schoolName: schoolName ?? null,
           schoolOrgId: schoolOrgId ?? null,
           location: location ?? null,
+          country: country ?? null,
           trainedUnder: trainedUnder ?? null,
           trainedUnderNodeId: trainedUnderNodeId ?? null,
           represent: represent ?? null,
