@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache"
+import type { Prisma } from "~/.generated/prisma/client"
 import { memberTopRankAward } from "~/lib/lineage/canvas-model"
 import { type LineageNodeRow, lineageNodeRowPayload } from "~/server/web/lineage/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
@@ -20,10 +21,12 @@ import { db } from "~/services/db"
  *
  * Query budget (no N+1 per node): 1 base-node lookup + ONE edge lookup per level
  * (a chain step depends on the previous level, so level-by-level is the batch) +
- * ONE `findMany({ id: { in: chain } })` for all display data. A chain of length L
- * costs L + 3 queries, hard-capped by `ANCESTRY_MAX_DEPTH`.
+ * ONE `findMany({ id: { in: chain } })` for all display data + ONE
+ * `findMany({ passportId: { in: chain } })` for enabled story scenes (Epic A,
+ * SESSION_0498 — a real extra query, so the budget moved L+3 → L+4). A chain of
+ * length L costs L + 4 queries, hard-capped by `ANCESTRY_MAX_DEPTH`.
  *
- * Author: Cody / SESSION_0493 TASK_05.
+ * Author: Cody / SESSION_0493 TASK_05. Story projection: SESSION_0498 TASK_01.
  */
 
 /** Generational depth cap for the up-walk (member → founder). */
@@ -43,6 +46,24 @@ export type LineageAncestryRank = {
   degree: number | null
 }
 
+/**
+ * Story-scene projection for one ancestry entry (Epic A — Lineage Journey,
+ * SESSION_0498). Additive narrative copy/media over the walk; carries NO rank,
+ * visibility, or verification authority.
+ */
+export type LineageStorySceneView = {
+  quote: string | null
+  /** Display attribution under the quote; null = render the entry's displayName. */
+  quoteAttribution: string | null
+  storyBio: string | null
+  heroImageUrl: string | null
+  heroVideoUrl: string | null
+  posterUrl: string | null
+  sceneOrder: number | null
+  /** Bob / dirty-dozen bridge scene (A6 conditional render — out of 0498). */
+  isBridge: boolean
+}
+
 export type LineageAncestryEntry = {
   nodeId: string
   /** LineageNode slug (deep-link seam; may be null for imported placeholders). */
@@ -60,6 +81,8 @@ export type LineageAncestryEntry = {
    * above) and for edges without a description.
    */
   narrative: string | null
+  /** Enabled story scene for this person (Epic A); undefined when none exists. */
+  story?: LineageStorySceneView
 }
 
 /** One step of the member-up walk: the node + the description of its edge UP. */
@@ -69,6 +92,34 @@ type AncestryWalkStep = {
 }
 
 /**
+ * Story-scene batch select/where — exported so the unit tests can pin the query
+ * boundary invariants (enabled-only; keyed strictly by the PUBLIC-filtered
+ * chain's passportIds — never a visibility widener).
+ */
+export const ancestryStorySceneSelect = {
+  passportId: true,
+  quote: true,
+  quoteAttribution: true,
+  storyBio: true,
+  heroImageUrl: true,
+  heroVideoUrl: true,
+  posterUrl: true,
+  sceneOrder: true,
+  isBridge: true,
+} satisfies Prisma.LineageStorySceneSelect
+
+export const ancestryStorySceneWhere = (passportIds: string[]) =>
+  ({
+    passportId: { in: passportIds },
+    enabled: true,
+  }) satisfies Prisma.LineageStorySceneWhereInput
+
+/** One fetched scene row — the view fields plus the passportId map key. */
+export type AncestryStorySceneRow = Prisma.LineageStorySceneGetPayload<{
+  select: typeof ancestryStorySceneSelect
+}>
+
+/**
  * Project the walked chain into ordered entries — [founder … member], the profile
  * owner LAST by contract.
  *
@@ -76,10 +127,15 @@ type AncestryWalkStep = {
  * PUBLIC-filtered batch fetch. If a walked node is missing from the batch (visibility
  * changed between queries), the chain is TRUNCATED at the gap rather than spliced —
  * a false adjacency would fabricate a promotion link.
+ *
+ * `scenesByPassportId` (Epic A, SESSION_0498) holds the enabled story scenes keyed
+ * by passportId — attached only to entries whose node survived the PUBLIC batch, so
+ * a scene can never resurrect or widen a hidden node.
  */
 export const assembleAncestryEntries = (
   walk: AncestryWalkStep[],
   nodesById: ReadonlyMap<string, LineageNodeRow>,
+  scenesByPassportId: ReadonlyMap<string, AncestryStorySceneRow> = new Map(),
 ): LineageAncestryEntry[] => {
   const memberUp: LineageAncestryEntry[] = []
 
@@ -92,6 +148,7 @@ export const assembleAncestryEntries = (
     // (multi-discipline surface → no disciplineId, per memberTopRankAward).
     const dto = projectPublicPassport(node.passport, {})
     const award = dto.ranks.length === 0 ? null : memberTopRankAward(node)
+    const scene = scenesByPassportId.get(node.passportId)
 
     memberUp.push({
       nodeId: node.id,
@@ -110,6 +167,18 @@ export const assembleAncestryEntries = (
         : null,
       disciplineLabel: award?.rank.rankSystem?.discipline?.name ?? null,
       narrative: step.narrative,
+      story: scene
+        ? {
+            quote: scene.quote,
+            quoteAttribution: scene.quoteAttribution,
+            storyBio: scene.storyBio,
+            heroImageUrl: scene.heroImageUrl,
+            heroVideoUrl: scene.heroVideoUrl,
+            posterUrl: scene.posterUrl,
+            sceneOrder: scene.sceneOrder,
+            isBridge: scene.isBridge,
+          }
+        : undefined,
     })
   }
 
@@ -188,5 +257,20 @@ export const getLineageAncestryForPassport = async (
     select: lineageNodeRowPayload,
   })
 
-  return assembleAncestryEntries(walk, new Map(nodes.map(node => [node.id, node])))
+  // ONE batch fetch for the chain's enabled story scenes (Epic A, SESSION_0498) —
+  // keyed by the passportIds the PUBLIC-filtered batch above returned, so a hidden
+  // node can never leak its scene. The one real budget addition: L+3 → L+4.
+  const scenes =
+    nodes.length === 0
+      ? []
+      : await db.lineageStoryScene.findMany({
+          where: ancestryStorySceneWhere(nodes.map(node => node.passportId)),
+          select: ancestryStorySceneSelect,
+        })
+
+  return assembleAncestryEntries(
+    walk,
+    new Map(nodes.map(node => [node.id, node])),
+    new Map(scenes.map(scene => [scene.passportId, scene])),
+  )
 }

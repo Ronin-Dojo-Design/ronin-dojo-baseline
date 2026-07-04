@@ -1,5 +1,6 @@
 /**
  * SESSION_0493 TASK_05 — assembleAncestryEntries (pure projection, no DB).
+ * SESSION_0498 TASK_01 — story-scene projection (Epic A, Lineage Journey).
  *
  * Run: cd apps/web && bun run test server/web/lineage/ancestry.test.ts
  *
@@ -8,7 +9,11 @@
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
-import { assembleAncestryEntries } from "~/server/web/lineage/ancestry"
+import {
+  type AncestryStorySceneRow,
+  ancestryStorySceneWhere,
+  assembleAncestryEntries,
+} from "~/server/web/lineage/ancestry"
 import type { LineageNodeRow } from "~/server/web/lineage/payloads"
 
 /**
@@ -254,5 +259,115 @@ describe("assembleAncestryEntries — truncation + empty states", () => {
       nodes,
     )
     expect(entries).toEqual([])
+  })
+})
+
+describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_0498)", () => {
+  // makeNode assigns passportId = `${id}-passport`; scenes key by that.
+  const makeScene = (
+    passportId: string,
+    overrides: Partial<AncestryStorySceneRow> = {},
+  ): AncestryStorySceneRow => ({
+    passportId,
+    quote: "A founder quote.",
+    quoteAttribution: "Attribution note",
+    storyBio: null,
+    heroImageUrl: null,
+    heroVideoUrl: null,
+    posterUrl: null,
+    sceneOrder: 1,
+    isBridge: false,
+    ...overrides,
+  })
+
+  it("attaches each scene to the RIGHT entry by passportId; entries without one carry story undefined", () => {
+    const nodes = new Map([
+      ["member", makeNode({ id: "member", displayName: "Tony Hua" })],
+      ["founder", makeNode({ id: "founder", displayName: "Rigan Machado" })],
+    ])
+    const scenes = new Map([
+      [
+        "founder-passport",
+        makeScene("founder-passport", {
+          quote: "Jiu-Jitsu is not about fighting; it's about solving problems.",
+          heroImageUrl: "https://img.test/rigan.webp",
+          sceneOrder: 4,
+        }),
+      ],
+    ])
+
+    const entries = assembleAncestryEntries(
+      [
+        { nodeId: "member", narrative: null },
+        { nodeId: "founder", narrative: null },
+      ],
+      nodes,
+      scenes,
+    )
+
+    // Founder-first order: [founder, member].
+    expect(entries[0].story).toEqual({
+      quote: "Jiu-Jitsu is not about fighting; it's about solving problems.",
+      quoteAttribution: "Attribution note",
+      storyBio: null,
+      heroImageUrl: "https://img.test/rigan.webp",
+      heroVideoUrl: null,
+      posterUrl: null,
+      sceneOrder: 4,
+      isBridge: false,
+    })
+    expect(entries[1].story).toBeUndefined()
+  })
+
+  it("omitted scene map (2-arg call) leaves every entry's story undefined — back-compat", () => {
+    const nodes = new Map([
+      ["member", makeNode({ id: "member", displayName: "Member" })],
+      ["instructor", makeNode({ id: "instructor", displayName: "Instructor" })],
+    ])
+
+    const entries = assembleAncestryEntries(
+      [
+        { nodeId: "member", narrative: null },
+        { nodeId: "instructor", narrative: null },
+      ],
+      nodes,
+    )
+
+    expect(entries).toHaveLength(2)
+    for (const entry of entries) expect(entry.story).toBeUndefined()
+  })
+
+  it("a scene keyed to a HIDDEN node never surfaces — visibility truncation unchanged", () => {
+    // "middle" dropped from the PUBLIC batch; its scene must not resurrect it or
+    // attach anywhere else. Truncation behavior is identical to the no-scene case.
+    const nodes = new Map([
+      ["member", makeNode({ id: "member", displayName: "Member" })],
+      ["below-gap", makeNode({ id: "below-gap", displayName: "Below Gap" })],
+      ["founder", makeNode({ id: "founder", displayName: "Founder" })],
+    ])
+    const scenes = new Map([["middle-passport", makeScene("middle-passport")]])
+
+    const entries = assembleAncestryEntries(
+      [
+        { nodeId: "member", narrative: null },
+        { nodeId: "below-gap", narrative: null },
+        { nodeId: "middle", narrative: null }, // missing from the batch
+        { nodeId: "founder", narrative: null },
+      ],
+      nodes,
+      scenes,
+    )
+
+    expect(entries.map(e => e.nodeId)).toEqual(["below-gap", "member"])
+    for (const entry of entries) expect(entry.story).toBeUndefined()
+  })
+
+  it("query boundary excludes disabled scenes and keys strictly by the given passportIds", () => {
+    const where = ancestryStorySceneWhere(["p-1", "p-2"])
+    // enabled: true is the DB-side gate — a disabled scene can never reach the map.
+    expect(where.enabled).toBe(true)
+    // Strict in-list on the PUBLIC-filtered chain's passportIds — never a widener.
+    expect(where.passportId).toEqual({ in: ["p-1", "p-2"] })
+    expect(Object.keys(where).sort()).toEqual(["enabled", "passportId"])
   })
 })

@@ -1107,6 +1107,9 @@ model Passport {
 
   // @added SESSION_0437 (ADR 0036) — unified person claim keyed on identity.
   claimRequests PassportClaimRequest[]
+
+  // @added SESSION_0498 (Epic A) — 1:0..1 story-scene satellite for the lineage scroll story.
+  storyScene LineageStoryScene?
 }
 
 model DirectoryProfile {
@@ -2725,6 +2728,37 @@ model LineageRelationship {
   @@index([fromNodeId, toNodeId, type])
   @@index([type, rankAwardId])
   @@index([verificationStatus])
+}
+
+// @added   SESSION_0498 (Epic A — Lineage Journey scrollytelling; petey-plan-0498 §A0)
+// @why     Per-person story-scene copy/media for the /directory/[slug] ancestry scroll story.
+//          1:1 keyed by passportId (grill fork #1 ratified — identity SoT per ADR 0025; survives
+//          node re-parenting / tree consolidation). Additive story data only — never rank,
+//          visibility, or verification authority.
+// @wired   server/web/lineage/ancestry.ts (LineageAncestryEntry.story), prisma/seed-lineage-story-scenes.ts
+model LineageStoryScene {
+  id               String   @id @default(cuid(2))
+  quote            String?
+  // Display attribution under the quote; null = render the person's displayName.
+  quoteAttribution String?
+  storyBio         String?
+  // Cinematic large-frame image for the scene.
+  heroImageUrl     String?
+  // A5 fast-follow seam (self-hosted clip) — no upload path exists yet (SESSION_0498 finding).
+  heroVideoUrl     String?
+  // Video poster / still frame (e.g. the Rorion clip poster).
+  posterUrl        String?
+  // Storyboard ordering (A1 board); reorder is UI-only.
+  sceneOrder       Int?
+  // Bob / dirty-dozen bridge scene (A6 conditional render — out of 0498).
+  isBridge         Boolean  @default(false)
+  bridgeCondition  String?
+  enabled          Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId String   @unique
 }
 
 // @added   migration 20260517_lineage_tree_v1 (2026-05-17)
