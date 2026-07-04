@@ -177,7 +177,21 @@ const updateRankAwardFact = beltProcedure
 
     if (input.promoter !== undefined) {
       if (input.promoter?.awardedByPassportId) {
-        data.awardedByPassportId = input.promoter.awardedByPassportId
+        // The picker sends a Passport id (belt-tab-loader.getBeltPromoterOptions is keyed
+        // by passport). Verify it still exists — the option list is cached, so a stale or
+        // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
+        // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
+        const promoterPassport = await db.passport.findUnique({
+          where: { id: input.promoter.awardedByPassportId },
+          select: { id: true },
+        })
+        if (!promoterPassport) {
+          throw new ORPCError("BAD_REQUEST", {
+            message:
+              "That instructor can't be linked — pick another from the list or type their name.",
+          })
+        }
+        data.awardedByPassportId = promoterPassport.id
         data.notes = null
       } else {
         const name = input.promoter?.name?.trim() || null
@@ -188,7 +202,19 @@ const updateRankAwardFact = beltProcedure
 
     if (input.school !== undefined) {
       if (input.school?.organizationId) {
-        data.organizationId = input.school.organizationId
+        // Same guard as the promoter: the school option list is cached too, so a school
+        // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
+        const org = await db.organization.findUnique({
+          where: { id: input.school.organizationId },
+          select: { id: true },
+        })
+        if (!org) {
+          throw new ORPCError("BAD_REQUEST", {
+            message:
+              "That school is no longer available — pick another from the list or type its name.",
+          })
+        }
+        data.organizationId = org.id
         data.location = null
       } else {
         const schoolName = input.school?.name?.trim() || null

@@ -1,5 +1,6 @@
 import "server-only"
 
+import { Brand } from "~/.generated/prisma/client"
 import type { CreatableOption } from "~/components/common/creatable-combobox"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
 import { ceilingSortOrder } from "~/server/belt/belt-gate"
@@ -7,6 +8,41 @@ import { gateAwardSelect, getBjjDisciplineId, toBeltCard, toGateAward } from "~/
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { db } from "~/services/db"
+
+const PROMOTER_CAP = 300
+
+/**
+ * Registered promoter options for the belt fact-editor, keyed by **Passport id**.
+ *
+ * The promoter FK on `RankAward` is `awardedByPassportId` (→ Passport), and the belt
+ * card pre-fills the picker from that stored passport id — so the OPTIONS must be keyed
+ * by passport id too. The Join-wizard instructor picker (`getInstructorOptions`) is keyed
+ * by **node id** because the claim path links `trainedUnderNodeId`; reusing it here wrote
+ * a node id into the Passport FK and P2003'd on save (SESSION_0497). Hence this
+ * belt-specific, passport-keyed source. Public BBL lineage people, de-duped by passport
+ * (one person may hold a node in more than one tree).
+ */
+async function getBeltPromoterOptions(): Promise<CreatableOption[]> {
+  const nodes = await db.lineageNode.findMany({
+    where: {
+      visibility: "PUBLIC",
+      treeMembers: { some: { tree: { brand: Brand.BBL, isPublished: true } } },
+    },
+    select: {
+      passportId: true,
+      passport: { select: { displayName: true, user: { select: { name: true } } } },
+    },
+    orderBy: { passport: { displayName: "asc" } },
+    take: PROMOTER_CAP,
+  })
+
+  const byPassport = new Map<string, string>()
+  for (const node of nodes) {
+    const name = (node.passport?.displayName ?? node.passport?.user?.name ?? "").trim()
+    if (name && !byPassport.has(node.passportId)) byPassport.set(node.passportId, name)
+  }
+  return [...byPassport].map(([id, name]) => ({ id, name }))
+}
 
 /**
  * The "Belts" tab server load (Slice 5 — Petey Plan 0477 §Slice 5).
@@ -31,7 +67,7 @@ export type BeltTabData = {
   ceiling: number | null
   /** The member's own Passport id — the upload target for a promotion soft-gate photo (B1). */
   passportId: string
-  /** Registered promoter options (id = Passport/node ref) for the creatable combobox. */
+  /** Registered promoter options (id = **Passport id**, matching the `awardedByPassportId` FK). */
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
   schoolOptions: CreatableOption[]
@@ -54,7 +90,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
   // ONE pass: the ladder, the member's BJJ awards+milestone media, and the option
   // lists in parallel. Awards are pre-ordered by `rank.sortOrder desc` so the gate's
   // "first in discipline" ceiling rule holds.
-  const [ladder, awards, joinOptions] = await Promise.all([
+  const [ladder, awards, joinOptions, promoterOptions] = await Promise.all([
     getBjjRanksForClaimPicker(),
     db.rankAward.findMany({
       where: { passportId: passport.id, rank: { rankSystem: { disciplineId } } },
@@ -62,6 +98,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
       orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
     }),
     getJoinWizardOptions(),
+    getBeltPromoterOptions(),
   ])
 
   const ceiling = ceilingSortOrder(awards.map(toGateAward), disciplineId)
@@ -87,7 +124,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
     ranks,
     ceiling,
     passportId: passport.id,
-    promoterOptions: joinOptions.instructors.map(o => ({ id: o.id, name: o.name })),
+    promoterOptions,
     schoolOptions: joinOptions.schools.map(o => ({ id: o.id, name: o.name })),
   }
 }

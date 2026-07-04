@@ -24,6 +24,13 @@ export const gateAwardSelect = {
   location: true,
   awardedById: true,
   awardedByPassportId: true,
+  // Join the promoter Passport so a REGISTERED promoter resolves to a display name.
+  // `notes` only ever holds the FREETEXT promoter, so a registered pick used to read
+  // back with `promoterName: null` — invisible on the card AND the editor prefill,
+  // which is why the registered path looked broken (SESSION_0497).
+  awardedByPassport: {
+    select: { displayName: true, user: { select: { name: true } } },
+  },
   organizationId: true,
   rankId: true,
   rank: {
@@ -130,7 +137,13 @@ export function toBeltCard(award: MemberAward): BeltCardOutput {
       awardedById: award.awardedById,
     }),
     awardedAt: award.awardedAt,
-    promoterName: award.notes,
+    // FREETEXT promoter → `notes`; REGISTERED promoter → the joined Passport's name
+    // (the handler nulls whichever side isn't picked, so these never collide).
+    promoterName:
+      award.notes ??
+      award.awardedByPassport?.displayName ??
+      award.awardedByPassport?.user?.name ??
+      null,
     awardedByPassportId: award.awardedByPassportId,
     schoolName: award.location,
     organizationId: award.organizationId,
