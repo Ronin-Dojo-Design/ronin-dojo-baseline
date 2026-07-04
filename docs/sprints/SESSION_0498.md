@@ -218,6 +218,71 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
 - Mitigation acknowledged: yes — plan ratified pre-build; spot-check pasted above; hand-author lane followed step-for-step with shadow-replay proof.
 - DB verification: founders located in local `ronindojo_prodsnap` before seeding — nodes `carlos-gracie-sr`, `carlos-gracie-jr`, `rorion-gracie`, `rigan-machado`, all PUBLIC with Passports.
 
+## Pre-flight: LineageStoryScene / LineageStorySequence (A2-v1)
+
+### 1. Existing component scan
+
+- Searched `components/web/` for: scene, scrollytell, story, useScroll, useTransform, full-bleed hero
+- Searched `components/common/` for: section, card, avatar, badge, belt-swatch, stack, heading
+- Found: `LineageAncestryTimeline` (the surface being layered onto — reused as the reduced-motion
+  fallback), `Avatar`/`AvatarImage`/`AvatarFallback`, `Badge`, `BeltSwatch`, `Stack`, `H4`,
+  `Section` (web/ui). No existing scrollytelling/scene component anywhere (grep across
+  `components/`, `custom-component-inventory.md`); the only `useScroll` usage in the repo is
+  `inline-menu.tsx` (TOC scroll-spy — different purpose).
+
+### 2. L1 template scan (via Dirstarter Component Inventory)
+
+- Consulted `docs/knowledge/wiki/dirstarter-component-inventory.md`: yes
+- Consulted `docs/knowledge/wiki/custom-component-inventory.md`: yes (no scene/story component)
+- Closest L1 pattern: none for scroll-driven scenes; section chrome follows `Section` (web/ui) +
+  the BBL landing section idiom (`bbl-hero.tsx` full-bleed image + overlay; `bbl-landing/index.tsx`
+  Poppins-800 display-type wrapper).
+- **Primitive API spot-check:** `Avatar` (children `AvatarImage(src, alt)` / `AvatarFallback`,
+  className); `Badge` (variant: primary|soft|outline|success|warning|info|danger, size: sm|md|lg);
+  `Stack` (size: xs|sm|md|lg, direction: row|column, wrap: bool, render); `BeltSwatch`
+  (variant: dot|bar|flat-bar, colorHex, secondaryColorHex, degree, shimmer, className);
+  `H4` (render, size — Base UI `useRender`); `Section`/`Section.Content`/`Section.Sidebar`
+  (Wrapper-based, `md:grid md:grid-cols-3`). Fonts: shared `bblHeadingFont` from `lib/fonts.ts`
+  (`--font-bbl-heading`, Poppins 600/700/800 italic — NEVER a per-component `Poppins()` call).
+
+### 3. Composition decision
+
+- [x] Composing existing components: `LineageAncestryTimeline` (fallback), `Avatar`, `Badge`,
+  `BeltSwatch`, `Stack`, `H4`, `Section`, shared `bblHeadingFont`.
+- [x] New component, no L1 match exists (justify): scroll-driven cinematic scene sections are a
+  genuinely new surface (Epic A2-v1, operator-ratified petey-plan-0498). ONE section primitive
+  (`SceneShell`, palette variant `black|red|white` token sets) × two content layouts (full story
+  scene / minimal node scene) + a sequence orchestrator; pure palette-cycle + gating logic in a
+  testable `scene-model.ts`. Walk order stays the ordering authority (`sceneOrder` NOT consumed —
+  aligns with Giddy A0 P3-2).
+
+### 4. Lane docs loaded
+
+- [x] Prior SESSION "Next session" + petey-plan-0498 §A2 read (grill outcome incl. the
+  three-variant palette clarification + `quoteAttribution` display semantics)
+- [x] Wiki entries: dirstarter-component-inventory, custom-component-inventory
+- [x] Runbook consulted: N/A (no schema/backend change; A0 landed the data lane)
+
+### 5. Dev environment confirmed
+
+- Dev server command: `npx next dev --turbo -p 3498` (from `apps/web/` — port 3498, NOT :3000;
+  other sessions may own :3000)
+- Working directory: `/Users/brianscott/dev/ronin-0498/apps/web`
+- Brand/host for testing: `localhost:3498` (`/directory/cub-swanson` — chain Carlos Sr → Carlos
+  Jr → Rigan → Cub, 3 seeded scenes in-walk; Rorion is in no tree locally so his scene never
+  enters a walk)
+- Verification commands confirmed: `bun run typecheck`, `bun run lint` (fixer — accept writes),
+  `bun run test` (never bare `bun test`)
+- Tests: pure-function tests only (palette cycle + gating) — no DB, no mock.module
+
+### 6. FAILED_STEPS check
+
+- Prior failures in this area: FS-0001 (raw HTML when an inventory component exists), FS-0008
+  (primitive props inferred not read — spot-check pasted above), 0495 lesson (shared-primitive
+  changes need e2e/live verification — `LineageAncestryTimeline` is NOT modified, only composed;
+  live SSR verify on :3498 planned)
+- Mitigation acknowledged: yes
+
 ## Task log
 
 | ID | Status | Summary |
