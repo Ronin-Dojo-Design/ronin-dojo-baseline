@@ -142,10 +142,14 @@ export function LineageStoryScene({
   // Holds full scale until ~viewport-center (Desi A2 P1-1 retime: the [0.2, 1]
   // map measured scale 0.71 at center — the hero was never witnessed large).
   const heroScale = useTransform(scrollYProgress, [0.45, 1], [1, 0.42])
-  // The node echo (avatar chip) the hero shrinks into — fades in late, after the
-  // retimed shrink is underway, so the "becomes the node" beat lands on-screen.
-  // Decorative duplication (aria-hidden): opacity-0 never hides real content.
-  const chipOpacity = useTransform(scrollYProgress, [0.85, 1], [0, 1])
+  // The node echo (avatar chip) the hero shrinks into — fades in mid-shrink so
+  // the "becomes the node" beat is WITNESSED (Desi A2 re-score P2: the [0.85, 1]
+  // window played entirely above the viewport / under the sticky chrome —
+  // opacity 1.0 landed at chip-top −137px mobile / −43px desktop). [0.6, 0.8]
+  // reaches opacity 0.8 at p=0.76 with the chip ~71px (390×844) / ~154px
+  // (1440×900) from viewport-top — below the ~50px / ~110px sticky stacks on
+  // both. Decorative duplication (aria-hidden): opacity-0 never hides content.
+  const chipOpacity = useTransform(scrollYProgress, [0.6, 0.8], [0, 1])
   // Operator direction: horizontal text flips to vertical on scroll — the scene
   // marker rotates 0° → 90° across the first two thirds of the scene.
   const markerRotate = useTransform(scrollYProgress, [0, 0.6], [0, 90])
