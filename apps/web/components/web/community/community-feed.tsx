@@ -134,8 +134,13 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
         }
       />
 
-      {/* Filter-aware count under the bar (C1-4). Self-hides at 0 — the EmptyList carries that copy. */}
-      <ResultsCount total={filtered.length} label={t("count_posts", { count: filtered.length })} />
+      {/* Filter-aware count under the bar (C1-4). hideWhenEmpty: at 0 the EmptyList carries the copy,
+          so the "0 posts" line is noise here (opt-in — other ResultsCount consumers keep the zero-signal). */}
+      <ResultsCount
+        total={filtered.length}
+        label={t("count_posts", { count: filtered.length })}
+        hideWhenEmpty
+      />
 
       {!filtered.length && (
         <EmptyList render={<div className="flex flex-col items-start" />}>

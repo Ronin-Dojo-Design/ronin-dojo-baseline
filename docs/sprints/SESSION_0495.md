@@ -390,3 +390,31 @@ memory `epic-a05-students-carousel-v2-scope`.
 | Git hygiene | branch main; single commit at close; **NOT pushed** — explicit-push-authorization (app-code push = prod deploy); hash reported in bow-out chat |
 | Graphify update | nodes=16209 edges=31961 communities=2169 (gate runner, pre-commit) |
 | Ledger cross-off | D-035 → RESOLVED (C2-1). Runner candidates FI-001/G-001/FS-0001/FS-0002 = referenced, NOT resolved (standing) → not flipped. No board-tracked card resolved → board cross-off skipped |
+
+## Post-close addendum — CI-caught regression + fix (post-push)
+
+The push to `main` (`44d67d36`) went out on the operator's go; the Vercel prod deploy went **Ready/live**,
+but the CI matrix caught two issues the loop missed:
+
+1. **oxfmt --check (format gate) FAILED** on 2 NEW files (`feed-filter-bar.tsx`, `saved-subjects.test.ts`).
+   Root cause: the bow-out format-fixer only formats **tracked** diffs, so **untracked new files slipped**.
+   Whitespace-only fix committed (`f4dc4aba`). *(Follow-up: the gate runner's format-fix should include
+   untracked new files — logged as a gate-runner gap.)*
+
+2. **Playwright E2E FAILED (real regression)** — `e2e/lineage/public-visibility.spec.ts:74` (webkit +
+   chromium): `getByText("0 lineage trees")` not visible. **Cause:** C2-6 made `ResultsCount` self-hide at
+   `total <= 0` for **all 7 consumers**; `lineage-query.tsx` needs the visible "0 lineage trees" — a
+   public-visibility **contract** (anonymous search matching only hidden members must show the zero count).
+   Giddy flagged the consumer-safety risk; Cody "verified-safe" by **source inspection** — but the loop never
+   ran Playwright, so the E2E contract went unchecked. **NOT a security leak** (hidden names still never
+   rendered; only the "0" affirmation was missing) and prod's exposure was cosmetic.
+   **Fix:** hide-at-0 made **opt-in** (`hideWhenEmpty`, default renders) — `community-feed` opts in; the other
+   6 consumers restore their zero-signal. Verified: tsc 0; live `/lineage?q=<no-match>` renders "0 lineage
+   trees" again; format:check clean. CI re-run confirms.
+
+**Process lesson (see memory `operating-loop-needs-e2e-for-ui-contracts`):** the Desi→Cody→Giddy→Doug loop
+verified at source + unit + `next build` levels but **never ran the Playwright E2E suite**, so a
+shared-primitive change that broke a *tested UI contract* passed the loop and only failed in CI. Doug's SHIP
+even declared "no authenticated browser click" — but this was an **anonymous** contract the local loop could
+have run. For any change to a **shared primitive with existing E2E coverage**, run the affected E2E specs
+locally before the SHIP verdict, not just unit + build.
