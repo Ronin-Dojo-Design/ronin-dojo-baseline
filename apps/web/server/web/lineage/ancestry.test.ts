@@ -270,13 +270,8 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
   ): AncestryStorySceneRow => ({
     passportId,
     quote: "A founder quote.",
-    quoteAttribution: "Attribution note",
     storyBio: null,
     heroImageUrl: null,
-    heroVideoUrl: null,
-    posterUrl: null,
-    sceneOrder: 1,
-    isBridge: false,
     ...overrides,
   })
 
@@ -291,7 +286,6 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
         makeScene("founder-passport", {
           quote: "Jiu-Jitsu is not about fighting; it's about solving problems.",
           heroImageUrl: "https://img.test/rigan.webp",
-          sceneOrder: 4,
         }),
       ],
     ])
@@ -305,16 +299,13 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
       scenes,
     )
 
-    // Founder-first order: [founder, member].
+    // Founder-first order: [founder, member]. Exact shape via toEqual — the view is
+    // deliberately minimal (P3-1: a PUBLIC RSC payload projects only what renders;
+    // provenance/dormant/storyboard fields must NOT appear here).
     expect(entries[0].story).toEqual({
       quote: "Jiu-Jitsu is not about fighting; it's about solving problems.",
-      quoteAttribution: "Attribution note",
       storyBio: null,
       heroImageUrl: "https://img.test/rigan.webp",
-      heroVideoUrl: null,
-      posterUrl: null,
-      sceneOrder: 4,
-      isBridge: false,
     })
     expect(entries[1].story).toBeUndefined()
   })
@@ -360,6 +351,32 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
 
     expect(entries.map(e => e.nodeId)).toEqual(["below-gap", "member"])
     for (const entry of entries) expect(entry.story).toBeUndefined()
+  })
+
+  it("a scene on a PUBLIC node ABOVE the truncation gap vanishes with its truncated entry (Giddy A0 P3-3)", () => {
+    // "founder" IS in the PUBLIC batch AND has a scene — but the chain truncates at
+    // "middle" below it. The founder entry (and its scene) must vanish with the
+    // truncation: attachment happens only for entries that survive the walk, so a
+    // refactor of the truncation `break` cannot leak an above-gap scene back in.
+    const nodes = new Map([
+      ["member", makeNode({ id: "member", displayName: "Member" })],
+      ["founder", makeNode({ id: "founder", displayName: "Founder" })],
+    ])
+    const scenes = new Map([["founder-passport", makeScene("founder-passport")]])
+
+    const entries = assembleAncestryEntries(
+      [
+        { nodeId: "member", narrative: null },
+        { nodeId: "middle", narrative: null }, // missing from the batch — the gap
+        { nodeId: "founder", narrative: null }, // PUBLIC + scened, but above the gap
+      ],
+      nodes,
+      scenes,
+    )
+
+    // Chain truncates to [member] alone → below the 2-entry floor → renders nothing.
+    // The founder's scene neither surfaces nor resurrects the chain.
+    expect(entries).toEqual([])
   })
 
   it("query boundary excludes disabled scenes and keys strictly by the given passportIds", () => {

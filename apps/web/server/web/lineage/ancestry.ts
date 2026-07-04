@@ -50,18 +50,19 @@ export type LineageAncestryRank = {
  * Story-scene projection for one ancestry entry (Epic A — Lineage Journey,
  * SESSION_0498). Additive narrative copy/media over the walk; carries NO rank,
  * visibility, or verification authority.
+ *
+ * Deliberately minimal (Giddy A0 review P3-1/P3-2): this is a PUBLIC RSC payload,
+ * so it projects ONLY what the scene renderer consumes. `quoteAttribution` is
+ * sourcing provenance (attribution renders the entry's displayName by contract),
+ * `heroVideoUrl`/`posterUrl` are dormant until A5, `isBridge`/`bridgeCondition`
+ * until A6, and `sceneOrder` is storyboard-only metadata — **walk order is the
+ * authoritative entry order**; a consumer must never re-sort the chain by scene
+ * metadata. Widen this view only when a renderer actually consumes the field.
  */
 export type LineageStorySceneView = {
   quote: string | null
-  /** Display attribution under the quote; null = render the entry's displayName. */
-  quoteAttribution: string | null
   storyBio: string | null
   heroImageUrl: string | null
-  heroVideoUrl: string | null
-  posterUrl: string | null
-  sceneOrder: number | null
-  /** Bob / dirty-dozen bridge scene (A6 conditional render — out of 0498). */
-  isBridge: boolean
 }
 
 export type LineageAncestryEntry = {
@@ -99,13 +100,8 @@ type AncestryWalkStep = {
 export const ancestryStorySceneSelect = {
   passportId: true,
   quote: true,
-  quoteAttribution: true,
   storyBio: true,
   heroImageUrl: true,
-  heroVideoUrl: true,
-  posterUrl: true,
-  sceneOrder: true,
-  isBridge: true,
 } satisfies Prisma.LineageStorySceneSelect
 
 export const ancestryStorySceneWhere = (passportIds: string[]) =>
@@ -170,13 +166,8 @@ export const assembleAncestryEntries = (
       story: scene
         ? {
             quote: scene.quote,
-            quoteAttribution: scene.quoteAttribution,
             storyBio: scene.storyBio,
             heroImageUrl: scene.heroImageUrl,
-            heroVideoUrl: scene.heroVideoUrl,
-            posterUrl: scene.posterUrl,
-            sceneOrder: scene.sceneOrder,
-            isBridge: scene.isBridge,
           }
         : undefined,
     })

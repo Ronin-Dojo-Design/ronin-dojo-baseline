@@ -17,13 +17,8 @@ import {
 
 const storyView = (overrides: Partial<LineageStorySceneView> = {}): LineageStorySceneView => ({
   quote: "You either win or you learn.",
-  quoteAttribution: "provenance note — never display copy",
   storyBio: null,
   heroImageUrl: null,
-  heroVideoUrl: null,
-  posterUrl: null,
-  sceneOrder: 1,
-  isBridge: false,
   ...overrides,
 })
 
