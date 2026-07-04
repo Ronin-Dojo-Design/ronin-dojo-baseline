@@ -151,6 +151,11 @@ function DrawerBody({
   const view = deriveDrawerProfileView(profile)
   const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
   const claimState = effectiveClaimState(viewerClaimState, profile)
+  // "View full profile" deep-link target — only for a PUBLIC directory slug (a
+  // MEMBERS_ONLY/HIDDEN page 404s a guest via the directory route's visibility gate).
+  const directoryProfile = profile.passport?.directoryProfile
+  const profileSlug =
+    directoryProfile?.visibility === "PUBLIC" ? (directoryProfile.slug ?? null) : null
   // Shared-element morph target key (SESSION_0496, Epic A0.5): pairs the identity-header
   // avatar with the V2 student-card avatar that opened this profile
   // (`students-carousel-v2.tsx` uses the same `student-avatar-<nodeId>` id). V2-only and
@@ -206,8 +211,9 @@ function DrawerBody({
         </TabsContent>
       </Tabs>
 
-      <ClaimCta
-        state={claimState}
+      <DrawerFooter
+        profileSlug={profileSlug}
+        claimState={claimState}
         isClaimable={isClaimable}
         isTreeClaimable={isTreeClaimable}
         treeSlug={treeSlug}
@@ -235,7 +241,7 @@ function effectiveClaimState(
 }
 
 /**
- * Bottom-pinned claim CTA — the 5-state machine (ADR 0036, SESSION_0440):
+ * The claim CTA button — the 5-state machine (ADR 0036, SESSION_0440):
  *   - CLAIMED_MINE  → "This profile is yours →" (manage; no claim button)
  *   - PENDING_MINE  → "Claim pending review" (disabled/info)
  *   - UNCLAIMED     → "Claim this profile" → the account-optional /lineage/join funnel
@@ -243,8 +249,11 @@ function effectiveClaimState(
  *                     login-gated /claim form — a non-user should not hit a login wall
  *                     (SESSION_0386). Carries the node so the join form can preselect it.
  *   - CLAIMED_OTHER → nothing (normal claimed public profile)
+ *
+ * Returns the bare button (no container) — {@link DrawerFooter} owns the bordered
+ * footer so the claim CTA and the "View full profile" link share ONE grid row.
  */
-function ClaimCta({
+function ClaimCtaButton({
   state,
   isClaimable,
   isTreeClaimable,
@@ -259,44 +268,100 @@ function ClaimCta({
 }) {
   if (state === "CLAIMED_MINE") {
     return (
-      <div className="border-t p-4">
-        <Button
-          variant="secondary"
-          size="md"
-          className="w-full"
-          render={<Link href="/app/profile" />}
-        >
-          This profile is yours →
-        </Button>
-      </div>
+      <Button
+        variant="secondary"
+        size="md"
+        className="w-full"
+        render={<Link href="/app/profile" />}
+      >
+        This profile is yours →
+      </Button>
     )
   }
 
   if (state === "PENDING_MINE") {
     return (
-      <div className="border-t p-4">
-        <Button variant="soft" size="md" className="w-full" prefix={<ClockIcon />} disabled>
-          Claim pending review
-        </Button>
-      </div>
+      <Button variant="soft" size="md" className="w-full" prefix={<ClockIcon />} disabled>
+        Claim pending review
+      </Button>
     )
   }
 
   if (state === "UNCLAIMED" && isClaimable && isTreeClaimable && treeSlug) {
     return (
-      <div className="border-t p-4">
-        <Button
-          variant="primary"
-          size="md"
-          className="w-full"
-          prefix={<UserRoundPlusIcon />}
-          render={<Link href={`/lineage/join${nodeId ? `?node=${nodeId}` : ""}`} />}
-        >
-          Claim this profile
-        </Button>
-      </div>
+      <Button
+        variant="primary"
+        size="md"
+        className="w-full"
+        prefix={<UserRoundPlusIcon />}
+        render={<Link href={`/lineage/join${nodeId ? `?node=${nodeId}` : ""}`} />}
+      >
+        Claim this profile
+      </Button>
     )
   }
 
   return null
+}
+
+/**
+ * Bottom-pinned footer (the content grid's 3rd `auto` row): a "View full profile"
+ * link to the directory page — where the ancestry timeline + the rich profile live;
+ * the drawer is only a preview (see the module doc) — plus the claim CTA, sharing ONE
+ * bordered container so the 3-row grid layout holds. The profile link shows only for a
+ * PUBLIC directory slug: the directory route `notFound()`s a MEMBERS_ONLY/HIDDEN page
+ * for a guest (`buildDirectoryProfileWhere`), so gating on PUBLIC never dead-links.
+ * Renders nothing when neither action applies (SESSION_0497 — the drawer previously had
+ * no path at all to the full profile page).
+ */
+function DrawerFooter({
+  profileSlug,
+  claimState,
+  isClaimable,
+  isTreeClaimable,
+  treeSlug,
+  nodeId,
+}: {
+  profileSlug: string | null
+  claimState: ClaimViewerState
+  isClaimable?: boolean
+  isTreeClaimable?: boolean
+  treeSlug?: string
+  nodeId?: string | null
+}) {
+  const hasClaim =
+    claimState === "CLAIMED_MINE" ||
+    claimState === "PENDING_MINE" ||
+    (claimState === "UNCLAIMED" && !!isClaimable && !!isTreeClaimable && !!treeSlug)
+
+  if (!profileSlug && !hasClaim) {
+    return null
+  }
+
+  return (
+    <div className="border-t p-4 flex flex-col gap-2">
+      {profileSlug ? (
+        // `ghost` (not `secondary`) so a claim/manage CTA below stays the solid action —
+        // two equal-weight buttons read as co-primary (Desi P1). Copy = "View profile"
+        // for parity with every other person surface (m-card / directory / view-A menu).
+        <Button
+          variant="ghost"
+          size="md"
+          className="w-full"
+          render={<Link href={`/directory/${profileSlug}`} />}
+        >
+          View profile →
+        </Button>
+      ) : null}
+      {hasClaim ? (
+        <ClaimCtaButton
+          state={claimState}
+          isClaimable={isClaimable}
+          isTreeClaimable={isTreeClaimable}
+          treeSlug={treeSlug}
+          nodeId={nodeId}
+        />
+      ) : null}
+    </div>
+  )
 }

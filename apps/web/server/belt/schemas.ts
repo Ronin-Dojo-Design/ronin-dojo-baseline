@@ -33,6 +33,9 @@ export const updateRankAwardFactInput = z.object({
   awardedAt: z.coerce.date().nullish(),
   promoter: z
     .object({
+      // A **Passport id** (the belt promoter picker is keyed by passport to match the
+      // `awardedByPassportId` FK — SESSION_0497). The handler verifies it exists before
+      // writing the FK. Freetext instead → `name`.
       awardedByPassportId: cuid.nullish(),
       name: z.string().max(200).nullish(),
     })

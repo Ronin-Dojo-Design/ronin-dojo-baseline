@@ -55,6 +55,11 @@ async function getSchoolOptions(): Promise<JoinNamedOption[]> {
  * node is a member of a published BBL tree. `id` is the node id, the same ref
  * the claim path links. Falls back to the Passport's `user.name` when the
  * Passport has no `displayName`; nameless placeholders are dropped.
+ *
+ * ⚠️ Keyed by NODE id (the claim path links `trainedUnderNodeId`). The belt promoter
+ * picker needs a PASSPORT id — see `getBeltPromoterOptions` (belt-tab-loader). Do NOT
+ * merge the two: writing a node id into the Passport-keyed `awardedByPassportId` FK was
+ * the SESSION_0497 P2003.
  */
 async function getInstructorOptions(): Promise<JoinNamedOption[]> {
   const nodes = await db.lineageNode.findMany({

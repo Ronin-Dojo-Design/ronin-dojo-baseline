@@ -177,7 +177,10 @@ afterAll(async () => {
 const member = () => asMember({ id: fx.memberUserId, role: "user" })
 const other = () => asMember({ id: fx.otherUserId, role: "user" })
 
-const expectCode = async (promise: Promise<unknown>, code: "FORBIDDEN" | "NOT_FOUND") => {
+const expectCode = async (
+  promise: Promise<unknown>,
+  code: "FORBIDDEN" | "NOT_FOUND" | "BAD_REQUEST",
+) => {
   try {
     await promise
     throw new Error(`expected the call to reject with ${code}`)
@@ -247,6 +250,35 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
       select: { rankId: true },
     })
     expect(after.rankId).toBe(before.rankId) // and at the DB layer
+  })
+
+  it("links a REGISTERED promoter by Passport id + resolves its name (SESSION_0497 — P2003 regression)", async () => {
+    const card = await member().updateRankAwardFact({
+      rankAwardId: fx.whiteAwardId,
+      promoter: { awardedByPassportId: fx.otherPassportId },
+    })
+    // The picker now sends a Passport id → the FK stores it verbatim (no node→passport
+    // mismatch, so no P2003 → no swallowed 500). This is the case with ZERO prior coverage.
+    expect(card.awardedByPassportId).toBe(fx.otherPassportId)
+    // …and the read model resolves the registered promoter's name (`notes` stays null).
+    expect(card.promoterName).toBe(tag("other-pp"))
+
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: fx.whiteAwardId },
+      select: { awardedByPassportId: true, notes: true },
+    })
+    expect(row.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(row.notes).toBeNull()
+  })
+
+  it("REJECTS a promoter id that is not a real Passport with BAD_REQUEST (not a swallowed 500)", async () => {
+    await expectCode(
+      member().updateRankAwardFact({
+        rankAwardId: fx.whiteAwardId,
+        promoter: { awardedByPassportId: "not-a-real-passport-id" },
+      }),
+      "BAD_REQUEST",
+    )
   })
 
   it("emits a deduped school-outreach placeholder org + lead for the freetext school (flywheel, no send)", async () => {

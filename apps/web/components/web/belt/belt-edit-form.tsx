@@ -127,8 +127,13 @@ export function BeltEditForm({
       })
       onSaved?.(next)
       toast.success("Story saved.")
-    } catch {
-      toast.error("Could not save your story.")
+    } catch (error) {
+      // Surface the real oRPC message (BAD_REQUEST / FORBIDDEN carry user-safe copy);
+      // fall back only for opaque failures. A bare `catch {}` masked a live P2003 as
+      // this generic toast for every failure class (SESSION_0497).
+      toast.error(
+        error instanceof Error && error.message ? error.message : "Could not save your story.",
+      )
     } finally {
       setIsSaving(false)
     }
@@ -158,8 +163,14 @@ export function BeltEditForm({
       })
       onSaved?.(next)
       toast.success("Belt details saved.")
-    } catch {
-      toast.error("Could not save your belt details.")
+    } catch (error) {
+      // See saveStory: surface the real oRPC message instead of masking every failure
+      // (incl. the registered-promoter P2003) behind one generic toast (SESSION_0497).
+      toast.error(
+        error instanceof Error && error.message
+          ? error.message
+          : "Could not save your belt details.",
+      )
     } finally {
       setIsSaving(false)
     }
