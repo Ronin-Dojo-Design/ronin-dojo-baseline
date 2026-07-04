@@ -59,7 +59,9 @@ const toggleClassName = (active: boolean) =>
   cx(
     "inline-flex items-center justify-center rounded-md p-1.5 transition-colors",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+    active
+      ? "bg-background text-foreground shadow-sm"
+      : "text-muted-foreground hover:text-foreground",
   )
 
 export const FeedFilterBar = ({

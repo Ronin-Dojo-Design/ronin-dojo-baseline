@@ -46,12 +46,17 @@ describe("checkBookmarkSubjects", () => {
     expect(saved.has("cp_3")).toBe(false)
 
     expect(capturedFindManyArgs.where.userId).toBe("user_1")
-    expect(capturedFindManyArgs.where.OR).toEqual([{ communityPostId: { in: ["cp_1", "cp_2", "cp_3"] } }])
+    expect(capturedFindManyArgs.where.OR).toEqual([
+      { communityPostId: { in: ["cp_1", "cp_2", "cp_3"] } },
+    ])
     expect(capturedFindManyArgs.select).toEqual({ communityPostId: true })
   })
 
   it("groups mixed subject types into per-column IN clauses", async () => {
-    findManyRows = [{ toolId: "t_1", passportId: null }, { toolId: null, passportId: "p_1" }]
+    findManyRows = [
+      { toolId: "t_1", passportId: null },
+      { toolId: null, passportId: "p_1" },
+    ]
     const { checkBookmarkSubjects } = await import("./saved-subjects")
 
     const saved = await checkBookmarkSubjects("user_1", [
