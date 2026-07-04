@@ -56,10 +56,17 @@ export type ScenePaletteTokens = {
   muted: string
   /** Legibility overlay over the full-bleed hero media. */
   overlay: string
-  /** Monogram fallback panel (no hero image and no avatar). */
+  /** Monogram fallback panel (no hero image — avatars never go full-bleed). */
   monogram: string
   /** Ring color for the profile owner's avatar on this background. */
   ownerRing: string
+  /**
+   * Owner-chip overrides layered onto `<Badge variant="primary">`. On black/white
+   * the primary chip stands (red on mono — only the theme-dependent
+   * `text-background` is pinned to white; the poles are theme-independent). On
+   * red, primary vanishes into the section (red-on-red) → a white outline chip.
+   */
+  badge: string
 }
 
 export const scenePaletteTokens: Record<ScenePalette, ScenePaletteTokens> = {
@@ -70,14 +77,17 @@ export const scenePaletteTokens: Record<ScenePalette, ScenePaletteTokens> = {
     overlay: "bg-gradient-to-t from-neutral-950/80 via-neutral-950/20 to-transparent",
     monogram: "bg-neutral-900 text-white/20",
     ownerRing: "ring-primary",
+    badge: "text-white",
   },
   red: {
     section: "bg-primary text-white",
     underline: "decoration-neutral-950",
-    muted: "text-white/75",
+    // /90 not /75 — AA for small text on the brand red (Desi A2 P2).
+    muted: "text-white/90",
     overlay: "bg-gradient-to-t from-black/60 via-black/15 to-transparent",
     monogram: "bg-white/10 text-white/25",
     ownerRing: "ring-white",
+    badge: "bg-transparent border-white/70 text-white",
   },
   white: {
     section: "bg-white text-neutral-950",
@@ -86,5 +96,6 @@ export const scenePaletteTokens: Record<ScenePalette, ScenePaletteTokens> = {
     overlay: "bg-gradient-to-t from-white/80 via-white/20 to-transparent",
     monogram: "bg-neutral-100 text-neutral-950/15",
     ownerRing: "ring-primary",
+    badge: "text-white",
   },
 }

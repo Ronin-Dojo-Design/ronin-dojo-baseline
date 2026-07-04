@@ -5,6 +5,7 @@ import { useRef, type ReactNode } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
 import { BeltSwatch } from "~/components/common/belt-swatch"
+import { H5 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { memberInitials } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -19,7 +20,9 @@ import { type ScenePalette, scenePaletteTokens } from "./scene-model"
  * token sets in `scene-model.ts`) × two content layouts:
  *
  * - `LineageStoryScene` — full cinematic beat for an entry WITH a story scene:
- *   full-bleed hero (heroImageUrl → passport avatar → typographic monogram) that
+ *   full-bleed hero (heroImageUrl → typographic monogram; passport avatars are
+ *   NEVER promoted to full-bleed — placeholder clip-art at hero scale is
+ *   undignified (Desi A2 P1-3), the avatar's home is the node-echo chip) that
  *   starts LARGE and shrinks toward the top-left to "become" the timeline node,
  *   Poppins-800 display name (landing-page type parity via the
  *   `--font-bbl-heading` var the server section defines), sourced quote with the
@@ -47,9 +50,14 @@ import { type ScenePalette, scenePaletteTokens } from "./scene-model"
  * Landing-page display-type parity (`bbl-landing/index.tsx`): Poppins 800 italic
  * uppercase. Consumes the `--font-bbl-heading` var (defined by `AncestrySection`
  * via the shared `bblHeadingFont.variable`) with the app display font fallback.
+ *
+ * `font-[family-name:…]` (an arbitrary-VALUE font utility, not an arbitrary
+ * property) so tailwind-merge resolves it in the font-family group — it must
+ * beat `Heading`'s `font-sans` when composed onto `H5` (Desi A2 P2: real
+ * heading semantics, display-type styling kept).
  */
 const displayTypeClass =
-  "[font-family:var(--font-bbl-heading,var(--font-display))] font-extrabold italic uppercase tracking-[0.02em]"
+  "font-[family-name:var(--font-bbl-heading,var(--font-display))] font-extrabold italic uppercase tracking-[0.02em]"
 
 /** Accent underline on display type — thickness/offset shared across palettes. */
 const accentUnderlineClass = "underline decoration-[0.06em] underline-offset-[0.15em]"
@@ -131,18 +139,33 @@ export function LineageStoryScene({
 
   // Hero: starts LARGE (scale 1) → shrinks + slides toward the top-left
   // (transform-origin top-left does the slide) to "become" the timeline node.
-  const heroScale = useTransform(scrollYProgress, [0.2, 1], [1, 0.42])
-  // The node echo (avatar chip) the hero shrinks into — fades in late. Decorative
-  // duplication (aria-hidden), so its opacity-0 start never hides real content.
-  const chipOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1])
+  // Holds full scale until ~viewport-center (Desi A2 P1-1 retime: the [0.2, 1]
+  // map measured scale 0.71 at center — the hero was never witnessed large).
+  const heroScale = useTransform(scrollYProgress, [0.45, 1], [1, 0.42])
+  // The node echo (avatar chip) the hero shrinks into — fades in late, after the
+  // retimed shrink is underway, so the "becomes the node" beat lands on-screen.
+  // Decorative duplication (aria-hidden): opacity-0 never hides real content.
+  const chipOpacity = useTransform(scrollYProgress, [0.85, 1], [0, 1])
   // Operator direction: horizontal text flips to vertical on scroll — the scene
   // marker rotates 0° → 90° across the first two thirds of the scene.
   const markerRotate = useTransform(scrollYProgress, [0, 0.6], [0, 90])
+  // Void reclaim (Desi A2 P1-2): the transform-scale shrink does NOT reclaim the
+  // hero's layout box, leaving a ~(1 − 0.42) × heroHeight dead band (~250px) mid-
+  // scene. The following content stack chases the shrinking hero with a transform-
+  // only `y` (same scroll map — compositor-friendly, never layout-triggering),
+  // keeping a 24px residual over the flex gap so the rest-state gap reads
+  // intentional. SSR/no-JS: scale 1 → y 0 → transform none, zero layout shift.
+  // Reading offsetHeight per frame is safe here: scroll frames with transform-only
+  // animation leave layout clean, so the read never forces a reflow.
+  const contentY = useTransform(heroScale, scale => {
+    const heroHeight = heroRef.current?.offsetHeight ?? 0
+    return -Math.max(0, (1 - scale) * heroHeight - 24)
+  })
 
   const story = entry.story
   if (!story) return null
 
-  const heroImage = story.heroImageUrl ?? entry.avatarUrl
+  const heroImage = story.heroImageUrl
 
   return (
     <SceneShell palette={palette} className="px-6 py-14 sm:px-10 sm:py-20">
@@ -177,8 +200,10 @@ export function LineageStoryScene({
                 className="absolute inset-0 size-full object-cover"
               />
             ) : (
-              // No hero image and no avatar (imported founders) — a typographic
-              // monogram panel keeps the shrink-to-node beat consistent.
+              // No hero image — the dignified palette-tinted monogram panel keeps
+              // the shrink-to-node beat consistent. Deliberately NOT the passport
+              // avatar: placeholder avatars at full-bleed are the worst frame
+              // (Desi A2 P1-3); the avatar renders correctly in the node echo.
               <div className={cx("absolute inset-0 grid place-items-center", tokens.monogram)}>
                 <span className={cx(displayTypeClass, "text-8xl")}>
                   {memberInitials(entry.displayName)}
@@ -203,46 +228,54 @@ export function LineageStoryScene({
           </motion.div>
         </div>
 
-        <Stack size="xs" direction="column" wrap={false} className="min-w-0">
-          <Stack size="sm" direction="row" wrap className="items-center">
-            <span
-              className={cx(
-                displayTypeClass,
-                accentUnderlineClass,
-                tokens.underline,
-                "text-4xl leading-[1.05] sm:text-6xl",
+        {/* The content stack chases the shrinking hero up (transform-only y —
+            see contentY above), reclaiming the dead band the scale transform
+            leaves in the layout. */}
+        <motion.div style={{ y: contentY }} className="flex flex-col gap-8">
+          <Stack size="xs" direction="column" wrap={false} className="min-w-0">
+            <Stack size="sm" direction="row" wrap className="items-center">
+              {/* Real heading semantics (document outline) with the display type
+                  kept — H5's font-sans/font-medium/text-base lose the merge to
+                  displayTypeClass + the size classes (Desi A2 P2). */}
+              <H5
+                className={cx(
+                  displayTypeClass,
+                  accentUnderlineClass,
+                  tokens.underline,
+                  "text-4xl leading-[1.05] sm:text-6xl",
+                )}
+              >
+                {entry.displayName}
+              </H5>
+              {isOwner && (
+                <Badge variant="primary" size="sm" className={tokens.badge}>
+                  This member
+                </Badge>
               )}
-            >
-              {entry.displayName}
-            </span>
-            {isOwner && (
-              <Badge variant="primary" size="sm">
-                This member
-              </Badge>
-            )}
+            </Stack>
+
+            <SceneRankRows entry={entry} mutedClass={tokens.muted} />
           </Stack>
 
-          <SceneRankRows entry={entry} mutedClass={tokens.muted} />
-        </Stack>
+          {story.quote && (
+            <figure className="flex flex-col gap-4">
+              <blockquote className={cx(displayTypeClass, "text-2xl leading-tight sm:text-4xl")}>
+                “{story.quote}”
+              </blockquote>
+              {/* Attribution = displayName by contract — stored quoteAttribution is
+                  provenance notes, never display copy (SESSION_0498). */}
+              <figcaption
+                className={cx("text-sm font-semibold tracking-[0.2em] uppercase", tokens.muted)}
+              >
+                — {entry.displayName}
+              </figcaption>
+            </figure>
+          )}
 
-        {story.quote && (
-          <figure className="flex flex-col gap-4">
-            <blockquote className={cx(displayTypeClass, "text-2xl leading-tight sm:text-4xl")}>
-              “{story.quote}”
-            </blockquote>
-            {/* Attribution = displayName by contract — stored quoteAttribution is
-                provenance notes, never display copy (SESSION_0498). */}
-            <figcaption
-              className={cx("text-sm font-semibold tracking-[0.2em] uppercase", tokens.muted)}
-            >
-              — {entry.displayName}
-            </figcaption>
-          </figure>
-        )}
-
-        {story.storyBio && (
-          <p className={cx("text-base leading-7", tokens.muted)}>{story.storyBio}</p>
-        )}
+          {story.storyBio && (
+            <p className={cx("text-base leading-7", tokens.muted)}>{story.storyBio}</p>
+          )}
+        </motion.div>
       </div>
     </SceneShell>
   )
@@ -284,7 +317,7 @@ export function LineageStoryNodeScene({
                 {entry.displayName}
               </span>
               {isOwner && (
-                <Badge variant="primary" size="sm">
+                <Badge variant="primary" size="sm" className={tokens.badge}>
                   This member
                 </Badge>
               )}

@@ -65,6 +65,21 @@ describe("scenePaletteAt — the three-variant cycle", () => {
     }
   })
 
+  it("gives the red palette a contrasting (non-primary-bg) owner chip", () => {
+    // Badge variant="primary" is bg-primary — invisible on the red section.
+    // The red badge token must knock the bg out and outline in white; the mono
+    // poles keep the primary chip, pinning only the theme-dependent text color.
+    expect(scenePaletteTokens.red.badge).toContain("bg-transparent")
+    expect(scenePaletteTokens.red.badge).toContain("border-white/70")
+    expect(scenePaletteTokens.red.badge).toContain("text-white")
+    expect(scenePaletteTokens.black.badge).not.toContain("bg-")
+    expect(scenePaletteTokens.white.badge).not.toContain("bg-")
+  })
+
+  it("keeps red-palette muted copy at AA small-text contrast", () => {
+    expect(scenePaletteTokens.red.muted).toBe("text-white/90")
+  })
+
   it("keeps red as the brand primary token, never a hardcoded hex", () => {
     // Brand color SoT is the BrandSettings DB → --color-primary (repo law).
     const allTokenClasses = SCENE_PALETTE_CYCLE.flatMap(palette =>

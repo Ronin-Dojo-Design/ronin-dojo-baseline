@@ -39,7 +39,9 @@ export function LineageStorySequence({ entries }: { entries: LineageAncestryEntr
       // Full-bleed to the viewport edges below md (-mx-6 cancels the Container's
       // px-6); inside the md+ content grid the strip keeps the column width with
       // rounded cinema edges. overflow-hidden pairs with the per-scene clipping.
-      className="-mx-6 flex flex-col overflow-hidden md:mx-0 md:rounded-3xl"
+      // md ring: a hairline boundary so the black opener separates from dark
+      // desktop chrome (Desi A2 P2).
+      className="-mx-6 flex flex-col overflow-hidden md:mx-0 md:rounded-3xl md:ring-1 md:ring-white/10"
     >
       {entries.map((entry, index) => {
         const palette = scenePaletteAt(index)
