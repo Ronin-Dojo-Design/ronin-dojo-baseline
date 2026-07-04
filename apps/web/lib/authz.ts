@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { db } from "~/services/db"
 
 /**
@@ -25,9 +26,10 @@ export type AuthzUser = {
 // Pure checks
 // -----------------------------------------------------------------------------
 
-export const isAdmin = (user: AuthzUser | null | undefined): boolean => {
-  return user?.role === "admin"
-}
+// `isAdmin` lives in the db-free `lib/authz-predicates` module (so client components can import it
+// without dragging Prisma into the browser bundle) and is re-exported here — server code keeps
+// importing it from `~/lib/authz`, one predicate. (SESSION_0495 C2-8.)
+export { isAdmin }
 
 // -----------------------------------------------------------------------------
 // Brand resolution

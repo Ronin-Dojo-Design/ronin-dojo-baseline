@@ -139,7 +139,10 @@ function PassportIdentity({
     <Stack direction="row" className="w-full items-center gap-4">
       <Avatar
         className={cx(
-          "size-16 shrink-0 ring-2 ring-offset-2 ring-offset-card",
+          // C2-9: the belt-color ring pairs with an UNCONDITIONAL faint outline (the BeltSwatch
+          // lesson) so a `#000000` rank stays visible against the dark card instead of vanishing —
+          // the colored ring sits on top, the outline guarantees an edge for any belt color.
+          "size-16 shrink-0 outline outline-border/60 ring-2 ring-offset-2 ring-offset-card",
           colorHex ? "ring-(--rank-color)" : "ring-primary/40",
         )}
       >

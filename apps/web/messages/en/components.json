@@ -3,6 +3,18 @@
     "placeholder": "Type to search...",
     "no_results": "No results found."
   },
+  "listing": {
+    "view": "View",
+    "save": "Save",
+    "saved": "Saved",
+    "save_tooltip": "Save this listing",
+    "remove_tooltip": "Remove saved listing",
+    "sign_in_tooltip": "Sign in to save this listing",
+    "saving": "Saving listing...",
+    "removing": "Removing saved listing...",
+    "save_success": "Listing saved",
+    "remove_success": "Listing removed from saved items"
+  },
   "ads": {
     "ad_label": "Ad",
     "learn_more": "Learn More",

@@ -2,6 +2,7 @@
 
 import { HeartIcon } from "lucide-react"
 import { usePathname } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { useAction } from "next-safe-action/hooks"
 import { type ComponentProps, useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -24,23 +25,34 @@ import type { BookmarkSubjectTypeInput } from "~/server/web/bookmarks/schema"
 type ListingSaveButtonProps = Omit<ComponentProps<typeof Button>, "prefix"> & {
   subjectType: BookmarkSubjectTypeInput
   subjectId: string
+  /** Override the "Save" label (i18n `components.listing.save` by default). */
   label?: string
   showLabel?: boolean
+  /**
+   * Server-hydrated initial saved-state (SESSION_0495 C2-2). When the parent already knows whether
+   * the viewer saved this subject — a listing page can batch ONE query for the whole grid — pass it
+   * here to skip the per-mount `checkBookmarkSubject` action. Omit it (the default) and the button
+   * self-checks on mount, as before. `undefined` = "unknown, self-check"; a boolean = "authoritative".
+   */
+  initialSaved?: boolean
 }
 
 export const ListingSaveButton = ({
   subjectType,
   subjectId,
-  label = "Save",
+  label,
   showLabel = true,
+  initialSaved,
   className,
   size = "sm",
   variant = "secondary",
   ...props
 }: ListingSaveButtonProps) => {
+  const t = useTranslations("components.listing")
+  const saveLabel = label ?? t("save")
   const pathname = usePathname()
   const { data: session } = useSession()
-  const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarked, setBookmarked] = useState(initialSaved ?? false)
 
   const checkAction = useAction(checkBookmarkSubject, {
     onSuccess: ({ data }) => {
@@ -61,10 +73,12 @@ export const ListingSaveButton = ({
   const executeCheck = checkAction.execute
 
   useEffect(() => {
-    if (session?.user) {
+    // Skip the per-mount round-trip when the parent hydrated an authoritative saved-state — a grid of
+    // N cards then costs ONE batched query instead of N per-card actions (the 30-action mount storm).
+    if (session?.user && initialSaved === undefined) {
       executeCheck({ subjectType, subjectId })
     }
-  }, [executeCheck, session?.user, subjectType, subjectId])
+  }, [executeCheck, session?.user, subjectType, subjectId, initialSaved])
 
   if (!session?.user) {
     const next = encodeURIComponent(pathname)
@@ -81,11 +95,11 @@ export const ListingSaveButton = ({
               render={<Link href={`/auth/login?next=${next}`} />}
               {...props}
             >
-              <span className={cx(!showLabel && "sr-only")}>{label}</span>
+              <span className={cx(!showLabel && "sr-only")}>{saveLabel}</span>
             </Button>
           }
         />
-        <TooltipContent>Sign in to save this listing</TooltipContent>
+        <TooltipContent>{t("sign_in_tooltip")}</TooltipContent>
       </Tooltip>
     )
   }
@@ -106,14 +120,14 @@ export const ListingSaveButton = ({
         }
       },
       {
-        loading: nextBookmarked ? "Saving listing..." : "Removing saved listing...",
-        success: nextBookmarked ? "Listing saved" : "Listing removed from saved items",
+        loading: nextBookmarked ? t("saving") : t("removing"),
+        success: nextBookmarked ? t("save_success") : t("remove_success"),
         error: err => err.message,
       },
     )
   }
 
-  const text = bookmarked ? "Saved" : label
+  const text = bookmarked ? t("saved") : saveLabel
 
   return (
     <Tooltip>
@@ -132,7 +146,7 @@ export const ListingSaveButton = ({
           </Button>
         }
       />
-      <TooltipContent>{bookmarked ? "Remove saved listing" : "Save this listing"}</TooltipContent>
+      <TooltipContent>{bookmarked ? t("remove_tooltip") : t("save_tooltip")}</TooltipContent>
     </Tooltip>
   )
 }

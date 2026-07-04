@@ -42,7 +42,7 @@ export const getEditableProgramOrganizations = cache(
   async (brand: Brand, userId: string, role?: string | null) => {
     const where: Prisma.OrganizationWhereInput = { brand }
 
-    if (!isAdmin({ id: userId, role })) {
+    if (!isAdmin({ role })) {
       where.OR = [
         { ownerId: userId },
         {

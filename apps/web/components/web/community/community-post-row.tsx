@@ -6,10 +6,8 @@ import { Badge } from "~/components/common/badge"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
-import { CommunityPostAdminMenu } from "~/components/web/community/community-post-admin-menu"
+import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
-import { CommunityShareMenu } from "~/components/web/community/community-share-menu"
-import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { Author } from "~/components/web/ui/author"
 import type { CommunityPostMany } from "~/server/web/community/payloads"
 
@@ -21,9 +19,15 @@ import type { CommunityPostMany } from "~/server/web/community/payloads"
 type CommunityPostRowProps = {
   post: CommunityPostMany
   isAdmin?: boolean
+  /** Server-batched saved-state (D6). `undefined` → the Save button self-checks on mount. */
+  initialSaved?: boolean
 }
 
-export const CommunityPostRow = ({ post, isAdmin = false }: CommunityPostRowProps) => {
+export const CommunityPostRow = ({
+  post,
+  isAdmin = false,
+  initialSaved,
+}: CommunityPostRowProps) => {
   const format = useFormatter()
 
   return (
@@ -73,11 +77,15 @@ export const CommunityPostRow = ({ post, isAdmin = false }: CommunityPostRowProp
             className="min-w-0"
           />
 
-          <div className="flex shrink-0 items-center gap-1">
-            <ListingSaveButton subjectType="COMMUNITY_POST" subjectId={post.id} showLabel={false} />
-            <CommunityShareMenu slug={post.slug} title={post.title} text={post.excerpt} />
-            {isAdmin && <CommunityPostAdminMenu postId={post.id} isHidden={post.isHidden} />}
-          </div>
+          <CommunityPostActions
+            postId={post.id}
+            slug={post.slug}
+            title={post.title}
+            text={post.excerpt}
+            isHidden={post.isHidden}
+            isAdmin={isAdmin}
+            initialSaved={initialSaved}
+          />
         </div>
       </div>
     </Card>

@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import type { ComponentProps, ReactNode } from "react"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -47,7 +48,7 @@ type ListingCardProps = ComponentProps<typeof Card> & {
   statusBadges?: ReactNode
   /** Longer description revealed on hover. */
   description?: string | null
-  /** Footer view-button label. Defaults to "View" (entity-agnostic). */
+  /** Footer view-button label. Defaults to the i18n "View" (entity-agnostic). */
   viewLabel?: string
   /** Save/bookmark control slot (right of the default View button). */
   save?: ReactNode
@@ -69,12 +70,14 @@ const ListingCard = ({
   categories,
   statusBadges,
   description,
-  viewLabel = "View",
+  viewLabel,
   save,
   footer,
   className,
   ...props
 }: ListingCardProps) => {
+  const t = useTranslations("components.listing")
+
   return (
     <Card isRevealed className={cx(mediaTop ? "overflow-clip" : undefined, className)} {...props}>
       {mediaTop ? <div className="-mx-5 -mt-5 mb-1 overflow-clip">{mediaTop}</div> : null}
@@ -98,7 +101,10 @@ const ListingCard = ({
         <Stack
           size="lg"
           direction="column"
-          className={cx("flex-1", description && "duration-200 group-hover:opacity-0")}
+          // C2-7: the hover swap (tagline out → description in) is a POINTER affordance — gate it to
+          // `md:` (fine-pointer/desktop) so touch users, who never hover, don't lose the tagline. On
+          // `max-md` the tagline stays put and the description renders inline below (see the block).
+          className={cx("flex-1", description && "duration-200 md:group-hover:opacity-0")}
         >
           {tagline && <CardDescription className="min-h-10">{tagline}</CardDescription>}
 
@@ -114,10 +120,17 @@ const ListingCard = ({
           )}
 
           {statusBadges}
+
+          {/* Touch/no-hover surface: render the description in normal flow at `max-md` so it's
+              actually reachable (the desktop hover overlay below is `md:` only). */}
+          {description && (
+            <CardDescription className="line-clamp-3 md:hidden">{description}</CardDescription>
+          )}
         </Stack>
 
+        {/* Desktop hover overlay — fades in over the tagline on pointer hover; hidden on touch. */}
         {description && (
-          <div className="absolute inset-0 opacity-0 duration-200 group-hover:opacity-100">
+          <div className="absolute inset-0 hidden opacity-0 duration-200 group-hover:opacity-100 md:block">
             <CardDescription className="line-clamp-3">{description}</CardDescription>
           </div>
         )}
@@ -127,7 +140,7 @@ const ListingCard = ({
         {footer ?? (
           <>
             <Button size="sm" variant="secondary" render={<Link href={href} />}>
-              {viewLabel}
+              {viewLabel ?? t("view")}
             </Button>
 
             {save}

@@ -2,6 +2,7 @@
 
 import { LinkIcon, MailIcon, Share2Icon } from "lucide-react"
 import { useTranslations } from "next-intl"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import {
@@ -26,6 +27,13 @@ type CommunityShareMenuProps = {
 
 export const CommunityShareMenu = ({ slug, title, text }: CommunityShareMenuProps) => {
   const t = useTranslations("community")
+
+  // C1-8: only offer "Share…" where the Web Share API exists — otherwise `nativeShare` just falls
+  // back to Copy link, duplicating the item above it. Resolved after mount (SSR has no `navigator`).
+  const [canNativeShare, setCanNativeShare] = useState(false)
+  useEffect(() => {
+    setCanNativeShare(typeof navigator !== "undefined" && typeof navigator.share === "function")
+  }, [])
 
   const shareUrl = () => `${window.location.origin}/posts/${slug}`
 
@@ -78,9 +86,11 @@ export const CommunityShareMenu = ({ slug, title, text }: CommunityShareMenuProp
         <DropdownMenuItem onClick={copyLink}>
           <LinkIcon /> {t("share_copy_link")}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={nativeShare}>
-          <Share2Icon /> {t("share_native")}
-        </DropdownMenuItem>
+        {canNativeShare && (
+          <DropdownMenuItem onClick={nativeShare}>
+            <Share2Icon /> {t("share_native")}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={emailShare}>
           <MailIcon /> {t("share_email")}
         </DropdownMenuItem>

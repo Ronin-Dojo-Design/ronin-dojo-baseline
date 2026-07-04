@@ -30,6 +30,7 @@ import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
 import { useSession } from "~/lib/auth-client"
+import { isAdmin } from "~/lib/authz-predicates"
 
 // Inlined here (not imported from lib/media, which pulls the Prisma client into the
 // browser bundle — this is a client component). Single-brand BBL gi fallback avatar.
@@ -129,8 +130,10 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
                 {t("navigation.dashboard")}
               </NavLink>
 
-              {user.role === "admin" && (
-                <NavLink href="/admin" prefix={<ShieldHalfIcon />}>
+              {/* C2-8: shared `isAdmin` predicate (not a forked `role === "admin"`); link the
+                  canonical `/app` target directly instead of `/admin` (a 308 redirect → /app). */}
+              {isAdmin(user) && (
+                <NavLink href="/app" prefix={<ShieldHalfIcon />}>
                   {t("navigation.admin_panel")}
                 </NavLink>
               )}
@@ -169,7 +172,7 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
                 render={<ThemeSwitcher />}
               />
               <JoinCtaButton size="sm" variant="primary" onActivate={() => onOpenChange(false)}>
-                Join Legacy
+                {t("navigation.join_legacy")}
               </JoinCtaButton>
             </div>
           </SheetFooter>

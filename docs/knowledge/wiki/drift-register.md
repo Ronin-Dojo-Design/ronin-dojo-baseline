@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-07-03
-last_agent: claude-session-0493
+last_agent: claude-session-0495
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -483,4 +483,37 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   the exact horizontal-drift failure the design-system doctrine exists to prevent.
 - **Fix shape:** extract a shared `FeedFilterTabs`/pill-tab helper (a `components/web/ui/*` candidate)
   consumed by both feeds; consider one slotted feed-row over `Card` behind it.
-- **Status: OPEN** (P2 — extract before any third feed lands).
+- **Status: RESOLVED (SESSION_0495, Epic C C2-1).** Extracted `components/web/ui/feed-filter-bar.tsx` — the
+  shared presentation-only sticky tabs/toggle bar — now consumed by BOTH `community-feed.tsx` and
+  `post-feed.tsx`; the verbatim ~90-line dup is gone and the C1 mobile fixes (sticky/edge-fade/style-facet)
+  land once, so `/blog` inherits them. Filter state stays in each feed (the blog precedent); feed-specific
+  controls go through the bar's `trailing` slot. Verified by Giddy (9.6) + Desi (9.6). (The row-shell dup
+  `community-post-row`↔`posts/post-row` was NOT merged — deliberate, the divergences are real; row extraction
+  stays a future call if a third feed lands.)
+
+### D-036 — `isAdmin` consolidation incomplete: two residual forks + an undecided admin-route (SESSION_0495)
+
+- **What:** Epic C's C2-8 consolidated the client admin check onto the db-free `isAdmin`
+  (`lib/authz-predicates.ts`, re-exported by `lib/authz.ts`) across `nav-sheet`, `user-menu`, `search`. Two
+  residuals remain: (a) `components/admin/auth-hoc.tsx:25` still hand-rolls `session.user.role === "admin"`
+  (pre-existing, not this session's diff); (b) `components/common/search.tsx:83-88` carries a fenced
+  `isAdminPath = pathname.startsWith("/admin")` for search-result `[slug]` admin-detail hrefs — those detail
+  routes exist under **neither** `/admin` nor `/app`, so it's dormant (`/admin` 308s to `/app`) but needs a
+  target-route decision before the branch can be repaired-or-deleted.
+- **Why it matters:** one predicate with two import doors is the goal; every residual fork is a place admin
+  visibility can silently diverge. Ruled ACCEPT+log by Giddy this session (dormant, not a live hole).
+- **Fix shape:** migrate `auth-hoc.tsx` to `isAdmin`; decide the admin-detail route target, then repair or
+  delete the `isAdminPath` branch in `search.tsx`.
+- **Status: OPEN** (LOW — opportunistic; no live security impact).
+
+### D-037 — Feed fetch bound divergence: community capped, blog unbounded (SESSION_0495)
+
+- **What:** Epic C capped `findCommunityPosts` at `take: FEED_TAKE = 100`
+  (`server/web/community/queries.ts`, a Petey-ratified MVP safety bound), but the sibling blog
+  `findPublishedPosts` (`server/web/posts/queries.ts:27`) stays unbounded. Also `posts/page.tsx:82`'s hero
+  total under-reports once the table exceeds `FEED_TAKE`.
+- **Why it matters:** the two feeds now disagree on a scalability guard; the blog bound + real cursor
+  pagination are the same follow-up. Left per plan scope (blog volume is staff-controlled, low risk today).
+- **Fix shape:** cursor pagination on both feed queries when volume warrants; the hero-count under-report
+  resolves with it.
+- **Status: OPEN** (P3 — deferred until post volume warrants).

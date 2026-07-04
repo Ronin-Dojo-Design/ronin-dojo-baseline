@@ -5,11 +5,9 @@ import { getFormatter, getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
-import { CommunityPostAdminMenu } from "~/components/web/community/community-post-admin-menu"
+import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
-import { CommunityShareMenu } from "~/components/web/community/community-share-menu"
 import { ExternalLink } from "~/components/web/external-link"
-import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { Markdown } from "~/components/web/markdown"
 import { Author } from "~/components/web/ui/author"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -33,9 +31,7 @@ type Props = PageProps<"/posts/[slug]">
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
   const session = await getServerSession()
-  const viewerIsAdmin = isAdmin(
-    session?.user ? { id: session.user.id, role: session.user.role } : null,
-  )
+  const viewerIsAdmin = isAdmin(session?.user)
 
   const post = await findCommunityPostBySlug(slug, Brand.BBL, { includeHidden: viewerIsAdmin })
 
@@ -141,11 +137,15 @@ export default async function (props: Props) {
         </Section.Content>
 
         <Section.Sidebar>
-          <Stack size="sm" wrap={false}>
-            <ListingSaveButton subjectType="COMMUNITY_POST" subjectId={post.id} />
-            <CommunityShareMenu slug={post.slug} title={post.title} text={post.excerpt} />
-            {viewerIsAdmin && <CommunityPostAdminMenu postId={post.id} isHidden={post.isHidden} />}
-          </Stack>
+          <CommunityPostActions
+            postId={post.id}
+            slug={post.slug}
+            title={post.title}
+            text={post.excerpt}
+            isHidden={post.isHidden}
+            isAdmin={viewerIsAdmin}
+            showSaveLabel
+          />
         </Section.Sidebar>
       </Section>
     </>

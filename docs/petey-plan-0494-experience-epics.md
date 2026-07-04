@@ -5,7 +5,7 @@ type: petey-plan
 status: staged
 created: 2026-07-03
 updated: 2026-07-03
-last_agent: claude-session-0493
+last_agent: claude-session-0495
 pairs_with:
   - docs/sprints/SESSION_0494.md
   - docs/sprints/SESSION_0493.md
@@ -152,6 +152,7 @@ hand-authored migration.**
 
 | Slice | Ships |
 |---|---|
+| **A0.5** StudentsCarousel V2 (FIRST · operator-added 0495) | Additive bake-off variant of `students-carousel.tsx` — see the dedicated section below. Builds the reusable **card + embla swiper + `layoutId` grow-into-drawer** that A's scenes AND the post-A featured-blog carousel both consume. |
 | **A0** Story data model | 1:1 `LineageStoryScene` table + hand-authored migration; project into `LineageAncestryEntry`; conditional-bridge select in the walk; seed founders (Carlos Sr/Jr/Rorion/Rigan) + Bob |
 | **A1** Storyboard admin CRUD | board of scene cards + duplicate + plus-button + reorder in `/app`; premium-lean; image/video drop |
 | **A2** v1 scene scaffold | `motion/react useScroll`: node → scroll scene (large → shrink → slide top-left); reduced-motion = today's stagger |
@@ -162,6 +163,45 @@ hand-authored migration.**
 | **A7** v2 Lenis pass | add Lenis; A/B vs v1 |
 | **A8** Mobile perf + reduced-motion | simplified mobile variant; Safari jank pass; the loop's rounds |
 | **A9** *(open lane)* v3 GSAP | ScrollTrigger version when desired |
+
+### Slice A0.5 — StudentsCarousel V2 (operator-added SESSION_0495; Epic A opener)
+
+An **additive bake-off variant** — the existing `apps/web/components/web/lineage/students-carousel.tsx`
+stays untouched; V2 is a second option to compare live. **Parity target =** BBLApp
+`ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/lineage/StudentsCarousel.jsx`. Port its
+**gesture · behavior · feature**, NOT its chrome. (Captured in memory `epic-a05-students-carousel-v2-scope`.)
+
+**IN — the operator's "baseball-card / ESPN-Fantasy-for-BJJ" treatment:**
+
+- Bigger student **player cards**: avatar photo + full name + `BeltSwatch`/rank + **country flag** +
+  **school logo** + **verified badge**. **NO premium badge** (dropped). Metaphor: photo + name + belt (position)
+  + flag (nationality) + school logo (team) — like studying players in a fantasy app, for BJJ.
+- Real **swiper** via our embla `Carousel`/`CarouselSlide` (`components/common/carousel.tsx`), not the current
+  flat `overflow-x-auto` row.
+- **Behavior:** tap a card → BBLApp's inline mini-preview → card **grows/morphs into the lineage profile
+  drawer** via `motion/react` `layoutId` shared-element; **reduced-motion falls back to today's instant swap**.
+
+**OUT — "not the content tabs":**
+
+- ❌ BBLApp's search bar / belt-rank filter dropdown / Expand-All-Collapse-All (BBLApp Tier 3).
+- ❌ No restructuring the drawer's internal content tabs — the morph lands in the EXISTING drawer, unchanged.
+- ❌ No BBLApp `getStudentsByInstructor` client fetch — our students are server-loaded props.
+
+**Keep our foundations:** awarded-truth `memberTopRank` (ADR 0035) over BBLApp's `rank.includes()` string-match;
+`BeltSwatch` tokens; server-loaded data.
+
+**Data dependency (read-model extension — NOT a schema migration):** project onto `LineageTreeMemberRow`
+(`server/web/lineage/payloads.ts`): `isVerified` (have it), `countryOfOrigin` (→ flag; BBLApp uses a
+`data/countries` + `getCountryByCode` util to port or match), and current school `name` + `logoUrl` (the
+drawer's `InfoTab` already resolves `school.logoUrl` — project it onto the row). Lands with Epic A's planned
+walk-read-model work.
+
+**Reuse dividend:** the card + swiper + morph built here is consumed by A2–A6 scenes AND by the **featured-blog
+posts carousel** (operator: YES, but AFTER Epic A so it reuses this swiper — blog has card+list today, no
+carousel; the embla primitive already exists).
+
+**Desi/Cody hand-off:** pass-0 Desi baselines the current `students-carousel.tsx` + scores V2 against the
+"player-card" rubric; Cody builds V2 as the variant behind a toggle; runs the operating loop to ≥9.5.
 
 ### Assets (operator: images live in BBLApp / ronin-dojo-monorepo — Graphify available there)
 - **Founder images (inventoried; monorepo `public/brand/blackbeltlegacy/images/`; canonical map =

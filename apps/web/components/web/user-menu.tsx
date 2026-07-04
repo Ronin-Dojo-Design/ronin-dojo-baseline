@@ -19,6 +19,7 @@ import { Link } from "~/components/common/link"
 import { NavLink } from "~/components/web/ui/nav-link"
 import { UserLogout } from "~/components/web/user-logout"
 import { useSession } from "~/lib/auth-client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { cx } from "~/lib/utils"
 
 export const UserMenu = () => {
@@ -88,8 +89,10 @@ export const UserMenu = () => {
 
           <DropdownMenuSeparator />
 
-          {session.user.role === "admin" && (
-            <DropdownMenuItem render={<NavLink href="/admin" prefix={<ShieldHalfIcon />} />}>
+          {/* C2-8: shared `isAdmin` predicate (not a forked `role === "admin"`); link the canonical
+              `/app` admin surface directly, not the retired `/admin` (which only 308s to /app). */}
+          {isAdmin(session.user) && (
+            <DropdownMenuItem render={<NavLink href="/app" prefix={<ShieldHalfIcon />} />}>
               {t("navigation.admin_panel")}
             </DropdownMenuItem>
           )}

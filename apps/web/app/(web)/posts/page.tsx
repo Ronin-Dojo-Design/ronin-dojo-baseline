@@ -10,6 +10,7 @@ import { getBrandSiteConfig } from "~/config/site"
 import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
 import { getPageData, getPageMetadata } from "~/lib/pages"
+import { checkBookmarkSubjects } from "~/server/web/bookmarks/saved-subjects"
 import { findApprovedStyleOptions, findCommunityPosts } from "~/server/web/community/queries"
 
 // I18n page namespace — the community feed OWNS its namespace; `pages.blog` stays editorial-only
@@ -52,6 +53,16 @@ export default async function ({ searchParams }: Props) {
 
   const t = await getTranslations("community")
 
+  // Batch the viewer's saved-state for the WHOLE feed in ONE query (D6), then thread it down as
+  // `initialSaved` per card — replacing the N per-card `checkBookmarkSubject` actions that fired on
+  // mount. Signed-out viewers skip the query entirely (the Save button is a sign-in CTA for them).
+  const savedPostIds = session?.user
+    ? await checkBookmarkSubjects(
+        session.user.id,
+        posts.map(post => ({ subjectType: "COMMUNITY_POST" as const, subjectId: post.id })),
+      )
+    : null
+
   // `?school=` is part of the URL contract already (ADR 0042 Amendment 1 §3) but stays a stub
   // until school data flows onto community posts.
   const school = typeof params.school === "string" ? params.school : undefined
@@ -65,16 +76,20 @@ export default async function ({ searchParams }: Props) {
         <Intro>
           <IntroTitle>{metadata.title}</IntroTitle>
           <IntroDescription>{metadata.description}</IntroDescription>
-          <Note className="mt-2">{t("count_posts", { count: posts.length })}</Note>
+          {/* Hero shows the TOTAL only when there is one (C1-4). The filter-aware count lives under
+              the bar (CommunityFeed → ResultsCount); at 0, the feed's EmptyList carries the copy, so
+              a "No posts yet" line here would duplicate it. */}
+          {posts.length > 0 && (
+            <Note className="mt-2">{t("count_posts", { count: posts.length })}</Note>
+          )}
         </Intro>
       </section>
 
       <CommunityFeed
         posts={posts}
         styles={styles}
-        viewer={{
-          isAdmin: isAdmin(session?.user ? { id: session.user.id, role: session.user.role } : null),
-        }}
+        viewer={{ isAdmin: isAdmin(session?.user) }}
+        savedPostIds={savedPostIds ? [...savedPostIds] : null}
         school={school}
       />
     </>

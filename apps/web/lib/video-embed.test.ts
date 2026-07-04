@@ -58,6 +58,12 @@ describe("toVideoEmbedUrl", () => {
   it("returns null for a youtube URL missing the id", () => {
     expect(toVideoEmbedUrl("https://www.youtube.com/watch?list=xyz")).toBeNull()
   })
+
+  it("returns null for a malformed youtube id (charset/length guard, C1-11)", () => {
+    // wrong length + a disallowed char — must not be interpolated into an iframe src.
+    expect(toVideoEmbedUrl("https://youtu.be/short")).toBeNull()
+    expect(toVideoEmbedUrl("https://www.youtube.com/watch?v=has a space!!")).toBeNull()
+  })
 })
 
 // SESSION_0493 (Desi P1): community feed card media for video-first posts.

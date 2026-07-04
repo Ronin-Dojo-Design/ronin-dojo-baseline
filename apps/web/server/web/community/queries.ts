@@ -9,12 +9,22 @@ import { db } from "~/services/db"
  * here, in one place).
  */
 
-/** The public feed: PUBLISHED + brand, newest first (the locked MVP sort). */
+/**
+ * The public feed: PUBLISHED + brand, newest first (the locked MVP sort).
+ *
+ * `take: FEED_TAKE` is a safety bound, not a pagination surface (D6). The MVP has NO posts yet, so a
+ * cursor/pagination UI is YAGNI — but an unbounded `findMany` would materialize the whole table onto
+ * every `/posts` render once volume arrives. This bounds it to the newest page's worth; cursor
+ * pagination is the follow-up when real volume shows up. (SESSION_0495; Petey-ratified.)
+ */
+const FEED_TAKE = 100
+
 export const findCommunityPosts = async (brand: Brand) => {
   const rows = await db.communityPost.findMany({
     where: { brand, status: "PUBLISHED" },
     select: communityPostManyPayload,
     orderBy: { createdAt: "desc" },
+    take: FEED_TAKE,
   })
 
   return rows.map(toCommunityPostMany)

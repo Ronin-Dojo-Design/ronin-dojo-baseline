@@ -21,19 +21,30 @@ function parseVideoUrl(raw: string | null | undefined): URL | null {
   }
 }
 
+/**
+ * YouTube video ids are exactly 11 chars from the URL-safe base64 alphabet. Validating the charset
+ * (SESSION_0495 C1-11) stops a malformed/garbage path segment from being interpolated straight into
+ * an `youtube.com/embed/<id>` src — the id goes into an iframe `src`, so it must be a real id shape,
+ * not whatever the member typed after the slash.
+ */
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/
+
+const asYouTubeId = (candidate: string | null | undefined): string | null =>
+  candidate && YOUTUBE_ID.test(candidate) ? candidate : null
+
 /** YouTube video id from youtu.be/<id>, youtube.com/watch?v=<id>, /embed/<id>, /shorts/<id>. */
 function parseYouTubeVideoId(url: URL): string | null {
   const host = url.hostname.replace(/^www\./, "").toLowerCase()
 
   if (host === "youtu.be") {
-    return url.pathname.split("/").filter(Boolean)[0] ?? null
+    return asYouTubeId(url.pathname.split("/").filter(Boolean)[0])
   }
   if (host === "youtube.com" || host === "m.youtube.com" || host === "youtube-nocookie.com") {
     if (url.pathname === "/watch") {
-      return url.searchParams.get("v") || null
+      return asYouTubeId(url.searchParams.get("v"))
     }
     const match = url.pathname.match(/^\/(?:embed|shorts)\/([^/]+)/)
-    return match ? match[1] : null
+    return asYouTubeId(match?.[1])
   }
   return null
 }

@@ -43,6 +43,10 @@ import { communityPostImageSchema, createCommunityPostSchema } from "~/server/we
  * goes through the member-safe `uploadCommunityPostImage` action (rate-limited + byte-sniffed) —
  * NOT the entitlement-gated admin media seam.
  */
+
+/** Title input cap — mirrored into the remaining-characters hint (C1-7). */
+const TITLE_MAX_LENGTH = 100
+
 type CreateCommunityPostDialogProps = {
   styles: { id: string; name: string }[]
   isOpen: boolean
@@ -126,6 +130,7 @@ export const CreateCommunityPostDialog = ({
   }
 
   const imageUrl = form.watch("imageUrl")
+  const title = form.watch("title")
 
   if (!session?.user) {
     return <LoginDialog isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -198,8 +203,17 @@ export const CreateCommunityPostDialog = ({
                 <FormItem>
                   <FormLabel isRequired>{t("title_label")}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t("title_placeholder")} maxLength={100} {...field} />
+                    <Input
+                      placeholder={t("title_placeholder")}
+                      maxLength={TITLE_MAX_LENGTH}
+                      {...field}
+                    />
                   </FormControl>
+                  {/* C1-7: `maxLength` silently swallowed keystrokes at the cap — surface how many
+                      characters remain so it's a visible limit, not a mystery. */}
+                  <Hint>
+                    {t("title_hint", { remaining: TITLE_MAX_LENGTH - (title?.length ?? 0) })}
+                  </Hint>
                   <FormMessage />
                 </FormItem>
               )}
@@ -239,6 +253,9 @@ export const CreateCommunityPostDialog = ({
                       {...field}
                     />
                   </FormControl>
+                  {/* C1-6: only YouTube/Vimeo embed inline (`toVideoEmbedUrl`); everything else
+                      degrades to a link out — set that expectation, like content/image do. */}
+                  <Hint>{t("video_hint")}</Hint>
                   <FormMessage />
                 </FormItem>
               )}

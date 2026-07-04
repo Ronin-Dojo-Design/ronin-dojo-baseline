@@ -39,11 +39,26 @@ const buttonVariants = cva({
       sm: "px-2 py-1 gap-[0.66ch]",
       md: "px-3 py-2 gap-[0.75ch]",
       lg: "px-3.5 py-2.5 gap-[1ch] rounded-lg sm:text-sm/tight",
+      // Circular icon-only button: a square target with a centered ~1.4em glyph and no label
+      // (SESSION_0495 C2-5). The community FAB + Epic B's radial MAB render through this instead of
+      // hand-patching the `lg` pill with `mx-0! my-0! size-6! rounded-full p-4`.
+      icon: "size-11 shrink-0 rounded-full p-0",
     },
     isPending: {
       true: "relative [&>*]:opacity-0! select-none after:absolute after:size-[1.1em] after:rounded-full after:border-[1.5px] after:border-[light-dark(var(--color-foreground),var(--color-background))] after:border-t-transparent after:animate-spin",
     },
   },
+
+  compoundVariants: [
+    {
+      // Icon-only: neutralize the affix's em-based negative margins (they nudge a label-adjacent
+      // glyph) and grow the lone icon so it reads as a proper icon button, not a shrunken pill glyph.
+      size: "icon",
+      className: {
+        affix: "mx-0! my-0! [svg]:size-[1.4em]",
+      },
+    },
+  ],
 
   defaultVariants: {
     hover: true,

@@ -21,6 +21,7 @@ import {
 import { Kbd } from "~/components/common/kbd"
 import { useSearch } from "~/contexts/search-context"
 import { useSession } from "~/lib/auth-client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { searchItems } from "~/server/web/actions/search"
 
 type SearchResultsProps<T> = {
@@ -78,7 +79,13 @@ export const Search = () => {
   const [q, setQuery] = useDebouncedState("", 250)
   const listRef = useRef<HTMLDivElement>(null)
 
-  const isAdmin = session?.user.role === "admin"
+  // C2-8: shared `isAdmin` predicate, not a forked `role === "admin"`.
+  const viewerIsAdmin = isAdmin(session?.user)
+  // DRIFT (logged, not fixed here): `/admin/*` admin CRUD moved to `/app/*` (0441–0448), and the
+  // `[slug]` admin-detail routes this prefixed don't exist under EITHER prefix. Repairing the
+  // search-result href routing needs a target-route decision (out of this pass's scope) — the admin
+  // quick-actions below are repaired (dead `/admin/*/new` → live `/app/*/new`) but this branch is
+  // left as-is so behavior on the public (non-admin-path) branch is unchanged.
   const isAdminPath = pathname.startsWith("/admin")
   const hasQuery = !!q.length
 
@@ -100,24 +107,24 @@ export const Search = () => {
   const hotkeys: HotkeyItem[] = [["mod+K", () => search.open()]]
 
   // Admin command sections & hotkeys
-  if (isAdmin) {
+  if (viewerIsAdmin) {
     commandSections.push({
       name: t("navigation.create"),
       items: [
         {
           label: t("navigation.new_tool"),
           shortcut: { meta: true, children: "1" },
-          onSelect: () => navigateTo("/admin/tools/new"),
+          onSelect: () => navigateTo("/app/tools/new"),
         },
         {
           label: t("navigation.new_category"),
           shortcut: { meta: true, children: "2" },
-          onSelect: () => navigateTo("/admin/categories/new"),
+          onSelect: () => navigateTo("/app/categories/new"),
         },
         {
           label: t("navigation.new_tag"),
           shortcut: { meta: true, children: "3" },
-          onSelect: () => navigateTo("/admin/tags/new"),
+          onSelect: () => navigateTo("/app/tags/new"),
         },
       ],
     })

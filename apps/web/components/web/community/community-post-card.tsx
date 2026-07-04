@@ -4,11 +4,9 @@ import { PlayIcon } from "lucide-react"
 import Image from "next/image"
 import { useFormatter } from "next-intl"
 import { Badge } from "~/components/common/badge"
-import { CommunityPostAdminMenu } from "~/components/web/community/community-post-admin-menu"
+import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
-import { CommunityShareMenu } from "~/components/web/community/community-share-menu"
 import { ListingCard } from "~/components/web/listing/listing-card"
-import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { Author } from "~/components/web/ui/author"
 import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import type { CommunityPostMany } from "~/server/web/community/payloads"
@@ -23,9 +21,15 @@ import type { CommunityPostMany } from "~/server/web/community/payloads"
 type CommunityPostCardProps = {
   post: CommunityPostMany
   isAdmin?: boolean
+  /** Server-batched saved-state (D6). `undefined` → the Save button self-checks on mount. */
+  initialSaved?: boolean
 }
 
-export const CommunityPostCard = ({ post, isAdmin = false }: CommunityPostCardProps) => {
+export const CommunityPostCard = ({
+  post,
+  isAdmin = false,
+  initialSaved,
+}: CommunityPostCardProps) => {
   const format = useFormatter()
 
   // Video-first posts without an uploaded image get the provider thumbnail as card
@@ -87,11 +91,15 @@ export const CommunityPostCard = ({ post, isAdmin = false }: CommunityPostCardPr
             className="min-w-0"
           />
 
-          <div className="flex shrink-0 items-center gap-1">
-            <ListingSaveButton subjectType="COMMUNITY_POST" subjectId={post.id} showLabel={false} />
-            <CommunityShareMenu slug={post.slug} title={post.title} text={post.excerpt} />
-            {isAdmin && <CommunityPostAdminMenu postId={post.id} isHidden={post.isHidden} />}
-          </div>
+          <CommunityPostActions
+            postId={post.id}
+            slug={post.slug}
+            title={post.title}
+            text={post.excerpt}
+            isHidden={post.isHidden}
+            isAdmin={isAdmin}
+            initialSaved={initialSaved}
+          />
         </>
       }
     />
