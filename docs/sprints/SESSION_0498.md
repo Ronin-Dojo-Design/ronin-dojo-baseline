@@ -100,7 +100,7 @@ Live docs checked during planning: Prisma migration precedent (`20260703000000_a
 
 #### Design / motion direction (operator Brian-notes → A2-v1 craft targets)
 
-- **Alternating section palette:** black bg / white text / red underlines → next section red bg / white text / black underlines.
+- **Section palette = a THREE-variant cycle (operator clarification, mid-A0):** three section *types* that alternate/cycle — **black** bg (white text, red underlines), **red** bg (white text, black underlines), and **white** bg (black text, red underlines — accent inferred, operator-editable). The scaffold's section primitive should take a palette variant (`black | red | white`) and the sequence cycles through the three — not a binary black↔red toggle.
 - **Full-width sections, Poppins 800** display type (landing-page parity).
 - **Horizontal text flips to vertical** on scroll; clean full-bleed images with a section overlay.
 - **Quality bars (where "high-level" is judged): scroll smoothness, mobile-first, timing** — maps directly to the v1 bake-off criteria (60fps mobile Safari, deterministic scroll map, zero layout shift).
@@ -182,6 +182,41 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
 - NOT re-authoring the ancestry timeline — layering onto the live one.
 - NOT touching `../ronin-0496`/`0491`/`0492`/`0493`/`0485`/`0477` or any live worktree/branch.
 - Standing alternative if operator repoints: **FI-001** Brian Truelson first-tester onboarding (P0, disjoint scripts lane).
+
+## Pre-flight: Schema — LineageStoryScene (A0)
+
+### 1. Petey invocation
+
+- [x] Petey plan exists: `petey-plan-0498` §A0 + SESSION_0498_TASK_01 (this file). 1 new model (≤3 → no extra Petey pass needed).
+
+### 2. Design doc check
+
+- Design doc consulted: `petey-plan-0498` §A0 schema sketch (ratified grill fork #1 → key = `passportId`).
+- Models match design doc: yes — field-for-field; relation block placed last per neighboring-model convention.
+
+### 3. Existing schema scan
+
+- Current model count: 128.
+- Related existing models: `Passport` (identity SoT, ADR 0025), `LineageNode` (walk source).
+- Back-relations needed: `Passport.storyScene LineageStoryScene?` (1:0..1 satellite).
+- **Schema spot-check (from `schema.prisma` directly):** `Passport.id String @id @default(cuid(2))`; satellite precedent `LineageNode.passportId String @unique` + `@relation(..., onDelete: Cascade)` (same shape on `DirectoryProfile.passportId`). `LineageNode.slug String? @unique` — founder lookup key for the seed. No enum touched.
+
+### 4. Runbook consulted
+
+- [x] `docs/runbooks/database/schema-migration.md` read
+- [x] `docs/runbooks/database/prisma-workflow.md` (CLI URL comes from `prisma.config.ts`, not a schema `url` line)
+- Migration strategy: **hand-authored** SQL via `migrate diff` + shadow-replay validation + `migrate deploy` (additive). `migrate dev` BANNED — worktrees share one local DB ([[parallel-session-shared-db-migrate-dev-reset-trap]]); the runbook's Option B guidance is superseded for parallel-worktree work.
+
+### 5. Data flow reference
+
+- Flow: lineage public read-model (`getLineageAncestryForPassport` PUBLIC-only up-walk) — scenes are an additive batch projection; visibility gates untouched.
+- Lifecycle stage: public `/directory/[slug]` profile view (logged-out must render).
+
+### 6. FAILED_STEPS check
+
+- Prior failures: FS-0006/FS-0021 (schema work without plan / runbook steps skipped), FS-0008 (spot-check skipped).
+- Mitigation acknowledged: yes — plan ratified pre-build; spot-check pasted above; hand-author lane followed step-for-step with shadow-replay proof.
+- DB verification: founders located in local `ronindojo_prodsnap` before seeding — nodes `carlos-gracie-sr`, `carlos-gracie-jr`, `rorion-gracie`, `rigan-machado`, all PUBLIC with Passports.
 
 ## Task log
 
