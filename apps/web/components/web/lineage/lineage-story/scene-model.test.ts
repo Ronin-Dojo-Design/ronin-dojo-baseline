@@ -19,6 +19,7 @@ const storyView = (overrides: Partial<LineageStorySceneView> = {}): LineageStory
   quote: "You either win or you learn.",
   storyBio: null,
   heroImageUrl: null,
+  enabled: true,
   ...overrides,
 })
 

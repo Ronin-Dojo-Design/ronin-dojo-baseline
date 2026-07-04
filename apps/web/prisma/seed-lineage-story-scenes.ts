@@ -15,7 +15,12 @@
  * (grill fork #4 — sourced; editable via the A1 storyboard). The Rorion quote is
  * marked for source-verify in its attribution note.
  *
- * Usage: cd apps/web && bun prisma/seed-lineage-story-scenes.ts
+ * Usage: cd apps/web && bun prisma/seed-lineage-story-scenes.ts [--disabled]
+ *
+ * `--disabled` (SESSION_0498 TASK_04 — prod bring-up): create the scenes with
+ * `enabled: false`, so they are invisible on public profiles until previewed on
+ * `/app/beta/lineage-journey` and flipped live per-scene via the storyboard.
+ * Create-only semantics are unchanged — the flag never touches existing rows.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../.generated/prisma/client"
@@ -25,6 +30,9 @@ const adapter = new PrismaPg({
     process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
 })
 const prisma = new PrismaClient({ adapter })
+
+/** --disabled → seed scenes dark (preview-first prod bring-up). */
+const seedDisabled = process.argv.includes("--disabled")
 
 const founderScenes = [
   {
@@ -103,13 +111,13 @@ async function main() {
         quote: founder.quote,
         quoteAttribution: founder.quoteAttribution,
         sceneOrder: founder.sceneOrder,
-        enabled: true,
+        enabled: !seedDisabled,
       },
     })
 
     created++
     console.log(
-      `✅ Scene ${founder.sceneOrder}: ${node.passport.displayName ?? founder.displayName} (scene ${scene.id}, passport ${node.passportId})`,
+      `✅ Scene ${founder.sceneOrder}: ${node.passport.displayName ?? founder.displayName} (scene ${scene.id}, passport ${node.passportId}${seedDisabled ? ", DISABLED" : ""})`,
     )
   }
 

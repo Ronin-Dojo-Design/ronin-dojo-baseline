@@ -63,6 +63,14 @@ export type LineageStorySceneView = {
   quote: string | null
   storyBio: string | null
   heroImageUrl: string | null
+  /**
+   * Scene kill-switch state — consumed by the `/app/beta/lineage-journey`
+   * preview's "disabled" marker chip (SESSION_0498 TASK_04). On the PUBLIC read
+   * path this is `true` by construction (`ancestryStorySceneWhere` defaults to
+   * enabled-only); only the beta preview's `includeDisabledScenes` read can
+   * surface `false`.
+   */
+  enabled: boolean
 }
 
 export type LineageAncestryEntry = {
@@ -94,20 +102,40 @@ type AncestryWalkStep = {
 
 /**
  * Story-scene batch select/where — exported so the unit tests can pin the query
- * boundary invariants (enabled-only; keyed strictly by the PUBLIC-filtered
- * chain's passportIds — never a visibility widener).
+ * boundary invariants (enabled-only BY DEFAULT; keyed strictly by the
+ * PUBLIC-filtered chain's passportIds — never a visibility widener).
  */
 export const ancestryStorySceneSelect = {
   passportId: true,
   quote: true,
   storyBio: true,
   heroImageUrl: true,
+  enabled: true,
 } satisfies Prisma.LineageStorySceneSelect
 
-export const ancestryStorySceneWhere = (passportIds: string[]) =>
+/**
+ * Read options for the ancestry walk (SESSION_0498 TASK_04).
+ *
+ * `includeDisabledScenes` relaxes ONLY the scene batch's `enabled: true` filter
+ * — node visibility gates are untouched. It exists for the admin-gated
+ * `/app/beta/lineage-journey` preview; the PUBLIC caller (`AncestrySection` via
+ * `loadDirectoryProfile`) must NEVER pass it. `getLineageAncestryForPassport`
+ * is `"use cache"`, so the flag is part of the cache key — the preview read and
+ * the public read are distinct cache entries by construction.
+ */
+export type LineageAncestryOptions = {
+  includeDisabledScenes?: boolean
+}
+
+export const ancestryStorySceneWhere = (
+  passportIds: string[],
+  { includeDisabledScenes = false }: LineageAncestryOptions = {},
+) =>
   ({
     passportId: { in: passportIds },
-    enabled: true,
+    // The public kill-switch gate. The beta preview is the ONLY reader allowed
+    // to drop it (visibility stays PUBLIC-only either way).
+    ...(includeDisabledScenes ? {} : { enabled: true }),
   }) satisfies Prisma.LineageStorySceneWhereInput
 
 /** One fetched scene row — the view fields plus the passportId map key. */
@@ -168,6 +196,9 @@ export const assembleAncestryEntries = (
             quote: scene.quote,
             storyBio: scene.storyBio,
             heroImageUrl: scene.heroImageUrl,
+            // Constant true on the public path (where-gated); false only via the
+            // beta preview's includeDisabledScenes read (its "disabled" marker).
+            enabled: scene.enabled,
           }
         : undefined,
     })
@@ -193,9 +224,15 @@ export const assembleAncestryEntries = (
  * chain. Depth is hard-capped at {@link ANCESTRY_MAX_DEPTH}.
  *
  * Returns `[]` when the Passport has no PUBLIC lineage node or no PUBLIC up-chain.
+ *
+ * `options` (see {@link LineageAncestryOptions}): `includeDisabledScenes` is the
+ * beta-preview read — `"use cache"` keys on the arguments, so the flagged read
+ * caches separately from the public one; storyboard mutations revalidate the
+ * shared `"lineage"` tag, flushing both.
  */
 export const getLineageAncestryForPassport = async (
   passportId: string,
+  options?: LineageAncestryOptions,
 ): Promise<LineageAncestryEntry[]> => {
   "use cache"
 
@@ -248,14 +285,18 @@ export const getLineageAncestryForPassport = async (
     select: lineageNodeRowPayload,
   })
 
-  // ONE batch fetch for the chain's enabled story scenes (Epic A, SESSION_0498) —
-  // keyed by the passportIds the PUBLIC-filtered batch above returned, so a hidden
-  // node can never leak its scene. The one real budget addition: L+3 → L+4.
+  // ONE batch fetch for the chain's story scenes (Epic A, SESSION_0498) — keyed
+  // by the passportIds the PUBLIC-filtered batch above returned, so a hidden
+  // node can never leak its scene. Enabled-only by default; the beta preview's
+  // includeDisabledScenes relaxes ONLY that filter. Budget: L+3 → L+4.
   const scenes =
     nodes.length === 0
       ? []
       : await db.lineageStoryScene.findMany({
-          where: ancestryStorySceneWhere(nodes.map(node => node.passportId)),
+          where: ancestryStorySceneWhere(
+            nodes.map(node => node.passportId),
+            options,
+          ),
           select: ancestryStorySceneSelect,
         })
 

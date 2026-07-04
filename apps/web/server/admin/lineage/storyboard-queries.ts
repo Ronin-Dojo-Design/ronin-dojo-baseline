@@ -64,6 +64,12 @@ export type StorySceneBoardCard = {
   posterUrl: string | null
   sceneOrder: number | null
   enabled: boolean
+  /**
+   * Public `/directory/[slug]` slug for this person — the GA-view comparison
+   * link on `/app/beta/lineage-journey` (SESSION_0498 TASK_04). Null when the
+   * person has no directory profile.
+   */
+  directorySlug: string | null
 }
 
 /**
@@ -90,6 +96,7 @@ export async function findStorySceneBoard(): Promise<StorySceneBoardCard[]> {
           displayName: true,
           avatarUrl: true,
           user: { select: { name: true, image: true } },
+          directoryProfile: { select: { slug: true } },
         },
       },
     },
@@ -111,5 +118,6 @@ export async function findStorySceneBoard(): Promise<StorySceneBoardCard[]> {
     posterUrl: scene.posterUrl,
     sceneOrder: scene.sceneOrder,
     enabled: scene.enabled,
+    directorySlug: scene.passport.directoryProfile?.slug ?? null,
   }))
 }

@@ -2,6 +2,7 @@
 import { describe, expect, it } from "bun:test"
 import type { SessionUser } from "~/server/orpc/context"
 import { can, matchesPattern } from "~/server/orpc/permissions"
+import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 
 const asUser = (role: string, id = "u1") => {
   return { id, role } as unknown as SessionUser
@@ -106,5 +107,25 @@ describe("can — undefined / null user", () => {
   it("treats undefined the same as null (guest)", () => {
     expect(can(undefined, "health.read")).toBe(true)
     expect(can(undefined, "claim.review")).toBe(false)
+  })
+})
+
+describe("beta.view — the /app/beta gate key (SESSION_0498 TASK_04)", () => {
+  it("registers the beta area in the APP_AREA_PERMISSIONS vocabulary as a .view key", () => {
+    // The layout gate (`requirePermission(APP_AREA_PERMISSIONS.beta)`) and this
+    // pin share ONE string — renaming the key without updating the gate fails here.
+    expect(APP_AREA_PERMISSIONS.beta).toBe("beta.view")
+  })
+
+  it("admin reaches the beta area via the * wildcard — zero grant plumbing", () => {
+    expect(can(admin, APP_AREA_PERMISSIONS.beta)).toBe(true)
+  })
+
+  it("DENIES beta.view to every non-admin role (adversarial — FI-019 overrides are the only future path in)", () => {
+    expect(can(member, APP_AREA_PERMISSIONS.beta)).toBe(false)
+    expect(can(guest, APP_AREA_PERMISSIONS.beta)).toBe(false)
+    expect(can(undefined, APP_AREA_PERMISSIONS.beta)).toBe(false)
+    expect(can(asUser("tournament_director"), APP_AREA_PERMISSIONS.beta)).toBe(false)
+    expect(can(asUser("nonexistent-role"), APP_AREA_PERMISSIONS.beta)).toBe(false)
   })
 })

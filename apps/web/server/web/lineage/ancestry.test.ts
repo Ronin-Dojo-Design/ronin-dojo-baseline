@@ -272,6 +272,7 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
     quote: "A founder quote.",
     storyBio: null,
     heroImageUrl: null,
+    enabled: true,
     ...overrides,
   })
 
@@ -301,13 +302,37 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
 
     // Founder-first order: [founder, member]. Exact shape via toEqual — the view is
     // deliberately minimal (P3-1: a PUBLIC RSC payload projects only what renders;
-    // provenance/dormant/storyboard fields must NOT appear here).
+    // provenance/dormant/storyboard fields must NOT appear here). `enabled` joined
+    // in SESSION_0498 TASK_04 — consumed by the beta preview's disabled marker.
     expect(entries[0].story).toEqual({
       quote: "Jiu-Jitsu is not about fighting; it's about solving problems.",
       storyBio: null,
       heroImageUrl: "https://img.test/rigan.webp",
+      enabled: true,
     })
     expect(entries[1].story).toBeUndefined()
+  })
+
+  it("projects a DISABLED scene row with enabled: false — the beta preview's marker signal", () => {
+    // A disabled row only ever reaches the map via the includeDisabledScenes
+    // read (the where defaults to enabled-only); assembly is mode-agnostic and
+    // must project the flag faithfully so the preview can mark it.
+    const nodes = new Map([
+      ["member", makeNode({ id: "member", displayName: "Member" })],
+      ["founder", makeNode({ id: "founder", displayName: "Founder" })],
+    ])
+    const scenes = new Map([["founder-passport", makeScene("founder-passport", { enabled: false })]])
+
+    const entries = assembleAncestryEntries(
+      [
+        { nodeId: "member", narrative: null },
+        { nodeId: "founder", narrative: null },
+      ],
+      nodes,
+      scenes,
+    )
+
+    expect(entries[0].story?.enabled).toBe(false)
   })
 
   it("omitted scene map (2-arg call) leaves every entry's story undefined — back-compat", () => {
@@ -386,5 +411,27 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
     // Strict in-list on the PUBLIC-filtered chain's passportIds — never a widener.
     expect(where.passportId).toEqual({ in: ["p-1", "p-2"] })
     expect(Object.keys(where).sort()).toEqual(["enabled", "passportId"])
+  })
+
+  it("PUBLIC-caller invariant: the no-options call and explicit flag-off are the SAME enabled-only shape", () => {
+    // The public read path (AncestrySection → getLineageAncestryForPassport with
+    // no options) MUST stay enabled-gated forever — the beta preview flag
+    // (SESSION_0498 TASK_04) may never shift this default.
+    const defaultWhere = ancestryStorySceneWhere(["p-1", "p-2"])
+    const explicitOff = ancestryStorySceneWhere(["p-1", "p-2"], { includeDisabledScenes: false })
+    expect(defaultWhere).toEqual({ passportId: { in: ["p-1", "p-2"] }, enabled: true })
+    expect(explicitOff).toEqual(defaultWhere)
+  })
+
+  it("includeDisabledScenes relaxes ONLY the enabled filter — the passportId key is untouched", () => {
+    const where = ancestryStorySceneWhere(["p-1", "p-2"], { includeDisabledScenes: true })
+    // The kill-switch gate drops entirely (no `enabled: false` flip — BOTH
+    // states render in preview)…
+    expect(where.enabled).toBeUndefined()
+    // …and nothing else about the boundary moves: still a strict in-list on the
+    // PUBLIC-filtered chain's passportIds, no extra keys (never a visibility
+    // widener — node-level PUBLIC gates live upstream of this where).
+    expect(where.passportId).toEqual({ in: ["p-1", "p-2"] })
+    expect(Object.keys(where)).toEqual(["passportId"])
   })
 })
