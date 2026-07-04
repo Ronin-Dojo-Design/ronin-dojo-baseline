@@ -518,14 +518,17 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   resolves with it.
 - **Status: OPEN** (P3 — deferred until post volume warrants).
 
-### D-038 — Prodsnap re-imports seed-drifted BrandSettings rows (SESSION_0496)
+### D-038 — Seed-drifted local BrandSettings rows (SESSION_0496) — RESOLVED, mechanism corrected
 
-- **What:** prod `BrandSettings.accentColor` for BBL (+ WEKAF) still carries `"51 100% 50%"` (the
+- **What (as found):** local `BrandSettings.accentColor` for BBL (+ WEKAF) carried `"51 100% 50%"` (the
   SESSION_0357 wrong-tear-sheet gold) while the checked-in `scripts/seed-brand-settings.ts` ratifies
-  `accentColor: null` — so **every prodsnap refresh re-imports the drift** into local. SESSION_0496 hit it
-  as a ~1.4:1 selected-row contrast bug that looked like CSS; the root cause was the data layer.
-- **Why it matters:** data-layer fixes leave no diff artifact — until the prod row conforms to the seed,
-  local silently re-drifts on every snapshot and the "fix" un-happens.
-- **Fix shape:** run the ratified seed against prod (TD-003) — kills the drift at source. Local reseed
-  already applied (SESSION_0496).
-- **Status: OPEN** (P2 — resolves with TD-003 at ship).
+  `accentColor: null`. SESSION_0496 hit it as a ~1.4:1 selected-row contrast bug that looked like CSS; the
+  root cause was the data layer.
+- **Mechanism correction (verified at close):** the hypothesized "prodsnap re-imports the drift" was WRONG —
+  the pre-seed prod read showed `BrandSettings` **empty** (prod ran on the clean `styles.css` fallback). The
+  stale rows were local-only pre-ratification leftovers that no snapshot refresh had replaced.
+- **Resolution:** local reseeded mid-session; prod seeded at close on operator GO (TD-003 ✅) — both now
+  hold the ratified rows (red primary, null accents), post-run reads verified. No re-drift vector remains:
+  prod is the SoT prodsnap copies, and prod now matches the seed.
+- **Lesson:** a two-sources-of-truth bug needs BOTH sources read before the mechanism is asserted.
+- **Status: RESOLVED** (SESSION_0496).

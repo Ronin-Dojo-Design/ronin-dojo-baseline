@@ -364,9 +364,11 @@ plan time. Model experiment: Opus planned (bow-in grounding), Fable built + revi
 
 ## Open decisions / blockers
 
-- **Push + prod seed: operator GO given in-session** — push executed at close; prod BrandSettings seed
-  (`scripts/seed-brand-settings.ts` vs prod env) run at close per TD-003 (kills D-038 at source). Results in
-  the bow-out chat.
+- **Push + prod seed: operator GO given in-session, both EXECUTED at close** — push `67b246e2` → main;
+  prod BrandSettings seeded + post-run read verified (BBL + WEKAF ratified rows, null accents). **Factual
+  correction found at execution:** the pre-seed prod read showed `BrandSettings` EMPTY — prod never carried
+  the gold (it ran on the clean styles.css fallback); the stale rows were local-only pre-ratification
+  leftovers. TD-003 ✅ done · D-038 RESOLVED with corrected mechanism (both ledgers amended).
 - **Bake-off decision pending (operator):** V1 vs V2 — compare at `/lineage/rigan-machado-lineage?cards=v2`;
   loser deleted, V2-promotion adds its E2E smoke (FI-018 scopes this).
 - Deferred (ledgered, none blocking): FI-017 finalize normalization + country carry-over · WL-P3-24/25/26

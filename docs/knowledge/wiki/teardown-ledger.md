@@ -62,10 +62,13 @@ decision changes. Route here from the closing-ritual finding router (closing.md 
 
 ### TD-003 — Prod BrandSettings accent drift — ratified seed re-run (ship-gate)
 
-- **Status:** open (ship-gate item — operator authorized SESSION_0496; execute with the push)
-- **What:** prod `BrandSettings` BBL (+ WEKAF) rows carry stale `accentColor "51 100% 50%"` (gold) vs the
-  checked-in seed's ratified null → dark-theme selected-row contrast ~1.4:1 on every command/menu accent
-  surface (SESSION_0496 root-caused; local reseeded same session).
-- **How to action:** run `scripts/seed-brand-settings.ts` against the prod env (gitignored `.env.prod`
-  overlay per the env-prod runbook — the script needs `import "dotenv/config"` FIRST because `--env-file`
-  REPLACES env), then smoke a combobox selected row on prod. Closes D-038 at source.
+- **Status:** ✅ **done (SESSION_0496, operator-authorized)** — with a factual correction: the pre-run prod
+  read showed `BrandSettings` was **EMPTY** (0 rows), not stale-gold. Prod had been serving the clean
+  `styles.css` fallback all along; the gold rows were **local-only pre-ratification leftovers** (the
+  "prod carries the same stale row" pass-2 claim was an unverified local⇒prod inference). The seed was run
+  anyway (`bun --env-file=.env.prod scripts/seed-brand-settings.ts`): prod now has BBL + WEKAF rows with
+  ratified values (red primary, `accentColor: null`) — verified by post-run read. This conforms prod data to
+  the checked-in law, gives the admin brand-edit surface real rows, and removes the local-vs-prod ambiguity
+  that produced the false inference.
+- **Original claim (superseded):** prod rows carry stale gold `"51 100% 50%"` → dark-theme ~1.4:1 contrast.
+- **Lesson:** verify prod state by a read before asserting it — and data-layer claims need data-layer proof.
