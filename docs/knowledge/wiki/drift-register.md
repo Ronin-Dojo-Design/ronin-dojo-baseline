@@ -532,3 +532,16 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   prod is the SoT prodsnap copies, and prod now matches the seed.
 - **Lesson:** a two-sources-of-truth bug needs BOTH sources read before the mechanism is asserted.
 - **Status: RESOLVED** (SESSION_0496).
+
+### D-039 — `DrawerFooter.hasClaim` mirrors `ClaimCtaButton`'s render conditions (SESSION_0497)
+
+- **What:** in `apps/web/components/web/lineage/lineage-profile-drawer/index.tsx`, `DrawerFooter` computes a
+  `hasClaim` boolean (`CLAIMED_MINE || PENDING_MINE || (UNCLAIMED && isClaimable && isTreeClaimable && treeSlug)`)
+  that hand-mirrors the three internal `if` branches of `ClaimCtaButton` — two sources of truth for "does the
+  claim CTA render."
+- **Risk:** add a 6th claim state or loosen a condition in `ClaimCtaButton` and forget `hasClaim`, and you get
+  either an empty bordered footer (border + padding, no button) or a suppressed CTA — a silent visual bug CI
+  won't catch. Correct today (both live in one file/screen), so drift is currently visible.
+- **Fix direction (Giddy):** make `ClaimCtaButton` the single source — render it and let it return `null`, then
+  decide the container on "did either child produce output." Low severity.
+- **Status: OPEN** (follow-up; bundle into any lineage-drawer touch).
