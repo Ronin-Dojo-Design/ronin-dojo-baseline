@@ -1,7 +1,7 @@
 "use client"
 
 import { useReducedMotion } from "@mantine/hooks"
-import { ClockIcon, UserRoundIcon, UserRoundPlusIcon } from "lucide-react"
+import { ClockIcon, UserRoundPlusIcon } from "lucide-react"
 import { LayoutGroup } from "motion/react"
 import dynamic from "next/dynamic"
 import { Button } from "~/components/common/button"
@@ -341,14 +341,16 @@ function DrawerFooter({
   return (
     <div className="border-t p-4 flex flex-col gap-2">
       {profileSlug ? (
+        // `ghost` (not `secondary`) so a claim/manage CTA below stays the solid action —
+        // two equal-weight buttons read as co-primary (Desi P1). Copy = "View profile"
+        // for parity with every other person surface (m-card / directory / view-A menu).
         <Button
-          variant="secondary"
+          variant="ghost"
           size="md"
           className="w-full"
-          prefix={<UserRoundIcon />}
           render={<Link href={`/directory/${profileSlug}`} />}
         >
-          View full profile →
+          View profile →
         </Button>
       ) : null}
       {hasClaim ? (
