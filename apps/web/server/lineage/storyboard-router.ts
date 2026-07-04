@@ -65,6 +65,8 @@ async function requirePassport(passportId: string): Promise<void> {
   }
 }
 
+const SCENE_EXISTS_MESSAGE = "This person already has a scene — edit their existing card instead."
+
 /** CONFLICT when the person already has a scene (`passportId @unique` — 1:1). */
 async function requireNoExistingScene(passportId: string): Promise<void> {
   const existing = await db.lineageStoryScene.findUnique({
@@ -72,9 +74,28 @@ async function requireNoExistingScene(passportId: string): Promise<void> {
     select: { id: true },
   })
   if (existing) {
-    throw new ORPCError("CONFLICT", {
-      message: "This person already has a scene — edit their existing card instead.",
-    })
+    throw new ORPCError("CONFLICT", { message: SCENE_EXISTS_MESSAGE })
+  }
+}
+
+/**
+ * Create the scene row, converting a `passportId @unique` race into the same
+ * CONFLICT `requireNoExistingScene` throws. The check-then-create pair is TOCTOU
+ * (Giddy pass-2 P2-4): two concurrent creates for one person both pass the check,
+ * and the loser would surface Prisma's raw P2002 as INTERNAL_SERVER_ERROR. The
+ * unique index is the real invariant — the check is just the friendly fast path.
+ * (P2002 detection = the structural `.code` idiom, `stripe-webhook.ts:102`.)
+ */
+async function createSceneRow(
+  data: Parameters<typeof db.lineageStoryScene.create>[0]["data"],
+): Promise<{ id: string; passportId: string }> {
+  try {
+    return await db.lineageStoryScene.create({ data, select: { id: true, passportId: true } })
+  } catch (error) {
+    if ((error as { code?: string }).code === "P2002") {
+      throw new ORPCError("CONFLICT", { message: SCENE_EXISTS_MESSAGE })
+    }
+    throw error
   }
 }
 
@@ -103,13 +124,10 @@ const create = storyboardProcedure.input(createSceneInput).handler(async ({ inpu
   await requirePassport(input.passportId)
   await requireNoExistingScene(input.passportId)
 
-  const scene = await db.lineageStoryScene.create({
-    data: {
-      passportId: input.passportId,
-      ...scenePatch(input),
-      enabled: input.enabled ?? true,
-    },
-    select: { id: true, passportId: true },
+  const scene = await createSceneRow({
+    passportId: input.passportId,
+    ...scenePatch(input),
+    enabled: input.enabled ?? true,
   })
 
   revalidateScene(context, scene.passportId)
@@ -180,14 +198,11 @@ const duplicate = storyboardProcedure
     await requirePassport(input.targetPassportId)
     await requireNoExistingScene(input.targetPassportId)
 
-    const scene = await db.lineageStoryScene.create({
-      data: {
-        passportId: input.targetPassportId,
-        ...source,
-        sceneOrder: null,
-        enabled: false,
-      },
-      select: { id: true, passportId: true },
+    const scene = await createSceneRow({
+      passportId: input.targetPassportId,
+      ...source,
+      sceneOrder: null,
+      enabled: false,
     })
 
     revalidateScene(context, scene.passportId)

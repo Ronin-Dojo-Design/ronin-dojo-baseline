@@ -25,8 +25,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 import { createRouterClient, ORPCError } from "@orpc/server"
 
-// Recording seams: `server/orpc/revalidate.ts` maps `tags` → `updateTag` and
-// `paths` → `revalidatePath`, so capturing these proves the mutation's cache contract.
+// Recording seams: `server/orpc/revalidate.ts` maps `tags` → `revalidateTag(tag, { expire: 0 })`
+// (NOT `updateTag` — Server-Actions-only, E872 in the `/api/rpc` Route Handler; see the seam's
+// docblock) and `paths` → `revalidatePath`. Capturing these proves the mutation's cache contract.
 const recordedTags: string[] = []
 const recordedPaths: string[] = []
 

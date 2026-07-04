@@ -13,6 +13,11 @@ import { db } from "~/services/db"
  * needs; the board projects its own full field set here instead.
  */
 
+/**
+ * Picker option cap — silently truncates beyond this (no server-side search yet).
+ * Fine for today's roster (~hundreds); when the lineage outgrows it, the picker
+ * needs a search input, not a bigger cap (Giddy pass-2 P3-5).
+ */
 const PERSON_CAP = 300
 
 export type ScenePersonOption = { id: string; name: string }

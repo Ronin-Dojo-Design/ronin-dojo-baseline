@@ -6,9 +6,11 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Wrapper } from "~/components/common/wrapper"
 import { LineageStorySequence } from "~/components/web/lineage/lineage-story/lineage-story-sequence"
+import { requirePermission } from "~/lib/auth-guard"
 import { bblHeadingFont } from "~/lib/fonts"
 import { cx } from "~/lib/utils"
 import { findStorySceneBoard } from "~/server/admin/lineage/storyboard-queries"
+import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
 
 /**
@@ -27,6 +29,12 @@ import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
  */
 
 export default async function ({ searchParams }: PageProps<"/app/beta/lineage-journey">) {
+  // Defense-in-depth (Giddy addendum P2-1): this page fetches privileged data
+  // (unpublished scenes via `includeDisabledScenes`), so the gate lives HERE too,
+  // not only in the beta layout — leaf-segment flight requests don't reliably
+  // re-render parent layouts (the sibling `storyboard/page.tsx:41` idiom).
+  await requirePermission(APP_AREA_PERMISSIONS.beta)
+
   const { passport } = await searchParams
   const passportId = typeof passport === "string" ? passport : undefined
 
