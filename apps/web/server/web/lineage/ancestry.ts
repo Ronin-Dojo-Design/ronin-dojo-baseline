@@ -102,11 +102,13 @@ type AncestryWalkStep = {
 }
 
 /**
- * Story-scene batch select/where — exported so the unit tests can pin the query
- * boundary invariants (enabled-only BY DEFAULT; keyed strictly by the
- * PUBLIC-filtered chain's passportIds — never a visibility widener).
+ * Story-scene batch select — the unit tests pin the query boundary invariants
+ * (enabled-only BY DEFAULT; keyed strictly by the PUBLIC-filtered chain's
+ * passportIds — never a visibility widener) via the exported
+ * `ancestryStorySceneWhere` + `AncestryStorySceneRow`; the select itself is
+ * consumed in-file only (`typeof` needs no export).
  */
-export const ancestryStorySceneSelect = {
+const ancestryStorySceneSelect = {
   passportId: true,
   quote: true,
   storyBio: true,

@@ -4,12 +4,12 @@ import { motion, useScroll, useTransform } from "motion/react"
 import { useRef, type ReactNode } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
-import { BeltSwatch } from "~/components/common/belt-swatch"
 import { H5 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
 import { memberInitials } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
 import type { LineageAncestryEntry } from "~/server/web/lineage/ancestry"
+import { AncestryAvatar, RankByline } from "../lineage-ancestry-entry"
 import { type ScenePalette, scenePaletteTokens } from "./scene-model"
 
 /**
@@ -122,29 +122,6 @@ function SceneShell({
     >
       {children}
     </section>
-  )
-}
-
-/** Shared belt/discipline rows — the timeline-node vocabulary on a palette bg. */
-function SceneRankRows({ entry, mutedClass }: { entry: LineageAncestryEntry; mutedClass: string }) {
-  return (
-    <>
-      {entry.rank && (
-        <Stack size="sm" direction="row" wrap={false} className="items-center">
-          <BeltSwatch
-            variant="flat-bar"
-            colorHex={entry.rank.colorHex}
-            secondaryColorHex={entry.rank.secondaryColorHex}
-            degree={entry.rank.degree}
-          />
-          <span className={cx("truncate text-xs", mutedClass)}>{entry.rank.name}</span>
-        </Stack>
-      )}
-
-      {entry.disciplineLabel && (
-        <span className={cx("truncate text-xs", mutedClass)}>{entry.disciplineLabel}</span>
-      )}
-    </>
   )
 }
 
@@ -349,7 +326,7 @@ export function LineageStoryScene({
                   This member
                 </Badge>
               )}
-              <SceneRankRows entry={entry} mutedClass={tokens.muted} />
+              <RankByline entry={entry} mutedClass={tokens.muted} />
             </Stack>
           )}
 
@@ -389,10 +366,10 @@ export function LineageStoryNodeScene({
         {entry.narrative && <p className={cx("text-sm italic", tokens.muted)}>{entry.narrative}</p>}
 
         <Stack size="md" direction="row" wrap={false} className="items-center">
-          <Avatar className={cx("size-14", isOwner && cx("ring-2", tokens.ownerRing))}>
-            {entry.avatarUrl && <AvatarImage src={entry.avatarUrl} alt={entry.displayName} />}
-            <AvatarFallback>{memberInitials(entry.displayName)}</AvatarFallback>
-          </Avatar>
+          <AncestryAvatar
+            entry={entry}
+            className={cx("size-14", isOwner && cx("ring-2", tokens.ownerRing))}
+          />
 
           <Stack size="xs" direction="column" wrap={false} className="min-w-0">
             <Stack size="sm" direction="row" wrap className="items-center">
@@ -413,7 +390,7 @@ export function LineageStoryNodeScene({
               )}
             </Stack>
 
-            <SceneRankRows entry={entry} mutedClass={tokens.muted} />
+            <RankByline entry={entry} mutedClass={tokens.muted} />
           </Stack>
         </Stack>
       </div>

@@ -6,7 +6,7 @@
 export const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 export const MAX_BYTES = 10 * 1024 * 1024
 
-export function formatBytes(n: number) {
+function formatBytes(n: number) {
   if (n === 0) return "0 B"
   const k = 1024
   const sizes = ["B", "KB", "MB"]

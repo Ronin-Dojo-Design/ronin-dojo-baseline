@@ -7,6 +7,7 @@ import { cx } from "~/lib/utils"
 import type { uploadAndPromotePassportAvatar } from "~/server/web/actions/passport-avatar"
 import type { uploadJoinLegacyAvatar } from "~/server/web/lead/public-actions"
 import { BeltPreview } from "./belt-preview"
+import { useClaimEscape } from "./use-claim-escape"
 import { usePhotoUpload } from "./use-photo-upload"
 import type { UploaderPhase } from "./types"
 import { ALLOWED_TYPES, validateImageFile } from "./validation"
@@ -105,6 +106,12 @@ export function AvatarUploader({
     setPhase("idle")
     if (fileInputRef.current) fileInputRef.current.value = ""
   }, [rawPreviewUrl])
+
+  // Escape claim across the WHOLE crop phase — the ProfileEnhancementWizard
+  // hosts this uploader inside a Base UI Dialog, so the lazy-chunk Suspense
+  // fallback window would otherwise let Escape dismiss the wizard and its
+  // dirty fields (SESSION_0499 fallow-fix P2; see use-claim-escape.ts).
+  useClaimEscape(phase === "crop", handleCropCancel)
 
   const handleUpload = useCallback(() => {
     if (!croppedFile) return

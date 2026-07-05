@@ -1,6 +1,6 @@
 "use client"
 
-import { type CSSProperties, useCallback, useEffect, useState } from "react"
+import { type CSSProperties, useCallback, useState } from "react"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import {
@@ -17,10 +17,12 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { ButtonGroup } from "~/components/common/button-group"
 import { SHAPE_MASK_CLIP_PATH } from "~/lib/shape-mask"
 import { CROP_PRESETS, type CropPresetKey } from "./crop-presets"
+import { useClaimEscape } from "./use-claim-escape"
 
 const PRESET_ICONS: Record<CropPresetKey, typeof CircleIcon> = {
   circle: CircleIcon,
@@ -110,9 +112,9 @@ type ImageCropperProps = {
  *
  * Escape ownership (SESSION_0499 Desi P1): because this is a raw overlay, a
  * host `Dialog` under it still owns the Escape key — mid-crop Escape closed
- * the HOST dialog and discarded its unsaved fields. The window keydown CAPTURE
- * listener below claims Escape while the cropper is mounted (cancel the crop,
- * keep the host dialog + its dirty state alive). The long-term fix is
+ * the HOST dialog and discarded its unsaved fields. `useClaimEscape` claims
+ * Escape while the cropper is mounted (cancel the crop, keep the host dialog
+ * + its dirty state alive). The long-term fix is
  * rebuilding this overlay ON `~/components/common/dialog` so Base UI's
  * dismissal stack owns key handling natively — deliberately NOT done in the
  * Desi fix pass (scoped change only).
@@ -155,24 +157,21 @@ export default function ImageCropper({
     try {
       const file = await createCroppedImage(imageSrc, croppedArea, maxOutputPx)
       onCropComplete(file)
+    } catch {
+      // Canvas/decoder failures (image load, 2D context, toBlob) — surface them
+      // instead of a silent rejection (SESSION_0499 fallow-fix P3): the user is
+      // left mid-crop and can retry or cancel.
+      toast.error("Could not crop the image.")
     } finally {
       setIsProcessing(false)
     }
   }, [imageSrc, croppedArea, onCropComplete, maxOutputPx])
 
-  // Escape closes the CROPPER, not the host dialog (see the component docblock).
-  // Capture phase + stopImmediatePropagation beats Base UI Dialog's document-
-  // level dismiss listener, so the host dialog and its dirty fields survive.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      onCancel()
-    }
-    window.addEventListener("keydown", onKeyDown, { capture: true })
-    return () => window.removeEventListener("keydown", onKeyDown, { capture: true })
-  }, [onCancel])
+  // Escape closes the CROPPER, not the host dialog (see the component docblock
+  // and `use-claim-escape.ts`). The host uploader mounts the same hook for the
+  // lazy-chunk fallback window; this mount keeps a directly-used ImageCropper
+  // covered on its own.
+  useClaimEscape(true, onCancel)
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-black/95">

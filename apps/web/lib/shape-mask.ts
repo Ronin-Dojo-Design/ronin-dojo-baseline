@@ -33,7 +33,13 @@ const SHAPE_MASK_CLASS: Record<ShapeMask, string> = {
   star: "[clip-path:polygon(50%_0%,61%_35%,98%_35%,68%_57%,79%_91%,50%_70%,21%_91%,32%_57%,2%_35%,39%_35%)]",
 }
 
-/** Display-mask class for a token; undefined = plain rectangle (no mask). */
+/**
+ * Display-mask class for a token; undefined = plain rectangle (no mask).
+ * Deliberately exported ahead of its display consumers: this is the multi-use
+ * API half of the doctrine above (the cropper consumes `SHAPE_MASK_CLIP_PATH`
+ * today; display surfaces adopt `shapeMaskClass` as they render masked shapes).
+ */
+// fallow-ignore-next-line unused-export
 export function shapeMaskClass(mask?: ShapeMask | null): string | undefined {
   return mask ? SHAPE_MASK_CLASS[mask] : undefined
 }

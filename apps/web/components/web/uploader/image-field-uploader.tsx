@@ -1,15 +1,14 @@
 "use client"
 
 import { Trash2Icon, UploadIcon } from "lucide-react"
-import { useAction } from "next-safe-action/hooks"
-import { lazy, Suspense, useRef, useState } from "react"
-import { toast } from "sonner"
+import { lazy, Suspense, useRef } from "react"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
-import { uploadMedia } from "~/server/web/actions/media"
 import type { CropPresetKey } from "./crop-presets"
-import { ALLOWED_TYPES, validateImageFile } from "./validation"
+import { useClaimEscape } from "./use-claim-escape"
+import { useImageFieldUpload } from "./use-image-field-upload"
+import { ALLOWED_TYPES } from "./validation"
 
 // Same lazy chunk as AvatarUploader — react-easy-crop + canvas only load when
 // the crop modal actually opens.
@@ -46,6 +45,7 @@ export type ImageFieldUploaderProps = {
  * `media.manage`/`canUploadMedia` gate) → the returned URL lands in ONE form
  * field via `onChange`. The dumb-form counterpart to `AvatarUploader` — no
  * entity side-effects, no `Media` row; the parent form owns persistence.
+ * Flow state lives in `useImageFieldUpload`; this component is markup only.
  *
  * Upload fires immediately after the crop (the blog `post-form.tsx` hero
  * precedent) — a later Cancel of the parent form orphans the R2 object, same
@@ -63,42 +63,22 @@ export function ImageFieldUploader({
   className,
 }: ImageFieldUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [rawPreviewUrl, setRawPreviewUrl] = useState<string | null>(null)
-  const [validationError, setValidationError] = useState<string | null>(null)
+  const {
+    rawPreviewUrl,
+    validationError,
+    isUploading,
+    handleFileChange,
+    handleCropComplete,
+    handleCropCancel,
+  } = useImageFieldUpload({ uploadPathPrefix, onChange })
 
-  const upload = useAction(uploadMedia, {
-    onSuccess: ({ data }) => {
-      if (data) onChange(data)
-    },
-    onError: ({ error: { serverError, validationErrors } }) => {
-      toast.error(validationErrors?.file?._errors?.[0] ?? serverError ?? "Image upload failed.")
-    },
-  })
+  // Escape claim for the WHOLE crop phase — including the lazy-chunk Suspense
+  // FALLBACK window, where the cropper's own claim isn't mounted yet and
+  // Escape would otherwise dismiss a host Base UI dialog and its dirty fields
+  // (SESSION_0499 fallow-fix P2; see use-claim-escape.ts).
+  useClaimEscape(rawPreviewUrl !== null, handleCropCancel)
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = "" // allow re-selecting the same file
-    if (!file) return
-
-    const pickError = validateImageFile(file)
-    setValidationError(pickError)
-    if (pickError) return
-
-    setRawPreviewUrl(URL.createObjectURL(file))
-  }
-
-  const handleCropComplete = (cropped: File) => {
-    if (rawPreviewUrl) URL.revokeObjectURL(rawPreviewUrl)
-    setRawPreviewUrl(null)
-    upload.execute({ file: cropped, path: `${uploadPathPrefix}/${crypto.randomUUID()}` })
-  }
-
-  const handleCropCancel = () => {
-    if (rawPreviewUrl) URL.revokeObjectURL(rawPreviewUrl)
-    setRawPreviewUrl(null)
-  }
-
-  const busy = disabled || upload.isPending
+  const busy = disabled || isUploading
 
   return (
     <div className={cx("flex w-full flex-col gap-2", className)}>
@@ -120,54 +100,109 @@ export function ImageFieldUploader({
         />
       )}
 
-      <Stack size="sm">
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          prefix={<UploadIcon />}
-          isPending={upload.isPending}
-          disabled={busy}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {value ? "Replace" : "Upload image"}
-        </Button>
-
-        {value && (
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            prefix={<Trash2Icon />}
-            disabled={busy}
-            onClick={() => onChange(null)}
-          >
-            Remove
-          </Button>
-        )}
-      </Stack>
+      <FieldActions
+        value={value}
+        busy={busy}
+        isUploading={isUploading}
+        onPick={() => fileInputRef.current?.click()}
+        onRemove={() => onChange(null)}
+      />
 
       {validationError && <p className="text-sm text-destructive">{validationError}</p>}
 
-      {rawPreviewUrl && (
-        <Suspense
-          fallback={
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80">
-              <p className="text-sm text-white">Loading cropper…</p>
-            </div>
-          }
-        >
-          <LazyCropper
-            imageSrc={rawPreviewUrl}
-            presets={presets}
-            defaultPreset={defaultPreset}
-            maxOutputPx={maxOutputPx}
-            title={cropTitle}
-            onCropComplete={handleCropComplete}
-            onCancel={handleCropCancel}
-          />
-        </Suspense>
-      )}
+      <FieldCropOverlay
+        rawPreviewUrl={rawPreviewUrl}
+        presets={presets}
+        defaultPreset={defaultPreset}
+        maxOutputPx={maxOutputPx}
+        cropTitle={cropTitle}
+        onCropComplete={handleCropComplete}
+        onCancel={handleCropCancel}
+      />
     </div>
+  )
+}
+
+/** Upload/Replace + Remove row — Remove only renders once a value exists. */
+function FieldActions({
+  value,
+  busy,
+  isUploading,
+  onPick,
+  onRemove,
+}: {
+  value: string | null
+  busy: boolean
+  isUploading: boolean
+  onPick: () => void
+  onRemove: () => void
+}) {
+  return (
+    <Stack size="sm">
+      <Button
+        type="button"
+        size="sm"
+        variant="secondary"
+        prefix={<UploadIcon />}
+        isPending={isUploading}
+        disabled={busy}
+        onClick={onPick}
+      >
+        {value ? "Replace" : "Upload image"}
+      </Button>
+
+      {value && (
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          prefix={<Trash2Icon />}
+          disabled={busy}
+          onClick={onRemove}
+        >
+          Remove
+        </Button>
+      )}
+    </Stack>
+  )
+}
+
+/** The lazy crop modal — mounts only during the crop phase (`rawPreviewUrl` set). */
+function FieldCropOverlay({
+  rawPreviewUrl,
+  presets,
+  defaultPreset,
+  maxOutputPx,
+  cropTitle,
+  onCropComplete,
+  onCancel,
+}: {
+  rawPreviewUrl: string | null
+  presets?: CropPresetKey[]
+  defaultPreset?: CropPresetKey
+  maxOutputPx: number
+  cropTitle: string
+  onCropComplete: (file: File) => void
+  onCancel: () => void
+}) {
+  if (!rawPreviewUrl) return null
+  return (
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80">
+          <p className="text-sm text-white">Loading cropper…</p>
+        </div>
+      }
+    >
+      <LazyCropper
+        imageSrc={rawPreviewUrl}
+        presets={presets}
+        defaultPreset={defaultPreset}
+        maxOutputPx={maxOutputPx}
+        title={cropTitle}
+        onCropComplete={onCropComplete}
+        onCancel={onCancel}
+      />
+    </Suspense>
   )
 }
