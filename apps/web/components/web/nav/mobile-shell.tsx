@@ -10,12 +10,15 @@ import { findApprovedStyleOptions } from "~/server/web/community/queries"
  *
  * Resolves the session + `can()` permissions SERVER-SIDE (so `SessionUser`/`can()` never
  * enter the client bundle — the Sidebar precedent) and passes plain booleans to the client
- * `Mab`. The `BottomNav` is always mounted (session-aware on the client via `useSession`);
- * the `Mab` is ADMIN-ONLY for now and only mounted when the admin has at least one permitted
- * action.
+ * `Mab`. The `BottomNav` is LOGGED-IN-only (it self-gates on the client via `useSession` and
+ * renders nothing for guests); the `Mab` is ADMIN-ONLY for now and only mounted when the admin
+ * has at least one permitted action.
  *
- * Mounted once in `(web)/layout`. Everything it renders is `md:hidden`, so desktop is
- * untouched.
+ * Mounted once PER layout tree (v2, SESSION_0500): in the `(web)` public layout AND the `/app`
+ * console layout, so a signed-in member keeps the bottom nav across both. Not hoisted to the
+ * root layout — that would add a session + Passport query to every request (incl. `/admin`)
+ * and put member chrome on the admin task-board surface. Everything it renders is `md:hidden`,
+ * so desktop is untouched.
  */
 export const MobileShell = async ({ userAvatarUrl }: { userAvatarUrl?: string | null }) => {
   const session = await getServerSession()

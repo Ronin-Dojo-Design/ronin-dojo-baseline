@@ -3,13 +3,12 @@
 import {
   ContactRoundIcon,
   GitBranchIcon,
-  LayoutDashboardIcon,
   type LucideIcon,
   MenuIcon,
   MessagesSquareIcon,
   UserRoundIcon,
 } from "lucide-react"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { Link } from "~/components/common/link"
@@ -21,19 +20,24 @@ import { cx } from "~/lib/utils"
 /**
  * BottomNav — the B0 mobile bottom navigation (SESSION_0500).
  *
- * Mobile-only (`md:hidden`), always-on, session-aware. Mounted once in `(web)/layout`.
- * 5 tabs — Dashboard · Lineage · Directory · Posts · Profile — plus a "More" affordance that
- * opens the existing right-side hamburger drawer (`NavSheet`, DEMOTED from primary chrome to
- * overflow here — not duplicated). Creation is NOT a tab; it lives in the MAB (admin-only).
+ * Mobile-only (`md:hidden`), LOGGED-IN member chrome. Mounted once per layout tree by
+ * `MobileShell` — in both the `(web)` layout and the `/app` console layout — so a signed-in
+ * member keeps the bar everywhere (v2 fix). 4 tabs — Lineage · Directory · Posts · Profile —
+ * plus a "More" affordance that opens the existing right-side hamburger drawer (`NavSheet`,
+ * DEMOTED from primary chrome to overflow here — not duplicated). Creation is NOT a tab; it
+ * lives in the MAB (admin-only).
  *
- * Session-aware: signed-out visitors get the public subset (Lineage · Directory · Posts) so
- * the bar still orients them; the account-scoped Dashboard/Profile tabs collapse into "More"
- * (whose drawer already carries the sign-in / Join CTAs for guests).
+ * Logged-out visitors get NO bottom nav — it's member chrome; they keep the normal public
+ * header (whose menu carries the sign-in / Join CTAs). The bar renders once `useSession`
+ * confirms a signed-in user.
  *
- * Route notes (SESSION_0500 pre-flight): the member home is `/app/profile` (there is no
- * `/dashboard` page — that route 404s; the legacy nav-sheet link to it is a pre-existing bug,
- * flagged separately). Dashboard tab → `/app/profile`; Profile tab → `/app/profile?tab=profile`,
- * so the two stay distinct and each highlights on its own surface.
+ * Tab collapse (v2, SESSION_0500 operator): the former separate Dashboard + Profile tabs both
+ * pointed at `/app/profile` (one surface — overview + belts + billing + profile sub-tabs), so
+ * they collapsed into a single Profile tab (the member home/account). This removed the tab
+ * route-collision AND the `?tab` soft-nav no-op that the two-tab split relied on.
+ *
+ * Route note (SESSION_0500): `/dashboard` is a 308 redirect → `/app/profile`
+ * (`config/app-redirects.ts`), not a 404; the member home is `/app/profile`.
  */
 
 type TabItem = {
@@ -41,50 +45,33 @@ type TabItem = {
   href: string
   icon: LucideIcon
   /** Highlight test. Defaults to `pathname.startsWith(href)`. */
-  isActive: (ctx: { pathname: string; tab: string | null }) => boolean
-  /** Show for signed-out visitors too. */
-  public: boolean
+  isActive: (ctx: { pathname: string }) => boolean
 }
 
-const DASHBOARD_HREF = "/app/profile"
-const PROFILE_HREF = "/app/profile?tab=profile"
-
 const TABS: TabItem[] = [
-  {
-    key: "dashboard",
-    href: DASHBOARD_HREF,
-    icon: LayoutDashboardIcon,
-    // Home = /app/profile with no (or a non-profile) tab param.
-    isActive: ({ pathname, tab }) => pathname.startsWith("/app/profile") && tab !== "profile",
-    public: false,
-  },
   {
     key: "lineage",
     href: "/lineage",
     icon: GitBranchIcon,
     isActive: ({ pathname }) => pathname.startsWith("/lineage"),
-    public: true,
   },
   {
     key: "directory",
     href: "/directory",
     icon: ContactRoundIcon,
     isActive: ({ pathname }) => pathname.startsWith("/directory"),
-    public: true,
   },
   {
     key: "posts",
     href: "/posts",
     icon: MessagesSquareIcon,
     isActive: ({ pathname }) => pathname.startsWith("/posts"),
-    public: true,
   },
   {
     key: "profile",
-    href: PROFILE_HREF,
+    href: "/app/profile",
     icon: UserRoundIcon,
-    isActive: ({ pathname, tab }) => pathname.startsWith("/app/profile") && tab === "profile",
-    public: false,
+    isActive: ({ pathname }) => pathname.startsWith("/app/profile"),
   },
 ]
 
@@ -99,13 +86,12 @@ const TAB_BASE =
 export const BottomNav = ({ userAvatarUrl }: BottomNavProps) => {
   const t = useTranslations()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const tab = searchParams.get("tab")
   const { data: session } = useSession()
   const [isMoreOpen, setMoreOpen] = useState(false)
 
-  const isSignedIn = Boolean(session?.user)
-  const visibleTabs = TABS.filter(item => item.public || isSignedIn)
+  // Member chrome: the bottom nav is logged-in-only. Logged-out visitors get the normal
+  // public header, no bar (v2, SESSION_0500 operator).
+  if (!session?.user) return null
 
   return (
     <>
@@ -120,9 +106,13 @@ export const BottomNav = ({ userAvatarUrl }: BottomNavProps) => {
         )}
       >
         <div className="mx-auto flex max-w-2xl items-stretch px-1">
-          {visibleTabs.map(item => {
+          {TABS.map(item => {
             const Icon = item.icon
-            const active = item.isActive({ pathname, tab })
+            const active = item.isActive({ pathname })
+            // The "posts" tab reads "Posts" (locked decision) via a bottom-nav-scoped key,
+            // while the drawer's own `navigation.posts` entry keeps its "Community" label.
+            const label =
+              item.key === "posts" ? t("mobileShell.posts") : t(`navigation.${item.key}`)
             return (
               <Link
                 key={item.key}
@@ -137,7 +127,7 @@ export const BottomNav = ({ userAvatarUrl }: BottomNavProps) => {
                 )}
               >
                 <Icon className="size-5" strokeWidth={active ? 2.4 : 2} />
-                <span>{t(`navigation.${item.key}`)}</span>
+                <span>{label}</span>
               </Link>
             )
           })}

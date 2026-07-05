@@ -127,7 +127,9 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
 
           {user && (
             <nav className="flex flex-col gap-3 border-t pt-4">
-              <NavLink href="/dashboard" prefix={<LayoutDashboardIcon />}>
+              {/* Member home = `/app/profile`. Link it directly; `/dashboard` is only a 308
+                  redirect → `/app/profile` (config/app-redirects.ts), so skip the hop. */}
+              <NavLink href="/app/profile" prefix={<LayoutDashboardIcon />}>
                 {t("navigation.dashboard")}
               </NavLink>
 

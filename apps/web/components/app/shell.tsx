@@ -18,7 +18,9 @@ export const Shell = ({ user, hasLineageGrant, children }: ShellProps) => {
     <div className="flex items-stretch size-full">
       <Sidebar user={user} hasLineageGrant={hasLineageGrant} />
 
-      <div className="grid content-start gap-4 flex-1 p-4 sm:px-6">{children}</div>
+      {/* `max-md:pb-16` clears the fixed mobile bottom nav (B0 v2) so the console tail
+          isn't covered; desktop (sidebar, no bottom nav) has no extra padding. */}
+      <div className="grid content-start gap-4 flex-1 p-4 sm:px-6 max-md:pb-16">{children}</div>
     </div>
   )
 }
