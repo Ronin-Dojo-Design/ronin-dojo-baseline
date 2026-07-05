@@ -11,7 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
-import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
 import { Note } from "~/components/common/note"
@@ -151,9 +150,9 @@ export function SceneEditorDialog({
               onChange={event => setQuoteAttribution(event.target.value)}
               placeholder="Where the quote comes from..."
             />
-            <Hint>
+            <Note>
               Provenance for curators — the public scene credits the quote to the person's name.
-            </Hint>
+            </Note>
           </div>
 
           <div className="w-full">
@@ -175,41 +174,15 @@ export function SceneEditorDialog({
               value={heroImageUrl || null}
               onChange={url => setHeroImageUrl(url ?? "")}
               uploadPathPrefix="lineage/story-scenes"
-              presets={["vertical", "horizontal", "square"]}
-              defaultPreset="vertical"
+              presets={["tall", "wide", "square"]}
+              defaultPreset="tall"
               cropTitle="Crop the scene hero"
               disabled={isSaving}
             />
-            <Hint>
+            <Note>
               Tall (4:5) matches the mobile hero frame; the desktop 16:10 frame crops from the same
               image.
-            </Hint>
-          </div>
-
-          <Note className="w-full">
-            Advanced — video lands with A5 (the uploader arrives then; URLs are accepted meanwhile).
-          </Note>
-
-          <div className="w-full">
-            <Label htmlFor="scene-hero-video">Hero video URL</Label>
-            <Input
-              id="scene-hero-video"
-              type="url"
-              value={heroVideoUrl}
-              onChange={event => setHeroVideoUrl(event.target.value)}
-              placeholder="https://... (plays in the scene once A5 lands)"
-            />
-          </div>
-
-          <div className="w-full">
-            <Label htmlFor="scene-poster">Poster URL</Label>
-            <Input
-              id="scene-poster"
-              type="url"
-              value={posterUrl}
-              onChange={event => setPosterUrl(event.target.value)}
-              placeholder="https://... (video poster / still frame)"
-            />
+            </Note>
           </div>
 
           <Stack size="md" className="w-full items-end" wrap>
@@ -237,6 +210,30 @@ export function SceneEditorDialog({
               </Label>
             </Stack>
           </Stack>
+
+          <Note className="w-full">Advanced — video upload is coming; paste URLs for now.</Note>
+
+          <div className="w-full">
+            <Label htmlFor="scene-hero-video">Hero video URL</Label>
+            <Input
+              id="scene-hero-video"
+              type="url"
+              value={heroVideoUrl}
+              onChange={event => setHeroVideoUrl(event.target.value)}
+              placeholder="https://... (plays in the scene once A5 lands)"
+            />
+          </div>
+
+          <div className="w-full">
+            <Label htmlFor="scene-poster">Poster URL</Label>
+            <Input
+              id="scene-poster"
+              type="url"
+              value={posterUrl}
+              onChange={event => setPosterUrl(event.target.value)}
+              placeholder="https://... (video poster / still frame)"
+            />
+          </div>
         </Stack>
 
         <DialogFooter>

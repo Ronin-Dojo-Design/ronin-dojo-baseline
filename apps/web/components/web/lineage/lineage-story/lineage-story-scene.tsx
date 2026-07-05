@@ -247,7 +247,9 @@ export function LineageStoryScene({
       <span
         aria-hidden
         className={cx(
-          "absolute top-8 right-6 text-xs font-semibold tracking-[0.4em] sm:top-12 sm:right-10",
+          // -mr-[0.4em] swallows the last glyph's tracking gap so the marker's
+          // visual edge (not its letter-space) aligns to the right inset.
+          "absolute top-8 right-6 -mr-[0.4em] text-xs font-semibold tracking-[0.4em] sm:top-12 sm:right-10",
           tokens.muted,
         )}
       >
@@ -394,7 +396,7 @@ export function LineageStoryNodeScene({
 
           <Stack size="xs" direction="column" wrap={false} className="min-w-0">
             <Stack size="sm" direction="row" wrap className="items-center">
-              <span
+              <H5
                 className={cx(
                   displayTypeClass,
                   accentUnderlineClass,
@@ -403,7 +405,7 @@ export function LineageStoryNodeScene({
                 )}
               >
                 {entry.displayName}
-              </span>
+              </H5>
               {isOwner && (
                 <Badge variant="primary" size="sm" className={tokens.badge}>
                   This member

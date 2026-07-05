@@ -1,6 +1,6 @@
 "use client"
 
-import { type CSSProperties, useCallback, useState } from "react"
+import { type CSSProperties, useCallback, useEffect, useState } from "react"
 import Cropper from "react-easy-crop"
 import type { Area } from "react-easy-crop"
 import {
@@ -25,8 +25,8 @@ import { CROP_PRESETS, type CropPresetKey } from "./crop-presets"
 const PRESET_ICONS: Record<CropPresetKey, typeof CircleIcon> = {
   circle: CircleIcon,
   square: SquareIcon,
-  horizontal: RectangleHorizontalIcon,
-  vertical: RectangleVerticalIcon,
+  wide: RectangleHorizontalIcon,
+  tall: RectangleVerticalIcon,
   triangle: TriangleIcon,
   star: StarIcon,
   free: CropIcon,
@@ -105,12 +105,24 @@ type ImageCropperProps = {
   maxOutputPx?: number
 }
 
+/**
+ * Full-screen crop overlay (hand-rolled `fixed inset-0`, NOT a Dialog).
+ *
+ * Escape ownership (SESSION_0499 Desi P1): because this is a raw overlay, a
+ * host `Dialog` under it still owns the Escape key — mid-crop Escape closed
+ * the HOST dialog and discarded its unsaved fields. The window keydown CAPTURE
+ * listener below claims Escape while the cropper is mounted (cancel the crop,
+ * keep the host dialog + its dirty state alive). The long-term fix is
+ * rebuilding this overlay ON `~/components/common/dialog` so Base UI's
+ * dismissal stack owns key handling natively — deliberately NOT done in the
+ * Desi fix pass (scoped change only).
+ */
 export default function ImageCropper({
   imageSrc,
   onCropComplete,
   onCancel,
   title = "Crop photo",
-  accentColor = "hsl(var(--primary))",
+  accentColor = "var(--color-primary)",
   presets = ["circle"],
   defaultPreset,
   maxOutputPx,
@@ -147,6 +159,20 @@ export default function ImageCropper({
       setIsProcessing(false)
     }
   }, [imageSrc, croppedArea, onCropComplete, maxOutputPx])
+
+  // Escape closes the CROPPER, not the host dialog (see the component docblock).
+  // Capture phase + stopImmediatePropagation beats Base UI Dialog's document-
+  // level dismiss listener, so the host dialog and its dirty fields survive.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      onCancel()
+    }
+    window.addEventListener("keydown", onKeyDown, { capture: true })
+    return () => window.removeEventListener("keydown", onKeyDown, { capture: true })
+  }, [onCancel])
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col bg-black/95">
@@ -246,13 +272,14 @@ export default function ImageCropper({
         </div>
 
         <div className="flex items-center justify-between">
-          <button
+          <Button
+            type="button"
+            variant="secondary"
+            prefix={<RotateCcwIcon />}
             onClick={() => setRotation(r => (r + 90) % 360)}
-            className="flex items-center gap-2 rounded-lg bg-neutral-800 px-4 py-2 text-white transition-colors hover:bg-neutral-700"
           >
-            <RotateCcwIcon className="size-4" />
             Rotate
-          </button>
+          </Button>
 
           <div className="flex items-center gap-3">
             <Button type="button" variant="secondary" onClick={onCancel}>

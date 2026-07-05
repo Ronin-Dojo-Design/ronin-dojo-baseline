@@ -12,14 +12,7 @@ import type { ShapeMask } from "~/lib/shape-mask"
  *   so the user frames for the final shape.
  */
 
-export type CropPresetKey =
-  | "circle"
-  | "square"
-  | "horizontal"
-  | "vertical"
-  | "triangle"
-  | "star"
-  | "free"
+export type CropPresetKey = "circle" | "square" | "wide" | "tall" | "triangle" | "star" | "free"
 
 export type CropPreset = {
   key: CropPresetKey
@@ -33,8 +26,8 @@ export type CropPreset = {
 export const CROP_PRESETS: Record<CropPresetKey, CropPreset> = {
   circle: { key: "circle", label: "Circle", aspect: 1, mask: "circle" },
   square: { key: "square", label: "Square", aspect: 1 },
-  horizontal: { key: "horizontal", label: "Wide", aspect: 16 / 9 },
-  vertical: { key: "vertical", label: "Tall", aspect: 4 / 5 },
+  wide: { key: "wide", label: "Wide", aspect: 16 / 9 },
+  tall: { key: "tall", label: "Tall", aspect: 4 / 5 },
   triangle: { key: "triangle", label: "Triangle", aspect: 1, mask: "triangle" },
   star: { key: "star", label: "Star", aspect: 1, mask: "star" },
   free: { key: "free", label: "Free" },
