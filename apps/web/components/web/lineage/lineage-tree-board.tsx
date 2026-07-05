@@ -1,13 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import {
-  ELITE_LINEAGE_LISTING_RENDER_POLICY,
-  FREE_LINEAGE_LISTING_RENDER_POLICY,
-  type LineageListingRenderPolicy,
-} from "~/lib/entitlements/lineage-tier-policy"
+import type { LineageListingRenderPolicy } from "~/lib/entitlements/lineage-tier-policy"
 import { bblPortalTypographyClass } from "~/lib/fonts"
-import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { LineageRow } from "~/lib/lineage/tree-layout"
 import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
 import type { LineageEditorCapability } from "~/server/web/lineage/editor-queries"
@@ -18,6 +13,11 @@ import type {
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
 import { LineageEditorToolbar } from "./lineage-editor-toolbar"
+import {
+  buildPromoterChangeContext,
+  findMemberByNodeId,
+  resolveEffectiveRenderPolicy,
+} from "./lineage-tree-board-model"
 import { LineageProfileDrawer, type LineageProfileDrawerTab } from "./lineage-profile-drawer"
 import { type LineageLayout, LineageTreeCanvas } from "./lineage-tree-canvas"
 
@@ -66,30 +66,6 @@ type LineageTreeBoardProps = {
   edges?: LineageRelationshipRow[]
 }
 
-function displayNameForMember(member: LineageTreeMemberRow): string {
-  return passportDisplayName(member.node.passport) ?? "Unnamed"
-}
-
-function descendantMemberIds(members: LineageTreeMemberRow[], rootMemberId: string): Set<string> {
-  const childrenByParentId = new Map<string, string[]>()
-  for (const member of members) {
-    if (!member.primaryVisualParentMemberId) continue
-    const children = childrenByParentId.get(member.primaryVisualParentMemberId) ?? []
-    children.push(member.id)
-    childrenByParentId.set(member.primaryVisualParentMemberId, children)
-  }
-
-  const descendants = new Set<string>()
-  const stack = [...(childrenByParentId.get(rootMemberId) ?? [])]
-  while (stack.length > 0) {
-    const next = stack.pop()
-    if (!next || descendants.has(next)) continue
-    descendants.add(next)
-    stack.push(...(childrenByParentId.get(next) ?? []))
-  }
-  return descendants
-}
-
 export function LineageTreeBoard({
   rows,
   rootId,
@@ -119,10 +95,7 @@ export function LineageTreeBoard({
    * Path highlighting is driven by `selectedNodeId` (set immediately);
    * the drawer is driven by `drawerOpen` (set after the delay).
    */
-  const effectiveRenderPolicy =
-    capability?.canEditTree || capability?.canManageGroups
-      ? ELITE_LINEAGE_LISTING_RENDER_POLICY
-      : (renderPolicy ?? FREE_LINEAGE_LISTING_RENDER_POLICY)
+  const effectiveRenderPolicy = resolveEffectiveRenderPolicy({ capability, renderPolicy })
 
   const handleNodeSelect = useCallback((nodeId: string) => {
     // Clear any pending drawer open
@@ -172,27 +145,14 @@ export function LineageTreeBoard({
   }, [])
 
   const selectedProfile = selectedNodeId ? (profilesById[selectedNodeId] ?? null) : null
-  const selectedMember =
-    selectedNodeId && members ? members.find(member => member.nodeId === selectedNodeId) : null
-  const selectedMemberDescendants =
-    members && selectedMember ? descendantMemberIds(members, selectedMember.id) : new Set<string>()
-  const promoterChangeContext =
-    treeId && capability?.canEditTree && selectedProfile && selectedMember && members
-      ? {
-          treeId,
-          memberId: selectedMember.id,
-          // Awarded truth (ADR 0035): the promoter-change modal defaults to the member's
-          // shown (top awarded) rank — the same award every surface displays.
-          currentRankAwardId: selectedProfile.passport?.rankAwardsEarned?.[0]?.id ?? null,
-          rankAwards: selectedProfile.passport?.rankAwardsEarned ?? [],
-          candidates: members
-            .filter(
-              member =>
-                member.id !== selectedMember.id && !selectedMemberDescendants.has(member.id),
-            )
-            .map(member => ({ memberId: member.id, label: displayNameForMember(member) })),
-        }
-      : null
+  const selectedMember = findMemberByNodeId(members, selectedNodeId)
+  const promoterChangeContext = buildPromoterChangeContext({
+    treeId,
+    capability,
+    selectedProfile,
+    selectedMember,
+    members,
+  })
 
   return (
     <>
