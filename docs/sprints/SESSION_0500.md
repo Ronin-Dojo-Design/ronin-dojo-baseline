@@ -174,13 +174,18 @@ cut LineageTreeBoard complexity — all collision-free across a shared local DB 
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0500_TASK_01 | in-progress | Cody dispatched — G-004 N1, worktree `ronin-0500-g004` :3500 |
-| SESSION_0500_TASK_02 | in-progress | Giddy dispatched — belt-rebase strategy, worktree `ronin-0491` |
+| SESSION_0500_TASK_02 | resolved — RETIRE | Giddy: 0491 SUPERSEDED by #186 (migration byte-identical, SELF_REVIEW guard on main / absent on branch, RankMilestone on main). NOT rebased. Operator GO → archive-tagged `archive/session-0491-belt-rebase` @ `e19653a9` + worktree/branch removed. Rebasing would re-open the CRITICAL self-approval hole. |
 | SESSION_0500_TASK_03 | in-progress | Cody dispatched — WL-P2-22 refactor, worktree `ronin-0500-wl22` :3501 |
-| SESSION_0500_TASK_04 | pending | Wave 2 — gated on TASK_02 land |
+| SESSION_0500_TASK_04 | pending (un-gated) | G-004 N2 — Wave-2 gate DISSOLVED (belt subsystem already on main via #186). Dispatch on main after TASK_01 returns. |
+| SESSION_0500_TASK_05 | pending | FI-006 — `selectedRankAward` FK deprecation (unblocked; belt DB on main). Migration → sequence after/with N2 (shared belt/member files + one migration lane). |
 
 ## Open decisions / blockers
 
-- Wave 2 (N2) blocked until the belt rebase (TASK_02 → Cody execute) merges to `main`.
+- **REVERSAL (mid-session, verified):** TASK_02 belt-rebase → RETIRE, not land. 0491 is superseded by
+  #186; the Wave-2 gate on N2 is dissolved and FI-006 is unblocked (belt subsystem already on main). N2 +
+  FI-006 pulled into this cycle (operator call), dispatched after N1 returns.
+- **Follow-up flagged:** 5 more dead belt-verify branches (`session-0477/0487/0488/0489/0490-belt-verify*`
+  — the #178–181 iteration series #186 superseded) are cruft; not touched (need operator GO to prune).
 - Operator-held: FI-001 send · Rorion portrait · FI-018 pick · G-002 cloud half.
 
 ## Next session
