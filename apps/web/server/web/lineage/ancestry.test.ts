@@ -321,7 +321,9 @@ describe("assembleAncestryEntries — story-scene projection (Epic A, SESSION_04
       ["member", makeNode({ id: "member", displayName: "Member" })],
       ["founder", makeNode({ id: "founder", displayName: "Founder" })],
     ])
-    const scenes = new Map([["founder-passport", makeScene("founder-passport", { enabled: false })]])
+    const scenes = new Map([
+      ["founder-passport", makeScene("founder-passport", { enabled: false })],
+    ])
 
     const entries = assembleAncestryEntries(
       [

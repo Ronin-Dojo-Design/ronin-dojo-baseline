@@ -120,8 +120,8 @@ export default async function ({ searchParams }: PageProps<"/app/beta/lineage-jo
               </div>
             ) : (
               <Note>
-                {selected.displayName} has no renderable public up-chain (the journey needs at
-                least two PUBLIC chain entries) — pick one of their descendants instead.
+                {selected.displayName} has no renderable public up-chain (the journey needs at least
+                two PUBLIC chain entries) — pick one of their descendants instead.
               </Note>
             )}
           </Stack>
