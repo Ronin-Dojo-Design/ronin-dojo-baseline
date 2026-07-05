@@ -176,7 +176,7 @@ cut LineageTreeBoard complexity — all collision-free across a shared local DB 
 | SESSION_0500_TASK_02 | resolved — RETIRE | Giddy: 0491 SUPERSEDED by #186 (migration byte-identical, SELF_REVIEW guard on main / absent on branch, RankMilestone on main). NOT rebased. Operator GO → archive-tagged `archive/session-0491-belt-rebase` @ `e19653a9` + worktree/branch removed. Rebasing would re-open the CRITICAL self-approval hole. |
 | SESSION_0500_TASK_03 | landed (Doug running) | WL-P2-22 — CRAP 1190→240 (−80%), cyc 34→15; 5 pure fns → `lineage-tree-board-model.ts` + 19 unit tests; e2e 12/12 behavior-preserving; gates green @ `a0ec954d`. Held. Flagged: `.fallow/` not gitignored. |
 | SESSION_0500_TASK_01 | landed (Doug pending) | G-004 N1 — combobox swapped, typed refs persist (`trainedUnderNodeId`/`claimedSchoolId`), no migration, gates green @ `78aa43e2`. Held. |
-| SESSION_0500_TASK_04 | in-progress | G-004 N2 dispatched — belt cards (passport-keyed picker, WL-P1-8 guard) + privacy toggles + Billing tab, on main's #186 belt subsystem, in `ronin-0500-g004` on top of N1. |
+| SESSION_0500_TASK_04 | landed (Doug running) | G-004 N2 — 2/3 surfaces (belt cards + privacy fields) ALREADY on main via #186; real work = NEW Billing tab (`billing-tab.tsx`, entitlements+enrollments+Stripe portal, billing now single-home) + privacy discoverability polish. Passport-keyed picker untouched (WL-P1-8 held). No migration. Gates green (24 tests) @ `f81f0d46`. Held. |
 | SESSION_0500_TASK_05 | resolved — STALE | FI-006 already DONE on main: `selectedRankAward` FK removed in 0475 (schema:2931 comment only); claim rank picker + `currentRankId`/`claimedRankId` shipped. SOT row is stale → close at bow-out. No dispatch. |
 
 ## Open decisions / blockers
