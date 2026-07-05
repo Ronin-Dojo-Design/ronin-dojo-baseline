@@ -15,7 +15,7 @@ backlinks:
 
 # ADR 0009 — Mobile Auth Strategy: Better-Auth Mobile SDK
 
-**Status:** Accepted
+**Status:** Accepted — **confirmed still standing** by the [ADR 0002 2026-07-05 reconciliation](0002-expo-for-mobile.md#2026-07-05-reconciliation--native-api-contract-session_0501) (SESSION_0501): this auth decision is transport-agnostic and holds regardless of the native data-contract choice (oRPC / REST / hybrid). Note the `/api/v1/auth/mobile-token` endpoint mentioned under "Option B — JWT bridge" below is part of the **rejected** alternative — it was never built.
 **Date:** 2026-04-27
 **Resolves:** MB-001 (Manual Boundary Registry)
 **Supersedes:** The open decision branch in ADR 0002

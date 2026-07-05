@@ -2,10 +2,10 @@
 title: "Native mobile API contract — oRPC vs REST api/v1 (research review)"
 slug: native-api-contract-research-review
 type: research
-status: draft
+status: ratified
 created: 2026-07-05
 updated: 2026-07-05
-last_agent: giddy-session-0500
+last_agent: claude-session-0501
 author: giddy
 supersedes_input_for:
   - docs/architecture/decisions/0002-expo-for-mobile.md
@@ -18,10 +18,11 @@ backlinks:
 
 # Native mobile API contract — oRPC vs REST `api/v1`
 
-**Status: draft research review — decision input for the operator. NOT a ratified ADR.**
-This document analyzes options for the API contract the future Expo native app
-(`apps/mobile/`) will consume. It does not scaffold the app, change code, or ratify a
-direction. It exists to let the operator pick a lane before the native client is built.
+**Status: RATIFIED (SESSION_0501, 2026-07-05).** The operator ratified this review's recommendation —
+**Option C (hybrid), deferred** (§4/§7). The decision is recorded in the
+[ADR 0002 2026-07-05 reconciliation](decisions/0002-expo-for-mobile.md#2026-07-05-reconciliation--native-api-contract-session_0501).
+This document remains the analysis of record; nothing was scaffolded and `api/v1` was **not** built —
+the seam is kept, the surface deferred until a native client ships (YAGNI).
 
 ---
 
