@@ -3,6 +3,7 @@
 import { SparklesIcon } from "lucide-react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
+import type { CreatableOption } from "~/components/common/creatable-combobox"
 import { Button } from "~/components/common/button"
 import { ProfileEnhancementWizard } from "./profile-enhancement-wizard"
 import type { BeltRankOption } from "~/server/web/onboarding/ranks"
@@ -12,6 +13,10 @@ const STORAGE_KEY = "bbl:onboarding:profile:v1"
 
 type ProfileEnhancementLauncherProps = {
   ranks: BeltRankOption[]
+  /** Registered instructor options (LineageNode-keyed) for the "Promoted by" combobox. */
+  instructorOptions?: CreatableOption[]
+  /** Registered school options (Organization-keyed) for the "School" combobox. */
+  schoolOptions?: CreatableOption[]
   userId: string
   initialAvatarUrl?: string | null
   /** True when the Passport is missing an avatar and/or a rank — auto-opens once. */
@@ -27,6 +32,8 @@ type ProfileEnhancementLauncherProps = {
  */
 export function ProfileEnhancementLauncher({
   ranks,
+  instructorOptions,
+  schoolOptions,
   userId,
   initialAvatarUrl,
   incomplete,
@@ -89,6 +96,8 @@ export function ProfileEnhancementLauncher({
         onComplete={handleClose}
         onSkip={handleClose}
         ranks={ranks}
+        instructorOptions={instructorOptions}
+        schoolOptions={schoolOptions}
         userId={userId}
         initialAvatarUrl={initialAvatarUrl}
       />

@@ -35,6 +35,12 @@ type Fixtures = {
   rankId: string
   rankSystemId: string
   disciplineId: string
+  // Registered creatable-combobox targets (SESSION_0500 N1): an instructor LineageNode and a
+  // school Organization the wizard's typed refs point at.
+  instructorUserId: string
+  instructorPassportId: string
+  instructorNodeId: string
+  schoolOrgId: string
 }
 
 let fx: Fixtures | null = null
@@ -50,6 +56,30 @@ beforeAll(async () => {
 
   const passport = await db.passport.create({
     data: { userId: user.id, displayName: "Wizard Member" },
+  })
+
+  // A registered instructor (a LineageNode keyed off its own Passport) + a registered school
+  // Organization — the two typed-ref targets the wizard's comboboxes persist.
+  const instructorUser = await db.user.create({
+    data: {
+      id: tag("instructor-user"),
+      name: tag("Instructor"),
+      email: `${tag("instructor")}@test.local`,
+    },
+  })
+  const instructorPassport = await db.passport.create({
+    data: { userId: instructorUser.id, displayName: "Wizard Instructor" },
+  })
+  const instructorNode = await db.lineageNode.create({
+    data: { id: tag("node"), passportId: instructorPassport.id, visibility: "PUBLIC" },
+  })
+  const school = await db.organization.create({
+    data: {
+      id: tag("org"),
+      brand: TEST_BRAND,
+      name: tag("Wizard Academy"),
+      slug: tag("wizard-academy"),
+    },
   })
 
   const discipline = await db.discipline.create({
@@ -90,6 +120,10 @@ beforeAll(async () => {
     rankId: rank.id,
     rankSystemId: rankSystem.id,
     disciplineId: discipline.id,
+    instructorUserId: instructorUser.id,
+    instructorPassportId: instructorPassport.id,
+    instructorNodeId: instructorNode.id,
+    schoolOrgId: school.id,
   }
 })
 
@@ -103,8 +137,11 @@ afterAll(async () => {
   await db.rank.deleteMany({ where: { id: fx.rankId } })
   await db.rankSystem.deleteMany({ where: { id: fx.rankSystemId } })
   await db.discipline.deleteMany({ where: { id: fx.disciplineId } })
+  await db.organization.deleteMany({ where: { id: fx.schoolOrgId } })
+  await db.lineageNode.deleteMany({ where: { id: fx.instructorNodeId } })
+  await db.passport.deleteMany({ where: { id: fx.instructorPassportId } })
   await db.passport.deleteMany({ where: { userId: fx.userId } })
-  await db.user.deleteMany({ where: { id: fx.userId } })
+  await db.user.deleteMany({ where: { id: { in: [fx.userId, fx.instructorUserId] } } })
 })
 
 describe("setPassportRank — safe-action wrapper", () => {
@@ -122,7 +159,11 @@ describe("setPassportRank — safe-action wrapper", () => {
       rankId: fx!.rankId,
       awardedAt: new Date(Date.UTC(2021, 5, 1)),
       promotedBy: "Professor Example",
+      // SESSION_0500 N1: a REGISTERED creatable-combobox pick persists a typed FK ref alongside
+      // the free text — instructor = LineageNode id, school = Organization id.
+      promotedByNodeId: fx!.instructorNodeId,
       schoolName: "Example Academy",
+      schoolOrgId: fx!.schoolOrgId,
     })
 
     expect(result?.serverError).toBeUndefined()
@@ -142,6 +183,10 @@ describe("setPassportRank — safe-action wrapper", () => {
     expect(claim?.claimedRankId).toBe(fx!.rankId)
     expect(claim?.claimantNote).toContain("Professor Example")
     expect(claim?.claimantNote).toContain("Example Academy")
+    // The registered picks materialize as typed FK refs (steward-display for a promotion — they
+    // render as resolved links in claim-review-detail.tsx). SESSION_0500 N1.
+    expect(claim?.trainedUnderNodeId).toBe(fx!.instructorNodeId)
+    expect(claim?.claimedSchoolId).toBe(fx!.schoolOrgId)
   })
 
   it("rejects a second declaration while a promotion is already pending (one open per member)", async () => {
