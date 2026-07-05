@@ -1,9 +1,10 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { ThemeProvider } from "next-themes"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { Search } from "~/components/common/search"
 import { Toaster } from "~/components/common/toaster"
 import { TooltipProvider } from "~/components/common/tooltip"
+import { SwRegister } from "~/components/web/pwa/sw-register"
 import { metadataConfig } from "~/config/metadata"
 import { getBrandSiteConfig } from "~/config/site"
 import { BrandProvider } from "~/contexts/brand-context"
@@ -35,7 +36,19 @@ export const generateMetadata = async (): Promise<Metadata> => {
       default: `${brandConfig.tagline} – ${brandConfig.name}`,
     },
     description: brandConfig.description,
-    icons: { icon: [{ type: "image/png", url: faviconUrl }] },
+    icons: {
+      icon: [{ type: "image/png", url: faviconUrl }],
+      // iOS home-screen icon (apple-touch-icon) — same DB-resolved brand favicon.
+      apple: [{ type: "image/png", url: faviconUrl }],
+    },
+    // Installable-PWA surface: the static manifest route (app/manifest.ts) +
+    // the Apple web-app meta iOS needs for standalone add-to-home-screen.
+    manifest: "/manifest.webmanifest",
+    appleWebApp: {
+      capable: true,
+      title: "BBL",
+      statusBarStyle: "black-translucent",
+    },
     ...metadataConfig,
     openGraph: {
       ...metadataConfig.openGraph,
@@ -43,6 +56,14 @@ export const generateMetadata = async (): Promise<Metadata> => {
       images: ogImageUrl ? [{ url: ogImageUrl }] : metadataConfig.openGraph?.images,
     },
   }
+}
+
+// Browser-chrome theme color = the BBL always-dark shell — app/styles.css
+// `[data-brand="BBL"] --color-chrome: hsl(0 0% 4%)` (#0a0a0a). Matches the
+// manifest's theme_color (app/manifest.ts). Next merges this with its default
+// viewport (width/initial-scale untouched).
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
 }
 
 export default async function ({ children }: LayoutProps<"/">) {
@@ -83,6 +104,7 @@ export default async function ({ children }: LayoutProps<"/">) {
                       {children}
                       <Toaster />
                       <Search />
+                      <SwRegister />
                     </ThemeProvider>
                   </BrandProvider>
                 </SearchProvider>
