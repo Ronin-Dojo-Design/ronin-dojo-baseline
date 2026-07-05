@@ -545,3 +545,19 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix direction (Giddy):** make `ClaimCtaButton` the single source — render it and let it return `null`, then
   decide the container on "did either child produce output." Low severity.
 - **Status: OPEN** (follow-up; bundle into any lineage-drawer touch).
+
+### D-040 — `passport-and-shells.md` carries a stale "Passport → User (1:1)" + a 2026-04 open question (SESSION_0498)
+
+- **What:** `docs/knowledge/wiki/concepts/passport-and-shells.md` still states the Passport→User link as a
+  strict 1:1 and carries an unresolved RankAward open question from 2026-04. Both predate the ratified model:
+  `Passport.userId` is **nullable `@unique`** (an accountless Passport IS the placeholder person — ADR 0025;
+  claim binding ADR 0032), and the RankAward question was settled by ADR 0035/0043 (awarded truth; Passport-keyed
+  provenance). Surfaced by the Giddy passport/node research-review
+  (`docs/architecture/research/research-review-passport-node-id.md`).
+- **Risk:** the concepts page is identity-canon read-path material (opening.md step 3) — a fresh agent reading
+  "1:1" could design a surface assuming every Passport has a User, re-introducing the placeholder-person class
+  of bug. Low likelihood (ADR 0025 is also in the read-path and wins), but it's a canon page contradicting canon.
+- **Fix direction:** one-line correction ("1:0..1 — `userId String? @unique`; accountless Passport = placeholder
+  person") + resolve/remove the stale open question with pointers to ADR 0035/0043. Next wiki sweep; not a code
+  change.
+- **Status: OPEN** (wiki-sweep one-liner; flagged from SESSION_0498 bow-out).

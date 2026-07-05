@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-07-04
-last_agent: claude-session-0496
+last_agent: claude-session-0498
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -487,6 +487,22 @@ The `/posts` member community feed (ADR 0042 Amendment 1) and the `/directory/[s
 | Data scripts ×3 | `apps/web/scripts/{backfill-lineage-instructor-edges,seed-rank-degrees,seed-rank-secondary-colors}.ts` | CLI, `--apply` | Idempotent, dry-run default, reviewed-mapping pattern; banked for prod (run with `--env-file=.env.prod` AFTER the migrations deploy) |
 | `getBeltPromoterOptions` | `apps/web/server/web/belt/belt-tab-loader.ts` | `() → CreatableOption[]` | Belt promoter picker options keyed by **Passport id** (matches the `RankAward.awardedByPassportId` FK) — the deliberate do-not-merge twin of the node-keyed `getInstructorOptions` (SESSION_0497 P2003 fix, WL-P1-8). Public BBL lineage people, de-duped by passport; uncached (authenticated own-dashboard load) |
 | `DrawerFooter` + `ClaimCtaButton` | `apps/web/components/web/lineage/lineage-profile-drawer/index.tsx` | `DrawerFooter({ profileSlug, claimState, … })` | Bottom-pinned drawer footer (the 3-row grid's `auto` row): a PUBLIC-gated "View profile →" ghost link to `/directory/[slug]` + the 5-state claim CTA in one bordered container. `ClaimCtaButton` returns the bare button (no wrapper) so the footer owns the border. PUBLIC-only gate ⇒ never dead-links (directory route `notFound()`s MEMBERS_ONLY/HIDDEN for guests) |
+
+## Lineage Journey scrollytelling + storyboard + beta preview (SESSION_0498, Epic A spine — ADR 0044)
+
+The scroll-driven founder→member story on `/directory/[slug]`, its curation board, and the pre-GA beta preview area.
+
+| Component | File | Props (shape) | Notable behavior |
+| --- | --- | --- | --- |
+| `scene-model` (pure) | `apps/web/components/web/lineage/lineage-story/scene-model.ts` | `scenePaletteAt(i)`, `chainHasStoryScenes(entries)`, `scenePaletteTokens` | THE palette law: three-variant cycle black→red→white by walk index (operator-ratified); red = `bg-primary`/`decoration-primary` (BrandSettings token, no-hex test-pinned), black/white = fixed cinematic poles (`neutral-950`/`white`, theme-independent by design); per-palette `badge` + AA `muted` tokens — **palette branching lives HERE, never in components** |
+| `LineageStoryScene` + `LineageStoryNodeScene` (via `SceneShell`) | `.../lineage-story-scene.tsx` | `{ entry, palette, isOwner, showDisabledMarker? }` | Full cinematic scene (quote + hero + bio) vs mini node scene (avatar+name+belt). Motion: `useScroll` offset `["start 0.85","end 0.35"]`; hero scale `[0.45,1]→[1,0.42]` (holds LARGE until viewport-center — measured); transform-only `contentY` chase (kills the shrink void); chip fade `[0.6,0.8]` (the become-the-node beat lands below sticky chrome on both viewports — measured). Hero = `heroImageUrl ?? palette monogram` — **NEVER the avatar** (clip-art full-bleed trap). Attribution renders `displayName`; stored `quoteAttribution` = provenance. H5 headings via `font-[family-name:…]` (arbitrary-VALUE so tailwind-merge beats H5's `font-sans`; the arbitrary-property form does NOT conflict-resolve) |
+| `LineageStorySequence` | `.../lineage-story-sequence.tsx` | `{ entries, showDisabledMarkers? }` | The walk→scene mapper; `useReducedMotion` → renders `LineageAncestryTimeline` (full fallback); `showDisabledMarkers` = admin-preview-only (default false; keyed-Fragment branch keeps public DOM byte-identical; amber marker deliberately hardcoded — `variant="caution"` washes out on fixed scene palettes) |
+| `AncestrySection` (gate) | `app/(web)/directory/[slug]/_components/directory-profile/ancestry-section.tsx` | `{ ancestry }` | Data-gated rollout: `chainHasStoryScenes` → story sequence (full content width, `bblHeadingFont.variable` server seam), else the byte-identical legacy timeline. **GA = data (`enabled` flips), never a deploy** |
+| `getLineageAncestryForPassport` (extended) | `apps/web/server/web/lineage/ancestry.ts` | `(passportId, { includeDisabledScenes? })` | Now L+4 (one scene batch, PUBLIC-chain-keyed, `enabled: true` default). `includeDisabledScenes` = the ADR 0044 §D5 preview-widening flag: beta-only caller, distinct `"use cache"` entry by construction, public default test-pinned. `LineageStorySceneView` = minimal public payload (quote/storyBio/heroImageUrl/enabled — constant-in-view rule §D4) |
+| Storyboard board + router | `app/app/lineage/storyboard/**`, `apps/web/server/lineage/storyboard-{router,schemas}.ts`, `server/admin/lineage/storyboard-queries.ts` | oRPC `lineage.storyboard.{create,update,setEnabled,duplicate,remove}` | `can("lineage.manage")` on page + procedures + entry link (flat key — tree grants don't map to cross-tree curation, ADR 0044 §D6); passport-keyed picker `getScenePersonOptions` (WL-P1-8 twin discipline; node-id → BAD_REQUEST test-pinned); every mutation revalidates `"lineage"` + `lineage-ancestry-${passportId}` + the board path; duplicate lands DISABLED+unordered (§D8); TOCTOU create races → CONFLICT (P2002 `.code` idiom) |
+| `/app/beta` area | `app/app/beta/{layout,page}.tsx`, `.../beta/lineage-journey/page.tsx` | — | `beta.view` axis-1 key (`APP_AREA_PERMISSIONS.beta`; admin `"*"` covers day-one; per-user grants = FI-019); gate in the layout AND in the privileged preview page (leaf flight requests don't reliably re-render parent layouts); preview lists scened people → full journey incl. disabled scenes + markers + GA/storyboard links |
+| Founder seed | `apps/web/prisma/seed-lineage-story-scenes.ts` | CLI, `[--disabled]` | CREATE-ONLY (reseed never reverts curated copy or re-arms `enabled` — Giddy A0 P1); `--disabled` = prod bring-up dark-seeding; skips-never-creates missing founders |
+| Revalidation twins (law) | `server/orpc/revalidate.ts` ↔ `lib/safe-actions.ts` | — | ONE contract, TWO transport-bound impls: oRPC/Route-Handler = `revalidateTag(tag,{expire:0})`; Server Actions = `updateTag`. **Do not merge or cross-copy** (E872; WL-P2-27, ADR 0044 §D7) |
 
 ## How to update this file
 

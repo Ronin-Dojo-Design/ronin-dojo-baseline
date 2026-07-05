@@ -111,9 +111,15 @@ export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArra
  * `admin: ["*"]` passes all of them today; `tournament_director` passes
  * `tournaments.manage` via its `tournaments.*` wildcard. This is the
  * operator-ratified day-one tightening: non-admin roles reach only their areas.
+ *
+ * `beta` is `.view` (not `.manage`): the `/app/beta` preview area is a read
+ * surface (SESSION_0498 TASK_04). Zero grant plumbing — admin `"*"` covers it;
+ * named non-admin testers arrive via FI-019 per-user override grants (authz
+ * research-review §FI-019: a new authz need = a new KEY, never a new system).
  */
 export const APP_AREA_PERMISSIONS = {
   ageGroups: "age-groups.manage",
+  beta: "beta.view",
   billing: "billing.manage",
   brandSettings: "brand-settings.manage",
   categories: "categories.manage",

@@ -10,6 +10,8 @@ import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
 import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { findLineageTrees } from "~/server/admin/lineage/queries"
 import { lineageTreesTableParamsCache } from "~/server/admin/lineage/schema"
+import { can } from "~/server/orpc/permissions"
+import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 
 function ClaimBadge({
   claim,
@@ -42,8 +44,11 @@ function ClaimBadge({
 
 async function LineageContent({
   searchParams,
+  showStoryboard,
 }: {
   searchParams: PageProps<"/app/lineage">["searchParams"]
+  /** Storyboard is flat-`lineage.manage` only (see storyboard/page.tsx) — hide the link from tree-grant users. */
+  showStoryboard: boolean
 }) {
   const search = lineageTreesTableParamsCache.parse(await searchParams)
   const { trees, total } = await findLineageTrees(search)
@@ -56,9 +61,16 @@ async function LineageContent({
           <Note>{total} lineage trees</Note>
         </Stack>
 
-        <Button variant="secondary" size="sm" render={<Link href="/app/lineage/claims" />}>
-          Review claims
-        </Button>
+        <Stack size="xs" wrap>
+          {showStoryboard && (
+            <Button variant="secondary" size="sm" render={<Link href="/app/lineage/storyboard" />}>
+              Story scenes
+            </Button>
+          )}
+          <Button variant="secondary" size="sm" render={<Link href="/app/lineage/claims" />}>
+            Review claims
+          </Button>
+        </Stack>
       </Stack>
 
       {trees.length === 0 ? (
@@ -141,11 +153,14 @@ async function LineageContent({
 }
 
 export default async ({ searchParams }: PageProps<"/app/lineage">) => {
-  await requireLineageManagementAccess()
+  const user = await requireLineageManagementAccess()
 
   return (
     <Suspense fallback={<DataTableSkeleton title="Lineage" />}>
-      <LineageContent searchParams={searchParams} />
+      <LineageContent
+        searchParams={searchParams}
+        showStoryboard={can(user, APP_AREA_PERMISSIONS.lineage)}
+      />
     </Suspense>
   )
 }

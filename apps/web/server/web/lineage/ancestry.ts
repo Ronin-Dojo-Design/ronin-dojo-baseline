@@ -1,4 +1,5 @@
 import { cacheLife, cacheTag } from "next/cache"
+import type { Prisma } from "~/.generated/prisma/client"
 import { memberTopRankAward } from "~/lib/lineage/canvas-model"
 import { type LineageNodeRow, lineageNodeRowPayload } from "~/server/web/lineage/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
@@ -20,10 +21,12 @@ import { db } from "~/services/db"
  *
  * Query budget (no N+1 per node): 1 base-node lookup + ONE edge lookup per level
  * (a chain step depends on the previous level, so level-by-level is the batch) +
- * ONE `findMany({ id: { in: chain } })` for all display data. A chain of length L
- * costs L + 3 queries, hard-capped by `ANCESTRY_MAX_DEPTH`.
+ * ONE `findMany({ id: { in: chain } })` for all display data + ONE
+ * `findMany({ passportId: { in: chain } })` for enabled story scenes (Epic A,
+ * SESSION_0498 — a real extra query, so the budget moved L+3 → L+4). A chain of
+ * length L costs L + 4 queries, hard-capped by `ANCESTRY_MAX_DEPTH`.
  *
- * Author: Cody / SESSION_0493 TASK_05.
+ * Author: Cody / SESSION_0493 TASK_05. Story projection: SESSION_0498 TASK_01.
  */
 
 /** Generational depth cap for the up-walk (member → founder). */
@@ -43,6 +46,33 @@ export type LineageAncestryRank = {
   degree: number | null
 }
 
+/**
+ * Story-scene projection for one ancestry entry (Epic A — Lineage Journey,
+ * SESSION_0498). Additive narrative copy/media over the walk; carries NO rank,
+ * visibility, or verification authority.
+ *
+ * Deliberately minimal (Giddy A0 review P3-1/P3-2): this is a PUBLIC RSC payload,
+ * so it projects ONLY what the scene renderer consumes. `quoteAttribution` is
+ * sourcing provenance (attribution renders the entry's displayName by contract),
+ * `heroVideoUrl`/`posterUrl` are dormant until A5, `isBridge`/`bridgeCondition`
+ * until A6, and `sceneOrder` is storyboard-only metadata — **walk order is the
+ * authoritative entry order**; a consumer must never re-sort the chain by scene
+ * metadata. Widen this view only when a renderer actually consumes the field.
+ */
+export type LineageStorySceneView = {
+  quote: string | null
+  storyBio: string | null
+  heroImageUrl: string | null
+  /**
+   * Scene kill-switch state — consumed by the `/app/beta/lineage-journey`
+   * preview's "disabled" marker chip (SESSION_0498 TASK_04). On the PUBLIC read
+   * path this is `true` by construction (`ancestryStorySceneWhere` defaults to
+   * enabled-only); only the beta preview's `includeDisabledScenes` read can
+   * surface `false`.
+   */
+  enabled: boolean
+}
+
 export type LineageAncestryEntry = {
   nodeId: string
   /** LineageNode slug (deep-link seam; may be null for imported placeholders). */
@@ -60,6 +90,8 @@ export type LineageAncestryEntry = {
    * above) and for edges without a description.
    */
   narrative: string | null
+  /** Enabled story scene for this person (Epic A); undefined when none exists. */
+  story?: LineageStorySceneView
 }
 
 /** One step of the member-up walk: the node + the description of its edge UP. */
@@ -69,6 +101,49 @@ type AncestryWalkStep = {
 }
 
 /**
+ * Story-scene batch select/where — exported so the unit tests can pin the query
+ * boundary invariants (enabled-only BY DEFAULT; keyed strictly by the
+ * PUBLIC-filtered chain's passportIds — never a visibility widener).
+ */
+export const ancestryStorySceneSelect = {
+  passportId: true,
+  quote: true,
+  storyBio: true,
+  heroImageUrl: true,
+  enabled: true,
+} satisfies Prisma.LineageStorySceneSelect
+
+/**
+ * Read options for the ancestry walk (SESSION_0498 TASK_04).
+ *
+ * `includeDisabledScenes` relaxes ONLY the scene batch's `enabled: true` filter
+ * — node visibility gates are untouched. It exists for the admin-gated
+ * `/app/beta/lineage-journey` preview; the PUBLIC caller (`AncestrySection` via
+ * `loadDirectoryProfile`) must NEVER pass it. `getLineageAncestryForPassport`
+ * is `"use cache"`, so the flag is part of the cache key — the preview read and
+ * the public read are distinct cache entries by construction.
+ */
+export type LineageAncestryOptions = {
+  includeDisabledScenes?: boolean
+}
+
+export const ancestryStorySceneWhere = (
+  passportIds: string[],
+  { includeDisabledScenes = false }: LineageAncestryOptions = {},
+) =>
+  ({
+    passportId: { in: passportIds },
+    // The public kill-switch gate. The beta preview is the ONLY reader allowed
+    // to drop it (visibility stays PUBLIC-only either way).
+    ...(includeDisabledScenes ? {} : { enabled: true }),
+  }) satisfies Prisma.LineageStorySceneWhereInput
+
+/** One fetched scene row — the view fields plus the passportId map key. */
+export type AncestryStorySceneRow = Prisma.LineageStorySceneGetPayload<{
+  select: typeof ancestryStorySceneSelect
+}>
+
+/**
  * Project the walked chain into ordered entries — [founder … member], the profile
  * owner LAST by contract.
  *
@@ -76,10 +151,15 @@ type AncestryWalkStep = {
  * PUBLIC-filtered batch fetch. If a walked node is missing from the batch (visibility
  * changed between queries), the chain is TRUNCATED at the gap rather than spliced —
  * a false adjacency would fabricate a promotion link.
+ *
+ * `scenesByPassportId` (Epic A, SESSION_0498) holds the enabled story scenes keyed
+ * by passportId — attached only to entries whose node survived the PUBLIC batch, so
+ * a scene can never resurrect or widen a hidden node.
  */
 export const assembleAncestryEntries = (
   walk: AncestryWalkStep[],
   nodesById: ReadonlyMap<string, LineageNodeRow>,
+  scenesByPassportId: ReadonlyMap<string, AncestryStorySceneRow> = new Map(),
 ): LineageAncestryEntry[] => {
   const memberUp: LineageAncestryEntry[] = []
 
@@ -92,6 +172,7 @@ export const assembleAncestryEntries = (
     // (multi-discipline surface → no disciplineId, per memberTopRankAward).
     const dto = projectPublicPassport(node.passport, {})
     const award = dto.ranks.length === 0 ? null : memberTopRankAward(node)
+    const scene = scenesByPassportId.get(node.passportId)
 
     memberUp.push({
       nodeId: node.id,
@@ -110,6 +191,16 @@ export const assembleAncestryEntries = (
         : null,
       disciplineLabel: award?.rank.rankSystem?.discipline?.name ?? null,
       narrative: step.narrative,
+      story: scene
+        ? {
+            quote: scene.quote,
+            storyBio: scene.storyBio,
+            heroImageUrl: scene.heroImageUrl,
+            // Constant true on the public path (where-gated); false only via the
+            // beta preview's includeDisabledScenes read (its "disabled" marker).
+            enabled: scene.enabled,
+          }
+        : undefined,
     })
   }
 
@@ -133,9 +224,15 @@ export const assembleAncestryEntries = (
  * chain. Depth is hard-capped at {@link ANCESTRY_MAX_DEPTH}.
  *
  * Returns `[]` when the Passport has no PUBLIC lineage node or no PUBLIC up-chain.
+ *
+ * `options` (see {@link LineageAncestryOptions}): `includeDisabledScenes` is the
+ * beta-preview read — `"use cache"` keys on the arguments, so the flagged read
+ * caches separately from the public one; storyboard mutations revalidate the
+ * shared `"lineage"` tag, flushing both.
  */
 export const getLineageAncestryForPassport = async (
   passportId: string,
+  options?: LineageAncestryOptions,
 ): Promise<LineageAncestryEntry[]> => {
   "use cache"
 
@@ -188,5 +285,24 @@ export const getLineageAncestryForPassport = async (
     select: lineageNodeRowPayload,
   })
 
-  return assembleAncestryEntries(walk, new Map(nodes.map(node => [node.id, node])))
+  // ONE batch fetch for the chain's story scenes (Epic A, SESSION_0498) — keyed
+  // by the passportIds the PUBLIC-filtered batch above returned, so a hidden
+  // node can never leak its scene. Enabled-only by default; the beta preview's
+  // includeDisabledScenes relaxes ONLY that filter. Budget: L+3 → L+4.
+  const scenes =
+    nodes.length === 0
+      ? []
+      : await db.lineageStoryScene.findMany({
+          where: ancestryStorySceneWhere(
+            nodes.map(node => node.passportId),
+            options,
+          ),
+          select: ancestryStorySceneSelect,
+        })
+
+  return assembleAncestryEntries(
+    walk,
+    new Map(nodes.map(node => [node.id, node])),
+    new Map(scenes.map(scene => [scene.passportId, scene])),
+  )
 }

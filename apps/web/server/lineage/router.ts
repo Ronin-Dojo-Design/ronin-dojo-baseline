@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { storyboard } from "~/server/lineage/storyboard-router"
 import { publicProcedure } from "~/server/orpc/procedure"
 import { getLineageTreeBySlug } from "~/server/web/lineage/queries"
 
@@ -42,4 +43,6 @@ const bySlug = publicProcedure
 
 export const lineage = {
   bySlug,
+  /** `can("lineage.manage")`-gated storyboard scene mutations (Epic A1, SESSION_0498). */
+  storyboard,
 }

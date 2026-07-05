@@ -1,4 +1,4 @@
-import { revalidatePath, updateTag } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 
 export type RevalidateOptions = {
   paths?: Array<string>
@@ -22,10 +22,15 @@ export const detailTags = (prefix: string, ...slugs: Array<string | undefined | 
 /**
  * Queue path + tag revalidations after a mutation.
  *
- * Ronin delta: uses `updateTag` to match the existing `lib/safe-actions.ts`
- * revalidate semantics (upstream calls `revalidateTag(tag, "infinite")`) —
- * both layers must invalidate identically while they coexist during the
- * migration.
+ * Ronin delta: uses `revalidateTag(tag, { expire: 0 })`, NOT `updateTag`. Every
+ * oRPC mutation reaches this seam through `/api/rpc` — a Route Handler — and
+ * Next 16 hard-throws `updateTag` outside a Server Action (error E872; surfaced
+ * live by the first tag-passing oRPC procedure, SESSION_0498 storyboard). The
+ * `{ expire: 0 }` profile expires the tagged entries IMMEDIATELY (the next
+ * request recomputes — `revalidation-utils.js` maps it to `durations.expire = 0`),
+ * matching the `updateTag` semantics `lib/safe-actions.ts` keeps in its true
+ * Server-Action context. A named profile like `"max"` would instead serve
+ * stale-while-revalidate — one request behind, verified live on :3497.
  */
 export const revalidate = ({ paths = [], tags = [] }: RevalidateOptions) => {
   for (const path of paths) {
@@ -33,6 +38,6 @@ export const revalidate = ({ paths = [], tags = [] }: RevalidateOptions) => {
   }
 
   for (const tag of tags) {
-    updateTag(tag)
+    revalidateTag(tag, { expire: 0 })
   }
 }

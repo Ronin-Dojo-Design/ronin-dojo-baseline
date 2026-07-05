@@ -13,7 +13,17 @@ type RevalidateOptions = {
 }
 
 /**
- * Queue revalidation for the given options
+ * Queue revalidation for the given options.
+ *
+ * ⚠ TRANSPORT-BOUND TWIN (do not merge / do not copy elsewhere): `updateTag` is
+ * legal ONLY inside true Server Actions — Next 16 hard-throws E872 in Route
+ * Handlers. This seam serves next-safe-action Server Actions, so `updateTag`
+ * (same-request refresh) is correct HERE. The oRPC seam
+ * (`server/orpc/revalidate.ts`) serves `/api/rpc` (a Route Handler) and MUST use
+ * `revalidateTag(tag, { expire: 0 })` instead. Same contract, two deliberate
+ * transport-bound implementations — the WL-P1-8 do-not-merge-twins class
+ * (SESSION_0498, Giddy pass-2).
+ *
  * @param options - The options to queue revalidation for
  */
 const revalidate = ({ paths = [], tags = [] }: RevalidateOptions) => {
