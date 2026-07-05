@@ -406,7 +406,10 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
   return (
     <Nav
       isCollapsed={!!isMobile}
-      className={cx("sticky top-0 h-dvh z-40 border-r", isMobile ? "w-12" : "w-48")}
+      // v2 (SESSION_0500): on mobile the B0 bottom nav is the ONE mobile nav system, so the
+      // `/app` icon rail hides — its destinations live in the bottom nav + the "More" drawer.
+      // Desktop keeps the full sidebar.
+      className={cx("sticky top-0 h-dvh z-40 border-r max-md:hidden", isMobile ? "w-12" : "w-48")}
       links={buildVisibleLinks(items, user, hasLineageGrant)}
     />
   )
@@ -480,7 +483,11 @@ const BblMemberRail = ({
     return (
       <Nav
         isCollapsed
-        className="chrome-surface sticky top-0 z-40 h-dvh w-12 border-r"
+        // v2 (SESSION_0500): hidden on mobile — the B0 bottom nav + "More" drawer are the ONE
+        // mobile nav system. (`isMobile` still drives this branch for the SSR-safe fallback,
+        // but CSS `max-md:hidden` guarantees it never paints on a phone regardless of the
+        // `useMediaQuery` first-render `undefined`.)
+        className="chrome-surface sticky top-0 z-40 h-dvh w-12 border-r max-md:hidden"
         links={mobileLinks}
       />
     )
@@ -490,7 +497,7 @@ const BblMemberRail = ({
     href === "/app" ? pathname === "/app" : pathname.startsWith(href)
 
   return (
-    <nav className="chrome-surface sticky top-0 z-40 flex h-dvh w-64 flex-col border-r">
+    <nav className="chrome-surface sticky top-0 z-40 flex h-dvh w-64 flex-col border-r max-md:hidden">
       <div className="border-b p-6">
         <Link
           href="/app"

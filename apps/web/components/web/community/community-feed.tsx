@@ -203,16 +203,22 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
         ))}
 
       {/* Mobile create-post FAB. The circular `icon` size (SESSION_0495 C2-5) replaces the old
-          `lg`-pill + `mx-0! my-0! size-6! rounded-full p-4` hack. */}
-      <Button
-        type="button"
-        variant="fancy"
-        size="icon"
-        prefix={<PenSquareIcon />}
-        onClick={() => setIsCreateOpen(true)}
-        aria-label={t("new_post")}
-        className="fixed right-5 bottom-5 z-40 shadow-lg md:hidden"
-      />
+          `lg`-pill + `mx-0! my-0! size-6! rounded-full p-4` hack.
+
+          SESSION_0500 (Epic B): the admin-only radial MAB now owns Create-Post on mobile, so
+          this FAB is HIDDEN for admins (no two FABs). Non-admins have no MAB and keep this
+          direct create affordance. `bottom-20` clears the fixed bottom nav (B0). */}
+      {!viewer.isAdmin && (
+        <Button
+          type="button"
+          variant="fancy"
+          size="icon"
+          prefix={<PenSquareIcon />}
+          onClick={() => setIsCreateOpen(true)}
+          aria-label={t("new_post")}
+          className="fixed right-5 bottom-20 z-30 shadow-lg md:hidden"
+        />
+      )}
 
       <CreateCommunityPostDialog
         styles={styles}

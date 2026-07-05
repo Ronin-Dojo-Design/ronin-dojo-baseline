@@ -1,6 +1,6 @@
 "use client"
 
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "~/components/common/button"
 import { Stack } from "~/components/common/stack"
@@ -22,6 +22,14 @@ export function DashboardTabs({ tabs, defaultTab }: DashboardTabsProps) {
   const urlTab =
     requestedTab && tabs.some(tab => tab.id === requestedTab) ? requestedTab : undefined
   const [activeTab, setActiveTab] = useState(urlTab ?? defaultTab ?? tabs[0]?.id ?? "")
+
+  // Sync the active sub-tab to `?tab` on soft-nav / deep-link (v2, SESSION_0500). `useState`
+  // reads `?tab` only at mount, so a soft-nav to `/app/profile?tab=events` (e.g. the
+  // /app/events → ?tab=events redirect, or an in-page link) wouldn't switch tabs. Reacting to
+  // the resolved `urlTab` makes those work; unknown/absent `?tab` leaves the current tab as-is.
+  useEffect(() => {
+    if (urlTab) setActiveTab(urlTab)
+  }, [urlTab])
 
   const activeContent = tabs.find(t => t.id === activeTab)?.content
 
