@@ -561,3 +561,10 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   person") + resolve/remove the stale open question with pointers to ADR 0035/0043. Next wiki sweep; not a code
   change.
 - **Status: OPEN** (wiki-sweep one-liner; flagged from SESSION_0498 bow-out).
+
+### D-041 — local `.env` S3 endpoint points at Next itself; MinIO down → all local media uploads fail (SESSION_0499)
+
+- **What:** `apps/web/.env` has `S3_ENDPOINT="http://localhost:3000"` + `S3_PUBLIC_URL="http://localhost:3000/ronindojo-dev"` — the runbook (`local-dev-auth-storage.md` §1) says MinIO on **:9000**. :3000 is the Next dev server, so every local media upload dies with an S3 XML-deserialization error (the SDK parsing Next's HTML 404). Docker daemon (MinIO host) was also down at discovery.
+- **Risk:** any local upload-path work silently blames the code (the 0499 uploader verification had to build a session-local S3 shim on :9100 + a corrected private worktree `.env` to proceed). Prod unaffected (R2).
+- **Fix direction:** restore the runbook values in the operator's `.env` + `docker compose up -d minio minio-init`. Operator's call (agents must not edit the canonical `.env` — [[operator-script-caution]] + env is gitignored).
+- **Status: OPEN** (operator action; workaround pattern documented in SESSION_0499 findings).

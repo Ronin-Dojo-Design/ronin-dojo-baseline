@@ -2,7 +2,7 @@
 title: "SESSION 0499 — Scene hero images live + storyboard uploader (kill the URL field)"
 slug: session-0499
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-05
 updated: 2026-07-05
 last_agent: claude-session-0499
@@ -77,7 +77,7 @@ family, `components/web/uploader/*`, with 3 consumer surfaces; the storyboard sh
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0499_TASK_01 | landed | 3 founder heroes set on prod (NULL-guarded); live-verified in SSR. Rorion = monogram (no portrait; A5). |
-| SESSION_0499_TASK_03 | in-progress | Timeline polish (operator, mid-session): (1) kill the ~3× name redundancy per scene card — figcaption attribution dup dies (Desi 0498 P3), echo chip goes avatar-only, ONE prominent name per card; (2) the H→V beat becomes SUBSTANTIAL — the display name itself rotates vertical and lands as the card's LEFT-EDGE SPINE (replaces the unnoticed tiny-marker rotate). The broader 2-axis carousel = pinned FI-020, NOT this slice. |
+| SESSION_0499_TASK_03 | landed — Desi 9.6 within combined SHIP | Timeline polish (operator, mid-session): (1) kill the ~3× name redundancy per scene card — figcaption attribution dup dies (Desi 0498 P3), echo chip goes avatar-only, ONE prominent name per card; (2) the H→V beat becomes SUBSTANTIAL — the display name itself rotates vertical and lands as the card's LEFT-EDGE SPINE (replaces the unnoticed tiny-marker rotate). The broader 2-axis carousel = pinned FI-020, NOT this slice. |
 | SESSION_0499_TASK_02 | landed | Preset cropper system + `ImageFieldUploader` — the scene editor's hero URL field is DEAD. Reused: the `uploadMedia` seam (3rd consumer; existing authz pins stay authoritative), lazy `ImageCropper` (extended `presets`/`defaultPreset`/`maxOutputPx`; defaults keep avatars pixel-identical), `ButtonGroup` chip row, the blog post-form upload idiom. New: `crop-presets.ts` registry (circle/square/wide-16:9/tall-4:5/triangle/star/free), `lib/shape-mask.ts` display-mask tokens (export = rectangle ALWAYS; shapes = display-time clip-path), shared `validateImageFile` guard (+3 tests → suite 1098). Live 12-step Playwright round-trip on :3499 (verification worktree — see findings for WHY): 3-chip preset row, preset switching, upload → `lineage/story-scenes/{uuid}.webp` (73KB — the `maxOutputPx` cap keeps crops under the 512KB seam ceiling), save, board thumb, public SSR + render on `/directory/tony-hua`, Remove → cleared (Rigan scene restored byte-identical to pre-test). A11y fix en route: `Label htmlFor` on the trigger button shadowed its visible name (WCAG 2.5.3) — label detached, `id` prop dropped from the variant. |
 
 ## Findings routed
@@ -170,6 +170,18 @@ family, `components/web/uploader/*`, with 3 consumer surfaces; the storyboard sh
 
 ## What landed
 
+7 commits on `session-0499-scene-hero-uploader` (squash-merged via PR — see Git hygiene):
+
+- **TASK_01 (prod data):** founder portraits live on the public story (Sr/Jr/Rigan; NULL-guarded; landing assets). Rorion = monogram (no portrait; A5).
+- **TASK_02 `cda8543a`:** preset cropper system (registry: circle/square/wide/tall/triangle/star/free; aspect-vs-mask two layers, rectangle exports, `lib/shape-mask.ts` display tokens) + `ImageFieldUploader` (pick→crop→upload via the ONE `uploadMedia` seam) — **the hero URL field is dead** (operator law: image inputs = uploaders). Avatar consumers pixel-identical.
+- **TASK_03 `cd944256`:** timeline polish — ONE name per card (figcaption dead, chip avatar-only) + the **name-spine H→V beat** (headline rotates −90° mid-viewport, parks as the card's left-edge spine; measured both viewports). Marker static.
+- **Desi pass `658ee606`:** Escape-in-cropper data-loss P1 + accent var + dialog field order + 5 P3s.
+- **Fallow loop `f09587fd`:** `useClaimEscape` (Suspense-window Escape gap — genuinely simulated), crop-failure toast, `RankByline`/`AncestryAvatar` clone-kill, dialog/save + `ImageFieldUploader` decomposition. Delta: clones 1→0, dead 5→2 (pre-existing), 4 CRAP targets→clean.
+- **`1a2adf75`:** `mediaUrl` schema — root-relative paths accepted (founder-scene saves 400'd on prod), http(s)-only absolute (blocks `javascript:` — old `z.string().url()` accepted it).
+- **`5ffef7be`:** code-quality pass — matrix scores uploader **9.3** / story motion **9.4** (pre-fix 8.9 caps cleared: inventory rows + JETTY headers).
+
+Reviews: Desi 8.9/9.6 → fixes → combined SHIP; 3 finders + Doug-verifier (10/13 refuted); matrix formal run (closes 0498 deferral). Suite **1103/0**; headless 10/10 + 12-step round-trip.
+
 ## Review log
 
 ### Code-quality score — Uploader family additions (code-quality-matrix)
@@ -220,4 +232,61 @@ Gates at the fix commit: typecheck 0 · lint clean-on-touched · format:check cl
 
 ## Next session
 
-TBD at close.
+### Goal
+
+Unchanged from SESSION_0498's staged pick: **FI-001 (Brian Truelson, board P0)** — Epic A prod bring-up is
+now fully DONE (operator flipped scenes live; portraits shipped; the mediaUrl save-fix deploys with this
+merge). Operator-held alternatives: the quality menu (authz conformance sweep · WL-P2-22 · apparatus
+lean-out — all banked, operator picks).
+
+### First task
+
+Confirm this deploy green + founder-scene saves work on prod (the 400 fix), then open FI-001 per
+`petey-plan-0419` §Task 1 + `petey-plan-0457` §Slice A2.
+
+## Hostile close review
+
+- **Giddy-equivalent:** covered by the matrix run (`5ffef7be` agent): Class A/B verdicts 9.3/9.4, caps
+  honestly applied then cleared, reuse-first proven (seam's consumer, not a fork). Pass.
+- **Doug-equivalent:** verifier pass (10/13 finder candidates refuted with mechanism-level evidence;
+  survivors fixed + genuinely simulated) + gates 1103/0 ×2 + `next build` green pre-push. Pass.
+- **Desi:** 8.9/9.6 → fix pass → combined SHIP; name-spine "answers the operator's complaint with
+  measured evidence." Pass.
+- **Kaizen aggregate:** 9.4/10 — operator-driven session; every complaint became a measured fix; the
+  fallow loop caught a live prod bug (mediaUrl 400) that five reviews missed because it lived in
+  data-shape, not code-shape.
+
+## ADR / ubiquitous-language check
+
+- ADR update **not required** — no architectural decision changed; ADR 0044 conformed-to throughout
+  (view minimalism §D4 upheld; preset system extends the family per ADR 0040 one-primitive×variants).
+  The crop-preset registry + shape-mask doctrine are documented in the component inventory (their canon
+  home for UI patterns).
+- Ubiquitous language: no new domain terms ("preset", "spine" = UI vocabulary, inventoried).
+
+## Reflections
+
+- The operator's "why do I have to ask?" is the sharpest review the storyboard got — five agent reviews
+  checked the data contract and none checked the input affordance. The inventory gap (uploader family had
+  ZERO rows) was the enabler: you can't reuse-check against an inventory that doesn't list the thing.
+  Fixed structurally (family inventoried + the law + WL-P2-28 checklist lesson).
+- The fallow loop's live round-trip caught what static review couldn't: seeded data (root-relative paths)
+  violating a zod shape (`url()`) = every founder-scene save 400ing on prod. Data-shape bugs need
+  data-shaped verification. Bonus: the fix closed a real `javascript:` URL acceptance.
+- Verification-driven refutation is cheap and high-value: 10 of 13 plausible-sounding finder candidates
+  died against actual reachability (always-cropped uploads, effect-gated callbacks, spec-guaranteed
+  callbacks). Confirm-before-fix saved a day of phantom fixes.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | 3 rows, all landed |
+| Gates | typecheck 0 · lint clean-touched · format:check 1793 files · `bun run test` 1103/0 (×2) · `next build` green pre-push (§4a cost gate) |
+| Wiki lint | 0 errors at close commit |
+| Reviews | Desi (combined SHIP) + verifier (10/13 refuted) + matrix 9.3/9.4 — in Review log |
+| Ledger routing | WL-P2-28 (✅fixed), D-041 (open, operator), FI-020 (pinned), chip task_e2143162 (mediaUrl edge), R2-orphan trade-off documented |
+| Memory sweep | `image-inputs-are-uploaders-never-url-fields` saved mid-session + MEMORY.md indexed |
+| Inventory | Uploader family section + atoms rows + JETTY on 7 new files (`5ffef7be`) |
+| Git hygiene | single close commit + push on operator "Word."; PR squash-merge; branch deleted post-merge |
+| Graphify | refreshed post-merge (count in bow-out chat) |
