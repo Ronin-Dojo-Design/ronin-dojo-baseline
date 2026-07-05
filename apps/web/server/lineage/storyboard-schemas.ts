@@ -13,6 +13,23 @@ import { z } from "zod"
 const cuid = z.string().min(1).max(191)
 
 /**
+ * Media URL: absolute (https://r2…) OR root-relative (`/brand/…` — public/
+ * assets; the founder seeds use these, SESSION_0499). `z.string().url()` alone
+ * 400'd every save of a seeded founder scene ("Invalid URL" — live prod bug
+ * surfaced by the 0499 fallow loop). Root-relative must start with a single
+ * `/` (no `//host` protocol-relative smuggling).
+ */
+const mediaUrl = z
+  .string()
+  .max(2000)
+  .refine(
+    value =>
+      /^\/(?!\/)/.test(value) ||
+      (/^https?:\/\//.test(value) && z.string().url().safeParse(value).success),
+    "Must be an http(s) URL or a root-relative path (/…)",
+  )
+
+/**
  * The editable copy/media field set. Every key is optional so a partial update
  * leaves untouched columns alone (`undefined` = keep, `null` = clear — the
  * belt-router idiom). URLs are length-capped; the A5 upload path doesn't exist
@@ -23,9 +40,9 @@ export const sceneFields = z.object({
   /** Sourcing/provenance note — public display renders the person's displayName. */
   quoteAttribution: z.string().max(500).nullish(),
   storyBio: z.string().max(5000).nullish(),
-  heroImageUrl: z.string().url().max(2000).nullish(),
-  heroVideoUrl: z.string().url().max(2000).nullish(),
-  posterUrl: z.string().url().max(2000).nullish(),
+  heroImageUrl: mediaUrl.nullish(),
+  heroVideoUrl: mediaUrl.nullish(),
+  posterUrl: mediaUrl.nullish(),
   sceneOrder: z.number().int().min(0).max(100_000).nullish(),
 })
 
