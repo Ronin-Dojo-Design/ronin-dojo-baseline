@@ -16,9 +16,18 @@ export type NavLink = ButtonProps & {
   label?: ReactNode
 }
 
+/**
+ * Non-interactive group label between link runs (SESSION_0501 admin nav
+ * regroup). Collapsed rails have no room for text, so it degrades to a
+ * separator there.
+ */
+export type NavHeading = { heading: string }
+
+export type NavEntry = NavLink | NavHeading | undefined
+
 type NavProps = ComponentProps<"nav"> & {
   isCollapsed: boolean
-  links: Array<NavLink | undefined>
+  links: Array<NavEntry>
 }
 
 export const Nav = ({ className, links, isCollapsed, ...props }: NavProps) => {
@@ -47,6 +56,21 @@ export const Nav = ({ className, links, isCollapsed, ...props }: NavProps) => {
       {links.map((link, index) => {
         if (!link) {
           return <Separator key={index} className="my-2 -mx-3 w-auto" />
+        }
+
+        if ("heading" in link) {
+          if (isCollapsed) {
+            return <Separator key={index} className="my-2 -mx-3 w-auto" />
+          }
+
+          return (
+            <span
+              key={index}
+              className="px-2 pt-4 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground"
+            >
+              {link.heading}
+            </span>
+          )
         }
 
         const { href, title, label, suffix, ...props } = link

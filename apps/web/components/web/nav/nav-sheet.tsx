@@ -2,6 +2,7 @@
 
 import { getInitials } from "@dirstack/utils"
 import {
+  CompassIcon,
   ContactRoundIcon,
   GitBranchIcon,
   LayoutDashboardIcon,
@@ -136,9 +137,17 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
               {/* C2-8: shared `isAdmin` predicate (not a forked `role === "admin"`); link the
                   canonical `/app` target directly instead of `/admin` (a 308 redirect → /app). */}
               {isAdmin(user) && (
-                <NavLink href="/app" prefix={<ShieldHalfIcon />}>
-                  {t("navigation.admin_panel")}
-                </NavLink>
+                <>
+                  <NavLink href="/app" prefix={<ShieldHalfIcon />}>
+                    {t("navigation.admin_panel")}
+                  </NavLink>
+
+                  {/* FI-021 (SESSION_0501): the grouped console index — the mobile way into
+                      the `/app` areas (the desktop sidebar is max-md:hidden). */}
+                  <NavLink href="/app/sections" prefix={<CompassIcon />}>
+                    {t("navigation.sections")}
+                  </NavLink>
+                </>
               )}
             </nav>
           )}

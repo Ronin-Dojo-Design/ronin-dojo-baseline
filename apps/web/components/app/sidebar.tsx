@@ -1,43 +1,28 @@
 "use client"
 
 import { getInitials } from "@dirstack/utils"
-import { useMediaQuery } from "@mantine/hooks"
 import {
-  AwardIcon,
-  CalendarIcon,
-  BuildingIcon,
-  BookOpenIcon,
-  ClipboardListIcon,
+  CircleUserRoundIcon,
+  CompassIcon,
   DockIcon,
   ExternalLinkIcon,
   FileTextIcon,
   GitBranchIcon,
   HomeIcon,
-  IdCardIcon,
-  ImageIcon,
-  LayersIcon,
   LogOutIcon,
-  MailIcon,
-  MailPlusIcon,
-  PaletteIcon,
   PlusCircleIcon,
-  BarChart3Icon,
-  ShieldCheckIcon,
   SparklesIcon,
-  SquareKanbanIcon,
-  SwordsIcon,
-  TrophyIcon,
   UserIcon,
-  UsersIcon,
 } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Nav, type NavLink } from "~/components/app/nav"
+import { Nav, type NavEntry, type NavLink } from "~/components/app/nav"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Button } from "~/components/common/button"
 import { Kbd } from "~/components/common/kbd"
 import { Link } from "~/components/common/link"
 import { LogoSymbol } from "~/components/web/ui/logo-symbol"
+import { ADMIN_SECTION_GROUPS, filterAdminSectionGroups } from "~/config/admin-sections"
 import { useBrand } from "~/contexts/brand-context"
 import { useSearch } from "~/contexts/search-context"
 import { signOut } from "~/lib/auth-client"
@@ -46,10 +31,13 @@ import type { SessionUser } from "~/server/orpc/context"
 import { can } from "~/server/orpc/permissions"
 import { APP_AREA_PERMISSIONS, type Permission } from "~/server/orpc/roles"
 
-// A nav entry plus an optional permission gate. Items without a `permission`
-// are shown to every signed-in user; admin (`*`) sees everything. `lineage:
-// true` marks the item as ALSO visible to active LineageTreeAccess grantees
-// (Ronin delta, SOT-ADR D4 — mirrors `requireLineageAccess`).
+// A nav entry plus an optional permission gate (BblMemberRail subset). Items
+// without a `permission` are shown to every signed-in user; admin (`*`) sees
+// everything. `lineage: true` marks the item as ALSO visible to active
+// LineageTreeAccess grantees (Ronin delta, SOT-ADR D4 — mirrors
+// `requireLineageAccess`). The full management nav's 36 areas live in
+// `config/admin-sections.ts` (SESSION_0501) — ONE grouped model shared with
+// `/app/sections` and the beta Command Deck.
 type NavItem = NavLink & {
   permission?: Permission
   lineage?: boolean
@@ -102,7 +90,6 @@ type SidebarProps = {
 }
 
 export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
-  const isMobile = useMediaQuery("(max-width: 768px)")
   const router = useRouter()
   const search = useSearch()
 
@@ -121,12 +108,9 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     })
   }
 
-  // Single ordered nav config. `undefined` entries are group separators; items
-  // carry an optional `permission` and are hidden when the user lacks it.
-  // Phase 2b waves (BBL-SOT-Spec Phase 2): entries grow per wave as `/admin`
-  // areas move under `/app` — wave 1 (SESSION_0365): lineage/users/claims;
-  // wave 2 (SESSION_0366): tournaments/memberships/organizations.
-  const items: Array<NavItem | undefined> = [
+  // Ungrouped chrome concerns stay at the top; the 36 managed areas render as
+  // grouped runs from the shared config (SESSION_0501 admin nav regroup).
+  const topLinks: Array<NavEntry> = [
     {
       title: "Dashboard",
       href: "/app",
@@ -135,231 +119,34 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     {
       title: "Profile",
       href: "/app/profile",
-      prefix: <UserIcon />,
+      prefix: <CircleUserRoundIcon />,
     },
     {
       title: "Onboarding",
       href: "/app?tour=1",
       prefix: <SparklesIcon />,
     },
+    {
+      title: "All sections",
+      href: "/app/sections",
+      prefix: <CompassIcon />,
+    },
+  ]
 
-    undefined,
-    {
-      title: "Loop Board",
-      href: "/app/loop-board",
-      prefix: <SquareKanbanIcon />,
-      permission: APP_AREA_PERMISSIONS.loopBoard,
-    },
-    {
-      title: "Lineage",
-      href: "/app/lineage",
-      prefix: <GitBranchIcon />,
-      permission: APP_AREA_PERMISSIONS.lineage,
-      lineage: true,
-    },
-    {
-      title: "Events",
-      href: "/app/events",
-      prefix: <CalendarIcon />,
-    },
-    {
-      title: "Techniques",
-      href: "/app/techniques",
-      prefix: <SwordsIcon />,
-    },
-    {
-      title: "Users",
-      href: "/app/users",
-      prefix: <UsersIcon />,
-      permission: APP_AREA_PERMISSIONS.users,
-    },
-    {
-      title: "Claims",
-      href: "/app/claims",
-      prefix: <ShieldCheckIcon />,
-      permission: APP_AREA_PERMISSIONS.claims,
-    },
-    {
-      title: "Tournaments",
-      href: "/app/tournaments",
-      prefix: <TrophyIcon />,
-      permission: APP_AREA_PERMISSIONS.tournaments,
-    },
-    {
-      title: "Memberships",
-      href: "/app/memberships",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.memberships,
-    },
-    {
-      title: "Organizations",
-      href: "/app/organizations",
-      prefix: <BuildingIcon />,
-      permission: APP_AREA_PERMISSIONS.organizations,
-    },
-    {
-      title: "Certificates",
-      href: "/app/certificates",
-      prefix: <AwardIcon />,
-      permission: APP_AREA_PERMISSIONS.certificates,
-    },
-    {
-      title: "Posts",
-      href: "/app/blog",
-      prefix: <FileTextIcon />,
-      permission: APP_AREA_PERMISSIONS.posts,
-    },
-    {
-      title: "Content",
-      href: "/app/content",
-      prefix: <LayersIcon />,
-      permission: APP_AREA_PERMISSIONS.content,
-    },
-    {
-      title: "Media",
-      href: "/app/media",
-      prefix: <ImageIcon />,
-      permission: APP_AREA_PERMISSIONS.media,
-    },
-    {
-      title: "Roles",
-      href: "/app/roles",
-      prefix: <ShieldCheckIcon />,
-      permission: APP_AREA_PERMISSIONS.roles,
-    },
-    {
-      title: "Entitlements",
-      href: "/app/entitlements",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.entitlements,
-    },
-    {
-      title: "Invites",
-      href: "/app/invites",
-      prefix: <MailPlusIcon />,
-      permission: APP_AREA_PERMISSIONS.invites,
-    },
-    {
-      title: "Leads",
-      href: "/app/leads",
-      prefix: <ClipboardListIcon />,
-      permission: APP_AREA_PERMISSIONS.leads,
-    },
-    {
-      title: "Email",
-      href: "/app/email",
-      prefix: <MailIcon />,
-      permission: APP_AREA_PERMISSIONS.email,
-    },
-    {
-      title: "Brand Settings",
-      href: "/app/brand-settings",
-      prefix: <PaletteIcon />,
-      permission: APP_AREA_PERMISSIONS.brandSettings,
-    },
-    {
-      title: "Privacy",
-      href: "/app/privacy/requests",
-      prefix: <ShieldCheckIcon />,
-      permission: APP_AREA_PERMISSIONS.privacy,
-    },
-    {
-      title: "Reports",
-      href: "/app/reports",
-      prefix: <BarChart3Icon />,
-      permission: APP_AREA_PERMISSIONS.reports,
-    },
-    {
-      title: "Programs",
-      href: "/app/programs",
-      prefix: <ClipboardListIcon />,
-      permission: APP_AREA_PERMISSIONS.programs,
-    },
-    {
-      title: "Courses",
-      href: "/app/courses",
-      prefix: <BookOpenIcon />,
-      permission: APP_AREA_PERMISSIONS.courses,
-    },
-    {
-      title: "Age Groups",
-      href: "/app/age-groups",
-      prefix: <UsersIcon />,
-      permission: APP_AREA_PERMISSIONS.ageGroups,
-    },
-    {
-      title: "Skill Levels",
-      href: "/app/skill-levels",
-      prefix: <LayersIcon />,
-      permission: APP_AREA_PERMISSIONS.skillLevels,
-    },
-    {
-      title: "Schedule",
-      href: "/app/schedule",
-      prefix: <CalendarIcon />,
-      permission: APP_AREA_PERMISSIONS.schedule,
-    },
-    {
-      title: "Billing",
-      href: "/app/billing",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.billing,
-    },
-    {
-      title: "Categories",
-      href: "/app/categories",
-      prefix: <LayersIcon />,
-      permission: APP_AREA_PERMISSIONS.categories,
-    },
-    {
-      title: "Tags",
-      href: "/app/tags",
-      prefix: <LayersIcon />,
-      permission: APP_AREA_PERMISSIONS.tags,
-    },
-    {
-      title: "Pricing Plans",
-      href: "/app/pricing-plans",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.pricingPlans,
-    },
-    {
-      title: "Subscription Tiers",
-      href: "/app/subscription-tiers",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.subscriptionTiers,
-    },
-    {
-      title: "Subscriptions",
-      href: "/app/subscriptions",
-      prefix: <IdCardIcon />,
-      permission: APP_AREA_PERMISSIONS.subscriptions,
-    },
-    {
-      title: "Merch",
-      href: "/app/merch",
-      prefix: <ClipboardListIcon />,
-      permission: APP_AREA_PERMISSIONS.merch,
-    },
-    {
-      title: "Tools",
-      href: "/app/tools",
-      prefix: <ClipboardListIcon />,
-      permission: APP_AREA_PERMISSIONS.tools,
-    },
-    {
-      title: "Storage",
-      href: "/app/storage",
-      prefix: <DockIcon />,
-      permission: APP_AREA_PERMISSIONS.storage,
-    },
-    {
-      title: "Repo Docs",
-      href: "/app/repo-docs",
-      prefix: <BookOpenIcon />,
-      permission: APP_AREA_PERMISSIONS.repoDocs,
-    },
+  // Grouped middle: same gate semantics as before (permission / lineage grant),
+  // now filtered through the shared config. Empty groups drop their label.
+  const groupedEntries: Array<NavEntry> = filterAdminSectionGroups(user, hasLineageGrant).flatMap(
+    group => [
+      { heading: group.label },
+      ...group.items.map(({ title, href, icon: Icon }) => ({
+        title,
+        href,
+        prefix: <Icon />,
+      })),
+    ],
+  )
 
+  const utilityLinks: Array<NavEntry> = [
     undefined,
     {
       title: "Quick Menu",
@@ -385,10 +172,12 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
   // BBL (single brand): regular members get the simplified BBL member rail;
   // privileged users (anyone with a gated area permission, or an active lineage
   // grant) keep the full management nav so nothing is lost.
-  const isPrivileged = items.some(
-    item =>
-      item?.permission != null &&
-      (can(user, item.permission) || (item.lineage === true && hasLineageGrant)),
+  const isPrivileged = ADMIN_SECTION_GROUPS.some(group =>
+    group.items.some(
+      item =>
+        item.permission != null &&
+        (can(user, item.permission) || (item.lineage === true && hasLineageGrant)),
+    ),
   )
 
   if (user && !isPrivileged) {
@@ -396,7 +185,6 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
       <BblMemberRail
         user={user}
         hasLineageGrant={hasLineageGrant}
-        isMobile={!!isMobile}
         onVisitSite={handleOpenSite}
         onSignOut={handleSignOut}
       />
@@ -405,12 +193,13 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
 
   return (
     <Nav
-      isCollapsed={!!isMobile}
-      // v2 (SESSION_0500): on mobile the B0 bottom nav is the ONE mobile nav system, so the
-      // `/app` icon rail hides — its destinations live in the bottom nav + the "More" drawer.
-      // Desktop keeps the full sidebar.
-      className={cx("sticky top-0 h-dvh z-40 border-r max-md:hidden", isMobile ? "w-12" : "w-48")}
-      links={buildVisibleLinks(items, user, hasLineageGrant)}
+      // WL-P3-29 (SESSION_0501): the old `useMediaQuery` collapsed mode was dead
+      // code — `max-md:hidden` already hides this rail below the md breakpoint
+      // (the B0 bottom nav is the ONE mobile nav system), so the collapsed icon
+      // variant could never paint. Desktop keeps the full sidebar.
+      isCollapsed={false}
+      className="sticky top-0 h-dvh z-40 border-r max-md:hidden w-48 overflow-y-auto"
+      links={[...topLinks, ...groupedEntries, ...utilityLinks]}
     />
   )
 }
@@ -424,7 +213,6 @@ const RAIL_UTILITY_ITEM =
 type BblMemberRailProps = {
   user: SessionUser
   hasLineageGrant: boolean
-  isMobile: boolean
   onVisitSite: () => void
   onSignOut: () => void
 }
@@ -432,19 +220,14 @@ type BblMemberRailProps = {
 /**
  * Simplified BBL member rail (parity with the legacy `DesktopNav`): brand mark +
  * wordmark block, a short icon+label nav with a primary active highlight, a
- * primary Create CTA, and a bottom user mini-card. Desktop-labeled; on mobile it
- * falls back to the collapsed icon Nav because the `/app` area has no separate
- * mobile header/drawer. Surfaced via the shared `.chrome-surface` remap so the
- * `--color-primary` accent stays brand-driven (red on BBL) and other brands —
- * which never reach this branch — are unaffected.
+ * primary Create CTA, and a bottom user mini-card. Desktop-only — `max-md:hidden`
+ * hides it on mobile where the B0 bottom nav is the ONE nav system (the old
+ * `isMobile` collapsed-rail branch was dead code, pruned per WL-P3-29). Surfaced
+ * via the shared `.chrome-surface` remap so the `--color-primary` accent stays
+ * brand-driven (red on BBL) and other brands — which never reach this branch —
+ * are unaffected.
  */
-const BblMemberRail = ({
-  user,
-  hasLineageGrant,
-  isMobile,
-  onVisitSite,
-  onSignOut,
-}: BblMemberRailProps) => {
+const BblMemberRail = ({ user, hasLineageGrant, onVisitSite, onSignOut }: BblMemberRailProps) => {
   const pathname = usePathname()
   const { name } = useBrand()
 
@@ -469,29 +252,6 @@ const BblMemberRail = ({
   ]
   const links = buildVisibleLinks(memberItems, user, hasLineageGrant)
   const canPost = can(user, APP_AREA_PERMISSIONS.posts)
-
-  if (isMobile) {
-    const mobileLinks: Array<NavLink | undefined> = [
-      ...links,
-      ...(canPost
-        ? [{ title: "Create", href: "/app/blog/new", prefix: <PlusCircleIcon /> } as NavLink]
-        : []),
-      undefined,
-      { title: "Visit Site", href: "#", onClick: onVisitSite, prefix: <ExternalLinkIcon /> },
-      { title: "Logout", href: "#", onClick: onSignOut, prefix: <LogOutIcon /> },
-    ]
-    return (
-      <Nav
-        isCollapsed
-        // v2 (SESSION_0500): hidden on mobile — the B0 bottom nav + "More" drawer are the ONE
-        // mobile nav system. (`isMobile` still drives this branch for the SSR-safe fallback,
-        // but CSS `max-md:hidden` guarantees it never paints on a phone regardless of the
-        // `useMediaQuery` first-render `undefined`.)
-        className="chrome-surface sticky top-0 z-40 h-dvh w-12 border-r max-md:hidden"
-        links={mobileLinks}
-      />
-    )
-  }
 
   const isActive = (href: string) =>
     href === "/app" ? pathname === "/app" : pathname.startsWith(href)

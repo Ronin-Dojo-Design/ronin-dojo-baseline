@@ -21,6 +21,12 @@ const BETA_FEATURES = [
     description:
       "The scroll-driven ancestry story on public profiles — previewed here with disabled scenes visible, so new scenes can be curated before flipping live.",
   },
+  {
+    href: "/app/beta/command-deck",
+    name: "Command Deck",
+    description:
+      "An expressive take on the admin console — swipeable group decks with live-count bento tiles. The flat grouped index it mirrors ships at /app/sections.",
+  },
 ] as const
 
 export default function BetaIndexPage() {
