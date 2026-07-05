@@ -50,6 +50,10 @@ export type ImageFieldUploaderProps = {
  * Upload fires immediately after the crop (the blog `post-form.tsx` hero
  * precedent) — a later Cancel of the parent form orphans the R2 object, same
  * accepted trade-off as that precedent.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     Image inputs are uploaders, never URL text fields (WL-P2-28) — the family's field variant
+ * @wired   app/app/lineage/storyboard/_components/scene-editor-dialog.tsx (scene hero field)
  */
 export function ImageFieldUploader({
   value,

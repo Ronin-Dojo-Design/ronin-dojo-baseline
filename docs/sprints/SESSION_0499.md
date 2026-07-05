@@ -77,6 +77,7 @@ family, `components/web/uploader/*`, with 3 consumer surfaces; the storyboard sh
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0499_TASK_01 | landed | 3 founder heroes set on prod (NULL-guarded); live-verified in SSR. Rorion = monogram (no portrait; A5). |
+| SESSION_0499_TASK_03 | in-progress | Timeline polish (operator, mid-session): (1) kill the ~3× name redundancy per scene card — figcaption attribution dup dies (Desi 0498 P3), echo chip goes avatar-only, ONE prominent name per card; (2) the H→V beat becomes SUBSTANTIAL — the display name itself rotates vertical and lands as the card's LEFT-EDGE SPINE (replaces the unnoticed tiny-marker rotate). The broader 2-axis carousel = pinned FI-020, NOT this slice. |
 | SESSION_0499_TASK_02 | landed | Preset cropper system + `ImageFieldUploader` — the scene editor's hero URL field is DEAD. Reused: the `uploadMedia` seam (3rd consumer; existing authz pins stay authoritative), lazy `ImageCropper` (extended `presets`/`defaultPreset`/`maxOutputPx`; defaults keep avatars pixel-identical), `ButtonGroup` chip row, the blog post-form upload idiom. New: `crop-presets.ts` registry (circle/square/wide-16:9/tall-4:5/triangle/star/free), `lib/shape-mask.ts` display-mask tokens (export = rectangle ALWAYS; shapes = display-time clip-path), shared `validateImageFile` guard (+3 tests → suite 1098). Live 12-step Playwright round-trip on :3499 (verification worktree — see findings for WHY): 3-chip preset row, preset switching, upload → `lineage/story-scenes/{uuid}.webp` (73KB — the `maxOutputPx` cap keeps crops under the 512KB seam ceiling), save, board thumb, public SSR + render on `/directory/tony-hua`, Remove → cleared (Rigan scene restored byte-identical to pre-test). A11y fix en route: `Label htmlFor` on the trigger button shadowed its visible name (WCAG 2.5.3) — label detached, `id` prop dropped from the variant. |
 
 ## Findings routed
@@ -168,6 +169,50 @@ family, `components/web/uploader/*`, with 3 consumer surfaces; the storyboard sh
   only; gates re-run at the final commit SHA.
 
 ## What landed
+
+## Review log
+
+### Code-quality score — Uploader family additions (code-quality-matrix)
+
+Unit: `components/web/uploader/{crop-presets,image-field-uploader,use-image-field-upload,use-claim-escape,validation}` + `lib/shape-mask.ts` (+ extended `cropper.tsx`). Formal matrix run at `1a2adf75` + this pass's doc fixes.
+
+**Class:** A — extends the Dirstarter media/storage L1 via the untouched `uploadMedia` seam (§3).
+
+| Dim | Score | Note |
+| --- | ---: | --- |
+| D1 Correctness | 9.5 | 12-step live Playwright round-trip on :3499 (upload→uuid key→save→board thumb→public SSR→Remove→restore byte-identical); avatar consumers pixel-identical by defaults; pick-guard test-pinned; objectURL revoked exactly once; canvas failures surfaced |
+| D2 Security | 9 | seam untouched — adversarial authz pins authoritative; client validate documented UX-only, server sniff + 512KB ceiling authoritative; uuid keys; `mediaUrl` now blocks `javascript:`/`//host` — but the root-relative refine misses `/\`-and-whitespace protocol-relative smuggles (named follow-up; writers are `lineage.manage`-privileged) |
+| D3 Simplicity | 9 | fallow clone-groups 0; preset registry = data not branches; hook/markup split; named debt: ImageCropper cognitive 132 (accepted-with-reason — JSX-branch-rich) + raw overlay-not-Dialog (exit path named) |
+| D4 Readability | 9.5 | docblocks carry the why + trade-offs (orphaned-R2, Escape dual-mount); JETTY `@added/@why/@wired` added this pass on all 7 new files |
+| D5 Maintainability | 9.5 | units 26–208 LOC; one shared validation source; fallow health 89.8 good; 0 new dead code |
+| D6 Scalability | 9.5 | lazy cropper chunk; draw-time downscale (73KB measured vs 512KB ceiling); no server/hot-path work |
+| D7 Convention/reuse | 9.5 | textbook extend-don't-bypass (seam's 3rd consumer; defaults keep avatars identical); pre-flight on file; family + hook inventory rows complete after this pass |
+
+**Weighted average:** 9.3 · **Cap applied:** none (pre-fix: 8.9 uninventoried-primitive cap — `useClaimEscape`/`useImageFieldUpload` rows added) · **Composite: 9.3 / 10**
+**Apple/Facebook verdict:** Strong — a senior reviewer approves: it extends the platform seam instead of forking it; the one shortcut (raw overlay, not `Dialog`) is named with its exit path.
+**Top fixes (follow-ups):** (1) tighten `mediaUrl` root-relative refine against `\`/whitespace smuggles (D2, behavior change → out of this loop); (2) rebuild the crop overlay on `Dialog` (retires `useClaimEscape`).
+
+### Code-quality score — Lineage-story motion post-polish (code-quality-matrix)
+
+Unit: `lineage-story/lineage-story-scene.tsx` + `lineage-ancestry-entry.tsx` + `scene-model.ts`. Closes SESSION_0498's deferred formal matrix run.
+
+**Class:** B — custom, reference = ADR 0044 + `custom-component-inventory` + scene-model token law (§3).
+
+| Dim | Score | Note |
+| --- | ---: | --- |
+| D1 Correctness | 9.5 | Desi 9.6 on measured motion evidence (spine park/glyph sizes + chip window re-measured both viewports, probes on file); SSR/no-JS ships content visible at progress 0; hooks before early-return; public DOM regression-checked byte-identical |
+| D2 Security | 9.5 | public RSC read path, minimal projection (ADR 0044 §D4); `ancestryStorySceneSelect` export narrowed in-file this branch; enabled-only + PUBLIC-chain keying test-pinned; user copy rendered as text nodes |
+| D3 Simplicity | 9 | ONE `SceneShell` × token sets (palette branching only in `scene-model`); `RankByline`/`AncestryAvatar` dup-kill (clone-groups 0); named debt: `LineageStoryScene` cognitive 132 accepted-with-reason (motion + JSX-branch-rich; geometry stays with the JSX it animates — defensible, no §4 cap exists for complexity) |
+| D4 Readability | 9.5 | every magic number carries its measured rationale (NAME_BEAT, chip position vs sticky chrome, spine geometry derivation written out); JETTY tags added to the new `lineage-ancestry-entry.tsx` |
+| D5 Maintainability | 9.5 | pure model split (no React — server + tests consume); typed token contract with per-field docs; one-way sibling dependency documented; palette law + gate test-pinned |
+| D6 Scalability | 9 | transform/opacity-only, deterministic scroll map; per-frame `offset*` reads documented reflow-safe but `spineTarget` runs 3× per frame (micro follow-up); chain length bounded by lineage depth |
+| D7 Convention/reuse | 9.5 | L1 primitives (Avatar/Badge/H5/Stack); belt = `Rank.colorHex` data; red = token never hex (test-pinned); inventory rows updated for the polish + the missing atoms row added this pass |
+
+**Weighted average:** 9.4 · **Cap applied:** none (pre-fix: 8.9 uninventoried-primitive cap — `lineage-ancestry-entry.tsx` row added) · **Composite: 9.4 / 10**
+**Apple/Facebook verdict:** Strong — ship-quality motion code: deterministic, compositor-only, every constant carries its measurement; the one oversized component is a defended trade.
+**Top fixes (follow-ups):** (1) memo `spineTarget` per frame if scenes multiply (D6, micro); (2) revisit the cognitive-132 acceptance only if the component grows.
+
+Gates at the fix commit: typecheck 0 · lint clean-on-touched · format:check clean · `bun run test` 1103/0 · wiki-lint 0 errors. Fixes were docs/comments only (inventory rows, JETTY headers, this log) — headless re-verify not required; no behavior surface touched.
 
 ## Open decisions / blockers
 

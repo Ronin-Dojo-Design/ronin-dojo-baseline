@@ -24,6 +24,10 @@ import { useEffect } from "react"
  *
  * Long-term fix stays the one in the cropper docblock: rebuild the overlay ON
  * `~/components/common/dialog` so Base UI's dismissal stack owns key handling.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     Mid-crop Escape must cancel the CROP, not dismiss the host dialog's dirty fields (Desi P1/P2)
+ * @wired   image-field-uploader.tsx (crop phase incl. Suspense fallback), cropper.tsx (direct mounts)
  */
 export function useClaimEscape(active: boolean, onCancel: () => void) {
   useEffect(() => {

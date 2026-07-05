@@ -9,6 +9,10 @@
  * Consumers: the uploader cropper's frame-for-shape overlay reads
  * `SHAPE_MASK_CLIP_PATH` (via a CSS var); any display surface renders a masked
  * image with `shapeMaskClass(mask)`.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     Shapes are DISPLAY-time clip-path tokens — the uploaded export stays a clean rectangle
+ * @wired   components/web/uploader/cropper.tsx (mask overlay), components/web/uploader/crop-presets.ts (mask field)
  */
 
 export type ShapeMask = "circle" | "triangle" | "star"

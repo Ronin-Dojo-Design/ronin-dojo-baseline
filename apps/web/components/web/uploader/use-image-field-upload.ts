@@ -17,6 +17,10 @@ import { validateImageFile } from "./validation"
  * enum would just mirror `rawPreviewUrl !== null` / `isUploading`). Every path
  * out of the crop phase runs through `handleCropCancel`, which revokes the
  * objectURL exactly once.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     ImageFieldUploader's flow state (fallow decomposition — markup/state split)
+ * @wired   image-field-uploader.tsx
  */
 export function useImageFieldUpload({
   uploadPathPrefix,

@@ -13,6 +13,10 @@ import type { LineageAncestryEntry } from "~/server/web/lineage/ancestry"
  * rank/discipline blocks. Homed as a lineage-family SIBLING (not inside
  * `lineage-story/`) so the older generic timeline never imports from the newer
  * story module — the dependency stays one-way: both consume this file.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     Dup-kill — one source for the avatar + rank byline both ancestry surfaces rendered verbatim
+ * @wired   lineage-ancestry-timeline.tsx, lineage-story/lineage-story-scene.tsx
  */
 
 /** Entry avatar — image when present, `memberInitials` fallback. Ring/size styling is the caller's. */

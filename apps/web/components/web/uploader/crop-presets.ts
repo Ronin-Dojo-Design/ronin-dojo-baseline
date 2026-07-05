@@ -10,6 +10,10 @@ import type { ShapeMask } from "~/lib/shape-mask"
  *   are applied with CSS clip-path where the image renders, so one uploaded
  *   asset is reusable in any shape. The cropper only overlays the mask outline
  *   so the user frames for the final shape.
+ *
+ * @added   SESSION_0499 (2026-07-05)
+ * @why     One registry for the cropper's easy preset selects (crop aspect × display mask)
+ * @wired   cropper.tsx (preset row + icons), image-field-uploader.tsx (`presets` prop), app/app/lineage/storyboard/_components/scene-editor-dialog.tsx
  */
 
 export type CropPresetKey = "circle" | "square" | "wide" | "tall" | "triangle" | "star" | "free"
