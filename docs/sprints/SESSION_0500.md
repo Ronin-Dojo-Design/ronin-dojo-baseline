@@ -173,11 +173,11 @@ cut LineageTreeBoard complexity — all collision-free across a shared local DB 
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0500_TASK_01 | in-progress | Cody dispatched — G-004 N1, worktree `ronin-0500-g004` :3500 |
 | SESSION_0500_TASK_02 | resolved — RETIRE | Giddy: 0491 SUPERSEDED by #186 (migration byte-identical, SELF_REVIEW guard on main / absent on branch, RankMilestone on main). NOT rebased. Operator GO → archive-tagged `archive/session-0491-belt-rebase` @ `e19653a9` + worktree/branch removed. Rebasing would re-open the CRITICAL self-approval hole. |
 | SESSION_0500_TASK_03 | in-progress | Cody dispatched — WL-P2-22 refactor, worktree `ronin-0500-wl22` :3501 |
-| SESSION_0500_TASK_04 | pending (un-gated) | G-004 N2 — Wave-2 gate DISSOLVED (belt subsystem already on main via #186). Dispatch on main after TASK_01 returns. |
-| SESSION_0500_TASK_05 | pending | FI-006 — `selectedRankAward` FK deprecation (unblocked; belt DB on main). Migration → sequence after/with N2 (shared belt/member files + one migration lane). |
+| SESSION_0500_TASK_01 | landed (Doug pending) | G-004 N1 — combobox swapped, typed refs persist (`trainedUnderNodeId`/`claimedSchoolId`), no migration, gates green @ `78aa43e2`. Held. |
+| SESSION_0500_TASK_04 | in-progress | G-004 N2 dispatched — belt cards (passport-keyed picker, WL-P1-8 guard) + privacy toggles + Billing tab, on main's #186 belt subsystem, in `ronin-0500-g004` on top of N1. |
+| SESSION_0500_TASK_05 | resolved — STALE | FI-006 already DONE on main: `selectedRankAward` FK removed in 0475 (schema:2931 comment only); claim rank picker + `currentRankId`/`claimedRankId` shipped. SOT row is stale → close at bow-out. No dispatch. |
 
 ## Open decisions / blockers
 
