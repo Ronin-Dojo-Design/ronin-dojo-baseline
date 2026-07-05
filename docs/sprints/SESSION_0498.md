@@ -2,7 +2,7 @@
 title: "SESSION 0498 — Epic A opener: the Lineage Journey scrollytelling (A0 → A2-v1 → A1)"
 slug: session-0498
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-04
 updated: 2026-07-04
 last_agent: claude-session-0498
@@ -395,17 +395,51 @@ The 6 forks from `petey-plan-0498` — resolve BEFORE Cody builds A0:
 
 ## What landed
 
+The complete **Epic A spine**, loop-verified to SHIP ≥9.5 across five reviews + a Doug end-verify (9.5 SHIP-WITH-NOTES):
+
+- **A0 (`ede05efe` + seed-fix `508263ea`):** `LineageStoryScene` (1:1 by `passportId`) — hand-authored migration (shadow-replay clean, additive-only, prod-safe), `LineageAncestryEntry.story` projection (one batch, honest L+3→L+4, visibility-truncation-gated), create-only founder seed with the 4 sourced quotes.
+- **A2-v1 (`286c56cb` + view-trim `b2673097` + fix-pass `65875ac3` + chip retune `826c7209`):** the scroll-driven Lineage Journey on `/directory/[slug]` — three-palette `SceneShell` cycle (black→red→white, operator direction), Poppins 800 landing parity, hero large→shrink-to-node beat (measured on-screen), mini scenes for non-scened entries, data-gated rollout (`chainHasStoryScenes`), SSR-visible pre-hydration + reduced-motion falls back to the existing timeline. **Bake-off gate: v1 PROVEN — no Lenis/GSAP dep.** Desi 8.4 → 9.6 SHIP (independently re-measured).
+- **A1 (`a7362e67`):** `/app/lineage/storyboard` — `can("lineage.manage")`-gated scene-card board + oRPC `lineage.storyboard.*` (create/update/setEnabled/duplicate/remove), passport-keyed picker (WL-P1-8 guard regression-pinned), every mutation revalidates the ancestry cache, duplicate-lands-disabled. 13 adversarial-first tests.
+- **TASK_04 (`5b230aed`):** `/app/beta` gated preview area — `beta.view` axis-1 key (admin `"*"` covers Brian+Tony day-one), Lineage Journey preview rendering chains **including disabled scenes** (`includeDisabledScenes` distinct-cache read, marker chips), seed `--disabled` flag. GA = per-scene `enabled` flip on the storyboard; no deploy needed to launch scenes.
+- **Shared-infra fix (in `a7362e67`, hardened `b4fe3d14`):** `server/orpc/revalidate.ts` `updateTag` → `revalidateTag(tag, {expire:0})` — the tag branch would hard-throw E872 on first real use (Route Handler transport). Twin-seam law ratified (ADR 0044 §D7, WL-P2-27, reciprocal docblocks).
+- **Research-reviews (Giddy):** [`research-review-passport-node-id.md`](../architecture/research/research-review-passport-node-id.md) (KEEP SEPARATE — 1:1 FK ≠ DRY violation) and [`research-review-authz-systems.md`](../architecture/research/research-review-authz-systems.md) (keep-layered-and-conform; 7-item conformance sweep; FI-019 design).
+- **ADR 0044** ratified at close (scene model laws, preview-widening flag pattern, constant-in-view rule, transport-split revalidation, flat `lineage.manage` precedent).
+- Conformance batch (`b4fe3d14`): TOCTOU P2002→CONFLICT, twin docblocks, in-page beta gate; format stragglers (`01bb94a5`).
+
 ## Decisions resolved
+
+- All 6 grill forks (operator-ratified at bow-in — see Grill outcome): passportId key · MVP CRUD depth · A0→A2→A1 order · sourced quotes shipped · v1 bake-off hard gate (met) · bridge OUT.
+- Passport.id/LineageNode.id stay separate (research-review; operator accepted).
+- Authz systems stay layered; conformance sweep is the lane, not consolidation (research-review; operator accepted). FI-019 = per-user grants inside axis-1 `can()`.
+- Beta/GA model: public stays data-gated on `enabled`; preview surface reads disabled scenes; GA is a data flip (operator-requested TASK_04, mid-session).
+- Attribution renders `displayName`; stored `quoteAttribution` = provenance (orchestrator, off Cody's flag).
+- Push authorized by the operator ("Go and push beautiful work!") at the gate after Doug's verdict.
 
 ## Files touched
 
-| File | Change |
-| --- | --- |
+32 files, +3,868/−17 vs origin/main (`git diff --stat origin/main..HEAD`), 12 commits. By area:
+
+| Area | Files | Change |
+| --- | --- | --- |
+| Schema/migration | `prisma/schema.prisma`, `migrations/20260704000000_add_lineage_story_scene/`, `prisma/seed-lineage-story-scenes.ts` | `LineageStoryScene` model + hand-authored additive migration + create-only founder seed (`--disabled` flag) |
+| Read-model | `server/web/lineage/ancestry.ts` + `.test.ts` | `story` projection (L+4), minimal `LineageStorySceneView`, `includeDisabledScenes` preview option, invariants test-pinned |
+| Scroll story | `components/web/lineage/lineage-story/` (scene-model, scene, sequence + tests), `directory-profile/ancestry-section.tsx` | Three-palette scene system, motion (retimed shrink + content chase + witnessed chip beat), monogram fallback, data gate |
+| Storyboard | `server/lineage/storyboard-{router,schemas}.ts` + integration test, `server/admin/lineage/storyboard-queries.ts`, `app/app/lineage/storyboard/**`, `server/lineage/router.ts` | oRPC scene CRUD (`lineage.manage`), board UI, passport-keyed picker |
+| Beta area | `app/app/beta/**`, `server/orpc/roles.ts`, `server/orpc/permissions.test.ts` | `beta.view` key + gated layout/index/preview (in-page gate too) |
+| Shared infra | `server/orpc/revalidate.ts`, `lib/safe-actions.ts` | Transport-split revalidation twins (fix + reciprocal docblocks) |
+| Docs | SESSION_0498, ADR 0044, 2 research-reviews, POST_LAUNCH_SOT (FI-019), wiring-ledger (WL-P2-27), failed-steps (FS-0028), drift-register (D-040), wiki index, component inventory | Session record + ratified law + routed findings |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `bun run typecheck` | PASS 0 errors (Doug from-scratch @ `b4fe3d14`) |
+| `bun run lint` / `bunx oxfmt --check .` | PASS / all 1,784 files clean (after `01bb94a5`) |
+| `bun run test` | 1094/1095 — the 1 fail = pre-existing stripe-webhook parallel flake (untouched file; 10/10 ×2 in isolation). Target families all green: visibility 9/9, ancestry 16/16, scene-model 10/10, storyboard 13/13, permissions 18/18 |
+| `bun run build` (`next build`) | PASS (32.8s) — Vercel deploy pre-proven |
+| Migration rehearsal | shadow-replay empty-diff/exit-0; SQL additive-only; `migrate status` clean; CI re-applies on fresh DB |
+| Live UAT (Doug, :3497) | Public story SSR-real (palette cycle exact, zero provenance leak) · reduced-motion runtime-proven · storyboard round-trip + exact revert · beta disabled-preview with zero public leak · both cache entries flushed by one mutation · anon 401/307 everywhere · DB left at baseline |
+| E2E | Deferred to CI deliberately (no existing spec covers `/directory/[slug]` ancestry; shared-DB globalSetup — 0497 lesson). CI runs full matrix on push. |
 
 ## Open decisions / blockers
 
@@ -420,11 +454,25 @@ All 6 grill forks resolved at bow-in (see Grill outcome). Mid-build orchestrator
 
 ### Goal
 
-TBD at bow-out.
+**Epic A prod bring-up + FI-001 (the board P0).** Bring the Lineage Journey live on prod via the ratified
+runbook, then land Brian Truelson's first-tester onboarding (`FI:FI-001`, the operator's top board card,
+in-progress P0) — the ledger-debt-≈-zero precondition the operator set for it is now closer than ever.
 
 ### First task
 
-TBD at bow-out.
+Run the **prod bring-up runbook** (Doug-verified, SESSION_0498): confirm the deploy landed green (migration
+auto-applied; public unchanged) → verify prod founder node slugs → seed dark:
+`bun --env-file .env.prod prisma/seed-lineage-story-scenes.ts --disabled` (dotenv-first gotcha; seed
+skips-never-creates) → operator + Tony preview `/app/beta/lineage-journey` (this doubles as the real-device
+60fps UAT) → flip scenes live per-person on `/app/lineage/storyboard` → confirm public read-your-writes on
+that first prod storyboard edit (`revalidateTag {expire:0}` under Vercel's cache — the one behavior only
+prod can prove). Then open FI-001 per `petey-plan-0419` §Task 1 + `petey-plan-0457` §Slice A2.
+
+**Operator-queued alternative:** the apparatus lean-out session (`/consolidate-memory` + CLAUDE.md diet +
+superseded-docs prune — petey-plan-0498 tail note; run fresh, not at a build session's tail). **Epic A
+fast-follows** (A3 layout: full-width breakout + vertical-name-rail flip + Desi P3 bucket; A5 media:
+video upload path + Rorion/Rigan clips — ask the operator for the videos at A5 open) stay banked in
+ADR 0044 / the Desi review log — not blocking.
 
 ## Review log
 
@@ -479,3 +527,47 @@ TBD at bow-out.
 - **ADR prescriptions banked for ADR 0044:** (1) the generic rule — a public-view field constant-by-construction on the public path is admissible ONLY with a where-shape test pinning the constant; (2) name the **preview-widening flag pattern** (gated surface passes it, public callers structurally can't, constant pinned by test) so A5/A6 media previews reuse the shape.
 - **Score:** 9.5/10 (beta) · 9.8 (retune)
 - **Follow-up:** none blocking — Doug end-verify next.
+
+### SESSION_0498_REVIEW_06 — Doug end-of-session release-readiness (`b4fe3d14`)
+
+- **Reviewed tasks:** all (TASK_01–04 + infra)
+- **Dirstarter docs check:** not applicable — custom lineage module; Prisma follows the hand-authored lane.
+- **Verdict:** **9.5 SHIP-WITH-NOTES.** Gates from scratch (typecheck/lint/build PASS; oxfmt caught 2 stragglers → P1, fixed `01bb94a5`; suite 1094/1095, the 1 fail = pre-existing stripe-webhook flake — passes 10/10 in isolation). Migration deploy-safe (shadow-replay clean, additive, status clean, CI fresh-DB re-applies). Deploy-consequence verified: empty prod table → data-gate holds → **zero public change until seeded**. Live UAT green on every leg (SSR-real story, RM runtime-proven, storyboard round-trip + exact revert, beta disabled-preview zero-leak, both cache entries flushed, anon denied everywhere, DB at baseline). E2E deferral holds (no existing spec covers the surface). Prod bring-up runbook code-verified.
+- **Notes carried:** dev `.next` blanket-404 staleness artifact (env, not code; `rm -rf .next` clears); Resend OPEN FIX memory still active (12 live sends in suite output); stripe flake = rerun-then-chore; `revalidateTag {expire:0}` Vercel freshness → confirm on first prod storyboard edit.
+- **Score:** 9.5/10
+
+## Hostile close review
+
+- **Giddy:** pass — SHIP. A0 9.6 / A1 9.5 / A2-arch 9.5 / view-trim 9.7 / beta 9.5 / retune 9.8 across pass-1 + pass-2 + addendum. Revalidate-seam fix verified for ALL callers; `enabled`-in-view adjudicated ACCEPT with the constant-in-view rule; ADR 0044 recommended and written; no session-log overclaims found (spot-verified test math).
+- **Doug:** pass — 9.5 SHIP-WITH-NOTES (REVIEW_06); the one P1 (format stragglers) fixed pre-push; launch-safe end-to-end with the prod bring-up runbook code-verified.
+- **Desi:** pass — A2 8.4 → 9.6 SHIP; all 7 prescribed fixes + the chip retune verified with measured, independently reproduced evidence; zero regressions; P3 bucket routed to A3.
+- **Kaizen aggregate:** 9.6/10 — the full operating loop ran honestly (a sub-bar Desi score forced a real fix-pass; a reviewer-prescription error — the unwitnessable chip window — was caught by the re-score and retuned with acceptance numbers); one latent shared-infra bug found and killed by building the first real consumer.
+
+## ADR / ubiquitous-language check
+
+- **ADR 0044 CREATED** ([`0044-lineage-story-scene-and-preview-gating.md`](../architecture/decisions/0044-lineage-story-scene-and-preview-gating.md)) — scene identity/authority laws, walk-order authority, public-view minimalism + constant-in-view rule, the preview-widening flag pattern, flat `lineage.manage` curation precedent, the transport-split revalidation law, editorial-integrity defaults. ADR 0025/0035/0036/0037 confirmed and conformed-to (both research-reviews reinforce 0025).
+- **Ubiquitous language:** no new domain terms requiring the glossary — "story scene," "storyboard," "beta preview" are self-describing surface names documented in ADR 0044; revisit if "scene" grows meanings.
+
+## Reflections
+
+- **The loop earned its cost this session.** Desi's 8.4 was the system working: the initial A2 was architecturally right and craft-wrong in ways only measurement caught (a hero nobody ever saw large; a payoff beat that played off-screen on BOTH viewports — including in the *fix* she herself prescribed). Two review rounds with hard acceptance numbers turned "scrollytelling scaffold" into something measured at 9.6. Craft bars need instruments, not adjectives.
+- **Building the first real consumer of a seam is a verification act.** The oRPC revalidate seam sat "done" since the Phase-1 migration and would have 500'd on its first tag-passing caller forever. A1's storyboard was that caller — the E872 throw surfaced in live round-trip, not in any gate (unit mocks covered both functions; typecheck can't see transport legality). Built-not-wired debt hides precisely where tests mock.
+- **Two "consolidate?" questions, two keep-separate verdicts, one shared rule.** Passport/node ids and the 4 authz systems both *looked* like DRY violations and both decomposed into different-axes-doing-different-jobs, with the real debt being drift *within* an axis (25 raw role checks; twin entitlement checkers). The transferable lesson: DRY polices duplicated *knowledge*, not similar-looking structures — and the senior fix is ratify-then-conform, not merge.
+- **Gate claims belong to commit SHAs, not tasks** (FS-0028). "oxfmt clean" was true when written and false when shipped, because edits continued after the claim. Doug's from-scratch re-run — re-verifying everything against the final tree — is what the end-verify slot is *for*.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | New docs carry full frontmatter (ADR 0044, 2 research-reviews — `slug`/`updated`/`last_agent` fixed after wiki-lint flagged); SESSION_0498 frontmatter `status: closed`, `updated: 2026-07-04` |
+| Backlinks/index sweep | ADR 0044 ↔ research-reviews ↔ SESSION_0498 cross-linked in `pairs_with`/`backlinks`; wiki index row added for SESSION_0498; component inventory entry added (lineage-story family + storyboard board) |
+| Wiki lint | `bun run wiki:lint` — 3 errors (all introduced: research-review frontmatter) FIXED in-close → re-run 0 errors; remaining warnings pre-existing (SESSION_0495/0477/VIDEO_R001 et al.) + 4 introduced heading-list warnings fixed |
+| Kaizen reflection | `## Reflections` present (4 entries) |
+| Hostile close review | REVIEW_01–06 (Giddy ×3, Desi ×2, Doug ×1) — all SHIP; aggregate 9.6 |
+| Code-quality gate (Class-A) | Class-A custom code = the lineage-story motion system + storyboard router; held to the operating loop's ≥9.5 bar in lieu of a separate `/code-quality` run (5 scored reviews with measured evidence — A2 9.6, A1 9.5); no hard-cap triggered |
+| Runtime verification (Doug) | REVIEW_06 — live UAT on all touched routes/mutations (:3497), DB left at baseline |
+| Review & Recommend | Next session goal written (prod bring-up + FI-001, seeded from the operator's board P0) |
+| Memory sweep | epic-a memory updated (spine shipped + bring-up runbook + gotchas); prisma-prod-migration memory updated (7.8 CLI drift); MEMORY.md index updated |
+| Next session unblock check | UNBLOCKED — bring-up runbook is self-contained post-deploy; FI-001 fully specified (petey-plan-0419/0457). Only operator-side inputs: Tony's device UAT + (at A5) the Rorion/Rigan videos |
+| Git hygiene | branch `session-0498-epic-a` in `../ronin-0498`; clean pre-close; single close commit + push authorized by operator GO ("see git log" — hash reported at bow-out); PR → merge to `main` per trunk flow; worktree cleanup after merge |
+| Graphify update | gate runner (worktree): nodes=12461 · edges=27159 · communities=1411 (pre-commit per FS-0025); canonical checkout refresh after merge |

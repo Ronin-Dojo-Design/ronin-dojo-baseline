@@ -565,6 +565,27 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   (sop-test-writing.md:101).
 - **Status:** mitigated.
 
+### FS-0028 — "oxfmt clean" claimed in the task log while two committed files were unformatted
+
+- **Session:** SESSION_0498 (Epic A spine); caught by Doug's end-of-session gate re-run.
+- **Agent:** Claude / Cody pass #2 (the `5b230aed` beta commit), recorded by the orchestrator.
+- **Step failed:** the TASK_04 report + task-log row claimed "oxfmt clean," but `bunx oxfmt --check .` at
+  end-verify failed on **2 files introduced/edited by `5b230aed`** (`app/app/beta/lineage-journey/page.tsx`,
+  `server/web/lineage/ancestry.test.ts`). The claim was true when checked mid-task, then a later edit round
+  (the in-page permission gate + test additions) landed without a final repo-wide format re-check before the
+  claim was carried forward — the same class as the SESSION_0495 gate-runner miss (format checks that don't
+  cover the final state of NEW/late-touched files).
+- **Root cause:** gate claims were snapshotted per-report, not re-verified against the commit that shipped;
+  formatting was re-checked per-file rather than repo-wide (`--check .`) after the last edit.
+- **Impact:** LOW — caught pre-push by the Doug end-verify (whose job this is); an unnoticed push would have
+  reddened CI `format:check`. Fixed by a whitespace-only commit (`01bb94a5`).
+- **Corrective action:** (a) this FS entry; (b) rule of thumb ratified in the SESSION close — **a gate claim
+  belongs to a commit SHA, not a task**: any post-claim edit invalidates the claim, and the end-verify re-runs
+  ALL gates from scratch (which is exactly what caught it).
+- **Verification:** `bunx oxfmt --check .` → "All matched files use the correct format" (1,784 files) after
+  `01bb94a5`.
+- **Status:** mitigated.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.

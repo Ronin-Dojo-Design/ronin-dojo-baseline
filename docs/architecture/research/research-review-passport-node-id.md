@@ -1,9 +1,11 @@
 ---
 title: "Research-Review — Passport.id vs LineageNode.id: one id or two?"
+slug: research-review-passport-node-id
 type: research-review
 persona: giddy
 status: complete
 created: 2026-07-04
+updated: 2026-07-05
 last_agent: claude-session-0498
 domain: lineage / identity
 pairs_with:

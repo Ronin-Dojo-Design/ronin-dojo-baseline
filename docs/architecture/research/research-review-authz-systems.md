@@ -4,6 +4,7 @@ slug: research-review-authz-systems
 type: research-review
 status: active
 created: 2026-07-04
+updated: 2026-07-05
 last_agent: giddy-session-0498
 pairs_with:
   - docs/architecture/auth.md
@@ -61,6 +62,7 @@ its resolver (`can()`) as two systems, and **missed `LineageTreeAccess` entirely
 decomposition is **four axes + two non-systems**:
 
 ### Axis 1 — Global capability (WHO you are platform-wide → what actions)
+
 - Store: `User.role` — Prisma `enum UserRole { user, admin, tournament_director }`
   (`apps/web/prisma/schema.prisma:62`), field owned by the Better Auth `admin()` plugin
   (`apps/web/lib/auth.ts:230`).
@@ -75,6 +77,7 @@ decomposition is **four axes + two non-systems**:
   `lib/authz.ts`; ratified as THE single admin predicate at SESSION_0495 C2-8) — **15 refs**.
 
 ### Axis 2 — Resource-scoped lineage authority (what you may edit in THIS tree/branch/node)
+
 - Store: `LineageTreeAccess` (`schema.prisma:2845`), roles
   `TREE_ADMIN/TREE_EDITOR/BRANCH_EDITOR/NODE_EDITOR` (`schema.prisma:581`), `revokedAt`
   soft-revoke, `grantedById` audit.
@@ -85,6 +88,7 @@ decomposition is **four axes + two non-systems**:
   (`lib/auth-guard.ts:69,90,116`) — 6 call sites.
 
 ### Axis 3 — Org-scoped standing (your role within THIS organization)
+
 - Store: `Membership` (`schema.prisma:1355`) + `Role` reference table (`schema.prisma:1406`,
   codes `ORG_ADMIN/OWNER/INSTRUCTOR/COACH`…) + `MembershipRoleAssignment`
   (`schema.prisma:1392`), plus `Organization.ownerId`.
@@ -96,6 +100,7 @@ decomposition is **four axes + two non-systems**:
   schema comment — not an authz store. Correctly excluded.
 
 ### Axis 4 — Commerce entitlements (what you paid for / were granted)
+
 - Store: `Entitlement` + `UserEntitlement` (keys like `S3_UPLOAD`, tier keys).
 - Resolvers: `hasEntitlement` (`apps/web/server/web/entitlements/queries.ts:10`, cached) and
   its **uncached twin** `checkEntitlement`
