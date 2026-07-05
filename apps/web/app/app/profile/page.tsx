@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import { DashboardBeltsTab } from "~/app/(web)/dashboard/belts-tab"
+import { DashboardBillingTab } from "~/app/(web)/dashboard/billing-tab"
 import { DashboardEventsTab } from "~/app/(web)/dashboard/events-tab"
 import { DashboardLineageTab } from "~/app/(web)/dashboard/lineage-tab"
 import { DashboardToolListing } from "~/app/(web)/dashboard/listing"
@@ -155,6 +156,15 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
                     content: (
                       <Suspense fallback={<Skeleton className="h-64" />}>
                         <DashboardEventsTab />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    id: "billing",
+                    label: "Billing",
+                    content: (
+                      <Suspense fallback={<Skeleton className="h-64" />}>
+                        <DashboardBillingTab />
                       </Suspense>
                     ),
                   },

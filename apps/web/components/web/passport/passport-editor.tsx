@@ -16,7 +16,8 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { FormMedia } from "~/components/common/form-media"
-import { H2 } from "~/components/common/heading"
+import { H2, H3 } from "~/components/common/heading"
+import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import {
   Select,
@@ -35,6 +36,14 @@ import { SocialLinksEditor } from "./social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
 const str = (v: string | null | undefined) => v ?? ""
+
+/** Per-member privacy toggles (G-004 N2) — which DirectoryProfile facts appear publicly. */
+const PRIVACY_TOGGLES = [
+  { name: "showEmail", label: "Show email" },
+  { name: "showPhone", label: "Show phone" },
+  { name: "showOrgs", label: "Show schools & orgs" },
+  { name: "showRanks", label: "Show belt ranks" },
+] as const
 
 /** Initial `react-hook-form` values for the Passport (identity) form. */
 function passportFormValues(passport: PassportOne) {
@@ -298,7 +307,7 @@ function DirectoryProfileForm({
             name="visibility"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Visibility</FormLabel>
+                <FormLabel>Profile visibility</FormLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
@@ -319,6 +328,10 @@ function DirectoryProfileForm({
                     <SelectItem value="PUBLIC">Public</SelectItem>
                   </SelectContent>
                 </Select>
+                <Hint>
+                  Public shows your profile in the directory to everyone; Members only limits it to
+                  signed-in members; Hidden keeps it off the directory entirely.
+                </Hint>
                 <FormMessage />
               </FormItem>
             )}
@@ -378,28 +391,32 @@ function DirectoryProfileForm({
             )}
           />
 
-          <div className="@md:col-span-2 flex flex-wrap gap-6">
-            {(["showEmail", "showPhone", "showOrgs", "showRanks"] as const).map(name => (
-              <FormField
-                key={name}
-                control={form.control}
-                name={name}
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        aria-label={name.replace("show", "Show ")}
-                      />
-                    </FormControl>
-                    <FormLabel className="mt-0! capitalize">
-                      {name.replace("show", "Show ")}
-                    </FormLabel>
-                  </FormItem>
-                )}
-              />
-            ))}
+          <div className="@md:col-span-2 flex flex-col gap-3">
+            <div>
+              <H3 size="h5">Privacy</H3>
+              <Hint>Choose which details appear on your public profile.</Hint>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-3">
+              {PRIVACY_TOGGLES.map(({ name, label }) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem className="flex items-center gap-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          aria-label={label}
+                        />
+                      </FormControl>
+                      <FormLabel className="mt-0!">{label}</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="@md:col-span-2">
