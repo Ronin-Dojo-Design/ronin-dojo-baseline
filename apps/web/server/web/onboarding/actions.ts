@@ -21,7 +21,7 @@ import { setPassportRankSchema } from "./schemas"
 export const setPassportRank = userActionClient
   .inputSchema(setPassportRankSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const { rankId, awardedAt, promotedBy, schoolName } = parsedInput
+    const { rankId, awardedAt, promotedBy, promotedByNodeId, schoolName, schoolOrgId } = parsedInput
     const note =
       [
         promotedBy?.trim() ? `Promoted by ${promotedBy.trim()}` : null,
@@ -31,11 +31,17 @@ export const setPassportRank = userActionClient
         .filter(Boolean)
         .join(" ") || null
 
+    // Registered creatable-combobox picks persist typed FK refs (SESSION_0441 shape) so the steward
+    // sees resolved verifiable links, not free text. A custom (typed) entry leaves the ref empty
+    // string here → null on the claim. Instructor = NODE id (join-options.instructors); school =
+    // Organization id (join-options.schools) — never a passport id (SESSION_0497 P2003).
     const { claimId } = await submitRankPromotionClaim(db, {
       claimantUserId: user.id,
       claimedRankId: rankId,
       brand: Brand.BBL,
       claimantNote: note,
+      trainedUnderNodeId: promotedByNodeId?.trim() || null,
+      claimedSchoolId: schoolOrgId?.trim() || null,
     })
 
     revalidate({ paths: ["/me", "/app/profile"] })

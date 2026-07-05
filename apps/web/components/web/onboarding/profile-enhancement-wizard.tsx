@@ -16,6 +16,11 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
+import {
+  CreatableCombobox,
+  type CreatableOption,
+  type CreatableValue,
+} from "~/components/common/creatable-combobox"
 import { DataSelect, type DataSelectOption } from "~/components/common/data-select"
 import {
   Dialog,
@@ -36,8 +41,14 @@ import type { BeltRankOption } from "~/server/web/onboarding/ranks"
 type WizardForm = {
   rankId: string
   awardedAt: string
+  /** Instructor free-text label (the combobox's custom fallback). */
   promotedBy: string
+  /** Registered instructor ref — a LineageNode id (join-options.instructors); "" for a custom entry. */
+  promotedByNodeId: string
+  /** School free-text label (the combobox's custom fallback). */
   schoolName: string
+  /** Registered school ref — an Organization id (join-options.schools); "" for a custom entry. */
+  schoolOrgId: string
 }
 
 const STEPS = [
@@ -53,6 +64,17 @@ type ProfileEnhancementWizardProps = {
   onSkip: () => void
   /** Belt ranks for the Step 2 picker (data-driven from `Rank`). */
   ranks: BeltRankOption[]
+  /**
+   * Registered instructor options for the "Promoted by" creatable combobox — `id` is a
+   * LineageNode id (join-options.instructors, NODE-keyed). A registered pick persists
+   * `promotedByNodeId`; a typed custom entry keeps only the text label (SESSION_0441 shape).
+   */
+  instructorOptions?: CreatableOption[]
+  /**
+   * Registered school options for the "School" creatable combobox — `id` is an Organization id
+   * (join-options.schools). A registered pick persists `schoolOrgId`; a custom entry keeps only text.
+   */
+  schoolOptions?: CreatableOption[]
   /** Kept for caller compatibility — no longer used inside the wizard. */
   userId?: string
   initialAvatarUrl?: string | null
@@ -62,10 +84,13 @@ type ProfileEnhancementWizardProps = {
  * Post-registration profile completion — baseline parity for the monorepo's
  * `ProfileEnhancementWizard.jsx`. Step rail with icons: Profile Photo (optional,
  * reuses the shared `AvatarField`/R2 seam) → Current Belt (data-driven from
- * `Rank`, with `<BeltSwatch>`) → Belt History (optional). The final step
- * persists to the account's Passport: avatar via `updatePassport`, belt via the
- * `setPassportRank` seam (a `RankAward`). Base UI `Dialog` + `motion/react` with
- * a `prefers-reduced-motion` fallback; brand tokens, not hardcoded classes.
+ * `Rank`, with `<BeltSwatch>`) → Belt History (optional). The final step files a
+ * pending `RANK_PROMOTION` claim via `setPassportRank` (B1, ADR 0035 Amdt 1) —
+ * avatar is saved directly by the uploader. The "Promoted by" / "School" inputs
+ * are the verified creatable-combobox (SESSION_0441 / SESSION_0500 N1): a
+ * registered pick persists a typed FK ref (LineageNode / Organization) that
+ * surfaces to the steward as a resolved link, not free text. Base UI `Dialog` +
+ * `motion/react` with a `prefers-reduced-motion` fallback; brand tokens.
  */
 export function ProfileEnhancementWizard({
   open,
@@ -73,6 +98,8 @@ export function ProfileEnhancementWizard({
   onComplete,
   onSkip,
   ranks,
+  instructorOptions = [],
+  schoolOptions = [],
   initialAvatarUrl,
 }: ProfileEnhancementWizardProps) {
   const [currentStep, setCurrentStep] = useState(0)
@@ -83,7 +110,9 @@ export function ProfileEnhancementWizard({
       rankId: "",
       awardedAt: "",
       promotedBy: "",
+      promotedByNodeId: "",
       schoolName: "",
+      schoolOrgId: "",
     },
   })
 
@@ -95,6 +124,15 @@ export function ProfileEnhancementWizard({
   }, [open])
 
   const rankId = form.watch("rankId")
+  // Dual-shape values for the creatable comboboxes: the ref id (registered pick) + the text label.
+  const promotedByValue: CreatableValue = {
+    id: form.watch("promotedByNodeId") || null,
+    label: form.watch("promotedBy") || "",
+  }
+  const schoolValue: CreatableValue = {
+    id: form.watch("schoolOrgId") || null,
+    label: form.watch("schoolName") || "",
+  }
 
   const rankOptions: DataSelectOption[] = ranks.map(rank => {
     const label = rank.shortName ? `${rank.name} (${rank.shortName})` : rank.name
@@ -131,7 +169,9 @@ export function ProfileEnhancementWizard({
         rankId: values.rankId,
         awardedAt: values.awardedAt ? new Date(values.awardedAt) : null,
         promotedBy: values.promotedBy || undefined,
+        promotedByNodeId: values.promotedByNodeId || undefined,
         schoolName: values.schoolName || undefined,
+        schoolOrgId: values.schoolOrgId || undefined,
       })
       if (res?.serverError) {
         toast.error(res.serverError)
@@ -236,18 +276,32 @@ export function ProfileEnhancementWizard({
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="onboarding-promoted-by">Promoted by</Label>
-                    <Input
+                    <CreatableCombobox
                       id="onboarding-promoted-by"
-                      placeholder="Professor's name"
-                      {...form.register("promotedBy")}
+                      options={instructorOptions}
+                      value={promotedByValue}
+                      onValueChange={(next: CreatableValue) => {
+                        // Persist BOTH: the text label (always) and the ref id (registered pick →
+                        // the LineageNode id; custom → cleared). Same shape as the Join wizard.
+                        form.setValue("promotedBy", next.label)
+                        form.setValue("promotedByNodeId", next.id ?? "")
+                      }}
+                      placeholder="Select or type your instructor…"
+                      searchPlaceholder="Search the lineage, or type a name…"
                     />
                   </div>
                   <div className="grid gap-1.5">
                     <Label htmlFor="onboarding-school">School name</Label>
-                    <Input
+                    <CreatableCombobox
                       id="onboarding-school"
-                      placeholder="Where you were promoted"
-                      {...form.register("schoolName")}
+                      options={schoolOptions}
+                      value={schoolValue}
+                      onValueChange={(next: CreatableValue) => {
+                        form.setValue("schoolName", next.label)
+                        form.setValue("schoolOrgId", next.id ?? "")
+                      }}
+                      placeholder="Select or type your school…"
+                      searchPlaceholder="Search schools, or type to add…"
                     />
                   </div>
                 </div>

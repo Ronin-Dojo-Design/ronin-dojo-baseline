@@ -41,6 +41,16 @@ export type SubmitRankPromotionClaimInput = {
   brand: Brand
   claimantNote?: string | null
   /**
+   * Registered lineage selections from the profile-enhancement wizard's creatable comboboxes
+   * (SESSION_0441 shape, ADR 0036) — a typed FK ref persisted alongside the free text carried in
+   * `claimantNote`. `claimedSchoolId` = an Organization; `trainedUnderNodeId` = a LineageNode. Each
+   * renders as a resolved verifiable link in the steward review (`claim-review-detail.tsx`, ungated
+   * on claim type) instead of raw free text; a custom (typed) entry leaves the ref null. Same
+   * id-spaces as the Join wizard — never a passport id here (SESSION_0497 P2003).
+   */
+  claimedSchoolId?: string | null
+  trainedUnderNodeId?: string | null
+  /**
    * Soft-gate: certificate / instructor photo. Encouraged, not required. A `mediaId`
    * carries an uploaded photo (materializes onto the milestone on approve, Slice V3);
    * label/url/text carry a link or note. Any subset may be present.
@@ -151,6 +161,10 @@ export async function submitRankPromotionClaim(
           brand: input.brand,
           claimedRankId: input.claimedRankId,
           claimantNote: input.claimantNote ?? null,
+          // Registered creatable-combobox picks → typed FK refs (steward-display for a promotion;
+          // a custom entry leaves these null and only the note text survives). SESSION_0500 N1.
+          claimedSchoolId: input.claimedSchoolId ?? null,
+          trainedUnderNodeId: input.trainedUnderNodeId ?? null,
           ...(input.evidence?.length
             ? {
                 evidence: {

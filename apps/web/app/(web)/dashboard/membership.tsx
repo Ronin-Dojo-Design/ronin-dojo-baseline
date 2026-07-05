@@ -1,22 +1,22 @@
 import { redirect } from "next/navigation"
-import { BillingPortalButton } from "~/app/(web)/dashboard/billing-portal-button"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
-import { Card, CardDescription, CardHeader } from "~/components/common/card"
+import { Card, CardHeader } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Section } from "~/components/web/ui/section"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import {
-  findUserEnrollments,
-  findUserEntitlements,
-  findUserRegistrations,
-  findUserStripeCustomer,
-} from "~/server/web/dashboard/queries"
+import { findUserEnrollments, findUserRegistrations } from "~/server/web/dashboard/queries"
 import { getPassportByUserId } from "~/server/web/passport/queries"
 
+/**
+ * The at-a-glance overview header above the dashboard tabs — passport identity, program
+ * enrollments, and tournament registrations. Billing (active entitlements + the Stripe
+ * portal) moved to the dedicated `DashboardBillingTab` (G-004 N2), so this stays an
+ * activity overview and billing has one canonical home.
+ */
 export const DashboardMembership = async () => {
   const session = await getServerSession()
 
@@ -24,19 +24,13 @@ export const DashboardMembership = async () => {
     throw redirect("/auth/login?next=/app/profile")
   }
 
-  const [enrollments, entitlements, registrations, passport, stripeCustomer] = await Promise.all([
+  const [enrollments, registrations, passport] = await Promise.all([
     findUserEnrollments(session.user.id, Brand.BBL),
-    findUserEntitlements(session.user.id, Brand.BBL),
     findUserRegistrations(session.user.id, Brand.BBL),
     getPassportByUserId(session.user.id),
-    findUserStripeCustomer(session.user.id, Brand.BBL),
   ])
 
-  const hasData =
-    enrollments.length > 0 ||
-    entitlements.length > 0 ||
-    registrations.length > 0 ||
-    Boolean(stripeCustomer)
+  const hasData = enrollments.length > 0 || registrations.length > 0
 
   if (!hasData && !passport) {
     return null
@@ -66,7 +60,7 @@ export const DashboardMembership = async () => {
           </div>
         )}
 
-        <div className="grid gap-6 @lg:grid-cols-3">
+        <div className="grid gap-6 @lg:grid-cols-2">
           {/* Enrollments */}
           {enrollments.length > 0 && (
             <div className="space-y-3">
@@ -90,35 +84,6 @@ export const DashboardMembership = async () => {
                         </Badge>
                       </Stack>
                     </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Entitlements */}
-          {entitlements.length > 0 && (
-            <div className="space-y-3">
-              <H4>Active Entitlements</H4>
-              <div className="grid gap-2">
-                {entitlements.map(ue => (
-                  <Card key={ue.id} hover={false}>
-                    <CardHeader>
-                      <Stack size="sm" className="justify-between">
-                        <div>
-                          <span className="text-sm font-medium">{ue.entitlement.name}</span>
-                          <p className="text-xs text-muted-foreground font-mono">
-                            {ue.entitlement.key}
-                          </p>
-                        </div>
-                        <Badge variant="success" size="sm">
-                          {ue.sourceType}
-                        </Badge>
-                      </Stack>
-                    </CardHeader>
-                    {ue.endsAt && (
-                      <CardDescription>Expires {ue.endsAt.toLocaleDateString()}</CardDescription>
-                    )}
                   </Card>
                 ))}
               </div>
@@ -165,7 +130,6 @@ export const DashboardMembership = async () => {
           <Button variant="secondary" size="sm" render={<Link href="/tournaments" />}>
             Browse Tournaments
           </Button>
-          {stripeCustomer && <BillingPortalButton />}
         </div>
       </Section.Content>
     </Section>

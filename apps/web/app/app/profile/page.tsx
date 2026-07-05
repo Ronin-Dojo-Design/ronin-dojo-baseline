@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { getTranslations } from "next-intl/server"
 import { cache, Suspense } from "react"
 import { DashboardBeltsTab } from "~/app/(web)/dashboard/belts-tab"
+import { DashboardBillingTab } from "~/app/(web)/dashboard/billing-tab"
 import { DashboardEventsTab } from "~/app/(web)/dashboard/events-tab"
 import { DashboardLineageTab } from "~/app/(web)/dashboard/lineage-tab"
 import { DashboardToolListing } from "~/app/(web)/dashboard/listing"
@@ -25,6 +26,7 @@ import { getBrandSiteConfig } from "~/config/site"
 import { requireUser } from "~/lib/auth-guard"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageData, getPageMetadata } from "~/lib/pages"
+import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { getOnboardingState } from "~/server/web/onboarding/queries"
 import { getBeltRanks } from "~/server/web/onboarding/ranks"
 
@@ -56,9 +58,12 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
   const { breadcrumbs, metadata } = await getData()
 
   const user = await requireUser()
-  const [onboarding, ranks] = await Promise.all([
+  const [onboarding, ranks, joinOptions] = await Promise.all([
     getOnboardingState({ userId: user.id, role: user.role, brand: Brand.BBL }),
     getBeltRanks(Brand.BBL),
+    // Registered instructor (NODE-keyed) + school (Organization-keyed) options for the wizard's
+    // verified creatable comboboxes — the SAME cached public source the Join wizard uses.
+    getJoinWizardOptions(),
   ])
 
   return (
@@ -73,6 +78,8 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
       <Suspense fallback={null}>
         <ProfileEnhancementLauncher
           ranks={ranks}
+          instructorOptions={joinOptions.instructors}
+          schoolOptions={joinOptions.schools}
           userId={user.id}
           initialAvatarUrl={onboarding.avatarUrl}
           incomplete={!onboarding.hasAvatar || !onboarding.hasRank}
@@ -149,6 +156,15 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
                     content: (
                       <Suspense fallback={<Skeleton className="h-64" />}>
                         <DashboardEventsTab />
+                      </Suspense>
+                    ),
+                  },
+                  {
+                    id: "billing",
+                    label: "Billing",
+                    content: (
+                      <Suspense fallback={<Skeleton className="h-64" />}>
+                        <DashboardBillingTab />
                       </Suspense>
                     ),
                   },
