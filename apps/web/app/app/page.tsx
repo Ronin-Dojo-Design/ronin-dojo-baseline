@@ -76,7 +76,7 @@ export default async function (_props: PageProps<"/app">) {
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Welcome, {user.name}. Your workspace areas appear in the sidebar.
+          Welcome, {user.name}. Choose a workspace area from the navigation.
         </p>
       )}
     </Wrapper>
