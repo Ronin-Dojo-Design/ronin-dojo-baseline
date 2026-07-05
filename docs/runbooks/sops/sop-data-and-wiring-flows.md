@@ -4,11 +4,11 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-01
-last_agent: claude-session-0490
+updated: 2026-07-05
+last_agent: claude-session-0501
 pairs_with:
-  - docs/runbooks/sop-e2e-user-lifecycle.md
-  - docs/runbooks/local-dev-auth-storage.md
+  - docs/runbooks/sops/sop-e2e-user-lifecycle.md
+  - docs/runbooks/dev-environment/local-dev-auth-storage.md
   - docs/protocols/cody-preflight.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -20,11 +20,14 @@ backlinks:
 
 # SOP — Data Flows and Wiring Flows
 
-> **⚠ Substrate-change notice (SESSION_0359).** This documents the **current** (pre-SoT-Spec) substrate. The
-> target is [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md): Phases 1–3 replace the
-> action/permission layer (oRPC + `can()` + BBL resource-scoped grants), the routes (`/admin`+`/dashboard` →
-> `/app`), and root identity on **Passport** (nullable `userId`). Accurate for today's code — but **check the
-> SoT-Spec before building new work** here; this is rewritten as its phase lands.
+> **⚠ Substrate-change notice (SESSION_0359, updated 0501).** Much of the SoT-Spec migration has **landed** and
+> is reflected below: admin surfaces moved off `/admin/*` (retired to a thin shell — only `/admin/task-board`
+> remains) to **`/app/*`**; oRPC is the internal contract at **`/api/rpc`** but only a few routers are migrated
+> (`ping` / `health.brand` / `lineage` / `promotion` / `belt` — `server/router.ts`) — **most surfaces are still
+> next-safe-action** server actions (`lib/safe-actions.ts` clients). The 4-brand `Brand`-enum harness is **dead**
+> (single-brand collapse — every request is `Brand.BBL` via `lib/brand-context.ts`; **no `middleware.ts`, no
+> `activeBrandId`**). `Passport.userId` is now **nullable** (accountless Passport = placeholder). Cross-check
+> [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md) before building new work here.
 
 ## Purpose
 
@@ -53,13 +56,16 @@ Document the major system flows in low-fi ASCII so:
                                v
                     +----------------------+
                     | Better-Auth session  |
-                    | + activeBrandId      |
+                    | (brand = BBL, server |
+                    |  resolved; no        |
+                    |  activeBrandId)      |
                     +----------+-----------+
                                |
                                v
                     +----------------------+
                     | authz.ts checks      |
-                    | brand + role + scope |
+                    | role + scope (brand  |
+                    | single-valued: BBL)  |
                     +----------+-----------+
                                |
                                v
@@ -71,9 +77,9 @@ Document the major system flows in low-fi ASCII so:
 
 ```mermaid
 flowchart TD
-    A[User / Browser] --> B[Next.js app/web\nroute + middleware]
-    B -->|host → brand context| C[Better-Auth session\n+ activeBrandId]
-    C --> D[authz.ts checks\nbrand + role + scope]
+    A[User / Browser] --> B[Next.js app/web\nroute handler]
+    B -->|host → brand = BBL\nlib/brand-context| C[Better-Auth session\nno activeBrandId]
+    C --> D[authz.ts checks\nrole + scope; brand single-valued BBL]
     D --> E[Prisma client\nPostgres]
 ```
 
@@ -81,41 +87,44 @@ flowchart TD
 
 ## 2. Host/brand resolution flow
 
+> **⚠ Single-brand collapse (verified SESSION_0501).** There is **no `middleware.ts`** and **no
+> `activeBrandId`** in `apps/web`. Host→brand resolution is `lib/brand-context.ts::resolveBrand`, which is
+> **edge-safe and always returns `Brand.BBL`** (single-brand deployment). `HOST_TO_BRAND` maps
+> `blackbeltlegacy.com` / `bbl.local` / `localhost` → BBL. The 4-brand fan-out (BASELINE / WEKAF /
+> RONIN_DOJO_DESIGN) is dead — those live as separate **products** (own app/DB/deploy), not per-request
+> brand switches. oRPC handlers get `context.brand` from the `withBrand` middleware (`server/orpc/context.ts`).
+
 ```text
-request.host
+request.host (x-forwarded-host / host header)
    |
    v
-+-------------------+
-| middleware.ts     |
-| resolve host      |
-+-------------------+
++---------------------------+
+| lib/brand-context.ts      |
+| resolveBrand(host)        |
++---------------------------+
    |
-   +--> host brand = BASELINE_MARTIAL_ARTS
-   +--> host brand = BBL
-   +--> host brand = WEKAF
-   +--> host brand = RONIN_DOJO_DESIGN
+   +--> HOST_TO_BRAND: blackbeltlegacy.com / bbl.local / localhost => BBL
+   |    (single-brand collapse — always Brand.BBL today)
    |
    v
-theme / marketing chrome / copy defaults
+theme / marketing chrome / copy defaults (all BBL)
    |
    v
-auth session may still carry activeBrandId
+oRPC handlers scope by context.brand (withBrand middleware); server actions inline Brand.BBL
 ```
 
 ```mermaid
 flowchart TD
-    R[request.host] --> MW[middleware.ts\nresolve host]
-    MW --> B1[BASELINE_MARTIAL_ARTS]
-    MW --> B2[BBL]
-    MW --> B3[WEKAF]
-    MW --> B4[RONIN_DOJO_DESIGN]
-    B1 & B2 & B3 & B4 --> TH[theme / marketing chrome / copy defaults]
-    TH --> AS[auth session may carry activeBrandId]
+    R[request.host] --> RB[lib/brand-context.ts\nresolveBrand]
+    RB --> BBL[Brand.BBL\nsingle-brand collapse]
+    BBL --> TH[theme / marketing chrome / copy defaults]
+    TH --> CTX[oRPC context.brand via withBrand;\nserver actions inline Brand.BBL]
 ```
 
 ### Key rule
 
-Host brand and active app brand may align, but they are not always the same thing.
+Brand is **server-resolved and single-valued (BBL) today** — never client-trusted. Other brands are separate
+products (own app/DB/deploy), not a per-request `activeBrandId` switch inside this app.
 
 ---
 
@@ -142,16 +151,15 @@ Better-Auth creates session cookie
   v
 Server reads session
   |
-  +--> host-derived brand context
-  |
-  +--> session.user.activeBrandId
+  +--> host-derived brand context (lib/brand-context → always BBL)
+  |    (no session.user.activeBrandId — field removed with the multi-brand harness)
   |
   v
 authz.ts
   |
-  +--> isAdmin?
-  +--> isInSameBrand?
+  +--> isAdmin? (User.role === "admin")
   +--> membership / role checks
+  +--> resource-scoped grants (can())
   |
   v
 Prisma query
@@ -165,19 +173,22 @@ flowchart TD
     V[Visitor] --> SI[Sign in / Sign up]
     SI --> BA[Better-Auth creates session cookie]
     BA --> SR[Server reads session]
-    SR --> HC[host-derived brand context]
-    SR --> AB[session.user.activeBrandId]
-    HC & AB --> AZ[authz.ts]
-    AZ --> ADM{isAdmin?}
-    AZ --> BRD{isInSameBrand?}
+    SR --> HC[host-derived brand context\nlib/brand-context → always BBL]
+    HC --> AZ[authz.ts]
+    AZ --> ADM{isAdmin?\nUser.role === admin}
+    AZ --> GRANT{resource-scoped grants\ncan()}
     AZ --> MEM{membership / role checks}
-    ADM & BRD & MEM --> PQ[Prisma query]
+    ADM & GRANT & MEM --> PQ[Prisma query]
     PQ --> PG[Postgres rowset]
 ```
 
 ---
 
-## 4. Mobile auth decision flow (current unresolved branch)
+## 4. Mobile auth decision flow (aspirational — NOT built)
+
+> **⚠ Not implemented (verified SESSION_0501).** There is **no `apps/mobile`** (only `apps/web` and
+> `apps/baseline`) and **no `app/api/v1`** public API surface yet — both are deferred. This section is a
+> forward-looking design branch, not a live flow. Do not treat it as current wiring.
 
 ```text
                 +--------------------+
@@ -315,14 +326,20 @@ Registration history must not be rewritten by later promotions or organization c
 
 ## Current public long-form content
 
+> **⚠ Updated SESSION_0501 (ADR 0042).** The BBL blog is now **DB-backed** via the `Post` model, authored in
+> the `/app/blog` staff surface (Tiptap editor). The old `apps/web/content/blog/*.mdx` file-authoring path is
+> **gone** (`apps/web/content/` no longer exists). Public read: `/blog` →
+> `server/web/posts/queries.ts::findPublishedPosts(Brand.BBL)` → `PostFeed`. The member community feed is a
+> separate model (`CommunityPost` / `/posts`).
+
 ```text
-Authoring in repo
+Authoring in /app/blog (Tiptap editor, staff)
    |
    v
-apps/web/content/blog/*.mdx
+Post model (DB)  — server/web/posts/queries.ts
    |
    v
-Next.js render
+Next.js render (/blog → findPublishedPosts → PostFeed)
    |
    v
 public blog/article output
@@ -349,7 +366,8 @@ render / publish / campaign outputs
 Do not confuse:
 
 - wiki knowledge pages
-- current live MDX blog content
+- current live DB-backed blog content (`Post` model, `/app/blog` → `/blog`)
+- the member community feed (`CommunityPost` → `/posts`)
 - future reusable content-atom operational flow
 
 These are related, not identical.
@@ -729,7 +747,8 @@ Membership created (status: ACTIVE — invited members pre-approved)
 MembershipRoleAssignment created (if role specified)
   |
   v
-Redirect to /organizations/{slug}/welcome
+Welcome email sent (notifyMemberOfMembershipWelcome) + redirect to /me
+   (claim-form pushes /me; verified 0501 — there is no /organizations/[slug]/welcome route)
 ```
 
 ```mermaid
@@ -744,7 +763,7 @@ flowchart TD
     DISC --> CHECK[InviteClaim checks\nnot expired, not over max, not duplicate]
     CHECK --> MEM[Membership created\nstatus: ACTIVE]
     MEM --> ROLE[MembershipRoleAssignment\nif role specified]
-    ROLE --> WELCOME[Redirect to welcome page]
+    ROLE --> WELCOME[Welcome email + redirect to /me]
 ```
 
 ---

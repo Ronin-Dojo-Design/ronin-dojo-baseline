@@ -4,11 +4,11 @@ slug: sop-e2e-user-lifecycle
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-01
-last_agent: claude-session-0490
+updated: 2026-07-05
+last_agent: claude-session-0501
 pairs_with:
-  - docs/runbooks/sop-data-and-wiring-flows.md
-  - docs/runbooks/resend-setup-runbook.md
+  - docs/runbooks/sops/sop-data-and-wiring-flows.md
+  - docs/runbooks/integrations/resend-setup-runbook.md
   - docs/protocols/cody-preflight.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -23,12 +23,15 @@ backlinks:
 
 # SOP — End-to-End User Lifecycle
 
-> **⚠ Substrate-change notice (SESSION_0359).** This documents the **current** (pre-SoT-Spec) substrate. The
-> target is [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md): Phases 1–3 replace the
-> action/permission layer (oRPC + `can()` + BBL resource-scoped grants), the routes (`/admin`+`/dashboard` →
-> `/app`), and root identity on **Passport** (nullable `userId`) — so the §1 "Visitor → account → Passport stub"
-> flow inverts to **Passport-first, account-on-claim**. Accurate for today's code — but **check the SoT-Spec
-> before building new work** here; this is rewritten as its phase lands.
+> **⚠ Substrate-change notice (SESSION_0359, updated 0501).** The SoT-Spec migration has **largely landed**:
+> admin surfaces moved off `/admin/*` (retired to a thin shell — only `/admin/task-board` survives) to
+> **`/app/*`**; member self-serve stays at `/dashboard` (under `(web)`); `Passport.userId` is now **nullable**
+> (`schema.prisma` — an accountless Passport = the placeholder), so root identity is **Passport-first,
+> account-on-claim**. oRPC is the internal contract at `/api/rpc` but only a few routers are migrated
+> (`ping` / `health.brand` / `lineage` / `promotion` / `belt` — `server/router.ts`); most surfaces are still
+> **next-safe-action** server actions (`server/**/actions.ts`). §1's "Visitor → account → Passport stub" still
+> describes the account-first sign-up door, which coexists with the Passport-first claim door. Cross-check
+> [`BBL-SOT-Spec.md`](../../product/black-belt-legacy/BBL-SOT-Spec.md) before building new work here.
 
 ## Purpose
 
@@ -428,21 +431,28 @@ This differs from monthly members who have unlimited access during their subscri
 
 # 9. Cross-brand lifecycle
 
+> **⚠ Single-brand collapse (verified SESSION_0501).** The 4-brand `Brand`-enum harness is dead;
+> every request in `apps/web` resolves to **`Brand.BBL`** (`lib/brand-context.ts::resolveBrand` always
+> returns `Brand.BBL`; `HOST_TO_BRAND` maps `blackbeltlegacy.com`/`bbl.local`/`localhost` → BBL). There is
+> **no `session.user.activeBrandId`** anymore. Multi-*brand* (one app, many brand tokens) was replaced by
+> multi-*product* (separate apps per product in this monorepo, own DB/deploy — `apps/baseline` etc.). The
+> flow below describes that **future multi-product** shape, not a live per-request brand switch.
+
 ```text
-One user
+One human, one account
   |
-  +--> host brand = BASELINE
-  +--> activeBrandId = BASELINE
+  +--> this app (apps/web) = BBL, always (single-brand)
   |
-  +--> may later have other brand memberships
+  +--> other PRODUCTS = separate apps (apps/baseline, clients/*), own DB/deploy
   |
   v
-same account, different app context
+same human identity model, different product deployment
 ```
 
 ## Key rule
 
-One human can move across brands without needing a separate backend identity.
+One human can appear across products (BBL, Baseline, …) without a separate backend identity **model** —
+but products are separate app deploys with separate DBs, not brand-swaps inside one request.
 
 ---
 
@@ -526,11 +536,9 @@ flowchart TD
 - account exists but Passport stub incomplete
 - Passport complete but no Membership yet
 - multiple memberships across organizations/disciplines
-- host brand ≠ activeBrandId
 - rank changed after tournament registration
 - directory hidden but membership active
 - subscription expired but account still valid
-- mobile auth path differs from web until final decision is locked
 - punch card exhausted but membership still active
 - invite expired or max uses reached
 - certification expired but rank still valid
@@ -610,9 +618,9 @@ submitDataSubjectRequest action
   +--> redirect /privacy/request/submitted
   |
   v
-Admin: /admin/privacy/requests
+Admin: /app/privacy/requests  (moved off /admin/* — SESSION_0441+, verified 0501)
   +--> list filterable by status
-  +--> drill in to /admin/privacy/requests/[id]
+  +--> drill in to /app/privacy/requests/[id]
   |
   v
 transitionDataSubjectRequestStatus action
@@ -639,9 +647,9 @@ Fulfillment
 **Code surfaces:**
 
 - Submit form: `apps/web/app/(web)/privacy/request/page.tsx`
-- Submit action: `apps/web/app/(web)/privacy/request/_actions.ts::submitDataSubjectRequest`
-- Admin triage: `apps/web/app/admin/privacy/requests/page.tsx` + `[id]/page.tsx`
-- Admin transition: `apps/web/server/admin/privacy/actions.ts::transitionDataSubjectRequestStatus`
+- Submit action: `apps/web/app/(web)/privacy/request/_actions.ts::submitDataSubjectRequest` (`userActionClient`)
+- Admin triage: `apps/web/app/app/privacy/requests/page.tsx` + `[id]/page.tsx` (moved off `/admin/*`, verified 0501)
+- Admin transition: `apps/web/server/admin/privacy/actions.ts::transitionDataSubjectRequestStatus` (`adminActionClient`)
 
 ---
 
