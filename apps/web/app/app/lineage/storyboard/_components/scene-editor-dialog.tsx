@@ -14,9 +14,11 @@ import {
 import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
+import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
+import { ImageFieldUploader } from "~/components/web/uploader/image-field-uploader"
 import { client } from "~/lib/orpc-client"
 import type {
   ScenePersonOption,
@@ -166,15 +168,27 @@ export function SceneEditorDialog({
           </div>
 
           <div className="w-full">
-            <Label htmlFor="scene-hero-image">Hero image URL</Label>
-            <Input
-              id="scene-hero-image"
-              type="url"
-              value={heroImageUrl}
-              onChange={event => setHeroImageUrl(event.target.value)}
-              placeholder="https://..."
+            {/* No htmlFor: labeling the trigger BUTTON would shadow its visible
+                "Upload image"/"Replace" text as the accessible name (WCAG 2.5.3). */}
+            <Label>Hero image</Label>
+            <ImageFieldUploader
+              value={heroImageUrl || null}
+              onChange={url => setHeroImageUrl(url ?? "")}
+              uploadPathPrefix="lineage/story-scenes"
+              presets={["vertical", "horizontal", "square"]}
+              defaultPreset="vertical"
+              cropTitle="Crop the scene hero"
+              disabled={isSaving}
             />
+            <Hint>
+              Tall (4:5) matches the mobile hero frame; the desktop 16:10 frame crops from the same
+              image.
+            </Hint>
           </div>
+
+          <Note className="w-full">
+            Advanced — video lands with A5 (the uploader arrives then; URLs are accepted meanwhile).
+          </Note>
 
           <div className="w-full">
             <Label htmlFor="scene-hero-video">Hero video URL</Label>

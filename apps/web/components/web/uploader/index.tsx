@@ -9,21 +9,11 @@ import type { uploadJoinLegacyAvatar } from "~/server/web/lead/public-actions"
 import { BeltPreview } from "./belt-preview"
 import { usePhotoUpload } from "./use-photo-upload"
 import type { UploaderPhase } from "./types"
+import { ALLOWED_TYPES, validateImageFile } from "./validation"
 
 // The cropper is heavy (react-easy-crop + canvas) — lazy-load so the bundle
 // chunk is only fetched when the crop modal actually opens.
 const LazyCropper = lazy(() => import("./cropper"))
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-const MAX_BYTES = 10 * 1024 * 1024
-
-function formatBytes(n: number) {
-  if (n === 0) return "0 B"
-  const k = 1024
-  const sizes = ["B", "KB", "MB"]
-  const i = Math.floor(Math.log(n) / Math.log(k))
-  return `${(n / k ** i).toFixed(1)} ${sizes[i]}`
-}
 
 export type AvatarUploaderProps = {
   /** Existing avatar URL shown before a new one is selected. */
@@ -86,12 +76,9 @@ export function AvatarUploader({
     if (!file) return
 
     setValidationError(null)
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setValidationError("Only JPEG, PNG, WebP, or GIF images are allowed.")
-      return
-    }
-    if (file.size > MAX_BYTES) {
-      setValidationError(`File must be under ${formatBytes(MAX_BYTES)}.`)
+    const pickError = validateImageFile(file)
+    if (pickError) {
+      setValidationError(pickError)
       return
     }
 
