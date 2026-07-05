@@ -520,6 +520,20 @@ The scroll-driven founder→member story on `/directory/[slug]`, its curation bo
 | Founder seed | `apps/web/prisma/seed-lineage-story-scenes.ts` | CLI, `[--disabled]` | CREATE-ONLY (reseed never reverts curated copy or re-arms `enabled` — Giddy A0 P1); `--disabled` = prod bring-up dark-seeding; skips-never-creates missing founders |
 | Revalidation twins (law) | `server/orpc/revalidate.ts` ↔ `lib/safe-actions.ts` | — | ONE contract, TWO transport-bound impls: oRPC/Route-Handler = `revalidateTag(tag,{expire:0})`; Server Actions = `updateTag`. **Do not merge or cross-copy** (E872; WL-P2-27, ADR 0044 §D7) |
 
+## Mobile shell — bottom nav + admin MAB (SESSION_0500, Epic B — shipped to prod)
+
+Net-new mobile chrome (`apps/web/components/web/nav/`): an always-on 4-tab bottom nav for logged-in users + an admin-only movable radial Multi-Action Button. Was Epic B of petey-plan-0494 (skipped when Epic A ate 0495–0499). See the [[epic-b-mobile-shell-shipped]] memory.
+
+| Component | File | Props (shape) | Notable behavior |
+| --- | --- | --- | --- |
+| `MobileShell` (server) | `apps/web/components/web/nav/mobile-shell.tsx` | `{ user?, avatarUrl }` | THE mount + the admin-gate boundary: resolves `isAdmin(user)` + `can()` **server-side** and passes only booleans to the client `Mab` (keeps `can()`/Prisma off the client bundle — Doug-verified airtight, `next build` clean). **Dual-mounted** in `app/(web)/layout.tsx` AND `app/app/layout.tsx` so the nav is always-on for logged-in users across both shells — deliberately NOT root-mounted (keeps it off the legacy retiring `/admin`). |
+| `BottomNav` (client) | `.../bottom-nav.tsx` | `{ isLoggedIn }` | Mobile-only (`md:hidden`), **logged-in-only** (`return null` for guests). **4 tabs**: Lineage · Directory · Posts · Profile (creation lives in the MAB, not a center tab; Dashboard+Profile collapsed to one — they shared `/app/profile`). Active-route highlight. Bespoke stacked tab (not `NavLink` — that's `flex-row`); safe-area inset; `max-md:pb-16` content clearance in both layouts. Demotes the `(web)` hamburger (`nav-sheet.tsx`) + the `/app` Sidebar (`max-md:hidden`) to the "More" overflow. |
+| `Mab` (client) | `.../mab.tsx` | booleans-only (`canClaim`/`canPost`/`canUpload`/`canPromote`, `postStyles`) | **Admin-only** movable radial FAB (Reddit-style fan, 4-corner snap, drag+persist, toggle-off). 4 `can()`-gated actions: Claim/verify + Log promotion **navigate** to their wizards; Create Post reuses the shipped `CreateCommunityPostDialog`; Upload opens `MabUploadSheet`. `useReducedMotion` branch on every animated node. |
+| `MabUploadSheet` / `MabToggle` | `.../mab-upload-sheet.tsx`, `.../mab-toggle.tsx` | — | Upload bottom-sheet composes the shared `Drawer` L1 + shipped `MediaUploader` (no new sheet primitive). `MabToggle` (in the "More" drawer) = the re-enable `Switch`. |
+| `mab-preferences` (pure) | `apps/web/lib/mab-preferences.ts` | localStorage `bbl.mab.enabled` / `bbl.mab.corner` | Per-device persistence, SSR-safe (`isBrowser()` guard, no `window` at module scope, mounted-guard → no hydration mismatch); same-tab sync via `MAB_ENABLED_EVENT` CustomEvent. **Promotion path** documented: on/off toggle → per-account (DB column) when the MAB opens beyond admins. |
+
+Follow-ups (FI-021 + WL-P3-29/30/31): mobile entry point for the ~30 `/app` admin CRUD sections the sidebar demote hid; prune the dead `BblMemberRail` `isMobile` branch; promote the non-admin MAB-absence e2e to CI. PWA layer (installable/offline) is the queued next mobile step.
+
 ## How to update this file
 
 - When a new custom component lands: add a row to the appropriate section in the same session that adds the file. If no section fits, create a new H2 with a one-line scope sentence and add the first row.

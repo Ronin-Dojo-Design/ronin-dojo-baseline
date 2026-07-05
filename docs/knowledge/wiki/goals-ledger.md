@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-06-28
-last_agent: claude-session-0466
+updated: 2026-07-05
+last_agent: claude-session-0500
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -82,12 +82,18 @@ aggregator reads it with no new parser logic.
 
 ### G-004 — BBLApp feature adaptation (N1 + N2)
 
-- **Status:** open — P1
+- **Status:** done — P1 (SESSION_0500)
 - **Objective:** N1 — swap the verified instructor/school creatable-combobox into the post-claim
   profile-enhancement wizard. N2 — member-dashboard ports (belt-by-belt edit cards, per-member privacy
   toggles, a dedicated Billing tab). Read-and-translate, no Playwright port.
 - **Lane:** lineage / member dashboard. **Unblocks:** G-001 (polished onboarding before Brian's real send).
 - **Why:** the post-claim surface is where a new claimant lands — it must feel finished.
+- **Progress:** **DONE (SESSION_0500, shipped to prod).** N1 = post-claim wizard now uses the verified
+  creatable-combobox for instructor/school (typed refs `trainedUnderNodeId`/`claimedSchoolId`; Doug SHIP
+  9.6). N2 = **2 of 3 surfaces (belt edit cards + privacy fields) were already on main via #186** — real
+  work was the NEW Billing tab + privacy discoverability polish. So **G-001/FI-001's onboarding-polish gate
+  is now cleared** — only the operator "send Brian now" remains. (See `186-superseded-belt-lane-ledger-items`
+  memory — the belt ledgers overstated remaining work.)
 
 ### G-005 — m-card consolidation: build `kind="generic"` + rebase the kernel card on the Dirstarter L1
 

@@ -203,6 +203,39 @@ merge N1 + WL-P2-22, then execute the belt rebase per TASK_02's plan.
 
 ## ADR / ubiquitous-language check
 
-- ADR update not required at plan-lock — no architectural decision changed. G-004/ADR 0040
-  one-primitive×variants + ADR 0035/0044 conformed-to.
-- Ubiquitous language: no new domain terms.
+- ADR update not required for the shipped code — G-004/ADR 0040 one-primitive×variants + ADR 0035/0044
+  conformed-to; Epic B is net-new chrome, no decision changed.
+- **ADR 0002 (Expo-for-mobile) flagged for a reconciliation amendment** (operator ratification): the
+  `native-api-contract-research-review.md` produced this session found ADR 0002's `api/v1` premise is dead
+  (never built; oRPC only ~4/140 modules; the repo already models the `Source="rpc"|"openapi"|"rsc"` hybrid).
+  Recommendation = Option C hybrid (oRPC internal + a generated `/api/v1` OpenAPI facade when native ships).
+  Not ratified here — decision-input only.
+- Ubiquitous language: MAB (Multi-Action Button), mobile shell — inventoried in the component inventory.
+
+## What landed (shipped to prod `5cfdcf4f`, Vercel ● Ready)
+
+- **G-004 N1+N2** (Doug 9.6) — post-claim wizard creatable-combobox (typed refs); member Billing tab + privacy polish. G-004 → done; **FI-001's onboarding-polish gate cleared** (only operator "send Brian" remains).
+- **WL-P2-22** (Doug 9.7) — LineageTreeBoard CRAP 1190→240 (−80%), 5 pure fns extracted + 19 tests, behavior-preserving.
+- **Epic B mobile shell** (Doug 9.5) — 4-tab bottom nav + admin radial MAB, always-on for logged-in users across `(web)`+`/app`; server-resolved admin-gate; localStorage persistence.
+- **Retired without wasted build:** 0491 belt-rebase (superseded by #186 — would've re-opened a self-approval hole; archive-tagged) + 5 dead `belt-verify` branches pruned. **FI-006** closed (already done).
+- **Docs/research:** `native-api-contract-research-review.md` (oRPC vs api/v1 options). **Queued:** PWA lane + mobile-admin-reachability (FI-021).
+
+## Reflections
+
+- **The sharpest work this session was NOT building — it was killing phantom lanes.** Three "open" belt-lane items (0491 rebase, FI-006, 2/3 of N2) were already shipped by #186; the ledgers/branches predated the consolidation and were never crossed off. Verifying against `main` before dispatching saved a wasted rebase (which would have regressed a security fix) and two no-op builds. Memory saved so the next belt lane checks first.
+- **Fan-out paid off because the work was genuinely disjoint** — three Wave-1 lanes (claim funnel / lineage canvas / git analysis) touched zero shared files, so they ran fully parallel and merged clean. The one collision (N2↔belt) was surfaced in planning and sequenced, not discovered at merge.
+- **Operator delegation on the "what would Apple/FB do" fork** (persistence) resolved to the lean call: per-device localStorage for a 2-admin v1 shell still being designed, with a documented per-account promotion path — not a premature DB column.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | 6 tasks: 3 shipped (N1+N2 · WL-P2-22 · Epic B), 1 retired (belt-rebase), 1 stale-closed (FI-006), 1 planning |
+| Combined gates (pre-push, `5cfdcf4f`) | typecheck 0 · oxfmt 1804 files · `bun run test` **1122/0** · `next build` exit 0 (197 pages) · wiki-lint 0 errors |
+| Reviews | Doug ×4 (9.6 g004 · 9.7 WL-22 · 9.7→9.5 Epic B v1/v2) + Desi (Epic B 2-HIGH → fixed) + Giddy (belt-rebase retire strategy + native-contract research) |
+| Deploy | Vercel ● Ready (3m); prod smoke 200 on `/` · `/posts` · `/lineage` |
+| Ledger routing | G-004→done · WL-P2-22→done · FI-006→resolved · FI-021 added · WL-P3-29/30/31 logged · board `markCardDone` ×3 |
+| Memory sweep | `186-superseded-belt-lane-ledger-items` + `epic-b-mobile-shell-shipped` saved; MEMORY.md indexed + compacted (19.7→18.5KB) |
+| Inventory | Epic B mobile-shell nav family added |
+| Git hygiene | 4 branches merged (1 push, 1 deploy) + deleted; 0491 archive-tagged; 5 belt-verify branches pruned |
+| Follow-ups queued | PWA lane (task) · mobile-admin affordance (task/FI-021) |
