@@ -1,0 +1,14 @@
+{
+  "more": "More",
+  "mab_open": "Open create menu",
+  "mab_close": "Close create menu",
+  "mab_disable": "Hide the quick actions button",
+  "mab_setting_label": "Quick actions button",
+  "action_claim": "Claim or verify a person",
+  "action_post": "Create post",
+  "action_upload": "Upload photo or media",
+  "action_promotion": "Log a promotion",
+  "upload_title": "Upload media",
+  "upload_description": "Add a photo or video to the media library.",
+  "upload_manage_link": "Manage the media library"
+}

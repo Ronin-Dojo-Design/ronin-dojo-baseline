@@ -5,6 +5,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { Wrapper } from "~/components/common/wrapper"
 import { FeedbackWidget } from "~/components/web/feedback-widget"
 import { Header } from "~/components/web/header"
+import { MobileShell } from "~/components/web/nav/mobile-shell"
 import { Backdrop } from "~/components/web/ui/backdrop"
 import { Container } from "~/components/web/ui/container"
 import { siteConfig } from "~/config/site"
@@ -53,7 +54,9 @@ export default async function ({ children }: PropsWithChildren) {
       customDomain={env.NEXT_PUBLIC_PLAUSIBLE_URL}
     >
       <JoinModalProvider joinOptions={joinOptions}>
-        <div className="flex flex-col min-h-dvh overflow-clip pt-(--header-inner-offset)">
+        {/* `max-md:pb-16` keeps the fixed mobile bottom nav (B0) from covering the footer /
+            page tail; desktop (no bottom nav) has no extra padding. */}
+        <div className="flex flex-col min-h-dvh overflow-clip pt-(--header-inner-offset) max-md:pb-16">
           <Header userAvatarUrl={userAvatarUrl} />
 
           <Backdrop isFixed />
@@ -62,6 +65,10 @@ export default async function ({ children }: PropsWithChildren) {
 
           <BblFooter />
         </div>
+
+        {/* Mobile chrome (B0/B1): always-on bottom nav + admin-only movable radial MAB. All
+            `md:hidden`, so desktop is untouched. Resolves permissions server-side. */}
+        <MobileShell userAvatarUrl={userAvatarUrl} />
 
         <FeedbackWidget />
       </JoinModalProvider>

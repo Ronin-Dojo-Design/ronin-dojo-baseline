@@ -25,6 +25,7 @@ import {
   SheetTitle,
 } from "~/components/common/sheet"
 import { JoinCtaButton } from "~/app/(web)/_components/join-modal/join-cta-button"
+import { MabToggle } from "~/components/web/nav/mab-toggle"
 import { ThemeSwitcher } from "~/components/web/theme-switcher"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { NavLink } from "~/components/web/ui/nav-link"
@@ -150,6 +151,14 @@ export const NavSheet = ({ open, onOpenChange, userAvatarUrl }: NavSheetProps) =
               )
             })}
           </nav>
+
+          {/* MAB on/off toggle — admin-only (the MAB is admin-only today), mobile-only. The
+              way back on after the MAB's own disable affordance (SESSION_0500 B1). */}
+          {user && isAdmin(user) && (
+            <div className="border-t pt-4">
+              <MabToggle />
+            </div>
+          )}
 
           {user && (
             <nav className="flex flex-col gap-3 border-t pt-4">
