@@ -53,7 +53,8 @@ export type LineageAncestryRank = {
  *
  * Deliberately minimal (Giddy A0 review P3-1/P3-2): this is a PUBLIC RSC payload,
  * so it projects ONLY what the scene renderer consumes. `quoteAttribution` is
- * sourcing provenance (attribution renders the entry's displayName by contract),
+ * sourcing provenance (the scene renders NO attribution line — the once-per-card
+ * name is the attribution, SESSION_0499 TASK_03),
  * `heroVideoUrl`/`posterUrl` are dormant until A5, `isBridge`/`bridgeCondition`
  * until A6, and `sceneOrder` is storyboard-only metadata — **walk order is the
  * authoritative entry order**; a consumer must never re-sort the chain by scene

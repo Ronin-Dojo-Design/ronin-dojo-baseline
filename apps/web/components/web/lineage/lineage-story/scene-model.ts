@@ -50,7 +50,14 @@ export const chainHasStoryScenes = (entries: readonly LineageAncestryEntry[]): b
 export type ScenePaletteTokens = {
   /** Section background + base text color. */
   section: string
-  /** Accent underline (text-decoration color) on display type. */
+  /**
+   * Accent underline (text-decoration color) on display type. Double duty since
+   * SESSION_0499 TASK_03: the parked name-spine keeps this underline, so it IS
+   * the spine's vertical accent rail — no separate spine token (the name keeps
+   * the section text color for legibility over the hero overlay gradient on
+   * every palette; a raw accent-colored spine would vanish on the red palette's
+   * black-on-dark-gradient combination).
+   */
   underline: string
   /** Secondary / muted copy on this background. */
   muted: string
