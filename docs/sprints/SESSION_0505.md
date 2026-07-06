@@ -215,22 +215,9 @@ Sequential (01 → 02 → 03); single coherent lane, no fan-out.
 | `bunx oxlint app/manifest.ts` | ✓ clean |
 | `bun run format:check` | ✓ 1819 files (added-files oxfmt trap avoided) |
 | `manifest()` fn invoked + `existsSync` per icon | all 3 srcs resolve ✓ |
-
-## Open decisions / blockers
-
-## Decisions resolved
-
-## Files touched
-
-| File | Change |
-| --- | --- |
-| `<path>` | <one-line change> |
-
-## Verification
-
-| Command / smoke | Result |
-| --- | --- |
-| `<command>` | <result> |
+| prod `<link rel=icon>` (blackbeltlegacy.com) | → `crest.png` (CDN) ✓ |
+| prod `<link rel=apple-touch-icon>` | → `apple-touch-icon.png` sizes=180×180 ✓ |
+| prod manifest + all assets | 3 install icons + crest + apple-touch → 200, dims exact ✓ |
 
 ## Open decisions / blockers
 
@@ -250,8 +237,12 @@ ledger/board scan or operator `/goal`.
 
 ### First task
 
-Run the bow-in ledger + board scan; if nothing pinned, consider the apple-touch-icon /
-favicon parity follow-up above (cheap, same Route A source).
+Run the bow-in ledger + board scan (`bun scripts/ledger-backlog.ts` + `board-backlog`),
+bundle the top 3–5 coherent items, and surface the Petey plan for sign-off before
+building. If open PRs exist and nothing else is pinned, default to `/pr-fix-loop`.
+The apple-touch/favicon parity is DONE (TASK_04, verified live on prod). Optional cheap
+follow-ups if picked up: a real multi-res `favicon.ico` (currently a PNG favicon via
+metadata, which modern browsers accept), and a leaner MEMORY.md (~35 entries).
 
 ## Review log
 
