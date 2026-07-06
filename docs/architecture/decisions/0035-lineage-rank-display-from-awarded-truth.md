@@ -4,8 +4,8 @@ slug: adr-0035-lineage-rank-display-from-awarded-truth
 type: adr
 status: accepted
 created: 2026-06-22
-updated: 2026-07-01
-last_agent: claude-session-0491
+updated: 2026-07-05
+last_agent: claude-session-0501
 pairs_with:
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/architecture/decisions/0036-unified-passport-claim.md
@@ -190,3 +190,32 @@ by adding a second of a thing the canon already collapsed" failure that record w
 - **Backfill (implied) award** — a `VERIFIED`-by-implication `RankAward` a member self-adds for a belt
   **at/below** their verified ceiling, so it can carry a `RankMilestone`. Rank implied by a higher verified
   rank; dates/promoters self-reported.
+
+## Amendment 2 — Belt-fact editing: member fill-blanks + audited admin CRUD (ACCEPTED — SESSION_0501)
+
+Operator-ratified policy change to the fact-editing gate (`memberFactEditability`,
+`apps/web/server/belt/belt-gate.ts`). Before: date / promoter / school were editable only on
+self-added STATED backfills — on imported/authority-owned awards the facts rendered as dead
+"Not recorded" text with **no path for anyone** (member or admin) to fill them.
+
+### Amendment decision (hybrid)
+
+1. **Member fill-blanks:** the award OWNER may **set a fact that is currently EMPTY** on their
+   own award of any source (fill-once, per-fact: date `awardedAt IS NULL`; promoter = no
+   `awardedByPassportId` AND blank `notes`; school = no `organizationId` AND blank `location`)
+   — but may **never modify or clear a filled authority fact**. Self-added backfills keep full
+   editability. DISPUTED awards stay fully locked for the owner (deny-by-default).
+2. **Admin CRUD:** `updateRankAwardFactAsAdmin` — set/overwrite/clear any fact on any member's
+   award; gated by the new `belt.admin` permission KEY on the existing `can()` system (admin
+   `"*"` wildcard; the FI-019 precedent — a new key, never a 5th authz system); every write is
+   audit-logged (`belt.fact.updated`, before/after in-transaction).
+
+### Invariants preserved
+
+- **Awarded-truth display (§§1–3) unchanged** — facts are enrichment; `rankId` is not an input
+  on any fact path; no code path produces an `UNVERIFIED` award (Amendment 1 holds).
+- Authz widening shipped **GAINER-adversarial-tests-first** (29/0 integration + 22/0 gate
+  matrix), and the fill-once write is race-proof (conditional atomic write re-asserting
+  emptiness; fails closed — SESSION_0501 `80803228`).
+- Admin **UI mount** deliberately deferred: ratified as a `/app/users/[id]` belts tab (next
+  lane); the oRPC path is live + tested regardless.
