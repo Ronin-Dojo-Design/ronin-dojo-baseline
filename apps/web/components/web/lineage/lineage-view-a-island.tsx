@@ -1,24 +1,14 @@
 "use client"
 
-import { Menu } from "@base-ui/react/menu"
 import { useReducedMotion } from "@mantine/hooks"
-import {
-  CopyIcon,
-  FocusIcon,
-  NetworkIcon,
-  PencilIcon,
-  RouteIcon,
-  ShieldCheckIcon,
-  UserRoundIcon,
-  UserRoundPlusIcon,
-  UsersRoundIcon,
-} from "lucide-react"
+import { FocusIcon } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
-import { BeltSwatch } from "~/components/common/belt-swatch"
-import { DropdownMenuItem } from "~/components/common/dropdown-menu"
-import { Link } from "~/components/common/link"
 import { LineageCohortTimeline } from "~/components/web/lineage/lineage-cohort-timeline"
+import { CardMenu } from "~/components/web/lineage/lineage-view-a/card-menu"
+import { SOLID_PILL } from "~/components/web/lineage/lineage-view-a/chrome"
 import { FilterBar } from "~/components/web/lineage/lineage-view-a/filter-bar"
+import { FocusPanel } from "~/components/web/lineage/lineage-view-a/focus-panel"
+import { MetricsHeader } from "~/components/web/lineage/lineage-view-a/metrics-header"
 import { useLineageFocus } from "~/components/web/lineage/lineage-view-a/use-lineage-focus"
 import { useLineageViewAFilters } from "~/components/web/lineage/lineage-view-a/use-lineage-view-a-filters"
 import {
@@ -26,8 +16,7 @@ import {
   type LineageProfileDrawerTab,
 } from "~/components/web/lineage/lineage-profile-drawer"
 import { bblPortalTypographyClass } from "~/lib/fonts"
-import { BBL, rgba } from "~/lib/lineage/belt-color"
-import { memberInitials } from "~/lib/lineage/canvas-model"
+import { BBL } from "~/lib/lineage/belt-color"
 import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
 import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
@@ -37,7 +26,7 @@ import type {
   LineageTreeMemberRow,
   LineageVisualGroupRow,
 } from "~/server/web/lineage/payloads"
-import { cx, popoverAnimationClasses } from "~/lib/utils"
+import { cx } from "~/lib/utils"
 
 type Props = {
   members: LineageTreeMemberRow[]
@@ -67,12 +56,6 @@ type Props = {
 
 // Depth control: value === MAX_DEPTH means "All" (a depth larger than any real tree).
 const MAX_DEPTH = 6
-
-// Solid "legacy/authoritative" chrome — replaces glassmorphism (no backdrop-blur).
-const SOLID_PANEL =
-  "border border-white/8 bg-[#0c0c0d] shadow-[0_20px_60px_-26px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.045)]"
-const SOLID_PILL =
-  "border border-white/8 bg-[#101011] shadow-[0_12px_30px_-18px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.04)]"
 
 // Trust state is detail-level metadata — focus panel / drawer only.
 const TRUST_LABEL: Record<LineageTrustStatus, string> = {
@@ -126,42 +109,6 @@ function DepthStepper({
       </button>
     </div>
   )
-}
-
-function MetricPill({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string | number
-}) {
-  return (
-    <div className={cx("rounded-2xl px-4 py-3", SOLID_PILL)}>
-      <div className="flex items-center gap-2 text-white/45">
-        <span className="[&_svg]:size-4">{icon}</span>
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.2em]">{label}</span>
-      </div>
-      <div className="mt-2 text-xl font-black tracking-[-0.04em] text-white">{value}</div>
-    </div>
-  )
-}
-
-// Compact mobile metric — value + label inline, for the slim header strip.
-function MetricStat({ label, value }: { label: string; value: string | number }) {
-  return (
-    <span className="inline-flex items-baseline gap-1.5">
-      <span className="text-sm font-black tabular-nums text-white">{value}</span>
-      <span className="text-[0.6rem] font-bold uppercase tracking-[0.18em] text-white/45">
-        {label}
-      </span>
-    </span>
-  )
-}
-
-function PremiumPanel({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cx("rounded-3xl p-4", SOLID_PANEL, className)}>{children}</div>
 }
 
 export function LineageViewAIsland({
@@ -292,111 +239,18 @@ export function LineageViewAIsland({
 
       <div className="relative z-10 p-4 sm:p-5 lg:p-6">
         <div className="mb-3 grid gap-4 sm:mb-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <PremiumPanel className="max-sm:p-3">
-            <div className="flex flex-col gap-4 sm:gap-5 2xl:flex-row 2xl:items-end 2xl:justify-between">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/8 bg-[#141415] px-3 py-1 text-[0.6rem] font-bold uppercase tracking-[0.2em] text-white/60 sm:text-[0.65rem]">
-                    <RouteIcon className="size-3.5" />
-                    Focal lineage view
-                  </span>
-                </div>
+          <MetricsHeader
+            memberCount={members.length}
+            verifiedCount={verifiedCount}
+            rootCount={rootCount}
+          />
 
-                {/* Slim mobile title (YouTube-app header); desktop keeps the full heading + lede. */}
-                <h2 className="mt-3 text-xl uppercase italic tracking-[0.01em] text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif] sm:hidden">
-                  Living lineage
-                </h2>
-
-                <h2 className="mt-4 hidden text-balance text-3xl uppercase italic tracking-[0.01em] text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif] sm:block sm:text-4xl lg:text-5xl">
-                  Explore the living lineage.
-                </h2>
-
-                <p className="mt-3 hidden max-w-3xl text-pretty text-sm/6 text-white/60 sm:block sm:text-base/7">
-                  Click any practitioner to recenter the tree and trace their lineage. Instructors
-                  with students of their own branch into their own box; everyone else lists under
-                  their teacher — tap them to open their profile and full student roster.
-                </p>
-              </div>
-
-              {/* Metrics — thin inline strip on mobile, MetricPill grid on sm+. */}
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
-                <MetricStat label="Members" value={members.length} />
-                <span aria-hidden className="text-white/20">
-                  ·
-                </span>
-                <MetricStat label="Verified" value={verifiedCount} />
-                <span aria-hidden className="text-white/20">
-                  ·
-                </span>
-                <MetricStat label="Roots" value={rootCount} />
-              </div>
-
-              <div className="hidden w-full shrink-0 grid-cols-3 gap-2 sm:grid md:w-auto md:max-w-[25rem]">
-                <MetricPill icon={<UsersRoundIcon />} label="Members" value={members.length} />
-                <MetricPill icon={<ShieldCheckIcon />} label="Verified" value={verifiedCount} />
-                <MetricPill icon={<NetworkIcon />} label="Roots" value={rootCount} />
-              </div>
-            </div>
-          </PremiumPanel>
-
-          <PremiumPanel className="hidden flex-col justify-between gap-4 xl:flex">
-            <div>
-              <div className="text-[0.62rem] font-black uppercase tracking-[0.24em] text-white/42">
-                Current focus
-              </div>
-
-              <div className="mt-3 flex items-start gap-3">
-                <div
-                  className="flex size-12 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-sm font-black text-white shadow-lg"
-                  style={{
-                    boxShadow: focusNode?.colorHex
-                      ? `0 0 22px ${rgba(focusNode.colorHex, 0.24)}`
-                      : undefined,
-                  }}
-                >
-                  {memberInitials(focusNode?.displayName ?? "Lineage")}
-                </div>
-
-                <div className="min-w-0">
-                  <div className="truncate text-lg italic text-white [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
-                    {focusNode?.displayName ?? "Select a practitioner"}
-                  </div>
-
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <BeltSwatch variant="bar" shimmer colorHex={focusNode?.colorHex} />
-                    <span className="min-w-0 truncate text-xs text-white/55">
-                      {focusNode?.rankLabel ?? "Unranked"}
-                    </span>
-                  </div>
-
-                  {focusNode?.schoolLabel && (
-                    <div className="mt-1 truncate text-xs text-white/42">
-                      {focusNode.schoolLabel}
-                    </div>
-                  )}
-
-                  {focusTrustLabel && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-[#101011] px-2 py-1 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-white/62">
-                      <ShieldCheckIcon className="size-3" />
-                      {focusTrustLabel}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              disabled={!focusMemberId}
-              onClick={() => {
-                if (focusMemberId) openDrawer(focusMemberId)
-              }}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.07] px-3 text-xs font-bold text-white transition hover:bg-white/[0.12] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <UserRoundIcon className="size-4" />
-              View profile
-            </button>
-          </PremiumPanel>
+          <FocusPanel
+            focusNode={focusNode}
+            focusTrustLabel={focusTrustLabel}
+            focusMemberId={focusMemberId}
+            onViewProfile={openDrawer}
+          />
         </div>
 
         <FilterBar
@@ -512,8 +366,7 @@ export function LineageViewAIsland({
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-white/42">
           <span className="hidden sm:inline">
-            Best on desktop; fully usable on mobile — tap a card to recenter, scroll the canvas, and
-            use depth controls to simplify.
+            Tap a card to recenter · scroll to explore · use depth controls to simplify.
           </span>
 
           {claimableCount > 0 && (
@@ -524,71 +377,17 @@ export function LineageViewAIsland({
         </div>
       </div>
 
-      <Menu.Root
-        open={cardMenu !== null}
-        onOpenChange={open => {
-          if (!open) setCardMenu(null)
-        }}
-      >
-        <Menu.Portal>
-          <Menu.Positioner
-            anchor={cardMenu?.anchorEl ?? null}
-            side="bottom"
-            align="end"
-            sideOffset={6}
-            className="isolate z-50"
-          >
-            <Menu.Popup
-              className={cx(
-                "flex min-w-48 flex-col rounded-xl border border-white/10 bg-[#0a0a0b] p-1 text-white shadow-2xl shadow-black/50",
-                popoverAnimationClasses,
-              )}
-            >
-              <DropdownMenuItem
-                onClick={() => {
-                  if (cardMenu) openDrawer(cardMenu.memberId)
-                  setCardMenu(null)
-                }}
-              >
-                <UserRoundIcon />
-                View profile
-              </DropdownMenuItem>
-
-              {activeMenuNode?.claimable &&
-                isTreeClaimable &&
-                // SESSION_0440 — don't offer a claim on a node already claimed or with the
-                // viewer's claim pending (shared resolver). Undefined (un-threaded) → UNCLAIMED.
-                (claimStateByNodeId?.[activeMenuNode.nodeId] ?? "UNCLAIMED") === "UNCLAIMED" && (
-                  <DropdownMenuItem
-                    render={<Link href={`/lineage/join?node=${activeMenuNode.nodeId}`} />}
-                  >
-                    <UserRoundPlusIcon />
-                    Claim this profile
-                  </DropdownMenuItem>
-                )}
-
-              <DropdownMenuItem
-                onClick={() => {
-                  if (cardMenu) copyFocusLink(cardMenu.memberId)
-                  setCardMenu(null)
-                }}
-              >
-                <CopyIcon />
-                Copy focus link
-              </DropdownMenuItem>
-
-              {canManage && treeSlug && activeMenuNode && (
-                <DropdownMenuItem
-                  render={<Link href={`/lineage/${treeSlug}/edit/${activeMenuNode.nodeId}`} />}
-                >
-                  <PencilIcon />
-                  Open in editor
-                </DropdownMenuItem>
-              )}
-            </Menu.Popup>
-          </Menu.Positioner>
-        </Menu.Portal>
-      </Menu.Root>
+      <CardMenu
+        cardMenu={cardMenu}
+        activeMenuNode={activeMenuNode}
+        claimStateByNodeId={claimStateByNodeId}
+        isTreeClaimable={isTreeClaimable}
+        canManage={canManage}
+        treeSlug={treeSlug}
+        openDrawer={openDrawer}
+        copyFocusLink={copyFocusLink}
+        onClose={() => setCardMenu(null)}
+      />
 
       <LineageProfileDrawer
         open={drawerOpen}
