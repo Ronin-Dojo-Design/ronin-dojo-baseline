@@ -278,7 +278,7 @@ const updateRankAwardFact = beltProcedure
 
     // Per-fact gate: every fact the input tries to write must be editable for the
     // OWNER. Surface the REAL reason naming the locked fact(s), never a blanket error.
-    const { facts } = memberFactEditability(award)
+    const { facts, reason } = memberFactEditability(award)
     const locked = requestedFactKeys(input).filter(key => !facts[key])
     if (locked.length > 0) {
       throw new ORPCError("FORBIDDEN", {
@@ -287,7 +287,36 @@ const updateRankAwardFact = beltProcedure
     }
 
     const data = await buildFactUpdateData(input)
-    await db.rankAward.update({ where: { id: award.id }, data })
+    if (reason === "SELF_BACKFILL") {
+      // Self-added backfill: full overwrite is the ratified semantics — the owner
+      // racing themselves is harmless, so the unconditional write stands.
+      await db.rankAward.update({ where: { id: award.id }, data })
+    } else {
+      // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
+      // read-checked emptiness, but a concurrent fill (or an admin write landing in the
+      // read→write window) could otherwise be overwritten. The write itself re-asserts
+      // per-fact emptiness atomically — a raced fill matches 0 rows and fails CLOSED.
+      // (Prisma can't express the gate's trim() blank-check, so whitespace-only
+      // freetext also fails closed here — the safe direction, and unreachable via our
+      // own writers, which always trim-or-null.)
+      const stillEmpty = requestedFactKeys(input).map(key =>
+        key === "awardedAt"
+          ? { awardedAt: null }
+          : key === "promoter"
+            ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
+            : { organizationId: null, OR: [{ location: null }, { location: "" }] },
+      )
+      const written = await db.rankAward.updateMany({
+        where: { id: award.id, passportId, AND: stillEmpty },
+        data,
+      })
+      if (written.count !== 1) {
+        throw new ORPCError("FORBIDDEN", {
+          message:
+            "This belt's details were just updated elsewhere — refresh to see the latest record.",
+        })
+      }
+    }
 
     context.revalidate({ paths: REVALIDATE_PATHS })
     return enrichedCard(passportId, award.id)
@@ -334,6 +363,12 @@ const updateRankAwardFactAsAdmin = authedProcedure
     })
 
     await db.$transaction(async tx => {
+      // Race-proof before-image (Doug SESSION_0501 P3): re-read inside the tx — the
+      // outer read is only the NOT_FOUND guard and could be ms-stale by write time.
+      const before = await tx.rankAward.findUniqueOrThrow({
+        where: { id: award.id },
+        select: factEditSelect,
+      })
       const updated = await tx.rankAward.update({
         where: { id: award.id },
         data,
@@ -346,7 +381,7 @@ const updateRankAwardFactAsAdmin = authedProcedure
           entityType: "RankAward",
           entityId: award.id,
           userId: context.user.id,
-          before: factSnapshot(award),
+          before: factSnapshot(before),
           after: factSnapshot(updated),
         },
       })
