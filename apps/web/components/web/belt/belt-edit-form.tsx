@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
 import {
   CreatableCombobox,
@@ -12,9 +13,11 @@ import {
 import { DialogFooter, DialogHeader, DialogTitle } from "~/components/common/dialog"
 import { Input } from "~/components/common/input"
 import { Label } from "~/components/common/label"
+import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
+import { siteConfig } from "~/config/site"
 import { client } from "~/lib/orpc-client"
 import type { BeltCardOutput, MilestoneMediaPurpose } from "~/server/belt/schemas"
 import { BeltMediaGallery } from "./belt-media-gallery"
@@ -42,6 +45,14 @@ import { CountrySelect } from "./country-select"
  * - MILESTONE fields (story + the 4 media galleries) — ALWAYS editable (member-owned).
  *   Story wires to `client.belt.upsertBeltMilestone`; media to the galleries.
  *
+ * ONE Save button (Desi P1-9 — one mental model, one action): it always upserts the
+ * story (which also mints the award/milestone when absent), then — when any fact is
+ * editable AND dirty — pushes the fact edit against the FRESH card the upsert
+ * returned. The per-group mutations stay separate server-side; the merge is pure
+ * client orchestration. This also gives the white belt a save path for its date
+ * (the old "Save belt details" button was `!white && …`, so the white-belt date
+ * input had no way to persist).
+ *
  * White-belt special-case: the date label asks "when did you start training?" and
  * the promoter/location fields are hidden (structurally detected via `minSortOrder`).
  *
@@ -62,6 +73,19 @@ function toDateInputValue(date: Date | null): string {
   const d = new Date(date)
   if (Number.isNaN(d.getTime())) return ""
   return d.toISOString().slice(0, 10)
+}
+
+/**
+ * A LOCKED fact rendered as a plain label/value line (Desi P2-15): muted "Not
+ * recorded" when absent, `text-foreground` value when present — matching the
+ * form's field rhythm. `Note` is reserved for the single lock-explanation note.
+ */
+function LockedFactValue({ value }: { value: string }) {
+  return value ? (
+    <p className="text-sm text-foreground">{value}</p>
+  ) : (
+    <p className="text-sm text-muted-foreground">Not recorded</p>
+  )
 }
 
 export function BeltEditForm({
@@ -89,28 +113,43 @@ export function BeltEditForm({
   const card = vm.card
   const white = isWhiteBelt(vm.rank.sortOrder, minSortOrder)
   // Per-fact editability (SESSION_0501): the server computes the matrix; the form
-  // renders an input per editable fact and a read-only note per locked one.
+  // renders an input per editable fact and a plain value line per locked one.
   const facts = cardFactEditability(card)
-  const anyFactEditable = facts.awardedAt || facts.promoter || facts.school
+  // A locked fact exists on this card (locked ⇔ authority-filled on non-disputed
+  // awards) — drives the "Request a correction" affordance (Desi P1-7).
+  const hasLockedFact = card != null && !(facts.awardedAt && facts.promoter && facts.school)
+
+  // Initial values recompute from the card prop each render, so after a save the
+  // dirty flags settle back to false (the grid re-hands the fresh card down).
+  const initialAwardedAt = toDateInputValue(card?.awardedAt ?? null)
+  const initialPromoter: CreatableValue = card?.awardedByPassportId
+    ? { id: card.awardedByPassportId, label: card.promoterName ?? "" }
+    : card?.promoterName
+      ? { id: null, label: card.promoterName }
+      : EMPTY_CREATABLE_VALUE
+  const initialSchool: CreatableValue = card?.organizationId
+    ? { id: card.organizationId, label: card.schoolName ?? "" }
+    : card?.schoolName
+      ? { id: null, label: card.schoolName }
+      : EMPTY_CREATABLE_VALUE
 
   const [story, setStory] = useState(card?.milestone?.story ?? "")
-  const [awardedAt, setAwardedAt] = useState(toDateInputValue(card?.awardedAt ?? null))
-  const [promoter, setPromoter] = useState<CreatableValue>(
-    card?.awardedByPassportId
-      ? { id: card.awardedByPassportId, label: card.promoterName ?? "" }
-      : card?.promoterName
-        ? { id: null, label: card.promoterName }
-        : EMPTY_CREATABLE_VALUE,
-  )
-  const [school, setSchool] = useState<CreatableValue>(
-    card?.organizationId
-      ? { id: card.organizationId, label: card.schoolName ?? "" }
-      : card?.schoolName
-        ? { id: null, label: card.schoolName }
-        : EMPTY_CREATABLE_VALUE,
-  )
+  const [awardedAt, setAwardedAt] = useState(initialAwardedAt)
+  const [promoter, setPromoter] = useState<CreatableValue>(initialPromoter)
+  const [school, setSchool] = useState<CreatableValue>(initialSchool)
   const [country, setCountry] = useState<string>("")
   const [isSaving, setIsSaving] = useState(false)
+
+  // Per-fact dirty flags — the single Save only sends a fact when it is editable
+  // AND actually changed (a locked fact in the payload would FORBIDDEN the save).
+  const dateDirty = awardedAt !== initialAwardedAt
+  const promoterDirty =
+    promoter.id !== initialPromoter.id || promoter.label !== initialPromoter.label
+  const schoolDirty =
+    school.id !== initialSchool.id ||
+    school.label !== initialSchool.label ||
+    // Country rides the FREETEXT school entry, so picking one dirties the school.
+    (country !== "" && !school.id)
 
   const mediaByPurpose = useMemo(() => {
     const map: Record<string, BeltCardMedia[]> = {}
@@ -123,62 +162,52 @@ export function BeltEditForm({
 
   const milestoneId = card?.milestone?.id ?? null
 
-  const saveStory = async () => {
+  /**
+   * The ONE Save (Desi P1-9). Story first — the upsert also mints the award +
+   * milestone when this belt has no card yet — then the fact edit against the
+   * FRESH card the upsert returned (a just-minted backfill is fully editable, so
+   * the fresh card's matrix is the one that matters, not the possibly-null prop's).
+   * Facts are sent per-fact, only when editable AND dirty (undefined leaves a
+   * column untouched; a locked authority fact in the payload would FORBIDDEN the
+   * whole save).
+   */
+  const save = async () => {
     setIsSaving(true)
     try {
-      const next = await client.belt.upsertBeltMilestone({
+      let next = await client.belt.upsertBeltMilestone({
         rankId: vm.rank.id,
         story: story.trim() || null,
       })
+
+      const freshFacts = cardFactEditability(next)
+      const sendDate = freshFacts.awardedAt && dateDirty
+      const sendPromoter = !white && freshFacts.promoter && promoterDirty
+      const sendSchool = !white && freshFacts.school && schoolDirty
+      if (sendDate || sendPromoter || sendSchool) {
+        next = await client.belt.updateRankAwardFact({
+          rankAwardId: next.rankAwardId,
+          awardedAt: sendDate ? (awardedAt ? new Date(awardedAt) : null) : undefined,
+          promoter: sendPromoter
+            ? promoter.id
+              ? { awardedByPassportId: promoter.id }
+              : { name: promoter.label || null }
+            : undefined,
+          school: sendSchool
+            ? school.id
+              ? { organizationId: school.id }
+              : { name: school.label || null, country: country || null }
+            : undefined,
+        })
+      }
+
       onSaved?.(next)
-      toast.success("Story saved.")
+      toast.success("Belt saved.")
     } catch (error) {
       // Surface the real oRPC message (BAD_REQUEST / FORBIDDEN carry user-safe copy);
       // fall back only for opaque failures. A bare `catch {}` masked a live P2003 as
       // this generic toast for every failure class (SESSION_0497).
       toast.error(
-        error instanceof Error && error.message ? error.message : "Could not save your story.",
-      )
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const saveFact = async () => {
-    if (!card) {
-      // No award yet — the story upsert creates it; save the story first.
-      await saveStory()
-      return
-    }
-    setIsSaving(true)
-    try {
-      // Send ONLY the editable facts (undefined leaves a column untouched) — a
-      // locked authority fact in the payload would FORBIDDEN the whole save.
-      const next = await client.belt.updateRankAwardFact({
-        rankAwardId: card.rankAwardId,
-        awardedAt: facts.awardedAt ? (awardedAt ? new Date(awardedAt) : null) : undefined,
-        promoter:
-          white || !facts.promoter
-            ? undefined
-            : promoter.id
-              ? { awardedByPassportId: promoter.id }
-              : { name: promoter.label || null },
-        school:
-          white || !facts.school
-            ? undefined
-            : school.id
-              ? { organizationId: school.id }
-              : { name: school.label || null, country: country || null },
-      })
-      onSaved?.(next)
-      toast.success("Belt details saved.")
-    } catch (error) {
-      // See saveStory: surface the real oRPC message instead of masking every failure
-      // (incl. the registered-promoter P2003) behind one generic toast (SESSION_0497).
-      toast.error(
-        error instanceof Error && error.message
-          ? error.message
-          : "Could not save your belt details.",
+        error instanceof Error && error.message ? error.message : "Could not save this belt.",
       )
     } finally {
       setIsSaving(false)
@@ -188,13 +217,41 @@ export function BeltEditForm({
   return (
     <Stack direction="column" size="lg" className="w-full">
       <DialogHeader>
-        <DialogTitle>{vm.rank.name}</DialogTitle>
+        {/* Belt-swatch continuity with the launching card (Desi P2-14) — same
+            data-driven `Rank.colorHex`, same `bar` variant/size as `BeltEditCard`.
+            The swatch is aria-hidden, so the accessible title stays the rank name. */}
+        <DialogTitle className="flex items-center gap-2.5">
+          <BeltSwatch colorHex={vm.rank.colorHex} variant="bar" className="h-4 w-12" />
+          {vm.rank.name}
+        </DialogTitle>
       </DialogHeader>
 
       {/* FACT fields — PER-FACT editability (SESSION_0501 fill-blanks policy): a
           self-added backfill is fully editable; on an authority-owned award an EMPTY
-          fact renders an input the owner may fill, a FILLED one a read-only note. */}
+          fact renders an input the owner may fill, a FILLED one a plain value line.
+          The lock explanation leads the group (Desi P1-7) so the state is announced
+          before the reader hits dead fields; locked-filled facts get a lightweight
+          "Request a correction" mailto (no member-facing correction subsystem exists
+          — see PromoterChangeModal, an editor-authority tool that can't mount here). */}
       <Stack direction="column" size="md" className="w-full">
+        {(card?.editabilityReason === "AUTHORITY_LOCKED" ||
+          card?.editabilityReason === "AUTHORITY_PARTIAL") && (
+          <Note className="text-xs">
+            {card.editabilityReason === "AUTHORITY_LOCKED"
+              ? "These belt facts were recorded by an instructor or admin and are locked."
+              : "Facts recorded by an instructor or admin are locked — you can add the ones still missing."}{" "}
+            {hasLockedFact && (
+              <Link
+                href={`mailto:${siteConfig.email}?subject=${encodeURIComponent(
+                  `Belt record correction request — ${vm.rank.name}`,
+                )}`}
+              >
+                Request a correction
+              </Link>
+            )}
+          </Note>
+        )}
+
         <div className="w-full">
           <Label htmlFor="belt-awarded-at">{beltDateLabel(white)}</Label>
           {facts.awardedAt ? (
@@ -206,7 +263,7 @@ export function BeltEditForm({
               onChange={event => setAwardedAt(event.target.value)}
             />
           ) : (
-            <Note className="text-sm">{awardedAt || "Not recorded"}</Note>
+            <LockedFactValue value={awardedAt} />
           )}
         </div>
 
@@ -223,7 +280,7 @@ export function BeltEditForm({
                   searchPlaceholder="Search instructors, or type a name..."
                 />
               ) : (
-                <Note className="text-sm">{promoter.label || "Not recorded"}</Note>
+                <LockedFactValue value={promoter.label} />
               )}
             </div>
 
@@ -238,7 +295,7 @@ export function BeltEditForm({
                   searchPlaceholder="Search schools, or type to add..."
                 />
               ) : (
-                <Note className="text-sm">{school.label || "Not recorded"}</Note>
+                <LockedFactValue value={school.label} />
               )}
             </div>
 
@@ -249,18 +306,6 @@ export function BeltEditForm({
               </div>
             )}
           </>
-        )}
-
-        {card?.editabilityReason === "AUTHORITY_LOCKED" && (
-          <Note className="text-xs">
-            These belt facts were recorded by an instructor or admin and are locked.
-          </Note>
-        )}
-        {card?.editabilityReason === "AUTHORITY_PARTIAL" && (
-          <Note className="text-xs">
-            Facts recorded by an instructor or admin are locked — you can add the ones still
-            missing.
-          </Note>
         )}
       </Stack>
 
@@ -294,8 +339,7 @@ export function BeltEditForm({
         </Stack>
       ) : (
         <Note className="text-xs">
-          Save your story first to start adding belt, instructor, certificate, and competition
-          photos.
+          Save this belt once to start adding belt, instructor, certificate, and competition photos.
         </Note>
       )}
 
@@ -303,16 +347,9 @@ export function BeltEditForm({
         <Button type="button" variant="secondary" onClick={onClose}>
           Close
         </Button>
-        <Stack size="sm">
-          {!white && card && anyFactEditable && (
-            <Button type="button" variant="secondary" isPending={isSaving} onClick={saveFact}>
-              Save belt details
-            </Button>
-          )}
-          <Button type="button" isPending={isSaving} onClick={saveStory}>
-            Save story
-          </Button>
-        </Stack>
+        <Button type="button" isPending={isSaving} onClick={save}>
+          Save
+        </Button>
       </DialogFooter>
     </Stack>
   )

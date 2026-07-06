@@ -68,8 +68,9 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
 
     const story = `E2E white-belt story ${Date.now()}`
     await dialog.getByLabel("Your story").fill(story)
-    await dialog.getByRole("button", { name: "Save story" }).click()
-    await expect(page.getByText("Story saved.")).toBeVisible({ timeout: 15_000 })
+    // ONE Save button (Desi P1-9) — story + editable facts in a single action.
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await expect(page.getByText("Belt saved.")).toBeVisible({ timeout: 15_000 })
   })
 
   test("a belt above the ceiling routes to the promotion flow (Purple, no award)", async ({
@@ -106,11 +107,13 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible({ timeout: 15_000 })
     // SESSION_0501 fill-blanks policy, per fact: the FILLED authority facts (date +
-    // promoter, seeded on the fixture) collapse to read-only notes — no date input —
-    // and the partial-lock hint names the authority.
+    // promoter, seeded on the fixture) collapse to plain value lines — no date input —
+    // and the partial-lock hint LEADS the fact group (Desi P1-7).
     await expect(dialog.getByText(/recorded by an instructor or admin are locked/i)).toBeVisible()
     await expect(dialog.locator('input[type="date"]')).toHaveCount(0)
     await expect(dialog.getByText("Prof. Fixture")).toBeVisible()
+    // Locked-filled facts expose the lightweight correction affordance (Desi P1-7).
+    await expect(dialog.getByRole("link", { name: "Request a correction" })).toBeVisible()
     // …while the EMPTY school fact exposes a fill affordance (the combobox trigger —
     // a `role="combobox"` Button whose accessible name is the placeholder when empty).
     await expect(
