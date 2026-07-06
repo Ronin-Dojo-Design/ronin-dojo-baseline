@@ -2,7 +2,7 @@
 title: "SESSION 0504 — page-code-review recipe on page #2 = /lineage/[treeSlug]"
 slug: session-0504
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-06
 updated: 2026-07-06
 last_agent: claude-session-0504
@@ -274,3 +274,152 @@ out of this page pass's scope (it is not even part of the `/lineage/[treeSlug]` 
   is a ratify-then-conform ticket, not a refactor-pass fix.
 - **TICKET-0504-C** — add unit tests for the extracted `FocusPanel` + `CardMenu` (cyclo 12-13) to clear fallow's
   zero-coverage `critical` flag (CRAP is coverage-driven, not a complexity hotspot). Low priority.
+
+## What landed
+
+- **Page-code-review recipe run on page #2 = `/lineage/[treeSlug]`** (the gnarly canvas/timeline page), proving
+  the recipe scales past the polished page #1.
+- **Step 0 boundary was the real work:** the "gnarly" surface is almost entirely SHARED (board/timeline/canvas/
+  drawer/story used by ≥2 pages) → flag-only. Editable page-owned set shrank to TWO files.
+- **Explore island extraction (behavior-preserving):** `lineage-view-a-island.tsx` **794 → 412 LOC**;
+  `LineageViewAIsland` **cyclo 52 → 27, CRAP 2756 → 756 (−73%)** — no longer the surface's dominant hotspot.
+  Split into a new page-owned dir `components/web/lineage/lineage-view-a/` (2 hooks + 5 presentational files).
+  **Zero shared-file edits.**
+- **New explore-view e2e** (`e2e/lineage/explore-view.spec.ts`) — the missing behavior harness (all prior
+  `/lineage/[treeSlug]` specs pin to `?view=board`); green on the PRE-refactor island first, then throughout.
+  Firefox ⋮-menu flake killed with a self-healing `expect.toPass` helper.
+- **Desi polish:** card-menu anchor-rationale comment; softened the "Best on desktop" helper copy; refreshed the
+  stale `LineageViewAIsland` row in `custom-component-inventory.md`.
+- **Recipe inventory row flipped** — `/lineage/[treeSlug]` → ✅ done (0504).
+
+## Decisions resolved
+
+- **Refactor depth = full safe stack (Giddy Slices 1–5)** (operator, post-report). Behavior-preserving; the
+  gnarly shared subtree stays a separate component pass (TICKET-0504-A).
+- **Land = merge to main + push (deploy)** (operator) — app-code, so the push triggers the prod deploy;
+  behavior-preserving.
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `apps/web/components/web/lineage/lineage-view-a-island.tsx` | god-function extraction 794→412 LOC (cyclo 52→27) |
+| `apps/web/components/web/lineage/lineage-view-a/use-lineage-focus.ts` | NEW — focus/recenter/copy-link state + `buildFocusSearchParams` |
+| `apps/web/components/web/lineage/lineage-view-a/use-lineage-view-a-filters.ts` | NEW — filter facets + state (null-passthrough preserved) |
+| `apps/web/components/web/lineage/lineage-view-a/filter-bar.tsx` | NEW — filter bar + `FilterDropdown` |
+| `apps/web/components/web/lineage/lineage-view-a/focus-panel.tsx` | NEW — "Current focus" desktop panel |
+| `apps/web/components/web/lineage/lineage-view-a/metrics-header.tsx` | NEW — header + `MetricPill`/`MetricStat` (kept as 2 responsive fns) |
+| `apps/web/components/web/lineage/lineage-view-a/card-menu.tsx` | NEW — Base UI `Menu.*` ⋮ menu + anchor-rationale comment |
+| `apps/web/components/web/lineage/lineage-view-a/chrome.tsx` | NEW — SOLID_* chrome literals + `PremiumPanel` (ratified, not retokenized) |
+| `apps/web/e2e/lineage/explore-view.spec.ts` | NEW — explore-view behavior harness (5 tests × chromium+firefox) |
+| `docs/knowledge/wiki/custom-component-inventory.md` | refreshed stale `LineageViewAIsland` prop row |
+| `docs/protocols/page-code-review.md` | inventory row flip (page #2 done) + `last_agent` |
+| `docs/knowledge/wiki/index.md` | added SESSION_0504 row **+ backfilled the missing SESSION_0505 row** (operator: fold in the sibling; FS-0019) |
+| `docs/knowledge/wiki/test-fail-fix-ledger.md` | TFF-008 — `authenticated-lifecycle:88` JIT-compile env flake (diagnosed, not a regression) |
+| `docs/sprints/SESSION_0504.md` | this session record |
+
+### Cross-session fold-in (operator request)
+
+Folded the parallel **SESSION_0505** (PWA icons) into this close: 0505's code merged to `origin/main` (3
+commits, `a7a7bc6b`) and its session file is `closed`, but its bow-out **skipped its `wiki/index.md` row**
+(FS-0019) — backfilled here. **SESSION_0503 (Command Deck) never materialized** — no branch, worktree,
+session file, or commit exists anywhere in the repo; nothing to fold in. This branch was rebased onto 0505's
+work before push (zero file overlap, clean rebase).
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `bun run typecheck` · repo-wide `bun run format:check` | 0 errors · clean (1827 files) |
+| `bun run test` (`--parallel=1`) — lineage units | **118/0** (filter-facets null-passthrough covered) |
+| `explore-view.spec.ts` (chromium+firefox) | 5/5 × 2; firefox 16/16 at `--repeat-each=8` (flake dead) |
+| Full lineage e2e (17 × chromium+firefox, serialized) | **34/34** on a clean server |
+| `authenticated-lifecycle:88` late red | pre-existing JIT-compile env flake — **5/5 green on fresh server** (Petey, first-hand); zero auth/edit-file diff → not a regression |
+| `npx next build` (pre-push cost gate) | **green** (exit 0) — mirrors Vercel |
+| fallow health (island) | `LineageViewAIsland` cyclo 27 / CRAP 756 (from 52 / 2756); introduced findings 0 |
+| Doug independent hostile verify | **8.5/10 SHIP-WITH-FOLLOWUPS** (all P2s closed); every number reproduced exactly |
+
+## Next session
+
+### Goal
+
+Continue the page-code-review cadence to **page #3 = `/posts`** (community feed) — OR take **TICKET-0504-A**
+(the lineage **shared-component** pass this session teed up: `InfoTab` 1190, `LineageBranch` 870,
+`deriveDrawerProfileView` 600, `LineageTreeCanvas` 420 — the CRAP that lives in the shared subtree a page pass
+can only flag). Operator picks; consult `/app/loop-board` board order first.
+
+### First task
+
+Bow-in, then run the recipe's Step 0 on the chosen page: bound the file set (run the ≥2-page usage grep FIRST —
+page #2's lesson: a "big" page often shrinks to its single-consumer surface), capture the fallow baseline, then
+the scored review. If TICKET-0504-A instead: it is a COMPONENT pass (different bounding rule — the shared
+components ARE the unit), so read `page-code-review.md` Step 0's shared-boundary note and adapt.
+
+## Review log
+
+### SESSION_0504_REVIEW_01 — Doug independent hostile verify (TASK_02 + TASK_03)
+
+- **Reviewed:** `db30b963`..`4966db0a` (extraction + e2e harness). **Verdict: SHIP-WITH-FOLLOWUPS · 8.5/10.**
+- Every complexity + boundary number reproduced exactly (cyclo 52→27, CRAP 2756→756, 794→412 LOC, page 306
+  unchanged, 11-file diff all in-boundary, zero shared-file edits, no new prod clone group). chromium 16/16; SSR
+  renders all 77 cards. Behavior-preservation: null-passthrough ✅ (unit-covered), `?cards=v2` SSR-safe ✅,
+  menu-close now asserted ✅.
+- **Refuted the initial "32/32" claim** (firefox ⋮-menu flake) → **P2 harness hardening applied** (`4966db0a`);
+  firefox now 16/16 at `--repeat-each=8`, full suite 34/34.
+- **Follow-ups (none block):** TICKET-0504-A (shared component pass) · TICKET-0504-B (6th drawer slice, cyclo
+  27→<25) · TICKET-0504-C (FocusPanel/CardMenu unit tests) · `authenticated-lifecycle:88` env-flake ticket.
+
+## Hostile close review
+
+- **Giddy:** pass — the extraction followed his ratified 5-slice plan; god-*function* untangled into page-owned
+  hooks + colocated presentational files; zero shared-file edits (the hard boundary held); scope discipline held
+  (6th drawer slice ticketed, not smuggled in).
+- **Doug:** pass — 8.5 SHIP with every number independently reproduced; the one late red disambiguated to a
+  pre-existing JIT-compile env flake (fresh-server 5/5 + zero auth-file diff), not a regression.
+- **Desi:** pass — no god-component in the reuse sense; the `MetricPill`/`MetricStat` split + `?cards=v2` toggle
+  correctly preserved; copy softened; stale inventory row refreshed.
+- **Kaizen aggregate:** **9.0/10** — a clean, honest, behavior-preserving −73% CRAP win with a real e2e harness
+  added where none existed; deductions for the initially over-reported e2e green (caught by Doug) and the
+  cyclo-27-vs-<25 residual (ticketed). The recipe scaled to a gnarly page by shrinking to the page-owned surface.
+
+## ADR / ubiquitous-language check
+
+- **ADR:** not required. Behavior-preserving refactor; no architectural decision made/changed. The
+  page-owned colocated-extraction shape (`lineage-view-a/` = hooks + presentational files for a single-consumer
+  island) is a recipe application, not a new ADR.
+- **Ubiquitous language:** no new domain terms. `LineageViewAIsland` / explore-view / cohort-timeline unchanged.
+
+## Reflections
+
+- **The Step-0 boundary IS the page pass on a gnarly page.** The "canvas + timeline" page looked huge, but the
+  ≥2-page usage grep collapsed it to one single-consumer island + a flag list. The recipe's bounding rule is
+  what stops a page pass from becoming a whole-app refactor — and it correctly routed the real CRAP (shared
+  subtree) to its own component pass instead of swallowing it. Run that grep FIRST on every future page.
+- **Reuse-reviewer and complexity-reviewer disagreed, and both were right.** Desi saw a coherent component (don't
+  merge the pieces); Giddy saw a cyclo-52 hard cap (must reduce). The synthesis — a god-*function*, not a god
+  component-library → **extract, don't merge** — is the reconciliation to remember.
+- **The behavior harness was the enabler, and its absence was the hidden risk.** The island had zero e2e (all
+  specs pinned to board) and zero unit coverage. Writing the explore e2e FIRST and proving it green on the
+  pre-refactor code is what made a 794-line client-island refactor safe. This is the 0495 lesson made concrete.
+- **A hammered dev server manufactures fake regressions.** `authenticated-lifecycle:88` went red only after three
+  agents pounded one shared :3004 server through restarts — a documented JIT-compile timing flake on an untouched
+  route. First-hand fresh-server re-run + byte-identical-code proof was faster and more honest than arguing from
+  the builder's self-report. Worth a pre-warm/timeout ticket.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | PASS — 3 rows, all landed |
+| JETTY/frontmatter sweep | SESSION_0504 + `page-code-review.md` stamped `last_agent: claude-session-0504`; `custom-component-inventory.md` row refreshed; no other frontmatter changes |
+| Backlinks/index sweep | wiki `index.md` row added for SESSION_0504; recipe inventory + inventory doc cross-referenced |
+| Wiki lint | `bun run wiki:lint` — 0 err / 38 warn (all pre-existing) |
+| Kaizen reflection | yes — `## Reflections` present |
+| Hostile close review | SESSION_0504_REVIEW_01 (Doug 8.5) + Giddy/Desi passes; Kaizen 9.0 |
+| Code-quality gate (Class-A) | island = page-owned custom island; Giddy scored it 5.8→post-extract Class B; `page.tsx` 8.6 Class A (untouched) |
+| Runtime verification (Doug) | full lineage e2e 34/34 chromium+firefox; SSR spot-check renders 77 cards; explore harness non-vacuous |
+| Review & Recommend | next = page #3 `/posts` or TICKET-0504-A (shared lineage component pass) |
+| Memory sweep | `page-review-page2-lineage-0504` memory written (recipe-scaling + extraction pattern + env-flake) |
+| Next session unblock check | unblocked — bow-in + Step 0; no user input required |
+| Git hygiene | branch `session-0504-page-review` rebased onto origin/main (clean, 0 conflicts, 0 file overlap w/ 0505); single push to main at close — hash in bow-out response |
+| Graphify update | nodes=12664 edges=27659 communities=1398 (gate runner, worktree graph) |

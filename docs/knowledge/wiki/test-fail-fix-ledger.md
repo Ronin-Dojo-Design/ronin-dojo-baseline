@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-06-27
-last_agent: claude-session-0454
+updated: 2026-07-06
+last_agent: claude-session-0504
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -115,6 +115,29 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   `118/0`; oxlint/oxfmt clean.
 - **Reusable pattern:** any test asserting on `after()`-deferred work should `await env.flushAfter()`,
   not a `setTimeout` hack. Relates to FS-0027 / SOP §3.
+
+### TFF-008 — `e2e/lineage/authenticated-lifecycle.spec.ts:88` flakes on a hammered/cold dev server (JIT-compile timing)
+
+- **Status:** `open` (diagnosed, not code-fixed — env/harness, not a product bug; SESSION_0504).
+- **Last observed:** 2026-07-06. During SESSION_0504's close, after 3 agents (Cody build + Doug verify +
+  Petey) pounded ONE shared local `:3004` dev server through repeated full-suite runs + 2 system kills/
+  restarts, `authenticated-lifecycle:88` ("anonymous claim and edit routes redirect to the real login
+  route") failed with a 40s `toHaveURL(/auth/login)` timeout on the **edit route**
+  (`/lineage/[slug]/edit/[nodeId]`, the second of its two assertions).
+- **Root cause (NOT a regression):** dev-server Turbopack **JIT-compile delay** on the dynamic
+  `/lineage/[slug]/edit/[nodeId]` route — the exact failure the spec's own comment documents (timeout was
+  bumped 20s→40s at SESSION_0267 for this). Under accumulated server load + a cold route, first-compile
+  exceeds even 40s. Proven independent of the session's refactor: (a) the whole-session diff touches ZERO
+  auth/edit/middleware files and the edit route imports NONE of the changed files (byte-identical to
+  baseline); (b) it passed the full suite 34/34 on a fresh server earlier; (c) **re-ran 5/5 green on a
+  fresh unloaded `:3004` server** (first-hand).
+- **Fix (recommended, not done — out of SESSION_0504's page-pass scope):** harden the harness — pre-warm
+  the `/lineage/[slug]/edit/[nodeId]` route with a fetch before the assertion, and/or raise the timeout
+  for that specific redirect, and/or give parallel worktree sessions **separate dev-server ports** so one
+  suite doesn't starve another's. Do NOT read a red here as a code regression without a fresh-server re-run.
+- **Reusable pattern:** a scary e2e red on a server shared by parallel agents ≠ a regression. Disambiguate
+  with (1) a diff + transitive-import check that the changed files don't reach the failing route, and (2) a
+  fresh-server isolated re-run. Relates to the shared-DB/one-server parallel-session trap.
 
 ### TFF-001..005 — resolved
 
