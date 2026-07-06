@@ -51,9 +51,9 @@ test.describe("Lineage explore-view (island) E2E", () => {
     })
 
     // The island heading + the "Focal lineage view" badge mark the explore surface.
-    await expect(
-      page.getByRole("heading", { name: /Explore the living lineage/i }),
-    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("heading", { name: /Explore the living lineage/i })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByText("Focal lineage view")).toBeVisible()
 
     // At least one metric pill (Members) is visible. The label renders twice —
@@ -121,9 +121,9 @@ test.describe("Lineage explore-view (island) E2E", () => {
   }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
 
-    await expect(
-      page.getByRole("heading", { name: /Explore the living lineage/i }),
-    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("heading", { name: /Explore the living lineage/i })).toBeVisible({
+      timeout: 30_000,
+    })
 
     // The filter bar renders one labeled dropdown per available dimension
     // (Group/Belt/School/Year). Open the first available one.
