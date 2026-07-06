@@ -8,7 +8,11 @@ import {
   resolveLineageTrustStatus,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
-import type { DirectoryProfileList, DirectoryProfileSelf } from "~/server/web/directory/payloads"
+import type {
+  DirectoryProfileDetail,
+  DirectoryProfileList,
+  DirectoryProfileSelf,
+} from "~/server/web/directory/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 
 type ProfileViewer = {
@@ -25,7 +29,16 @@ type UserTrustSource = {
   } | null
 }
 
-export function canRenderFullProfileForViewer({
+/**
+ * Whether the viewer may see the RICH-media fields (cover/video/social/location/email).
+ * Basic identity+bio+ranks+organizations are unconditional for a claimed profile — no viewer
+ * check is needed for those. Rich media unlocks when the tier grants it, OR the viewer is an
+ * admin, OR the viewer owns the Passport (owner always previews their own rich media).
+ *
+ * @changed SESSION_0502 (TASK_03) — renamed from `canRenderFullProfileForViewer`; the gate now
+ * targets rich media specifically, since "full basic" is granted to every claimed profile.
+ */
+export function canRenderRichMediaForViewer({
   policy,
   profileUserId,
   viewerUserId,
@@ -35,7 +48,7 @@ export function canRenderFullProfileForViewer({
   profileUserId: string | null
 } & ProfileViewer) {
   return (
-    policy.canRenderFullProfile ||
+    policy.canRenderRichMedia ||
     viewerRole === "admin" ||
     (profileUserId != null && viewerUserId === profileUserId)
   )
@@ -110,7 +123,7 @@ export function trustSummaryForUser(user: UserTrustSource) {
 //
 // The member-facing read model for the authenticated profile page. Unlike the
 // public projections above there is no tier/visibility gate: a member always
-// sees their own profile in full (the `canRenderFullProfileForViewer` "own
+// sees their own profile in full (the `canRenderRichMediaForViewer` "own
 // profile" rule, ADR 0025). Pure presentation shaping — no DB.
 // ---------------------------------------------------------------------------
 
@@ -208,6 +221,100 @@ export function projectOwnProfile({
   }
 }
 
+// ---------------------------------------------------------------------------
+// Public directory DETAIL projection (`/directory/[slug]`) — SESSION_0502 (TASK_03).
+//
+// ONE policy-parameterized projector for the detail page, replacing the two-branch
+// (preview vs full) split that used to live inline in `findProfileBySlug`. It maps
+// fields per the operator-ratified boundary:
+//   BASIC (name/avatar/bio/organizations/full rank history/trust) — always populated for a
+//     claimed profile, free tier included.
+//   RICH  (coverPhotoUrl/videoIntroUrl/socialLinks/location/email/techniqueProgress) — populated
+//     only when the viewer may see rich media (premium+ tier, admin, or owner).
+// `email` is additionally gated behind the member's `showEmail` flag; `techniqueProgress`
+// behind rich media. The returned object keeps a `canRenderFullProfile` key aliased to the
+// rich-media decision so the existing component consumers need no edits.
+// ---------------------------------------------------------------------------
+
+export type DirectoryDetailProfile = ReturnType<typeof projectDirectoryDetailProfile>
+
+export function projectDirectoryDetailProfile({
+  profile,
+  policy,
+  viewerUserId,
+  viewerRole,
+  brand,
+}: {
+  profile: DirectoryProfileDetail
+  policy: LineageProfileDetailRenderPolicy
+  brand?: string | null
+} & ProfileViewer) {
+  // Phase 3c: identity is Passport-rooted; `passport.user` is the attached account (null = placeholder).
+  const account = profile.passport.user
+  const canRenderRichMedia = canRenderRichMediaForViewer({
+    policy,
+    profileUserId: account?.id ?? null,
+    viewerUserId,
+    viewerRole,
+  })
+
+  // Project identity through the canonical public passport projector (issue #134 surface-2):
+  // displayName → account.name fallback, avatar resolution, showRanks gate, full rank history.
+  const passportDto = projectPublicPassport(profile.passport, {
+    brand,
+    showRanks: profile.showRanks ?? undefined,
+  })
+
+  const organizations =
+    profile.showOrgs && account
+      ? account.memberships
+          .filter(m => m.organization)
+          .map(m => ({
+            id: m.organization.id,
+            name: m.organization.name,
+            slug: m.organization.slug,
+            discipline: m.discipline,
+            joinedAt: m.joinedAt,
+          }))
+      : []
+
+  return {
+    id: profile.id,
+    // @added SESSION_0397 — Passport id is the Save subject for a person (Passport = identity SoT).
+    passportId: profile.passport.id,
+    slug: profile.slug,
+    profileTier: policy.tier,
+    // Aliased to the rich-media decision so the 7 component consumers (rich/upgrade/QR affordances)
+    // need zero edits. Basic fields render unconditionally regardless of this flag.
+    canRenderFullProfile: canRenderRichMedia,
+    isClaimablePlaceholder: account == null,
+    isOwnProfile: account != null && viewerUserId === account.id,
+    ...trustSummaryForUser({
+      isPlaceholder: account == null,
+      lineageNode: profile.passport.lineageNode,
+    }),
+    // RICH media — gated.
+    coverPhotoUrl: canRenderRichMedia ? profile.coverPhotoUrl : null,
+    videoIntroUrl: canRenderRichMedia ? profile.videoIntroUrl : null,
+    locationCity: canRenderRichMedia ? profile.locationCity : null,
+    locationRegion: canRenderRichMedia ? profile.locationRegion : null,
+    locationCountry: canRenderRichMedia ? profile.locationCountry : null,
+    user: {
+      id: account?.id ?? null,
+      // BASIC identity — always published for a claimed profile.
+      name: passportDto.displayName,
+      image: passportDto.avatarUrl,
+      bio: profile.passport.bio ?? null,
+      organizations,
+      ranks: passportDto.ranks,
+      // RICH media — gated.
+      socialLinks: canRenderRichMedia ? (profile.passport.socialLinks ?? null) : null,
+      email: canRenderRichMedia && profile.showEmail ? (account?.email ?? null) : null,
+      techniqueProgress: canRenderRichMedia ? (account?.techniqueProgress ?? []) : [],
+    },
+  }
+}
+
 export function projectDirectoryProfileListItem({
   profile,
   policy = FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
@@ -221,12 +328,20 @@ export function projectDirectoryProfileListItem({
 } & ProfileViewer) {
   // Phase 3c: identity is Passport-rooted; `passport.user` is the attached account (null = placeholder).
   const account = profile.passport.user
-  const canRenderFullProfile = canRenderFullProfileForViewer({
+  // The output flag stays viewer-widened (owner/admin see the "full" badge on their own card).
+  const canRenderFullProfile = canRenderRichMediaForViewer({
     policy,
     profileUserId: account?.id ?? null,
     viewerUserId,
     viewerRole,
   })
+  // @changed SESSION_0502 (TASK_03, scope guard) — the list/roster CARD is a DISTINCT surface
+  // from the detail page and stays behavior-identical: free cards keep their compact roster
+  // shape even for the owner/admin. The detail-policy `features` map was widened so free DETAIL
+  // pages publish bio/ranks/orgs, so the list card can no longer gate on those flags — it gates
+  // on the TIER's rich access (`policy.canRenderRichMedia`), which is false-on-free regardless
+  // of viewer. (Previously this rode `features.organizations/rankHistory` being false-on-free.)
+  const cardShowsRich = policy.canRenderRichMedia
 
   return {
     id: profile.id,
@@ -236,6 +351,7 @@ export function projectDirectoryProfileListItem({
     userId: account?.id ?? null,
     name: profile.passport.displayName ?? account?.name ?? null,
     profileTier: policy.tier,
+    // Output key kept as `canRenderFullProfile` (the roster-card consumer + map-roster contract).
     canRenderFullProfile,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
@@ -243,24 +359,20 @@ export function projectDirectoryProfileListItem({
     }),
     // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
     image: resolveDisplayAvatar(profile.passport.avatarUrl ?? account?.image, brand),
-    locationCity: canRenderFullProfile && policy.features.location ? profile.locationCity : null,
-    locationRegion:
-      canRenderFullProfile && policy.features.location ? profile.locationRegion : null,
-    locationCountry:
-      canRenderFullProfile && policy.features.location ? profile.locationCountry : null,
+    locationCity: cardShowsRich && policy.features.location ? profile.locationCity : null,
+    locationRegion: cardShowsRich && policy.features.location ? profile.locationRegion : null,
+    locationCountry: cardShowsRich && policy.features.location ? profile.locationCountry : null,
     email:
-      canRenderFullProfile && policy.features.email && profile.showEmail
-        ? (account?.email ?? null)
-        : null,
+      cardShowsRich && policy.features.email && profile.showEmail ? (account?.email ?? null) : null,
     organizations:
-      canRenderFullProfile && policy.features.organizations && profile.showOrgs
+      cardShowsRich && policy.features.organizations && profile.showOrgs
         ? projectProfileOrganizations({
             affiliations: profile.passport.affiliations,
             memberships: account?.memberships ?? [],
           })
         : [],
     ranks:
-      canRenderFullProfile && policy.features.rankHistory && profile.showRanks
+      cardShowsRich && policy.features.rankHistory && profile.showRanks
         ? profile.passport.rankAwardsEarned
         : rankSummaryForProfile({
             showRanks: profile.showRanks,

@@ -19,9 +19,21 @@ export type LineageListingRenderPolicy = {
   }
 }
 
+/**
+ * The public directory-detail render policy. Split into two gates (SESSION_0502, operator-
+ * ratified): every claimed profile publishes the full BASIC identity (name/avatar/bio/rank
+ * history/organizations/ancestry), so `canRenderProfile` is true for ALL tiers incl. free.
+ * Premium+ additionally unlocks RICH MEDIA (cover photo, video intro, social links, location,
+ * email, analytics), gated behind `canRenderRichMedia`. The `features` map is now interpreted
+ * as the per-field RICH gate (basic fields — bio/rankHistory/organizations — are granted on
+ * free too, so their flags are `true` at every tier).
+ */
 export type LineageProfileDetailRenderPolicy = {
   tier: LineageListingTier
-  canRenderFullProfile: boolean
+  /** Basic identity+bio+school+ranks+ancestry — true for ALL tiers incl. free. */
+  canRenderProfile: boolean
+  /** Cover/video/social/location/email/analytics — premium+ only. */
+  canRenderRichMedia: boolean
   features: {
     avatar: boolean
     rankSummary: boolean
@@ -77,15 +89,22 @@ export const LEGEND_LINEAGE_LISTING_RENDER_POLICY: LineageListingRenderPolicy = 
 
 export const FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
   tier: "free",
-  canRenderFullProfile: false,
+  // @changed SESSION_0502 (TASK_03, operator-ratified) — a free claimed profile now renders
+  // the FULL BASIC public profile: bio, full rank history, and organizations are granted on
+  // free (`canRenderProfile: true`). Only RICH MEDIA (cover/video/social/location/email) stays
+  // gated to premium+ (`canRenderRichMedia: false`).
+  canRenderProfile: true,
+  canRenderRichMedia: false,
   features: {
     avatar: true,
     rankSummary: true,
+    // Basic-tier fields — granted on free.
+    bio: true,
+    rankHistory: true,
+    organizations: true,
+    // Rich-media fields — gated to premium+.
     location: false,
-    organizations: false,
-    rankHistory: false,
     email: false,
-    bio: false,
     socialLinks: false,
     qrShare: false,
   },
@@ -93,7 +112,8 @@ export const FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRend
 
 export const PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY: LineageProfileDetailRenderPolicy = {
   tier: "premium",
-  canRenderFullProfile: true,
+  canRenderProfile: true,
+  canRenderRichMedia: true,
   features: {
     avatar: true,
     rankSummary: true,

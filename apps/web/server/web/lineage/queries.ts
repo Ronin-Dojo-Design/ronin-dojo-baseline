@@ -303,7 +303,7 @@ export const getLineageProfile = cache(
  * @added SESSION_0410. Unlike `getLineageProfile` (PUBLIC-only, viewer-agnostic) this
  * resolves the caller's own node by `passport.userId` with NO visibility filter and NO
  * rank redaction — a member always sees their own promotion provenance (the directory
- * `canRenderFullProfileForViewer` "own profile" rule, ADR 0025; `showRanks`/visibility
+ * `canRenderRichMediaForViewer` "own profile" rule, ADR 0025; `showRanks`/visibility
  * are gates for *other* viewers). Returns null when the member has no lineage placement
  * yet, and the page renders an empty state. Request-scoped `cache()`.
  */

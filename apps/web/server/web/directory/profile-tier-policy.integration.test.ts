@@ -1,10 +1,12 @@
 /**
  * SESSION_0348 — Directory profile owner-tier render policy integration test.
- *
- * Proves public directory detail reads:
- *  - return only the free listing preview for free profile owners,
- *  - publish full profile fields for premium/elite profile owners,
- *  - allow the owner to preview their own full profile without changing public access.
+ * @changed SESSION_0502 (TASK_03) — the free/paid boundary was repackaged (operator-ratified):
+ * a FREE claimed profile now renders the FULL BASIC public profile (bio, organizations, full
+ * rank history, trust status); Premium/Elite gate only RICH MEDIA (cover photo, video intro,
+ * social links, location, email). These reads now prove:
+ *  - a free claimed profile publishes full BASIC fields but gates cover/video/social/location/email,
+ *  - premium/elite profiles publish the rich-media fields too (`canRenderFullProfile === true`),
+ *  - the owner previewing their own free profile also gets rich media.
  *
  * Uses the real Postgres dev DB. Fixtures are cleaned up after.
  *
@@ -78,6 +80,11 @@ async function createProfileFixture(name: "free" | "premium") {
               locationCity: "Denver",
               locationRegion: "CO",
               locationCountry: "US",
+              // Rich-media fields set on BOTH fixtures (incl. free) so the paid gate is proven
+              // non-vacuously: the free projection must NULL these even though the DB rows hold a
+              // real value (a null-by-absence field would pass a "gated" assertion vacuously).
+              coverPhotoUrl: `https://example.com/${tag(name)}-cover.jpg`,
+              videoIntroUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
               showEmail: true,
               showOrgs: true,
               showRanks: true,
@@ -212,37 +219,53 @@ afterAll(async () => {
 })
 
 describe("directory profile detail tier policy", () => {
-  it("returns only the free listing preview for a free profile owner", async () => {
+  it("publishes full BASIC fields for a free claimed profile but gates rich media", async () => {
     const profile = await findProfileBySlug({ slug: tag("free-profile"), brand: TEST_BRAND })
 
     expect(profile?.profileTier).toBe("free")
+    // canRenderFullProfile is now an alias for canRenderRichMedia — free = false (rich gated).
     expect(profile?.canRenderFullProfile).toBe(false)
     expect(profile?.trustStatus).toBe("disputed")
-    expect(profile?.locationCity).toBeNull()
+
+    // BASIC fields — always published for a claimed profile, free tier included.
     expect(profile?.user.image).toBe(`https://example.com/${tag("free")}-avatar.jpg`)
-    expect(profile?.user.bio).toBeNull()
+    expect(profile?.user.bio).toBe(`${tag("free")} public bio`)
+    expect(profile?.user.organizations).toHaveLength(1)
+    // Full rank history (not truncated to a 1-rank summary). Only one rank was seeded.
+    expect(profile?.user.ranks).toHaveLength(1)
+
+    // RICH-media fields — gated on the free tier even though the DB rows hold real values.
+    expect(profile?.coverPhotoUrl).toBeNull()
+    expect(profile?.videoIntroUrl).toBeNull()
+    expect(profile?.locationCity).toBeNull()
+    expect(profile?.locationRegion).toBeNull()
+    expect(profile?.locationCountry).toBeNull()
     expect(profile?.user.socialLinks).toBeNull()
     expect(profile?.user.email).toBeNull()
-    expect(profile?.user.organizations).toEqual([])
-    expect(profile?.user.ranks).toHaveLength(1)
   })
 
-  it("returns full public profile fields for a premium profile owner", async () => {
+  it("publishes rich media for a premium profile owner", async () => {
     const profile = await findProfileBySlug({ slug: tag("premium-profile"), brand: TEST_BRAND })
 
     expect(profile?.profileTier).toBe("premium")
     expect(profile?.canRenderFullProfile).toBe(true)
-    expect(profile?.locationCity).toBe("Denver")
+
+    // BASIC still present.
     expect(profile?.user.bio).toBe(`${tag("premium")} public bio`)
-    expect(profile?.user.email).toBe(`${tag("premium")}@test.local`)
     expect(profile?.user.organizations).toHaveLength(1)
     expect(profile?.user.ranks).toHaveLength(1)
+
+    // RICH-media unlocked for the paid tier.
+    expect(profile?.coverPhotoUrl).toBe(`https://example.com/${tag("premium")}-cover.jpg`)
+    expect(profile?.videoIntroUrl).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+    expect(profile?.locationCity).toBe("Denver")
+    expect(profile?.user.email).toBe(`${tag("premium")}@test.local`)
     expect(profile?.user.socialLinks).toMatchObject({
       website: `https://example.com/${tag("premium")}`,
     })
   })
 
-  it("allows a free owner to preview their own full profile without publishing it publicly", async () => {
+  it("gives a free owner rich media on their own profile without publishing it publicly", async () => {
     const profile = await findProfileBySlug({
       slug: tag("free-profile"),
       brand: TEST_BRAND,
@@ -254,5 +277,8 @@ describe("directory profile detail tier policy", () => {
     expect(profile?.isOwnProfile).toBe(true)
     expect(profile?.user.bio).toBe(`${tag("free")} public bio`)
     expect(profile?.user.organizations).toHaveLength(1)
+    // Owner viewing own profile bypasses the rich-media gate.
+    expect(profile?.coverPhotoUrl).toBe(`https://example.com/${tag("free")}-cover.jpg`)
+    expect(profile?.locationCity).toBe("Denver")
   })
 })

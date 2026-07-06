@@ -74,38 +74,51 @@ describe("lineage listing render policy", () => {
     ])
   })
 
-  it("keeps free profile detail to avatar/name/rank summary features", () => {
+  it("publishes basic profile detail (bio/ranks/orgs) for free while gating rich media", () => {
+    // @changed SESSION_0502 — the free tier now renders the full BASIC profile
+    // (bio + rank history + organizations) and gates only rich media (cover/video/social/
+    // location/email). `canRenderProfile` is true for all tiers; `canRenderRichMedia` is
+    // premium+.
     const policy = resolveLineageProfileDetailRenderPolicyFromEntitlementKeys([])
 
     expect(policy.tier).toBe("free")
-    expect(policy.canRenderFullProfile).toBe(false)
+    expect(policy.canRenderProfile).toBe(true)
+    expect(policy.canRenderRichMedia).toBe(false)
+    // Basic features unlocked on free.
     expect(policy.features.avatar).toBe(true)
     expect(policy.features.rankSummary).toBe(true)
-    expect(policy.features.bio).toBe(false)
+    expect(policy.features.bio).toBe(true)
+    expect(policy.features.rankHistory).toBe(true)
+    expect(policy.features.organizations).toBe(true)
+    // Rich-media features still gated on free.
     expect(policy.features.socialLinks).toBe(false)
-    expect(policy.features.organizations).toBe(false)
+    expect(policy.features.location).toBe(false)
+    expect(policy.features.email).toBe(false)
   })
 
-  it("maps premium profile detail to full public profile publishing", () => {
+  it("unlocks rich media for premium profile detail", () => {
     const policy = resolveLineageProfileDetailRenderPolicyFromEntitlementKeys([
       LINEAGE_PREMIUM_ENTITLEMENT_KEY,
     ])
 
     expect(policy.tier).toBe("premium")
-    expect(policy.canRenderFullProfile).toBe(true)
+    expect(policy.canRenderProfile).toBe(true)
+    expect(policy.canRenderRichMedia).toBe(true)
     expect(policy.features.bio).toBe(true)
     expect(policy.features.socialLinks).toBe(true)
+    expect(policy.features.location).toBe(true)
     expect(policy.features.rankHistory).toBe(true)
     expect(policy.features.qrShare).toBe(true)
   })
 
-  it("maps legend profile detail to full public profile publishing", () => {
+  it("unlocks rich media for legend profile detail", () => {
     const policy = resolveLineageProfileDetailRenderPolicyFromEntitlementKeys([
       LINEAGE_LEGEND_ENTITLEMENT_KEY,
     ])
 
     expect(policy.tier).toBe("legend")
-    expect(policy.canRenderFullProfile).toBe(true)
+    expect(policy.canRenderProfile).toBe(true)
+    expect(policy.canRenderRichMedia).toBe(true)
     expect(policy.features.bio).toBe(true)
     expect(policy.features.qrShare).toBe(true)
   })
