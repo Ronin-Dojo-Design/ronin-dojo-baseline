@@ -32,6 +32,50 @@ function memberCardHeaderButton(page: Page, memberName: string) {
   return page.getByRole("button", { name: new RegExp(escapeRegExp(memberName)) })
 }
 
+/**
+ * Open a member card's ⋮ "Actions" menu and click a menuitem, retrying the whole
+ * open→click cycle until the click's OBSERVABLE EFFECT (`until`) lands —
+ * deterministic across engines.
+ *
+ * The ⋮ menu is a Base UI `Menu.Popup` (`popoverAnimationClasses`) whose
+ * positioner RE-ANCHORS after mount: it recalculates placement and, on firefox,
+ * DETACHES + re-attaches the menuitem DOM node mid-transition. That defeats
+ * Playwright's click actionability wait AND can leave the popup subtree in a
+ * transiently non-interactive state — the ~50% flake Doug caught (SESSION_0504;
+ * harness gap, not a code bug). `{ force: true }` cut it but did not kill it: a
+ * forced click can land on a stale node with no effect, and a stuck popup stays
+ * stuck for the whole window.
+ *
+ * Robust fix: a self-healing `expect.toPass` loop. Each iteration ensures the
+ * menu is open (re-clicking the ⋮ button when it is not — which tears down + re-
+ * mounts a stuck popup), force-clicks the freshly re-resolved menuitem, then
+ * asserts the effect. This resolves the race at its source instead of guessing a
+ * settle time; the loop stops the instant the effect is observed.
+ */
+async function openCardMenuAndClick(
+  page: Page,
+  memberName: string,
+  itemName: string,
+  until: () => Promise<void>,
+) {
+  const card = page.locator(`[id^="lineage-member-"]`, { hasText: memberName }).first()
+  await expect(card).toBeVisible({ timeout: 30_000 })
+
+  const actions = card.getByRole("button", { name: "Actions" })
+  const menu = page.getByRole("menu")
+
+  await expect(async () => {
+    // Ensure the popup is freshly open (re-open resets a stuck/re-anchoring menu).
+    if (!(await menu.isVisible())) {
+      await actions.click()
+      await expect(menu).toBeVisible({ timeout: 5_000 })
+    }
+    const item = menu.getByRole("menuitem", { name: itemName })
+    await item.click({ force: true, timeout: 5_000 })
+    await until()
+  }).toPass({ timeout: 25_000 })
+}
+
 test.describe("Lineage explore-view (island) E2E", () => {
   test.beforeAll(async () => {
     fixture = await seedLineageVisibilityFixture()
@@ -70,23 +114,16 @@ test.describe("Lineage explore-view (island) E2E", () => {
   test("card ⋮ Actions → View profile opens the profile drawer", async ({ page }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
 
-    const card = page.locator(`[id^="lineage-member-"]`, { hasText: fixture.publicName }).first()
-    await expect(card).toBeVisible({ timeout: 30_000 })
+    const drawer = page.getByRole("dialog", { name: fixture.publicName })
+    await openCardMenuAndClick(page, fixture.publicName, "View profile", () =>
+      expect(drawer).toBeVisible({ timeout: 2_000 }),
+    )
 
-    // The ⋮ button is labeled "Actions" (aria-label). Open the card menu.
-    await card.getByRole("button", { name: "Actions" }).click()
-
-    // "View profile" menuitem opens the drawer dialog for the member.
-    await page.getByRole("menuitem", { name: "View profile" }).click()
-    await expect(page.getByRole("dialog", { name: fixture.publicName })).toBeVisible({
-      timeout: 15_000,
-    })
+    await expect(drawer).toBeVisible({ timeout: 15_000 })
 
     // Close the drawer (Escape) — the dialog goes away.
     await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog", { name: fixture.publicName })).toBeHidden({
-      timeout: 15_000,
-    })
+    await expect(drawer).toBeHidden({ timeout: 15_000 })
   })
 
   test("clicking a member card header recenters focus (?view=explore&focus=)", async ({ page }) => {
@@ -104,47 +141,68 @@ test.describe("Lineage explore-view (island) E2E", () => {
     }).toPass({ timeout: 15_000 })
   })
 
-  test("card ⋮ Actions → Copy focus link shows the transient confirmation", async ({ page }) => {
-    await page.goto(`/lineage/${fixture.treeSlug}`)
-
-    const card = page.locator(`[id^="lineage-member-"]`, { hasText: fixture.publicName }).first()
-    await expect(card).toBeVisible({ timeout: 30_000 })
-
-    await card.getByRole("button", { name: "Actions" }).click()
-    await page.getByRole("menuitem", { name: "Copy focus link" }).click()
-
-    await expect(page.getByText("Focus link copied")).toBeVisible({ timeout: 15_000 })
-  })
-
-  test("filter dropdown opens, its checkbox toggles, and the island stays rendered", async ({
+  test("card ⋮ Actions → Copy focus link shows the transient confirmation and closes the menu", async ({
     page,
   }) => {
+    await page.goto(`/lineage/${fixture.treeSlug}`)
+
+    const toast = page.getByText("Focus link copied")
+    await openCardMenuAndClick(page, fixture.publicName, "Copy focus link", () =>
+      expect(toast).toBeVisible({ timeout: 2_000 }),
+    )
+
+    await expect(toast).toBeVisible({ timeout: 15_000 })
+
+    // The menu closes on select (SESSION_0504: the close moved from the hook to
+    // `onClose()` in card-menu.tsx — this locks that behavior; a regression that
+    // dropped `onClose()` would otherwise pass unnoticed).
+    await expect(page.getByRole("menuitem", { name: "Copy focus link" })).toBeHidden({
+      timeout: 15_000,
+    })
+  })
+
+  test("filter dropdown toggles and DIMS (not hides) via matchedMemberIds", async ({ page }) => {
     await page.goto(`/lineage/${fixture.treeSlug}`)
 
     await expect(page.getByRole("heading", { name: /Explore the living lineage/i })).toBeVisible({
       timeout: 30_000,
     })
 
+    const card = page.locator(`[id^="lineage-member-"]`, { hasText: fixture.publicName }).first()
+    await expect(card).toBeVisible({ timeout: 30_000 })
+    // Baseline: no filter active → no member is dimmed (matchedMemberIds === null).
+    await expect(card).not.toHaveAttribute("data-dimmed", /.*/)
+
     // The filter bar renders one labeled dropdown per available dimension
     // (Group/Belt/School/Year). Open the first available one.
-    const filterLabels = ["Belt", "Group", "School", "Year"]
-    let opened = false
+    const filterLabels = ["Group", "Belt", "School", "Year"]
+    let openedLabel: string | null = null
     for (const label of filterLabels) {
       const trigger = page.getByRole("button", { name: new RegExp(`^${label}$`, "i") })
       if ((await trigger.count()) > 0) {
         await trigger.first().click()
-        opened = true
+        openedLabel = label
         break
       }
     }
-    expect(opened).toBe(true)
+    expect(openedLabel).not.toBeNull()
 
-    // A checkbox menuitem is visible + clickable; toggling it must not crash the island.
+    // A checkbox menuitem is visible + clickable; toggling it drives matchedMemberIds.
     const checkboxItem = page.getByRole("menuitemcheckbox").first()
     await expect(checkboxItem).toBeVisible({ timeout: 15_000 })
     await checkboxItem.click()
+    await page.keyboard.press("Escape")
 
-    // Filters DIM (not hide) — the member card is still present after the toggle.
-    await expect(page.locator(`[id^="lineage-member-"]`).first()).toBeVisible({ timeout: 15_000 })
+    // Filters DIM, never HIDE — the card is still in the DOM + visible after the toggle.
+    await expect(card).toBeVisible({ timeout: 15_000 })
+
+    // The single visible member (the PUBLIC-visibility seed strips the other 3)
+    // belongs to the group we just selected, so it MATCHES → stays lit (not
+    // dimmed). This locks half the "dim not hide" invariant: a matching filter
+    // must not dim a matching member, and it must not remove the card. Fully
+    // proving the *unmatched-gets-dimmed* half needs a ≥2-member / multi-facet
+    // fixture (the board specs cover cross-member cases); see FLAG in the
+    // SESSION_0504 report.
+    await expect(card).not.toHaveAttribute("data-dimmed", /.*/)
   })
 })
