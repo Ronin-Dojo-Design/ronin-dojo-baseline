@@ -181,8 +181,19 @@ TASK_01 (two read-only reviewers) runs in parallel; TASK_02/03 are sequential af
 
 ### Open decisions
 
-- **Refactor depth of the island** — how aggressively to extract (hooks + presentational sub-components) vs.
-  a lighter touch. Resolved after the review + operator report (directive: report baseline + findings first).
+- **Refactor depth of the island** — RESOLVED (operator, post-report): **Full safe stack (Giddy Slices 1–5)**
+  behind a new explore-view e2e that covers the card menu. Target: island cyclo 52 → ~18-20, CRAP 2756 → low
+  hundreds (Class B). Desi's polish (rationale comment, copy, inventory row) + flag shared-subtree debt
+  (TICKET-0504-A) folded in. Rationale: operator picked this page to prove the recipe scales to a gnarly
+  surface; behavior-preserving extraction is the recipe's core.
+
+### Review scores (Step 2)
+
+- `page.tsx` — **Giddy 8.6/10 Class A** (essentially gold-standard; leave as-is). Desi: clean route.
+- `lineage-view-a-island.tsx` — **Giddy 5.8/10 Class C hard-capped** (cyclo 52 = 3.5× ceiling, CRAP 2756,
+  532-line body — god-*function*, high craft). Desi: coherent (no kind-union, all 12 props consumed; keep the
+  `MetricPill`/`MetricStat` split + `?cards=v2` toggle). Reconciled: fix = **extract** (hooks + colocated
+  presentational files), not merge.
 
 ### Risks
 
@@ -202,6 +213,64 @@ TASK_01 (two read-only reviewers) runs in parallel; TASK_02/03 are sequential af
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0504_TASK_01 | in-progress | Desi + Giddy scored review → prioritized fix list |
-| SESSION_0504_TASK_02 | pending | explore-view e2e (behavior harness) |
-| SESSION_0504_TASK_03 | pending | /fallow-fix-loop behavior-preserving fixes |
+| SESSION_0504_TASK_01 | landed | Desi + Giddy scored review → fix list (page 8.6 Class A; island 5.8 Class C → extract) |
+| SESSION_0504_TASK_02 | landed | `e2e/lineage/explore-view.spec.ts` — 5 tests × 2 engines, GREEN on pre-refactor island (behavior locked) |
+| SESSION_0504_TASK_03 | landed | Slices 1–5 extraction + Desi polish (Cody `30a25934`/`44a0cbb7`/`fef2a865`/`7bae0a2b`); Doug verify pending |
+
+## Fix-pass results (Cody, pending Doug verify)
+
+- **Island `lineage-view-a-island.tsx`: 795 → 412 LOC; `LineageViewAIsland` cyclo 52 → 27, CRAP 2756 → 756**
+  (−48% cyclo, −73% CRAP). Page unchanged (306, as expected — it was already Class A).
+- **8 new page-owned files** in `components/web/lineage/lineage-view-a/`: `use-lineage-focus.ts` (+ exported
+  `buildFocusSearchParams`, kills 2-site URL-shape dup), `use-lineage-view-a-filters.ts` (null-passthrough
+  preserved), `filter-bar.tsx`, `focus-panel.tsx`, `metrics-header.tsx` (`MetricPill`/`MetricStat` kept as two
+  responsive fns), `card-menu.tsx` (+ Desi P2 anchor-rationale comment), `chrome.tsx` (ratified SOLID_* literals).
+- **Zero shared-file edits** — HARD BOUNDARY held. `lib/lineage/*`, timeline, drawer all consumed unchanged.
+- **e2e:** explore-view 5/5 × chromium at every checkpoint (incl. pre-refactor — behavior locked). Gates:
+  typecheck 0 · format:check clean (repo-wide, new files) · lineage units 118/0.
+- **Subtle behavior scorecard (Doug-verified):** null-passthrough ✅ (unit-covered `filter-facets.test.ts`);
+  `?cards=v2` SSR contract ✅ (`useState`+`useEffect`, no render-time `window`); `copyFocusLink` menu-close
+  moved to call site (`onClose()`) — source-correct ✅.
+
+## Review log — SESSION_0504_REVIEW_01 (Doug, independent hostile verify)
+
+- **Verdict: SHIP-WITH-FOLLOWUPS · 8.5/10.** Every complexity + boundary number reproduced **exactly**
+  (island 794→412 LOC, cyclo 52→27, CRAP 2756→756, page 306 unchanged, 11 files all in-boundary, zero
+  shared-file edits, no new prod clone group). chromium **16/16** clean; SSR renders all 77 cards.
+- **Refuted the "32/32" claim:** the two new ⋮-menu e2e tests were **reproducibly firefox-flaky (~50%)** — a
+  harness robustness gap (Base UI `Menu.Popup` still animating when Playwright clicks; firefox slower to
+  settle), NOT a code regression (chromium deterministic). → **P2 harness hardening CLOSED (Cody `957eca08`).**
+- **P2 (test-only, DONE):** (a) `openCardMenuAndClick` self-healing `expect.toPass` helper — re-opens a stuck
+  popup, re-resolves the menuitem, asserts observable effect → **firefox 16/16 at `--repeat-each=8`, 0 flaky**;
+  (b) Copy-focus-link now asserts the ⋮ menu CLOSES (locks subtle change 3a). Source untouched.
+- **Full lineage suite (final):** **34/34** (17 tests × chromium+firefox) serialized on a clean server.
+
+### Env-flake diagnosis — `authenticated-lifecycle:88` (NOT a regression)
+
+A late run (on a dev server hammered for hours by 3 agents + system-restarts) showed 2 failures, both
+`authenticated-lifecycle:88` (anonymous **edit-route** → login redirect). Proven pre-existing + independent of
+this pass: (a) the whole-session diff (`9763fc62..957eca08`) touches **zero** auth/edit/middleware files and
+the `/lineage/[slug]/edit/[nodeId]` route imports **none** of the changed files → edit-route code is
+byte-identical to baseline; (b) the spec's own comments already document this exact route as
+JIT-compile-timing-flaky (timeout bumped 20s→40s at SESSION_0267); (c) **re-run 5/5 green on a fresh
+unloaded :3004 server** (Petey, first-hand). → route to a flaky-test ticket (pre-warm / higher timeout);
+out of this page pass's scope (it is not even part of the `/lineage/[treeSlug]` explore file set).
+- **P3:** extract `openCardMenu` spec helper (in-spec self-clone); add `data-[dimmed]` assertion to the filter
+  test (currently would pass even if the filter did nothing); optional FocusPanel/CardMenu unit tests to clear
+  the zero-coverage "critical" flag → **TICKET-0504-C** (not this pass).
+
+## Open decisions / blockers
+
+- **TICKET-0504-A** — lineage **shared-component** pass (own pass, not a page pass): the gnarly CRAP lives in the
+  shared subtree — `InfoTab` 1190, `LineageBranch` 870, `deriveDrawerProfileView` 600, `LineageTreeCanvas` 420,
+  `LineageBoxCard` 380, `LineageTreeBoard` 240. Flagged, not touched this pass.
+- **TICKET-0504-B** — optional **6th slice** `useLineageDrawer` (drawer state cluster: `memberMap`/`drawerMember`/
+  `drawerProfile`/`drawerStudents`/`openDrawer`/`selectStudent` + 3 state atoms). Behavior-preserving; would drop
+  the island cyclo 27 → under 25 (solid Class A/B). Left out to honor the ratified 5-slice scope. Low-value-now.
+- **URL 4-site convergence** — `buildFocusSearchParams` now centralizes the 2 island sites; the page (`page.tsx:217`)
+  + shared `lineage-tree-board.tsx` still hand-build the same `?view=explore&focus=` — converge in a shared helper
+  (`lib/lineage/`) in a later shared pass (needs a shared-file edit → not this page pass).
+- **`SOLID_PANEL`/`SOLID_PILL` non-tokenized chrome** — ratified BBL brand law (SESSION_0394); cross-brand parity
+  is a ratify-then-conform ticket, not a refactor-pass fix.
+- **TICKET-0504-C** — add unit tests for the extracted `FocusPanel` + `CardMenu` (cyclo 12-13) to clear fallow's
+  zero-coverage `critical` flag (CRAP is coverage-driven, not a complexity hotspot). Low priority.

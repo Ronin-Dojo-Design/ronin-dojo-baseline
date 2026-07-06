@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-07-06
 updated: 2026-07-06
-last_agent: claude-session-0502
+last_agent: claude-session-0504
 pairs_with:
   - .claude/skills/fallow-fix-loop/SKILL.md
   - .claude/skills/code-quality/SKILL.md
@@ -92,7 +92,7 @@ inventory tracker below.
 | --- | --- | --- | --- |
 | 1 | `/directory/[slug]` | ✅ done (0502) | profile fix — free-basic public profile + premium rich-media gate + 404-teaser; Doug 9.2 SHIP |
 | — | `/me` | partial (0502) | shares the consolidated policy; component-tree merge = TICKET-0502-A |
-| — | `/lineage/[treeSlug]` | queued | canvas + timeline — gnarlier, do once recipe proven |
+| 2 | `/lineage/[treeSlug]` | ✅ done (0504) | explore-island extraction: cyclo 52→27, CRAP 2756→756 (−73%), 794→412 LOC, 8 page-owned files; zero shared-file edits; Doug 8.5 SHIP; new explore-view e2e. Shared canvas/timeline/drawer = TICKET-0504-A |
 | — | `/posts` | queued | community feed |
 | — | `/` (landing) | queued | public first-impression |
 | — | `/app` index | queued | pairs with the Command Deck unified-index chip |
