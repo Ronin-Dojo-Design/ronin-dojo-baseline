@@ -1,6 +1,5 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
-import { Badge } from "~/components/common/badge"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
@@ -103,24 +102,15 @@ function PassportBeltAccents({ colorHex }: { colorHex: string | null }) {
   )
 }
 
-function PassportHeader({
-  disciplineLabel,
-  rankName,
-}: {
-  disciplineLabel?: string
-  rankName?: string
-}) {
+/**
+ * Eyebrow-only header — the rank credential lives ONCE, in the identity block's belt
+ * swatch + byline (SESSION_0501 P0: a header rank Badge duplicated it inside one card).
+ */
+function PassportHeader({ disciplineLabel }: { disciplineLabel?: string }) {
   return (
-    <Stack direction="row" className="w-full items-center justify-between gap-2">
-      <PassportEyebrow>
-        {disciplineLabel ? `${disciplineLabel} Passport` : "Passport"}
-      </PassportEyebrow>
-      {rankName && (
-        <Badge variant="primary" size="sm">
-          {rankName}
-        </Badge>
-      )}
-    </Stack>
+    <PassportEyebrow>
+      {disciplineLabel ? `${disciplineLabel} Passport` : "Passport"}
+    </PassportEyebrow>
   )
 }
 
@@ -234,7 +224,7 @@ export function BjjPassportCard({
       )}
     >
       <PassportBeltAccents colorHex={colorHex} />
-      <PassportHeader disciplineLabel={disciplineLabel} rankName={rankName} />
+      <PassportHeader disciplineLabel={disciplineLabel} />
       <PassportIdentity name={name} avatarUrl={avatarUrl} colorHex={colorHex} rankName={rankName} />
       <PassportSchool school={school} />
       <PassportLineageChain lineageChain={lineageChain} />

@@ -75,12 +75,14 @@ test.describe("Epic B mobile shell", () => {
       // Back to a `(web)` page for the MAB interaction proof.
       await page.goto("/lineage")
 
-      // Fan opens; 4 admin actions present.
+      // Fan opens; 4 admin actions present. NO in-fan disable control (SESSION_0501:
+      // the EyeOff item masqueraded as an action — on/off lives on the More drawer toggle).
       await mab.click()
       await expect(page.getByRole("button", { name: /create post/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /upload photo or media/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /log a promotion/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /claim or verify/i })).toBeVisible()
+      await expect(page.getByRole("button", { name: /hide the quick actions/i })).toHaveCount(0)
       await page.screenshot({ path: `${SHOTS}/admin-03-fan-open.png` })
 
       // Upload → bottom-sheet.
@@ -118,9 +120,13 @@ test.describe("Epic B mobile shell", () => {
       await expect(page.locator(MAB_TRIGGER)).toBeVisible()
       await page.screenshot({ path: `${SHOTS}/admin-05-dragged-topleft-persist.png` })
 
-      // Toggle OFF via the FAB's disable affordance → MAB gone → persists across reload.
-      await page.locator(MAB_TRIGGER).click()
-      await page.getByRole("button", { name: /hide the quick actions button/i }).click()
+      // Toggle OFF via the "More" drawer switch (SESSION_0501: disable AND re-enable both
+      // live on the drawer's MabToggle) → MAB gone → persists across reload. The "More"
+      // tab's accessible name is its aria-label ("Open menu"), not its visible "More" text.
+      const nav2 = page.getByRole("navigation", { name: /browse/i }).last()
+      await nav2.getByRole("button", { name: /open menu/i }).click()
+      await page.getByRole("switch", { name: /quick actions button/i }).click()
+      await page.keyboard.press("Escape")
       await expect(page.locator(MAB_TRIGGER)).toHaveCount(0)
       const enabled = await page.evaluate(() => localStorage.getItem("bbl.mab.enabled"))
       expect(enabled).toBe("0")
@@ -128,10 +134,9 @@ test.describe("Epic B mobile shell", () => {
       await expect(page.locator(MAB_TRIGGER)).toHaveCount(0)
       await page.screenshot({ path: `${SHOTS}/admin-06-toggled-off.png` })
 
-      // Re-enable via the "More" drawer toggle → MAB returns. The "More" tab's accessible
-      // name is its aria-label ("Open menu"), not its visible "More" text.
-      const nav2 = page.getByRole("navigation", { name: /browse/i }).last()
-      await nav2.getByRole("button", { name: /open menu/i }).click()
+      // Re-enable via the same drawer toggle → MAB returns.
+      const nav3 = page.getByRole("navigation", { name: /browse/i }).last()
+      await nav3.getByRole("button", { name: /open menu/i }).click()
       await page.getByRole("switch", { name: /quick actions button/i }).click()
       await page.keyboard.press("Escape")
       await expect(page.locator(MAB_TRIGGER)).toBeVisible()

@@ -30,12 +30,9 @@ export function HeroActions({
           This profile is yours →
         </Button>
       )}
-      <ListingSaveButton
-        subjectType="PERSON"
-        subjectId={profile.passportId}
-        size="md"
-        showLabel={false}
-      />
+      {/* Labeled (not icon-only) — parity with the labeled QR button beside it; the
+          cluster is full-width on mobile (SESSION_0501 P1). */}
+      <ListingSaveButton subjectType="PERSON" subjectId={profile.passportId} size="md" />
       {profile.canRenderFullProfile && (
         <QrShareButton
           url={profileUrl}

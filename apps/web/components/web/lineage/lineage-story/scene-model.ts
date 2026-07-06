@@ -34,6 +34,16 @@ export const scenePaletteAt = (index: number): ScenePalette => {
 }
 
 /**
+ * Palette for a scene by ROLE: the profile owner (last scene in the walk) is ALWAYS the
+ * `black` palette — its owner treatment (`ownerRing: ring-primary`, the red-on-black
+ * credential accent) must not depend on chain-length parity (SESSION_0501 P1: a 2-node
+ * chain landed the owner on the full-bleed brand-red scene by accident). Ancestor scenes
+ * keep the position-indexed {@link scenePaletteAt} cycle.
+ */
+export const scenePaletteFor = (index: number, count: number): ScenePalette =>
+  index === count - 1 ? "black" : scenePaletteAt(index)
+
+/**
  * Story-mode gate: the scroll-driven scene sequence renders only when the chain is
  * a real up-chain (≥ 2 entries — the `AncestrySection` contract) AND at least one
  * entry carries an enabled story scene. Everyone else keeps today's

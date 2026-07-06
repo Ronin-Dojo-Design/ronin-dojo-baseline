@@ -31,8 +31,10 @@ export default async function (_props: PageProps<"/app">) {
   })
 
   const counters = [
-    { label: "Tools", href: "/admin/tools", query: db.tool.count() },
-    { label: "Categories", href: "/admin/categories", query: db.category.count() },
+    // `/app/*` targets, NOT the retired `/admin/*` prefixes (those are 308 redirects
+    // at best — the stale-revalidate-path memory pattern, fixed SESSION_0501).
+    { label: "Tools", href: "/app/tools", query: db.tool.count() },
+    { label: "Categories", href: "/app/categories", query: db.category.count() },
     { label: "Users", href: "/app/users", query: db.user.count() },
     { label: "Tournaments", href: "/app/tournaments", query: db.tournament.count() },
     { label: "Memberships", href: "/app/memberships", query: db.membership.count() },

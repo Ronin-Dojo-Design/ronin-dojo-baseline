@@ -9,6 +9,7 @@ import type { DirectoryProfileView } from "./directory-profile-data"
 import { profileInitial } from "./directory-profile-fields"
 import { HeroActions } from "./hero-actions"
 import { HeroBadges } from "./hero-badges"
+import { PassportSection } from "./passport-section"
 import { ProfileSidebar } from "./profile-sidebar"
 import { RanksSection } from "./ranks-section"
 import { VideoIntroSection } from "./video-section"
@@ -89,7 +90,7 @@ export function DirectoryProfile({
           <HeroActions profile={profile} profileUrl={profileUrl} claimState={viewerClaimState} />
         }
         intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
-        sidebar={<ProfileSidebar profile={profile} />}
+        sidebar={<ProfileSidebar profile={profile} ancestry={ancestry} />}
       >
         <AboutSection profile={profile} />
         <VideoIntroSection videoIntroUrl={profile.videoIntroUrl} />
@@ -97,6 +98,9 @@ export function DirectoryProfile({
         <AncestrySection ancestry={ancestry} />
         <OrganizationsSection profile={profile} />
         <SocialSection profile={profile} />
+        {/* Mobile-only labeled home of the passport credential (SESSION_0501 P0);
+            desktop keeps it in the sidebar slot above. */}
+        <PassportSection profile={profile} profileUrl={profileUrl} ancestry={ancestry} />
         {!profile.canRenderFullProfile && <UpgradeSection />}
       </ListingDetail>
     </>

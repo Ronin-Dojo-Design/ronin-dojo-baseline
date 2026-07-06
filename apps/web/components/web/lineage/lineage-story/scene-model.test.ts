@@ -5,6 +5,7 @@ import {
   SCENE_PALETTE_CYCLE,
   chainHasStoryScenes,
   scenePaletteAt,
+  scenePaletteFor,
   scenePaletteTokens,
 } from "./scene-model"
 
@@ -90,6 +91,30 @@ describe("scenePaletteAt — the three-variant cycle", () => {
     expect(scenePaletteTokens.red.section).toContain("bg-primary")
     expect(scenePaletteTokens.black.underline).toContain("decoration-primary")
     expect(scenePaletteTokens.white.underline).toContain("decoration-primary")
+  })
+})
+
+describe("scenePaletteFor — the owner scene is pinned by role", () => {
+  it("pins the owner (last) scene to black regardless of chain-length parity", () => {
+    // 2-node chain: the raw cycle would land the owner on RED (SESSION_0501 P1 —
+    // the full-bleed brand-red member scene by parity accident).
+    expect(scenePaletteFor(1, 2)).toBe("black")
+    expect(scenePaletteFor(2, 3)).toBe("black")
+    expect(scenePaletteFor(3, 4)).toBe("black")
+    expect(scenePaletteFor(4, 5)).toBe("black")
+  })
+
+  it("keeps the position-indexed cycle for ancestor scenes", () => {
+    expect(scenePaletteFor(0, 5)).toBe("black")
+    expect(scenePaletteFor(1, 5)).toBe("red")
+    expect(scenePaletteFor(2, 5)).toBe("white")
+    expect(scenePaletteFor(3, 5)).toBe("black")
+  })
+
+  it("gives the owner scene the ring-primary owner treatment on every chain length", () => {
+    for (const count of [2, 3, 4, 5, 6]) {
+      expect(scenePaletteTokens[scenePaletteFor(count - 1, count)].ownerRing).toBe("ring-primary")
+    }
   })
 })
 

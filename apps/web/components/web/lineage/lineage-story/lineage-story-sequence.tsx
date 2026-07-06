@@ -6,12 +6,13 @@ import { Badge } from "~/components/common/badge"
 import { LineageAncestryTimeline } from "~/components/web/lineage/lineage-ancestry-timeline"
 import type { LineageAncestryEntry } from "~/server/web/lineage/ancestry"
 import { LineageStoryNodeScene, LineageStoryScene } from "./lineage-story-scene"
-import { scenePaletteAt } from "./scene-model"
+import { scenePaletteFor } from "./scene-model"
 
 /**
  * The Lineage Journey scroll sequence (Epic A2-v1, SESSION_0498) — maps the
  * ancestry walk `[founder … member]` onto scene sections with the three-variant
- * palette cycle (black → red → white → repeat, indexed by chain position).
+ * palette cycle (black → red → white → repeat, indexed by chain position; the
+ * OWNER scene is pinned to black by role — `scenePaletteFor`, SESSION_0501 P1).
  *
  * Enhance-not-replace: this only mounts when the chain carries ≥ 1 enabled story
  * scene (`chainHasStoryScenes`, decided server-side in `AncestrySection`), and
@@ -53,12 +54,12 @@ export function LineageStorySequence({
       // Full-bleed to the viewport edges below md (-mx-6 cancels the Container's
       // px-6); inside the md+ content grid the strip keeps the column width with
       // rounded cinema edges. overflow-hidden pairs with the per-scene clipping.
-      // md ring: a hairline boundary so the black opener separates from dark
-      // desktop chrome (Desi A2 P2).
-      className="-mx-6 flex flex-col overflow-hidden md:mx-0 md:rounded-3xl md:ring-1 md:ring-white/10"
+      // ring: a hairline boundary at EVERY width — black scenes otherwise dissolve
+      // into dark chrome (Desi A2 P2 desktop; SESSION_0501 P1 mobile).
+      className="-mx-6 flex flex-col overflow-hidden ring-1 ring-white/10 md:mx-0 md:rounded-3xl"
     >
       {entries.map((entry, index) => {
-        const palette = scenePaletteAt(index)
+        const palette = scenePaletteFor(index, entries.length)
         const isOwner = index === entries.length - 1
 
         const scene = entry.story ? (

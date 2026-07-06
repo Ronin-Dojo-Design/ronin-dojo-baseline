@@ -3,7 +3,6 @@
 import { useReducedMotion } from "@mantine/hooks"
 import {
   BadgeCheckIcon,
-  EyeOffIcon,
   ImageUpIcon,
   MedalIcon,
   PenSquareIcon,
@@ -23,7 +22,6 @@ import {
   readMabCorner,
   readMabEnabled,
   writeMabCorner,
-  writeMabEnabled,
 } from "~/lib/mab-preferences"
 import { cx } from "~/lib/utils"
 
@@ -37,7 +35,8 @@ import { cx } from "~/lib/utils"
  *
  * Movable: drag to reposition (`motion` drag), 4-corner snap on release (nearest corner by
  * pointer position), position persisted per-device (`lib/mab-preferences`). User-toggle-able
- * off (persisted); re-enable lives in the bottom-nav "More" drawer.
+ * off AND back on via the bottom-nav "More" drawer's `MabToggle` (SESSION_0501: the former
+ * in-fan EyeOff disable masqueraded as a fan action and was removed).
  *
  * Reduced-motion (motion-system runbook §3): the fan renders/dismisses instantly (no arc
  * spring, no rotate) under `prefers-reduced-motion`; drag still works (it's direct
@@ -70,12 +69,19 @@ type MabProps = {
   postStyles: { id: string; name: string }[]
 }
 
-// Fan radius (px) and per-item spread. Four items fan across a quarter-arc from the FAB.
+// Fan radius (px) and the PREFERRED per-item spread (used as-is only while it fits).
 const FAN_RADIUS = 76
 const ITEM_ARC_DEGREES = 68
 
+// Hard sweep cap: the fan may cover at most the inward 90° quadrant from its corner
+// (SESSION_0501 P0 — the old spread-centered-on-straight-up geometry gave 4 items a 204°
+// sweep, throwing the first item ~26px past the docked viewport edge at bottom-right).
+const QUADRANT_DEGREES = 90
+
 // Corner → the base angle (deg, standard math orientation) the fan sweeps FROM, and the
-// fixed-position anchor classes. Bottom corners fan upward; top corners fan downward.
+// fixed-position anchor classes. The sweep starts on the corner's vertical (straight up for
+// bottom corners, straight down for top corners) and rotates `direction` toward the screen
+// center — never toward the edges the FAB is docked against.
 const CORNER_CONFIG: Record<MabCorner, { anchor: string; baseAngle: number; direction: 1 | -1 }> = {
   "bottom-right": { anchor: "bottom-20 right-5", baseAngle: 90, direction: 1 },
   "bottom-left": { anchor: "bottom-20 left-5", baseAngle: 90, direction: -1 },
@@ -93,10 +99,12 @@ function nearestCorner(x: number, y: number): MabCorner {
 /** Offset of a fanned item from the FAB center, given its index and the corner geometry. */
 function fanOffset(index: number, count: number, corner: MabCorner) {
   const { baseAngle, direction } = CORNER_CONFIG[corner]
-  // Center the spread around the base angle.
-  const spread = (count - 1) * ITEM_ARC_DEGREES
-  const start = baseAngle - (spread / 2) * direction
-  const angle = start + index * ITEM_ARC_DEGREES * direction
+  // Clamp the sweep to the inward quadrant: shrink the per-item arc so the LAST item lands
+  // exactly on the quadrant edge when the preferred spread would overflow it (4 items → 30°
+  // steps, 90° total; 2 items keep the roomy 68°). Every offset therefore points up/down and
+  // inward — nothing can cross the docked viewport edges in any corner.
+  const step = count > 1 ? Math.min(ITEM_ARC_DEGREES, QUADRANT_DEGREES / (count - 1)) : 0
+  const angle = baseAngle + index * step * direction
   const rad = (angle * Math.PI) / 180
   return { x: Math.cos(rad) * FAN_RADIUS, y: -Math.sin(rad) * FAN_RADIUS }
 }
@@ -135,13 +143,6 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
   const handleToggleFan = useCallback(() => {
     haptics.tap()
     setOpen(prev => !prev)
-  }, [])
-
-  const handleDisable = useCallback(() => {
-    haptics.select()
-    setEnabled(false)
-    setOpen(false)
-    writeMabEnabled(false)
   }, [])
 
   const handleDragEnd = useCallback(
@@ -268,25 +269,6 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
                   </motion.button>
                 )
               })}
-
-            {/* Disable ("turn off MAB") affordance — sits opposite the fan, only while open. */}
-            {open && (
-              <motion.button
-                key="disable"
-                type="button"
-                onClick={handleDisable}
-                aria-label={t("mab_disable")}
-                initial={reduceMotion ? { opacity: 1 } : { opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.6 }}
-                transition={
-                  reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 460, damping: 30 }
-                }
-                className="absolute -top-14 left-1/2 flex size-9 -translate-x-1/2 items-center justify-center rounded-full border border-chrome-border bg-background text-muted-foreground shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
-              >
-                <EyeOffIcon className="size-4" />
-              </motion.button>
-            )}
           </AnimatePresence>
 
           {/* The FAB itself — tap toggles the fan; drag repositions. */}
