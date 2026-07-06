@@ -3,7 +3,6 @@
 import { Menu } from "@base-ui/react/menu"
 import { useReducedMotion } from "@mantine/hooks"
 import {
-  ChevronDownIcon,
   CopyIcon,
   FocusIcon,
   NetworkIcon,
@@ -16,17 +15,12 @@ import {
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react"
 import { BeltSwatch } from "~/components/common/belt-swatch"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
-import { Stack } from "~/components/common/stack"
 import { LineageCohortTimeline } from "~/components/web/lineage/lineage-cohort-timeline"
+import { FilterBar } from "~/components/web/lineage/lineage-view-a/filter-bar"
+import { useLineageFocus } from "~/components/web/lineage/lineage-view-a/use-lineage-focus"
+import { useLineageViewAFilters } from "~/components/web/lineage/lineage-view-a/use-lineage-view-a-filters"
 import {
   LineageProfileDrawer,
   type LineageProfileDrawerTab,
@@ -34,13 +28,6 @@ import {
 import { bblPortalTypographyClass } from "~/lib/fonts"
 import { BBL, rgba } from "~/lib/lineage/belt-color"
 import { memberInitials } from "~/lib/lineage/canvas-model"
-import {
-  deriveFacets,
-  facetKey,
-  matchMemberIds,
-  type FilterDimension,
-  type FilterFacet,
-} from "~/lib/lineage/filter-facets"
 import { toLineageVisual } from "~/lib/lineage/to-lineage-visual"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
 import type { ClaimViewerState } from "~/server/web/claims/resolve-viewer-claim-state"
@@ -95,89 +82,6 @@ const TRUST_LABEL: Record<LineageTrustStatus, string> = {
   claimed: "Claimed",
   imported: "Imported",
   unverified: "Unverified",
-}
-
-// Filter dimensions render as one labeled dropdown each (Apple-clean bar,
-// SESSION_0401) — order + display labels for the bar.
-const DIMENSION_ORDER: FilterDimension[] = ["group", "belt", "school", "year"]
-const DIMENSION_LABEL: Record<FilterDimension, string> = {
-  group: "Group",
-  belt: "Belt",
-  school: "School",
-  year: "Year",
-}
-
-/**
- * One dimension's multi-select dropdown for the filter bar. Composes the L1
- * `DropdownMenu` + `DropdownMenuCheckboxItem` primitives (checkbox items keep
- * the menu open for multi-toggle) — never a hand-rolled menu (FS-0001). The
- * trigger surfaces active state via a count badge so a closed filter still
- * reads as "on".
- */
-function FilterDropdown({
-  label,
-  facets,
-  activeFilters,
-  onToggle,
-  onClear,
-}: {
-  label: string
-  facets: FilterFacet[]
-  activeFilters: Set<string>
-  onToggle: (key: string) => void
-  onClear: () => void
-}) {
-  const activeCount = facets.reduce(
-    (count, facet) => (activeFilters.has(facetKey(facet)) ? count + 1 : count),
-    0,
-  )
-  const active = activeCount > 0
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        className={cx(
-          "inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-white/70 transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring max-sm:flex-1 max-sm:basis-[calc(50%-0.25rem)]",
-          active ? "border border-primary/40 bg-primary/15 text-white" : SOLID_PILL,
-        )}
-      >
-        <span className="text-[0.62rem] font-bold uppercase tracking-[0.16em]">{label}</span>
-        {active && (
-          <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-black text-white">
-            {activeCount}
-          </span>
-        )}
-        <ChevronDownIcon className="ml-auto size-3.5 opacity-60 sm:ml-0" />
-      </DropdownMenuTrigger>
-
-      <DropdownMenuContent align="start" className="max-h-80 min-w-52 overflow-y-auto">
-        {facets.map(facet => {
-          const key = facetKey(facet)
-          return (
-            <DropdownMenuCheckboxItem
-              key={key}
-              checked={activeFilters.has(key)}
-              onCheckedChange={() => onToggle(key)}
-            >
-              <span className="flex min-w-0 items-center gap-2">
-                {facet.dimension === "belt" && (
-                  <BeltSwatch variant="bar" colorHex={facet.colorHex} />
-                )}
-                <span className="max-w-[12rem] truncate">{facet.label}</span>
-              </span>
-            </DropdownMenuCheckboxItem>
-          )
-        })}
-
-        {active && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onClear}>Clear {label.toLowerCase()}</DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  )
 }
 
 function DepthStepper({
@@ -287,13 +191,11 @@ export function LineageViewAIsland({
   }, [])
 
   const initialMemberId = initialFocusId ?? defaultRootMemberId ?? members[0]?.id ?? null
-  const [focusMemberId, setFocusMemberId] = useState<string | null>(initialMemberId)
+  const { focusMemberId, focusMember, copyFocusLink, copied, hasInteracted } =
+    useLineageFocus(initialMemberId)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [drawerMemberId, setDrawerMemberId] = useState<string | null>(null)
   const [drawerTab, setDrawerTab] = useState<LineageProfileDrawerTab>("info")
-
-  // "Click to recenter" hint auto-dismisses after the first focus interaction.
-  const [hasInteracted, setHasInteracted] = useState(false)
 
   const [ancestryDepth, setAncestryDepth] = useState(MAX_DEPTH)
   const [progenyDepth, setProgenyDepth] = useState(MAX_DEPTH)
@@ -302,11 +204,6 @@ export function LineageViewAIsland({
     memberId: string
     anchorEl: HTMLElement
   } | null>(null)
-  const [copied, setCopied] = useState(false)
-
-  // Derived multi-select filter — belt + school facets from existing DTO data
-  // (no schema). Empty set = no active filter (all shown). (SESSION_0395 grill Q7)
-  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set())
 
   const memberMap = useMemo(() => new Map(members.map(member => [member.id, member])), [members])
   const drawerMember = drawerMemberId ? (memberMap.get(drawerMemberId) ?? null) : null
@@ -347,50 +244,18 @@ export function LineageViewAIsland({
 
   const claimableCount = useMemo(() => nodes.filter(node => node.claimable).length, [nodes])
 
-  // Derive filter facets from existing DTO data (no schema): cohort group (e.g.
-  // the Dirty Dozen), belt, school, and promotion year — one labeled dropdown
-  // each. Matching is AND-across / OR-within (see `lib/lineage/filter-facets`).
-  const facets = useMemo(() => deriveFacets(nodes), [nodes])
-
-  const facetByKey = useMemo(() => new Map(facets.map(facet => [facetKey(facet), facet])), [facets])
-
-  // Group facets by dimension so the bar renders one dropdown per dimension.
-  const facetsByDimension = useMemo(() => {
-    const map = new Map<FilterDimension, FilterFacet[]>()
-    for (const facet of facets) {
-      const list = map.get(facet.dimension)
-      if (list) list.push(facet)
-      else map.set(facet.dimension, [facet])
-    }
-    return map
-  }, [facets])
-
-  const matchedMemberIds = useMemo(() => {
-    const activeFacets = [...activeFilters]
-      .map(key => facetByKey.get(key))
-      .filter((facet): facet is FilterFacet => facet != null)
-    return matchMemberIds(nodes, activeFacets)
-  }, [activeFilters, facetByKey, nodes])
-
-  const toggleFilter = useCallback((key: string) => {
-    setActiveFilters(prev => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  }, [])
-
-  // Per-dimension clear — drop only this dimension's active keys.
-  const clearDimension = useCallback((dimension: FilterDimension) => {
-    setActiveFilters(prev => {
-      const next = new Set(prev)
-      for (const key of next) {
-        if (key.startsWith(`${dimension}:`)) next.delete(key)
-      }
-      return next
-    })
-  }, [])
+  // Derived multi-select filter (cohort group / belt / school / year) from the
+  // existing DTO data — no schema. `matchedMemberIds` may be null ("all lit");
+  // it is forwarded straight to `<LineageCohortTimeline>` unchanged.
+  const {
+    activeFilters,
+    facets,
+    facetsByDimension,
+    matchedMemberIds,
+    toggleFilter,
+    clearDimension,
+    clearAll,
+  } = useLineageViewAFilters(nodes)
 
   const openDrawer = useCallback((memberId: string) => {
     setDrawerMemberId(memberId)
@@ -409,35 +274,9 @@ export function LineageViewAIsland({
     [memberMap, profilesById],
   )
 
-  const focusMember = useCallback((memberId: string) => {
-    setFocusMemberId(memberId)
-    setHasInteracted(true)
-    const sp = new URLSearchParams(window.location.search)
-    sp.set("view", "explore")
-    sp.set("focus", memberId)
-    window.history.replaceState(null, "", `?${sp.toString()}`)
-  }, [])
-
   const openCardMenu = useCallback((memberId: string, anchorEl: HTMLElement) => {
     setCardMenu({ memberId, anchorEl })
   }, [])
-
-  const copyFocusLink = useCallback((memberId: string) => {
-    const sp = new URLSearchParams(window.location.search)
-    sp.set("view", "explore")
-    sp.set("focus", memberId)
-    const url = `${window.location.origin}${window.location.pathname}?${sp.toString()}`
-
-    void navigator.clipboard?.writeText(url)
-    setCardMenu(null)
-    setCopied(true)
-    window.setTimeout(() => setCopied(false), 1400)
-  }, [])
-
-  // Keep React focus in sync if the initial focus id resolves late (data load).
-  useEffect(() => {
-    if (!focusMemberId && initialMemberId) setFocusMemberId(initialMemberId)
-  }, [focusMemberId, initialMemberId])
 
   const focusTrustLabel = focusNode
     ? (TRUST_LABEL[focusNode.trustStatus] ?? focusNode.trustStatus)
@@ -560,35 +399,14 @@ export function LineageViewAIsland({
           </PremiumPanel>
         </div>
 
-        {/* Filter bar — one labeled dropdown per dimension; dim non-matches (not hide).
-            Matching is AND-across / OR-within (lib/lineage/filter-facets). */}
-        {facets.length > 0 && (
-          <Stack direction="row" wrap size="sm" className="mb-3 max-sm:gap-2">
-            {DIMENSION_ORDER.map(dimension => {
-              const dimensionFacets = facetsByDimension.get(dimension)
-              if (!dimensionFacets || dimensionFacets.length === 0) return null
-              return (
-                <FilterDropdown
-                  key={dimension}
-                  label={DIMENSION_LABEL[dimension]}
-                  facets={dimensionFacets}
-                  activeFilters={activeFilters}
-                  onToggle={toggleFilter}
-                  onClear={() => clearDimension(dimension)}
-                />
-              )
-            })}
-            {activeFilters.size > 0 && (
-              <button
-                type="button"
-                onClick={() => setActiveFilters(new Set())}
-                className="text-[0.68rem] font-semibold text-white/45 underline-offset-2 transition hover:text-white hover:underline max-sm:ml-auto"
-              >
-                Clear all
-              </button>
-            )}
-          </Stack>
-        )}
+        <FilterBar
+          facets={facets}
+          facetsByDimension={facetsByDimension}
+          activeFilters={activeFilters}
+          onToggle={toggleFilter}
+          onClearDimension={clearDimension}
+          onClearAll={clearAll}
+        />
 
         <div className="relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-black/60 shadow-2xl shadow-black/50">
           <div
@@ -752,6 +570,7 @@ export function LineageViewAIsland({
               <DropdownMenuItem
                 onClick={() => {
                   if (cardMenu) copyFocusLink(cardMenu.memberId)
+                  setCardMenu(null)
                 }}
               >
                 <CopyIcon />
