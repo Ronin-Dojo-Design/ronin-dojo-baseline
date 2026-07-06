@@ -5,8 +5,9 @@ import { Section } from "~/components/web/ui/section"
 import type { DirectoryProfile } from "./directory-profile-data"
 
 /**
- * "About" body — the public bio (or, for a listing-preview profile, the upgrade note)
- * plus the optional public email. Email visibility is already gated in the projection.
+ * "About" body — the public bio (always shown for a claimed profile, free tier included),
+ * or, when the member has no bio yet AND rich media is gated, a note pointing at the media
+ * that a paid listing unlocks. Plus the optional public email (gated in the projection).
  */
 export function AboutSection({ profile }: { profile: DirectoryProfile }) {
   const { user } = profile
@@ -21,8 +22,8 @@ export function AboutSection({ profile }: { profile: DirectoryProfile }) {
         ) : (
           !profile.canRenderFullProfile && (
             <Note>
-              This profile is currently published as a free listing. Full bio, links, school
-              details, and rank history unlock when the listing upgrades.
+              This profile has no bio yet. A cover photo, video intro, social links, and location
+              unlock with a Premium or Elite listing.
             </Note>
           )
         )}

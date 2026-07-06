@@ -93,6 +93,11 @@ export const findProfileBySlug = async ({
   // e.g. an imported placeholder with no tree membership yet. Rather than 404, resolve them
   // by slug alone (still honoring visibility) so the page can render the claim teaser. HIDDEN
   // rows never match either lookup, so they stay 404.
+  //
+  // ASSUMES single-brand-per-DB (ADR 0038 — each product runs its own database). This slug-only
+  // lookup drops the brand filter, so on a shared multi-product DB it could resolve another
+  // product's PUBLIC profile on BBL's `/directory/[slug]`. Separate DBs make that unreachable in
+  // production; if products are ever co-located in one DB, re-scope this by a brand column.
   if (!profile) {
     profile = await db.directoryProfile.findFirst({
       where: { slug, visibility: { in: allowedVisibility } },

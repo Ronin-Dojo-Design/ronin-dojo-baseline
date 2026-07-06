@@ -4,7 +4,12 @@ import { Stack } from "~/components/common/stack"
 import { Section } from "~/components/web/ui/section"
 import type { DirectoryProfile } from "./directory-profile-data"
 
-/** Ranks & achievements (full profile) or rank summary (listing preview). */
+/**
+ * Ranks & achievements. The full rank history renders for every claimed profile now — free
+ * tier included (SESSION_0502; `user.ranks` is the full history, no longer a 1-rank summary) —
+ * so the heading is unconditional (the old "Rank Summary" free-tier label was a truncation
+ * artifact that no longer applies).
+ */
 export function RanksSection({ profile }: { profile: DirectoryProfile }) {
   const { user } = profile
 
@@ -14,7 +19,7 @@ export function RanksSection({ profile }: { profile: DirectoryProfile }) {
 
   return (
     <Section>
-      <H4>{profile.canRenderFullProfile ? "Ranks & Achievements" : "Rank Summary"}</H4>
+      <H4>Ranks &amp; Achievements</H4>
       <Stack size="sm">
         {user.ranks.map(rankAward => (
           <div key={rankAward.awardId} className="flex items-center gap-2">

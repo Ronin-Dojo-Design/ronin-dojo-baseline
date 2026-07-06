@@ -38,16 +38,18 @@ test.describe("/directory/[slug] paywall field boundary", () => {
     await expect(page.getByText(fixture.bio)).toBeVisible()
     // Ranks section present (the seeded black belt).
     await expect(page.getByRole("heading", { name: /rank/i })).toBeVisible()
-    // Schools & Organizations present (the seeded membership).
-    await expect(page.getByText(fixture.orgName)).toBeVisible()
+    // Schools & Organizations present (the seeded membership). Scoped to the org-section LINK —
+    // the passport card also renders the org name as a plain-text school label (×mobile/desktop),
+    // so an unscoped getByText resolves to multiple elements and trips strict mode.
+    await expect(page.getByRole("link", { name: fixture.orgName })).toBeVisible()
 
     // RICH — gated on the free tier even though every field is set in the DB.
     await expect(page.getByRole("img", { name: /profile cover photo/i })).toHaveCount(0)
     await expect(page.getByRole("heading", { name: fixture.videoIntroTitle })).toHaveCount(0)
     await expect(page.getByRole("heading", { name: "Social" })).toHaveCount(0)
     await expect(page.getByText(fixture.locationCity)).toHaveCount(0)
-    // The listing-preview / upgrade affordance is present on the gated profile.
-    await expect(page.getByText(/listing preview/i)).toBeVisible()
+    // The media-locked upgrade badge is present on the gated (free) profile.
+    await expect(page.getByText(/media locked/i)).toBeVisible()
   })
 
   test("premium claimed profile renders rich media", async ({ page }) => {
@@ -61,7 +63,7 @@ test.describe("/directory/[slug] paywall field boundary", () => {
     await expect(page.getByRole("heading", { name: fixture.videoIntroTitle })).toBeVisible()
     await expect(page.getByRole("heading", { name: "Social" })).toBeVisible()
     await expect(page.getByText(fixture.locationCity).first()).toBeVisible()
-    // Paid profile does NOT show the listing-preview badge.
-    await expect(page.getByText(/listing preview/i)).toHaveCount(0)
+    // Paid profile does NOT show the media-locked badge.
+    await expect(page.getByText(/media locked/i)).toHaveCount(0)
   })
 })
