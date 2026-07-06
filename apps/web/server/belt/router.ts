@@ -1,9 +1,12 @@
 import { ORPCError } from "@orpc/server"
+import { Brand } from "~/.generated/prisma/client"
 import {
   ceilingSortOrder,
+  type FactKey,
   isFactEditable,
   isTopAward,
   isWithinCeiling,
+  memberFactEditability,
 } from "~/server/belt/belt-gate"
 import {
   gateAwardSelect,
@@ -19,6 +22,7 @@ import {
   deleteRankAwardInput,
   detachMilestoneMediaInput,
   updateRankAwardFactInput,
+  type UpdateRankAwardFactInput,
   upsertBeltMilestoneInput,
 } from "~/server/belt/schemas"
 import { resolveOwnedMedia } from "~/server/media/media-ownership"
@@ -131,13 +135,133 @@ const upsertBeltMilestone = beltProcedure
     return enrichedCard(passportId, rankAwardId)
   })
 
+/** The select both fact-edit paths need: authorship + current fact values. */
+const factEditSelect = {
+  id: true,
+  passportId: true,
+  source: true,
+  verificationStatus: true,
+  awardedById: true,
+  awardedAt: true,
+  awardedByPassportId: true,
+  notes: true,
+  organizationId: true,
+  location: true,
+} as const
+
+type FactUpdateInput = Pick<UpdateRankAwardFactInput, "awardedAt" | "promoter" | "school">
+
+type FactUpdateData = {
+  awardedAt?: Date | null
+  notes?: string | null
+  awardedByPassportId?: string | null
+  location?: string | null
+  organizationId?: string | null
+}
+
+/**
+ * Resolve a fact-edit input into a partial `RankAward` update — undefined keys
+ * leave the column untouched; `rankId` is deliberately never in this object. The
+ * ONE persistence seam for BOTH the member and the admin fact paths (SESSION_0501
+ * — the ref semantics must never fork): promoter/school each accept a typed FK OR
+ * freetext; a freetext school additionally emits a deduped school-outreach lead.
+ */
+async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateData> {
+  const data: FactUpdateData = {}
+
+  if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
+
+  if (input.promoter !== undefined) {
+    if (input.promoter?.awardedByPassportId) {
+      // The picker sends a Passport id (belt-tab-loader.getBeltPromoterOptions is keyed
+      // by passport). Verify it still exists — the option list is cached, so a stale or
+      // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
+      // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
+      const promoterPassport = await db.passport.findUnique({
+        where: { id: input.promoter.awardedByPassportId },
+        select: { id: true },
+      })
+      if (!promoterPassport) {
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "That instructor can't be linked — pick another from the list or type their name.",
+        })
+      }
+      data.awardedByPassportId = promoterPassport.id
+      data.notes = null
+    } else {
+      const name = input.promoter?.name?.trim() || null
+      data.awardedByPassportId = null
+      data.notes = name
+    }
+  }
+
+  if (input.school !== undefined) {
+    if (input.school?.organizationId) {
+      // Same guard as the promoter: the school option list is cached too, so a school
+      // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
+      const org = await db.organization.findUnique({
+        where: { id: input.school.organizationId },
+        select: { id: true },
+      })
+      if (!org) {
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "That school is no longer available — pick another from the list or type its name.",
+        })
+      }
+      data.organizationId = org.id
+      data.location = null
+    } else {
+      const schoolName = input.school?.name?.trim() || null
+      data.organizationId = null
+      data.location = schoolName
+      // Freetext school → capture the demand as a deduped school-outreach lead
+      // (Slice 1). Never sends outreach — the invite is an operator click. The
+      // country (Locked #7) belongs to the school, so it rides here → sets the
+      // placeholder Organization.country (ignored on a registered-org pick).
+      if (schoolName) {
+        await emitSchoolLead({
+          schoolName,
+          source: "belt-journey",
+          country: input.school?.country ?? null,
+        })
+      }
+    }
+  }
+
+  return data
+}
+
+/** Which of the three facts a fact-edit input is trying to write. */
+function requestedFactKeys(input: FactUpdateInput): FactKey[] {
+  const keys: FactKey[] = []
+  if (input.awardedAt !== undefined) keys.push("awardedAt")
+  if (input.promoter !== undefined) keys.push("promoter")
+  if (input.school !== undefined) keys.push("school")
+  return keys
+}
+
+const FACT_LABEL: Record<FactKey, string> = {
+  awardedAt: "promotion date",
+  promoter: "promoter",
+  school: "school",
+}
+
 /**
  * `updateRankAwardFact(rankAwardId, { awardedAt, promoter, school })` — edit the
- * promotion FACT of an OWN, self-added backfill award. NEVER changes `rankId`
- * (not an input). B1: editable only for self-added STATED backfills; a
- * promotion-minted / imported / disputed award is authority-owned → FORBIDDEN
- * (`isFactEditable`). Promoter/school each accept a typed FK OR freetext; freetext
- * school → `emitSchoolLead` + stored on `location`; freetext promoter → `notes`.
+ * promotion FACT of an OWN award. NEVER changes `rankId` (not an input).
+ *
+ * SESSION_0501 ratified policy (per-fact, `memberFactEditability`):
+ * - self-added STATED backfill → every fact fully editable (unchanged B1 behavior);
+ * - authority-owned award (promotion-minted / IMPORTED) → the owner may FILL a fact
+ *   that is currently EMPTY but may never modify or clear a filled one → FORBIDDEN
+ *   naming the locked fact(s);
+ * - DISPUTED → fully locked for the owner.
+ *
+ * Promoter/school ref semantics live in `buildFactUpdateData` (shared with the
+ * admin path): typed FK OR freetext; freetext school → `emitSchoolLead` + `location`;
+ * freetext promoter → `notes`.
  */
 const updateRankAwardFact = beltProcedure
   .input(updateRankAwardFactInput)
@@ -146,98 +270,90 @@ const updateRankAwardFact = beltProcedure
 
     const award = await db.rankAward.findUnique({
       where: { id: input.rankAwardId },
-      select: {
-        id: true,
-        passportId: true,
-        source: true,
-        verificationStatus: true,
-        awardedById: true,
-      },
+      select: factEditSelect,
     })
     if (!award || award.passportId !== passportId) {
       throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
     }
-    if (!isFactEditable(award)) {
+
+    // Per-fact gate: every fact the input tries to write must be editable for the
+    // OWNER. Surface the REAL reason naming the locked fact(s), never a blanket error.
+    const { facts } = memberFactEditability(award)
+    const locked = requestedFactKeys(input).filter(key => !facts[key])
+    if (locked.length > 0) {
       throw new ORPCError("FORBIDDEN", {
-        message: "This belt was verified by an instructor and its facts are read-only",
+        message: `The ${locked.map(key => FACT_LABEL[key]).join(", ")} on this belt was recorded by an instructor or admin and can't be changed`,
       })
     }
 
-    // Build a partial update — undefined keys leave the column untouched; the
-    // rankId is deliberately never in this object.
-    const data: {
-      awardedAt?: Date | null
-      notes?: string | null
-      awardedByPassportId?: string | null
-      location?: string | null
-      organizationId?: string | null
-    } = {}
-
-    if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
-
-    if (input.promoter !== undefined) {
-      if (input.promoter?.awardedByPassportId) {
-        // The picker sends a Passport id (belt-tab-loader.getBeltPromoterOptions is keyed
-        // by passport). Verify it still exists — the option list is cached, so a stale or
-        // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
-        // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
-        const promoterPassport = await db.passport.findUnique({
-          where: { id: input.promoter.awardedByPassportId },
-          select: { id: true },
-        })
-        if (!promoterPassport) {
-          throw new ORPCError("BAD_REQUEST", {
-            message:
-              "That instructor can't be linked — pick another from the list or type their name.",
-          })
-        }
-        data.awardedByPassportId = promoterPassport.id
-        data.notes = null
-      } else {
-        const name = input.promoter?.name?.trim() || null
-        data.awardedByPassportId = null
-        data.notes = name
-      }
-    }
-
-    if (input.school !== undefined) {
-      if (input.school?.organizationId) {
-        // Same guard as the promoter: the school option list is cached too, so a school
-        // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
-        const org = await db.organization.findUnique({
-          where: { id: input.school.organizationId },
-          select: { id: true },
-        })
-        if (!org) {
-          throw new ORPCError("BAD_REQUEST", {
-            message:
-              "That school is no longer available — pick another from the list or type its name.",
-          })
-        }
-        data.organizationId = org.id
-        data.location = null
-      } else {
-        const schoolName = input.school?.name?.trim() || null
-        data.organizationId = null
-        data.location = schoolName
-        // Freetext school → capture the demand as a deduped school-outreach lead
-        // (Slice 1). Never sends outreach — the invite is an operator click. The
-        // country (Locked #7) belongs to the school, so it rides here → sets the
-        // placeholder Organization.country (ignored on a registered-org pick).
-        if (schoolName) {
-          await emitSchoolLead({
-            schoolName,
-            source: "belt-journey",
-            country: input.school?.country ?? null,
-          })
-        }
-      }
-    }
-
+    const data = await buildFactUpdateData(input)
     await db.rankAward.update({ where: { id: award.id }, data })
 
     context.revalidate({ paths: REVALIDATE_PATHS })
     return enrichedCard(passportId, award.id)
+  })
+
+/**
+ * `updateRankAwardFactAsAdmin(rankAwardId, { awardedAt, promoter, school })` —
+ * admin CRUD on ANY member's award facts, any source (SESSION_0501 ratified
+ * policy). Same input + persistence seam as the member path (`buildFactUpdateData`
+ * — the ref semantics never fork); no ownership root and no per-fact gate.
+ *
+ * Authorization reuses the existing role system (repo rule: 4 authz systems, never
+ * a 5th): `meta.permission = "belt.admin"` — a NEW permission KEY on the existing
+ * `can()` gate, granted only via the admin `"*"` wildcard (the `beta.view` / FI-019
+ * precedent: a new authz need = a new key, never a new system). Every write is
+ * audit-logged with the fact before/after, matching the established admin-mutation
+ * pattern (`server/admin/users/actions.ts`, `server/admin/lineage/actions.ts`).
+ */
+const updateRankAwardFactAsAdmin = authedProcedure
+  .meta({ permission: "belt.admin", rateLimit: { points: 120, duration: 60 * 60 } })
+  .input(updateRankAwardFactInput)
+  .handler(async ({ input, context }) => {
+    const award = await db.rankAward.findUnique({
+      where: { id: input.rankAwardId },
+      select: factEditSelect,
+    })
+    if (!award) {
+      throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+    }
+
+    const data = await buildFactUpdateData(input)
+    const factSnapshot = (row: {
+      awardedAt: Date | null
+      awardedByPassportId: string | null
+      notes: string | null
+      organizationId: string | null
+      location: string | null
+    }) => ({
+      awardedAt: row.awardedAt?.toISOString() ?? null,
+      awardedByPassportId: row.awardedByPassportId,
+      notes: row.notes,
+      organizationId: row.organizationId,
+      location: row.location,
+    })
+
+    await db.$transaction(async tx => {
+      const updated = await tx.rankAward.update({
+        where: { id: award.id },
+        data,
+        select: factEditSelect,
+      })
+      await tx.auditLog.create({
+        data: {
+          brand: Brand.BBL,
+          action: "belt.fact.updated",
+          entityType: "RankAward",
+          entityId: award.id,
+          userId: context.user.id,
+          before: factSnapshot(award),
+          after: factSnapshot(updated),
+        },
+      })
+    })
+
+    context.revalidate({ paths: REVALIDATE_PATHS })
+    return enrichedCard(award.passportId, award.id)
   })
 
 /**
@@ -355,6 +471,7 @@ const deleteRankAward = beltProcedure
 export const belt = {
   upsertBeltMilestone,
   updateRankAwardFact,
+  updateRankAwardFactAsAdmin,
   attachMilestoneMedia,
   detachMilestoneMedia,
   deleteRankAward,

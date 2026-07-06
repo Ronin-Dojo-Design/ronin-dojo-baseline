@@ -291,14 +291,49 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     expect(lead).not.toBeNull()
   })
 
-  it("DENIES a fact edit on an IMPORTED award (blue, awarded truth → FORBIDDEN)", async () => {
+  // SESSION_0501 ratified policy (fill-blanks): the OWNER may SET a currently-EMPTY
+  // fact on their own award of ANY source — including IMPORTED — but may NEVER
+  // modify a fact that already has a value on an authority-owned award.
+  it("ALLOWS the owner FILLING the EMPTY date on their own IMPORTED award (fill-blanks — SESSION_0501)", async () => {
+    const card = await member().updateRankAwardFact({
+      rankAwardId: fx.blueAwardId,
+      awardedAt: new Date("2020-01-01"),
+    })
+    expect(card.awardedAt?.toISOString().slice(0, 10)).toBe("2020-01-01")
+    // Still authority-owned: never flips into the full-edit (self-backfill) class,
+    // and the date fact is now FILLED → locked for the member.
+    expect(card.isFactEditable).toBe(false)
+    expect(card.factEditability.awardedAt).toBe(false)
+  })
+
+  it("DENIES the owner CHANGING the now-FILLED date on the IMPORTED award (no overwrite → FORBIDDEN)", async () => {
     await expectCode(
       member().updateRankAwardFact({
         rankAwardId: fx.blueAwardId,
-        awardedAt: new Date("2020-01-01"),
+        awardedAt: new Date("2021-12-31"),
       }),
       "FORBIDDEN",
     )
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: fx.blueAwardId },
+      select: { awardedAt: true },
+    })
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2020-01-01")
+  })
+
+  it("ALLOWS the owner filling the EMPTY promoter on the IMPORTED award with a REGISTERED passport (semantics preserved)", async () => {
+    const card = await member().updateRankAwardFact({
+      rankAwardId: fx.blueAwardId,
+      promoter: { awardedByPassportId: fx.otherPassportId },
+    })
+    expect(card.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(card.promoterName).toBe(tag("other-pp"))
+    expect(card.factEditability.promoter).toBe(false) // filled → locked
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: fx.blueAwardId },
+      select: { notes: true },
+    })
+    expect(row.notes).toBeNull()
   })
 
   it("DENIES a fact edit on ANOTHER member's award (ownership → NOT_FOUND)", async () => {
@@ -306,6 +341,199 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
       member().updateRankAwardFact({
         rankAwardId: fx.otherAwardId,
         awardedAt: new Date("2020-01-01"),
+      }),
+      "NOT_FOUND",
+    )
+  })
+})
+
+describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", () => {
+  // Dedicated fixtures: a member whose IMPORTED award has FILLED date + freetext
+  // promoter (school left EMPTY — per-fact granularity target), plus an admin user
+  // deliberately created WITHOUT a Passport (the admin path must not require one).
+  let filledUserId: string
+  let filledPassportId: string
+  let filledAwardId: string
+  let adminUserId: string
+
+  const FILLED_DATE = "2018-04-04"
+
+  beforeAll(async () => {
+    const filledUser = await db.user.create({
+      data: { name: tag("filled"), email: `${tag("filled")}@test.local` },
+    })
+    const filledPassport = await db.passport.create({
+      data: { displayName: tag("filled-pp"), userId: filledUser.id },
+      select: { id: true },
+    })
+    // Brown self-backfill = the ceiling (keeps the IMPORTED blue off the top-award guard).
+    await db.rankAward.create({
+      data: {
+        passportId: filledPassport.id,
+        rankId: fx.brownRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+    })
+    const filledAward = await db.rankAward.create({
+      data: {
+        passportId: filledPassport.id,
+        rankId: fx.blueRankId,
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedAt: new Date(FILLED_DATE),
+        notes: "Prof. Legacy", // FILLED freetext promoter
+        // organizationId + location left null → school EMPTY (fillable)
+      },
+      select: { id: true },
+    })
+    const adminUser = await db.user.create({
+      data: { name: tag("admin"), email: `${tag("admin")}@test.local`, role: "admin" },
+    })
+
+    filledUserId = filledUser.id
+    filledPassportId = filledPassport.id
+    filledAwardId = filledAward.id
+    adminUserId = adminUser.id
+  })
+
+  afterAll(async () => {
+    await db.auditLog.deleteMany({ where: { userId: adminUserId } })
+    await db.rankAward.deleteMany({ where: { passportId: filledPassportId } })
+    await db.passport.deleteMany({ where: { id: filledPassportId } })
+    await db.user.deleteMany({ where: { id: { in: [filledUserId, adminUserId] } } })
+  })
+
+  const filledOwner = () => asMember({ id: filledUserId, role: "user" })
+  const admin = () => asMember({ id: adminUserId, role: "admin" })
+
+  it("(a) DENIES the owner OVERWRITING the FILLED date on an authority-owned award (→ FORBIDDEN)", async () => {
+    await expectCode(
+      filledOwner().updateRankAwardFact({
+        rankAwardId: filledAwardId,
+        awardedAt: new Date("2011-11-11"),
+      }),
+      "FORBIDDEN",
+    )
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: filledAwardId },
+      select: { awardedAt: true },
+    })
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe(FILLED_DATE)
+  })
+
+  it("(a) DENIES the owner OVERWRITING or CLEARING the FILLED promoter (→ FORBIDDEN, value intact)", async () => {
+    await expectCode(
+      filledOwner().updateRankAwardFact({
+        rankAwardId: filledAwardId,
+        promoter: { name: "Impostor Prof" },
+      }),
+      "FORBIDDEN",
+    )
+    // Clearing (explicit null) is a modification too.
+    await expectCode(
+      filledOwner().updateRankAwardFact({ rankAwardId: filledAwardId, promoter: null }),
+      "FORBIDDEN",
+    )
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: filledAwardId },
+      select: { notes: true },
+    })
+    expect(row.notes).toBe("Prof. Legacy")
+  })
+
+  it("(b) ALLOWS the owner filling the still-EMPTY school on the SAME award (per-fact granularity; freetext → lead)", async () => {
+    const schoolName = tag("Fill Blank Academy")
+    const card = await filledOwner().updateRankAwardFact({
+      rankAwardId: filledAwardId,
+      school: { name: schoolName, country: "US" },
+    })
+    expect(card.schoolName).toBe(schoolName)
+    // All three facts now filled on an authority award → fully locked for the member.
+    expect(card.factEditability).toEqual({ awardedAt: false, promoter: false, school: false })
+    expect(card.editabilityReason).toBe("AUTHORITY_LOCKED")
+    // Freetext school semantics preserved on the fill-blanks path: outreach lead emitted.
+    const org = await db.organization.findFirst({
+      where: { name: schoolName, ownerId: null },
+      select: { id: true },
+    })
+    expect(org).not.toBeNull()
+    expect(await db.lead.findFirst({ where: { organizationId: org?.id } })).not.toBeNull()
+  })
+
+  it("(d) DENIES a non-admin invoking the admin path (→ FORBIDDEN, nothing written)", async () => {
+    await expectCode(
+      filledOwner().updateRankAwardFactAsAdmin({
+        rankAwardId: filledAwardId,
+        awardedAt: new Date("2010-10-10"),
+      }),
+      "FORBIDDEN",
+    )
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: filledAwardId },
+      select: { awardedAt: true },
+    })
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe(FILLED_DATE)
+  })
+
+  it("(e) ALLOWS an admin OVERWRITING filled facts on ANOTHER member's IMPORTED award (+ audit row)", async () => {
+    const card = await admin().updateRankAwardFactAsAdmin({
+      rankAwardId: filledAwardId,
+      awardedAt: new Date("2019-03-03"),
+      // (f) registered-promoter semantics preserved on the admin path: FK set, notes nulled.
+      promoter: { awardedByPassportId: fx.otherPassportId },
+    })
+    expect(card.awardedAt?.toISOString().slice(0, 10)).toBe("2019-03-03")
+    expect(card.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(card.promoterName).toBe(tag("other-pp"))
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: filledAwardId },
+      select: { awardedAt: true, awardedByPassportId: true, notes: true },
+    })
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2019-03-03")
+    expect(row.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(row.notes).toBeNull()
+
+    // Established admin-mutation pattern: audit-log the write.
+    const audit = await db.auditLog.findFirst({
+      where: { entityType: "RankAward", entityId: filledAwardId, userId: adminUserId },
+      orderBy: { createdAt: "desc" },
+    })
+    expect(audit).not.toBeNull()
+    expect(audit?.action).toBe("belt.fact.updated")
+  })
+
+  it("(f) admin FREETEXT school overwrite keeps the lead-emitting semantics (same helper, no fork)", async () => {
+    const schoolName = tag("Admin Freetext Academy")
+    const card = await admin().updateRankAwardFactAsAdmin({
+      rankAwardId: filledAwardId,
+      school: { name: schoolName, country: "BR" },
+    })
+    expect(card.schoolName).toBe(schoolName)
+    expect(card.organizationId).toBeNull()
+    const org = await db.organization.findFirst({
+      where: { name: schoolName, ownerId: null },
+      select: { id: true },
+    })
+    expect(org).not.toBeNull()
+    expect(await db.lead.findFirst({ where: { organizationId: org?.id } })).not.toBeNull()
+  })
+
+  it("REJECTS a stale promoter id on the admin path with BAD_REQUEST (same guard as the member path)", async () => {
+    await expectCode(
+      admin().updateRankAwardFactAsAdmin({
+        rankAwardId: filledAwardId,
+        promoter: { awardedByPassportId: "not-a-real-passport-id" },
+      }),
+      "BAD_REQUEST",
+    )
+  })
+
+  it("admin path on a NONEXISTENT award → NOT_FOUND (no raw 500)", async () => {
+    await expectCode(
+      admin().updateRankAwardFactAsAdmin({
+        rankAwardId: "award-does-not-exist",
+        awardedAt: new Date("2019-03-03"),
       }),
       "NOT_FOUND",
     )

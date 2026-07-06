@@ -96,15 +96,21 @@ export const BELT_STATUS_LABEL: Record<BeltCardStatus, string> = {
   completed: "Completed",
 }
 
+/** The card's server-computed per-fact editability matrix (SESSION_0501). */
+export type CardFactEditability = BeltCardOutput["factEditability"]
+
+const NO_FACTS_EDITABLE: CardFactEditability = { awardedAt: false, promoter: false, school: false }
+
 /**
- * Whether the promotion FACT fields (date / promoter / school) are editable for a
- * card. B1 (ADR 0035 Amendment 1): the server computes this authoritatively
- * (`BeltCardOutput.isFactEditable` — true only for a self-added STATED backfill;
- * false for promotion-minted / imported / disputed awards). The client just
- * reflects it. An absent card has no award to edit → `false`.
+ * PER-FACT editability of the promotion facts (date / promoter / school) for a
+ * card — SESSION_0501 fill-blanks policy. The server computes this authoritatively
+ * (`memberFactEditability` in `belt-gate.ts`: a self-added backfill is fully
+ * editable; on an authority-owned award only the EMPTY facts are fillable; a
+ * filled authority fact is locked). The client just reflects it, per field. An
+ * absent card has no award to edit → all locked.
  */
-export function isCardFactEditable(card: BeltCardOutput | null | undefined): boolean {
-  return card?.isFactEditable ?? false
+export function cardFactEditability(card: BeltCardOutput | null | undefined): CardFactEditability {
+  return card?.factEditability ?? NO_FACTS_EDITABLE
 }
 
 /**

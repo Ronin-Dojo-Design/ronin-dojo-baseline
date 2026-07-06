@@ -85,6 +85,75 @@ export function isFactEditable(award: FactEditableAward): boolean {
 }
 
 /**
+ * The award shape PER-FACT editability needs: authorship (the `isFactEditable`
+ * fields) plus the current value of each of the three promotion facts.
+ */
+export type FactValueAward = FactEditableAward & {
+  awardedAt: Date | null
+  awardedByPassportId: string | null
+  /** Freetext promoter (the member-typed name) — `null` when unset. */
+  notes: string | null
+  organizationId: string | null
+  /** Freetext school — `null` when unset. */
+  location: string | null
+}
+
+/** The three promotion facts, as the fact-edit input groups them. */
+export type FactKey = "awardedAt" | "promoter" | "school"
+
+export type PerFactEditability = Record<FactKey, boolean>
+
+/**
+ * WHY the facts are (or aren't) editable — drives the UI copy:
+ * - `SELF_BACKFILL`      — member-authored award: every fact fully editable.
+ * - `AUTHORITY_PARTIAL`  — authority-owned, some facts EMPTY: those are fillable.
+ * - `AUTHORITY_LOCKED`   — authority-owned, every fact filled (or DISPUTED): all locked.
+ */
+export type FactEditabilityReason = "SELF_BACKFILL" | "AUTHORITY_PARTIAL" | "AUTHORITY_LOCKED"
+
+export type FactEditability = { facts: PerFactEditability; reason: FactEditabilityReason }
+
+const isBlank = (value: string | null): boolean => value === null || value.trim() === ""
+
+/**
+ * Per-fact editability for the award OWNER (SESSION_0501 ratified policy — the
+ * fill-blanks amendment to B1):
+ *
+ * - A **self-added STATED backfill** keeps today's FULL editability (unchanged —
+ *   `isFactEditable`): set, overwrite, clear.
+ * - On an **authority-owned** award (promotion-minted / IMPORTED / EARNED) the owner
+ *   may FILL a fact that is currently EMPTY, but may NEVER modify or clear a fact
+ *   that already has a value. "Empty" is per-fact:
+ *     - date:     `awardedAt` is null
+ *     - promoter: no `awardedByPassportId` AND no freetext `notes`
+ *     - school:   no `organizationId` AND no freetext `location`
+ * - **DISPUTED** awards are contested records under review — fully locked for the
+ *   owner (deny-by-default; the ratified policy names IMPORTED/authority-owned, not
+ *   disputed). Admins edit via the admin path, which bypasses this gate entirely.
+ *
+ * Server-authoritative: the router enforces this per requested fact, and the card
+ * output carries the same matrix so the client only renders what the server says.
+ */
+export function memberFactEditability(award: FactValueAward): FactEditability {
+  if (isFactEditable(award)) {
+    return { facts: { awardedAt: true, promoter: true, school: true }, reason: "SELF_BACKFILL" }
+  }
+  if (award.verificationStatus === "DISPUTED") {
+    return {
+      facts: { awardedAt: false, promoter: false, school: false },
+      reason: "AUTHORITY_LOCKED",
+    }
+  }
+  const facts: PerFactEditability = {
+    awardedAt: award.awardedAt === null,
+    promoter: award.awardedByPassportId === null && isBlank(award.notes),
+    school: award.organizationId === null && isBlank(award.location),
+  }
+  const anyEditable = facts.awardedAt || facts.promoter || facts.school
+  return { facts, reason: anyEditable ? "AUTHORITY_PARTIAL" : "AUTHORITY_LOCKED" }
+}
+
+/**
  * Is `rankAwardId` the member's current TOP award in the discipline? Deleting it
  * would drop the ceiling (a backdoor demotion of the whole journey), so the top
  * award is undeletable via self-service (Locked #5). Compares against the same

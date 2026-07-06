@@ -95,7 +95,9 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
     await expect(dialog.getByRole("button", { name: "Submit request" })).toBeVisible()
   })
 
-  test("a verified belt's promotion facts are read-only (Blue, top award)", async ({ page }) => {
+  test("a verified belt's FILLED facts are read-only, its EMPTY facts fillable (Blue, top award)", async ({
+    page,
+  }) => {
     const blue = cardForRank(page, fixture.blueRankId)
     await expect(blue).toBeVisible()
     // Verified but unlocked → still openable (the milestone story is always editable).
@@ -103,11 +105,18 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
 
     const dialog = page.getByRole("dialog")
     await expect(dialog).toBeVisible({ timeout: 15_000 })
-    // The FACT fields collapse to a read-only note; there is no editable date input
-    // and the verified hint is shown.
-    await expect(dialog.getByText(/verified and can no longer be edited/i)).toBeVisible()
+    // SESSION_0501 fill-blanks policy, per fact: the FILLED authority facts (date +
+    // promoter, seeded on the fixture) collapse to read-only notes — no date input —
+    // and the partial-lock hint names the authority.
+    await expect(dialog.getByText(/recorded by an instructor or admin are locked/i)).toBeVisible()
     await expect(dialog.locator('input[type="date"]')).toHaveCount(0)
-    // But the story textarea is present (milestone is always member-editable).
+    await expect(dialog.getByText("Prof. Fixture")).toBeVisible()
+    // …while the EMPTY school fact exposes a fill affordance (the combobox trigger —
+    // a `role="combobox"` Button whose accessible name is the placeholder when empty).
+    await expect(
+      dialog.getByRole("combobox", { name: /select or type your school/i }),
+    ).toBeVisible()
+    // And the story textarea is present (milestone is always member-editable).
     await expect(dialog.getByLabel("Your story")).toBeVisible()
   })
 

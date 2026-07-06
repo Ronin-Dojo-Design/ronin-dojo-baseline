@@ -115,8 +115,10 @@ async function seed(): Promise<BeltJourneyFixture> {
 
   // Blue belt — promotion-minted VERIFIED: the member's TOP award → the ceiling.
   // Stamped with the approving instructor's `awardedById` (mirrors `mintAssertedRankAward`),
-  // so `isFactEditable` reads it as authority-owned → read-only; it also cannot be
-  // deleted via self-service.
+  // so it is authority-owned; it also cannot be deleted via self-service.
+  // SESSION_0501 fill-blanks shape: date + freetext promoter FILLED (→ locked,
+  // read-only notes), school left EMPTY (→ the owner's fill affordance) — so the
+  // spec proves BOTH sides of the per-fact policy on one card.
   const blueAward = await prisma.rankAward.create({
     data: {
       passportId,
@@ -124,6 +126,8 @@ async function seed(): Promise<BeltJourneyFixture> {
       source: "STATED",
       verificationStatus: "VERIFIED",
       awardedById: instructor.id,
+      awardedAt: new Date("2023-05-10"),
+      notes: "Prof. Fixture",
     },
     select: { id: true },
   })

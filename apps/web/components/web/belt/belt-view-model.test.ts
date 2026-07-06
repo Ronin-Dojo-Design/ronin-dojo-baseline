@@ -5,8 +5,8 @@ import {
   beltDateLabel,
   type BeltRankViewModel,
   canRequestPromotion,
+  cardFactEditability,
   deriveBeltStatus,
-  isCardFactEditable,
   isRankLocked,
   isWhiteBelt,
 } from "./belt-view-model"
@@ -27,6 +27,8 @@ function card(over: Partial<BeltCardOutput> = {}): BeltCardOutput {
     colorHex: null,
     verificationStatus: "VERIFIED",
     isFactEditable: true,
+    factEditability: { awardedAt: true, promoter: true, school: true },
+    editabilityReason: "SELF_BACKFILL",
     awardedAt: null,
     promoterName: null,
     awardedByPassportId: null,
@@ -102,16 +104,15 @@ describe("deriveBeltStatus", () => {
   })
 })
 
-describe("isCardFactEditable (reflects the server's authoritative flag, B1)", () => {
-  it("is editable when the card's server-computed isFactEditable is true", () => {
-    expect(isCardFactEditable(card({ isFactEditable: true }))).toBe(true)
+describe("cardFactEditability (reflects the server's per-fact matrix, SESSION_0501)", () => {
+  it("passes the server-computed matrix through untouched", () => {
+    const facts = { awardedAt: false, promoter: true, school: false }
+    expect(cardFactEditability(card({ factEditability: facts }))).toEqual(facts)
   })
-  it("is read-only when the card's isFactEditable is false (promotion-minted / imported)", () => {
-    expect(isCardFactEditable(card({ isFactEditable: false }))).toBe(false)
-  })
-  it("is read-only for an absent card (no award to edit)", () => {
-    expect(isCardFactEditable(null)).toBe(false)
-    expect(isCardFactEditable(undefined)).toBe(false)
+  it("locks every fact for an absent card (no award to edit)", () => {
+    const locked = { awardedAt: false, promoter: false, school: false }
+    expect(cardFactEditability(null)).toEqual(locked)
+    expect(cardFactEditability(undefined)).toEqual(locked)
   })
 })
 

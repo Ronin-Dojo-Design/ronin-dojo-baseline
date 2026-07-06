@@ -22,7 +22,7 @@ import {
   beltDateLabel,
   type BeltCardMedia,
   type BeltRankViewModel,
-  isCardFactEditable,
+  cardFactEditability,
   isWhiteBelt,
 } from "./belt-view-model"
 import { CountrySelect } from "./country-select"
@@ -31,12 +31,14 @@ import { CountrySelect } from "./country-select"
  * The belt-journey EDIT SURFACE (Slice 4 — Petey Plan 0477 §Slice 4), opened from
  * an unlocked `BeltEditCard`. Two field groups:
  *
- * - FACT fields (date, promoter, school, country) — editable ONLY for a self-added
- *   backfill (`card.isFactEditable`, B1); a promotion-minted / imported award is
- *   authority-owned → rendered read-only with a "verified" note. Promoter + school
- *   are the resolve-or-create `CreatableCombobox`
- *   (a registered pick stores its ref id; freetext stores text → the oRPC turns a
- *   freetext school into a school-lead). Wired to `client.belt.updateRankAwardFact`.
+ * - FACT fields (date, promoter, school, country) — PER-FACT editability
+ *   (`card.factEditability`, SESSION_0501 fill-blanks policy): a self-added backfill
+ *   is fully editable; on an authority-owned (promotion-minted / imported) award an
+ *   EMPTY fact renders an input the owner may fill once, while a FILLED authority
+ *   fact renders a read-only note. Promoter + school are the resolve-or-create
+ *   `CreatableCombobox` (a registered pick stores its ref id; freetext stores text →
+ *   the oRPC turns a freetext school into a school-lead). Wired to
+ *   `client.belt.updateRankAwardFact`, which only receives the editable facts.
  * - MILESTONE fields (story + the 4 media galleries) — ALWAYS editable (member-owned).
  *   Story wires to `client.belt.upsertBeltMilestone`; media to the galleries.
  *
@@ -86,7 +88,10 @@ export function BeltEditForm({
 }) {
   const card = vm.card
   const white = isWhiteBelt(vm.rank.sortOrder, minSortOrder)
-  const factEditable = isCardFactEditable(card)
+  // Per-fact editability (SESSION_0501): the server computes the matrix; the form
+  // renders an input per editable fact and a read-only note per locked one.
+  const facts = cardFactEditability(card)
+  const anyFactEditable = facts.awardedAt || facts.promoter || facts.school
 
   const [story, setStory] = useState(card?.milestone?.story ?? "")
   const [awardedAt, setAwardedAt] = useState(toDateInputValue(card?.awardedAt ?? null))
@@ -147,19 +152,23 @@ export function BeltEditForm({
     }
     setIsSaving(true)
     try {
+      // Send ONLY the editable facts (undefined leaves a column untouched) — a
+      // locked authority fact in the payload would FORBIDDEN the whole save.
       const next = await client.belt.updateRankAwardFact({
         rankAwardId: card.rankAwardId,
-        awardedAt: awardedAt ? new Date(awardedAt) : null,
-        promoter: white
-          ? undefined
-          : promoter.id
-            ? { awardedByPassportId: promoter.id }
-            : { name: promoter.label || null },
-        school: white
-          ? undefined
-          : school.id
-            ? { organizationId: school.id }
-            : { name: school.label || null, country: country || null },
+        awardedAt: facts.awardedAt ? (awardedAt ? new Date(awardedAt) : null) : undefined,
+        promoter:
+          white || !facts.promoter
+            ? undefined
+            : promoter.id
+              ? { awardedByPassportId: promoter.id }
+              : { name: promoter.label || null },
+        school:
+          white || !facts.school
+            ? undefined
+            : school.id
+              ? { organizationId: school.id }
+              : { name: school.label || null, country: country || null },
       })
       onSaved?.(next)
       toast.success("Belt details saved.")
@@ -182,14 +191,13 @@ export function BeltEditForm({
         <DialogTitle>{vm.rank.name}</DialogTitle>
       </DialogHeader>
 
-      {/* FACT fields — editable only for a self-added backfill (fact-editable, `factEditable`).
-          B1 (ADR 0035 Amendment 1): there are no UNVERIFIED awards — a self-backfill is
-          VERIFIED-by-implication; a promotion-minted / imported / disputed award is
-          authority-owned and its facts render read-only. */}
+      {/* FACT fields — PER-FACT editability (SESSION_0501 fill-blanks policy): a
+          self-added backfill is fully editable; on an authority-owned award an EMPTY
+          fact renders an input the owner may fill, a FILLED one a read-only note. */}
       <Stack direction="column" size="md" className="w-full">
         <div className="w-full">
           <Label htmlFor="belt-awarded-at">{beltDateLabel(white)}</Label>
-          {factEditable ? (
+          {facts.awardedAt ? (
             <Input
               id="belt-awarded-at"
               type="date"
@@ -206,7 +214,7 @@ export function BeltEditForm({
           <>
             <div className="w-full">
               <Label>Who promoted you?</Label>
-              {factEditable ? (
+              {facts.promoter ? (
                 <CreatableCombobox
                   options={promoterOptions}
                   value={promoter}
@@ -221,7 +229,7 @@ export function BeltEditForm({
 
             <div className="w-full">
               <Label>School / academy</Label>
-              {factEditable ? (
+              {facts.school ? (
                 <CreatableCombobox
                   options={schoolOptions}
                   value={school}
@@ -234,7 +242,7 @@ export function BeltEditForm({
               )}
             </div>
 
-            {factEditable && (
+            {facts.school && (
               <div className="w-full">
                 <Label>Country</Label>
                 <CountrySelect value={country} onValueChange={setCountry} />
@@ -243,9 +251,15 @@ export function BeltEditForm({
           </>
         )}
 
-        {!factEditable && card && (
+        {card?.editabilityReason === "AUTHORITY_LOCKED" && (
           <Note className="text-xs">
-            These belt facts are verified and can no longer be edited here.
+            These belt facts were recorded by an instructor or admin and are locked.
+          </Note>
+        )}
+        {card?.editabilityReason === "AUTHORITY_PARTIAL" && (
+          <Note className="text-xs">
+            Facts recorded by an instructor or admin are locked — you can add the ones still
+            missing.
           </Note>
         )}
       </Stack>
@@ -290,7 +304,7 @@ export function BeltEditForm({
           Close
         </Button>
         <Stack size="sm">
-          {!white && card && factEditable && (
+          {!white && card && anyFactEditable && (
             <Button type="button" variant="secondary" isPending={isSaving} onClick={saveFact}>
               Save belt details
             </Button>

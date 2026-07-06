@@ -13,10 +13,12 @@ import { describe, expect, it } from "bun:test"
 import type { RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import {
   ceilingSortOrder,
+  type FactValueAward,
   type GateAward,
   isFactEditable,
   isTopAward,
   isWithinCeiling,
+  memberFactEditability,
 } from "~/server/belt/belt-gate"
 
 const BJJ = "disc-bjj"
@@ -113,6 +115,87 @@ describe("isFactEditable (B1) — only a self-added STATED backfill is editable"
     expect(
       isFactEditable({ source: "EARNED", verificationStatus: "VERIFIED", awardedById: null }),
     ).toBe(false)
+  })
+})
+
+describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the owner", () => {
+  /** An authority-owned (IMPORTED) award with every fact empty, overridable per test. */
+  const imported = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
+    source: "STATED",
+    verificationStatus: "IMPORTED",
+    awardedById: null,
+    awardedAt: null,
+    awardedByPassportId: null,
+    notes: null,
+    organizationId: null,
+    location: null,
+    ...overrides,
+  })
+
+  it("a self-added backfill keeps FULL editability (unchanged B1)", () => {
+    const result = memberFactEditability(
+      imported({
+        verificationStatus: "VERIFIED",
+        // even with every fact FILLED — the member authored it, so overwrite is fine
+        awardedAt: new Date("2020-01-01"),
+        notes: "Prof. Freetext",
+        location: "Some Academy",
+      }),
+    )
+    expect(result.reason).toBe("SELF_BACKFILL")
+    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
+  })
+
+  it("an authority award with EVERY fact empty is fully fillable (AUTHORITY_PARTIAL)", () => {
+    const result = memberFactEditability(imported())
+    expect(result.reason).toBe("AUTHORITY_PARTIAL")
+    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
+  })
+
+  it("a FILLED fact locks — per fact, not per card (date filled, others still fillable)", () => {
+    const result = memberFactEditability(imported({ awardedAt: new Date("2019-06-01") }))
+    expect(result.reason).toBe("AUTHORITY_PARTIAL")
+    expect(result.facts).toEqual({ awardedAt: false, promoter: true, school: true })
+  })
+
+  it("promoter counts as filled via EITHER the Passport FK or freetext notes", () => {
+    expect(memberFactEditability(imported({ awardedByPassportId: "pp-1" })).facts.promoter).toBe(
+      false,
+    )
+    expect(memberFactEditability(imported({ notes: "Prof. Freetext" })).facts.promoter).toBe(false)
+    // whitespace-only freetext is NOT a value
+    expect(memberFactEditability(imported({ notes: "   " })).facts.promoter).toBe(true)
+  })
+
+  it("school counts as filled via EITHER the Organization FK or freetext location", () => {
+    expect(memberFactEditability(imported({ organizationId: "org-1" })).facts.school).toBe(false)
+    expect(memberFactEditability(imported({ location: "Some Academy" })).facts.school).toBe(false)
+  })
+
+  it("every fact filled → AUTHORITY_LOCKED (nothing left for the owner)", () => {
+    const result = memberFactEditability(
+      imported({
+        awardedAt: new Date("2019-06-01"),
+        awardedByPassportId: "pp-1",
+        organizationId: "org-1",
+      }),
+    )
+    expect(result.reason).toBe("AUTHORITY_LOCKED")
+    expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
+  })
+
+  it("a promotion-minted award (awardedById stamped) gets the same fill-blanks treatment", () => {
+    const result = memberFactEditability(
+      imported({ verificationStatus: "VERIFIED", awardedById: "u-approver" }),
+    )
+    expect(result.reason).toBe("AUTHORITY_PARTIAL")
+    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
+  })
+
+  it("DISPUTED is fully locked for the owner even with empty facts (deny-by-default)", () => {
+    const result = memberFactEditability(imported({ verificationStatus: "DISPUTED" }))
+    expect(result.reason).toBe("AUTHORITY_LOCKED")
+    expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })
 })
 

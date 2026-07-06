@@ -55,6 +55,8 @@ export const updateRankAwardFactInput = z.object({
     .nullish(),
 })
 
+export type UpdateRankAwardFactInput = z.infer<typeof updateRankAwardFactInput>
+
 export const attachMilestoneMediaInput = z.object({
   rankMilestoneId: cuid,
   mediaId: cuid,
@@ -88,6 +90,19 @@ const beltCardOutput = z.object({
    * imported / disputed awards (authority-owned). The card renders read-only when false.
    */
   isFactEditable: z.boolean(),
+  /**
+   * PER-FACT editability for the award owner (SESSION_0501 fill-blanks policy —
+   * `memberFactEditability` in `belt-gate.ts`). On an authority-owned award an
+   * EMPTY fact is fillable by the owner; a FILLED one is locked. Server-computed;
+   * the edit form renders an input per true flag, a read-only note per false one.
+   */
+  factEditability: z.object({
+    awardedAt: z.boolean(),
+    promoter: z.boolean(),
+    school: z.boolean(),
+  }),
+  /** Why — `SELF_BACKFILL` (full edit) / `AUTHORITY_PARTIAL` (fill blanks) / `AUTHORITY_LOCKED`. */
+  editabilityReason: z.enum(["SELF_BACKFILL", "AUTHORITY_PARTIAL", "AUTHORITY_LOCKED"]),
   awardedAt: z.coerce.date().nullable(),
   promoterName: z.string().nullable(),
   awardedByPassportId: z.string().nullable(),
