@@ -37,9 +37,17 @@ export const generateMetadata = async (): Promise<Metadata> => {
     },
     description: brandConfig.description,
     icons: {
+      // Browser tab: the crest (config/site.ts faviconSrc), DB-overridable.
       icon: [{ type: "image/png", url: faviconUrl }],
-      // iOS home-screen icon (apple-touch-icon) — same DB-resolved brand favicon.
-      apple: [{ type: "image/png", url: faviconUrl }],
+      // iOS home-screen (apple-touch-icon): the Route A logo tile, matching the
+      // PWA install icon — legible at 180px where the crest's arced text isn't.
+      apple: [
+        {
+          type: "image/png",
+          sizes: "180x180",
+          url: resolvePublicMediaUrl("/images/brands/black-belt-legacy/apple-touch-icon.png"),
+        },
+      ],
     },
     // Installable-PWA surface: the static manifest route (app/manifest.ts) +
     // the Apple web-app meta iOS needs for standalone add-to-home-screen.

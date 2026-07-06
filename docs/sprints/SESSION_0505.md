@@ -149,6 +149,7 @@ Sequential (01 → 02 → 03); single coherent lane, no fan-out.
 | SESSION_0505_TASK_01 | landed | Route A sources authored: `pwa-icon.svg` (any) + `pwa-icon-maskable.svg` (maskable), official `logo.png` on soft-white `#f7f7f5` tile |
 | SESSION_0505_TASK_02 | landed | Rasterized to `icon-192/512.png` (any) + `icon-maskable-512.png` via native `qlmanage` (browser MCPs locked by siblings) |
 | SESSION_0505_TASK_03 | landed | `manifest.ts` icons[] repointed (3 icons, any×2 + maskable); route resolves all srcs; gates green |
+| SESSION_0505_TASK_04 | landed | Favicon + apple-touch parity: tab favicon = circular crest (legible at 32px); iOS/apple-touch = Route A tile @180. Fixed generic-template-favicon wiring |
 
 ## What landed
 
@@ -165,6 +166,14 @@ Sequential (01 → 02 → 03); single coherent lane, no fan-out.
   referencing `./logo.png` — edit + re-rasterize to change.
 - `manifest.ts` `icons[]` + docstring updated; placeholder files left in place
   (still used elsewhere), just no longer referenced by the manifest.
+- **Favicon + apple-touch parity (TASK_04, follow-up):** the browser tab was
+  resolving to the generic Dirstarter template `favicon.png` (BBL
+  `brandSettings.faviconUrl` is null in prodsnap → static `faviconSrc` fallback).
+  Fixed by pointing `faviconSrc` at the **circular BBL crest** (`crest.png`,
+  preserved from the old `app/icon.png` — reads as a badge at 16–32px where the
+  logo lockup smears) and splitting `apple` in `layout.tsx` to a dedicated
+  **Route A apple-touch icon** (`apple-touch-icon.png`, 180×180, matches the PWA
+  install icon). Removed the now-redundant file-convention `app/icon.png`.
 
 ## Decisions resolved
 
@@ -188,6 +197,11 @@ Sequential (01 → 02 → 03); single coherent lane, no fan-out.
 | `apps/web/public/images/brands/black-belt-legacy/icon-maskable-512.png` | new — 512 maskable |
 | `apps/web/public/images/brands/black-belt-legacy/pwa-icon.svg` | new — any source |
 | `apps/web/public/images/brands/black-belt-legacy/pwa-icon-maskable.svg` | new — maskable source |
+| `apps/web/public/images/brands/black-belt-legacy/crest.png` | new — circular crest preserved as tab favicon (was only `app/icon.png`) |
+| `apps/web/public/images/brands/black-belt-legacy/apple-touch-icon.png` | new — 180×180 Route A apple-touch (iOS home) |
+| `apps/web/app/icon.png` | removed — redundant file-convention (crest now via metadata + `crest.png`) |
+| `apps/web/config/site.ts` | `faviconSrc` → `crest.png` (tab favicon = crest) |
+| `apps/web/app/layout.tsx` | split `apple` icon → dedicated Route A apple-touch @180 |
 | `docs/sprints/SESSION_0505.md` | this session record |
 
 ## Verification

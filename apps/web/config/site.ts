@@ -31,7 +31,10 @@ const bblConfig: Pick<
   description:
     "Preserving martial arts heritage through lineage tracking, curriculum, and certifications.",
   logoSrc: "/brand/blackbeltlegacy/bbl-logo-white.png",
-  faviconSrc: "/images/brands/black-belt-legacy/favicon.png",
+  // Browser-tab favicon: the circular BBL crest — reads as a distinct badge at
+  // 16–32px, where the horizontal logo lockup is an illegible smear. The apple-
+  // touch + PWA install icons use the Route A logo tile instead (legible at 180px+).
+  faviconSrc: "/images/brands/black-belt-legacy/crest.png",
   ogImageSrc: "/images/brands/black-belt-legacy/opengraph.png",
 }
 
