@@ -10,8 +10,11 @@ import type { MetadataRoute } from "next"
  *  - theme/background: the BBL always-dark chrome — app/styles.css
  *    `[data-brand="BBL"] --color-chrome: hsl(0 0% 4%)` = #0a0a0a (the red
  *    #E52421 is the CTA accent, not the shell color).
- *  - icons: closest existing square assets. Purpose-built 192/512 (+maskable)
- *    BBL app icons are a known follow-up — do NOT treat these as final.
+ *  - icons: purpose-built BBL app icons derived from the official logo lockup
+ *    (`images/brands/black-belt-legacy/logo.png`) centered on a soft-white
+ *    tile. SVG sources are `pwa-icon.svg` (any) / `pwa-icon-maskable.svg`
+ *    (maskable — logo held inside the ~80% safe zone); rasterized to
+ *    `icon-192.png` / `icon-512.png` (any) + `icon-maskable-512.png`.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -26,14 +29,22 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#0a0a0a",
     icons: [
       {
-        src: "/images/brands/black-belt-legacy/favicon.png",
-        sizes: "256x256",
+        src: "/images/brands/black-belt-legacy/icon-192.png",
+        sizes: "192x192",
         type: "image/png",
+        purpose: "any",
       },
       {
-        src: "/brand/bbl/default-black-belt.png",
+        src: "/images/brands/black-belt-legacy/icon-512.png",
         sizes: "512x512",
         type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/images/brands/black-belt-legacy/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
   }
