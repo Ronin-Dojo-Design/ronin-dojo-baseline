@@ -32,6 +32,31 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // SESSION_0508 P0: baselinemartialarts.com is a leftover domain alias of this
+      // deployment (single-brand collapse, ADR 0034) — it served the ENTIRE BBL app,
+      // so join-form magic links minted off the request host stranded real signups
+      // (sessions + links) on the Baseline domain. Canonicalize every page view to
+      // blackbeltlegacy.com. `/api` is deliberately excluded: Baseline live-mode
+      // Stripe webhooks may still target this host, and webhook POSTs don't follow
+      // redirects.
+      //
+      // TEMPORARY (307), not permanent (308): the portfolio model (ADR 0034/0040)
+      // reserves baselinemartialarts.com as a possible future standalone Baseline
+      // product. A 308 hard-caches in browsers and would strand that future deploy;
+      // 307 stops the leak identically while staying trivially reversible. Promote to
+      // permanent only once the domain's fate is settled.
+      {
+        source: "/:path((?!api/).*)",
+        has: [{ type: "host", value: "baselinemartialarts.com" }],
+        destination: "https://blackbeltlegacy.com/:path",
+        permanent: false,
+      },
+      {
+        source: "/:path((?!api/).*)",
+        has: [{ type: "host", value: "www.baselinemartialarts.com" }],
+        destination: "https://blackbeltlegacy.com/:path",
+        permanent: false,
+      },
       ...buildMigratedAdminAppRedirects(),
       ...buildMigratedDashboardAppRedirects(),
       {

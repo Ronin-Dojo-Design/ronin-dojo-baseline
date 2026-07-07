@@ -431,7 +431,17 @@ export const createJoinLegacyInterest = publicActionClient
     const claimMember =
       claimTree && parsedInput.nodeId
         ? await db.lineageTreeMember.findFirst({
-            where: { treeId: claimTree.id, nodeId: parsedInput.nodeId, isClaimable: true },
+            // `passport.userId: null` — a node whose passport already belongs to an
+            // account is NOT claimable by someone else. Without this, students who
+            // arrived via their instructor's ?node= link were emailed "Claim your
+            // profile — <instructor>" for an already-claimed node (SESSION_0508 P0:
+            // Tony Hua's students). Finalize always refused; now the offer does too.
+            where: {
+              treeId: claimTree.id,
+              nodeId: parsedInput.nodeId,
+              isClaimable: true,
+              node: { passport: { userId: null } },
+            },
             select: {
               id: true,
               // Cohort drives the comp term in the email copy (lifetime vs 1yr) — read off the
@@ -563,7 +573,10 @@ export const createJoinLegacyInterest = publicActionClient
         data: {
           name: `${fullName} Legacy Profile`,
           slug: toolSlug,
-          websiteUrl: profileUrl ?? `https://blackbeltlegacy.com/people/${toolSlug}`,
+          // No fabricated deep link: /people/<slug> never existed (404 — SESSION_0508).
+          // Until steward approval creates a real profile, the honest fallback is the
+          // directory surface the person will eventually appear on.
+          websiteUrl: profileUrl ?? "https://blackbeltlegacy.com/directory",
           tagline: rankSummary ?? "Black Belt Legacy profile submission",
           description:
             bio ?? `Lineage profile intake submitted through Join the Legacy for ${fullName}.`,

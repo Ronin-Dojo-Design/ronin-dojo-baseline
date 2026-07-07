@@ -28,14 +28,23 @@ const getData = cache(async (nodeId?: string) => {
         // When arriving with a specific ?node= (a claim link), resolve the tree
         // that actually CONTAINS that node — don't assume it's the most-recently
         // -updated claimable tree, or the node silently fails to preselect.
-        members: { some: { isClaimable: true, ...(constrainNode && nodeId ? { nodeId } : {}) } },
+        // `passport.userId: null`: an already-claimed node must not preselect or
+        // appear in the "find yourself" list (SESSION_0508 P0 — Tony Hua's students
+        // were offered HIS claimed profile as themselves).
+        members: {
+          some: {
+            isClaimable: true,
+            node: { passport: { userId: null } },
+            ...(constrainNode && nodeId ? { nodeId } : {}),
+          },
+        },
       },
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,
         name: true,
         members: {
-          where: { isClaimable: true },
+          where: { isClaimable: true, node: { passport: { userId: null } } },
           orderBy: { visualSortOrder: "asc" },
           select: {
             nodeId: true,

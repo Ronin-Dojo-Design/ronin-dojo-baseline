@@ -61,8 +61,15 @@ async function persistPendingClaimBinding(email: string, nextPath: string): Prom
   if (!nodeId) return
 
   // Resolve the brand off the node's published, claimable tree (matches the claim's own scoping).
+  // `passport.userId: null` — never bind a pending claim to a node someone already owns
+  // (SESSION_0508 P0: students claim-bound to their instructor's claimed node).
   const member = await db.lineageTreeMember.findFirst({
-    where: { nodeId, isClaimable: true, tree: { isPublished: true, isClaimable: true } },
+    where: {
+      nodeId,
+      isClaimable: true,
+      node: { passport: { userId: null } },
+      tree: { isPublished: true, isClaimable: true },
+    },
     select: { tree: { select: { brand: true } } },
   })
   if (!member) return
