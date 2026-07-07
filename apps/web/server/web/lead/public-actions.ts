@@ -4,7 +4,7 @@ import { fileTypeFromBuffer } from "file-type"
 import { headers } from "next/headers"
 import { after } from "next/server"
 import { z } from "zod"
-import { Brand, type Prisma, ToolStatus } from "~/.generated/prisma/client"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getRequestOrigin } from "~/lib/brand-context"
 import { COUNTRIES, getCountryLabel } from "~/lib/countries"
@@ -20,7 +20,7 @@ import {
   notifyUserOfBblJoinLegacy,
 } from "~/lib/notifications"
 import { publicActionClient } from "~/lib/safe-actions"
-import { createSlugTakenCheck, generateUniqueSlug } from "~/lib/slug"
+import { autoPlaceSignupOnLineage } from "~/server/admin/lineage/place-lead-core"
 import {
   SUBMIT_PASSPORT_CLAIM_ERROR,
   submitPassportClaim,
@@ -558,36 +558,11 @@ export const createJoinLegacyInterest = publicActionClient
       })
     }
 
-    // Claiming an EXISTING placeholder node should not spawn a second pending
-    // "Legacy Profile" Tool — that's a duplicate identity an admin would have to
-    // reconcile. Only the pure-lead path (no node, or an invalid/non-claimable
-    // node) creates the Tool. (#4)
-    let tool: { id: string; slug: string } | null = null
-    if (!isClaimOfExistingNode) {
-      const toolSlug = await generateUniqueSlug({
-        source: `${fullName} legacy profile`,
-        isSlugTaken: createSlugTakenCheck(db.tool),
-      })
-
-      tool = await db.tool.create({
-        data: {
-          name: `${fullName} Legacy Profile`,
-          slug: toolSlug,
-          // No fabricated deep link: /people/<slug> never existed (404 — SESSION_0508).
-          // Until steward approval creates a real profile, the honest fallback is the
-          // directory surface the person will eventually appear on.
-          websiteUrl: profileUrl ?? "https://blackbeltlegacy.com/directory",
-          tagline: rankSummary ?? "Black Belt Legacy profile submission",
-          description:
-            bio ?? `Lineage profile intake submitted through Join the Legacy for ${fullName}.`,
-          submitterName: fullName,
-          submitterEmail: parsedInput.email.trim().toLowerCase(),
-          submitterNote: notes || null,
-          status: ToolStatus.Pending,
-        },
-        select: { id: true, slug: true },
-      })
-    }
+    // SESSION_0508 (FI-003): a NEW signup no longer spawns a pending "Legacy Profile" Tool.
+    // Auto-placement (`autoPlaceSignupOnLineage`, below) now files the person on the canonical
+    // lineage tree at submit time — the placeholder Tool was a DUPLICATE identity an admin would
+    // have had to reconcile. The Lead (CRM record) remains the intake; Tools stay reserved for
+    // real tool/listing submissions (`/app/tools`), not signup misuse.
 
     let claimCreated = false
     if (
@@ -640,7 +615,6 @@ export const createJoinLegacyInterest = publicActionClient
           ...(lead.meta && typeof lead.meta === "object" && !Array.isArray(lead.meta)
             ? lead.meta
             : {}),
-          toolSlug: tool?.slug ?? null,
           claimCreated,
         } satisfies Prisma.InputJsonObject,
       },
@@ -673,6 +647,22 @@ export const createJoinLegacyInterest = publicActionClient
     const isGuestPaidSubmission = membershipPath !== "FREE" && !session?.user?.id
 
     after(async () => {
+      // FI-003 auto-placement — a NEW person (not a claim of an existing node) who named a registered
+      // instructor is placed on the canonical lineage tree UNDER that instructor at submit time:
+      // Unverified, NOT claimable, bound to their account (or an accountless placeholder that attaches
+      // on sign-in — never a claim). Membership is automatic (ADR 0035 / SESSION_0474), not gated behind
+      // an approval. Reuses the SAME placement core as the manual steward control; best-effort +
+      // idempotent — the core swallows/logs any failure so a placement error never loses the lead or
+      // account, and only places when the instructor resolves to a canonical member (else the steward
+      // handles it via the manual "Place on lineage tree" control).
+      if (!isClaimOfExistingNode && trainedUnderNodeId) {
+        await autoPlaceSignupOnLineage(db, {
+          leadId: lead.id,
+          sessionUserId: session?.user?.id ?? null,
+          brand: Brand.BBL,
+        })
+      }
+
       await dispatchJoinLegacyNotifications({
         email,
         firstName,
@@ -703,13 +693,12 @@ export const createJoinLegacyInterest = publicActionClient
 
       revalidate({
         paths: ["/app/leads", "/lineage/join"],
-        tags: ["leads", "tools", `lead-${lead.id}`],
+        tags: ["leads", `lead-${lead.id}`],
       })
     })
 
     return {
       leadId: lead.id,
-      toolSlug: tool?.slug ?? null,
       checkoutUrl,
       claimCreated,
       // Guest paid submission → a checkout magic link was emailed instead of an immediate

@@ -30,6 +30,12 @@ export const toggleLineageTreeMemberClaimabilitySchema = z.object({
   isClaimable: z.boolean(),
 })
 
+export const placeLeadOnLineageSchema = z.object({
+  leadId: z.string().min(1),
+})
+
+export type PlaceLeadOnLineageSchema = z.infer<typeof placeLeadOnLineageSchema>
+
 export type ToggleLineageTreeClaimabilitySchema = z.infer<
   typeof toggleLineageTreeClaimabilitySchema
 >

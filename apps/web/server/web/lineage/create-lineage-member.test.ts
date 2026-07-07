@@ -4,8 +4,10 @@
  * Run: cd apps/web && bun test server/web/lineage/create-lineage-member.test.ts
  *
  * Integration test against the local DB; fixtures are tagged + torn down. Verifies that placing a
- * person creates a LineageNode + LineageTreeMember (visual parent) and the canonical PROMOTED_BY
- * LineageRelationship referencing the stated award (ADR 0016), and enforces the guards.
+ * person under a parent creates a LineageNode + LineageTreeMember, the canonical INSTRUCTOR_STUDENT
+ * "listed under" tree-placement edge (parent → member, what the canvas/timeline walk), and — when a
+ * rankAwardId is supplied — a SEPARATE optional PROMOTED_BY edge carrying that award (ADR 0016).
+ * Both edge writes are idempotent (SESSION_0508), and the guards are enforced.
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
@@ -116,7 +118,7 @@ afterAll(async () => {
 })
 
 describe("createLineageMember", () => {
-  it("places a person under a parent: member (visual parent) + PROMOTED_BY edge carrying the rank award", async () => {
+  it("places a person under a parent: member (visual parent) + INSTRUCTOR_STUDENT tree edge + separate PROMOTED_BY edge carrying the rank award", async () => {
     const result = await createLineageMember({
       db,
       brand: TEST_BRAND,
@@ -129,6 +131,7 @@ describe("createLineageMember", () => {
 
     expect(result.memberId).toBeTruthy()
     expect(result.relationshipId).toBeTruthy()
+    expect(result.trainedUnderRelationshipId).toBeTruthy()
 
     const member = await db.lineageTreeMember.findUnique({
       where: { id: result.memberId },
@@ -137,7 +140,21 @@ describe("createLineageMember", () => {
     expect(member?.treeId).toBe(fx.treeId)
     expect(member?.primaryVisualParentMemberId).toBe(fx.parentMemberId)
 
-    // The rank award rides the PROMOTED_BY edge (ADR 0016), not the member row (ADR 0035).
+    // SESSION_0508: the TREE-PLACEMENT edge is INSTRUCTOR_STUDENT (parent → member) — this is what
+    // the canvas + ancestry timeline walk. Exactly one such edge exists for (parent, member).
+    const trainedUnderEdges = await db.lineageRelationship.findMany({
+      where: {
+        type: "INSTRUCTOR_STUDENT",
+        fromNodeId: fx.parentNodeId,
+        toNodeId: member?.nodeId,
+      },
+      select: { id: true },
+    })
+    expect(trainedUnderEdges).toHaveLength(1)
+    expect(trainedUnderEdges[0]?.id).toBe(result.trainedUnderRelationshipId)
+
+    // The rank award rides a SEPARATE, OPTIONAL PROMOTED_BY edge (ADR 0016), not the member row
+    // (ADR 0035) and not the tree structure.
     const relationship = await db.lineageRelationship.findUnique({
       where: { id: result.relationshipId as string },
       select: { type: true, fromNodeId: true, toNodeId: true, rankAwardId: true },
@@ -146,6 +163,95 @@ describe("createLineageMember", () => {
     expect(relationship?.fromNodeId).toBe(fx.parentNodeId)
     expect(relationship?.toNodeId).toBe(member?.nodeId)
     expect(relationship?.rankAwardId).toBe(fx.childRankAwardId)
+  })
+
+  it("under a parent WITHOUT a rankAwardId: writes the INSTRUCTOR_STUDENT tree edge but NO PROMOTED_BY (listed-under ≠ promotion)", async () => {
+    const listedUser = await db.user.create({
+      data: { name: tag("listed"), email: email("listed"), isPlaceholder: true },
+    })
+    const listedPassport = await db.passport.create({
+      data: { userId: listedUser.id },
+      select: { id: true },
+    })
+
+    const result = await createLineageMember({
+      db,
+      brand: TEST_BRAND,
+      actorUserId: fx.parentUserId,
+      memberPassportId: listedPassport.id,
+      treeId: fx.treeId,
+      parentMemberId: fx.parentMemberId,
+      // no rankAwardId — this parent is purely the "listed under" instructor.
+    })
+
+    expect(result.trainedUnderRelationshipId).toBeTruthy()
+    // No promotion recorded → no PROMOTED_BY edge.
+    expect(result.relationshipId).toBeNull()
+
+    const promotedBy = await db.lineageRelationship.findMany({
+      where: {
+        type: "PROMOTED_BY",
+        fromNodeId: fx.parentNodeId,
+        toNodeId: result.nodeId,
+      },
+    })
+    expect(promotedBy).toHaveLength(0)
+
+    const trainedUnder = await db.lineageRelationship.findMany({
+      where: {
+        type: "INSTRUCTOR_STUDENT",
+        fromNodeId: fx.parentNodeId,
+        toNodeId: result.nodeId,
+      },
+    })
+    expect(trainedUnder).toHaveLength(1)
+  })
+
+  it("is idempotent on the INSTRUCTOR_STUDENT edge: a pre-existing edge is reused, never double-written (safe to compose with materializeTrainedUnder / place-lead-core)", async () => {
+    const composeUser = await db.user.create({
+      data: { name: tag("compose"), email: email("compose"), isPlaceholder: true },
+    })
+    const composePassport = await db.passport.create({
+      data: { userId: composeUser.id },
+      select: { id: true },
+    })
+    const composeNode = await db.lineageNode.create({
+      data: { passport: { connect: { id: composePassport.id } } },
+      select: { id: true },
+    })
+
+    // Simulate place-lead-core / materializeTrainedUnder already having written the (VERIFIED) edge.
+    const preExisting = await db.lineageRelationship.create({
+      data: {
+        type: "INSTRUCTOR_STUDENT",
+        fromNodeId: fx.parentNodeId,
+        toNodeId: composeNode.id,
+        isVerified: true,
+        verificationStatus: "VERIFIED",
+      },
+      select: { id: true },
+    })
+
+    const result = await createLineageMember({
+      db,
+      brand: TEST_BRAND,
+      actorUserId: fx.parentUserId,
+      memberPassportId: composePassport.id,
+      treeId: fx.treeId,
+      parentMemberId: fx.parentMemberId,
+    })
+
+    // Reused the existing edge — no duplicate.
+    expect(result.trainedUnderRelationshipId).toBe(preExisting.id)
+    const edges = await db.lineageRelationship.findMany({
+      where: {
+        type: "INSTRUCTOR_STUDENT",
+        fromNodeId: fx.parentNodeId,
+        toNodeId: composeNode.id,
+      },
+      select: { id: true },
+    })
+    expect(edges).toHaveLength(1)
   })
 
   it("rejects placing the same person in the same tree twice (MEMBER_EXISTS)", async () => {

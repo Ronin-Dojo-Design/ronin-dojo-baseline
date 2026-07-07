@@ -18,11 +18,18 @@ export type CreateLineageMemberInput = {
   /** The person being placed (their Passport id — SOT-ADR D1; placeholders are accountless Passports). */
   memberPassportId: string
   treeId: string
-  /** Optional visual + promotion parent (an existing member of the tree). */
+  /** The "listed under" tree parent (an existing member of the tree). When supplied this is the
+   *  member's structural placement: it seeds `primaryVisualParentMemberId` AND writes the canonical
+   *  `INSTRUCTOR_STUDENT` edge (parent → member) that the canvas + ancestry timeline walk
+   *  (`lib/lineage/tree-layout.ts`, `canvas-data.ts`). Exactly one such edge per (parent, member).
+   *  (SESSION_0508: previously this wrote a `PROMOTED_BY` edge and NO `INSTRUCTOR_STUDENT`, so an
+   *  admin-added person was invisible to the genealogy walk.) */
   parentMemberId?: string | null
-  /** The RankAward to tie to the PROMOTED_BY edge (`LineageRelationship.rankAwardId`,
-   *  the canonical promotion fact, ADR 0016). Does not drive the member's shown belt —
-   *  that is awarded truth (ADR 0035). */
+  /** The RankAward to tie to a SEPARATE, OPTIONAL `PROMOTED_BY` edge (`LineageRelationship.rankAwardId`,
+   *  the canonical promotion fact, ADR 0016) — "who awarded this rank at this time". Only recorded when
+   *  present AND a parent is supplied (the parent is the promoter). The tree structure is the
+   *  `INSTRUCTOR_STUDENT` edge above; `PROMOTED_BY` is NOT the tree structure. Does not drive the
+   *  member's shown belt — that is awarded truth (ADR 0035). */
   rankAwardId?: string | null
 }
 
@@ -30,7 +37,10 @@ export type CreateLineageMemberResult = {
   treeId: string
   memberId: string
   nodeId: string
+  /** The `PROMOTED_BY` edge id, or null when no rank promotion was recorded. */
   relationshipId: string | null
+  /** The `INSTRUCTOR_STUDENT` (tree-placement) edge id, or null when placed at root (no parent). */
+  trainedUnderRelationshipId: string | null
 }
 
 /**
@@ -39,9 +49,15 @@ export type CreateLineageMemberResult = {
  * Before SESSION_0358, `LineageNode` / `LineageTreeMember` were created only by seeds + test
  * fixtures; the lineage editor only *updates* members that already exist (it throws MEMBER_NOT_FOUND
  * otherwise). This helper fills that gap: it upserts the person's `LineageNode` (userId is unique),
- * creates a `LineageTreeMember` (a visual parent, appended after existing siblings), and — when a
- * parent is given — records the canonical `PROMOTED_BY` `LineageRelationship` referencing the stated
- * award (ADR 0016: RankAward is the canonical promotion fact).
+ * creates a `LineageTreeMember` (appended after existing siblings), and — when a parent is given —
+ * writes the canonical `INSTRUCTOR_STUDENT` "listed under" edge (parent → member; the tree structure
+ * the canvas + ancestry timeline walk) plus, ONLY when a `rankAwardId` is also supplied, a SEPARATE
+ * optional `PROMOTED_BY` edge referencing the stated award (ADR 0016: RankAward is the canonical
+ * promotion fact — "who awarded this rank when", NOT the tree structure).
+ *
+ * Both relationship writes are idempotent (find-first before create, mirroring `materializeTrainedUnder`)
+ * so this helper is safe to compose with the claim/place-lead materializers — running both against the
+ * same (parent, member) yields exactly ONE `INSTRUCTOR_STUDENT` edge.
  *
  * Designed to run INSIDE an existing transaction (pass the tx client) so add-person stays ONE action.
  * Admin authority is assumed (callers are `adminActionClient`); brand-ownership of the tree is
@@ -117,21 +133,69 @@ export const createLineageMember = async ({
     select: { id: true, nodeId: true },
   })
 
-  // 6. When promoted by a parent, record the canonical promotion edge (unverified — admin-stated).
+  // 6. When a "listed under" parent is given, write the tree-placement edge — the canonical
+  //    `INSTRUCTOR_STUDENT` relationship (parent → member) that the canvas + ancestry timeline walk.
+  //    Idempotent (find-first before create) so composing this with `materializeTrainedUnder`
+  //    (place-lead / claim-finalize) never double-writes. A rank promotion, if stated, is a SEPARATE
+  //    optional `PROMOTED_BY` edge — the tree structure is the INSTRUCTOR_STUDENT edge, not this.
+  let trainedUnderRelationshipId: string | null = null
   let relationshipId: string | null = null
-  if (parent) {
-    const relationship = await db.lineageRelationship.create({
-      data: {
-        type: "PROMOTED_BY",
+  if (parent && parent.nodeId !== member.nodeId) {
+    const existingTrainedUnder = await db.lineageRelationship.findFirst({
+      where: {
+        type: "INSTRUCTOR_STUDENT",
         fromNodeId: parent.nodeId,
         toNodeId: member.nodeId,
-        isVerified: false,
-        verificationStatus: "PENDING",
-        ...(rankAwardId ? { rankAwardId } : {}),
       },
       select: { id: true },
     })
-    relationshipId = relationship.id
+    if (existingTrainedUnder) {
+      trainedUnderRelationshipId = existingTrainedUnder.id
+    } else {
+      const trainedUnder = await db.lineageRelationship.create({
+        data: {
+          type: "INSTRUCTOR_STUDENT",
+          fromNodeId: parent.nodeId,
+          toNodeId: member.nodeId,
+          // Admin-stated placement — unverified until a steward verifies (mirrors the member's
+          // Unverified default). The claim/place-lead path materializes a VERIFIED edge on approval.
+          isVerified: false,
+          verificationStatus: "PENDING",
+        },
+        select: { id: true },
+      })
+      trainedUnderRelationshipId = trainedUnder.id
+    }
+
+    // OPTIONAL, SEPARATE promotion fact — only when an explicit rank promoter is being recorded
+    // (a `rankAwardId` is passed). A parent that is purely the "listed under" instructor with no
+    // rank-promotion intent gets NO `PROMOTED_BY` edge. Idempotent on (from, to, rankAward).
+    if (rankAwardId) {
+      const existingPromotedBy = await db.lineageRelationship.findFirst({
+        where: {
+          type: "PROMOTED_BY",
+          fromNodeId: parent.nodeId,
+          toNodeId: member.nodeId,
+          rankAwardId,
+        },
+        select: { id: true },
+      })
+      relationshipId =
+        existingPromotedBy?.id ??
+        (
+          await db.lineageRelationship.create({
+            data: {
+              type: "PROMOTED_BY",
+              fromNodeId: parent.nodeId,
+              toNodeId: member.nodeId,
+              isVerified: false,
+              verificationStatus: "PENDING",
+              rankAwardId,
+            },
+            select: { id: true },
+          })
+        ).id
+    }
   }
 
   // 7. Audit.
@@ -149,9 +213,16 @@ export const createLineageMember = async ({
         parentMemberId: parentMemberId ?? null,
         rankAwardId: rankAwardId ?? null,
         relationshipId,
+        trainedUnderRelationshipId,
       },
     },
   })
 
-  return { treeId, memberId: member.id, nodeId: member.nodeId, relationshipId }
+  return {
+    treeId,
+    memberId: member.id,
+    nodeId: member.nodeId,
+    relationshipId,
+    trainedUnderRelationshipId,
+  }
 }

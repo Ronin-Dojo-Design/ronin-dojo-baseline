@@ -286,7 +286,7 @@ const materializeClaimedSchool = async (
  * VERIFIED on approval (operator decision, mirroring the RankAward). Idempotent on (from, to, type);
  * skips a self-edge. Returns null when there is no claimed node to anchor the student end.
  */
-const materializeTrainedUnder = async (
+export const materializeTrainedUnder = async (
   tx: Tx,
   {
     trainedUnderNodeId,
@@ -348,7 +348,7 @@ const materializeRepresentTree = async (
  *   - the student member already has a visual parent → do not clobber a prior steward placement;
  *   - self-reference → skip.
  */
-const materializeVisualPlacement = async (
+export const materializeVisualPlacement = async (
   tx: Tx,
   {
     treeId,

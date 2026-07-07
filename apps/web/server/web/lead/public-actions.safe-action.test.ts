@@ -288,7 +288,7 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
   // publicActionClient action with NO auth requirement, so the §5b
   // "User not authenticated" case is N/A and intentionally omitted.
 
-  it("pure lead (no node, signed out): creates Lead + pending Tool; no claim; claimRequiresSignIn false", async () => {
+  it("pure lead (no node, signed out): creates Lead; NO Tool (SESSION_0508 FI-003); no claim; claimRequiresSignIn false", async () => {
     setTestSession(null)
     const submitter = "pure-lead"
 
@@ -297,13 +297,13 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     expect(result?.serverError).toBeUndefined()
     expect(result?.validationErrors).toBeUndefined()
     expect(result?.data?.leadId).toBeTruthy()
-    expect(result?.data?.toolSlug).not.toBeNull()
     expect(result?.data?.claimRequiresSignIn).toBe(false)
     expect(result?.data?.claimCreated).toBe(false)
 
-    const [lead, tool, claimCount] = await Promise.all([
+    const [lead, toolCount, claimCount] = await Promise.all([
       db.lead.findUnique({ where: { id: result!.data!.leadId } }),
-      db.tool.findUnique({ where: { slug: result!.data!.toolSlug! } }),
+      // SESSION_0508 FI-003: a signup must NOT create a "Legacy Profile" Tool anymore.
+      db.tool.count({ where: { submitterEmail: `${tag(submitter)}@test.local` } }),
       // P5 (ADR 0036): the lead door now writes the unified PassportClaimRequest.
       db.passportClaimRequest.count({ where: { claimantUserId } }),
     ])
@@ -313,12 +313,13 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     // which may be a pre-existing dev-DB row, not our fixture — just assert it
     // resolved one.
     expect(lead?.organizationId).toBeTruthy()
-    expect(tool?.status).toBe("Pending")
+    // No Tool row is created for the signup path.
+    expect(toolCount).toBe(0)
     // No node was targeted, so no claim could be created.
     expect(claimCount).toBe(0)
   })
 
-  it("claim of existing node, signed OUT: no Tool; claimRequiresSignIn true; toolSlug null; no claim", async () => {
+  it("claim of existing node, signed OUT: no Tool; claimRequiresSignIn true; no claim", async () => {
     setTestSession(null)
     const submitter = "claim-signed-out"
 
@@ -329,11 +330,10 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
 
     expect(result?.serverError).toBeUndefined()
-    expect(result?.data?.toolSlug).toBeNull()
     expect(result?.data?.claimRequiresSignIn).toBe(true)
     expect(result?.data?.claimCreated).toBe(false)
 
-    // #4: claiming an existing node must NOT spawn a duplicate placeholder Tool.
+    // #4 + SESSION_0508: neither a claim nor a signup spawns a placeholder Tool.
     const toolCount = await db.tool.count({
       where: { submitterEmail: `${tag(submitter)}@test.local` },
     })
@@ -394,9 +394,12 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     const result = await createJoinLegacyInterest(baseInput(submitter))
 
     expect(result?.serverError).toBeUndefined()
-    // No node selected → a placeholder Tool is still created, and isFounder is false.
-    expect(result?.data?.toolSlug).not.toBeNull()
+    // SESSION_0508: no node selected → NO placeholder Tool is created; isFounder is false.
     expect(result?.data?.isFounder).toBe(false)
+    const toolCount = await db.tool.count({
+      where: { submitterEmail: email },
+    })
+    expect(toolCount).toBe(0)
 
     const minted = mintTo(email)
     expect(minted).toHaveLength(1)
@@ -419,7 +422,6 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
 
     expect(result?.serverError).toBeUndefined()
-    expect(result?.data?.toolSlug).toBeNull()
     expect(result?.data?.claimRequiresSignIn).toBe(false)
     expect(result?.data?.claimCreated).toBe(true)
 
@@ -446,7 +448,7 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     expect(sent).not.toContain("notifyMemberOfBblClaimYourProfile")
   })
 
-  it("empty-string nodeId (form default) is treated as no-claim: Tool created, claimRequiresSignIn false, meta.claimIntent false", async () => {
+  it("empty-string nodeId (form default) is treated as no-claim: NO Tool, claimRequiresSignIn false, meta.claimIntent false", async () => {
     setTestSession(null)
     const submitter = "empty-node"
 
@@ -457,7 +459,10 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
 
     expect(result?.serverError).toBeUndefined()
-    expect(result?.data?.toolSlug).not.toBeNull()
+    const toolCount = await db.tool.count({
+      where: { submitterEmail: `${tag(submitter)}@test.local` },
+    })
+    expect(toolCount).toBe(0)
     expect(result?.data?.claimRequiresSignIn).toBe(false)
     expect(result?.data?.claimCreated).toBe(false)
 
