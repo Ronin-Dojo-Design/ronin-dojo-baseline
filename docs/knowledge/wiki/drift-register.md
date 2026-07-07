@@ -468,9 +468,15 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   (their sole home is unpublished). Also **blocks safe retirement of the clone trees** — deleting them would
   orphan these 4 (drop their last `LineageTreeMember`), which is why SESSION_0457 removed only Brian's
   redundant memberships and **kept the clone trees**.
-- **Status: OPEN.** Phase-B backfill: place the 4 correctly under the canonical root (provenance edges +
-  `primaryVisualParentMemberId`), then the clone trees can be retired. Tracked with WL-P2-21 (clone-membership
-  cleanup done SESSION_0457, surgical).
+- **Status: ✅ RESOLVED (SESSION_0508).** `scripts/migrate-founders-to-canonical.ts` (rehearsed on prodsnap,
+  render-verified, JSON-backup + rollback) placed all 4 founders onto the published canonical tree (77→80):
+  Carlos Gracie Sr (root) → Carlos Gracie Jr → Rigan, Erik Paulson + Rick Minter under Rigan; Erik was a
+  swap-in-place (repointed the 0493 placeholder member to the rich `erik-paulson` node, deleted the dup).
+  `defaultRootMemberId` repointed to Carlos Sr. Prod coverage audit post-apply: **0 not-on-canonical, 0
+  would-be-orphans** on both clones → unblocked the clone retirement (WL-P2-21, also resolved SESSION_0508 via
+  `scripts/remove-residual-lineage-clones.ts`). Backup: `/tmp/migrate-founders-backup-1783453504203.json`.
+  Follow-up (separate): the repointed `erik-james-paulson` directory slug was renamed to `erik-paulson`
+  (`scripts/fix-lineage-dedup-followups.ts`).
 
 ### D-035 — Community feed duplicates the blog feed's pill-tab + row shells (SESSION_0493)
 

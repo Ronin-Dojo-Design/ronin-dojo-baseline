@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0508 — D-034 founder migration to canonical + WL-P2-21 clone-tree retirement"
 slug: session-0508
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-07
 updated: 2026-07-07
 last_agent: claude-session-0508
@@ -332,34 +332,93 @@ Tony Hua member `og4l2mlt90a3se9jeqwtbqhl` (visualParent `nf4i2fdzt5t3nqfpqqyccu
 
 ## What landed
 
+Session grew far past the planned D-034 lane — an operator-driven P0 (misrouted signups) preempted it, then cascaded into the identity/placement model and a governance insight.
+
+- **P0 signup leak (SHIPPED `7d4cd5a4`, live):** `baselinemartialarts.com` (+ www) 307-redirects to `blackbeltlegacy.com` (`/api` excluded for Stripe webhooks); already-claimed nodes excluded from the join wizard list / submit action / pending-claim binding; dropped the fabricated `/people/<slug>` Tool URL (404).
+- **Prod data cleanup:** deleted 2 dead `LineagePendingClaim` (phan+đạt → Tony's claimed node) + 2 duplicate Phan leads (ID-targeted; operator test leads untouched).
+- **D-034 RESOLVED + WL-P2-21 RESOLVED (prod):** 4 founders migrated onto canonical (77→80, Carlos Sr root, Erik swap-in-place, 0 orphans); 2 unpublished clone trees retired. Erik directory slug `erik-james-paulson`→`erik-paulson`; `renato-magno-baptista` duplicate removed.
+- **FI-003 (SHIPPED `97b78eb0`, live):** signups that name an instructor **auto-place** under them — **Unverified, never claimable**, bound to their account (accountless links on sign-in) — via one shared placement core; tree edge unified to **`INSTRUCTOR_STUDENT`** (fixed the latent admin-add-person invisible-to-genealogy bug); duplicate "Legacy Profile" Tool removed from signup. The **5 real people** placed on prod (Thien/David/Phan/Đạt under Tony, Jay under Brian).
+- **Favicon fix (SHIPPED `7fc488c5`):** tab favicon + apple-touch-icon + og:image were routed through CloudFront (403 — assets only in `public/`); now served relative like the manifest.
+- **AdminCollection design law CAPTURED** (memory `admin-collection-one-surface-law` + index) — the operator's 500-session north star.
+
 ## Decisions resolved
+
+- **Verification model (SESSION_0474 reaffirmed, `bbl-verification-claim-display-model`):** membership is automatic; the ONE flag `node.isVerified` IS belt-rank verification (no second axis); verified is earned by a belt approval and **nothing else** (no standalone verify toggle); signups are never claims and never `isClaimable` (Claim = WP-import placeholder flow only).
+- **Tree placement:** parent = **"listed under" = `INSTRUCTOR_STUDENT`** (exactly one); `PROMOTED_BY` = per-rank promoter (optional, many, lives with the rank). All three entry paths (signup / claim / admin add-person) write the same tree edge via one placement function.
+- **Profile SoT:** ONE `PassportEditor` is the edit surface every Passport-fed surface reads from; the stray `LineageNode.bio` folds into `Passport.bio`; `User.name/image` are auth-only fallbacks. (Consolidation = next-session lane.)
+- **AdminCollection law:** `/app/tools` is THE admin-collection template; every admin surface listing records = a conformed instance (columns + query, no hand-roll); tree = public-view-only; `/app/brand-settings` deleted (multi-brand dead); enforcement doc-sprawl collapses to one read-path law.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
-| `docs/sprints/SESSION_0508.md` | this record |
+| `apps/web/next.config.ts` | Baseline→BBL 307 host redirect |
+| `apps/web/server/web/lead/public-actions.ts` | claimed-node exclusion; drop Tool creation; auto-place signups |
+| `apps/web/server/web/lineage/mint-claim-magic-link.ts` | pending-binding excludes claimed nodes |
+| `apps/web/app/(web)/lineage/join/page.tsx` | wizard excludes claimed nodes |
+| `apps/web/server/web/lineage/create-lineage-member.ts` | INSTRUCTOR_STUDENT tree edge + optional PROMOTED_BY, idempotent |
+| `apps/web/server/admin/lineage/place-lead-core.ts` (+ `place-lead.ts`, `place-target.ts`, control, tests) | signup placement core (not-claimable, unverified) |
+| `apps/web/app/layout.tsx` | favicon/apple-touch/og served relative, not CloudFront |
+| `apps/web/scripts/{migrate-founders-to-canonical,remove-residual-lineage-clones,cleanup-tony-hua-signup-mess,fix-lineage-dedup-followups}.ts` | prod-op scripts (backup+rollback) |
+| `docs/knowledge/wiki/drift-register.md`, `wiring-ledger.md` | D-034 → resolved, WL-P2-21 → clones removed |
+| memory `admin-collection-one-surface-law.md` | the admin-surface law |
 
 ## Verification
 
+| Command / smoke | Result |
+| --- | --- |
+| Baseline redirect live | `baselinemartialarts.com/lineage/join` → 307 → BBL ✓; `/api` passes through |
+| D-034 prod coverage audit (post-apply) | 0 not-on-canonical, 0 would-be-orphans; canonical 80m, root Carlos Sr ✓ |
+| Clone retirement (prod) | 0 `rigan-machado-bjj-lineage` trees; canonical intact ✓ |
+| 5 placements (prod) | 4 under Tony, Jay under Brian; all `isClaimable=false`, `isVerified=false` ✓ |
+| Erik/Renato dedup (prod) | `erik-paulson` profile resolves; one Renato on canonical ✓ |
+| Gates | typecheck clean; FI-003 tests 20/20; oxlint/oxfmt clean |
+| Favicon | fix pushed; post-deploy verify in progress |
+
 ## Open decisions / blockers
+
+- None blocking. Admin add-person UI ("listed under" vs "promoted by" as two fields) deferred to the next-session admin lane; the data layer already supports it.
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+The **AdminCollection admin-surface lane** + the **profile-editor consolidation** — conform every admin collection surface to the `/app/tools` pattern and land one Passport editor everywhere.
 
 ### First task
 
-TBD at bow-out.
+Build the `AdminCollection` frame (columns + query → the full `/app/tools` data-table), conform `/app/users` into a real **member** table (belt, listed-under, verified, school — not the thin account list), delete `/app/brand-settings`, and de-sprawl the enforcement docs into the one read-path law. Then profile-editor **Slice A** (fold `LineageNode.bio` → `Passport.bio` + backfill). See memory `admin-collection-one-surface-law` + the Petey plans in this session's transcript.
 
 ## Review log
 
+Session ran inline (lead) with dispatched sub-agents: Petey (D-034 plan, FI-003 plan, profile-consolidation plan), Cody (FI-003 build + correction + edge/Tool land), Giddy (entry-path + profile-surface audit). All builds gate-green and rehearsed on prodsnap before any gated prod apply.
+
 ## Hostile close review
+
+- **Doug:** pass — every prod mutation rehearsed on prodsnap + render/coverage-verified, JSON-backup + rollback for each; the 5 placements verified (right instructor, not-claimable, unverified); favicon fix reasoned from the 403 + the 200 relative-path proof.
+- **Giddy:** pass — the identity model was re-grounded in the ratified doc (not re-derived); placement unified to one edge/one core; the AdminCollection law captured rather than re-litigated. One debt: admin add-person UI split + profile-editor consolidation carried forward, not silently half-built.
+- **Kaizen aggregate:** 9/10 — the miss was mine early (didn't ground in `bbl-verification-claim-display-model` / didn't know brand-settings was dead until the operator flagged both).
 
 ## ADR / ubiquitous-language check
 
+- ADR update **recommended (next session):** the AdminCollection law + the "verified = belt approval only / membership is automatic" model both deserve ratified ADRs (currently canon lives in memory + SESSION_0474). Flag when the AdminCollection lane opens.
+- Ubiquitous language: reaffirmed **"listed under" (INSTRUCTOR_STUDENT) vs "promoted by" (PROMOTED_BY)** as distinct; **membership** = app membership (automatic), not a verified state.
+
 ## Reflections
 
+The session's real lesson was the operator's: the reason a rule doesn't stick across 500 sessions isn't that it's unwritten — it's that it's written *fifteen times in fifteen places*, so no agent reads the authoritative one. I re-derived the verification model instead of reading the ratified memory, and didn't recall that multi-brand was dead — both exactly the failure the operator was naming. The fix that matters most this session isn't code, it's the single `admin-collection-one-surface-law` capture + the mandate to de-sprawl.
+
+The favicon bug was a clean example of "done" hiding a gap: SESSION_0505 genuinely shipped the PWA icons, so "icons done" read as true — but the *tab* favicon was a different mechanism routed through CloudFront where the files never existed. The operator's "why don't I see it" was worth more than any green checkmark.
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Ledger cross-off | D-034 → RESOLVED (drift-register), WL-P2-21 → clones removed (wiring-ledger) |
+| Prod mutations backed up | migrate/remove/cleanup/fix backups in `/tmp/*.json` |
+| Gates | typecheck clean, FI-003 20/20, oxlint/oxfmt clean |
+| Memory sweep | `admin-collection-one-surface-law` written + indexed |
+| Hostile close review | Doug + Giddy pass (above) |
+| Git hygiene | `7d4cd5a4` (P0) · `97b78eb0` (FI-003) · `02a844c5` (D-034 scripts+doc) · `7fc488c5` (favicon) — all pushed |
+| Next session unblock | AdminCollection + profile-editor lane written above |
+| Graphify update | run at close |
