@@ -13,7 +13,6 @@ import { SearchProvider } from "~/contexts/search-context"
 import { Brand } from "~/.generated/prisma/client"
 import { brandThemeCss } from "~/lib/brand-theme"
 import { bblBodyFont, bblHeadingFont, fontSans } from "~/lib/fonts"
-import { resolvePublicMediaUrl } from "~/lib/media"
 import { getRequestOrigin } from "~/lib/request-url"
 import { findBrandSettings } from "~/server/admin/brand-settings/queries"
 import "./styles.css"
@@ -25,9 +24,15 @@ export const generateMetadata = async (): Promise<Metadata> => {
   const brandConfig = getBrandSiteConfig(Brand.BBL)
   const brandSettings = await findBrandSettings(Brand.BBL)
 
-  // DB asset URLs override static config/site.ts paths when present
-  const faviconUrl = brandSettings?.faviconUrl ?? resolvePublicMediaUrl(brandConfig.faviconSrc)
-  const ogImageUrl = brandSettings?.ogImageUrl ?? resolvePublicMediaUrl(brandConfig.ogImageSrc)
+  // DB asset URLs override static config/site.ts paths when present. The static
+  // fallbacks are served from `public/` by Next (like app/manifest.ts's icons) and
+  // are NOT synced to the CloudFront media origin — so they must stay RELATIVE
+  // (resolved against `metadataBase` to this origin). Routing them through
+  // resolvePublicMediaUrl() pointed the tab favicon / apple-touch-icon / og:image at
+  // CloudFront paths that 403 (SESSION_0508). resolvePublicMediaUrl is for
+  // user-uploaded R2/S3 media, not ship-with-the-app brand chrome.
+  const faviconUrl = brandSettings?.faviconUrl ?? brandConfig.faviconSrc
+  const ogImageUrl = brandSettings?.ogImageUrl ?? brandConfig.ogImageSrc
 
   return {
     metadataBase: new URL(origin),
@@ -45,7 +50,8 @@ export const generateMetadata = async (): Promise<Metadata> => {
         {
           type: "image/png",
           sizes: "180x180",
-          url: resolvePublicMediaUrl("/images/brands/black-belt-legacy/apple-touch-icon.png"),
+          // Relative (served from public/), NOT CloudFront — see the faviconUrl note.
+          url: "/images/brands/black-belt-legacy/apple-touch-icon.png",
         },
       ],
     },
