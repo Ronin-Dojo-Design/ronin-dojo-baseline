@@ -4,7 +4,7 @@ slug: post-launch-sot
 type: sot
 status: active
 created: 2026-06-20
-updated: 2026-07-05
+updated: 2026-07-07
 last_agent: claude-session-0500
 pairs_with:
   - docs/knowledge/wiki/files/feature-request-dialog.md
@@ -65,7 +65,7 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 
 | ID | Item | Type | Pri | Status | Source / notes |
 | --- | --- | --- | --- | --- | --- |
-| FI-001 | Brian Truelson first-tester onboarding + lifetime comp + thank-you email | feature | P0 | in-progress — **unblocked** | petey-plan-0457 — A1 prod clone cleanup done + test-send re-confirmed 0457 (Resend `8fe8b411…`, from `welcome@blackbeltlegacy.com`). **N1/N2 (G-004) SHIPPED SESSION_0500 → the onboarding-polish gate is CLEARED.** Only the operator "send Brian now" remains. |
+| FI-001 | Brian Truelson first-tester onboarding + lifetime comp + thank-you email | feature | P0 | in-progress — **unblocked** | petey-plan-0457 — A1 prod clone cleanup done + test-send re-confirmed 0457 (Resend `8fe8b411…`, from `welcome@blackbeltlegacy.com`). **N1/N2 (G-004) SHIPPED SESSION_0500 → the onboarding-polish gate is CLEARED.** Only the operator "send Brian now" remains. **Readiness RE-VERIFIED green vs LIVE prod (SESSION_0507):** email renders (`--dry-run`), node unclaimed + claimable, `--verify` claim+comp sim CLAIMS (rolled back, 2 entitlements), Resend keyed 2/2. Send seq = `--backfill`→`--send`→(sign-in)→`--grant`. **Lifetime Elite requires the `--grant` step** — auto-claim gives 1yr (Brian not Dirty Dozen). |
 | FI-002 | Lifecycle-email copy audit (all `LifecycleEmailKind`, now `DRYRUN=0`) | bug | P1 | triaged | SESSION_0419 follow-up |
 | FI-003 | Student sign-up under instructor/school + claim-approval flow | feature | P1 | triaged | petey-plan-0419 |
 | FI-004 | Admin email-composer parity + port BBLApp BBLEmail + mobile admin | feature | P1 | triaged | petey-plan-0419 |
