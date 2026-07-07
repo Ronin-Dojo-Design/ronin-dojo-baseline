@@ -114,8 +114,8 @@ export function StudentsCarouselV2({
               <AccordionTrigger className="p-3!">
                 <span className="flex min-w-0 items-center gap-2">
                   <BeltSwatch colorHex={group.colorHex} className="size-3.5" />
-                  <span className="truncate text-sm font-medium">{group.label}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="min-w-0 truncate text-sm font-medium">{group.label}</span>
+                  <span className="shrink-0 whitespace-nowrap text-xs text-muted-foreground">
                     {group.students.length} {group.students.length === 1 ? "student" : "students"}
                   </span>
                 </span>

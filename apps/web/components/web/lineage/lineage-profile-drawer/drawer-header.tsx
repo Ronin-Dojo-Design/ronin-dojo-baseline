@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  EllipsisVerticalIcon,
-  LockKeyholeIcon,
-  PencilIcon,
-  ShieldCheckIcon,
-  UserRoundCogIcon,
-} from "lucide-react"
+import { EllipsisVerticalIcon, LockKeyholeIcon, PencilIcon, UserRoundCogIcon } from "lucide-react"
 import { motion } from "motion/react"
 import { type CSSProperties, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
@@ -20,7 +14,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
@@ -313,11 +306,6 @@ function LineageDrawerActions({
               Edit profile
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem disabled>
-            <ShieldCheckIcon />
-            Manage verification (coming soon)
-          </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
