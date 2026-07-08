@@ -41,8 +41,9 @@ type PersonFormProps = ComponentProps<"form"> & {
 }
 
 /**
- * Admin "just add someone" form. One submit → placeholder User + Passport + stated RankAward +
- * optional Affiliation (lineage placement layered in SESSION_0358 TASK_02). Mirrors the
+ * Admin "just add someone" form. One submit → accountless Passport (no synthetic User, per
+ * SOT-ADR D1 — claimable precisely because it has no account) + stated RankAward + optional
+ * Affiliation (lineage placement layered in SESSION_0358 TASK_02). Mirrors the
  * `/admin/tools/new` create idiom (react-hook-form + Zod + next-safe-action). Selects are
  * dynamically populated and id-aware (`DataSelect`) — no hardcoded ranks/orgs.
  */

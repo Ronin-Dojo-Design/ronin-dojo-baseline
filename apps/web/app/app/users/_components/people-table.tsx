@@ -70,7 +70,7 @@ export function PeopleTable({ peoplePromise }: PeopleTableProps) {
             variant="secondary"
             size="md"
             prefix={<MailPlusIcon />}
-            render={<Link href="/admin/invites/new" />}
+            render={<Link href="/app/invites/new" />}
           >
             <div className="max-sm:sr-only">Invite user</div>
           </Button>
