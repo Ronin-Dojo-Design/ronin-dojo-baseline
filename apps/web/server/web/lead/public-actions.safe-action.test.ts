@@ -75,6 +75,10 @@ mock.module("~/lib/notifications", () => ({
 // real verification token. Record the destination so we can assert claim vs /me.
 // The action also imports the path helpers from this module, so re-export them.
 const mintCalls: Array<{ email: string; nextPath: string }> = []
+// SESSION_0513: the claim path now BINDS a durable pending claim + emails a durable /auth/login
+// sign-in URL instead of embedding a one-shot magic-link token. Track binds too so the guest-claim
+// tests assert the new contract (bind, no mint); the free-signup/checkout verify paths still mint.
+const bindCalls: Array<{ email: string; nodeId: string }> = []
 mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
   claimAcceptNextPath: (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`,
   FREE_SIGNUP_NEXT_PATH: "/me",
@@ -82,11 +86,17 @@ mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
     mintCalls.push({ email: opts.email, nextPath: opts.nextPath })
     return `https://blackbeltlegacy.com/api/auth/magic-link/verify?token=stub&callbackURL=stub`
   },
+  bindPendingClaim: async (email: string, nodeId: string) => {
+    bindCalls.push({ email, nodeId })
+  },
+  buildClaimSignInUrl: (baseUrl: string, nextPath = "/me") =>
+    `${baseUrl}/auth/login?next=${encodeURIComponent(nextPath)}`,
 }))
 
 /** Find the most recent notify call to a given recipient. */
 const notifyTo = (to: string) => notifyCalls.filter(c => c.to === to)
 const mintTo = (email: string) => mintCalls.filter(c => c.email === email)
+const bindTo = (email: string) => bindCalls.filter(c => c.email === email)
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "bun:test"
@@ -345,11 +355,13 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     })
     expect(claimCount).toBe(0)
 
-    // SESSION_0418: the guest now gets a branded claim magic link (no sign-in bounce).
+    // SESSION_0513: the guest gets a DURABLE /auth/login claim link (no one-shot token); the node
+    // is bound to their email so it auto-claims on the next sign-in (Google or magic link).
     const email = `${tag(submitter)}@test.local`
-    const minted = mintTo(email)
-    expect(minted).toHaveLength(1)
-    expect(minted[0]?.nextPath).toBe(`/lineage/claim/accept?node=${claimNodeId}`)
+    expect(mintTo(email)).toHaveLength(0)
+    const bound = bindTo(email)
+    expect(bound).toHaveLength(1)
+    expect(bound[0]?.nodeId).toBe(claimNodeId)
 
     const sent = notifyTo(email).map(c => c.fn)
     expect(sent).toContain("notifyMemberOfBblClaimYourProfile")
@@ -376,9 +388,10 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
 
     expect(result?.serverError).toBeUndefined()
 
-    const minted = mintTo(email)
-    expect(minted).toHaveLength(1)
-    expect(minted[0]?.nextPath).toBe(`/lineage/claim/accept?node=${dozenNodeId}`)
+    expect(mintTo(email)).toHaveLength(0)
+    const bound = bindTo(email)
+    expect(bound).toHaveLength(1)
+    expect(bound[0]?.nodeId).toBe(dozenNodeId)
 
     const claimEmail = notifyTo(email).find(c => c.fn === "notifyMemberOfBblClaimYourProfile")
     expect(claimEmail).toBeDefined()
@@ -491,9 +504,11 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     // The founder is detected deterministically off the `bob-bass` node slug.
     expect(result?.data?.isFounder).toBe(true)
 
-    // He still gets the branded claim magic link.
-    const minted = mintTo(email)
-    expect(minted).toHaveLength(1)
+    // He gets a DURABLE claim link (no one-shot token); his node is bound for auto-claim on sign-in.
+    expect(mintTo(email)).toHaveLength(0)
+    const bound = bindTo(email)
+    expect(bound).toHaveLength(1)
+    expect(bound[0]?.nodeId).toBe(founderNodeId)
 
     // The founder receives "The Long Road" letter — NOT the generic claim email.
     const sent = notifyTo(email).map(c => c.fn)
