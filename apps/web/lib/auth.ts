@@ -231,10 +231,38 @@ export const auth = betterAuth({
   ] as const,
 })
 
+export type Session = typeof auth.$Infer.Session
+export type SessionUserWithPermissionGrants = Session["user"] & { extraGrants?: string[] }
+type SessionWithPermissionGrants = Omit<Session, "user"> & {
+  user: SessionUserWithPermissionGrants
+}
+
+const loadActivePermissionGrants = async (userId: string) => {
+  const grants = await db.userPermissionGrant.findMany({
+    where: { userId, revokedAt: null },
+    select: { grant: true },
+    orderBy: { createdAt: "asc" },
+  })
+
+  return grants.map(grant => grant.grant)
+}
+
 export const getServerSession = cache(async (request?: NextRequest) => {
-  return auth.api.getSession({
+  const session = await auth.api.getSession({
     headers: request?.headers ?? (await headers()),
   })
-})
 
-export type Session = typeof auth.$Infer.Session
+  if (!session?.user?.id) {
+    return session as SessionWithPermissionGrants | null
+  }
+
+  const extraGrants = await loadActivePermissionGrants(session.user.id)
+
+  return {
+    ...session,
+    user: {
+      ...session.user,
+      extraGrants,
+    },
+  } satisfies SessionWithPermissionGrants
+})

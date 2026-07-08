@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-03
-last_agent: claude-session-0493
+updated: 2026-07-07
+last_agent: codex-session-0509
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -22,6 +22,7 @@ backlinks:
   - docs/sprints/SESSION_0033.md
   - docs/sprints/SESSION_0178.md
   - docs/sprints/SESSION_0479.md
+  - docs/sprints/SESSION_0509.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -149,6 +150,14 @@ The append-only review ledger at `docs/protocols/task-review-log.md`. Every non-
 The authentication account.
 
 A User owns login state, email, auth sessions, and account-level flags. It should not directly own martial arts rank, organization status, tournament role, or public directory settings.
+
+A User is a Person with an account. Some People do not have accounts yet.
+
+### Person
+
+A human identity in the platform, whether or not that person has an authentication account.
+
+Person-facing admin collections are about the Passport-backed human; account status is a property of that person, not the identity itself. Avoid using `User` when the thing being managed can be an accountless person.
 
 ### Passport
 
@@ -382,6 +391,24 @@ The join between Membership and Role.
 
 This allows one membership to hold multiple roles without creating duplicate memberships.
 
+## Authorization
+
+### Permission
+
+A stable `can()` key such as `beta.view`, `media.upload`, or `lineage.manage`.
+
+Permissions answer whether an account may perform an action platform-wide. They are not membership roles
+and they are not commerce entitlements.
+
+### PermissionGrant
+
+An additive grant of a Permission to a User, resolved inside the existing global `can()` capability axis.
+
+Per-user permission grants are the FI-019 model for letting a non-admin account reach a narrow gated area
+without promoting that account to platform `admin`. They must use the same `Grant` string vocabulary as
+`server/orpc/roles.ts`, be auditable, and be soft-revokable. They do not replace org membership roles,
+lineage resource grants, or commerce entitlements.
+
 ## Courses and curriculum
 
 ### Course
@@ -481,6 +508,8 @@ PricingPlan is the right place to attach future Stripe Product/Price IDs and ent
 A durable access key granted by purchase, subscription, manual grant, membership, or promo.
 
 Feature code should check Entitlements rather than hard-coded plan IDs, product IDs, or scattered paid booleans.
+Entitlements are commercial access facts, not the source of truth for platform authority. If the desired
+toggle answers "may this account perform this action?", model it as a Permission/PermissionGrant instead.
 
 ### UserEntitlement
 

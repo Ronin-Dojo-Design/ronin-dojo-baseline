@@ -107,6 +107,8 @@ model User {
   reviewedProfileClaims      ProfileClaimRequest[]       @relation("ProfileClaimReviewer")
   passportClaimRequests      PassportClaimRequest[]      @relation("PassportClaimClaimant")
   reviewedPassportClaims     PassportClaimRequest[]      @relation("PassportClaimReviewer")
+  permissionGrants           UserPermissionGrant[]       @relation("UserPermissionGrantUser")
+  permissionGrantsGranted    UserPermissionGrant[]       @relation("UserPermissionGrantGrantedBy")
   gamificationLog            GamificationEvent[]
   registrations              Registration[]
   subscriptions              UserBrandSubscription[]
@@ -2900,6 +2902,26 @@ model LineageTreeAccess {
   @@index([rootMemberId])
   @@index([memberId])
   @@index([nodeId])
+}
+
+// @added   migration 20260707000000_add_user_permission_grant (2026-07-07)
+// @why     FI-019 — additive per-user global capability grants inside the existing `can()` axis
+// @wired   lib/auth.ts, server/orpc/permissions.ts, server/admin/permissions/actions.ts, app/app/users/[id]/page.tsx
+model UserPermissionGrant {
+  id        String    @id @default(cuid(2))
+  grant     String
+  reason    String?
+  createdAt DateTime  @default(now())
+  revokedAt DateTime?
+
+  user        User  @relation("UserPermissionGrantUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  grantedBy   User? @relation("UserPermissionGrantGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+  grantedById String?
+
+  @@index([userId, revokedAt])
+  @@index([grant, revokedAt])
+  @@index([grantedById])
 }
 
 // @added   migration 20260517_lineage_tree_v1 (2026-05-17)

@@ -1,5 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
-import type { Session } from "~/lib/auth"
+import type { SessionUserWithPermissionGrants } from "~/lib/auth"
 
 /**
  * Which transport invoked the procedure.
@@ -10,7 +10,7 @@ import type { Session } from "~/lib/auth"
  */
 export type Source = "rpc" | "openapi" | "rsc"
 
-export type SessionUser = Session["user"]
+export type SessionUser = SessionUserWithPermissionGrants
 
 /**
  * Context available inside every procedure handler. Transports inject `user`

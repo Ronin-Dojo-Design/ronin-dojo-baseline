@@ -4,7 +4,7 @@ import { MediaAttachmentManager } from "~/components/web/media/media-attachment-
 import { PassportEditor } from "~/components/web/passport/passport-editor"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { canUploadMedia } from "~/server/web/entitlements/queries"
+import { canUploadMediaForUser } from "~/server/web/media/permissions"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
 
@@ -26,7 +26,7 @@ export async function DashboardProfileTab() {
   }
 
   const [canUpload, passportAttachments] = await Promise.all([
-    canUploadMedia(session.user.id, Brand.BBL),
+    canUploadMediaForUser(session.user, Brand.BBL),
     getDashboardMediaAttachments({
       brand: Brand.BBL,
       user: session.user,

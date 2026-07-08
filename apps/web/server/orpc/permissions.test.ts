@@ -2,7 +2,7 @@
 import { describe, expect, it } from "bun:test"
 import type { SessionUser } from "~/server/orpc/context"
 import { can, matchesPattern } from "~/server/orpc/permissions"
-import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
+import { APP_AREA_PERMISSIONS, MEDIA_UPLOAD_PERMISSION } from "~/server/orpc/roles"
 
 const asUser = (role: string, id = "u1") => {
   return { id, role } as unknown as SessionUser
@@ -127,5 +127,26 @@ describe("beta.view — the /app/beta gate key (SESSION_0498 TASK_04)", () => {
     expect(can(undefined, APP_AREA_PERMISSIONS.beta)).toBe(false)
     expect(can(asUser("tournament_director"), APP_AREA_PERMISSIONS.beta)).toBe(false)
     expect(can(asUser("nonexistent-role"), APP_AREA_PERMISSIONS.beta)).toBe(false)
+  })
+})
+
+describe("can — per-user extraGrants (FI-019)", () => {
+  it("adds narrow user override grants without changing the user's platform role", () => {
+    const betaTester = {
+      ...member,
+      extraGrants: [APP_AREA_PERMISSIONS.beta, MEDIA_UPLOAD_PERMISSION],
+    } satisfies SessionUser
+
+    expect(can(betaTester, APP_AREA_PERMISSIONS.beta)).toBe(true)
+    expect(can(betaTester, MEDIA_UPLOAD_PERMISSION)).toBe(true)
+    expect(can(betaTester, APP_AREA_PERMISSIONS.media)).toBe(false)
+    expect(can(betaTester, APP_AREA_PERMISSIONS.users)).toBe(false)
+  })
+
+  it("keeps user override grants additive-only", () => {
+    const plainMember = { ...member, extraGrants: [] } satisfies SessionUser
+
+    expect(can(plainMember, "health.read")).toBe(true)
+    expect(can(plainMember, APP_AREA_PERMISSIONS.beta)).toBe(false)
   })
 })

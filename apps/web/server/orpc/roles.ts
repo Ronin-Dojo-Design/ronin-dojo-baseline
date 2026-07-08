@@ -156,6 +156,8 @@ export const APP_AREA_PERMISSIONS = {
   users: "users.manage",
 } as const satisfies Record<string, Permission>
 
+export const MEDIA_UPLOAD_PERMISSION = "media.upload" as const satisfies Permission
+
 /**
  * Resolve the effective role for a session user. Returns `"guest"` for
  * anonymous callers or users with an unknown role string.

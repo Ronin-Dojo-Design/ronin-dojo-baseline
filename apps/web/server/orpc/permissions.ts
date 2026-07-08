@@ -28,7 +28,8 @@ export const matchesPattern = (grant: Grant, permission: Permission): boolean =>
 /**
  * Can a user perform a permission?
  *
- * Returns true when any of the user's role grants matches. Used by the
+ * Returns true when any of the user's role grants or active per-user override
+ * grants matches. Used by the
  * procedure pre-handler gate and by UI menu/sidebar/button visibility.
  *
  * Authorization is role-based only — there is no per-resource ownership check.
@@ -37,5 +38,9 @@ export const matchesPattern = (grant: Grant, permission: Permission): boolean =>
  * for tree/branch/node scope, layered on top of these flat global roles.
  */
 export const can = (user: SessionUser | null | undefined, permission: Permission): boolean => {
-  return ROLES[roleOf(user)].some(grant => matchesPattern(grant, permission))
+  const userGrants =
+    (user as (SessionUser & { extraGrants?: ReadonlyArray<Grant> }) | null | undefined)
+      ?.extraGrants ?? []
+
+  return [...ROLES[roleOf(user)], ...userGrants].some(grant => matchesPattern(grant, permission))
 }

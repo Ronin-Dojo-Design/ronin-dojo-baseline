@@ -3,8 +3,7 @@ import { revalidatePath, updateTag } from "next/cache"
 import { createSafeActionClient } from "next-safe-action"
 import { Brand, Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { can } from "~/server/orpc/permissions"
-import { canUploadMedia } from "~/server/web/entitlements/queries"
+import { canUploadMediaForUser } from "~/server/web/media/permissions"
 import { db } from "~/services/db"
 
 type RevalidateOptions = {
@@ -110,11 +109,10 @@ export const publicActionClient = actionClient
 // 6. Media-upload client (auth + canUploadMedia entitlement gate)
 // -----------------------------------------------------------------------------
 export const mediaUploadActionClient = userActionClient.use(async ({ next, ctx }) => {
-  // Platform roles that hold `media.manage` (admin via the `*` grant) bypass the entitlement gate;
-  // everyone else still needs an S3_UPLOAD entitlement / org-role / org-ownership signal. The role
-  // check reads the live session (not the 60s-cached `canUploadMedia`), so a role change takes
-  // effect immediately. See wiring-ledger WL-P2-19.
-  const allowed = can(ctx.user, "media.manage") || (await canUploadMedia(ctx.user.id, Brand.BBL))
+  // Platform roles that hold `media.manage` (admin via the `*` grant) and users with the FI-019
+  // `media.upload` override bypass the legacy entitlement/org gate. Existing S3_UPLOAD grants remain
+  // honored by the composed helper during migration. See wiring-ledger WL-P2-19 + WL-P2-32.
+  const allowed = await canUploadMediaForUser(ctx.user, Brand.BBL)
   if (!allowed) {
     throw new Error("User not authorized to upload media")
   }

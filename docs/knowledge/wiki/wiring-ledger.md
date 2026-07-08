@@ -4,8 +4,8 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-07-05
-last_agent: claude-session-0500
+updated: 2026-07-07
+last_agent: codex-session-0509
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0347.md
@@ -14,6 +14,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/custom-component-inventory.md
+  - docs/sprints/SESSION_0509.md
 ---
 
 # Wiring Ledger — not-done, gaps, and handroll slips
@@ -100,6 +101,7 @@ follow-ups, not silent nulls.
 | WL-P3-30 | `apps/web/.fallow/` (churn cache) ↔ `.gitignore` | Missing gitignore entry | **SESSION_0500 (WL-P2-22 + Doug):** `apps/web/.fallow/churn.bin` (fallow's churn cache) is untracked and NOT in `.gitignore` — risks an accidental commit in any fallow-run session. | Add `apps/web/.fallow/` (or `**/.fallow/`) to `.gitignore`. One-line governance fix. |
 | WL-P3-31 | `apps/web/e2e/mobile-shell.spec.ts:19` (`test.skip(Boolean(process.env.CI), …)`) | No CI guard on the #1-risk boundary | **SESSION_0500 Doug:** the mobile-shell spec (incl. the non-admin MAB-absence `toHaveCount(0)` assertion — the admin-capability boundary) is CI-skipped, so the highest-risk regression has no automated guard (strong source+runtime proof today, but nothing stops a future regression). | Promote a headless-stable non-admin MAB-absence assertion to a CI-run spec (needs a stable auth fixture — the reason for the current skip). |
 | WL-P2-28 | `apps/web/app/app/lineage/storyboard/_components/scene-editor-dialog.tsx` (A1-shipped hero/video/poster URL `Input`s) | Reuse miss — input affordance vs component inventory | **SESSION_0499 (operator caught it):** A1 shipped `heroImageUrl` as a URL text field although the canonical uploader family (`components/web/uploader/*` + the ONE `uploadMedia` R2 seam) existed with 3 consumers — and it survived 5 loop reviews + Doug because everyone checked the *data contract* (a URL string) and nobody checked the *input affordance* against the inventory. Root enabler: the uploader family had ZERO inventory rows. | ✅ Fixed — SESSION_0499 (`cda8543a`): `ImageFieldUploader` (pick→crop→upload; preset registry; shape-mask tokens); URL field dead; family inventoried with the **image-inputs-are-uploaders law** (operator standing rule, memory saved). Video/poster URL fields remain until A5 builds the video path. Review-checklist lesson: media-ish field ⇒ ask "is the INPUT the uploader?" |
+| WL-P2-32 | `apps/web/server/orpc/permissions.ts:29`; `apps/web/server/orpc/roles.ts:115`; `apps/web/app/app/users/[id]/page.tsx:17` | RBAC capability grants (FI-019) | **SESSION_0509 grill:** admins need to grant narrow `can()` capability keys to specific account-holding People without promoting them to platform `admin`. Today `can()` reads only `User.role`; `/app/roles/new` creates membership `Role` rows, not permissions; and the existing upload toggle grants `S3_UPLOAD` as a commerce entitlement even though the operator expectation is a capability toggle. This is not a reason to merge authz axes: FI-019 belongs inside global capability axis 1 as additive per-user grants over the existing `Grant` string vocabulary. | ✅ Fixed — SESSION_0509: added soft-revokable `UserPermissionGrant` with grantor/reason/audit trail, loaded active grants into the session as `extraGrants`, kept `can(user, key)` as the capability predicate, exposed a People-detail allowlist panel for `beta.view` and `media.upload`, and bridged legacy `S3_UPLOAD` as upload-only compatibility without granting broad `media.manage`. |
 
 ## localStorage / sessionStorage gaps
 
