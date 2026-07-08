@@ -99,8 +99,9 @@ export const EmailBblFirstTesterWelcome = ({
       </Text>
 
       <Text>
-        One tap on that link signs you in and claims your profile in a single step. It&apos;s yours,
-        privately — it&apos;s bound to your email and good for 7 days.
+        That link opens your sign-in screen. Sign in with either method below and your profile
+        claims itself on the spot — it&apos;s bound to your email, so there&apos;s nothing to enter
+        and nothing to expire. Take all the time you need.
       </Text>
 
       <Hr className="my-6 border-neutral-200" />
@@ -225,8 +226,7 @@ export const EmailBblFirstTesterWelcome = ({
 EmailBblFirstTesterWelcome.PreviewProps = {
   to: "btruelson@gmail.com",
   recipientName: "Brian",
-  claimUrl:
-    "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=preview&callbackURL=%2Fpreview",
+  claimUrl: "https://blackbeltlegacy.com/auth/login?next=%2Fme",
 } satisfies EmailProps
 
 export default EmailBblFirstTesterWelcome

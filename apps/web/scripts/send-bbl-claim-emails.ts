@@ -3,9 +3,13 @@
  *
  * SESSION_0403 — bulk "claim your profile" launch announcement for Black Belt
  * Legacy. For each recipient (an existing member whose profile was imported as a
- * placeholder Passport), resolve their claimable lineage node, build a claim
- * link that deep-opens the join modal (`/lineage/join?node=<nodeId>`), and send
- * the branded EmailBblClaimYourProfile via notifyMemberOfBblClaimYourProfile.
+ * placeholder Passport), resolve their claimable lineage node, bind the email→node
+ * durably (`bindPendingClaim`), and send the branded EmailBblClaimYourProfile
+ * (carrying the public sign-in URL) via notifyMemberOfBblClaimYourProfile.
+ *
+ * SESSION_0513: the email link is now a DURABLE public sign-in URL, not a one-shot
+ * magic-link token (a mail scanner / late click consumed the single use → dead link).
+ * The node auto-claims on the recipient's next sign-in via `lib/auth.ts` reconciliation.
  *
  * WHY a manifest (not a DB query): imported placeholders are accountless
  * Passports with NO stored email (by design — personal email is only captured on
@@ -38,10 +42,7 @@ import { readFileSync } from "node:fs"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Brand, PrismaClient } from "../.generated/prisma/client.js"
 import { notifyMemberOfBblClaimYourProfile } from "../lib/notifications"
-import {
-  claimAcceptNextPath,
-  mintClaimMagicLink,
-} from "../server/web/lineage/mint-claim-magic-link"
+import { bindPendingClaim, buildClaimSignInUrl } from "../server/web/lineage/mint-claim-magic-link"
 
 type Recipient = {
   email: string
@@ -171,28 +172,21 @@ async function main() {
         continue
       }
 
-      // FIX #3 (SESSION_0412): the claim link is now an email-bound, single-use
-      // magic link. The recipient clicks it → BA verifies + sets the session →
-      // redirects straight to the `callbackURL` (token-accept route), which
-      // one-click-claims the profile. (SESSION_0443: the `/preview` countdown-gate
-      // wrapper is retired — the gate is hard-off and the public site is open.)
+      // SESSION_0513: the claim link is now a DURABLE, public sign-in URL — no one-shot
+      // magic-link token (a mail scanner / late click consumed the single use → dead link).
+      // We bind the email→node once (90-day TTL); the node auto-claims on the recipient's
+      // next sign-in (Google OR magic link) via `lib/auth.ts` reconciliation.
+      const claimUrl = buildClaimSignInUrl(opts.baseUrl)
       if (opts.dryRun) {
-        // Dry run must not mint a real (DB-writing, single-use) token — print the
-        // would-be link SHAPE with a placeholder token instead.
-        const callbackURL = claimAcceptNextPath(resolved.nodeId)
-        const wouldBe = `${opts.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=${encodeURIComponent(callbackURL)}`
+        // Dry run must not write the binding — print the would-be link + binding instead.
         console.log(
-          `  ✓ would send → ${recipient.email} (${resolved.profileName}, ${recipient.dirtyDozen ? "lifetime" : "1yr"}) ${wouldBe}`,
+          `  ✓ would send → ${recipient.email} (${resolved.profileName}, ${recipient.dirtyDozen ? "lifetime" : "1yr"}) ${claimUrl} [would bind node ${resolved.nodeId}]`,
         )
         sent += 1
         continue
       }
 
-      const claimUrl = await mintClaimMagicLink({
-        baseUrl: opts.baseUrl,
-        email: recipient.email,
-        nextPath: claimAcceptNextPath(resolved.nodeId),
-      })
+      await bindPendingClaim(recipient.email, resolved.nodeId)
 
       await notifyMemberOfBblClaimYourProfile({
         brand: Brand.BBL,

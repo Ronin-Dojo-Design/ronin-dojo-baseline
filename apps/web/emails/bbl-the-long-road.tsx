@@ -27,7 +27,7 @@ const LoginStep = ({ n, children }: { n: number; children: React.ReactNode }) =>
 )
 
 /**
- * The founder's email to Bob Bass (SESSION_0418).
+ * The founder's email to Bob Bass (SESSION_0418; durable link SESSION_0513).
  *
  * A founder-to-founder letter addressed to "Mr. Bass": a warm "we're finally
  * here" invite, the "Open the preview" private-link CTA, a two-method sign-in
@@ -35,16 +35,18 @@ const LoginStep = ({ n, children }: { n: number; children: React.ReactNode }) =>
  * Road" — Brian Scott's 8-year founder testament
  * (RoninDashboard/philosophy/THE_LONG_ROAD.md).
  *
- * The button + paste link are the founder's one-click claim magic link, which
- * routes through the preview hop and one-click claims his node. The comp tier is
- * set by the claim flow, not promised in the copy.
+ * SESSION_0513: `claimUrl` is now a DURABLE public sign-in URL (`/auth/login`),
+ * NOT a one-shot magic-link token (a mail scanner / late click consumed the single
+ * use → dead link). The node auto-claims on the recipient's next sign-in via the
+ * email→node binding + `lib/auth.ts` reconciliation. The comp tier is set by the
+ * claim flow, not promised in the copy.
  *
  * Every block is fluid + word-wrapping so it reads perfectly on a narrow phone
  * (Galaxy / iPhone) with no horizontal scroll.
  */
 
 type EmailProps = BblEmailWrapperProps & {
-  /** The founder's one-click claim magic link (button + paste fallback). */
+  /** The founder's durable public sign-in URL (button + paste fallback); auto-claims on sign-in. */
   claimUrl: string
   /**
    * "founder" = Bob's letter as-is. "tony" = the same letter shown verbatim to
@@ -167,8 +169,9 @@ export const EmailBblTheLongRoad = ({
       </Text>
 
       <Text>
-        Take a look around — the lineage tree, your profile, and the sign-up flow. Opening it claims
-        your profile and locks in your place at the head of the lineage.
+        Take a look around — the lineage tree, your profile, and the sign-up flow. Signing in from
+        that link claims your profile and locks in your place at the head of the lineage — and the
+        link never expires, so open it whenever you like.
       </Text>
 
       <Hr className="my-6 border-neutral-200" />
@@ -176,8 +179,8 @@ export const EmailBblTheLongRoad = ({
       {/* How to sign in — two methods, each as big red-circle numbered steps. */}
       <Eyebrow>Signing In — Two Easy Ways</Eyebrow>
       <Text className="mt-0">
-        The link above signs you in automatically this first time. For every visit after, here are
-        your two ways back in — I&apos;d start with Google.
+        The link above opens your sign-in screen — sign in with either method below and your profile
+        claims itself on the spot. I&apos;d start with Google.
       </Text>
 
       <Section className="my-4 overflow-hidden rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-4 py-4">
@@ -302,8 +305,7 @@ export const EmailBblTheLongRoad = ({
 
 EmailBblTheLongRoad.PreviewProps = {
   to: "ronindojodesign@gmail.com",
-  claimUrl:
-    "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=preview&callbackURL=%2Fpreview",
+  claimUrl: "https://blackbeltlegacy.com/auth/login?next=%2Fme",
 } satisfies EmailProps
 
 export default EmailBblTheLongRoad

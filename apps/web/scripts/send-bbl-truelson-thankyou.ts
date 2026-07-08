@@ -54,7 +54,8 @@ const mode = {
   send: has("--send"),
 }
 
-const PLACEHOLDER_CLAIM_URL = `${TARGET.baseUrl}/api/auth/magic-link/verify?token=<minted>&callbackURL=%2Flineage%2Fclaim%2Faccept%3Fnode%3D%3Cnode%3E`
+// SESSION_0513: the durable, public sign-in URL the email now links to (no one-shot token).
+const PLACEHOLDER_CLAIM_URL = `${TARGET.baseUrl}/auth/login?next=%2Fme`
 
 /** Render the email to /tmp with a placeholder link — no DB, no send. */
 async function renderDryRun(): Promise<void> {
@@ -332,16 +333,15 @@ async function grant(): Promise<void> {
   console.table(result.grants)
 }
 
-/** Mint the one-click claim/sign-in link and send the email via Resend. */
+/** Bind the durable claim + build the public sign-in link, then send the email via Resend. */
 async function send(): Promise<void> {
   const { db } = await import("~/services/db")
-  const { mintClaimMagicLink, claimAcceptNextPath, FREE_SIGNUP_NEXT_PATH } =
+  const { bindPendingClaim, buildClaimSignInUrl } =
     await import("~/server/web/lineage/mint-claim-magic-link")
   const { notifyMemberOfBblFirstTesterWelcome } = await import("~/lib/notifications")
 
   // Test overrides (SESSION_0439): --to redirects the send to a throwaway inbox, and
-  // --free-signup points the magic link at /me (plain sign-in) INSTEAD of the claim-accept
-  // path — so a test click creates only a disposable account and NEVER claims Brian's node.
+  // --free-signup binds NOTHING — so a test click only signs in and NEVER claims Brian's node.
   const toEmail = (flagValue("--to") ?? TARGET.email).trim()
   const freeSignup = has("--free-signup")
 
@@ -352,19 +352,19 @@ async function send(): Promise<void> {
     return
   }
   if (!freeSignup && resolved.passportUserId) {
-    console.error("❌ SEND — node already claimed; aborting (will not re-mint).")
+    console.error("❌ SEND — node already claimed; aborting (will not re-bind).")
     process.exitCode = 1
     return
   }
 
-  const nextPath = freeSignup ? FREE_SIGNUP_NEXT_PATH : claimAcceptNextPath(resolved.nodeId)
-  const claimUrl = await mintClaimMagicLink({
-    baseUrl: TARGET.baseUrl,
-    email: toEmail,
-    nextPath,
-  })
+  // SESSION_0513: bind the email→node durably (auto-claims on Brian's next sign-in) and link the
+  // email to the public sign-in URL — no one-shot magic-link token to be consumed by a scanner.
+  if (!freeSignup) {
+    await bindPendingClaim(toEmail, resolved.nodeId)
+  }
+  const claimUrl = buildClaimSignInUrl(TARGET.baseUrl)
   console.log(
-    `📤 SEND — to=${toEmail} | nextPath=${nextPath}${freeSignup ? " (FREE-SIGNUP test — no claim)" : ""}`,
+    `📤 SEND — to=${toEmail} | claimUrl=${claimUrl}${freeSignup ? " (FREE-SIGNUP test — no claim bound)" : ` (bound node ${resolved.nodeId})`}`,
   )
 
   const res = await notifyMemberOfBblFirstTesterWelcome({
