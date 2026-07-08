@@ -5,7 +5,7 @@ import { HslColorPicker } from "react-colorful"
 import { Button } from "~/components/common/button"
 import { Input } from "~/components/common/input"
 import { Popover, PopoverContent, PopoverTrigger } from "~/components/common/popover"
-import { formatHslTriplet, type HslColor, isHslSafe, parseHslTriplet } from "~/lib/brand-theme"
+import { formatHslTriplet, type HslColor, parseHslTriplet } from "~/lib/brand-theme"
 import { cx } from "~/lib/utils"
 
 /**
@@ -28,6 +28,11 @@ import { cx } from "~/lib/utils"
 // The picker UI only seeds from this when the field has no parseable value; it is NOT
 // written back to the field until the user actually moves the picker.
 const FALLBACK: HslColor = { h: 0, s: 0, l: 50 }
+
+// Checkerboard fill shown on the swatch when the value isn't a safe, parseable triplet
+// (the "no color" state — mirrors the standard color-input empty affordance).
+const CHECKERBOARD_CLASS =
+  "bg-[length:8px_8px] bg-[position:0_0,4px_4px] bg-[image:linear-gradient(45deg,var(--color-muted)_25%,transparent_25%,transparent_75%,var(--color-muted)_75%),linear-gradient(45deg,var(--color-muted)_25%,transparent_25%,transparent_75%,var(--color-muted)_75%)]"
 
 type ColorFieldProps = {
   value: string
@@ -57,7 +62,9 @@ export function ColorField({
   "aria-describedby": ariaDescribedby,
 }: ColorFieldProps) {
   const parsed = parseHslTriplet(value)
-  const hasColor = parsed !== null && isHslSafe(value)
+  // A non-null parse implies isHslSafe(value): HSL_TRIPLET_RE's charset (digits, ".",
+  // space, "%") is a strict subset of isHslSafe's, so no extra guard is needed here.
+  const hasColor = parsed !== null
 
   return (
     <div className="flex items-center gap-2">
@@ -77,9 +84,7 @@ export function ColorField({
           <span
             className={cx(
               "block size-full rounded-md border border-border",
-              // Checkerboard "no color" state when the value isn't a safe, parseable triplet.
-              !hasColor &&
-                "bg-[length:8px_8px] bg-[position:0_0,4px_4px] bg-[image:linear-gradient(45deg,var(--color-muted)_25%,transparent_25%,transparent_75%,var(--color-muted)_75%),linear-gradient(45deg,var(--color-muted)_25%,transparent_25%,transparent_75%,var(--color-muted)_75%)]",
+              !hasColor && CHECKERBOARD_CLASS,
             )}
             style={hasColor ? { backgroundColor: `hsl(${value})` } : undefined}
           />
@@ -96,7 +101,9 @@ export function ColorField({
         ref={ref}
         id={id}
         name={name}
-        value={value}
+        // `?? ""` keeps this a controlled input even if a future consumer passes undefined
+        // (today all three coerce to ""); avoids React's controlled/uncontrolled warning.
+        value={value ?? ""}
         onChange={event => onChange(event.target.value)}
         onBlur={onBlur}
         placeholder={placeholder}
