@@ -327,6 +327,28 @@ G-003): `/admin/task-board` is now a redirect stub to `/app/loop-board`, and any
 **one board** — the DB `/app/loop-board` handled above. There is no live localStorage board to remind the
 operator about and no `lib/task-board/seed.ts` to edit.
 
+### 6.8. Deferral guard — prove nothing escaped the ledger
+
+The finding router (§6.7) *routes* findings to ledgers; this step *verifies* the routing actually
+happened for every deferral. It exists because a deferral that lives only in the SESSION file (or a
+memory note, or a recipe) is **invisible work** — the bow-in read-path (`ledger-backlog.ts` → the
+`/app/loop-board` sync) never surfaces it, so it silently rots. This is exactly how **TICKET-0502-A**
+vanished for ~11 sessions (found SESSION_0513): it was deferred in prose but never written to a ledger.
+
+Run the guard against this session's file:
+
+```bash
+bun scripts/deferral-guard.ts          # newest docs/sprints/SESSION_NNNN.md (or pass a path)
+```
+
+It scans for deferral-shaped language ("deferred", "follow-up", "TICKET-", "next/later slice", "punt",
+"revisit", …) and flags any whose line doesn't reference a **real ledger id** (WL/FS/D/FI/MB/TFF/INC/
+RISK/GL/TD that actually exists in a ledger file). For each flag: either **route it to a ledger** via
+§6.7 (then it auto-syncs to the board), or **dismiss it** if it's a scope note / a one-off already-done
+action, not trackable future work. Exit 1 = at least one un-ledgered deferral; **do not close until the
+guard is clean or every remaining flag is a justified dismissal.** (It errs toward over-flagging — a
+missed deferral is the failure it prevents, so a few dismissable false positives are by design.)
+
 ### 7. Memory sweep
 
 If anything from this session is worth carrying forward across all future sessions (not just the next one), update operator-side memory. Examples:
