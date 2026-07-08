@@ -327,15 +327,49 @@ TASK_06 landed. TASK_02 through TASK_04 remain pending because the operator pivo
 
 ### Goal
 
-Continue or complete the AdminCollection + Passport profile consolidation lane from this session plan.
+Two sequenced lanes, in order:
+
+1. **AdminCollection + Passport profile consolidation** (the original 0508/0509 lane) — conform
+   `/app/users` into the Passport-backed People collection, build the `AdminCollection` frame,
+   retire `/app/brand-settings`, and profile-editor Slice A (`LineageNode.bio` → `Passport.bio`).
+2. **Authz conformance sweep** (queued behind #1, operator-approved SESSION_0509 post-review) —
+   the ratified verdict is **keep the 4 authz axes layered, do NOT consolidate; conform instead**
+   (`docs/architecture/research/research-review-authz-systems.md`, TL;DR + the canonical rule +
+   the 7-item sweep). The sweep is drift-cleanup WITHIN/BETWEEN axes, not a merge: (1) delete the
+   3 dead admin HOCs; (2) unify/label the near-twin lineage helpers; (3) convert the **19 remaining
+   raw `role === "admin"` gates** → `can()`/`isAdmin()`; (4) merge the twin entitlement checkers
+   (`entitlement/` vs `entitlements/`); (5) migrate the hand-rolled lineage editor resolvers onto
+   canonical `resource-permissions.ts` (**adversarial-tests-first** — it's a security gate);
+   (6) swap `safe-actions.ts` raw comparisons to `isAdmin()`; (7) ratify the deny-behavior table +
+   the four-axes rule in `docs/architecture/auth.md`. Split it: quick-win batch (1,2,3,4,6,7 —
+   zero-to-low risk) then the careful item (5). Pairs naturally with the AdminCollection lane
+   (both make the admin surfaces honest).
 
 ### First task
 
-Start with SESSION_0509_TASK_02 if continuing the original lane: conform `/app/users` into the Passport-backed People collection. The RBAC grant toggle now exists for account-holding People; accountless People must hide account-only actions.
+Start with SESSION_0509_TASK_02 (AdminCollection): conform `/app/users` into the Passport-backed
+People collection. The RBAC grant toggle now exists for account-holding People; accountless People
+must hide account-only actions. The authz sweep (#2) starts only after the AdminCollection lane.
 
 ## Review log
 
 - 2026-07-07 bow-out: hostile close review completed inline. No blocking findings; residual risk is the deferred People collection conformance, not the shipped RBAC grant slice.
+- 2026-07-07 **post-close external hostile-close review (claude-session, of committed `b7584358`):**
+  operator committed the FI-019 diff, then ran a `/pr-fix-loop`-style review. Two independent
+  adversarial reviewers — **Doug** (security/release-readiness) + **Giddy** (architecture +
+  vertical-codebase + Apple-bar) — plus a direct read of the authz seam. **Verdict: launch-safe,
+  Giddy 9.0/10.** No CRITICAL/HIGH. All seven adversarial vectors defended and CONFIRMED by
+  running gates (allowlist enforced server-side via `z.enum`, admin-only gate, self-grant blocked,
+  soft-revoke live within one request, audit-before-mutation in-tx, additive drift-free migration).
+  The belt-lane authz-widening lesson was **applied, not repeated** (gainer tests present, no
+  fixture gap). Clean extension of the `can()` axis — NOT a 5th system; vertical-codebase
+  conformant. **Hardening applied → commit `7abb6bb7`** (LOW defense-in-depth): read-path allowlist
+  re-filter (second door), in-tx self-guard, dropped redundant cast, partial-index provenance
+  comment. F1 (any-typed tx) was a false positive (repo-wide `type Tx = any` convention). Gates:
+  tsc clean, 24/24 permission tests, lint/format clean.
+- 2026-07-07 architecture decision (operator): the "4 authz axes feels like too much" question →
+  reaffirmed the ratified **keep-layered-and-conform** verdict; queued the 7-item conformance
+  sweep as its own lane behind AdminCollection (see Next session #2). Not a merge — drift cleanup.
 
 ## Reflections
 
