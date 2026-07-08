@@ -85,6 +85,8 @@ Ratified SESSION_0510 from [`research-review-authz-systems.md`](research/researc
 axes, this is the **resolver** law — which function answers which authorization question:
 
 > **Four authz axes, one resolver each, compose — never merge, never fork.**
+> *(These enumerate the four **resolvers** — which function decides — distinct from the four **identity
+> stores** in the "Roles" section above; do not conflate the two "fours".)*
 >
 > 1. **Capability** — `can(user, key)` (`server/orpc/permissions.ts`) answers "may this account perform
 >    this action platform-wide?" It is the ONLY authorized reader of `User.role` for **action** gates;

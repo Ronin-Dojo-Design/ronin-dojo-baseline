@@ -2,7 +2,7 @@
 title: "SESSION 0510 — AdminCollection + Passport consolidation, then authz conformance sweep"
 slug: session-0510
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-07
 updated: 2026-07-07
 last_agent: claude-session-0510
@@ -214,29 +214,79 @@ and can interleave). Item 2 is sequenced entirely behind Item 1; its quick-win b
 
 ## What landed
 
+**Item 1 — AdminCollection + Passport consolidation (foundation):**
+- `AdminCollection<TData>` frame (`components/admin/admin-collection.tsx`) over the `data-table` kit — "new admin surface = columns + query."
+- `/app/users` conformed to the **Passport-keyed People collection** (`server/admin/people/*`): all 3 populations surface (443 userless roster placeholders + add-person placeholders + 23 real accounts), member columns via `canvas-model.ts` resolver-mirrors, account-only actions gated on `userId==null`. Dead old list stack removed.
+- `/app/brand-settings` → single-brand **Appearance** editor (operator Fork-4 revision — kept, not deleted; multi-brand vestige stripped).
+- bio **Slice A**: `Passport.bio` is now SoT (writer + all lineage readers repointed; null-only idempotent backfill migration; `LineageNode.bio` column retained, drop deferred).
+- **ADR 0045** ratifies the AdminCollection law; cody-preflight rule 5 points at it.
+
+**Item 2 — authz conformance sweep (keep 4 axes, conform, no merge):**
+- Quick-wins (items 1/2/3/4/6): deleted 3 dead HOCs + relocated `hasLineageAdminAccess`→`auth-guard.ts`; co-locate+label the lineage-grant twins + extracted `hasLineageTreeGrant`; converted ~11 raw `role==="admin"` → `can(key)` (action, admin-only keys → no widening) / `isAdmin()` (identity); merged the `checkEntitlement`→`hasEntitlement` twin; `safe-actions.ts`→`isAdmin()`/`roleOf()`.
+- Item 7: ratified the 4-axes resolver law + deny-behavior table in `auth.md`.
+- Item 5 (security gate): **characterized only** — 33 adversarial DENY tests (zero resolver diffs) + a sign-off-gated migration proposal. **Migration NOT performed** (awaits operator sign-off).
+
+Goal reached: both pinned lanes landed, with TASK_02b and the item-5 migration correctly deferred/gated by design.
+
 ## Decisions resolved
+
+- Fork 1 — build the frame + ONE exemplar (`/app/users`); ledger the ~29-page conformance sweep (WL-P2-34).
+- Fork 2 — People = Passport-keyed, keep the `/app/users` route (relabel nav "People"); account-only actions gate on `userId==null`.
+- Fork 3 — bio Slice A: Passport.bio wins on conflict, backfill nulls-only, defer the `LineageNode.bio` column drop.
+- **Fork 4 (operator revision)** — do NOT delete `/app/brand-settings`; reframe as the single-brand Appearance editor (keep the color/asset pickers). Fonts + `appearance.manage` grant = follow-ups (WL-P3-32).
+- Fork 5 — ratify one ADR (0045) now; defer the full enforcement-doc prune.
+- Item-5 migration held for operator sign-off (adversarial-tests-first honored).
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
+| `apps/web/components/admin/admin-collection.tsx` | NEW — the generic admin-list frame |
+| `apps/web/server/admin/people/{queries,schema}.ts` | NEW — Passport-keyed `findPeople` + params |
+| `apps/web/app/app/users/_components/people-*.tsx`, `person-actions.tsx` | NEW — People table + gated actions |
+| `apps/web/app/app/users/page.tsx`, `_components/users-table*.tsx` (deleted) | Page → People; dead old list stack removed |
+| `apps/web/app/app/brand-settings/{page,_components/brand-settings-form}.tsx` | Reframe → Appearance |
+| `apps/web/config/admin-sections.ts` | Nav labels: Users→People, Brand Settings→Appearance |
+| `apps/web/prisma/migrations/20260707223000_slice_a_backfill_passport_bio_from_lineage_node/` | NEW — bio backfill (data-only) |
+| `apps/web/server/web/lineage/{payloads,node-profile-actions,node-profile-queries}.ts` + lineage bio readers | Repoint bio → `passport.bio` |
+| `apps/web/components/admin/auth-hoc.tsx` (deleted), `lib/auth-guard.ts` | Delete dead HOCs; relocate `hasLineageAdminAccess` + `hasLineageTreeGrant` |
+| `apps/web/server/{web,admin}/**` (~11 sites), `lib/safe-actions.ts` | raw `role==="admin"` → `can()`/`isAdmin()` |
+| `apps/web/server/web/entitlement/check-entitlement.ts` (deleted); `tournaments/register.ts` | Merge entitlement twin |
+| `apps/web/server/web/promotion-events/editor-authorization.security.test.ts` | NEW — 33 adversarial char-tests (item 5) |
+| `docs/architecture/decisions/0045-...md`; `docs/architecture/auth.md`; `docs/architecture/research/0510-item5-...md` | ADR 0045; 4-axes law; item-5 proposal |
+| `docs/knowledge/wiki/wiring-ledger.md` | WL-P2-33..35, WL-P3-32..34 |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `git branch --show-current` | `session-0510-adminpassport` (worktree `../ronin-0510-adminpassport`, off `1002b0d1`) |
+| `bun run typecheck` | clean (all tasks) |
+| `bun run lint:check` | exit 0 (only pre-existing warnings, none in touched files) |
+| `bun run test` (affected authz/entitlement/claim/promotion/lineage suites) | **184 pass / 0 fail** (Doug close run) |
+| `cd apps/web && bun run build` (pre-push gate) | **exit 0** (green) |
+| `bunx prisma migrate status` | clean; single data-only additive backfill migration |
+| `bun run wiki:lint` | 0 errors / 45 warnings (all pre-existing class) |
+| Graphify refresh | nodes=12778 edges=28172 communities=1414 (worktree graph) |
+| Doug — Item 1 verify | LAUNCH-SAFE 9.6/10, zero P1/P2 |
+| Doug — hostile close (Item 2 + integration + prod-push) | **LAUNCH-SAFE 9.7/10**, zero P1/P2; no widening; push+deploy safe |
+| Giddy — hostile close (architecture) | **PASS 9.4/10**; no axis merged, honest half-cut, gate correctly held |
 
 ## Open decisions / blockers
+
+- **Item-5 lineage-editor resolver migration (WL-P2-33) — BLOCKED ON OPERATOR:** review `0510-item5-...migration-proposal.md` + the 33 char-tests, then sign off (or decline). The org-role/self-award/`buildAuthorizedRankAwardWhere` paths have no canonical equivalent = the decision point.
+- **Push — BLOCKED ON OPERATOR "go":** 9 commits on `session-0510-adminpassport`, build-green, both reviews LAUNCH-SAFE. A push deploys the (safe, additive) bio backfill to prod Neon.
+- Route/label naming (`/app/users` route vs "People" label) — deferred to TASK_02b (WL-P2-35).
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+**Primary (if operator signs off the item-5 proposal):** land the staged lineage-editor resolver migration (WL-P2-33) onto canonical `resource-permissions.ts` — dev-equivalence assertion first, adversarial-tests-gated per step, the 33 char-tests as the safety net. **Fallback (if the security work is deferred):** begin the AdminCollection conformance sweep (WL-P2-34) — conform the next batch of `/app/*` list pages onto the frame + rebuild `/app/media`.
 
 ### First task
 
-TBD at bow-out.
+Operator reviews `docs/architecture/research/0510-item5-lineage-editor-resolver-migration-proposal.md`. On sign-off, follow its staged plan: add the dev-only equivalence assertion (hand-rolled resolver vs `canWithGrants` agree on every case), confirm the 33 char-tests still green, then migrate the lineage-grant axis first (leaving org-role/self-award/`buildAuthorizedRankAwardWhere` as explicit supplements). If deferred, pick up WL-P2-34.
 
 ## Review log
 
@@ -259,11 +309,40 @@ TBD at bow-out.
 
 ## Hostile close review
 
+- **Giddy (architecture):** PASS 9.4/10 — AdminCollection at the right altitude (frame-only, no god-props); People/Passport half-cut is honest (zero dangling links/routes); bio fold is single-writer (no two-SoT); authz conform is discriminating (action→`can()`, identity→`isAdmin()`, org short-circuit kept as identity, no axis merged); item-5 correctly held. Scope guards all honored.
+- **Doug (release):** LAUNCH-SAFE 9.7/10 — **no gate widened** (independently verified `ROLES`: no non-admin role holds the converted keys; FI-019 grants double-gated to `beta.view`+`media.upload`, re-filtered on read); `session!` asserts guard-safe; item-5 char-tests non-tautological (real DENY, zero resolver diffs); 184 tests pass; sole migration idempotent additive → **safe to push + deploy**.
+- **Kaizen aggregate:** 9.5/10 — disciplined incremental work; the one security boundary was tested-first and held for sign-off rather than rushed.
+
+### Findings (severity ≥ medium)
+
+None. Two LOW notes handled: **N-1** (auth.md "two fours" conflation) — fixed inline (clarifying clause added). **N-2** (`/admin/layout.tsx` raw `role` check on the retiring surface) — ledgered **WL-P3-34**.
+
 ## ADR / ubiquitous-language check
 
+- **ADR 0045** filed (AdminCollection: one frame, one editor, Passport-backed People, Appearance-not-deleted, conform-incrementally). Cross-refs ADR 0025/0040/0034.
+- `docs/architecture/auth.md` gained the **4-axes resolver law + deny-behavior table** (ratifies `research-review-authz-systems.md`; carried by the research doc + auth.md, not a separate ADR).
+- **Ubiquitous language:** "People" (= a Passport, account or not) vs "User" (= a Passport with an account) clarified; "Appearance" replaces "Brand Settings". Residual `users`-route / "People"-label debt noted (WL-P2-35).
+
 ## Reflections
+
+- **The identity model was the whole game.** The one fact that de-risked TASK_02 was reading the schema before briefing: `LineageNode.passportId` is `@unique NOT NULL` and `Passport.userId` is nullable. That made "People must be Passport-keyed" a proof (userless roster Passports are invisible to any `User.findMany`), not an opinion — and made the bio fold clean (every node has exactly one Passport).
+- **The operator's Fork-4 override was the highest-value moment.** The law said "delete brand-settings"; the operator's "keep the color picker" reframed it to "the multi-brand switcher is dead, the appearance editor is not." Looking at the target before deleting (it was a live SoT editor, already single-brand-collapsed) is exactly why the "surface before deleting" rule exists. I corrected the law memory so no sibling re-deletes it.
+- **Committing per-task was the right call against the clobber lesson** — 9 sub-agent handoffs in one worktree, zero clobbered edits, because each task committed before the next dispatched. The cost: the bow-out gate runner saw a clean tree and mis-classified the session as "docs-only" (skipped the build), so I ran `next build` by hand. Worth flagging: the gate runner assumes an uncommitted working tree (FS-0025), which per-task-commit sessions violate.
+- **Holding the security gate was correct, not slow.** Characterizing the boundary with 33 adversarial tests (green vs current behavior) turned an unbounded "migrate the authz resolver" into a reviewable diff + a proposal — the operator can now greenlight from evidence, and the tests are the safety net the migration can't break.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
+| JETTY/frontmatter sweep | ADR 0045 + item-5 proposal + auth.md carry full frontmatter (`updated`/`last_agent` set); proposal-doc missing-`updated` caught by wiki:lint + fixed |
+| Backlinks/index sweep | ADR 0045 `pairs_with` verified (0025/0040/0034 real filenames); wiki index session row added below |
+| Wiki lint | `bun run wiki:lint` → **0 errors / 45 warnings** (all pre-existing "list needs blank line" class; none in this session's docs) |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | Giddy PASS 9.4 + Doug LAUNCH-SAFE 9.7 (this section); zero P1/P2 |
+| Code-quality gate (Class-A) | AdminCollection + People query are Class-A custom; covered by Giddy 9.4 architecture pass + Doug 9.6/9.7 (no separate `/code-quality` run) |
+| Runtime verification (Doug) | `/app/users` People SSR proven against 466 live rows; lineage drawer bio render confirmed; 184 tests pass |
+| Review & Recommend | Next session goal written: yes (item-5 migration on sign-off, else WL-P2-34) |
+| Memory sweep | Updated `admin-collection-one-surface-law` (frame built + Fork-4) + `admin-upload-gate-and-role-audit` (keep-layered verdict + sweep status) |
+| Next session unblock check | Primary next task BLOCKED ON OPERATOR (item-5 sign-off); clear fallback (WL-P2-34) is unblocked |
+| Git hygiene | branch `session-0510-adminpassport`, 9 commits + this close commit; **not pushed** (awaits operator "go"); worktree retained (branch unmerged); FS-0024 guard run each commit |
+| Graphify update | nodes=12778 edges=28172 communities=1414 (worktree graph; ran before close commit per FS-0025) |

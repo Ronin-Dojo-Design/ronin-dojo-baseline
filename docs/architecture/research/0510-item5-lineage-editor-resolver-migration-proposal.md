@@ -4,11 +4,14 @@ slug: 0510-item5-lineage-editor-resolver-migration-proposal
 type: research
 status: proposal
 created: 2026-07-07
+updated: 2026-07-07
 last_agent: claude-session-0510
 pairs_with:
   - apps/web/server/web/promotion-events/editor-authorization.ts
   - apps/web/server/orpc/resource-permissions.ts
   - apps/web/server/web/promotion-events/editor-authorization.security.test.ts
+backlinks:
+  - docs/sprints/SESSION_0510.md
 ---
 
 # Migration Proposal — Promotion-Event Editor Resolver → canonical resource-permissions
