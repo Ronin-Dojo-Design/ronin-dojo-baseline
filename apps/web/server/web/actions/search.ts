@@ -4,6 +4,7 @@ import { z } from "zod"
 import { ToolStatus } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { actionClient } from "~/lib/safe-actions"
+import { can } from "~/server/orpc/permissions"
 import { db } from "~/services/db"
 
 export const searchItems = actionClient
@@ -12,10 +13,17 @@ export const searchItems = actionClient
     const start = performance.now()
     const session = await getServerSession()
 
+    // Action gate (authz-conformance sweep item 3): "may this account see
+    // unpublished tools in search?" is a capability question → `can(user,
+    // "tools.manage")`, not a raw role check. `tools.manage` is held by no
+    // non-admin role, so admins still see drafts (via `["*"]`) and everyone else
+    // sees only Published — behavior preserved.
+    const canSeeUnpublished = can(session?.user, "tools.manage")
+
     const [tools, categories, tags] = await Promise.all([
       db.tool.findMany({
         where: {
-          status: session?.user.role === "admin" ? undefined : ToolStatus.Published,
+          status: canSeeUnpublished ? undefined : ToolStatus.Published,
           OR: [
             { name: { contains: query, mode: "insensitive" } },
             { tagline: { contains: query, mode: "insensitive" } },

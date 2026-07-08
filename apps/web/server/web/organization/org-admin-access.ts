@@ -1,5 +1,6 @@
 "use server"
 
+import { isAdmin } from "~/lib/authz-predicates"
 import { db } from "~/services/db"
 
 /**
@@ -14,7 +15,10 @@ import { db } from "~/services/db"
  */
 export async function hasOrgAdminAccess(userId: string, organizationId: string): Promise<boolean> {
   const user = await db.user.findUnique({ where: { id: userId }, select: { role: true } })
-  if (user?.role === "admin") return true
+  // Deliberate platform-admin short-circuit (SESSION_0448) across axis 3 — route it
+  // through the `isAdmin()` identity predicate, NOT a new `can()` key (authz-conformance
+  // sweep item 3). Behavior preserved: platform admins manage every org.
+  if (isAdmin(user)) return true
 
   const org = await db.organization.findUnique({
     where: { id: organizationId },

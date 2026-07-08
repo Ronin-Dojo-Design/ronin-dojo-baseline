@@ -4,8 +4,7 @@ import { EllipsisIcon, TrashIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { type ComponentProps, useTransition } from "react"
 import { toast } from "sonner"
-import type { User } from "~/.generated/prisma/browser"
-import { UsersDeleteDialog } from "~/app/app/users/_components/users-delete-dialog"
+import { PeopleDeleteDialog } from "~/app/app/users/_components/people-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
   DropdownMenu,
@@ -24,18 +23,34 @@ import { Stack } from "~/components/common/stack"
 import { admin, useSession } from "~/lib/auth-client"
 import { isAdmin } from "~/lib/authz-predicates"
 import { cx } from "~/lib/utils"
+import type { PersonRow } from "~/server/admin/people/queries"
 import { updateUserRole } from "~/server/admin/users/actions"
 
-type UserActionsProps = ComponentProps<typeof Button> & {
-  user: User
+type PersonActionsProps = ComponentProps<typeof Button> & {
+  person: PersonRow
 }
 
-export const UserActions = ({ user, className, ...props }: UserActionsProps) => {
+/**
+ * Row actions for the Passport-keyed People list. Account-only actions (edit,
+ * role change, ban/unban, revoke sessions, delete-account) are gated behind a linked
+ * account (`person.user`) — an accountless roster placeholder (userId == null) has no
+ * account to act on, so this renders nothing for it until the identity-level editor
+ * lands (deferred TASK_02b). Adapted from `user-actions.tsx`; the account-side behavior
+ * is byte-identical (same `updateUserRole` / Better Auth `admin` calls, same guards).
+ */
+export const PersonActions = ({ person, className, ...props }: PersonActionsProps) => {
   const { data: session } = useSession()
   const pathname = usePathname()
   const router = useRouter()
   const [isUpdatePending, startUpdateTransition] = useTransition()
   const roles = ["admin", "user", "tournament_director"] as const
+
+  const { user } = person
+
+  // Accountless placeholder → no account-level actions exist yet.
+  if (!user) {
+    return null
+  }
 
   if (user.id === session?.user.id) {
     return null
@@ -103,8 +118,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
           <DropdownMenuSeparator />
 
           {/* Identity-only row chrome (authz-conformance sweep item 3): shared `isAdmin`
-              predicate on the TARGET row, not a forked `role === "admin"`. Admin rows
-              are never bannable. */}
+              predicate on the TARGET account, not a forked `role === "admin"`. */}
           {!isAdmin(user) &&
             (user.banned ? (
               <DropdownMenuItem
@@ -150,7 +164,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
       </DropdownMenu>
 
       {!isAdmin(user) && (
-        <UsersDeleteDialog users={[user]} onExecute={() => router.push("/app/users")}>
+        <PeopleDeleteDialog userIds={[user.id]} onExecute={() => router.push("/app/users")}>
           <Button
             variant="secondary"
             size="sm"
@@ -158,7 +172,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
             className="text-red-500"
             {...props}
           />
-        </UsersDeleteDialog>
+        </PeopleDeleteDialog>
       )}
     </Stack>
   )

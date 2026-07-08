@@ -84,7 +84,7 @@ describe("filterAdminSectionGroups", () => {
 
 describe("isAdminSectionItemVisible", () => {
   const lineageItem = allItems.find(item => item.title === "Lineage")!
-  const gatedItem = allItems.find(item => item.title === "Users")!
+  const gatedItem = allItems.find(item => item.title === "People")!
 
   it("lineage flag only admits when the grant is active", () => {
     expect(isAdminSectionItemVisible(lineageItem, asUser("user"), false)).toBe(false)

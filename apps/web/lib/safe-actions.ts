@@ -3,7 +3,9 @@ import { revalidatePath, updateTag } from "next/cache"
 import { createSafeActionClient } from "next-safe-action"
 import { Brand, Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { isAdmin } from "~/lib/authz-predicates"
 import { canUploadMediaForUser } from "~/server/web/media/permissions"
+import { roleOf } from "~/server/orpc/roles"
 import { db } from "~/services/db"
 
 type RevalidateOptions = {
@@ -82,7 +84,10 @@ export const userActionClient = actionClient.use(async ({ next }) => {
 // 3. Admin-only client (extends auth client)
 // -----------------------------------------------------------------------------
 export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
-  if (ctx.user.role !== "admin") {
+  // Interim conform (authz-conformance sweep item 6): route through the shared
+  // `isAdmin()` predicate instead of a forked raw `role !== "admin"`. Full retirement
+  // rides the oRPC migration (SOT-ADR D3) — not accelerated here. Behavior preserved.
+  if (!isAdmin(ctx.user)) {
     throw new Error("User not authorized")
   }
 
@@ -93,7 +98,10 @@ export const adminActionClient = userActionClient.use(async ({ next, ctx }) => {
 // 4. Tournament-admin client (allows "admin" or "tournament_director")
 // -----------------------------------------------------------------------------
 export const tournamentAdminActionClient = userActionClient.use(async ({ next, ctx }) => {
-  if (ctx.user.role !== "admin" && ctx.user.role !== "tournament_director") {
+  // Interim conform (authz-conformance sweep item 6): `isAdmin()` + normalized `roleOf()`
+  // instead of forked raw comparisons. `roleOf` deny-by-defaults unknown roles to `guest`,
+  // so only genuine admins / tournament_directors pass — behavior preserved.
+  if (!isAdmin(ctx.user) && roleOf(ctx.user) !== "tournament_director") {
     throw new Error("User not authorized")
   }
 

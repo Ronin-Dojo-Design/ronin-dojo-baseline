@@ -63,7 +63,7 @@ export interface LineageLifecycleState {
   placeholderArchivedAt: string | null
   accessGrant: { id: string; role: string; userId: string } | null
   passportDisplayName: string | null
-  nodeBio: string | null
+  passportBio: string | null
   rankAwardedAt: string | null
   promoterRelationship: {
     fromNodeId: string

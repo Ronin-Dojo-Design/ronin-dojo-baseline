@@ -1,16 +1,16 @@
 import { Suspense } from "react"
+import { PeopleTable } from "~/app/app/users/_components/people-table"
 import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
-import { findUsers } from "~/server/admin/users/queries"
-import { usersTableParamsCache } from "~/server/admin/users/schema"
-import { UsersTable } from "~/app/app/users/_components/users-table"
+import { findPeople } from "~/server/admin/people/queries"
+import { peopleTableParamsCache } from "~/server/admin/people/schema"
 
 export default async ({ searchParams }: PageProps<"/app/users">) => {
-  const search = usersTableParamsCache.parse(await searchParams)
-  const usersPromise = findUsers(search)
+  const search = peopleTableParamsCache.parse(await searchParams)
+  const peoplePromise = findPeople(search)
 
   return (
-    <Suspense fallback={<DataTableSkeleton title="Users" />}>
-      <UsersTable usersPromise={usersPromise} />
+    <Suspense fallback={<DataTableSkeleton title="People" />}>
+      <PeopleTable peoplePromise={peoplePromise} />
     </Suspense>
   )
 }

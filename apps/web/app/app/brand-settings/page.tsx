@@ -15,9 +15,9 @@ export default async function AppBrandSettingsPage() {
       <div className="flex items-center gap-3">
         <PaletteIcon className="size-6" />
         <div>
-          <H2>Brand Settings</H2>
+          <H2>Appearance</H2>
           <p className="text-sm text-muted-foreground">
-            Theme colors and asset URLs. Changes take effect on next page load.
+            Brand theme colors and asset URLs. Changes take effect on next page load.
           </p>
         </div>
       </div>

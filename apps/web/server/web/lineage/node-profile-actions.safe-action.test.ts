@@ -216,12 +216,13 @@ describe("updateLineageNodeProfile — safe-action wrapper", () => {
     expect(result?.data?.memberId).toBe(fx!.memberId)
     expect(result?.data?.treeSlug).toBe(fx!.treeSlug)
 
-    const [passport, node] = await Promise.all([
-      db.passport.findUnique({ where: { userId: fx!.approvedClaimantUserId } }),
-      db.lineageNode.findUnique({ where: { id: fx!.nodeId } }),
-    ])
+    const passport = await db.passport.findUnique({
+      where: { userId: fx!.approvedClaimantUserId },
+    })
 
     expect(passport?.displayName).toBe("New")
-    expect(node?.bio).toBe("New bio")
+    // Bio Slice A (SESSION_0510 TASK_04): bio folded onto the Passport (the SoT); the
+    // writer no longer touches `LineageNode.bio`.
+    expect(passport?.bio).toBe("New bio")
   })
 })

@@ -314,17 +314,18 @@ describe("lineage node profile editing — logic", () => {
       memberId: fx!.memberId,
     })
 
-    const [passport, node, rankAward] = await Promise.all([
+    const [passport, rankAward] = await Promise.all([
       db.passport.findUnique({
         where: { userId: fx!.approvedClaimantUserId },
       }),
-      db.lineageNode.findUnique({ where: { id: fx!.nodeId } }),
       db.rankAward.findUnique({ where: { id: fx!.rankAwardId } }),
     ])
 
     expect(passport?.displayName).toBe("Updated Display Name")
     expect(passport?.avatarUrl).toBe("https://example.com/updated-avatar.jpg")
-    expect(node?.bio).toBe("Updated lineage bio")
+    // Bio Slice A (SESSION_0510 TASK_04): bio is folded onto the Passport — the writer no
+    // longer touches `LineageNode.bio`. Assert bio landed on the Passport (the SoT).
+    expect(passport?.bio).toBe("Updated lineage bio")
     expect(rankAward?.awardedAt?.toISOString()).toBe(promotionDate.toISOString())
   })
 

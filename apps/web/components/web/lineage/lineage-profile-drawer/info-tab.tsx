@@ -55,10 +55,10 @@ export function InfoTab({
 
   return (
     <Stack direction="column" size="md" className="w-full">
-      {/* Bio */}
-      {profile.bio && (
+      {/* Bio — Bio Slice A (SESSION_0510 TASK_04): Passport-rooted, read `passport.bio`. */}
+      {profile.passport.bio && (
         <section aria-label="Bio">
-          <Note className="text-sm">{profile.bio}</Note>
+          <Note className="text-sm">{profile.passport.bio}</Note>
         </section>
       )}
 

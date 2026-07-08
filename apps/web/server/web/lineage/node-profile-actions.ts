@@ -104,17 +104,17 @@ export const applyLineageNodeProfileUpdate = async ({
 
   await db.$transaction(async tx => {
     // Phase 3c: the node is Passport-rooted; update its Passport identity directly by id.
+    // Bio Slice A (SESSION_0510 TASK_04): bio folded onto the Passport — Passport.bio is
+    // the single source of truth. The parallel `LineageNode.bio` write is retired; readers
+    // now source bio from `passport.bio`. (The `LineageNode.bio` column drop is a deferred
+    // later slice.)
     await tx.passport.update({
       where: { id: member.node.passportId },
       data: {
         displayName: input.displayName,
         avatarUrl: input.avatarUrl,
+        bio: input.bio,
       },
-    })
-
-    await tx.lineageNode.update({
-      where: { id: member.node.id },
-      data: { bio: input.bio },
     })
 
     // SESSION_0496 TASK_06: country lives on the DirectoryProfile satellite. Skip entirely

@@ -42,7 +42,9 @@ function nodeFormDefaults(
     treeId: profile.tree.id,
     nodeId: profile.node.id,
     displayName: str(profile.node.passport.displayName),
-    bio: str(profile.node.bio),
+    // Bio Slice A (SESSION_0510 TASK_04): bio is Passport-rooted — prefill from the
+    // passport; the submit still sends `bio`, which the writer lands on the Passport.
+    bio: str(profile.node.passport.bio),
     avatarUrl: str(profile.node.passport.avatarUrl),
     promotionDate: canEditPromotionDate
       ? toDate(profile.member.currentRankAward?.awardedAt ?? null)

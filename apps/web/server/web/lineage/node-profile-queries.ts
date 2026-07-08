@@ -29,10 +29,14 @@ export type EditableLineageNodeProfile = {
   }
   node: {
     id: string
-    bio: string | null
     passport: {
       displayName: string | null
       avatarUrl: string | null
+      /**
+       * Bio Slice A (SESSION_0510 TASK_04): bio is Passport-rooted now — sourced from
+       * `passport.bio`, not the retired `LineageNode.bio` column.
+       */
+      bio: string | null
       /** DirectoryProfile satellite — the country flag source (SESSION_0496 TASK_06). */
       locationCountry: string | null
     }
@@ -108,11 +112,13 @@ export const getEditableLineageNodeProfile = async ({
           node: {
             select: {
               id: true,
-              bio: true,
               passport: {
                 select: {
                   displayName: true,
                   avatarUrl: true,
+                  // Bio Slice A (SESSION_0510 TASK_04): bio sourced from the Passport, not
+                  // the retired node-level column.
+                  bio: true,
                   // Country lives on the DirectoryProfile satellite (SESSION_0496 TASK_06);
                   // null when the placeholder has no profile yet — the form prefills "".
                   directoryProfile: { select: { locationCountry: true } },
@@ -164,10 +170,11 @@ export const getEditableLineageNodeProfile = async ({
     },
     node: {
       id: member.node.id,
-      bio: member.node.bio,
       passport: {
         displayName: member.node.passport.displayName,
         avatarUrl: member.node.passport.avatarUrl,
+        // Bio Slice A (SESSION_0510 TASK_04): read from the Passport, not `node.bio`.
+        bio: member.node.passport.bio,
         locationCountry: member.node.passport.directoryProfile?.locationCountry ?? null,
       },
     },

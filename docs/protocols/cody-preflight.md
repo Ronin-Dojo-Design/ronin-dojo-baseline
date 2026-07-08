@@ -93,6 +93,8 @@ Cody must add a `## Pre-flight: {component name}` section to the active SESSION 
 
 4. **Petey may waive pre-flight for trivial tasks** (e.g., fixing a typo, updating a doc). The waiver must be noted: `Pre-flight: waived by Petey — {reason}`.
 
+5. **Admin list surface? Use `AdminCollection`, never hand-roll.** Any admin page that lists a collection of records is the ONE `AdminCollection` frame (`components/admin/admin-collection.tsx`) — columns + a data source, nothing hand-rolled. Row → detail → the entity's one editor. See [ADR 0045](../architecture/decisions/0045-admin-collection-one-surface-law.md). Building a bespoke admin list/grid/card is a FAILED_STEPS violation.
+
 ## Schema checklist
 
 For any task that adds or modifies Prisma models (3+ models = mandatory Petey first):

@@ -47,7 +47,9 @@ async function main() {
   })
   for (const c of claims) {
     if (c.nodeId !== TONY_NODE_ID || c.consumedAt !== null) {
-      throw new Error(`GUARD: pending claim ${c.id} no longer matches (nodeId/consumedAt changed) — aborting`)
+      throw new Error(
+        `GUARD: pending claim ${c.id} no longer matches (nodeId/consumedAt changed) — aborting`,
+      )
     }
   }
 
@@ -76,7 +78,9 @@ async function main() {
       throw new Error(`GUARD: dup lead ${l.id} email mismatch (${l.email}) — aborting`)
     }
     if (l.followUps.length > 0) {
-      throw new Error(`GUARD: dup lead ${l.id} has ${l.followUps.length} followUp(s) — refusing to cascade-delete; reassign first`)
+      throw new Error(
+        `GUARD: dup lead ${l.id} has ${l.followUps.length} followUp(s) — refusing to cascade-delete; reassign first`,
+      )
     }
   }
 
@@ -84,14 +88,23 @@ async function main() {
   console.log("=== DELETE — dead pending claims (→ Tony's already-claimed node) ===")
   for (const c of claims) console.log(`  ${c.id}  ${c.email}  created ${c.createdAt.toISOString()}`)
   console.log(`\n=== KEEP — canonical Phan lead ===`)
-  console.log(`  ${keep.id}  "${keep.firstName} ${keep.lastName ?? ""}".trim  created ${keep.createdAt.toISOString()}`)
+  console.log(
+    `  ${keep.id}  "${keep.firstName} ${keep.lastName ?? ""}".trim  created ${keep.createdAt.toISOString()}`,
+  )
   console.log(`\n=== DELETE — duplicate Phan leads ===`)
-  for (const l of dupLeads) console.log(`  ${l.id}  "${l.firstName} ${l.lastName ?? ""}".trim  created ${l.createdAt.toISOString()}`)
+  for (const l of dupLeads)
+    console.log(
+      `  ${l.id}  "${l.firstName} ${l.lastName ?? ""}".trim  created ${l.createdAt.toISOString()}`,
+    )
 
   if (claims.length !== DEAD_PENDING_CLAIM_IDS.length)
-    console.log(`\n⚠ expected ${DEAD_PENDING_CLAIM_IDS.length} pending claims, found ${claims.length} (already gone?)`)
+    console.log(
+      `\n⚠ expected ${DEAD_PENDING_CLAIM_IDS.length} pending claims, found ${claims.length} (already gone?)`,
+    )
   if (dupLeads.length !== PHAN_DUP_LEAD_IDS.length)
-    console.log(`⚠ expected ${PHAN_DUP_LEAD_IDS.length} dup leads, found ${dupLeads.length} (already gone?)`)
+    console.log(
+      `⚠ expected ${PHAN_DUP_LEAD_IDS.length} dup leads, found ${dupLeads.length} (already gone?)`,
+    )
 
   // ---- Backup ----
   const backup = { at: new Date().toISOString(), claims, keptLead: keep, deletedLeads: dupLeads }
@@ -106,11 +119,15 @@ async function main() {
 
   // ---- Apply (one transaction) ----
   const result = await db.$transaction(async tx => {
-    const dc = await tx.lineagePendingClaim.deleteMany({ where: { id: { in: claims.map(c => c.id) } } })
+    const dc = await tx.lineagePendingClaim.deleteMany({
+      where: { id: { in: claims.map(c => c.id) } },
+    })
     const dl = await tx.lead.deleteMany({ where: { id: { in: dupLeads.map(l => l.id) } } })
     return { claimsDeleted: dc.count, leadsDeleted: dl.count }
   })
-  console.log(`\nAPPLIED: ${result.claimsDeleted} pending claim(s) + ${result.leadsDeleted} duplicate lead(s) deleted.`)
+  console.log(
+    `\nAPPLIED: ${result.claimsDeleted} pending claim(s) + ${result.leadsDeleted} duplicate lead(s) deleted.`,
+  )
 }
 
 main()

@@ -5,7 +5,7 @@ import { env } from "~/env"
 import { isInSameBrand } from "~/lib/authz"
 import { userActionClient } from "~/lib/safe-actions"
 import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
-import { checkEntitlement } from "~/server/web/entitlement/check-entitlement"
+import { hasEntitlement } from "~/server/web/entitlements/queries"
 import {
   registrationCancelSchema,
   registrationCheckoutSchema,
@@ -36,14 +36,19 @@ export const createRegistrationCheckout = userActionClient
       throw new Error("Tournament not found or not open for registration")
     }
 
-    // 2. Verify user holds the tournament-registration entitlement for this brand
-    const hasEntitlement = await checkEntitlement({
+    // 2. Verify user holds the tournament-registration entitlement for this brand.
+    // Uses the cached `hasEntitlement` (60s TTL, invalidated on grant/revoke via the
+    // `user-entitlements-${userId}` tag) — merged twin of the deleted uncached
+    // `checkEntitlement` (authz-conformance sweep item 4). Safe here: this is a
+    // pre-checkout gate reading an entitlement the account already holds (granted by
+    // webhook/admin, not by this action), so no read-your-writes dependency.
+    const holdsTournamentEntitlement = await hasEntitlement(
       userId,
-      entitlementKey: "tournament-registration",
-      brand: Brand.BBL,
-    })
+      "tournament-registration",
+      Brand.BBL,
+    )
 
-    if (!hasEntitlement) {
+    if (!holdsTournamentEntitlement) {
       throw new Error(
         "Your subscription does not include tournament registration. Please upgrade your plan.",
       )

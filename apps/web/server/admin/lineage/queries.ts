@@ -2,6 +2,7 @@ import "server-only"
 
 import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { isAdmin } from "~/lib/authz-predicates"
 import {
   buildAdminListWhere,
   getAdminListQueryParts,
@@ -32,9 +33,12 @@ function latestClaimStatus<T extends { status: keyof typeof claimStatusOrder; up
 
 export const findLineageTrees = async (search: LineageTreesTableSchema) => {
   const session = await getServerSession()
-  const isAdmin = session?.user.role === "admin"
+  // Identity-only row-scoping (authz-conformance sweep item 3): platform admins see
+  // every tree; non-admins are narrowed to the trees they hold a TREE_ADMIN grant on.
+  // This is a "who am I" data filter, not an action gate → the `isAdmin()` predicate.
+  const isPlatformAdmin = isAdmin(session?.user)
 
-  if (!isAdmin && !session?.user.id) {
+  if (!isPlatformAdmin && !session?.user.id) {
     return { trees: [], total: 0, pageCount: 0 }
   }
 
@@ -49,12 +53,14 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
   const where = buildAdminListWhere<Prisma.LineageTreeWhereInput>({
     baseWhere: {
       brand: Brand.BBL,
-      ...(isAdmin
+      ...(isPlatformAdmin
         ? {}
         : {
             accessGrants: {
               some: {
-                userId: session.user.id,
+                // Non-null: the early return above bailed unless `isPlatformAdmin` OR a
+                // signed-in user id exists; this is the non-admin branch, so id is present.
+                userId: session!.user.id,
                 role: "TREE_ADMIN",
                 revokedAt: null,
               },
@@ -118,9 +124,10 @@ export type AdminLineageTreeRow = Awaited<ReturnType<typeof findLineageTrees>>["
 
 export const findLineageTreeDetail = async (treeId: string) => {
   const session = await getServerSession()
-  const isAdmin = session?.user.role === "admin"
+  // Identity-only row-scoping (authz-conformance sweep item 3): see `findLineageTrees`.
+  const isPlatformAdmin = isAdmin(session?.user)
 
-  if (!isAdmin && !session?.user.id) {
+  if (!isPlatformAdmin && !session?.user.id) {
     return null
   }
 
@@ -128,12 +135,13 @@ export const findLineageTreeDetail = async (treeId: string) => {
     where: {
       id: treeId,
       brand: Brand.BBL,
-      ...(isAdmin
+      ...(isPlatformAdmin
         ? {}
         : {
             accessGrants: {
               some: {
-                userId: session.user.id,
+                // Non-null: see `findLineageTrees` — the early return guarantees a user id here.
+                userId: session!.user.id,
                 role: "TREE_ADMIN",
                 revokedAt: null,
               },

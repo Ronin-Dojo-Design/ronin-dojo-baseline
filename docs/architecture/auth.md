@@ -78,6 +78,46 @@ flowchart TD
   dOrgAdmin -->|no| deny[ACCESS_DENIED]
 ```
 
+## Authorization axes — the resolver law (ratified)
+
+Ratified SESSION_0510 from [`research-review-authz-systems.md`](research/research-review-authz-systems.md)
+(verdict: **keep-layered-and-conform**, not merge). Where the "Roles" section above lists the identity
+axes, this is the **resolver** law — which function answers which authorization question:
+
+> **Four authz axes, one resolver each, compose — never merge, never fork.**
+> *(These enumerate the four **resolvers** — which function decides — distinct from the four **identity
+> stores** in the "Roles" section above; do not conflate the two "fours".)*
+>
+> 1. **Capability** — `can(user, key)` (`server/orpc/permissions.ts`) answers "may this account perform
+>    this action platform-wide?" It is the ONLY authorized reader of `User.role` for **action** gates;
+>    `isAdmin()` (`lib/authz-predicates.ts`) is the ONLY identity predicate for **non-action** branching
+>    (labels, row-selection chrome).
+> 2. **Lineage resource grants** — `canForResource`/`canWithGrants`
+>    (`server/orpc/resource-permissions.ts`) answers "may this account do this to THIS tree/branch/node?"
+>    Additive over capability; the ONLY authorized reader of `LineageTreeAccess` for decisions.
+> 3. **Org standing** — `hasOrgAdminAccess` + role-assignment queries
+>    (`server/web/organization/org-admin-access.ts`) answers "what is this account's standing in THIS
+>    organization?" The ONLY authz reader of `Membership` role assignments.
+> 4. **Entitlements** — `hasEntitlement` (`server/web/entitlements/queries.ts`) answers "has this account
+>    been granted this product capability (paid or comped)?" Commerce, not authority-of-record.
+>
+> Ownership (`userId === owner`) is an aggregate invariant asserted in-handler (belt-router pattern), not
+> a system. Surfaces needing multiple axes compose predicates in a named server helper (`canUploadMedia`
+> pattern), never inline. Grants are additive-only and audited (per-user overrides = FI-019's
+> `UserPermissionGrant` inside axis 1). **A new authz need = a new *key* or a new *composition helper* —
+> never a new store or resolver.**
+
+### Deny-behavior standard
+
+Each gate helper denies in the idiom of its surface, and documents its lane:
+
+| Surface | Deny behavior |
+| --- | --- |
+| Route segment (layout/page guard) | `redirect(...)` (e.g. `requirePermission` → `/app`) |
+| Public-route page | `notFound()` (do not reveal the gated route exists) |
+| oRPC procedure / API route | `401` / `403` (`ORPCError FORBIDDEN`) |
+| Server action | typed error (`next-safe-action` `adminActionClient` → thrown Error) |
+
 ## Role assignment (write path)
 
 `User.role` is only ever written through the app's own zod-gated server actions — **not** through Better-Auth's `admin.setRole` (which is unused here; its array form would emit `"a,b"`, invalid for the enum). Keep roles single-valued.
