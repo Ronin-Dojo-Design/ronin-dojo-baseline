@@ -11,13 +11,14 @@ const node = {
   visibility: "PUBLIC",
   isVerified: true,
   verificationStatus: "VERIFIED",
-  bio: "Private biography should not render on a free card.",
   passportId: "passport-session-0347",
   // Phase 3c (SOT-ADR D1): identity is Passport-rooted; account is `passport.user`.
   passport: {
     id: "passport-session-0347",
     displayName: "Public Name",
     avatarUrl: "https://images.test/passport.jpg",
+    // Bio Slice A (SESSION_0510 TASK_04): bio is Passport-rooted now (was node-level).
+    bio: "Private biography should not render on a free card.",
     user: {
       id: "user-session-0347",
       name: "Legal Name",

@@ -68,7 +68,9 @@ export const lineageNodeRowPayload = {
   visibility: true,
   isVerified: true,
   verificationStatus: true,
-  bio: true,
+  // Bio Slice A (SESSION_0510 TASK_04): bio is sourced from `passport.bio` (folded via
+  // `lineagePassportPayload`/`publicPassportPayload`), NOT the node-level column. The
+  // node-level `bio` select is retired; consumers read `node.passport.bio`.
   passportId: true,
   claimRequests: {
     where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },
@@ -220,7 +222,8 @@ export const lineageNodeProfilePayload = {
   visibility: true,
   isVerified: true,
   verificationStatus: true,
-  bio: true,
+  // Bio Slice A (SESSION_0510 TASK_04): bio sourced from `passport.bio` (folded via
+  // `lineagePassportPayload`), NOT the node-level column. See `lineageNodeRowPayload`.
   passportId: true,
   claimRequests: {
     where: { status: { in: ["APPROVED", "PENDING", "NEEDS_INFO"] } },

@@ -46,7 +46,8 @@ export function LineageBoardCard({
 }) {
   const isRoot = member.id === defaultRootMemberId || member.nodeId === rootId
   const hasChildren = (childrenByParentId.get(member.id) ?? []).length > 0
-  const bio = member.node.bio?.trim()
+  // Bio Slice A (SESSION_0510 TASK_04): bio is Passport-rooted — read `passport.bio`.
+  const bio = member.node.passport.bio?.trim()
 
   return (
     <div
