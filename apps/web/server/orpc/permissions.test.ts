@@ -130,6 +130,38 @@ describe("beta.view — the /app/beta gate key (SESSION_0498 TASK_04)", () => {
   })
 })
 
+describe("authz-conformance sweep item 3 — converted action gates do NOT widen", () => {
+  // These `can()` keys replaced raw `role === "admin"` checks (docs-navigator route,
+  // search draft-visibility, passport-claim moderation). Converting WIDENS a gate from
+  // admin-only to "any role holding the key" — so pin that NO non-admin role holds them.
+  // Admins still pass via `["*"]`; FI-019 override grantees are the only future path in.
+  const nonAdminSubjects: Array<[string, SessionUser | null]> = [
+    ["user", member],
+    ["guest", guest],
+    ["tournament_director", asUser("tournament_director")],
+    ["unknown-role", asUser("nonexistent-role")],
+  ]
+
+  for (const key of ["repo-docs.manage", "claims.manage", "tools.manage"] as const) {
+    it(`admin holds ${key} (via the * wildcard) — behavior preserved`, () => {
+      expect(can(admin, key)).toBe(true)
+    })
+
+    for (const [label, subject] of nonAdminSubjects) {
+      it(`${label} does NOT hold ${key} (no silent widening)`, () => {
+        expect(can(subject, key)).toBe(false)
+      })
+    }
+  }
+
+  it("an FI-019 override IS the intended path in for a non-admin (repo-docs.manage)", () => {
+    const grantee = { ...member, extraGrants: ["repo-docs.manage"] } satisfies SessionUser
+    expect(can(grantee, "repo-docs.manage")).toBe(true)
+    // …and only that key — the override stays narrow.
+    expect(can(grantee, "claims.manage")).toBe(false)
+  })
+})
+
 describe("can — per-user extraGrants (FI-019)", () => {
   it("adds narrow user override grants without changing the user's platform role", () => {
     const betaTester = {

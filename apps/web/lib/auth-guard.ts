@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import type { LineageTreeAccessRole } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { isAdmin } from "~/lib/authz-predicates"
 import type { SessionUser } from "~/server/orpc/context"
 import { can } from "~/server/orpc/permissions"
 import type { Permission } from "~/server/orpc/roles"
@@ -109,15 +110,53 @@ export const requireLineageManagementAccess = async (
 }
 
 /**
- * Non-redirecting variant for nav/sidebar visibility: does this user have an
- * active tree-level lineage grant? Pairs with `can()` so the sidebar shows the
- * broad lineage section only to users who can reach the management index.
+ * Shared primitive for the two non-redirecting lineage-grant predicates below.
+ * Answers only "does this user hold an active `LineageTreeAccess` row in one of
+ * `roles`?" — no role/admin logic, so callers layer their own capability check.
  */
-export const hasAnyLineageGrant = async (userId: string): Promise<boolean> => {
+const hasLineageTreeGrant = async (
+  userId: string,
+  roles: LineageTreeAccessRole[],
+): Promise<boolean> => {
   const grant = await db.lineageTreeAccess.findFirst({
-    where: { userId, role: { in: LINEAGE_MANAGEMENT_AREA_ROLES }, revokedAt: null },
+    where: { userId, role: { in: roles }, revokedAt: null },
     select: { id: true },
   })
 
   return grant !== null
+}
+
+/**
+ * Non-redirecting variant for nav/sidebar visibility: does this user have an
+ * active tree-level lineage grant? Pairs with `can()` so the sidebar shows the
+ * broad lineage section only to users who can reach the management index.
+ *
+ * do-not-merge twins (WL-P1-8): `hasAnyLineageGrant` and `hasLineageAdminAccess`
+ * are near-twins over the SAME table but DIFFERENT role sets and admit rules —
+ * do NOT collapse them into one:
+ *   - `hasAnyLineageGrant`   → management roles {TREE_ADMIN, TREE_EDITOR}; NO
+ *     platform-admin short-circuit (callers pair it with `can()` for that).
+ *   - `hasLineageAdminAccess`→ {TREE_ADMIN} ONLY, PLUS a platform-admin
+ *     (`isAdmin`) short-circuit baked in.
+ * They share the `hasLineageTreeGrant` primitive; the difference is the point.
+ */
+export const hasAnyLineageGrant = async (userId: string): Promise<boolean> => {
+  return hasLineageTreeGrant(userId, LINEAGE_MANAGEMENT_AREA_ROLES)
+}
+
+/**
+ * Relocated from the (now deleted) `components/admin/auth-hoc.tsx` — the sole
+ * live helper in that dead-HOC file (authz-conformance sweep item 1).
+ *
+ * Answers "may this user act as a lineage admin?" = platform admin (identity
+ * short-circuit) OR an active TREE_ADMIN grant. Distinct from
+ * `hasAnyLineageGrant` — see the do-not-merge-twins note above.
+ */
+export const hasLineageAdminAccess = async (
+  userId: string,
+  role?: string | null,
+): Promise<boolean> => {
+  if (isAdmin({ role })) return true
+
+  return hasLineageTreeGrant(userId, ["TREE_ADMIN"])
 }

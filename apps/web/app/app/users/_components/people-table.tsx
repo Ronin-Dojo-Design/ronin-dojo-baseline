@@ -9,6 +9,7 @@ import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
+import { isAdmin } from "~/lib/authz-predicates"
 import type { findPeople, PersonRow } from "~/server/admin/people/queries"
 import { peopleTableParamsSchema } from "~/server/admin/people/schema"
 import type { DataTableFilterField } from "~/types"
@@ -52,7 +53,8 @@ export function PeopleTable({ peoplePromise }: PeopleTableProps) {
       initialState={{ columnPinning: { right: ["actions"] } }}
       getRowId={(originalRow, index) => `${originalRow.id}-${index}`}
       // Accountless placeholders + admins are not selectable (bulk actions are account-only).
-      enableRowSelection={row => row.original.user != null && row.original.user.role !== "admin"}
+      // Identity-only row chrome (authz-conformance sweep item 3): shared `isAdmin` predicate.
+      enableRowSelection={row => row.original.user != null && !isAdmin(row.original.user)}
       callToAction={
         <Stack size="sm">
           <Button

@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { db } from "~/services/db"
 import type { OnboardingTier } from "~/components/web/onboarding/tier-features"
 
@@ -69,8 +70,11 @@ export async function getOnboardingState({
       select: { id: true },
     }))
 
+  // Identity-only branch (authz-conformance sweep item 3): this selects a display
+  // tier LABEL (feature list + upgrade nudge), not an access gate → the `isAdmin()`
+  // identity predicate, not `can()`.
   let tier: OnboardingTier = "free"
-  if (role === "admin") {
+  if (isAdmin({ role })) {
     tier = "admin"
   } else if (ownerMembership || ownedOrg) {
     tier = "school_owner"

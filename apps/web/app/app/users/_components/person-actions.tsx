@@ -21,6 +21,7 @@ import {
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { admin, useSession } from "~/lib/auth-client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { cx } from "~/lib/utils"
 import type { PersonRow } from "~/server/admin/people/queries"
 import { updateUserRole } from "~/server/admin/users/actions"
@@ -116,7 +117,9 @@ export const PersonActions = ({ person, className, ...props }: PersonActionsProp
 
           <DropdownMenuSeparator />
 
-          {user.role !== "admin" &&
+          {/* Identity-only row chrome (authz-conformance sweep item 3): shared `isAdmin`
+              predicate on the TARGET account, not a forked `role === "admin"`. */}
+          {!isAdmin(user) &&
             (user.banned ? (
               <DropdownMenuItem
                 onClick={() => {
@@ -160,7 +163,7 @@ export const PersonActions = ({ person, className, ...props }: PersonActionsProp
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {user.role !== "admin" && (
+      {!isAdmin(user) && (
         <PeopleDeleteDialog userIds={[user.id]} onExecute={() => router.push("/app/users")}>
           <Button
             variant="secondary"

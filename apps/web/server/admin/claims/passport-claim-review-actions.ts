@@ -9,6 +9,7 @@ import {
 } from "~/server/admin/lineage/claim-finalize"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import type { SessionUser } from "~/server/orpc/context"
+import { can } from "~/server/orpc/permissions"
 import { canForResource } from "~/server/orpc/resource-permissions"
 import { scheduleClaimApprovedEmail } from "~/server/web/lineage/claim-approved-email"
 import { scheduleClaimRejectedEmail } from "~/server/web/lineage/claim-rejected-email"
@@ -292,7 +293,11 @@ const assertCanReviewPassportClaim = async ({
   brand: Brand
   claimId: string
 }): Promise<void> => {
-  if (user.role === "admin") {
+  // Action gate (authz-conformance sweep item 3): the moderation short-circuit routes
+  // through `can()` — the ONLY authorized reader of role for action gates. `claims.manage`
+  // is admin-only (held by no non-admin role), so admins still pass via `["*"]`; the
+  // resource-scoped `claim.review` grants below remain the additive path for non-admins.
+  if (can(user, "claims.manage")) {
     return
   }
 

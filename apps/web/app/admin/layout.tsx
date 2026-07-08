@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
-import { hasLineageAdminAccess } from "~/components/admin/auth-hoc"
 import { Shell } from "~/components/admin/shell"
 import { getServerSession } from "~/lib/auth"
+import { hasLineageAdminAccess } from "~/lib/auth-guard"
 
 export const metadata: Metadata = {
   title: "Admin Panel",

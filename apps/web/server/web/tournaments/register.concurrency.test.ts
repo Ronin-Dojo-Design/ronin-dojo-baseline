@@ -8,7 +8,7 @@
  *
  * Fixtures use real rows for everything the action touches: user + passport,
  * organization + membership (so `isInSameBrand` passes), Entitlement +
- * UserEntitlement (so `checkEntitlement` passes), tournament + discipline +
+ * UserEntitlement (so `hasEntitlement` passes), tournament + discipline +
  * role + division.
  *
  * Two-phase teardown matches `materialize.concurrency.test.ts`: targeted
@@ -56,6 +56,10 @@ mock.module("next/cache", () => ({
   revalidatePath: () => {},
   updateTag: () => {},
   revalidateTag: () => {},
+  // `hasEntitlement` (the merged entitlement checker) is a `"use cache"` fn that calls
+  // these at runtime — stub them so the gate resolves under bun:test.
+  cacheTag: () => {},
+  cacheLife: () => {},
 }))
 
 mock.module("~/lib/auth", () => ({
@@ -170,7 +174,7 @@ beforeAll(async () => {
     },
   })
 
-  // 5. Entitlement + UserEntitlement — required so `checkEntitlement` returns true.
+  // 5. Entitlement + UserEntitlement — required so `hasEntitlement` returns true.
   // The action looks up by literal `key === "tournament-registration"`. Upsert
   // (don't tag) so this is idempotent across runs; teardown only removes the
   // per-run UserEntitlement, never the shared Entitlement row.

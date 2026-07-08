@@ -22,6 +22,7 @@ import {
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { admin, useSession } from "~/lib/auth-client"
+import { isAdmin } from "~/lib/authz-predicates"
 import { cx } from "~/lib/utils"
 import { updateUserRole } from "~/server/admin/users/actions"
 
@@ -101,7 +102,10 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
 
           <DropdownMenuSeparator />
 
-          {user.role !== "admin" &&
+          {/* Identity-only row chrome (authz-conformance sweep item 3): shared `isAdmin`
+              predicate on the TARGET row, not a forked `role === "admin"`. Admin rows
+              are never bannable. */}
+          {!isAdmin(user) &&
             (user.banned ? (
               <DropdownMenuItem
                 onClick={() => {
@@ -145,7 +149,7 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {user.role !== "admin" && (
+      {!isAdmin(user) && (
         <UsersDeleteDialog users={[user]} onExecute={() => router.push("/app/users")}>
           <Button
             variant="secondary"

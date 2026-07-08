@@ -9,6 +9,7 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { isAdmin } from "~/lib/authz-predicates"
 import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { PersonRow } from "~/server/admin/people/queries"
 import { PersonActions } from "./person-actions"
@@ -75,7 +76,8 @@ export const getColumns = (): ColumnDef<PersonRow>[] => {
           checked={row.getIsSelected()}
           onChange={e => row.toggleSelected(e.target.checked)}
           // Only account-holders are selectable (bulk actions are account-only); admins never.
-          disabled={!hasAccount(row.original) || row.original.user?.role === "admin"}
+          // Identity-only row chrome (authz-conformance sweep item 3): shared `isAdmin` predicate.
+          disabled={!hasAccount(row.original) || isAdmin(row.original.user)}
           aria-label="Select row"
           table={table}
           row={row}
