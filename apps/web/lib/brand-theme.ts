@@ -17,6 +17,36 @@
 /** Only allow HSL-component characters (digits, spaces, dots, commas, %, /). */
 export const isHslSafe = (value: string): boolean => /^[\d.\s,/%]+$/.test(value)
 
+/**
+ * HSL color as separate components — the shape `react-colorful`'s `HslColorPicker`
+ * consumes/emits (`{ h, s, l }`, hue 0–360, saturation/lightness 0–100).
+ */
+export interface HslColor {
+  h: number
+  s: number
+  l: number
+}
+
+/** Matches the stored triplet form `"234 98% 61%"` (hue, S%, L% — no `hsl()` wrapper). */
+const HSL_TRIPLET_RE = /^\s*(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%\s*$/
+
+/**
+ * Parse a stored HSL triplet (`"234 98% 61%"`) into components, or `null` when the
+ * value is empty/malformed. Total (never throws) — callers treat `null` as "no color".
+ */
+export const parseHslTriplet = (value: string): HslColor | null => {
+  const match = HSL_TRIPLET_RE.exec(value)
+  if (!match) return null
+  return { h: Number(match[1]), s: Number(match[2]), l: Number(match[3]) }
+}
+
+/**
+ * Format HSL components back into the stored triplet form. Components are rounded to
+ * integers; the output is always `isHslSafe` (digits, spaces, `%` only).
+ */
+export const formatHslTriplet = (c: HslColor): string =>
+  `${Math.round(c.h)} ${Math.round(c.s)}% ${Math.round(c.l)}%`
+
 export interface ThemeColorSettings {
   primaryColor?: string | null
   primaryFgColor?: string | null
