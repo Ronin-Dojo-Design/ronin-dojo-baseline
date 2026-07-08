@@ -139,19 +139,19 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   with (1) a diff + transitive-import check that the changed files don't reach the failing route, and (2) a
   fresh-server isolated re-run. Relates to the shared-DB/one-server parallel-session trap.
 
-### TFF-009 — two stale e2e left behind by PR #194's UI reframes (resolved SESSION_0511)
-
-- **Status:** `resolved` (both fixed + CI-green before the #194 merge).
-- **What broke:** (1) `e2e/lineage/authenticated-lifecycle.spec.ts:362` `expect(updatedState.nodeBio).toBe(updatedBio)` failed on firefox+webkit — bio Slice A folded the bio write onto `Passport.bio` and deleted the `LineageNode.bio` write, so the read-model read a stale column. (2) `e2e/admin/brand-settings.spec.ts` (3 tests) hung to a 24m chromium timeout — the page was reframed `Brand Settings`→`Appearance` (h2), the per-brand `Black Belt Legacy` card collapsed to one `Theme` fieldset, route `/admin`→`/app`, toast `"…settings saved"`→`"Appearance saved"`; the spec still asserted every old string.
-- **NOT flakes — real stale tests from intentional UI-contract changes.** #2 was **chromium-only** because firefox/webkit are scoped `testDir: ./e2e/lineage` (the admin suite runs chromium-only) — invisible to 2 of 3 browsers.
-- **Fix:** repoint the lineage-lifecycle read-model at `passport.bio` (`nodeBio`→`passportBio`); rewrite the 3 brand-settings tests against the new DOM (verified locally on an isolated `:3100` server → 3 pass, then chromium CI green).
-- **Reusable pattern (→ memory `operating-loop-needs-e2e-for-ui-contracts`):** any UI reframe (renamed heading, moved route, restructured form) MUST run its affected e2e — incl. the **chromium-only admin suite** — before the SHIP/merge verdict. Source review + unit + `next build` + two fresh 9+ hostile reviews all missed both; only CI e2e caught them.
-
 ### TFF-001..005 — resolved
 
 See below.
 
 ## Resolved Clusters
+
+### TFF-009 — two stale e2e left behind by PR #194's UI reframes (resolved SESSION_0511)
+
+- **Status:** `resolved` (both fixed + CI-green before the #194 merge; merged to prod in #194).
+- **What broke:** (1) `e2e/lineage/authenticated-lifecycle.spec.ts:362` `expect(updatedState.nodeBio).toBe(updatedBio)` failed on firefox+webkit — bio Slice A folded the bio write onto `Passport.bio` and deleted the `LineageNode.bio` write, so the read-model read a stale column. (2) `e2e/admin/brand-settings.spec.ts` (3 tests) hung to a 24m chromium timeout — the page was reframed `Brand Settings`→`Appearance` (h2), the per-brand `Black Belt Legacy` card collapsed to one `Theme` fieldset, route `/admin`→`/app`, toast `"…settings saved"`→`"Appearance saved"`; the spec still asserted every old string.
+- **NOT flakes — real stale tests from intentional UI-contract changes.** #2 was **chromium-only** because firefox/webkit are scoped `testDir: ./e2e/lineage` (the admin suite runs chromium-only) — invisible to 2 of 3 browsers.
+- **Fix:** repoint the lineage-lifecycle read-model at `passport.bio` (`nodeBio`→`passportBio`, `37f438ce`); rewrite the 3 brand-settings tests against the new DOM (`abbad2db`, verified locally on an isolated `:3100` server → 3 pass, then chromium CI green).
+- **Reusable pattern (→ memory `operating-loop-needs-e2e-for-ui-contracts`):** any UI reframe (renamed heading, moved route, restructured form) MUST run its affected e2e — incl. the **chromium-only admin suite** — before the SHIP/merge verdict. Source review + unit + `next build` + two fresh 9+ hostile reviews all missed both; only CI e2e caught them.
 
 **TFF-001..005 — all one root cause: full-suite runner concurrency, not test logic.** Resolved by
 SESSION_0342.
