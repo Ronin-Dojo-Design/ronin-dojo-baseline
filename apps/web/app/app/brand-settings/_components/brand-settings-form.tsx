@@ -15,8 +15,8 @@ import type { findBrandSettings } from "~/server/admin/brand-settings/queries"
 
 // Single-brand collapse (SESSION_0447): BBL is the only brand. The `brand` field
 // keeps the action's enum contract (narrowed at Stage-2 with the schema drop) but
-// is fixed to BBL — the editor only ever writes the one row.
-const BBL_LABEL = "Black Belt Legacy"
+// is fixed to BBL — the editor only ever writes the one row. Reframed as the
+// single-brand "Appearance" editor (SESSION_0510) — no multi-brand switcher.
 
 const brandSettingsFormSchema = z.object({
   brand: z.enum(["BASELINE_MARTIAL_ARTS", "RONIN_DOJO_DESIGN", "BBL", "WEKAF"]),
@@ -51,7 +51,7 @@ export function BrandSettingsForm({ settings, className, ...props }: BrandSettin
     },
     actionProps: {
       onSuccess: () => {
-        toast.success(`${BBL_LABEL} settings saved`)
+        toast.success("Appearance saved")
       },
       onError: ({ error }) => {
         toast.error(error.serverError ?? "Failed to save settings")
@@ -63,7 +63,7 @@ export function BrandSettingsForm({ settings, className, ...props }: BrandSettin
     <Form {...form}>
       <form onSubmit={handleSubmitWithAction} className={className} {...props}>
         <div className="space-y-6">
-          <H3>{BBL_LABEL}</H3>
+          <H3>Theme</H3>
 
           {/* Color preview */}
           <div className="flex items-center gap-3">

@@ -298,7 +298,7 @@ export const ADMIN_SECTION_GROUPS: AdminSectionGroup[] = [
     icon: SettingsIcon,
     items: [
       {
-        title: "Brand Settings",
+        title: "Appearance",
         href: "/app/brand-settings",
         icon: PaletteIcon,
         permission: APP_AREA_PERMISSIONS.brandSettings,

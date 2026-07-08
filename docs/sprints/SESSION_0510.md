@@ -205,7 +205,7 @@ and can interleave). Item 2 is sequenced entirely behind Item 1; its quick-win b
 | SESSION_0510_TASK_01 | landed | AdminCollection frame built (`components/admin/admin-collection.tsx`); `/app/users` migrated onto it behavior-identical; typecheck/lint/SSR-smoke green |
 | SESSION_0510_TASK_02a | landed | `/app/users` LIST → Passport-keyed `findPeople` (`server/admin/people/*`); member columns (Name/Account/Belt/School/Verified/Listed-under/Created) via resolver-mirrors; account-only actions gated on `userId==null`; 41 placeholders now visible; 0509 RBAC detail flow untouched; gates green |
 | SESSION_0510_TASK_02b | deferred (operator fork) | Unify row→detail→PassportEditor (re-key `[id]` userId→passportId + conditional account panel). Higher-risk re-key on the account surface — surfaced for operator decision, not built overnight |
-| SESSION_0510_TASK_03 | pending | Reframe brand-settings → Appearance editor |
+| SESSION_0510_TASK_03 | landed | Reframed `/app/brand-settings` → **Appearance** editor (operator Fork-4 revision: keep the capability, not delete). Relabeled nav+H2 "Appearance", stripped the multi-brand `Black Belt Legacy` H3 vestige → "Theme", toast "Appearance saved". Route/permission/redirects + `BrandSettings` model/seed/layout injection untouched. Follow-ups ledgered: font settings + `appearance.manage` RBAC grant. Gates green |
 | SESSION_0510_TASK_04 | pending | bio Slice A fold |
 | SESSION_0510_TASK_05 | pending | ADR: AdminCollection law |
 | SESSION_0510_TASK_06 | pending | Authz sweep quick-win batch |
