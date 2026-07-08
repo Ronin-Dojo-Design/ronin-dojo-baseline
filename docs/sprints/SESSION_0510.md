@@ -239,6 +239,23 @@ TBD at bow-out.
 
 ## Review log
 
+### SESSION_0510_REVIEW_01 — Doug verify of Item 1 cumulative diff (`1002b0d1..570b373c`)
+
+- **Verdict:** LAUNCH-SAFE, 9.6/10, zero P1/P2. Passport-keyed `findPeople` proven against 466 live
+  rows; account-only actions provably gated off the 443 placeholders; 0509 RBAC detail flow
+  byte-for-byte untouched; bio backfill is null-only/idempotent/Passport-wins — safe to deploy to prod.
+  Gates: typecheck clean, lint:check exit 0, 22 affected tests pass.
+- **P3 dispositions:**
+  1. School mirror omits canonical `where:{isCurrent:true}` + D-023 Membership fallback → **affirmed as
+     intentional admin see-all** (comment added; 0/466 impacted today).
+  2. "Listed under" mirror omits `fromNode.visibility:PUBLIC` → already comment-affirmed "admin sees
+     all" (0 edges impacted).
+  3. Backfill treats `bio=''` as unfilled (would refill a deliberately-blanked bio once) → **accepted**:
+     empty ≈ no bio, and it refills the person's OWN lineage bio; the migration is already applied
+     (editing it would break Prisma's checksum), and it has not reached prod. Documented, not changed.
+- **Follow-up ledgered:** add `server/admin/people/queries.test.ts` (three populations + placeholder
+  gating) to replace Doug's ad-hoc runtime proof — coverage gap, not a defect.
+
 ## Hostile close review
 
 ## ADR / ubiquitous-language check

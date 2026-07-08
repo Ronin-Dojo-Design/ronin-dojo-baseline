@@ -61,6 +61,10 @@ export const peopleRowSelect = {
   },
   // School — `memberSchool`/`memberSchoolLabel` read `affiliations[0]` (org name, else
   // free-text `schoolName`). `isCurrent desc, createdAt desc` puts the current/newest first.
+  // Admin-surface divergence (intentional, Doug-affirmed SESSION_0510): canonical filters
+  // `where:{isCurrent:true}` and adds a D-023 Membership fallback; the admin list shows the
+  // person's newest affiliation even if none is current and drops the Membership fallback —
+  // zero-impact today (0/466 passports have only non-current affiliations).
   affiliations: {
     orderBy: [{ isCurrent: "desc" }, { createdAt: "desc" }],
     select: {
