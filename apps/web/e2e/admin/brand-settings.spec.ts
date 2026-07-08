@@ -1,13 +1,16 @@
 /**
- * E2E: Admin brand-settings CRUD + runtime CSS injection
+ * E2E: Admin Appearance editor (brand-settings) + runtime CSS injection
  *
  * Covers:
- * 1. Admin can navigate to /admin/brand-settings
+ * 1. Admin can navigate to /app/brand-settings (the single-brand "Appearance" editor)
  * 2. Admin can save BBL brand colors
  * 3. Runtime CSS injection applies saved colors on homepage
  *
  * @added SESSION_0292
  * @resolves D9
+ * @updated SESSION_0511 — brand-settings was reframed to the single-brand "Appearance" editor
+ *   (SESSION_0510): route /admin→/app, page heading "Brand Settings"→"Appearance", the per-brand
+ *   "Black Belt Legacy" card collapsed to one "Theme" fieldset, toast "…settings saved"→"Appearance saved".
  */
 import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
@@ -23,20 +26,26 @@ test.describe("Admin brand-settings E2E", () => {
     }
   })
 
-  test("admin can view the brand-settings page (single BBL editor)", async ({ page }) => {
+  test("admin can view the Appearance page (single BBL editor)", async ({ page }) => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
 
-    await page.goto("/admin/brand-settings")
+    await page.goto("/app/brand-settings")
 
-    await expect(page.getByRole("heading", { name: "Brand Settings", level: 2 })).toBeVisible({
+    await expect(page.getByRole("heading", { name: "Appearance", level: 2 })).toBeVisible({
       timeout: 20_000,
     })
 
-    // Single-brand collapse (SESSION_0447): the 4-brand picker is now one BBL editor — the
-    // only brand-section heading is Black Belt Legacy, with a single Save button.
-    await expect(page.getByRole("heading", { name: "Black Belt Legacy", level: 3 })).toBeVisible()
-    for (const goneBrand of ["Baseline Martial Arts", "Ronin Dojo Design", "WEKAF USA"]) {
+    // Single-brand collapse (SESSION_0447/0510): the 4-brand picker is now one BBL "Theme"
+    // fieldset — the only section heading is "Theme", with a single Save button. The former
+    // per-brand section headings (incl. Black Belt Legacy) are gone.
+    await expect(page.getByRole("heading", { name: "Theme", level: 3 })).toBeVisible()
+    for (const goneBrand of [
+      "Baseline Martial Arts",
+      "Ronin Dojo Design",
+      "WEKAF USA",
+      "Black Belt Legacy",
+    ]) {
       await expect(page.getByRole("heading", { name: goneBrand, level: 3 })).toHaveCount(0)
     }
 
@@ -48,29 +57,29 @@ test.describe("Admin brand-settings E2E", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
 
-    await page.goto("/admin/brand-settings")
-    await expect(page.getByRole("heading", { name: "Brand Settings", level: 2 })).toBeVisible({
+    await page.goto("/app/brand-settings")
+    await expect(page.getByRole("heading", { name: "Appearance", level: 2 })).toBeVisible({
       timeout: 20_000,
     })
 
-    // Find the BBL section — it's the 3rd brand card
-    const bblSection = page.locator("div.rounded-lg.border").filter({
-      has: page.getByRole("heading", { name: "Black Belt Legacy", level: 3 }),
+    // The single "Theme" fieldset (single-brand collapse — no per-brand cards).
+    const themeSection = page.locator("div.rounded-lg.border").filter({
+      has: page.getByRole("heading", { name: "Theme", level: 3 }),
     })
 
-    // Fill in BBL primary color
-    const primaryColorInput = bblSection.getByLabel("Primary Color")
+    // Fill in primary color
+    const primaryColorInput = themeSection.getByLabel("Primary Color")
     await primaryColorInput.fill("1 79% 51%")
 
-    // Fill in BBL accent color
-    const accentColorInput = bblSection.getByLabel("Accent Color")
+    // Fill in accent color
+    const accentColorInput = themeSection.getByLabel("Accent Color")
     await accentColorInput.fill("51 100% 50%")
 
-    // Submit the BBL form
-    await bblSection.getByRole("button", { name: /save settings/i }).click()
+    // Submit the form
+    await themeSection.getByRole("button", { name: /save settings/i }).click()
 
     // Verify toast confirmation
-    await expect(page.getByText("Black Belt Legacy settings saved")).toBeVisible({
+    await expect(page.getByText("Appearance saved")).toBeVisible({
       timeout: 10_000,
     })
   })
@@ -79,19 +88,19 @@ test.describe("Admin brand-settings E2E", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
 
-    // First, save a distinctive color via admin page
-    await page.goto("/admin/brand-settings")
-    await expect(page.getByRole("heading", { name: "Brand Settings", level: 2 })).toBeVisible({
+    // First, save a distinctive color via the Appearance editor
+    await page.goto("/app/brand-settings")
+    await expect(page.getByRole("heading", { name: "Appearance", level: 2 })).toBeVisible({
       timeout: 20_000,
     })
 
-    const baselineSection = page.locator("div.rounded-lg.border").filter({
-      has: page.getByRole("heading", { name: "Black Belt Legacy", level: 3 }),
+    const themeSection = page.locator("div.rounded-lg.border").filter({
+      has: page.getByRole("heading", { name: "Theme", level: 3 }),
     })
 
-    await baselineSection.getByLabel("Primary Color").fill("120 50% 40%")
-    await baselineSection.getByRole("button", { name: /save settings/i }).click()
-    await expect(page.getByText("Black Belt Legacy settings saved")).toBeVisible({
+    await themeSection.getByLabel("Primary Color").fill("120 50% 40%")
+    await themeSection.getByRole("button", { name: /save settings/i }).click()
+    await expect(page.getByText("Appearance saved")).toBeVisible({
       timeout: 10_000,
     })
 
@@ -116,17 +125,17 @@ test.describe("Admin brand-settings E2E", () => {
     expect(foundInjectedColor).toBe(true)
 
     // Clean up — clear the color we set
-    await page.goto("/admin/brand-settings")
-    await expect(page.getByRole("heading", { name: "Brand Settings", level: 2 })).toBeVisible({
+    await page.goto("/app/brand-settings")
+    await expect(page.getByRole("heading", { name: "Appearance", level: 2 })).toBeVisible({
       timeout: 20_000,
     })
 
     const cleanupSection = page.locator("div.rounded-lg.border").filter({
-      has: page.getByRole("heading", { name: "Black Belt Legacy", level: 3 }),
+      has: page.getByRole("heading", { name: "Theme", level: 3 }),
     })
     await cleanupSection.getByLabel("Primary Color").fill("")
     await cleanupSection.getByRole("button", { name: /save settings/i }).click()
-    await expect(page.getByText("Black Belt Legacy settings saved")).toBeVisible({
+    await expect(page.getByText("Appearance saved")).toBeVisible({
       timeout: 10_000,
     })
   })
