@@ -2,6 +2,15 @@ import { auth } from "~/lib/auth"
 import { db } from "~/services/db"
 
 /**
+ * SESSION_0513: the claim/onboarding EMAILS no longer embed a magic-link token. A one-shot
+ * `…/magic-link/verify?token=…` link (single-use, 7-day) was consumed by mail scanners /
+ * late clicks → dead link (Tony Hua + Bob got "The Long Road" with a dead CTA). The durable
+ * fix is `bindPendingClaim(email, nodeId)` + `buildClaimSignInUrl(baseUrl)`: bind the
+ * email→node once (90-day TTL), and point the email at a plain `/auth/login` URL that never
+ * expires. `lib/auth.ts` reconciliation claims the bound node on the recipient's NEXT sign-in
+ * (Google OR magic link). `mintClaimMagicLink` (below) is RETAINED for any non-email caller but
+ * is no longer what the email flows embed.
+ *
  * Shared magic-link minter for the BBL self-serve claim / free-signup flow
  * (SESSION_0418). Extracted from `scripts/send-bbl-claim-emails.ts` so BOTH the
  * bulk announcement script AND the public Join-the-Legacy action mint the SAME
@@ -50,14 +59,20 @@ const claimNodeIdFromNextPath = (nextPath: string): string | null => {
 }
 
 /**
- * SESSION_0419: persist an email→node pending-claim binding so the claim survives a sign-in
- * that did NOT come through the magic-link callbackURL — most importantly the emailed Google
- * "recommended" path, which authenticates fine but never carries the node. `lib/auth.ts`
- * `hooks.after` reconciles the binding on the next successful auth for this email. Only a
- * claim-accept nextPath binds a node; a free-signup nextPath (`/me`) is a no-op here.
+ * SESSION_0513: persist an email→node pending-claim binding, keyed on a `nodeId` DIRECTLY.
+ * This is THE durable claim primitive: the emailed link no longer carries a one-shot magic-link
+ * token (a mail scanner or a late click consumed the single use → dead link, SESSION_0513). Instead
+ * we bind the email→node here and point the email at a plain public sign-in URL; `lib/auth.ts`
+ * `hooks.after` (`reconcilePendingLineageClaims`) claims the bound node on the recipient's NEXT
+ * successful auth for this email — Google OR magic link, whichever they use.
+ *
+ * SAME scoping as always (SESSION_0419/0508 P0): only bind a node that is `isClaimable`, whose
+ * passport is UNOWNED (`node.passport.userId: null` — never bind to a node someone already owns,
+ * e.g. students who arrived via their instructor's `?node=` link), on a published + claimable tree.
+ * The brand is read off that tree. If the node resolves to no claimable/unowned member, it's a
+ * no-op. Re-arms on re-mint (extend window, clear consumption marker). 90-day TTL.
  */
-async function persistPendingClaimBinding(email: string, nextPath: string): Promise<void> {
-  const nodeId = claimNodeIdFromNextPath(nextPath)
+export async function bindPendingClaim(email: string, nodeId: string): Promise<void> {
   if (!nodeId) return
 
   // Resolve the brand off the node's published, claimable tree (matches the claim's own scoping).
@@ -82,6 +97,33 @@ async function persistPendingClaimBinding(email: string, nextPath: string): Prom
     // Re-arm on re-mint: extend the window and clear any prior consumption marker.
     update: { brand: member.tree.brand, expiresAt, consumedAt: null, consumedByUserId: null },
   })
+}
+
+/**
+ * Build the durable, PUBLIC sign-in URL the claim/onboarding emails now link to (SESSION_0513).
+ * No one-shot token — it points at `/auth/login`, which never expires and cannot be consumed by a
+ * mail scanner. The node claim happens via the 90-day `bindPendingClaim` binding + the sign-in
+ * reconciliation, NOT via this redirect target, so `nextPath` only decides where the (now-claimed)
+ * user lands — `/me` (their profile) is sufficient.
+ *
+ * `nextPath` MUST stay QUERY-FREE (a single relative segment). A `?node=` here would re-introduce
+ * the Better-Auth callbackURL double-decode trap (a nested `?` → INVALID_CALLBACK_URL); the
+ * reconciliation makes it unnecessary anyway.
+ */
+export function buildClaimSignInUrl(baseUrl: string, nextPath = "/me"): string {
+  const base = baseUrl.replace(/\/+$/, "")
+  return `${base}/auth/login?next=${encodeURIComponent(nextPath)}`
+}
+
+/**
+ * SESSION_0419 (legacy nextPath-keyed binding, retained for `mintClaimMagicLink`): persist an
+ * email→node binding derived from a claim-accept nextPath. Only a claim-accept nextPath binds a
+ * node; a free-signup nextPath (`/me`) is a no-op. Delegates to `bindPendingClaim`.
+ */
+async function persistPendingClaimBinding(email: string, nextPath: string): Promise<void> {
+  const nodeId = claimNodeIdFromNextPath(nextPath)
+  if (!nodeId) return
+  await bindPendingClaim(email, nodeId)
 }
 
 export async function mintClaimMagicLink(opts: {

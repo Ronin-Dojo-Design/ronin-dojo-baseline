@@ -28,7 +28,8 @@ import {
 import { leadPayload } from "~/server/web/lead/payloads"
 import { emitSchoolLead } from "~/server/web/school-lead/emit-school-lead"
 import {
-  claimAcceptNextPath,
+  bindPendingClaim,
+  buildClaimSignInUrl,
   FREE_SIGNUP_NEXT_PATH,
   mintClaimMagicLink,
 } from "~/server/web/lineage/mint-claim-magic-link"
@@ -310,14 +311,13 @@ async function dispatchJoinLegacyNotifications(opts: {
 
   try {
     if (isGuestFreeSubmission && isClaimOfExistingNode && nodeId) {
-      // Guest claiming an existing profile → email-bound magic link that one-click claims
-      // the node (account attach + comp grant happen in finalizeLineageNodeClaim). No
-      // sign-in bounce — the link IS the proof of identity.
-      const claimUrl = await mintClaimMagicLink({
-        baseUrl: bblOrigin,
-        email,
-        nextPath: claimAcceptNextPath(nodeId),
-      })
+      // SESSION_0513: guest claiming an existing profile → bind the email→node durably (90-day)
+      // and link the email to the PUBLIC sign-in URL. No one-shot magic-link token to be consumed
+      // by a mail scanner / late click; the node auto-claims on the recipient's next sign-in
+      // (Google OR magic link) via `lib/auth.ts` reconciliation (account attach + comp grant in
+      // finalizeLineageNodeClaim).
+      await bindPendingClaim(email, nodeId)
+      const claimUrl = buildClaimSignInUrl(bblOrigin)
       if (claimIsFounder) {
         // The founder (Bob Bass) gets "The Long Road" — Brian's testament, founder to
         // founder — with his one-click claim link carried inside.

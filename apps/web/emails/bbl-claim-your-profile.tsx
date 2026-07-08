@@ -103,7 +103,7 @@ EmailBblClaimYourProfile.PreviewProps = {
   to: "chris@example.com",
   firstName: "Chris",
   profileName: "Chris Haueter",
-  claimUrl: "https://blackbeltlegacy.com/lineage/join?node=chris-haueter",
+  claimUrl: "https://blackbeltlegacy.com/auth/login?next=%2Fme",
   compTier: "ELITE",
   isLifetime: true,
 } satisfies EmailProps
