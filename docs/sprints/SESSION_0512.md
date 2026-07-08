@@ -134,4 +134,44 @@ None — operator pre-approved the +1 dep (`react-colorful`) and the WL-P2-36 fa
 | Task | Status | Notes |
 | --- | --- | --- |
 | SESSION_0512_TASK_01 | landed | PR #195 squash-merged `2f81e006`; remote branch deleted; BBL prod deploy fired (Vercel pending on merge commit). |
-| SESSION_0512_TASK_02 | built — unpushed | Cody built; Petey folded in RHF `field.ref` forwarding (focus-on-error parity). **Doug LAUNCH-SAFE 9.7/10, zero P1/P2:** build 201/201, typecheck/lint/format/unit green, brand-settings e2e 3/3 serialized, injection surface not widened. Pre-existing e2e singleton-row race → WL-P3-35. Holding at push gate. |
+| SESSION_0512_TASK_02 | built + gauntlet-passed | Cody built; Petey folded in RHF `field.ref` forwarding. **Doug LAUNCH-SAFE 9.7/10.** Then the 3-pass quality gauntlet (`/fallow-fix-loop` + `/pr-fix-loop` review + hostile-close-review). Holding at push gate. See `## Hostile close review`. |
+| SESSION_0512_TASK_03 | landed | 3-pass gauntlet on PR #196: fallow-fix-loop (ColorField 63→<60L, redundant `isHslSafe` guard removed, checkerboard hoisted); ThemeFieldset config-driven refactor (124→<60L, operator ask); Doug bug-hunt 9.6/10 (zero blockers); Giddy hostile-close PROCEED (Kaizen 9); added ColorField render test + `value ?? ""`. Re-verified: build/lint/format/unit(26)/e2e(3/3 serialized) green; fallow "No issues in 8 changed files". |
+
+## Review log
+
+**SESSION_0512_REVIEW_01 — WL-P2-36 pre-merge gauntlet (`/fallow-fix-loop` + `/pr-fix-loop` review + hostile-close-review)**
+
+- **Reviewed tasks:** SESSION_0512_TASK_02
+- **Dirstarter docs check:** cached docs sufficient (UI/component layer; placement doctrine in-repo).
+- **Sources:** `docs/architecture/dirstarter-architecture-map.md:41-43,204,240-243`
+- **Verdict:** Three independent lenses over the final diff. **fallow-fix-loop:** one introduced finding (ColorField 63L/CRAP30) fixed by hoisting the checkerboard className + removing a provably-redundant `isHslSafe` guard; `ThemeFieldset` refactored config-driven (124→<60L, per operator) — fallow now reports **"No issues in 8 changed files"**. **Doug bug-hunt: 9.6/10**, zero P1/P2, all six angles REFUTED as defects (react-colorful edge cases, parse/format, ref/aria forward, removed-behavior parity, controlled-input, popover a11y). **Giddy hostile-close: PROCEED**, aggregate Kaizen **9**, no high findings, picker path *narrows* the CSS-injection seam. Behavior re-proven: unit 26/26, brand-settings e2e 3/3 serialized on an isolated `:3100` server.
+
+## Hostile close review
+
+### SESSION_0512 — WL-P2-36 theme color picker
+
+#### Review
+
+Giddy (architecture/merge-risk) + Doug (QA/security). Eight questions: **plan sanity PASS** (`web/forms/` is correct — domain component importing `~/lib/brand-theme`; a `common/` primitive importing a domain lib would be the real violation); **Dirstarter compliance PASS** (composes L1 `Popover`/`Button`/`Input`, rebuilds nothing; `react-colorful` is a real, locked leaf dep); **security PASS** (both `<style>` sinks gate via `isHslSafe` at `brand-theme.ts:79`, unchanged; picker only emits `formatHslTriplet` output = always safe → seam *narrowed*); **data integrity PASS** (guard enforced at the sink, not just the input); **lifecycle PARTIAL** (all 3 surfaces served via the shared fieldset, but picker interaction has no e2e — text-input path only); **verification PARTIAL** (helpers + e2e strong; ColorField interaction untested → the CRAP-30 gap — now partially closed by the new render test); **workflow PASS** (lane/worktree/task-IDs/ledger logged); **merge readiness READY**.
+
+#### Kaizen
+
+1. **Safe & secure:** provably safe = injection seam (traced) + picker-output-always-`isHslSafe` invariant (unit) + 3 consumers byte-identical (empty diff) + save→inject e2e. Documented-but-unproven = ref forwarding + picker-drag write (ref/interaction is DOM-only; SSR render test now proves id/aria/placeholder forwarding). 2. **Failed steps:** two low-cost — a dirty tree at review time (committed now) and an ad-hoc worktree name off the `wt-brand-launch` map (sanction per-session `ronin-NNNN` worktrees). 3. **Confidence @ scale:** 100 = 10/10; 1,000 = 9/10; 10,000 = 9/10 (O(1)-per-editor client widget, no server/DB coupling; docked only for the missing interaction test). **Aggregate: 9 → PROCEED.**
+
+#### Findings
+
+**SESSION_0512_FINDING_01 — Uncommitted checkerboard hoist at review time**
+
+- **Severity:** low · **Task:** SESSION_0512_TASK_02
+- **Evidence:** working-tree edit `color-field.tsx` (`CHECKERBOARD_CLASS`) uncommitted during review.
+- **Impact:** behavior-identical, but would merge nothing / risk a stash-clobber.
+- **Required follow-up:** commit to the branch before merge.
+- **Status:** addressed (committed this session).
+
+**SESSION_0512_FINDING_02 — No direct ColorField picker-interaction test**
+
+- **Severity:** medium · **Task:** SESSION_0512_TASK_02
+- **Evidence:** brand-settings e2e drives the text input only; picker drag / `ref` forward proven on 0 surfaces (CRAP 30 estimate).
+- **Impact:** a future popover/text-wiring refactor could silently break focus-on-error or the picker→triplet write.
+- **Required follow-up:** static half closed (new `color-field.test.tsx` proves id/aria/placeholder + swatch logic); interaction half (picker-drag emits `isHslSafe` triplet; `ref` lands) → **WL-P3-36** fast-follow.
+- **Status:** addressed (static) / open (interaction → WL-P3-36).
