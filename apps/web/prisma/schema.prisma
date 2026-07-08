@@ -2914,10 +2914,15 @@ model UserPermissionGrant {
   createdAt DateTime  @default(now())
   revokedAt DateTime?
 
-  user        User  @relation("UserPermissionGrantUser", fields: [userId], references: [id], onDelete: Cascade)
+  user        User    @relation("UserPermissionGrantUser", fields: [userId], references: [id], onDelete: Cascade)
   userId      String
-  grantedBy   User? @relation("UserPermissionGrantGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+  grantedBy   User?   @relation("UserPermissionGrantGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
   grantedById String?
+  // NOTE: a PARTIAL unique index `(userId, grant) WHERE "revokedAt" IS NULL` — "at most one
+  // LIVE grant per (user, key)" while preserving soft-revoke history — lives ONLY in
+  // migration 20260707000000_add_user_permission_grant/migration.sql (Prisma can't express a
+  // partial index). `migrate deploy` applies it from SQL; a `migrate diff --from-schema` that
+  // flags it as "missing" is that limitation, not real drift.
 
   @@index([userId, revokedAt])
   @@index([grant, revokedAt])

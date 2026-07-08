@@ -13,6 +13,7 @@ import { env } from "~/env"
 import { BRAND_TRUSTED_ORIGINS, resolveBrand, resolveRequestOrigin } from "~/lib/brand-context"
 import { getBrandSenderName, sendEmail } from "~/lib/email"
 import { generateUniqueProfileSlug } from "~/lib/slug"
+import { GRANTABLE_USER_PERMISSION_KEYS } from "~/server/admin/permissions/grantable"
 import { findJoinLegacyLeadCountry } from "~/server/web/lead/lead-country"
 import { reconcilePendingLineageClaims } from "~/server/web/lineage/reconcile-pending-claims"
 import { db } from "~/services/db"
@@ -237,6 +238,12 @@ type SessionWithPermissionGrants = Omit<Session, "user"> & {
   user: SessionUserWithPermissionGrants
 }
 
+// The read path is a SECOND door mirroring the write door (the zod allowlist in
+// `grantUserPermission`): only keys in the grantable allowlist are loaded into the
+// session, so a broad/wildcard key that ever reached the table by some other path
+// (manual insert, future non-enum writer) can never silently widen `can()`.
+const GRANTABLE_KEY_SET: ReadonlySet<string> = new Set(GRANTABLE_USER_PERMISSION_KEYS)
+
 const loadActivePermissionGrants = async (userId: string) => {
   const grants = await db.userPermissionGrant.findMany({
     where: { userId, revokedAt: null },
@@ -244,7 +251,7 @@ const loadActivePermissionGrants = async (userId: string) => {
     orderBy: { createdAt: "asc" },
   })
 
-  return grants.map(grant => grant.grant)
+  return grants.map(grant => grant.grant).filter(grant => GRANTABLE_KEY_SET.has(grant))
 }
 
 export const getServerSession = cache(async (request?: NextRequest) => {

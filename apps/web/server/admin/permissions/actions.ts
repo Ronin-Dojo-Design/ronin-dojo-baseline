@@ -36,6 +36,9 @@ type PermissionGrantSnapshot = {
   grantedById: string | null
 }
 
+// Extended-client interactive-tx handle. Kept structural `any` on the delegates,
+// matching the repo-wide `type Tx = any` convention (claim-finalize.ts, place-lead-core.ts):
+// the extended Prisma client's tx type isn't cleanly expressible, so every tx helper punts.
 type PermissionGrantDb = {
   user: any
   userPermissionGrant: any
@@ -156,6 +159,9 @@ async function grantPermissionInTx(
     reason?: string
   },
 ) {
+  // Invariant travels with the mutation, not just the entry point: a future second
+  // caller of this helper inherits the self-grant guard (LOW-2, hostile-close 0509).
+  assertNotSelfPermissionChange(input.granteeUserId, input.actorUserId, "grant")
   await ensureGranteeExists(db, input.granteeUserId)
 
   const existing = await findActiveGrant(db, input.granteeUserId, input.grant)
@@ -189,6 +195,7 @@ async function revokePermissionInTx(
     reason?: string
   },
 ) {
+  assertNotSelfPermissionChange(input.granteeUserId, input.actorUserId, "revoke")
   const activeGrants = (await db.userPermissionGrant.findMany({
     where: { userId: input.granteeUserId, grant: input.grant, revokedAt: null },
     select: permissionGrantSelect,

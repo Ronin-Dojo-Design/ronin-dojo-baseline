@@ -38,9 +38,8 @@ export const matchesPattern = (grant: Grant, permission: Permission): boolean =>
  * for tree/branch/node scope, layered on top of these flat global roles.
  */
 export const can = (user: SessionUser | null | undefined, permission: Permission): boolean => {
-  const userGrants =
-    (user as (SessionUser & { extraGrants?: ReadonlyArray<Grant> }) | null | undefined)
-      ?.extraGrants ?? []
+  // `SessionUser` already carries `extraGrants` (context.ts) — no re-cast of `user` needed.
+  const userGrants = (user?.extraGrants ?? []) as ReadonlyArray<Grant>
 
   return [...ROLES[roleOf(user)], ...userGrants].some(grant => matchesPattern(grant, permission))
 }
