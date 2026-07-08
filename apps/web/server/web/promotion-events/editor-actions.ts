@@ -4,6 +4,7 @@ import { Brand } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
 import { userActionClient } from "~/lib/safe-actions"
 import { generateUniqueSlug } from "~/lib/slug"
+import { assertLineageAxisEquivalence } from "~/server/web/promotion-events/editor-authorization-equivalence"
 import {
   type AuthorizablePromotionEvent,
   type AuthorizableRankAward,
@@ -229,6 +230,16 @@ export const applyPromotionEventEditorUpsert = async ({
       ) {
         throw new Error(PROMOTION_EVENT_EDITOR_ERROR.RANK_AWARD_ACCESS_REQUIRED)
       }
+
+      // Stage 1 (item-5) dev-only shadow equivalence check — runs the canonical
+      // `canForResource` lineage-grant decision ALONGSIDE the authoritative hand-rolled
+      // one and logs divergence. Never changes the outcome above and never throws.
+      await assertLineageAxisEquivalence({
+        db: txDb,
+        user,
+        scope,
+        awards: selectedAwardsInInputOrder,
+      })
 
       const slug = await generatePromotionEventSlug({
         db: txDb,

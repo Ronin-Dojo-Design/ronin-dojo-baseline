@@ -1,7 +1,9 @@
 import type { Brand, Prisma } from "~/.generated/prisma/client"
 import type { AuthzUser } from "~/lib/authz"
 import { passportDisplayName } from "~/lib/identity/passport-display"
+import { assertLineageAxisEquivalence } from "~/server/web/promotion-events/editor-authorization-equivalence"
 import {
+  type AuthorizableRankAward,
   buildAuthorizedRankAwardWhere,
   canAuthorPromotionEvent,
   resolvePromotionEventAuthoringScope,
@@ -199,26 +201,36 @@ export async function findEditablePromotionEvents({
     take: 100,
   })
 
-  return events
-    .filter(event =>
-      canAuthorPromotionEvent({
-        scope,
-        event,
-        hostOrganizationId: event.hostOrganizationId,
-        awards: event.rankAwards,
-        userId: user.id,
-      }),
-    )
-    .map(event => ({
-      id: event.id,
-      title: event.title,
-      slug: event.slug,
-      eventDate: event.eventDate,
-      location: event.location,
-      hostOrganizationName: event.hostOrganization?.name ?? null,
-      rankAwardCount: event._count.rankAwards,
-      photoCount: event._count.mediaAttachments,
-    }))
+  const authorizedEvents = events.filter(event =>
+    canAuthorPromotionEvent({
+      scope,
+      event,
+      hostOrganizationId: event.hostOrganizationId,
+      awards: event.rankAwards,
+      userId: user.id,
+    }),
+  )
+
+  // Stage 1 (item-5) dev-only shadow equivalence check — compare the canonical
+  // lineage-grant decision against the authoritative hand-rolled one across every
+  // award in the authorized list. Logs divergence; never affects results.
+  await assertLineageAxisEquivalence({
+    db,
+    user,
+    scope,
+    awards: authorizedEvents.flatMap(event => event.rankAwards as AuthorizableRankAward[]),
+  })
+
+  return authorizedEvents.map(event => ({
+    id: event.id,
+    title: event.title,
+    slug: event.slug,
+    eventDate: event.eventDate,
+    location: event.location,
+    hostOrganizationName: event.hostOrganization?.name ?? null,
+    rankAwardCount: event._count.rankAwards,
+    photoCount: event._count.mediaAttachments,
+  }))
 }
 
 export async function getPromotionEventEditorData({
@@ -254,6 +266,17 @@ export async function getPromotionEventEditorData({
     })
   ) {
     return null
+  }
+
+  // Stage 1 (item-5) dev-only shadow equivalence check — the current event's awards
+  // are the lineage-grant decisions this editor screen renders. Logs divergence only.
+  if (event) {
+    await assertLineageAxisEquivalence({
+      db,
+      user,
+      scope,
+      awards: event.rankAwards as AuthorizableRankAward[],
+    })
   }
 
   const currentAwardIds = event?.rankAwards.map(award => award.id) ?? []
