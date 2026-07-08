@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-26
-last_agent: claude-session-0452
+updated: 2026-07-08
+last_agent: claude-session-0514
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -584,6 +584,28 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   ALL gates from scratch (which is exactly what caught it).
 - **Verification:** `bunx oxfmt --check .` → "All matched files use the correct format" (1,784 files) after
   `01bb94a5`.
+- **Status:** mitigated.
+
+### FS-0029 — Deferred work escaped the ledger; invisible for ~11 sessions
+
+- **Session:** surfaced SESSION_0513 (operator flagged `/me` consolidation mid-conversation); mitigated SESSION_0514.
+- **Agent:** original miss at SESSION_0502 close (Claude).
+- **Step failed:** SESSION_0502 deferred a real work item — **TICKET-0502-A** (the `/me` + `/directory` profile
+  component-tree consolidation) — in prose (SESSION file + a memory note + the page-review recipe) but **never
+  routed it to a ledger** (§6.7 finding router). Because the bow-in read-path only reads the ledgers
+  (`ledger-backlog.ts` → `/app/loop-board` sync), the deferral was invisible: no session would ever pick it up.
+  It stayed lost ~11 sessions until the operator happened to remember it.
+- **Root cause:** the finding router *routes* findings but nothing *verified* that every deferral in a SESSION
+  file actually landed in a ledger. "Deferred to a later slice" reads as done-enough; the artifact never became
+  read-path-consumable (the [[readpath-push-vs-pull-audit]] failure mode).
+- **Impact:** LOW-MEDIUM — no broken code, but a launch-relevant consolidation silently fell off the backlog.
+- **Corrective action:** (a) this FS entry; (b) `scripts/deferral-guard.ts` — flags any SESSION-file deferral not
+  backed by a real ledger id; (c) closing.md **§6.8 Deferral guard** step (gate the close on it); (d) TICKET-0502-A
+  itself re-ledgered as `WL-P2-37` (SESSION_0513). Also answered the operator's "should we add a create-card
+  script?" — NO: the board already auto-syncs from the ledgers, so a manual card is a second un-synced source of
+  truth; fix upstream (ledger the deferral), not the symptom.
+- **Verification:** `bun scripts/deferral-guard.ts docs/sprints/SESSION_0502.md` → flags all 7 TICKET-0502-A
+  deferrals (exit 1); a clean file → exit 0.
 - **Status:** mitigated.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
