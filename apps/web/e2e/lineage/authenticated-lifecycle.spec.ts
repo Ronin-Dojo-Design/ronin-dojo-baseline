@@ -359,7 +359,9 @@ test.describe("Lineage authenticated lifecycle E2E", () => {
 
     const updatedState = await readLineageLifecycleState(fixture)
     expect(updatedState.passportDisplayName).toBe(updatedDisplayName)
-    expect(updatedState.nodeBio).toBe(updatedBio)
+    // bio Slice A (SESSION_0510): the editor writes Passport.bio now (LineageNode.bio no longer
+    // written), so the lifecycle read-model reads passport.bio — the new single-writer SoT.
+    expect(updatedState.passportBio).toBe(updatedBio)
     expect(updatedState.rankAwardedAt).toBe(
       new Date(`${updatedPromotionDate}T00:00:00.000Z`).toISOString(),
     )

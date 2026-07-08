@@ -566,7 +566,7 @@ async function readLineageLifecycleState(
     }),
     prisma.lineageNode.findUnique({
       where: { id: fixture.claimTargetNodeId },
-      select: { passport: { select: { userId: true } }, bio: true },
+      select: { passport: { select: { userId: true } } },
     }),
     prisma.user.findUnique({
       where: { id: fixture.placeholderUserId },
@@ -584,7 +584,7 @@ async function readLineageLifecycleState(
     }),
     prisma.passport.findUnique({
       where: { userId: fixture.claimantUserId },
-      select: { displayName: true },
+      select: { displayName: true, bio: true },
     }),
     prisma.rankAward.findUnique({
       where: { id: fixture.rankAwardId },
@@ -638,7 +638,7 @@ async function readLineageLifecycleState(
     placeholderArchivedAt: placeholderUser?.archivedAt?.toISOString() ?? null,
     accessGrant: grant,
     passportDisplayName: passport?.displayName ?? null,
-    nodeBio: node?.bio ?? null,
+    passportBio: passport?.bio ?? null,
     rankAwardedAt: rankAward?.awardedAt?.toISOString() ?? null,
     promoterRelationship,
     siblings: siblingMembers,
