@@ -203,7 +203,8 @@ and can interleave). Item 2 is sequenced entirely behind Item 1; its quick-win b
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0510_TASK_01 | landed | AdminCollection frame built (`components/admin/admin-collection.tsx`); `/app/users` migrated onto it behavior-identical; typecheck/lint/SSR-smoke green |
-| SESSION_0510_TASK_02 | pending | Conform /app/users → People collection |
+| SESSION_0510_TASK_02a | landed | `/app/users` LIST → Passport-keyed `findPeople` (`server/admin/people/*`); member columns (Name/Account/Belt/School/Verified/Listed-under/Created) via resolver-mirrors; account-only actions gated on `userId==null`; 41 placeholders now visible; 0509 RBAC detail flow untouched; gates green |
+| SESSION_0510_TASK_02b | deferred (operator fork) | Unify row→detail→PassportEditor (re-key `[id]` userId→passportId + conditional account panel). Higher-risk re-key on the account surface — surfaced for operator decision, not built overnight |
 | SESSION_0510_TASK_03 | pending | Reframe brand-settings → Appearance editor |
 | SESSION_0510_TASK_04 | pending | bio Slice A fold |
 | SESSION_0510_TASK_05 | pending | ADR: AdminCollection law |

@@ -84,7 +84,7 @@ export const ADMIN_SECTION_GROUPS: AdminSectionGroup[] = [
     icon: UsersIcon,
     items: [
       {
-        title: "Users",
+        title: "People",
         href: "/app/users",
         icon: UserIcon,
         permission: APP_AREA_PERMISSIONS.users,

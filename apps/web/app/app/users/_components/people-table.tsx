@@ -3,34 +3,37 @@
 import { MailPlusIcon, UserPlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
-import type { User } from "~/.generated/prisma/browser"
 import { AdminCollection } from "~/components/admin/admin-collection"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
-import type { findUsers } from "~/server/admin/users/queries"
-import { usersTableParamsSchema } from "~/server/admin/users/schema"
+import type { findPeople, PersonRow } from "~/server/admin/people/queries"
+import { peopleTableParamsSchema } from "~/server/admin/people/schema"
 import type { DataTableFilterField } from "~/types"
-import { getColumns } from "./users-table-columns"
-import { UsersTableToolbarActions } from "./users-table-toolbar-actions"
+import { getColumns } from "./people-table-columns"
+import { PeopleTableToolbarActions } from "./people-table-toolbar-actions"
 
-type UsersTableProps = {
-  usersPromise: ReturnType<typeof findUsers>
+type PeopleTableProps = {
+  peoplePromise: ReturnType<typeof findPeople>
 }
 
-export function UsersTable({ usersPromise }: UsersTableProps) {
-  const { users, usersTotal, pageCount } = use(usersPromise)
-  const [{ perPage, sort }] = useQueryStates(usersTableParamsSchema)
+export function PeopleTable({ peoplePromise }: PeopleTableProps) {
+  const { people, peopleTotal, pageCount } = use(peoplePromise)
+  const [{ perPage, sort }] = useQueryStates(peopleTableParamsSchema)
 
   // Memoize the columns so they don't re-render on every render
   const columns = useMemo(() => getColumns(), [])
 
-  // Search filters
-  const filterFields: DataTableFilterField<User>[] = [
+  // Search filters — one text field over Passport identity + linked-account name/email.
+  // nuqs keys the URL search param off `field.id` and `useDataTable` targets the column with
+  // that id, so `id` must be a real `PersonRow` key that is ALSO a column id: `displayName`
+  // (the Name column's accessor). The server `findPeople` reads the `displayName` param and
+  // fans the term across displayName / legal name / account name+email.
+  const filterFields: DataTableFilterField<PersonRow>[] = [
     {
-      id: "name",
+      id: "displayName",
       label: "Name",
       placeholder: "Search by name or email...",
     },
@@ -38,9 +41,9 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
 
   return (
     <AdminCollection
-      title="Users"
-      total={usersTotal}
-      data={users}
+      title="People"
+      total={peopleTotal}
+      data={people}
       columns={columns}
       pageCount={pageCount}
       filterFields={filterFields}
@@ -48,7 +51,8 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
       pageSize={perPage}
       initialState={{ columnPinning: { right: ["actions"] } }}
       getRowId={(originalRow, index) => `${originalRow.id}-${index}`}
-      enableRowSelection={row => row.original.role !== "admin"}
+      // Accountless placeholders + admins are not selectable (bulk actions are account-only).
+      enableRowSelection={row => row.original.user != null && row.original.user.role !== "admin"}
       callToAction={
         <Stack size="sm">
           <Button
@@ -73,7 +77,7 @@ export function UsersTable({ usersPromise }: UsersTableProps) {
     >
       {table => (
         <>
-          <UsersTableToolbarActions table={table} />
+          <PeopleTableToolbarActions table={table} />
           <DateRangePicker align="end" />
           <DataTableViewOptions table={table} />
         </>
