@@ -275,18 +275,30 @@ Goal reached: both pinned lanes landed, with TASK_02b and the item-5 migration c
 ## Open decisions / blockers
 
 - **Item-5 lineage-editor resolver migration (WL-P2-33) — BLOCKED ON OPERATOR:** review `0510-item5-...migration-proposal.md` + the 33 char-tests, then sign off (or decline). The org-role/self-award/`buildAuthorizedRankAwardWhere` paths have no canonical equivalent = the decision point.
-- **Push — BLOCKED ON OPERATOR "go":** 9 commits on `session-0510-adminpassport`, build-green, both reviews LAUNCH-SAFE. A push deploys the (safe, additive) bio backfill to prod Neon.
+- **PR #194 opened (operator-directed at close); MERGE held for the next-session vetting.** Branch `session-0510-adminpassport` pushed; merge to `main` (→ prod deploy + bio backfill) gated on `/pr-fix-loop` + fresh hostile-close-review + `/fallow-fix-loop` all green, per the Next session block.
 - Route/label naming (`/app/users` route vs "People" label) — deferred to TASK_02b (WL-P2-35).
 
 ## Next session
 
+> **This is a FRESH-SESSION vetting lane, operator-directed at the SESSION_0510 close.** The 10-commit
+> branch is on **[PR #194](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/194)**. Vet it
+> with fresh eyes (past the ~120K dumb-zone) before it touches `main`, then handle the item-5 sign-off.
+
 ### Goal
 
-**Primary (if operator signs off the item-5 proposal):** land the staged lineage-editor resolver migration (WL-P2-33) onto canonical `resource-permissions.ts` — dev-equivalence assertion first, adversarial-tests-gated per step, the 33 char-tests as the safety net. **Fallback (if the security work is deferred):** begin the AdminCollection conformance sweep (WL-P2-34) — conform the next batch of `/app/*` list pages onto the frame + rebuild `/app/media`.
+Vet **PR #194** (`session-0510-adminpassport`) through three independent passes, then merge when all green; separately, the item-5 sign-off. In order:
+
+1. **`/pr-fix-loop` on PR #194** — review → score → fix mechanical blockers, pause-on-merge.
+2. **Fresh `hostile-close-review.md`** (Giddy + Doug, clean context). This session's *in-worktree* review was Giddy 9.4 / Doug 9.7 LAUNCH-SAFE — the operator wants a fresh-session re-vet before `main` anyway.
+3. **`/fallow-fix-loop` on the diff** — CRAP / dupes / dead-code / complexity. ⚠ `fallow` was **OFF-PATH in this worktree**, so it NEVER ran this session (Doug + Cody both noted); run it in the canonical checkout or a fallow-bootstrapped worktree.
+
+**Merge-gate:** all three green **+** the item-5 decision made. Merging PR #194 → prod deploy + applies the (safe, additive) bio backfill to prod Neon.
+
+4. **Item-5 sign-off (WL-P2-33):** operator reviews `docs/architecture/research/0510-item5-lineage-editor-resolver-migration-proposal.md`, then land the staged lineage-editor resolver migration (dev-equivalence assertion first, the 33 char-tests as the safety net; org-role/self-award/`buildAuthorizedRankAwardWhere` have no canonical equivalent = the decision point) — or defer to WL-P2-33.
 
 ### First task
 
-Operator reviews `docs/architecture/research/0510-item5-lineage-editor-resolver-migration-proposal.md`. On sign-off, follow its staged plan: add the dev-only equivalence assertion (hand-rolled resolver vs `canWithGrants` agree on every case), confirm the 33 char-tests still green, then migrate the lineage-grant axis first (leaving org-role/self-award/`buildAuthorizedRankAwardWhere` as explicit supplements). If deferred, pick up WL-P2-34.
+Run `/pr-fix-loop` targeting **PR #194**, then the fresh hostile-close-review + `/fallow-fix-loop` on the same diff. Do NOT merge until all three are green and the item-5 call is made. If the whole PR is parked, fall back to WL-P2-34 (AdminCollection conformance sweep).
 
 ## Review log
 
@@ -344,5 +356,5 @@ None. Two LOW notes handled: **N-1** (auth.md "two fours" conflation) — fixed 
 | Review & Recommend | Next session goal written: yes (item-5 migration on sign-off, else WL-P2-34) |
 | Memory sweep | Updated `admin-collection-one-surface-law` (frame built + Fork-4) + `admin-upload-gate-and-role-audit` (keep-layered verdict + sweep status) |
 | Next session unblock check | Primary next task BLOCKED ON OPERATOR (item-5 sign-off); clear fallback (WL-P2-34) is unblocked |
-| Git hygiene | branch `session-0510-adminpassport`, 9 commits + this close commit; **not pushed** (awaits operator "go"); worktree retained (branch unmerged); FS-0024 guard run each commit |
+| Git hygiene | branch `session-0510-adminpassport`, 10 commits; **pushed → PR #194** (operator-authorized at close for the `/pr-fix-loop` lane); NOT merged (held for next-session vetting); worktree retained (branch unmerged); FS-0024 guard run each commit |
 | Graphify update | nodes=12778 edges=28172 communities=1414 (worktree graph; ran before close commit per FS-0025) |
