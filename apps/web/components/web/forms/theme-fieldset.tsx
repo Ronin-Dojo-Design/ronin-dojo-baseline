@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "~/components/common/form"
 import { Input } from "~/components/common/input"
+import { ColorField } from "~/components/web/forms/color-field"
 
 /**
  * Shared theme/brand color + asset fieldset (SESSION_0448 — the `<ThemeFieldset>`
@@ -68,7 +69,7 @@ export function ThemeFieldset({
             <FormItem>
               <FormLabel>Primary Color</FormLabel>
               <FormControl>
-                <Input placeholder={placeholders.primaryColor} {...field} />
+                <ColorField placeholder={placeholders.primaryColor} {...field} />
               </FormControl>
               <FormDescription>HSL values without hsl() wrapper</FormDescription>
               <FormMessage />
@@ -83,7 +84,7 @@ export function ThemeFieldset({
             <FormItem>
               <FormLabel>Primary Foreground</FormLabel>
               <FormControl>
-                <Input placeholder={placeholders.primaryFgColor} {...field} />
+                <ColorField placeholder={placeholders.primaryFgColor} {...field} />
               </FormControl>
               <FormDescription>Text color on primary background</FormDescription>
               <FormMessage />
@@ -98,7 +99,7 @@ export function ThemeFieldset({
             <FormItem>
               <FormLabel>Accent Color</FormLabel>
               <FormControl>
-                <Input placeholder={placeholders.accentColor} {...field} />
+                <ColorField placeholder={placeholders.accentColor} {...field} />
               </FormControl>
               <FormDescription>{accentColorDescription}</FormDescription>
               <FormMessage />
@@ -113,7 +114,7 @@ export function ThemeFieldset({
             <FormItem>
               <FormLabel>Accent Foreground</FormLabel>
               <FormControl>
-                <Input placeholder={placeholders.accentFgColor} {...field} />
+                <ColorField placeholder={placeholders.accentFgColor} {...field} />
               </FormControl>
               <FormDescription>Text color on accent background</FormDescription>
               <FormMessage />
