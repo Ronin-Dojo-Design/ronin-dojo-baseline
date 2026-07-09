@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation"
 import { Brand } from "~/.generated/prisma/client"
+import { ProfileView } from "~/app/(web)/_components/profile-view"
 import { findProfileBySlug } from "~/server/web/directory/queries"
-import { DirectoryProfile } from "./_components/directory-profile"
-import { loadDirectoryProfile } from "./_components/directory-profile/directory-profile-data"
+import { loadProfileViewBySlug } from "~/server/web/directory/profile-view"
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function DirectoryProfilePage({ params }: PageProps) {
   const { slug } = await params
-  const view = await loadDirectoryProfile(slug)
+  const view = await loadProfileViewBySlug(slug)
 
   if (!view) {
     notFound()
   }
 
-  return <DirectoryProfile {...view} />
+  return <ProfileView view={view} />
 }

@@ -122,6 +122,46 @@ produce the sequenced launch-for-Brian gate plan for operator sign-off.
   Brian's profile renders COMPLETE. **In-scope per operator (bow-in grill).**
 - **Depends on:** TASK_02 (People editor surface settles first).
 
+##### Pre-flight: ProfileRenderer + unified profile projection (TASK_03)
+
+**Existing-component / read-model scan (both trees read in full before design):**
+- `/me` renderer `MeProfile` (14 files) + read model `getOwnDirectoryProfile`→`projectOwnProfile`→`MyProfile`
+  and `getOwnLineageProfile`→`LineageNodeProfile`. Sidebar cards: BjjPassportCard + Identity/Affiliations/Social.
+  Body: About / BeltHistory (lazy `LineageRankHistoryTab`) / Gallery. Owner-only edit actions + `MeSectionEmpty`
+  prompts + `MeProfileEmpty` whole-page fallback.
+- `/directory/[slug]` renderer `DirectoryProfile` (15 files) + read model `loadDirectoryProfile`→`findProfileBySlug`
+  →`projectDirectoryDetailProfile`→`DirectoryDetailProfile`. Sidebar: BjjPassportCard (`ProfilePassportCard`).
+  Body: Cover / About / Video / Ranks / Ancestry / Organizations / Social / mobile PassportSection / Upgrade.
+  Placeholder branch → `ProfileClaimTeaser` (preserved verbatim). Hero: trust/claim/tier/media-lock badges +
+  Save/QR actions.
+- **Both share** `ListingDetail` chrome + `BjjPassportCard`; the section CONCEPTS overlap but the two read-model
+  SHAPES diverge (owner-editor fields vs public tier-gated fields), so this is a shared-shell + viewer-context
+  consolidation, NOT a lowest-common-denominator merge.
+
+**Composition decision — ONE renderer + ONE projection with a viewer context:**
+- New `server/web/directory/profile-view.ts` — `loadProfileViewForOwner(userId)` and
+  `loadProfileViewBySlug(slug)` both return one `ProfileView = { model: UnifiedProfileModel, viewerContext }`,
+  where `viewerContext = { isOwner: boolean, renderPolicy: LineageProfileDetailRenderPolicy }`. Reuses the
+  existing `projectOwnProfile` / `projectDirectoryDetailProfile` payloads + `loadDirectoryProfile` derivations
+  UNCHANGED under the hood — only the assembly is unified. Placeholder + claim-teaser path stays in the slug loader.
+- New renderer `app/(web)/_components/profile-view/` — one `ProfileView` component taking `{ view }`, one copy
+  each of the shared sections (about / hero-badges / hero-actions / sidebar / ranks / belt-history), branching on
+  `viewerContext.isOwner`. Owner → edit affordances + gallery + identity/affiliations cards + section-empties.
+  Public → tier-gated rich media (cover/video/social/location) behind `renderPolicy.canRenderRichMedia` +
+  upgrade-section + trust badges. Both pages become thin loaders.
+
+**Tier contract (unchanged, the hard net):** the 3 pinning tests stay byte-identical; `canRenderProfile`
+(basic, all tiers) + `canRenderRichMedia` (premium+ / owner / admin) drive exactly the gates they drive today.
+Owner (`/me`) = full render, tier-independent (the existing `canRenderRichMediaForViewer` "own profile" rule).
+
+**FAILED_STEPS check:** Prisma-in-client (no `server-only`/Prisma into `"use client"` — sections stay server
+components consuming props); `motion/react` reduced-fallback (untouched — ancestry story slice unchanged);
+belt color `Rank.colorHex` via `BeltSwatch` (preserved); avatar `passport.avatarUrl ?? user.image` (preserved
+via the existing projectors). Shared-DB contention → own dev server on :3100 if `Transaction API error`.
+
+**Dev/verify:** `bunx tsc --noEmit`, `bun run lint`, `bun run format:check`, `npx next build`; 3 tier tests +
+extended `e2e/directory/profile-paywall.spec.ts` (adds `/me` owner render). All from `apps/web/`.
+
 #### SESSION_0515_TASK_04 — Launch-for-Brian gate plan (Petey, planning only)
 
 - **Agent:** Petey (done — see `## Launch-for-Brian gate` below)

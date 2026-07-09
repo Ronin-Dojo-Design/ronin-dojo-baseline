@@ -3,54 +3,55 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { ListingDetail } from "~/components/web/listing/listing-detail"
 import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser"
 import { IntroDescription } from "~/components/web/ui/intro"
-import { AboutSection } from "./about-section"
-import { ProfileCoverBanner } from "./cover-banner"
-import type { DirectoryProfileView } from "./directory-profile-data"
-import { profileInitial } from "./directory-profile-fields"
-import { HeroActions } from "./hero-actions"
-import { HeroBadges } from "./hero-badges"
-import { PassportSection } from "./passport-section"
-import { ProfileSidebar } from "./profile-sidebar"
-import { RanksSection } from "./ranks-section"
-import { VideoIntroSection } from "./video-section"
+import { AboutSection } from "~/app/(web)/directory/[slug]/_components/directory-profile/about-section"
+import { ProfileCoverBanner } from "~/app/(web)/directory/[slug]/_components/directory-profile/cover-banner"
+import { profileInitial } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-fields"
+import { HeroActions } from "~/app/(web)/directory/[slug]/_components/directory-profile/hero-actions"
+import { HeroBadges } from "~/app/(web)/directory/[slug]/_components/directory-profile/hero-badges"
+import { PassportSection } from "~/app/(web)/directory/[slug]/_components/directory-profile/passport-section"
+import { ProfileSidebar } from "~/app/(web)/directory/[slug]/_components/directory-profile/profile-sidebar"
+import { RanksSection } from "~/app/(web)/directory/[slug]/_components/directory-profile/ranks-section"
+import { VideoIntroSection } from "~/app/(web)/directory/[slug]/_components/directory-profile/video-section"
+import type { PublicProfileView } from "~/server/web/directory/profile-view"
 
 /**
- * `/directory/[slug]` — the public member/listing detail (BBL_PARITY_SPEC).
- *
- * Thin orchestrator (the colocated folder module's public barrel): it wires the reused
- * `ListingDetail` chrome to the extracted hero / sidebar / body parts, owning no section
- * presentation itself. The `loadDirectoryProfile` server loader does all the fetching +
- * derivation (`directory-profile-data.ts`).
+ * `/directory/[slug]` arm of the ONE profile renderer — the public member/listing detail
+ * (BBL_PARITY_SPEC). Behavior-identical to the retired `DirectoryProfile` orchestrator.
  *
  * Brand note (recipe directory gotcha): `/directory` is a multi-brand, NON-BBL-font-wrapped
- * surface, so there is intentionally NO `BrandTypography` wrapper — wrapping it would force
- * BBL Poppins onto TB/WEKAF. The BBL type seam still reaches here where it belongs, via the
- * reused `BjjPassportCard` credential, which carries the `var(--font-bbl-*, var(--font-…))`
- * fallback idiom itself. Belt colors stay data-driven (`Rank.colorHex` → `BeltSwatch`).
+ * surface, so there is intentionally NO `BrandTypography` wrapper — wrapping it would force BBL
+ * Poppins onto TB/WEKAF. The BBL type seam still reaches here via the reused `BjjPassportCard`
+ * credential, which carries the `var(--font-bbl-*, var(--font-…))` fallback idiom itself. Belt
+ * colors stay data-driven (`Rank.colorHex` → `BeltSwatch`).
  *
- * Lazy boundaries: the below-the-fold body sections that ship client JS via `next/link`
- * or `motion/react` (Ancestry, Schools/Orgs, Social, Upgrade) are `next/dynamic`-split off
- * the initial bundle with SSR kept (no `ssr: false` — illegal in a Server Component anyway).
- * About + Ranks stay eager.
- *
- * @see docs/runbooks/component-launch-sweep-recipe.md
+ * Lazy boundaries: the below-the-fold body sections that ship client JS via `next/link` or
+ * `motion/react` (Ancestry, Schools/Orgs, Social, Upgrade) are `next/dynamic`-split off the
+ * initial bundle with SSR kept. About + Ranks stay eager.
  */
 
-const AncestrySection = dynamic(() => import("./ancestry-section").then(m => m.AncestrySection))
-const OrganizationsSection = dynamic(() =>
-  import("./organizations-section").then(m => m.OrganizationsSection),
+const AncestrySection = dynamic(() =>
+  import("~/app/(web)/directory/[slug]/_components/directory-profile/ancestry-section").then(
+    m => m.AncestrySection,
+  ),
 )
-const SocialSection = dynamic(() => import("./social-section").then(m => m.SocialSection))
-const UpgradeSection = dynamic(() => import("./upgrade-section").then(m => m.UpgradeSection))
+const OrganizationsSection = dynamic(() =>
+  import("~/app/(web)/directory/[slug]/_components/directory-profile/organizations-section").then(
+    m => m.OrganizationsSection,
+  ),
+)
+const SocialSection = dynamic(() =>
+  import("~/app/(web)/directory/[slug]/_components/directory-profile/social-section").then(
+    m => m.SocialSection,
+  ),
+)
+const UpgradeSection = dynamic(() =>
+  import("~/app/(web)/directory/[slug]/_components/directory-profile/upgrade-section").then(
+    m => m.UpgradeSection,
+  ),
+)
 
-export function DirectoryProfile({
-  profile,
-  profileUrl,
-  locationLine,
-  viewerClaimState,
-  claimFunnelHref,
-  ancestry,
-}: DirectoryProfileView) {
+export function PublicProfile({ view }: { view: PublicProfileView }) {
+  const { profile, profileUrl, locationLine, viewerClaimState, claimFunnelHref, ancestry } = view
   const { user } = profile
 
   // Legacy placeholder (no real account) → show the claim teaser instead of an empty
