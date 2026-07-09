@@ -6,6 +6,7 @@ import { removeS3Directories } from "~/lib/media"
 import { adminActionClient } from "~/lib/safe-actions"
 import { idsSchema } from "~/server/admin/shared/schema"
 import { createPersonSchema, userSchema } from "~/server/admin/users/schema"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { createPassport } from "~/server/identity/person-service"
 import { createLineageMember } from "~/server/web/lineage/create-lineage-member"
 import type { db as appDb } from "~/services/db"
@@ -119,6 +120,7 @@ export const createPerson = adminActionClient
         },
         select: { id: true },
       })
+      await syncRankEntryFromAward(tx, award.id)
 
       if (organizationId || trimmedSchool) {
         await tx.affiliation.create({

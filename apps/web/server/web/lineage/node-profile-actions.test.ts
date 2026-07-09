@@ -314,11 +314,15 @@ describe("lineage node profile editing — logic", () => {
       memberId: fx!.memberId,
     })
 
-    const [passport, rankAward] = await Promise.all([
+    const [passport, rankAward, rankEntry] = await Promise.all([
       db.passport.findUnique({
         where: { userId: fx!.approvedClaimantUserId },
       }),
       db.rankAward.findUnique({ where: { id: fx!.rankAwardId } }),
+      db.rankEntry.findUnique({
+        where: { rankAwardId: fx!.rankAwardId },
+        select: { passportId: true, rankId: true, status: true },
+      }),
     ])
 
     expect(passport?.displayName).toBe("Updated Display Name")
@@ -327,6 +331,11 @@ describe("lineage node profile editing — logic", () => {
     // longer touches `LineageNode.bio`. Assert bio landed on the Passport (the SoT).
     expect(passport?.bio).toBe("Updated lineage bio")
     expect(rankAward?.awardedAt?.toISOString()).toBe(promotionDate.toISOString())
+    expect(rankEntry).toEqual({
+      passportId: passport?.id,
+      rankId: fx!.rankId,
+      status: "UNVERIFIED",
+    })
   })
 
   // SESSION_0496 TASK_06 — the DirectoryProfile country upsert. The CREATE branch must pin

@@ -154,6 +154,12 @@ describe("finalizeRankPromotion (petey-plan-0477 Slice V3)", () => {
       expect(award!.passportId).toBe(member.passportId)
       expect(award!.rankId).toBe(rankId)
 
+      const entry = await tx.rankEntry.findUnique({
+        where: { rankAwardId: result.rankAwardId as string },
+        select: { passportId: true, rankId: true, status: true },
+      })
+      expect(entry).toEqual({ passportId: member.passportId, rankId, status: "VERIFIED" })
+
       const node = await tx.lineageNode.findUnique({
         where: { id: member.nodeId as string },
         select: { isVerified: true },
@@ -213,6 +219,12 @@ describe("finalizeRankPromotion (petey-plan-0477 Slice V3)", () => {
       })
       expect(after!.verificationStatus).toBe("VERIFIED")
       expect(after!.awardedById).toBe(actor.id)
+
+      const entry = await tx.rankEntry.findUnique({
+        where: { rankAwardId: pre.id },
+        select: { passportId: true, rankId: true, status: true },
+      })
+      expect(entry).toEqual({ passportId: member.passportId, rankId, status: "VERIFIED" })
 
       const count = await tx.rankAward.count({ where: { passportId: member.passportId, rankId } })
       expect(count).toBe(1)

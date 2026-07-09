@@ -257,13 +257,24 @@ describe("finalizePassportClaim — asserted RankAward (FI-006, ADR 0035)", () =
       })
 
       expect(result.rankAwardId).not.toBeNull()
-      const award = await tx.rankAward.findUnique({
-        where: { id: result.rankAwardId as string },
-        select: { passportId: true, rankId: true, verificationStatus: true },
-      })
+      const [award, entry] = await Promise.all([
+        tx.rankAward.findUnique({
+          where: { id: result.rankAwardId as string },
+          select: { passportId: true, rankId: true, verificationStatus: true },
+        }),
+        tx.rankEntry.findUnique({
+          where: { rankAwardId: result.rankAwardId as string },
+          select: { passportId: true, rankId: true, status: true },
+        }),
+      ])
       expect(award?.passportId).toBe(student.passportId)
       expect(award?.rankId).toBe(rankId)
       expect(award?.verificationStatus).toBe("VERIFIED")
+      expect(entry).toEqual({
+        passportId: student.passportId,
+        rankId,
+        status: "VERIFIED",
+      })
     })
   })
 
@@ -303,8 +314,7 @@ describe("finalizePassportClaim — asserted RankAward (FI-006, ADR 0035)", () =
           passportId: student.passportId,
           rankId,
           source: "STATED",
-          verificationStatus: "VERIFIED",
-          awardedById: claimantUserId,
+          verificationStatus: "UNVERIFIED",
         },
         select: { id: true },
       })
@@ -324,6 +334,22 @@ describe("finalizePassportClaim — asserted RankAward (FI-006, ADR 0035)", () =
       expect(result.rankAwardId).toBe(pre.id)
       const count = await tx.rankAward.count({ where: { passportId: student.passportId, rankId } })
       expect(count).toBe(1)
+      const [award, entry] = await Promise.all([
+        tx.rankAward.findUnique({
+          where: { id: pre.id },
+          select: { verificationStatus: true, awardedById: true },
+        }),
+        tx.rankEntry.findUnique({
+          where: { rankAwardId: pre.id },
+          select: { passportId: true, rankId: true, status: true },
+        }),
+      ])
+      expect(award).toEqual({ verificationStatus: "VERIFIED", awardedById: claimantUserId })
+      expect(entry).toEqual({
+        passportId: student.passportId,
+        rankId,
+        status: "VERIFIED",
+      })
     })
   })
 })

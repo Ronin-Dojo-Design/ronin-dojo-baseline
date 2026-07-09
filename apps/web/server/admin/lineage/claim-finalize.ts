@@ -7,6 +7,7 @@ import {
 import type { LineageCompGrantSpec } from "~/lib/entitlements/lineage-comp"
 import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
 import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { grantComp } from "~/server/entitlements/comp-grants"
 import { attachAccount } from "~/server/identity/person-service"
 
@@ -242,6 +243,7 @@ const mintAssertedRankAward = async (
         data: { verificationStatus: "VERIFIED", awardedById: actorUserId },
       })
     }
+    await syncRankEntryFromAward(tx, existing.id)
     return existing.id
   }
 
@@ -255,6 +257,7 @@ const mintAssertedRankAward = async (
     },
     select: { id: true },
   })
+  await syncRankEntryFromAward(tx, created.id)
   return created.id
 }
 

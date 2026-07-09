@@ -2,6 +2,7 @@
 
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import {
   findActiveLineageNodeProfileAccess,
@@ -148,6 +149,7 @@ export const applyLineageNodeProfileUpdate = async ({
         where: { id: shownRankAward.id },
         data: { awardedAt: input.promotionDate },
       })
+      await syncRankEntryFromAward(tx, shownRankAward.id)
     }
   })
 
