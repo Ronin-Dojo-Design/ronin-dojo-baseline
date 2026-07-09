@@ -3,8 +3,8 @@ import "server-only"
 import { Brand } from "~/.generated/prisma/client"
 import type { CreatableOption } from "~/components/common/creatable-combobox"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
-import { ceilingSortOrder } from "~/server/belt/belt-gate"
-import { gateAwardSelect, getBjjDisciplineId, toBeltCard, toGateAward } from "~/server/belt/queries"
+import { gateAwardSelect, getBjjDisciplineId } from "~/server/belt/queries"
+import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
 import { db } from "~/services/db"
@@ -48,14 +48,14 @@ async function getBeltPromoterOptions(): Promise<CreatableOption[]> {
  * The "Belts" tab server load (Slice 5 — Petey Plan 0477 §Slice 5).
  *
  * Loads EVERYTHING the belt-journey grid needs in ONE pass (no N+1): the acting
- * member's Passport, their awarded BJJ ranks, the ceiling (`pickTopAwardInDiscipline`,
+ * member's Passport, their active BJJ RankEntries, the ceiling (`pickTopAwardInDiscipline`,
  * BJJ-scoped, via `ceilingSortOrder`), and the full BJJ rank ladder in `sortOrder`.
  * The shared `gateAwardSelect` now joins each milestone's `MediaAttachment → Media`
  * rows to their `url`/`type`, so `toBeltCard` emits render-ready media directly —
  * no separate select or URL-reconciliation pass (SESSION_0492 cleanup).
  *
  * BJJ-scoped throughout (BBL is a BJJ lineage product, Locked #5): the ladder, the
- * awards, and therefore the ceiling all come from the BJJ discipline resolved from
+ * entries, and therefore the ceiling all come from the BJJ discipline resolved from
  * data (`discipline.code = "bjj"`), never hardcoded. Presentation-only view-models
  * out — no Prisma reaches the client belt components.
  */
@@ -87,37 +87,29 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
 
   const disciplineId = await getBjjDisciplineId()
 
-  // ONE pass: the ladder, the member's BJJ awards+milestone media, and the option
-  // lists in parallel. Awards are pre-ordered by `rank.sortOrder desc` so the gate's
+  // ONE pass: the ladder, the member's BJJ entries+milestone media, and the option
+  // lists in parallel. Entries are pre-ordered by `rank.sortOrder desc` so the gate's
   // "first in discipline" ceiling rule holds.
-  const [ladder, awards, joinOptions, promoterOptions] = await Promise.all([
+  const [ladder, entries, joinOptions, promoterOptions] = await Promise.all([
     getBjjRanksForClaimPicker(),
-    db.rankAward.findMany({
-      where: { passportId: passport.id, rank: { rankSystem: { disciplineId } } },
-      select: gateAwardSelect,
-      orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+    db.rankEntry.findMany({
+      // PENDING records are proposed higher ranks and never affect the active ceiling.
+      where: {
+        passportId: passport.id,
+        status: { not: "PENDING" },
+        rank: { rankSystem: { disciplineId } },
+      },
+      select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
+      orderBy: { rank: { sortOrder: "desc" } },
     }),
     getJoinWizardOptions(),
     getBeltPromoterOptions(),
   ])
 
-  const ceiling = ceilingSortOrder(awards.map(toGateAward), disciplineId)
-
-  // Index the member's awards by rankId so each ladder rank finds its card in O(1).
-  const awardByRankId = new Map(awards.map(award => [award.rankId, award]))
-
-  const ranks: BeltRankViewModel[] = ladder.map(rank => {
-    const award = awardByRankId.get(rank.id)
-    return {
-      rank: {
-        id: rank.id,
-        name: rank.name,
-        colorHex: rank.colorHex,
-        sortOrder: rank.sortOrder,
-      },
-      // `toBeltCard` now carries render-ready media on `card.milestone.media`.
-      card: award ? toBeltCard(award) : null,
-    }
+  const { ceiling, ranks } = projectProfileBeltEntries({
+    ladder,
+    entries,
+    disciplineId,
   })
 
   return {

@@ -1105,6 +1105,7 @@ model Passport {
   affiliations       Affiliation[]
   rankAwardsEarned   RankAward[]
   rankAwardsPromoted RankAward[]       @relation("PromotedByPassport")
+  rankEntries        RankEntry[]
   fightRecords       FightRecord[]
 
   // @added SESSION_0437 (ADR 0036) — unified person claim keyed on identity.
@@ -1339,6 +1340,7 @@ model Rank {
 
   memberships           Membership[]
   rankAwards            RankAward[]
+  rankEntries           RankEntry[]
   lineageClaimRequests  LineageClaimRequest[]        @relation("ClaimedRank")
   passportClaimRequests PassportClaimRequest[]       @relation("PassportClaimClaimedRank")
   courses               Course[]
@@ -2154,6 +2156,26 @@ enum RankAwardVerificationStatus {
   IMPORTED
 }
 
+enum RankEntryStatus {
+  PENDING
+  UNVERIFIED
+  VERIFIED
+  DISPUTED
+}
+
+enum RankEntryReviewStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+enum RankEntryReviewReason {
+  NEW_RANK
+  PROMOTER_CHANGED
+  SCHOOL_CHANGED
+  DISPUTE
+}
+
 model RankAward {
   id                 String                      @id @default(cuid(2))
   awardedAt          DateTime?
@@ -2204,6 +2226,8 @@ model RankAward {
   // @added   SESSION_0479 (2026-07-01)
   // @why     Belt Journey enrichment lives beside the canonical RankAward fact, not inside it.
   milestone            RankMilestone?
+  // @added SESSION_0518 — additive migration anchor for the unified RankEntry aggregate.
+  rankEntry            RankEntry?
 
   @@unique([passportId, rankId])
   @@index([passportId, awardedAt])
@@ -2212,6 +2236,46 @@ model RankAward {
   @@index([awardedByPassportId])
   @@index([organizationId])
   @@index([promotionEventId])
+}
+
+/// Canonical member rank aggregate. The first migration keeps RankAward as its
+/// compatibility anchor while authenticated profile reads and writes move over.
+model RankEntry {
+  id        String          @id @default(cuid(2))
+  status    RankEntryStatus @default(UNVERIFIED)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId String
+  rank       Rank     @relation(fields: [rankId], references: [id], onDelete: Restrict)
+  rankId     String
+
+  /// Temporary one-to-one migration anchor; remove only after legacy cutover.
+  rankAward   RankAward @relation(fields: [rankAwardId], references: [id], onDelete: Cascade)
+  rankAwardId String    @unique
+
+  reviews RankEntryReview[]
+
+  @@unique([passportId, rankId])
+  @@index([passportId, status])
+  @@index([rankId])
+}
+
+/// Steward workflow contract for higher-rank and proposed promoter/school changes.
+model RankEntryReview {
+  id        String                @id @default(cuid(2))
+  status    RankEntryReviewStatus @default(PENDING)
+  reason    RankEntryReviewReason
+  note      String?
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @updatedAt
+
+  rankEntry   RankEntry @relation(fields: [rankEntryId], references: [id], onDelete: Cascade)
+  rankEntryId String
+
+  @@index([rankEntryId, status])
+  @@index([status, reason])
 }
 
 // @added SESSION_0479 (2026-07-01) — member-owned belt journey enrichment.

@@ -37,6 +37,8 @@ mock.module("next/cache", () => ({
 
 import { Brand } from "~/.generated/prisma/client"
 import { appRouter } from "~/server/router"
+import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
+import { gateAwardSelect } from "~/server/belt/queries"
 import { db } from "~/services/db"
 
 const TS = Date.now()
@@ -137,6 +139,31 @@ beforeAll(async () => {
     select: { id: true },
   })
 
+  // Match the committed RankEntry backfill for post-migration test rows. The
+  // profile loader must use these canonical rows as its query root.
+  await db.rankEntry.createMany({
+    data: [
+      {
+        passportId: memberPassport.id,
+        rankId: whiteRankId,
+        rankAwardId: whiteAward.id,
+        status: "VERIFIED",
+      },
+      {
+        passportId: memberPassport.id,
+        rankId: blueRankId,
+        rankAwardId: blueAward.id,
+        status: "UNVERIFIED",
+      },
+      {
+        passportId: otherPassport.id,
+        rankId: purpleRankId,
+        rankAwardId: otherAward.id,
+        status: "VERIFIED",
+      },
+    ],
+  })
+
   fx = {
     memberUserId: memberUser.id,
     memberPassportId: memberPassport.id,
@@ -191,16 +218,46 @@ const expectCode = async (
 }
 
 describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () => {
+  it("loads the /app/profile belt projection from RankEntry status", async () => {
+    const [entries, ladder] = await Promise.all([
+      db.rankEntry.findMany({
+        where: { passportId: fx.memberPassportId, status: { not: "PENDING" } },
+        select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
+      }),
+      db.rank.findMany({
+        where: { id: { in: [fx.whiteRankId, fx.blueRankId] } },
+        select: { id: true, name: true, colorHex: true, sortOrder: true },
+      }),
+    ])
+    const data = projectProfileBeltEntries({
+      ladder,
+      entries,
+      disciplineId: entries[0]!.rankAward.rank.rankSystem.disciplineId!,
+    })
+    const blue = data.ranks.find(rank => rank.rank.id === fx.blueRankId)
+
+    // The legacy Award retains IMPORTED provenance, but the profile's
+    // member-facing status comes from its RankEntry compatibility anchor.
+    expect(blue?.card?.verificationStatus).toBe("UNVERIFIED")
+  })
+
   it("ALLOWS enriching the IMPORTED ceiling belt (blue) — milestone editable, award stays read-only", async () => {
     const card = await member().upsertBeltMilestone({
       rankId: fx.blueRankId,
       story: "my blue journey",
     })
     expect(card.rankId).toBe(fx.blueRankId)
-    // The award is awarded truth; enriching adds a milestone but never re-verifies it.
-    expect(card.verificationStatus).toBe("IMPORTED")
+    // The award retains IMPORTED provenance, while the canonical member-facing
+    // RankEntry status is UNVERIFIED; enriching never promotes either state.
+    expect(card.verificationStatus).toBe("UNVERIFIED")
     expect(card.isFactEditable).toBe(false)
     expect(card.milestone?.story).toBe("my blue journey")
+    expect(
+      await db.rankEntry.findUniqueOrThrow({
+        where: { rankAwardId: fx.blueAwardId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "UNVERIFIED" })
   })
 
   it("enriches a self-added backfill BELOW the ceiling (white) — VERIFIED-by-implication, fact editable (B1)", async () => {
@@ -250,6 +307,19 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
       select: { rankId: true },
     })
     expect(after.rankId).toBe(before.rankId) // and at the DB layer
+
+    // SESSION_0518: the existing profile editor is the first RankEntry write
+    // seam. Its compatibility mirror must move in the same transaction as the
+    // legacy fact so the new aggregate is ready for the next read-model slice.
+    const rankEntry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: fx.whiteAwardId },
+      select: { passportId: true, rankId: true, status: true },
+    })
+    expect(rankEntry).toEqual({
+      passportId: fx.memberPassportId,
+      rankId: before.rankId,
+      status: "VERIFIED",
+    })
   })
 
   it("links a REGISTERED promoter by Passport id + resolves its name (SESSION_0497 — P2003 regression)", async () => {
@@ -304,6 +374,12 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     // and the date fact is now FILLED → locked for the member.
     expect(card.isFactEditable).toBe(false)
     expect(card.factEditability.awardedAt).toBe(false)
+    expect(
+      await db.rankEntry.findUniqueOrThrow({
+        where: { rankAwardId: fx.blueAwardId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "UNVERIFIED" })
   })
 
   it("DENIES the owner CHANGING the now-FILLED date on the IMPORTED award (no overwrite → FORBIDDEN)", async () => {
@@ -493,6 +569,12 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
     expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2019-03-03")
     expect(row.awardedByPassportId).toBe(fx.otherPassportId)
     expect(row.notes).toBeNull()
+    expect(
+      await db.rankEntry.findUniqueOrThrow({
+        where: { rankAwardId: filledAwardId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "UNVERIFIED" })
 
     // Established admin-mutation pattern: audit-log the write.
     const audit = await db.auditLog.findFirst({

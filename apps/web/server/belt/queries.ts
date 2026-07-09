@@ -1,4 +1,8 @@
-import type { Prisma } from "~/.generated/prisma/client"
+import type {
+  Prisma,
+  RankAwardVerificationStatus,
+  RankEntryStatus,
+} from "~/.generated/prisma/client"
 import { type GateAward, memberFactEditability } from "~/server/belt/belt-gate"
 import type { BeltCardOutput } from "~/server/belt/schemas"
 import { db } from "~/services/db"
@@ -64,6 +68,17 @@ export const gateAwardSelect = {
 
 export type MemberAward = Prisma.RankAwardGetPayload<{ select: typeof gateAwardSelect }>
 
+/** Explicit bridge from legacy award provenance to canonical member status. */
+export function rankEntryStatusForAward(
+  verificationStatus: RankAwardVerificationStatus,
+): RankEntryStatus {
+  if (verificationStatus === "VERIFIED") return "VERIFIED"
+  if (verificationStatus === "DISPUTED") return "DISPUTED"
+  // IMPORTED is provenance, not a RankEntry status. It remains unverified until
+  // a steward explicitly verifies the corresponding entry.
+  return "UNVERIFIED"
+}
+
 /** The gate only needs status + discipline-scoped sortOrder. */
 export function toGateAward(
   award: Pick<MemberAward, "id" | "verificationStatus" | "rank">,
@@ -123,12 +138,21 @@ export async function getMemberAwards(
 }
 
 /** Project one award row into the enriched belt card the mutations return. */
-export function toBeltCard(award: MemberAward): BeltCardOutput {
+/**
+ * Project legacy compatibility fields through the canonical RankEntry status.
+ * Fact provenance/editability remains on RankAward during the additive cutover.
+ */
+export function toBeltCard(
+  award: MemberAward,
+  status: RankEntryStatus = rankEntryStatusForAward(award.verificationStatus),
+): BeltCardOutput {
   // Per-fact owner editability (SESSION_0501 fill-blanks policy). The reason
   // `SELF_BACKFILL` is exactly the old `isFactEditable` predicate, so the derived
   // card-level boolean keeps its B1 meaning for existing consumers.
   const editability = memberFactEditability({
     source: award.source,
+    // RankAward retains provenance (including IMPORTED) while RankEntry owns
+    // presentation status; fact authority remains a legacy compatibility rule.
     verificationStatus: award.verificationStatus,
     awardedById: award.awardedById,
     awardedAt: award.awardedAt,
@@ -143,7 +167,7 @@ export function toBeltCard(award: MemberAward): BeltCardOutput {
     rankName: award.rank.name,
     rankSortOrder: award.rank.sortOrder,
     colorHex: award.rank.colorHex,
-    verificationStatus: award.verificationStatus,
+    verificationStatus: status,
     isFactEditable: editability.reason === "SELF_BACKFILL",
     factEditability: editability.facts,
     editabilityReason: editability.reason,

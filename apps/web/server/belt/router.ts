@@ -13,6 +13,7 @@ import {
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
+  rankEntryStatusForAward,
   toBeltCard,
   toGateAward,
 } from "~/server/belt/queries"
@@ -52,6 +53,30 @@ const beltProcedure = authedProcedure.meta({
 })
 
 const REVALIDATE_PATHS = ["/app/profile"]
+
+type RankEntryDb = Pick<typeof db, "rankAward" | "rankEntry">
+
+/**
+ * Keep the additive RankEntry compatibility anchor aligned with the legacy award
+ * while the profile workspace is still rendered from its established RankAward
+ * view model. This is intentionally called in the same transaction as every
+ * member-owned fact write: a successful edit cannot leave two rank records out
+ * of sync.
+ */
+async function syncRankEntryFromAward(rankAwardId: string, dbClient: RankEntryDb = db) {
+  const award = await dbClient.rankAward.findUniqueOrThrow({
+    where: { id: rankAwardId },
+    select: { passportId: true, rankId: true, verificationStatus: true },
+  })
+
+  const status = rankEntryStatusForAward(award.verificationStatus)
+
+  await dbClient.rankEntry.upsert({
+    where: { rankAwardId },
+    create: { rankAwardId, passportId: award.passportId, rankId: award.rankId, status },
+    update: { passportId: award.passportId, rankId: award.rankId, status },
+  })
+}
 
 /**
  * Re-read the single enriched card for `rankAwardId`. Scoped to the acting
@@ -119,7 +144,22 @@ const upsertBeltMilestone = beltProcedure
           verificationStatus: "VERIFIED",
         },
         update: {},
-        select: { id: true },
+        select: { id: true, passportId: true, rankId: true, verificationStatus: true },
+      })
+
+      await tx.rankEntry.upsert({
+        where: { rankAwardId: award.id },
+        create: {
+          rankAwardId: award.id,
+          passportId: award.passportId,
+          rankId: award.rankId,
+          status: rankEntryStatusForAward(award.verificationStatus),
+        },
+        update: {
+          passportId: award.passportId,
+          rankId: award.rankId,
+          status: rankEntryStatusForAward(award.verificationStatus),
+        },
       })
 
       await tx.rankMilestone.upsert({
@@ -290,7 +330,10 @@ const updateRankAwardFact = beltProcedure
     if (reason === "SELF_BACKFILL") {
       // Self-added backfill: full overwrite is the ratified semantics — the owner
       // racing themselves is harmless, so the unconditional write stands.
-      await db.rankAward.update({ where: { id: award.id }, data })
+      await db.$transaction(async tx => {
+        await tx.rankAward.update({ where: { id: award.id }, data })
+        await syncRankEntryFromAward(award.id, tx)
+      })
     } else {
       // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
       // read-checked emptiness, but a concurrent fill (or an admin write landing in the
@@ -306,9 +349,13 @@ const updateRankAwardFact = beltProcedure
             ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
             : { organizationId: null, OR: [{ location: null }, { location: "" }] },
       )
-      const written = await db.rankAward.updateMany({
-        where: { id: award.id, passportId, AND: stillEmpty },
-        data,
+      const written = await db.$transaction(async tx => {
+        const result = await tx.rankAward.updateMany({
+          where: { id: award.id, passportId, AND: stillEmpty },
+          data,
+        })
+        if (result.count === 1) await syncRankEntryFromAward(award.id, tx)
+        return result
       })
       if (written.count !== 1) {
         throw new ORPCError("FORBIDDEN", {
@@ -374,6 +421,7 @@ const updateRankAwardFactAsAdmin = authedProcedure
         data,
         select: factEditSelect,
       })
+      await syncRankEntryFromAward(award.id, tx)
       await tx.auditLog.create({
         data: {
           brand: Brand.BBL,
