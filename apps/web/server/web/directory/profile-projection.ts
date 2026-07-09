@@ -38,7 +38,7 @@ type UserTrustSource = {
  * @changed SESSION_0502 (TASK_03) — renamed from `canRenderFullProfileForViewer`; the gate now
  * targets rich media specifically, since "full basic" is granted to every claimed profile.
  */
-export function canRenderRichMediaForViewer({
+function canRenderRichMediaForViewer({
   policy,
   profileUserId,
   viewerUserId,
@@ -54,7 +54,7 @@ export function canRenderRichMediaForViewer({
   )
 }
 
-export function rankSummaryForProfile<RankAward>(profile: {
+function rankSummaryForProfile<RankAward>(profile: {
   showRanks?: boolean
   rankAwards: RankAward[]
 }): RankAward[] {
@@ -76,7 +76,7 @@ type ProfileOrg = {
  *
  * @added SESSION_0358 (TASK_03)
  */
-export function projectProfileOrganizations(user: {
+function projectProfileOrganizations(user: {
   affiliations?: {
     schoolName: string | null
     organization: { id: string; name: string; slug: string } | null
@@ -102,7 +102,7 @@ export function projectProfileOrganizations(user: {
   }))
 }
 
-export function trustSummaryForUser(user: UserTrustSource) {
+function trustSummaryForUser(user: UserTrustSource) {
   const claimStatus = pickLineageClaimStatus(user.lineageNode?.claimRequests)
 
   return {
@@ -235,8 +235,6 @@ export function projectOwnProfile({
 // behind rich media. The returned object keeps a `canRenderFullProfile` key aliased to the
 // rich-media decision so the existing component consumers need no edits.
 // ---------------------------------------------------------------------------
-
-export type DirectoryDetailProfile = ReturnType<typeof projectDirectoryDetailProfile>
 
 export function projectDirectoryDetailProfile({
   profile,

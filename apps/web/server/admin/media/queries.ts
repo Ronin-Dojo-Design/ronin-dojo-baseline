@@ -1,14 +1,24 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { clampListPageParams } from "~/server/admin/list-query"
 import { db } from "~/services/db"
+
+const mediaRowInclude = {
+  uploadedBy: { select: { id: true, name: true } },
+  _count: { select: { attachments: true } },
+} satisfies Prisma.MediaInclude
+
+export type MediaRow = Prisma.MediaGetPayload<{ include: typeof mediaRowInclude }>
 
 export const findMedia = async (params: {
   brand?: string
   type?: string
-  q?: string
+  /** Search term fanned across title + description (Title column id per the People exemplar). */
+  title?: string
   page?: number
   perPage?: number
 }) => {
-  const { brand, type, q, page = 1, perPage = 24 } = params
+  const { brand, type, title } = params
+  const { page, perPage } = clampListPageParams(params.page ?? 1, params.perPage ?? 24)
   const skip = (page - 1) * perPage
 
   const where: Prisma.MediaWhereInput = {
@@ -16,20 +26,17 @@ export const findMedia = async (params: {
     ...(type && { type: type as any }),
   }
 
-  if (q) {
+  if (title) {
     where.OR = [
-      { title: { contains: q, mode: "insensitive" } },
-      { description: { contains: q, mode: "insensitive" } },
+      { title: { contains: title, mode: "insensitive" } },
+      { description: { contains: title, mode: "insensitive" } },
     ]
   }
 
   const [media, total] = await db.$transaction([
     db.media.findMany({
       where,
-      include: {
-        uploadedBy: { select: { id: true, name: true } },
-        _count: { select: { attachments: true } },
-      },
+      include: mediaRowInclude,
       orderBy: { createdAt: "desc" },
       take: perPage,
       skip,
@@ -37,5 +44,7 @@ export const findMedia = async (params: {
     db.media.count({ where }),
   ])
 
-  return { media, total, page, perPage }
+  const pageCount = Math.max(1, Math.ceil(total / perPage))
+
+  return { media, total, page, perPage, pageCount }
 }

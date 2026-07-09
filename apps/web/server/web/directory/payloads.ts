@@ -114,35 +114,6 @@ export type DirectoryProfileList = Prisma.DirectoryProfileGetPayload<{
 }>
 
 // ---------------------------------------------------------------------------
-// Public preview payload — enough for free profile listing/detail preview.
-// Full profile fields are selected only after the owner/listing tier is known.
-// ---------------------------------------------------------------------------
-
-export const directoryProfilePreviewPayload = {
-  id: true,
-  slug: true,
-  visibility: true,
-  showRanks: true,
-  passport: {
-    select: {
-      id: true,
-      displayName: true,
-      avatarUrl: true,
-      user: { select: { id: true, name: true, image: true } },
-      lineageNode: { select: directoryLineageTrustPayload },
-      rankAwardsEarned: {
-        select: directoryRankAwardPayload,
-        orderBy: { rank: { sortOrder: "desc" as const } },
-      },
-    },
-  },
-} satisfies Prisma.DirectoryProfileSelect
-
-export type DirectoryProfilePreview = Prisma.DirectoryProfileGetPayload<{
-  select: typeof directoryProfilePreviewPayload
-}>
-
-// ---------------------------------------------------------------------------
 // Detail payload — single profile page
 // @changed issue #134 surface-2 — now spreads publicPassportPayload for the
 // canonical identity core (displayName, avatarUrl, bio, socialLinks, rankAwardsEarned

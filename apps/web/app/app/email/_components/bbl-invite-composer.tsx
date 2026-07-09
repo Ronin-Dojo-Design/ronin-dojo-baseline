@@ -7,21 +7,35 @@ import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
+import { ComboboxSelector } from "~/components/common/combobox-selector"
 import { H3 } from "~/components/common/heading"
 import { Input } from "~/components/common/input"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import type { ClaimableNodeOption } from "~/server/admin/email/claimable-nodes"
 import { sendBblClaimInvite } from "~/server/admin/email/invite-actions"
 
-const DEFAULT_CLAIM_URL = "https://blackbeltlegacy.com/lineage/join?node="
+type BblInviteComposerProps = {
+  isSenderConfigured: boolean
+  /** BBL nodes with an unclaimed passport on a published, claimable tree (server-enumerated). */
+  claimableNodes: ClaimableNodeOption[]
+  /** The durable `/auth/login` URL the email will carry — shown in the live preview. */
+  durableClaimUrl: string
+}
 
-export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: boolean }) {
+export function BblInviteComposer({
+  isSenderConfigured,
+  claimableNodes,
+  durableClaimUrl,
+}: BblInviteComposerProps) {
   const [toEmail, setToEmail] = useState("")
   const [firstName, setFirstName] = useState("")
-  const [profileName, setProfileName] = useState("")
-  const [claimUrl, setClaimUrl] = useState(DEFAULT_CLAIM_URL)
+  const [nodeId, setNodeId] = useState<string>("")
   const [isLifetime, setIsLifetime] = useState(false)
   const [lastSentTo, setLastSentTo] = useState<string | null>(null)
+
+  const selectedNode = claimableNodes.find(node => node.id === nodeId)
+  const profileName = selectedNode?.profileName ?? ""
 
   const send = useAction(sendBblClaimInvite, {
     onSuccess: ({ data }) => {
@@ -30,14 +44,15 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
       toast.success(`Claim invite sent to ${data.to}`)
       setToEmail("")
       setFirstName("")
-      setProfileName("")
-      setClaimUrl(DEFAULT_CLAIM_URL)
+      setNodeId("")
       setIsLifetime(false)
     },
     onError: ({ error }) => {
       toast.error(error.serverError ?? "Unable to send claim invite.")
     },
   })
+
+  const noClaimableNodes = claimableNodes.length === 0
 
   return (
     <Card hover={false} className="p-4">
@@ -50,9 +65,10 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
             </Stack>
             <H3>Compose a claim invite</H3>
             <Note className="text-sm">
-              Send the BBL profile claim email directly to a specific person. They receive a branded
-              email with step-by-step instructions and their complimentary Elite membership. The
-              preview updates live as you type.
+              Send the BBL profile claim email directly to a specific person. Pick their profile
+              below — we bind the claim to their email so it auto-resolves the moment they sign in,
+              and the email links to a durable sign-in page (no expiring link). The preview updates
+              live as you type.
             </Note>
           </Stack>
           <Badge variant={isSenderConfigured ? "success" : "warning"} size="sm">
@@ -72,7 +88,7 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
             onSubmit={event => {
               event.preventDefault()
               setLastSentTo(null)
-              send.execute({ toEmail, firstName, profileName, claimUrl, isLifetime })
+              send.execute({ toEmail, firstName, profileName, nodeId, isLifetime })
             }}
           >
             <div className="grid gap-3 sm:grid-cols-2">
@@ -109,35 +125,26 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
             </div>
 
             <div className="min-w-0 space-y-1">
-              <label
-                className="font-medium text-muted-foreground text-xs"
-                htmlFor="composer-profilename"
-              >
-                Profile name shown in email
+              <label className="font-medium text-muted-foreground text-xs" htmlFor="composer-node">
+                Profile to claim
               </label>
-              <Input
-                id="composer-profilename"
-                value={profileName}
-                onChange={event => setProfileName(event.target.value)}
-                placeholder="Chris Haueter"
-                required
+              <ComboboxSelector
+                id="composer-node"
+                options={claimableNodes}
+                value={nodeId}
+                onValueChange={setNodeId}
+                placeholder={
+                  noClaimableNodes ? "No claimable BBL profiles" : "Search a BBL profile…"
+                }
+                searchPlaceholder="Search by name…"
+                emptyMessage="No matching profile."
+                clearable
               />
-            </div>
-
-            <div className="min-w-0 space-y-1">
-              <label
-                className="font-medium text-muted-foreground text-xs"
-                htmlFor="composer-claimurl"
-              >
-                Claim URL
-              </label>
-              <Input
-                id="composer-claimurl"
-                value={claimUrl}
-                onChange={event => setClaimUrl(event.target.value)}
-                placeholder="https://blackbeltlegacy.com/lineage/join?node=..."
-                required
-              />
+              <Note className="text-xs">
+                Only unclaimed profiles on a published, claimable BBL tree appear here. The claim
+                binds to this profile — it disambiguates by name and tree so you bind the right
+                person.
+              </Note>
             </div>
 
             <label className="flex cursor-pointer items-center gap-2 text-sm">
@@ -154,7 +161,7 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
               type="submit"
               size="sm"
               isPending={send.isPending}
-              disabled={!toEmail || !profileName || !claimUrl || send.isPending}
+              disabled={!toEmail || !nodeId || send.isPending}
               prefix={<SendIcon />}
             >
               Send claim invite
@@ -164,7 +171,7 @@ export function BblInviteComposer({ isSenderConfigured }: { isSenderConfigured: 
           <BblInvitePreview
             firstName={firstName}
             profileName={profileName}
-            claimUrl={claimUrl}
+            claimUrl={durableClaimUrl}
             isLifetime={isLifetime}
           />
         </div>
@@ -242,7 +249,7 @@ function BblInvitePreview({ firstName, profileName, claimUrl, isLifetime }: BblI
           <p className="text-[0.7rem] text-neutral-500">
             If the button doesn&apos;t work, paste this link into your browser:
             <br />
-            <span className="break-all text-neutral-700">{claimUrl || DEFAULT_CLAIM_URL}</span>
+            <span className="break-all text-neutral-700">{claimUrl}</span>
           </p>
         </div>
       </div>

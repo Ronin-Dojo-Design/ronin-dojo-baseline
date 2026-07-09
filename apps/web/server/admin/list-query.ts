@@ -97,3 +97,14 @@ export const runAdminListParallel = async <TRows>({
     pageCount: getPageCount(total, perPage),
   }
 }
+
+/**
+ * Clamp `page`/`perPage` from URL input to safe lower bounds before they become Prisma
+ * `skip`/`take`. A hand-crafted `?page=-1` or `?perPage=0` would otherwise produce a negative
+ * skip/take and a Prisma runtime error (500) on an admin list surface. Callers pass their own
+ * defaulted values; this only floors them at 1 and truncates fractional input.
+ */
+export const clampListPageParams = (page: number, perPage: number) => ({
+  page: Math.max(1, Math.trunc(page)),
+  perPage: Math.max(1, Math.trunc(perPage)),
+})

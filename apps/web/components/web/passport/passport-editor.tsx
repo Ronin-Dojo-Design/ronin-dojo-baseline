@@ -29,6 +29,11 @@ import {
 import { CountryField } from "~/components/web/belt/country-field"
 import { ProfileHero } from "~/components/web/profile/profile-hero"
 import { initialsOf } from "~/lib/directory/facet-result"
+import { updateDirectoryProfileAsAdmin, updatePassportAsAdmin } from "~/server/admin/people/actions"
+import {
+  updateDirectoryProfileAsAdminSchema,
+  updatePassportAsAdminSchema,
+} from "~/server/admin/people/schemas"
 import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
 import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
 import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
@@ -86,35 +91,80 @@ type Props = {
   directoryProfile: DirectoryProfileOne
   userId: string
   canUploadVideo: boolean
+  /**
+   * Admin mode (WL-P2-35, ADR 0045 D3): when a `passportId` is supplied, the editor
+   * writes through the admin-gated `updatePassportAsAdmin` / `updateDirectoryProfileAsAdmin`
+   * actions (keyed `where: { id: passportId }`) instead of the self-serve owner actions
+   * (keyed `where: { userId: session.user.id }`). Omit it for the `/me` + `/app/profile`
+   * owner-edit paths — those keep writing through the self-serve twins unchanged.
+   */
+  adminPassportId?: string
 }
 
 /**
  * The ONE canonical Passport + DirectoryProfile editor (SESSION_0398, ADR 0025).
  *
- * Rendered by both owner-edit entry points — `/me` (MePage) and the `/app/profile`
- * Profile tab (DashboardProfileTab). Passport is the identity SoT; DirectoryProfile
- * is its presentation/privacy view. Both forms hoist to this parent so a single live
- * `ProfileHero` can mirror name/avatar/location across both as the owner types.
+ * Rendered by the owner-edit entry points — `/me` (MePage) and the `/app/profile`
+ * Profile tab (DashboardProfileTab) — AND (WL-P2-35) the admin People detail
+ * `/app/users/[id]`, where an admin edits another person's Passport. Passport is the
+ * identity SoT; DirectoryProfile is its presentation/privacy view. Both forms hoist to
+ * this parent so a single live `ProfileHero` can mirror name/avatar/location across both
+ * as the editor types.
+ *
+ * The self-serve vs admin split is a prop, not a fork: `adminPassportId` swaps the two
+ * server actions + their schemas (owner-keyed → admin-keyed) and injects the target
+ * `passportId` into each form's submitted values. Everything else — the fields, the hero,
+ * the media paths — is identical, so there is exactly ONE editor to maintain.
  *
  * SESSION_0400 (D-023): the plain text/date/avatar fields render via the shared
  * `components/common/fields` primitives so this editor and the lineage-node profile
  * form share one field surface. The `Select`s (gender/visibility), the cover-photo
  * + video media, the privacy checkboxes, and `SocialLinksEditor` stay inline.
  */
-export function PassportEditor({ passport, directoryProfile, userId, canUploadVideo }: Props) {
-  const passportForm = useHookFormAction(updatePassport, zodResolver(updatePassportSchema), {
-    formProps: { values: passportFormValues(passport) },
-    actionProps: {
-      onSuccess: () => toast.success("Passport updated."),
-      onError: () => toast.error("Failed to update passport."),
+export function PassportEditor({
+  passport,
+  directoryProfile,
+  userId,
+  canUploadVideo,
+  adminPassportId,
+}: Props) {
+  const isAdmin = adminPassportId != null
+
+  // Admin mode swaps BOTH the action (owner-keyed → admin-keyed) and the schema
+  // (adds `passportId`), and injects the target id into the submitted values. The admin
+  // schemas are a superset of the base schemas, so the base-schema value shape is the
+  // common type; `passportId` is the one extra runtime key. RHF's `values` prop is typed
+  // against the (self-schema) union, so cast just that merged object — the key still rides
+  // through to the admin action, which is the only consumer that reads it.
+  const passportValues = (
+    isAdmin
+      ? { ...passportFormValues(passport), passportId: adminPassportId }
+      : passportFormValues(passport)
+  ) as ReturnType<typeof passportFormValues>
+
+  const passportForm = useHookFormAction(
+    isAdmin ? updatePassportAsAdmin : updatePassport,
+    zodResolver(isAdmin ? updatePassportAsAdminSchema : updatePassportSchema),
+    {
+      formProps: { values: passportValues },
+      actionProps: {
+        onSuccess: () => toast.success("Passport updated."),
+        onError: () => toast.error("Failed to update passport."),
+      },
     },
-  })
+  )
+
+  const directoryValues = (
+    isAdmin
+      ? { ...directoryFormValues(directoryProfile), passportId: adminPassportId }
+      : directoryFormValues(directoryProfile)
+  ) as ReturnType<typeof directoryFormValues>
 
   const directoryForm = useHookFormAction(
-    updateDirectoryProfile,
-    zodResolver(updateDirectoryProfileSchema),
+    isAdmin ? updateDirectoryProfileAsAdmin : updateDirectoryProfile,
+    zodResolver(isAdmin ? updateDirectoryProfileAsAdminSchema : updateDirectoryProfileSchema),
     {
-      formProps: { values: directoryFormValues(directoryProfile) },
+      formProps: { values: directoryValues },
       actionProps: {
         onSuccess: () => toast.success("Directory profile updated."),
         onError: () => toast.error("Failed to update directory profile."),

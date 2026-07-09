@@ -71,9 +71,15 @@ const claimNodeIdFromNextPath = (nextPath: string): string | null => {
  * e.g. students who arrived via their instructor's `?node=` link), on a published + claimable tree.
  * The brand is read off that tree. If the node resolves to no claimable/unowned member, it's a
  * no-op. Re-arms on re-mint (extend window, clear consumption marker). 90-day TTL.
+ *
+ * Returns `true` when a binding was written, `false` on a no-op (missing/blank `nodeId`, or the node
+ * resolved to no claimable/unowned member — e.g. it got claimed in the window between a caller's
+ * pre-guard and this call). Callers that EMAIL off the back of the bind (the invite composer) MUST
+ * check the result and abort the send on `false` so a recipient never gets a claim email that can
+ * never reconcile. (SESSION_0515 TASK_03 / Doug LOW-1.)
  */
-export async function bindPendingClaim(email: string, nodeId: string): Promise<void> {
-  if (!nodeId) return
+export async function bindPendingClaim(email: string, nodeId: string): Promise<boolean> {
+  if (!nodeId) return false
 
   // Resolve the brand off the node's published, claimable tree (matches the claim's own scoping).
   // `passport.userId: null` — never bind a pending claim to a node someone already owns
@@ -87,7 +93,7 @@ export async function bindPendingClaim(email: string, nodeId: string): Promise<v
     },
     select: { tree: { select: { brand: true } } },
   })
-  if (!member) return
+  if (!member) return false
 
   const normalizedEmail = email.trim().toLowerCase()
   const expiresAt = new Date(Date.now() + PENDING_CLAIM_TTL_MS)
@@ -97,6 +103,7 @@ export async function bindPendingClaim(email: string, nodeId: string): Promise<v
     // Re-arm on re-mint: extend the window and clear any prior consumption marker.
     update: { brand: member.tree.brand, expiresAt, consumedAt: null, consumedByUserId: null },
   })
+  return true
 }
 
 /**

@@ -114,5 +114,12 @@ export const findProfileBySlug = async ({
     brand,
   })
 
-  return projectDirectoryDetailProfile({ profile, policy, viewerUserId, viewerRole, brand })
+  // Doug LOW-3 (SESSION_0515): thread the resolved `renderPolicy` back as an ADDITIVE sibling so
+  // the `loadProfileViewBySlug` loader can reuse it (same userId → identical policy) instead of
+  // re-querying `getLineageProfileDetailRenderPolicyForUser`. All gated projection fields are
+  // unchanged — this only adds a key existing consumers ignore.
+  return {
+    ...projectDirectoryDetailProfile({ profile, policy, viewerUserId, viewerRole, brand }),
+    renderPolicy: policy,
+  }
 }

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { createAuthenticatedSession } from "../helpers/auth"
 import {
   cleanupDirectoryPaywallFixture,
   type DirectoryPaywallSeedFixture,
@@ -65,5 +66,28 @@ test.describe("/directory/[slug] paywall field boundary", () => {
     await expect(page.getByText(fixture.locationCity).first()).toBeVisible()
     // Paid profile does NOT show the media-locked badge.
     await expect(page.getByText(/media locked/i)).toHaveCount(0)
+  })
+})
+
+/**
+ * WL-P2-37 (SESSION_0515 TASK_03) — `/me` owner render through the ONE unified `ProfileView`
+ * renderer. The free fixture user viewing their OWN Passport at `/me` gets the full owner arm
+ * (bio + edit affordances), tier-independent (a member always sees their own profile in full).
+ * Proves the consolidated renderer's owner branch renders the same surface it did pre-refactor.
+ */
+test.describe("/me owner render (unified ProfileView)", () => {
+  test("free owner sees their full Passport at /me", async ({ page }) => {
+    // fixture.userIds[0] is the FREE user — sign in as them so /me resolves the owner arm.
+    await createAuthenticatedSession(page, fixture.userIds[0])
+    await page.goto("/me")
+
+    // Owner surface renders (the H1 is the member's own NAME, not a literal "My Passport" —
+    // that string is only the null-name fallback). The name also repeats in the passport-card
+    // H4, so scope to the H1 hero title.
+    await expect(page.getByRole("heading", { level: 1, name: fixture.freeName })).toBeVisible()
+    // The bio renders (tier-independent for the owner — a member always sees their own profile).
+    await expect(page.getByText(fixture.bio)).toBeVisible()
+    // Owner-only affordance: the "Edit profile" action (never shown on the public arm).
+    await expect(page.getByRole("link", { name: /edit profile/i })).toBeVisible()
   })
 })

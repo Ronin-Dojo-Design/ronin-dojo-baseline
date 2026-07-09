@@ -1,7 +1,7 @@
 "use client"
 
 import { EllipsisIcon, TrashIcon } from "lucide-react"
-import { usePathname, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { type ComponentProps, useTransition } from "react"
 import { toast } from "sonner"
 import type { User } from "~/.generated/prisma/browser"
@@ -19,7 +19,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/common/dropdown-menu"
-import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { admin, useSession } from "~/lib/auth-client"
 import { isAdmin } from "~/lib/authz-predicates"
@@ -32,7 +31,6 @@ type UserActionsProps = ComponentProps<typeof Button> & {
 
 export const UserActions = ({ user, className, ...props }: UserActionsProps) => {
   const { data: session } = useSession()
-  const pathname = usePathname()
   const router = useRouter()
   const [isUpdatePending, startUpdateTransition] = useTransition()
   const roles = ["admin", "user", "tournament_director"] as const
@@ -58,12 +56,9 @@ export const UserActions = ({ user, className, ...props }: UserActionsProps) => 
         />
 
         <DropdownMenuContent align="end" sideOffset={8}>
-          {pathname !== `/app/users/${user.id}` && (
-            <DropdownMenuItem render={<Link href={`/app/users/${user.id}`} />}>
-              Edit
-            </DropdownMenuItem>
-          )}
-
+          {/* WL-P2-35: `UserActions` now renders only inside the account detail page's
+              `AccountSection`, so a self "Edit" link back to this page is dead — dropped.
+              The detail route is Passport-keyed and no longer addressable by account id. */}
           <DropdownMenuSub>
             <DropdownMenuSubTrigger>Role</DropdownMenuSubTrigger>
 

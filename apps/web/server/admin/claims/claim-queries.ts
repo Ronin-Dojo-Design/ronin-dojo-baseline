@@ -1,6 +1,7 @@
 import "server-only"
 
-import { Brand } from "~/.generated/prisma/client"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
+import { clampListPageParams, runAdminListTransaction } from "~/server/admin/list-query"
 import { db } from "~/services/db"
 
 /**
@@ -40,15 +41,70 @@ const profileClaimSelect = {
   claimant: { select: { id: true, name: true, email: true } },
 } as const
 
+const pendingProfileClaimsWhere: Prisma.ProfileClaimRequestWhereInput = {
+  brand: Brand.BBL,
+  subjectType: "ORGANIZATION",
+  status: { in: ["PENDING", "NEEDS_INFO"] },
+}
+
 export async function findPendingProfileClaims() {
   return db.profileClaimRequest.findMany({
-    where: {
-      brand: Brand.BBL,
-      subjectType: "ORGANIZATION",
-      status: { in: ["PENDING", "NEEDS_INFO"] },
-    },
+    where: pendingProfileClaimsWhere,
     orderBy: { createdAt: "desc" },
     select: profileClaimSelect,
+  })
+}
+
+export type ProfileClaimRow = Awaited<ReturnType<typeof findPendingProfileClaims>>[number]
+
+/** Columns the queue can actually be ordered by in Prisma (computed columns like the
+ * subject label / relationship badge have no scalar to sort on). Anything else falls back
+ * to the schema default `createdAt desc`. */
+const CLAIM_ORDERABLE = new Set<keyof Prisma.ProfileClaimRequestOrderByWithRelationInput>([
+  "createdAt",
+  "status",
+])
+
+const defaultClaimOrderBy: Prisma.ProfileClaimRequestOrderByWithRelationInput = {
+  createdAt: "desc",
+}
+
+const resolveClaimOrderBy = (
+  sort: Array<{ id: string; desc: boolean }>,
+): Prisma.ProfileClaimRequestOrderByWithRelationInput => {
+  const primary = sort[0]
+  if (primary && CLAIM_ORDERABLE.has(primary.id as keyof typeof defaultClaimOrderBy)) {
+    return { [primary.id]: primary.desc ? "desc" : "asc" }
+  }
+  return defaultClaimOrderBy
+}
+
+/**
+ * Paginated shape of the pending profile-claim queue for the `AdminCollection` frame
+ * (ADR 0045), routed through `runAdminListTransaction` (like the exemplar `findPeople`) so
+ * it returns the shared `{ rows, total, pageCount }` and shares the pager math. Same rows,
+ * same filter (`ORGANIZATION` + `PENDING`/`NEEDS_INFO`); the header sort is threaded through
+ * (`resolveClaimOrderBy`) and defaults to the queue's `createdAt desc`.
+ */
+export async function findPendingProfileClaimsPaginated(params: {
+  page?: number
+  perPage?: number
+  sort?: Array<{ id: string; desc: boolean }>
+}) {
+  const { page, perPage } = clampListPageParams(params.page ?? 1, params.perPage ?? 50)
+  const orderBy = resolveClaimOrderBy(params.sort ?? [])
+
+  return runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.profileClaimRequest.findMany({
+        where: pendingProfileClaimsWhere,
+        orderBy,
+        select: profileClaimSelect,
+        take: perPage,
+        skip: (page - 1) * perPage,
+      }),
+    count: () => db.profileClaimRequest.count({ where: pendingProfileClaimsWhere }),
   })
 }
 
@@ -59,15 +115,7 @@ export async function findProfileClaimById(id: string) {
   })
 }
 
-/** Subject display label for a claim row (org name or person display name). */
-export function profileClaimSubjectLabel(claim: {
-  subjectType: "PERSON" | "ORGANIZATION"
-  organization: { name: string } | null
-  directoryProfile: {
-    passport: { displayName: string | null } | null
-  } | null
-}): string {
-  if (claim.subjectType === "ORGANIZATION")
-    return claim.organization?.name ?? "Unknown organization"
-  return claim.directoryProfile?.passport?.displayName ?? "Unknown profile"
-}
+// `profileClaimSubjectLabel` moved to the client-safe `./claim-labels` (Prisma-in-client
+// -chrome Turbopack trap). Re-exported here so existing server-component importers keep
+// their `~/server/admin/claims/claim-queries` import path.
+export { profileClaimSubjectLabel } from "./claim-labels"

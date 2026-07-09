@@ -94,12 +94,9 @@ export const getColumns = (): ColumnDef<PersonRow>[] => {
         const person = row.original
         const name = passportDisplayName(person) ?? person.user?.name ?? "Unnamed"
 
-        // Account-holders link to the EXISTING account-keyed detail (/app/users/[userId]).
-        // Placeholders (no user) have no detail route yet (deferred TASK_02b) → plain text.
-        if (person.user) {
-          return <DataTableLink href={`/app/users/${person.user.id}`} title={name} />
-        }
-        return <span className="block truncate font-medium">{name}</span>
+        // WL-P2-35: `/app/users/[id]` is now Passport-keyed, so EVERY Person — accountless
+        // placeholders included — opens the ONE Passport editor. `person.id` IS the passport id.
+        return <DataTableLink href={`/app/users/${person.id}`} title={name} />
       },
     },
     {
