@@ -5,6 +5,7 @@ import {
   getAdminListQueryParts,
   runAdminListTransaction,
 } from "~/server/admin/list-query"
+import { directoryProfileOnePayload, passportOnePayload } from "~/server/web/passport/payloads"
 import { db } from "~/services/db"
 import type { PeopleTableSchema } from "./schema"
 
@@ -156,3 +157,39 @@ export const findPeople = async (search: PeopleTableSchema) => {
 
   return { people, peopleTotal, pageCount }
 }
+
+/**
+ * The Passport-keyed detail payload for `/app/users/[id]` (WL-P2-35, ADR 0045 D3).
+ *
+ * `[id]` is a **Passport id** — the identity SoT (ADR 0025) — so EVERY Person has a
+ * detail route, including accountless roster placeholders (`userId == null`) that the
+ * old `findUserById` route structurally could not reach. Reuses the same `passportOnePayload`
+ * / `directoryProfileOnePayload` selects the self-serve editor consumes, plus the linked
+ * account (nullable) that gates the admin-only AccountSection (role/ban/grants).
+ *
+ * `directoryProfile` is nullable: accountless placeholders never got one (only the sign-up
+ * hook / add-person-with-account paths create it). The page synthesizes default form values
+ * and `updateDirectoryProfileAsAdmin` upserts on first edit.
+ */
+export const findPersonByPassportId = async (passportId: string) => {
+  return db.passport.findUnique({
+    where: { id: passportId },
+    select: {
+      ...passportOnePayload,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          role: true,
+          banned: true,
+          isPlaceholder: true,
+        },
+      },
+      directoryProfile: { select: directoryProfileOnePayload },
+    },
+  })
+}
+
+export type PersonDetail = NonNullable<Awaited<ReturnType<typeof findPersonByPassportId>>>

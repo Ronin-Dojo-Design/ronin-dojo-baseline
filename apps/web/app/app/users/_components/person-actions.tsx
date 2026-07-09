@@ -34,9 +34,12 @@ type PersonActionsProps = ComponentProps<typeof Button> & {
  * Row actions for the Passport-keyed People list. Account-only actions (edit,
  * role change, ban/unban, revoke sessions, delete-account) are gated behind a linked
  * account (`person.user`) — an accountless roster placeholder (userId == null) has no
- * account to act on, so this renders nothing for it until the identity-level editor
- * lands (deferred TASK_02b). Adapted from `user-actions.tsx`; the account-side behavior
- * is byte-identical (same `updateUserRole` / Better Auth `admin` calls, same guards).
+ * account to act on, so this renders nothing for it (ADR 0045 D3: account-only actions
+ * hide when `passport.userId == null`). The identity edit itself is reachable for EVERY
+ * Person via the Passport-keyed detail route (WL-P2-35) — the name cell links there; this
+ * menu's "Edit" is just the account-holder shortcut to that same page. Adapted from
+ * `user-actions.tsx`; the account-side behavior is byte-identical (same `updateUserRole` /
+ * Better Auth `admin` calls, same guards).
  */
 export const PersonActions = ({ person, className, ...props }: PersonActionsProps) => {
   const { data: session } = useSession()
@@ -73,8 +76,10 @@ export const PersonActions = ({ person, className, ...props }: PersonActionsProp
         />
 
         <DropdownMenuContent align="end" sideOffset={8}>
-          {pathname !== `/app/users/${user.id}` && (
-            <DropdownMenuItem render={<Link href={`/app/users/${user.id}`} />}>
+          {/* WL-P2-35: the detail route is Passport-keyed — link the passport id (person.id),
+              not the account id. */}
+          {pathname !== `/app/users/${person.id}` && (
+            <DropdownMenuItem render={<Link href={`/app/users/${person.id}`} />}>
               Edit
             </DropdownMenuItem>
           )}
