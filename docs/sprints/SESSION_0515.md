@@ -90,8 +90,13 @@ produce the sequenced launch-for-Brian gate plan for operator sign-off.
 #### SESSION_0515_TASK_01 — WL-P2-34 AdminCollection conformance (onboarding stragglers)
 
 - **Agent:** Cody → Doug → 3-pass gauntlet
-- **What:** Migrate the three non-kit onboarding stragglers — `/app/claims`, `/app/organizations`,
-  `/app/leads-pipeline` — onto the `AdminCollection` frame (columns + query; row→detail→one editor).
+- **What:** Migrate the three genuine hand-rolled stragglers — `/app/claims`, `/app/organizations`,
+  `/app/media` (rebuild its gallery) — onto the `AdminCollection` frame (columns + query; row→detail).
+- **Batch correction (bow-in discovery):** `/app/leads-pipeline` was in the operator's initial pick but is
+  a deliberate **kanban** on the shared `AdminKanban` ui-kit kernel — already kernel-conformant; converting
+  it to a table would regress the CRM board and duplicate `/app/leads`' table view. **Swapped OUT**; `/app/media`
+  (a real hand-rolled gallery straggler, named in ADR 0045 D5) swapped IN. → candidate drift note for bow-out:
+  ADR 0045 D5 lists leads-pipeline as a conformance target; it should be reclassified (kanban kernel ≠ table).
 - **Done means:** Each page renders via `AdminCollection<TData>` (no hand-rolled list/grid/gallery);
   behavior-preserving (same rows, filters, actions, row→detail); affected admin e2e green.
 - **Depends on:** nothing.
@@ -122,12 +127,41 @@ produce the sequenced launch-for-Brian gate plan for operator sign-off.
 - **Agent:** Petey (done — see `## Launch-for-Brian gate` below)
 - **Done means:** Sequenced gate A–E + critical path + forks F1–F6 delivered for operator sign-off.
 
+#### SESSION_0515_TASK_05 — Fix `/app/billing` 404 + stale admin links (bow-in bug)
+
+- **Agent:** Cody (small) → Doug spot-check
+- **What:** `app/app/billing/` has `layout.tsx` + `monitoring/page.tsx` but NO index `page.tsx` → `/app/billing`
+  404s. Add `app/app/billing/page.tsx` (redirect to `/app/billing/monitoring`). Repoint the two stale
+  `/admin/billing*` links left by the admin→app migration: `components/admin/sidebar.tsx:194`
+  (`/admin/billing/monitoring` → `/app/billing/monitoring`) and `components/admin/command-palette.tsx:65`
+  (`/admin/billing` → `/app/billing`).
+- **Done means:** `/app/billing` resolves (no 404); no `/admin/billing` refs remain (grep clean); permission
+  guard in `layout.tsx` still applies.
+- **Depends on:** nothing (file-disjoint; sequence after TASK_01 in the one worktree).
+
+#### SESSION_0515_TASK_06 — Composer durable-link conversion (#197 follow-up, slice of FI-004)
+
+- **Agent:** Cody → Doug → gauntlet
+- **What:** Convert the admin invite composer (`app/app/email/_components/bbl-invite-composer.tsx` +
+  `server/admin/email/invite-actions.ts` `sendBblClaimInvite`) OFF the old `/lineage/join?node=` single-use
+  pattern onto the durable-link pattern (PR #197): server-side `bindPendingClaim(email→node)` + a durable
+  `/auth/login` claim-sign-in URL (`buildClaimSignInUrl`) so a composed onboarding email is scanner-safe and
+  auto-claims on next sign-in — matching the Truelson script. This makes composer+script marryable (F5): run
+  script `--backfill --grant`, then send custom copy via the composer with the durable URL. Generalizes
+  beyond Brian (FI-003 students, future comps).
+- **Done means:** the composer binds the claim server-side + sends the durable `/auth/login` URL; no
+  single-use magic token in the composed email; a rehearsal send proves auto-claim on sign-in.
+- **Depends on:** nothing (file-disjoint; sequence after the conformance tasks).
+
 ### Grill outcome (2 forks resolved)
 
-1. **WL-P2-34 batch = onboarding stragglers** (`/app/claims`, `/app/organizations`, `/app/leads-pipeline`).
-   Rationale: highest launch value (the exact admin tools to onboard Brian); non-kit → build columns+query
-   fresh. Operator chose this over the cheap kit-swap batch.
+1. **WL-P2-34 batch = onboarding stragglers → `/app/claims` + `/app/organizations` + `/app/media`**
+   (leads-pipeline swapped OUT — it's a kanban on the shared `AdminKanban` kernel, not hand-rolled; see
+   TASK_01 batch-correction note). Media swapped IN (real hand-rolled gallery straggler).
 2. **WL-P2-37 IN scope** this session (operator pulled it in — profile is the funnel asset Brian lands on).
+3. **F5 resolved (mid-session):** operator wants composer+script married → pull the **composer durable-link
+   conversion** (TASK_06) INTO this session; full FI-004 (mobile/BBLApp) stays OUT of gate.
+4. **Bow-in bug:** `/app/billing` 404 + stale admin links → TASK_05 (operator: fix this session).
 
 ### Open decisions
 
@@ -186,8 +220,11 @@ operator "send" word; the Truelson thank-you script already uses the durable-lin
   real member traffic. Don't flip global live-send + Brian send in one step.
 - **F4 — WL-P2-33 sign-off vs migration in-gate?** Rec: sign-off in-gate, staged migration OUT (char-tests
   hold the line; rushed pre-launch migration riskier than status quo).
-- **F5 — FI-004 admin composer in-gate?** Rec: OUT unless Brian is sent via the composer — *confirm send
-  channel* (default: the dedicated durable-link script).
+- **F5 — FI-004 admin composer in-gate?** RESOLVED (operator): partially IN. Operator wants composer+script
+  married → the **composer durable-link conversion is IN-gate** (TASK_06 this session); full FI-004
+  (mobile admin, BBLApp port) stays OUT. Marriage path: script `--backfill --grant` binds+grants, composer
+  sends custom copy with the durable `/auth/login` URL. The composer today defaults to the OLD
+  `/lineage/join?node=` link + does not `bindPendingClaim` — TASK_06 fixes exactly that.
 - **F6 — WL-P2-21 admin branch/subtree CRUD?** Rec: OUT — data already correct; gate item = *verify on live
   prod*, not *build the CRUD*.
 
@@ -201,10 +238,12 @@ Road" to Bob (separate operator-gated outbound).
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0515_TASK_01 | in-progress | WL-P2-34 conformance: /app/claims + /app/organizations + /app/leads-pipeline onto AdminCollection |
+| SESSION_0515_TASK_01 | in-progress | WL-P2-34 conformance: /app/claims + /app/organizations + /app/media onto AdminCollection |
 | SESSION_0515_TASK_02 | pending | WL-P2-35 People Passport-keyed editor |
 | SESSION_0515_TASK_03 | pending | WL-P2-37 profile /me + /directory consolidation |
-| SESSION_0515_TASK_04 | landed | Launch-for-Brian gate plan (Petey) — awaiting operator sign-off on F1–F6 |
+| SESSION_0515_TASK_04 | landed | Launch-for-Brian gate plan (Petey) — F5 resolved; F1–F4/F6 await sign-off |
+| SESSION_0515_TASK_05 | pending | Fix /app/billing 404 + stale /admin/billing links |
+| SESSION_0515_TASK_06 | pending | Composer durable-link conversion (#197 follow-up / FI-004 slice) |
 
 ## Next session
 
