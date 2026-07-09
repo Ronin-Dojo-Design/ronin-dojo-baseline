@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0515 — AdminCollection conformance lane + launch-for-Brian gate plan"
 slug: session-0515
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-08
 updated: 2026-07-08
 last_agent: claude-session-0515
@@ -278,19 +278,70 @@ Road" to Bob (separate operator-gated outbound).
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0515_TASK_01 | in-progress | WL-P2-34 conformance: /app/claims + /app/organizations + /app/media onto AdminCollection |
-| SESSION_0515_TASK_02 | pending | WL-P2-35 People Passport-keyed editor |
-| SESSION_0515_TASK_03 | pending | WL-P2-37 profile /me + /directory consolidation |
+| SESSION_0515_TASK_01 | landed | WL-P2-34 conformance: /app/claims + /app/organizations + /app/media onto AdminCollection (`d71c3e3d`) |
+| SESSION_0515_TASK_02 | landed | WL-P2-35 People Passport-keyed editor (`18d1349c`) |
+| SESSION_0515_TASK_03 | landed | WL-P2-37 profile /me + /directory consolidation (`1fc3dc27`) |
 | SESSION_0515_TASK_04 | landed | Launch-for-Brian gate plan (Petey) — F5 resolved; F1–F4/F6 await sign-off |
-| SESSION_0515_TASK_05 | pending | Fix /app/billing 404 + stale /admin/billing links |
-| SESSION_0515_TASK_06 | pending | Composer durable-link conversion (#197 follow-up / FI-004 slice) |
+| SESSION_0515_TASK_05 | landed | Fix /app/billing 404 + stale /admin/billing links (`167a074a`) |
+| SESSION_0515_TASK_06 | landed | Composer durable-link conversion (#197 follow-up / FI-004 slice) (`55d04a11`) |
+
+All six landed in **PR #200** (squash-merged to `main` as `d0499bd3`) + the gauntlet fix (`a3cf6fca`) + pr-fix-loop nits (`1805635a`). Prod deploy READY, live smoke clean.
+
+## What landed
+
+- **WL-P2-34** (partial/incremental) — `/app/claims` + `/app/organizations` + `/app/media` migrated onto the `AdminCollection` frame (via the shared `runAdminListTransaction` paginator + threaded sort). `/app/leads-pipeline` STRUCK from the target list (kanban on the `AdminKanban` kernel → D-042). ~21 kit pages remain for the incremental sweep.
+- **WL-P2-35** — `/app/users/[id]` re-keyed userId→passportId; one generalized `PassportEditor` (`adminPassportId?` prop + `updatePassportAsAdmin`) + gated `AccountSection`; accountless placeholders now editable.
+- **WL-P2-37** — `/me` + `/directory/[slug]` on ONE renderer + ONE read model (`profile-view.ts`, `viewerContext` discriminated union); dead `directoryProfilePreviewPayload` deleted; byte-parity render.
+- **TASK_05** — `/app/billing` 404 fixed (index redirect to `/app/billing/monitoring`).
+- **TASK_06 (F5)** — BBL invite composer converted to the durable claim-link pattern (`bindPendingClaim` + `/auth/login`, node-picker, already-claimed guard) → composer+script marryable.
+- **TASK_04** — the launch-for-Brian gate plan (A–E + critical path + forks F1–F6) delivered for operator sign-off; **F5 resolved** (composer durable-link in-gate).
+- Follow-ups ledgered: WL-P2-38 (twin section-leaf trees), WL-P2-39 (claimable-node predicate), WL-P2-40 (admin-nav canonicalization), WL-P2-41 (deferred bot nits); drift D-042 (ADR 0045 D5 amend).
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `tsc --noEmit` · `format:check` · `next build` | green (201/201 pages) |
+| e2e `admin-collection-conformance` | 4 passed (claims/org/media + sort) |
+| e2e `directory/profile-paywall` | 3 passed (free/premium/`/me` owner) |
+| tier-policy tests (3 files) + `bind-pending-claim` | green, tier tests unchanged |
+| fallow re-audit | duplication clone groups dropped; `profile-projection.ts` dead-exports cleared |
+| CI on PR #200 (×2) | Oxc + tsc + unit + Playwright chromium/firefox/webkit + Vercel — all pass |
+| Live prod smoke (`blackbeltlegacy.com`) | `/` `/directory` `/directory/brian-scott` → 200; `/app/billing` → 307→login (404 gone); `/me` → 307→login |
+
+## Review log
+
+### SESSION_0515_REVIEW_01 — 3-pass gauntlet + pr-fix-loop
+
+- **Reviewed:** all 6 tasks (aggregate diff, +1767/−604).
+- **Verdict:** SHIP. The two seams (one editor via `adminPassportId`, one renderer via `viewerContext`) are correct; migrations behavior-preserving; identity re-key authz non-bypassable; claim-binding no-magic-token + TOCTOU closed; funnel profile byte-parity.
+- **Score:** 9.5/10.
+- **Follow-up:** WL-P2-38/39/40/41 + D-042.
+
+## Hostile close review
+
+- **Giddy:** SOUND-WITH-NITS (nits fixed in `a3cf6fca`; twin section-leaves + claimable-predicate ledgered).
+- **Doug:** SHIP (re-ran all gates; 3 LOW findings, 2 fixed, 1 ledgered).
+- **Desi:** POLISHED (public funnel renders complete; media-thumbnail tradeoff mitigated).
+- **Kaizen aggregate:** 9.5/10 — clean conformance lane, zero blockers, followed the 3-pass bar then a pr-fix-loop CI gate.
+
+## ADR / ubiquitous-language check
+
+- ADR update **required**: amend **ADR 0045 D5** to strike `/app/leads-pipeline` from the conformance-target list (D-042). Not done this session (docs-only follow-up).
+- ADR 0025 (Passport SoT) + ADR 0045 D1/D3 **reinforced** (People re-key). No new domain terms.
+
+## Reflections
+
+- **Bow-in discovery paid off twice:** enumerating the actual surfaces before dispatch caught that `/app/leads-pipeline` is a kanban (not a table) and that `/app/billing`'s 404 was a missing index page, not the stale `/admin/*` prefix. Both would have been wrong turns if I'd taken the ADR/operator list literally.
+- **The 3-pass gauntlet + a CI-bot pass is the right belt-and-suspenders for a launch merge** — the gauntlet caught structural nits (dead sort wire, hand-rolled paginator); the CI bots caught an edge-case 500 (unclamped pagination) + a test-user leak the gauntlet didn't. Different lenses, non-overlapping catches.
+- **The 529 overload forced an inline-fix fallback:** subagent dispatch failed twice on API overload, so the pr-fix-loop nits were applied directly in the main loop. Worth remembering: when dispatch is down, small well-specified fixes can proceed inline.
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+Continue the launch-for-Brian gate (TASK_04 plan). The conformance lane is done + merged; the remaining critical path to "send Brian" is security + email + rehearsal.
 
 ### First task
 
-TBD at bow-out.
+**RISK #13 — rotate the exposed prod Neon DB credential** (the hard prerequisite before any external user touches prod). Then the F1–F6 forks await operator sign-off (F2 defer #6, F4 sign-off-only WL-P2-33, F6 WL-P2-21 verify-not-build). After rotation: FI-002 lifecycle copy audit (staged DRYRUN=0), the #197 durable-link follow-ups (guest checkout + this session's composer already done), then the FI-001 rehearsal on a throwaway account, then the Desi public-surface sweep — then the operator says "send." The Brian email stays HELD until the full gate is green.
