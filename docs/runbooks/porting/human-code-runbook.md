@@ -4,14 +4,14 @@ slug: human-code-runbook
 type: reference
 status: active
 created: 2026-06-09
-updated: 2026-06-30
+updated: 2026-07-09
 last_agent: claude-session-0474
 pairs_with:
   - docs/knowledge/wiki/concepts/passport-and-shells.md
   - docs/knowledge/wiki/repo-truth-index.md
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
   - docs/architecture/ubiquitous-language.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -263,7 +263,7 @@ it and make every surface call that function. If you ever see two places showing
 record, the cause is almost always *two of them reading two different fields* — and the fix is never "patch the
 wrong one," it's "point them both at the one source." (Same family as §7's cache lesson; canon:
 [ADR 0035](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md),
-[`lineage-data-wiring-flow`](../sops/lineage-data-wiring-flow.md), `[[lineage-rank-display-awarded-truth]]`.)
+[`lineage-data-wiring-flow`](../../product/black-belt-legacy/lineage-data-wiring-flow.md), `[[lineage-rank-display-awarded-truth]]`.)
 
 ## See also
 

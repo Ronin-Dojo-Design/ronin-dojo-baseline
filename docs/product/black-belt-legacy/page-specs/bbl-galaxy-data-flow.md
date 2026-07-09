@@ -5,14 +5,14 @@ type: file
 status: active
 lifecycle: WIP
 created: 2026-06-21
-updated: 2026-06-30
+updated: 2026-07-09
 author: Brian + Claude
-last_agent: claude-session-0474
+last_agent: codex-session-0517
 pairs_with:
 
   - docs/epics/post-launch-clean-repo-001.md
   - docs/knowledge/wiki/files/public-passport-dto.md
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
 backlinks:
 
   - docs/knowledge/wiki/index.md

@@ -5,9 +5,9 @@ type: file
 status: active
 lifecycle: <PLANNED | WIP | MVP_LIVE | STABLE | DEPRECATED>
 created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
+updated: 2026-07-09
 author: Brian + <agent>
-last_agent: <agent>-session-NNNN
+last_agent: codex-session-0517
 pairs_with:
 
   - <docs/... related spec, SOP, or ADR>
@@ -43,7 +43,7 @@ How to use:
 
 ```text
 <low-fi box/arrow flow — source → projection → consumers. Mirror the
-docs/runbooks/sops/lineage-data-wiring-flow.md style.>
+docs/product/black-belt-legacy/lineage-data-wiring-flow.md style.>
 ```
 
 ## Data wiring flow (mermaid)

@@ -4,8 +4,8 @@ slug: session-0509
 type: session--implement
 status: closed
 created: 2026-07-07
-updated: 2026-07-07
-last_agent: codex-session-0509
+updated: 2026-07-09
+last_agent: codex-session-0517
 sprint: S49
 pairs_with:
   - docs/sprints/SESSION_0508.md
@@ -95,7 +95,7 @@ Live docs checked during planning on 2026-07-07:
 ### Canon and drift loaded
 
 - Domain hub: `docs/runbooks/domain-features/directory-org-profile-hub.md`.
-- Identity canon: `docs/knowledge/wiki/concepts/passport-and-shells.md`, `docs/knowledge/wiki/ronin-project-context.md`, `docs/runbooks/sops/lineage-data-wiring-flow.md`, `docs/knowledge/wiki/repo-truth-index.md`.
+- Identity canon: `docs/knowledge/wiki/concepts/passport-and-shells.md`, `docs/knowledge/wiki/ronin-project-context.md`, `docs/product/black-belt-legacy/lineage-data-wiring-flow.md`, `docs/knowledge/wiki/repo-truth-index.md`.
 - ADRs/LRs: ADR 0025, ADR 0035, ADR 0040, ADR 0041, ADR 0043; LR 0006 and LR 0008.
 - Relevant drift: D-023 remains the identity consolidation drift; D-040 warns that `passport-and-shells.md` still says Passport -> User 1:1 even though ADR 0025/schema have nullable `Passport.userId`.
 - FAILED_STEPS warnings: FS-0001/FS-0014 require L1 primitive/data-table reuse; FS-0024 requires cwd/remote guard before git mutations; FS-0026 requires old route prefixes to be swept across `revalidatePath`, redirects, links, and router pushes when deleting `/app/brand-settings` or retired `/admin` paths.

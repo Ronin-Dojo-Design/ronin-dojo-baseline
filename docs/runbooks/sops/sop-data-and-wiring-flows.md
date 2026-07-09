@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-05
-last_agent: claude-session-0501
+updated: 2026-07-09
+last_agent: codex-session-0517
 pairs_with:
   - docs/runbooks/sops/sop-e2e-user-lifecycle.md
   - docs/runbooks/dev-environment/local-dev-auth-storage.md
@@ -246,7 +246,7 @@ flowchart TD
 > `verificationStatus: VERIFIED`). So the belt-journey path only ever produces VERIFIED awards; a
 > self-declared belt is a claim record until verified. `RankAward.verificationStatus` stays **data-only
 > / never a display axis** (ADR 0035 §5) — `node.isVerified` is the one display trust flag. Full flow:
-> [`lineage-data-wiring-flow.md`](lineage-data-wiring-flow.md) §5.
+> [`lineage-data-wiring-flow.md`](../../product/black-belt-legacy/lineage-data-wiring-flow.md) §5.
 
 ```text
 User

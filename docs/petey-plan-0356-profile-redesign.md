@@ -4,11 +4,11 @@ slug: petey-plan-0356-profile-redesign
 type: plan
 status: active
 created: 2026-06-07
-updated: 2026-06-07
-last_agent: claude-session-0355
+updated: 2026-07-09
+last_agent: codex-session-0517
 pairs_with:
   - docs/sprints/SESSION_0355.md
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
   - docs/knowledge/wiki/custom-component-inventory.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -167,7 +167,7 @@ a tabbed/section body, so the three pages converge without over-abstracting the 
 ## Cross-references
 
 - [SESSION_0355](sprints/SESSION_0355.md) — assessment origin + the shipped DataSelect/claim/register interim.
-- [Lineage data wiring SOP](runbooks/sops/lineage-data-wiring-flow.md) — §4 directory, §5 claim, §7 privacy.
+- [Lineage data wiring SOP](product/black-belt-legacy/lineage-data-wiring-flow.md) — §5 directory, §6 claim, §9 privacy.
 - [Data + wiring SOP](runbooks/sops/sop-data-and-wiring-flows.md) — §18 org registration = Tool-submission analogue.
 - `components/web/profile/profile-hero.tsx`, `components/web/directory/facet-result-card.tsx`,
   `components/common/combobox-selector.tsx`, `app/(web)/submit/**`, `app/(web)/organizations/new/**`.

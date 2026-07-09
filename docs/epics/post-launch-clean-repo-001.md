@@ -95,5 +95,5 @@ independent lane; effort/risk noted. Docs-only items are low-risk quick wins.
 
 - Issue #134 (ADR + per-surface plan) · PR #135 (DTO base) · PR #133 (galaxy)
 - [public Passport DTO spec](../knowledge/wiki/files/public-passport-dto.md) · [galaxy data flow spec](../product/black-belt-legacy/page-specs/bbl-galaxy-data-flow.md)
-- [spec template](../knowledge/wiki/files/_template/SPEC_TEMPLATE.md) · [lineage-data-wiring-flow SOP](../runbooks/sops/lineage-data-wiring-flow.md) (format precedent)
+- [spec template](../knowledge/wiki/files/_template/SPEC_TEMPLATE.md) · [lineage-data-wiring-flow SOP](../product/black-belt-legacy/lineage-data-wiring-flow.md) (format precedent)
 - SESSION_0428 close (parity audit provenance)

@@ -2,10 +2,10 @@
 title: "Petey Plan 0477 — Belt Journey (RankMilestone) + School-Leads Flywheel + BBL CRM (autonomous epic)"
 slug: petey-plan-0477-belt-journey-crm-epic
 type: plan
-status: active
+status: superseded
 created: 2026-07-01
-updated: 2026-07-01
-last_agent: claude-session-0490
+updated: 2026-07-09
+last_agent: codex-session-0517
 pairs_with:
   - docs/runbooks/dev-environment/autonomous-sessions.md
   - docs/sprints/SESSION_0477.md
@@ -17,6 +17,10 @@ backlinks:
 ---
 
 # Petey Plan 0477 — Belt Journey + School-Leads Flywheel + BBL CRM
+
+> The `RankAward` + `RankMilestone` split and pending-claim boundary in this historical plan are superseded for the
+> member rank workflow by [BBL RankEntry Unified Domain and Data Flow](product/black-belt-legacy/rank-entry-unified-data-flow.md).
+> Preserve this plan as migration history; do not extend its split model.
 
 > **Authored SESSION_0476 for an overnight `scripts/auto-session-codex.sh` run** (operator handoff — Brian is
 > asleep). Goal: build G-004 N2 (the member belt-by-belt edit cards) **and** the reference-resolution +

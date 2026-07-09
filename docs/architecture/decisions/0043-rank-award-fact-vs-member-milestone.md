@@ -2,10 +2,10 @@
 title: "ADR 0043 - RankAward fact vs member-owned RankMilestone"
 slug: adr-0043-rank-award-fact-vs-member-milestone
 type: adr
-status: accepted
+status: superseded
 created: 2026-07-01
-updated: 2026-07-01
-last_agent: codex-session-0479
+updated: 2026-07-09
+last_agent: codex-session-0517
 deciders: Brian Scott
 pairs_with:
   - docs/petey-plan-0477-belt-journey-crm-epic.md
@@ -24,6 +24,8 @@ tags:
 ---
 
 # ADR 0043 - RankAward fact vs member-owned RankMilestone
+
+> Superseded for the BBL member rank workflow by [BBL RankEntry Unified Domain and Data Flow](../../product/black-belt-legacy/rank-entry-unified-data-flow.md). This document remains only as migration history.
 
 ## Status
 

@@ -188,7 +188,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0040 — Design-system doctrine + card architecture (one surface, named cards)](../../architecture/decisions/0040-design-system-doctrine-and-card-architecture.md) | decision | accepted |
 | [ADR 0041 — Agent roster as a dispatch layer + the Kanban board as the session driver](../../architecture/decisions/0041-agent-roster-dispatch-and-kanban-as-session-driver.md) | decision | accepted |
 | [ADR 0042 — Canonical public blog = `Post`/`/blog`; `ContentAtom` stays the content-ops engine](../../architecture/decisions/0042-canonical-blog-surface-post-over-contentatom.md) | decision | accepted |
-| [ADR 0043 — RankAward fact vs member-owned RankMilestone](../../architecture/decisions/0043-rank-award-fact-vs-member-milestone.md) | decision | accepted |
+| [ADR 0043 — RankAward fact vs member-owned RankMilestone](../../architecture/decisions/0043-rank-award-fact-vs-member-milestone.md) | decision | superseded — migration history; see BBL RankEntry canon |
 
 ## Learning Records
 
@@ -723,7 +723,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [Neon Prisma Advisory-Lock Recovery](../../runbooks/database/neon-advisory-lock-recovery.md) | runbook | active |
 | [Manual Boundary Registry](manual-boundary-registry.md) | runbook | active |
 | [SOP — Data and Wiring Flows](../../runbooks/sops/sop-data-and-wiring-flows.md) | runbook | active |
-| [Lineage Data + Wiring Flows](../../runbooks/sops/lineage-data-wiring-flow.md) | runbook | active — SESSION_0350 lineage genealogy + trust + faceted `/directory` flow map (peer to SOP Data and Wiring Flows) |
+| [BBL Lineage Data + Wiring Flows](../../product/black-belt-legacy/lineage-data-wiring-flow.md) | runbook | active — SESSION_0517 canonical RankEntry, trust, claims, profile, certificate, and faceted `/directory` flow map |
+| [BBL RankEntry Unified Domain](../../product/black-belt-legacy/rank-entry-unified-data-flow.md) | architecture-spec | proposed — unified cross-discipline rank-entry model and migration target |
 | [SOP — End-to-End User Lifecycle](../../runbooks/sops/sop-e2e-user-lifecycle.md) | runbook | active |
 | [SOP — Agent Workflows and Rituals](../../runbooks/sops/sop-agent-workflows-and-rituals.md) | runbook | active |
 | [Dev Environment](../../runbooks/dev-environment/dev-environment.md) | runbook | active |

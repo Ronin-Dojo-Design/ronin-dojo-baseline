@@ -4,12 +4,12 @@ slug: learning-record-0008
 type: learning-record
 status: active
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-09
 author: Giddy + claude-session-0474
 last_agent: claude-session-0474
 pairs_with:
   - docs/architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
   - docs/learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md
 backlinks:
   - docs/knowledge/wiki/index.md

@@ -5,12 +5,12 @@ type: file
 status: active
 lifecycle: WIP
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-07-09
 author: Brian + Claude
-last_agent: claude-session-0428
+last_agent: codex-session-0517
 pairs_with:
 
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/product/black-belt-legacy/page-specs/bbl-galaxy-data-flow.md
 backlinks:

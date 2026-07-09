@@ -4,7 +4,7 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-30
+updated: 2026-07-09
 last_agent: claude-session-0476
 pairs_with:
   - docs/rituals/closing.md
@@ -142,7 +142,7 @@ Only the ones that bear on today's task:
 
 - [`docs/architecture/plan-vs-current.md`](../architecture/plan-vs-current.md) — if the task touches schema or data behavior.
 - [`docs/architecture/decisions/`](../architecture/decisions/) — if the task touches an architectural choice.
-- **Identity canon** — if the task touches people, rank, schools, or lineage, read these *before* re-deriving the model: [`passport-and-shells`](../knowledge/wiki/concepts/passport-and-shells.md) (Passport = identity SoT), [`ronin-project-context`](../knowledge/wiki/ronin-project-context.md), the [lineage SOP](../runbooks/sops/lineage-data-wiring-flow.md), and the [repo-truth-index canonical-entity layer](../knowledge/wiki/repo-truth-index.md) (entity → source-of-truth table). Ratified in [ADR 0025](../architecture/decisions/0025-passport-identity-source-of-truth.md).
+- **Identity canon** — if the task touches people, rank, schools, or lineage, read these *before* re-deriving the model: [`passport-and-shells`](../knowledge/wiki/concepts/passport-and-shells.md) (Passport = identity SoT), [`ronin-project-context`](../knowledge/wiki/ronin-project-context.md), the [lineage SOP](../product/black-belt-legacy/lineage-data-wiring-flow.md), and the [repo-truth-index canonical-entity layer](../knowledge/wiki/repo-truth-index.md) (entity → source-of-truth table). Ratified in [ADR 0025](../architecture/decisions/0025-passport-identity-source-of-truth.md).
 - [`docs/runbooks/`](../runbooks/) — if the task involves the database, deploys, or environment.
 - [`docs/knowledge/wiki/dirstarter-docs-inventory.md`](../knowledge/wiki/dirstarter-docs-inventory.md) — **Alignment URLs section.** If the task touches any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting), check alignment before proceeding.
 

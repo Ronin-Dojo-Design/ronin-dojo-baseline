@@ -4,13 +4,13 @@ slug: files-readme
 type: index
 status: active
 created: 2026-06-21
-updated: 2026-06-21
-last_agent: claude-session-0428
+updated: 2026-07-09
+last_agent: codex-session-0517
 pairs_with:
 
   - docs/knowledge/wiki/index.md
   - docs/epics/post-launch-clean-repo-001.md
-  - docs/runbooks/sops/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
 backlinks:
 
   - docs/knowledge/wiki/index.md
