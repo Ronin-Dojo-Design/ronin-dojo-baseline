@@ -1,6 +1,7 @@
 import "server-only"
 
 import { Brand, type Prisma } from "~/.generated/prisma/client"
+import { runAdminListTransaction } from "~/server/admin/list-query"
 import { db } from "~/services/db"
 
 /**
@@ -56,34 +57,55 @@ export async function findPendingProfileClaims() {
 
 export type ProfileClaimRow = Awaited<ReturnType<typeof findPendingProfileClaims>>[number]
 
+/** Columns the queue can actually be ordered by in Prisma (computed columns like the
+ * subject label / relationship badge have no scalar to sort on). Anything else falls back
+ * to the schema default `createdAt desc`. */
+const CLAIM_ORDERABLE = new Set<keyof Prisma.ProfileClaimRequestOrderByWithRelationInput>([
+  "createdAt",
+  "status",
+])
+
+const defaultClaimOrderBy: Prisma.ProfileClaimRequestOrderByWithRelationInput = {
+  createdAt: "desc",
+}
+
+const resolveClaimOrderBy = (
+  sort: Array<{ id: string; desc: boolean }>,
+): Prisma.ProfileClaimRequestOrderByWithRelationInput => {
+  const primary = sort[0]
+  if (primary && CLAIM_ORDERABLE.has(primary.id as keyof typeof defaultClaimOrderBy)) {
+    return { [primary.id]: primary.desc ? "desc" : "asc" }
+  }
+  return defaultClaimOrderBy
+}
+
 /**
  * Paginated shape of the pending profile-claim queue for the `AdminCollection` frame
- * (ADR 0045), mirroring `findPeople` (`{ rows, total, pageCount }`). Same rows, same
- * filter (`ORGANIZATION` + `PENDING`/`NEEDS_INFO`), same `createdAt desc` order as
- * `findPendingProfileClaims`; only pagination is layered on so the frame's pager wires
- * correctly.
+ * (ADR 0045), routed through `runAdminListTransaction` (like the exemplar `findPeople`) so
+ * it returns the shared `{ rows, total, pageCount }` and shares the pager math. Same rows,
+ * same filter (`ORGANIZATION` + `PENDING`/`NEEDS_INFO`); the header sort is threaded through
+ * (`resolveClaimOrderBy`) and defaults to the queue's `createdAt desc`.
  */
 export async function findPendingProfileClaimsPaginated(params: {
   page?: number
   perPage?: number
+  sort?: Array<{ id: string; desc: boolean }>
 }) {
-  const { page = 1, perPage = 50 } = params
-  const skip = (page - 1) * perPage
+  const { page = 1, perPage = 50, sort = [] } = params
+  const orderBy = resolveClaimOrderBy(sort)
 
-  const [rows, total] = await db.$transaction([
-    db.profileClaimRequest.findMany({
-      where: pendingProfileClaimsWhere,
-      orderBy: { createdAt: "desc" },
-      select: profileClaimSelect,
-      take: perPage,
-      skip,
-    }),
-    db.profileClaimRequest.count({ where: pendingProfileClaimsWhere }),
-  ])
-
-  const pageCount = Math.max(1, Math.ceil(total / perPage))
-
-  return { rows, total, pageCount }
+  return runAdminListTransaction({
+    perPage,
+    findMany: () =>
+      db.profileClaimRequest.findMany({
+        where: pendingProfileClaimsWhere,
+        orderBy,
+        select: profileClaimSelect,
+        take: perPage,
+        skip: (page - 1) * perPage,
+      }),
+    count: () => db.profileClaimRequest.count({ where: pendingProfileClaimsWhere }),
+  })
 }
 
 export async function findProfileClaimById(id: string) {

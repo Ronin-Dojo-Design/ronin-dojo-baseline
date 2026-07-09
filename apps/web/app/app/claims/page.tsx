@@ -9,8 +9,8 @@ import { claimsTableParamsCache } from "~/server/admin/claims/schema"
  * frame (ADR 0045, WL-P2-34). Mirrors the lineage claims list.
  */
 export default async ({ searchParams }: PageProps<"/app/claims">) => {
-  const { page, perPage } = claimsTableParamsCache.parse(await searchParams)
-  const claimsPromise = findPendingProfileClaimsPaginated({ page, perPage })
+  const { page, perPage, sort } = claimsTableParamsCache.parse(await searchParams)
+  const claimsPromise = findPendingProfileClaimsPaginated({ page, perPage, sort })
 
   return (
     <Suspense fallback={<DataTableSkeleton title="Profile Claims" />}>

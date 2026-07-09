@@ -9,8 +9,8 @@ import { organizationsTableParamsCache } from "~/server/admin/org-settings/schem
  * (ADR 0045, WL-P2-34). Row → `/app/organizations/[id]/theme` editor.
  */
 export default async ({ searchParams }: PageProps<"/app/organizations">) => {
-  const { page, perPage } = organizationsTableParamsCache.parse(await searchParams)
-  const organizationsPromise = findOrganizationsWithSettingsPaginated({ page, perPage })
+  const { page, perPage, sort } = organizationsTableParamsCache.parse(await searchParams)
+  const organizationsPromise = findOrganizationsWithSettingsPaginated({ page, perPage, sort })
 
   return (
     <Suspense fallback={<DataTableSkeleton title="Organizations" />}>

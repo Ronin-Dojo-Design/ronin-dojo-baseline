@@ -53,7 +53,6 @@ export const getColumns = (): ColumnDef<ProfileClaimRow>[] => {
     },
     {
       id: "status",
-      enableSorting: false,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => {
         const { status } = row.original
@@ -62,7 +61,6 @@ export const getColumns = (): ColumnDef<ProfileClaimRow>[] => {
     },
     {
       accessorKey: "createdAt",
-      enableSorting: false,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Requested" />,
       cell: ({ row }) => <Note>{row.getValue<Date>("createdAt").toLocaleDateString()}</Note>,
     },

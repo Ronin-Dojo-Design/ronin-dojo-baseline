@@ -5,8 +5,9 @@ import type { ProfileClaimRow } from "./claim-queries"
 /**
  * Params/sort schema for the profile-claim queue (`/app/claims`) migrated onto
  * `AdminCollection` (ADR 0045). The queue is small and had no search axis in its
- * hand-rolled form, so this schema carries only pagination + the default
- * `createdAt desc` sort the queue already ordered by. Behavior-preserving.
+ * hand-rolled form, so this schema carries only pagination + sort. Sort is threaded to
+ * the query (`resolveClaimOrderBy` maps the Status/Requested headers to real Prisma
+ * orders) and defaults to the queue's original `createdAt desc`.
  */
 export const claimsTableParamsSchema = {
   page: parseAsInteger.withDefault(1),

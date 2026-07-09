@@ -1,7 +1,7 @@
 "use client"
 
 import type { ColumnDef } from "@tanstack/react-table"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon, PlayIcon } from "lucide-react"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
@@ -21,7 +21,11 @@ export const getColumns = (): ColumnDef<MediaRow>[] => {
       id: "preview",
       enableSorting: false,
       enableHiding: false,
-      size: 64,
+      // Desi (SESSION_0515): the grid→table migration (ADR 0045) dropped thumbnails to 48px.
+      // Widen the preview column and bump the thumb to 64px (`size-16`) to recover scanability
+      // within the mandated table, and stamp a corner play glyph on VIDEO rows so they read as
+      // video at a glance.
+      size: 80,
       header: ({ column }) => <DataTableColumnHeader column={column} title="" />,
       cell: ({ row }) => {
         const item = row.original
@@ -30,23 +34,28 @@ export const getColumns = (): ColumnDef<MediaRow>[] => {
             <img
               src={item.url}
               alt={item.altText ?? item.title ?? "Media"}
-              className="size-12 rounded object-cover"
+              className="size-16 rounded object-cover"
             />
           )
         }
         if (item.type === "VIDEO") {
           return (
-            // oxlint-disable-next-line jsx-a11y/media-has-caption -- admin preview of user-uploaded media; no caption track available
-            <video
-              src={item.url}
-              className="size-12 rounded object-cover"
-              poster={item.thumbnailUrl ?? undefined}
-            />
+            <div className="relative size-16">
+              {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- admin preview of user-uploaded media; no caption track available */}
+              <video
+                src={item.url}
+                className="size-16 rounded object-cover"
+                poster={item.thumbnailUrl ?? undefined}
+              />
+              <span className="absolute right-1 bottom-1 flex size-5 items-center justify-center rounded-full bg-black/60">
+                <PlayIcon className="size-3 fill-white text-white" />
+              </span>
+            </div>
           )
         }
         return (
-          <div className="flex size-12 items-center justify-center rounded bg-muted">
-            <ImageIcon className="size-5 text-muted-foreground" />
+          <div className="flex size-16 items-center justify-center rounded bg-muted">
+            <ImageIcon className="size-6 text-muted-foreground" />
           </div>
         )
       },

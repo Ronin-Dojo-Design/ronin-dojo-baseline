@@ -5,8 +5,8 @@ import type { OrganizationRow } from "./queries"
 /**
  * Params/sort schema for the organizations list (`/app/organizations`) migrated onto
  * `AdminCollection` (ADR 0045). The hand-rolled list had no search axis; this schema
- * carries only pagination + the default `name asc` sort the list already ordered by.
- * Behavior-preserving.
+ * carries only pagination + sort. Sort is threaded to the query (`resolveOrgOrderBy` maps
+ * the Organization/Brand headers to real Prisma orders) and defaults to `name asc`.
  */
 export const organizationsTableParamsSchema = {
   page: parseAsInteger.withDefault(1),

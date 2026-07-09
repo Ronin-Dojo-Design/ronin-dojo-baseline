@@ -64,7 +64,15 @@ export const sendBblClaimInvite = adminActionClient
 
     // Bind the email→node durably, then link the email to the public sign-in URL — the binding is
     // SERVER-SIDE, not in the URL, so a mail scanner or late click can't consume it.
-    await bindPendingClaim(toEmail, parsedInput.nodeId)
+    // The pre-guard above and this bind are not atomic: if the node gets claimed in that window,
+    // `bindPendingClaim` no-ops and returns false. Abort BEFORE sending so the recipient never gets
+    // a claim email that can never reconcile (Doug LOW-1) — same toastable style as the guard.
+    const bound = await bindPendingClaim(toEmail, parsedInput.nodeId)
+    if (!bound) {
+      throw new Error(
+        "That profile has already been claimed — no invite sent (we won't re-bind a claimed profile).",
+      )
+    }
     const claimUrl = buildClaimSignInUrl(await getBrandOrigin())
 
     const result = await sendEmail({

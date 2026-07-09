@@ -10,7 +10,6 @@ import {
   resolveViewerClaimState,
 } from "~/server/web/claims/resolve-viewer-claim-state"
 import { findProfileBySlug, getOwnDirectoryProfile } from "~/server/web/directory/queries"
-import { getLineageProfileDetailRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 import {
   getLineageAncestryForPassport,
   type LineageAncestryEntry,
@@ -173,9 +172,11 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     return null
   }
 
-  const account = profile.user
+  // Doug LOW-3 (SESSION_0515): `findProfileBySlug` already resolved the tier render policy for the
+  // same account, so reuse the one it threads back (`profile.renderPolicy`) instead of re-querying.
+  const renderPolicy = profile.renderPolicy
 
-  const [origin, viewerClaimState, claimFunnelHref, ancestry, renderPolicy] = await Promise.all([
+  const [origin, viewerClaimState, claimFunnelHref, ancestry] = await Promise.all([
     getRequestOrigin(),
     resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
     resolveClaimFunnelHref(profile),
@@ -183,7 +184,6 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     profile.isClaimablePlaceholder
       ? Promise.resolve<LineageAncestryEntry[]>([])
       : getLineageAncestryForPassport(profile.passportId),
-    getLineageProfileDetailRenderPolicyForUser({ userId: account.id ?? null, brand: Brand.BBL }),
   ])
 
   return {

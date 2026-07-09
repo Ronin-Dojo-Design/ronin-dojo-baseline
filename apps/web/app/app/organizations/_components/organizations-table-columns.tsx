@@ -25,7 +25,6 @@ export const getColumns = (): ColumnDef<OrganizationRow>[] => {
     {
       id: "name",
       accessorKey: "name",
-      enableSorting: false,
       enableHiding: false,
       size: 240,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Organization" />,
@@ -41,7 +40,7 @@ export const getColumns = (): ColumnDef<OrganizationRow>[] => {
     },
     {
       id: "brand",
-      enableSorting: false,
+      accessorKey: "brand",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Brand" />,
       cell: ({ row }) => <Badge variant="outline">{row.original.brand}</Badge>,
     },
