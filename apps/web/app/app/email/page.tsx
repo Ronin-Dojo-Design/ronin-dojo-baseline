@@ -22,7 +22,10 @@ import {
   getConfiguredBrandSenderEmail,
   isBrandSenderConfigured,
 } from "~/lib/email"
+import { getBrandOrigin } from "~/lib/brand-origin"
+import { buildClaimSignInUrl } from "~/server/web/lineage/mint-claim-magic-link"
 import { getBblEmailTemplatePreviews } from "~/server/admin/email/catalog"
+import { findClaimableBblNodeOptions } from "~/server/admin/email/claimable-nodes"
 import { getLifecycleCatalogPreviews } from "~/server/admin/email/lifecycle-catalog"
 import {
   type BblJoinLegacyCapture,
@@ -91,11 +94,18 @@ export default async function AppEmailPage() {
     env.RESEND_SENDER_EMAIL || env.RESEND_SENDER_EMAIL_BASELINE_MARTIAL_ARTS,
   )
   const bblSenderConfigured = isBrandSenderConfigured(Brand.BBL)
-  const [bblEmailTemplates, lifecyclePreviews, bblCaptures] = await Promise.all([
-    getBblEmailTemplatePreviews(),
-    getLifecycleCatalogPreviews(),
-    findRecentBblJoinLegacyCaptures(),
-  ])
+  const [bblEmailTemplates, lifecyclePreviews, bblCaptures, claimableNodes, bblOrigin] =
+    await Promise.all([
+      getBblEmailTemplatePreviews(),
+      getLifecycleCatalogPreviews(),
+      findRecentBblJoinLegacyCaptures(),
+      findClaimableBblNodeOptions(),
+      getBrandOrigin(),
+    ])
+
+  // The durable claim link the recipient will receive — shown in the composer's live preview.
+  // The action rebuilds this from `getBrandOrigin()` at send time; this is the same value.
+  const durableClaimUrl = buildClaimSignInUrl(bblOrigin)
 
   const captureRows: BblCaptureRow[] = bblCaptures.map(toCaptureRow)
 
@@ -216,7 +226,11 @@ export default async function AppEmailPage() {
         isSenderConfigured={bblSenderConfigured}
       />
 
-      <BblInviteComposer isSenderConfigured={bblSenderConfigured} />
+      <BblInviteComposer
+        isSenderConfigured={bblSenderConfigured}
+        claimableNodes={claimableNodes}
+        durableClaimUrl={durableClaimUrl}
+      />
 
       <BblEmailCaptureList captures={captureRows} />
 
