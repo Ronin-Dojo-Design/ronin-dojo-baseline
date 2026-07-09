@@ -27,8 +27,11 @@ import { JoinLegacyForm } from "./join-legacy-form"
 import { LineageMembershipCheckout } from "./lineage-membership-checkout"
 import type { findLineageMembershipPlans } from "~/server/web/billing/lineage-membership"
 import type { JoinWizardOptions } from "~/server/web/lineage/join-options"
+import type { JoinLegacyFormValues } from "./join-legacy-wizard/schema"
 
 type MembershipPlans = Awaited<ReturnType<typeof findLineageMembershipPlans>>
+type MembershipPlan = MembershipPlans[number]
+type MembershipPath = JoinLegacyFormValues["membershipPath"]
 
 type ClaimableTree = {
   id: string
@@ -55,6 +58,9 @@ const PHONE_COLUMNS: MarqueeColumn[] = [
   { images: pickPhones([1, 4, 7]), durationSec: 48, direction: "down" },
   { images: pickPhones([2, 5, 8]), durationSec: 44, direction: "up" },
 ]
+
+const membershipPathForPlan = (plan: MembershipPlan): MembershipPath =>
+  plan.entitlementKeys.includes("LINEAGE_ELITE") ? "ELITE" : "PREMIUM"
 
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
   return (
@@ -89,8 +95,16 @@ export function JoinLegacyLanding({
 }) {
   // Auto-open the join modal when arriving from a "Claim this profile" card.
   const [open, setOpen] = useState(Boolean(initialNodeId))
+  const [selectedMembershipPath, setSelectedMembershipPath] = useState<MembershipPath>("FREE")
 
-  const openJoin = () => setOpen(true)
+  const openJoin = (membershipPath: MembershipPath = "FREE") => {
+    // Claim-link arrivals use the locked complimentary-Elite claim card, so keep the
+    // underlying submitted path free; the claim finalizer applies the comp.
+    setSelectedMembershipPath(initialNodeId ? "FREE" : membershipPath)
+    setOpen(true)
+  }
+  const openFreeJoin = () => openJoin("FREE")
+  const captureIntakeBeforeCheckout = !isSubmitted && !isCancelled
 
   return (
     <div
@@ -152,7 +166,7 @@ export function JoinLegacyLanding({
             <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row">
               <button
                 type="button"
-                onClick={openJoin}
+                onClick={openFreeJoin}
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-red-600 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400"
               >
                 {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
@@ -284,7 +298,14 @@ export function JoinLegacyLanding({
             </h2>
           </div>
           <div className="mt-8">
-            <LineageMembershipCheckout plans={membershipPlans} />
+            <LineageMembershipCheckout
+              plans={membershipPlans}
+              onSelectPlan={
+                captureIntakeBeforeCheckout
+                  ? plan => openJoin(membershipPathForPlan(plan))
+                  : undefined
+              }
+            />
           </div>
         </section>
       )}
@@ -323,7 +344,7 @@ export function JoinLegacyLanding({
         </p>
         <button
           type="button"
-          onClick={openJoin}
+          onClick={openFreeJoin}
           className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-red-600 px-8 text-sm font-bold uppercase tracking-[0.12em] text-white transition hover:bg-red-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400"
         >
           {initialNodeId ? "Claim Your Profile" : "Join the Legacy"}
@@ -338,8 +359,10 @@ export function JoinLegacyLanding({
       {/* Join modal — the existing intake form, in the shared responsive drawer. */}
       <JoinLegacyDrawer open={open} onOpenChange={setOpen}>
         <JoinLegacyForm
+          key={`${initialNodeId ?? "join"}:${selectedMembershipPath}`}
           claimableTree={claimableTree}
           initialNodeId={initialNodeId}
+          initialMembershipPath={selectedMembershipPath}
           compIsLifetime={compIsLifetime}
           joinOptions={joinOptions}
         />

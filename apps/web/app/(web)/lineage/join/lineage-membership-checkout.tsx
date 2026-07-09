@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpRightIcon, CheckIcon } from "lucide-react"
+import { ArrowRightIcon, ArrowUpRightIcon, CheckIcon } from "lucide-react"
 import { useAction } from "next-safe-action/hooks"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
@@ -14,6 +14,7 @@ import type { LineageMembershipPlan } from "~/server/web/billing/lineage-members
 
 type LineageMembershipCheckoutProps = {
   plans: LineageMembershipPlan[]
+  onSelectPlan?: (plan: LineageMembershipPlan) => void
 }
 
 const formatPrice = (plan: LineageMembershipPlan) => {
@@ -29,12 +30,37 @@ const formatPrice = (plan: LineageMembershipPlan) => {
   return price
 }
 
-export function LineageMembershipCheckout({ plans }: LineageMembershipCheckoutProps) {
+const getIntakeCtaLabel = (plan: LineageMembershipPlan) => {
+  if (plan.requiresBlackBelt) return "Start Black Belt rate intake"
+  if (plan.entitlementKeys.includes("LINEAGE_ELITE")) return "Start Elite intake"
+  return "Start Premium intake"
+}
+
+export function LineageMembershipCheckout({ plans, onSelectPlan }: LineageMembershipCheckoutProps) {
   const checkout = useAction(createLineageMembershipCheckout, {
     onError: ({ error }) => {
       toast.error(error.serverError ?? "Unable to start checkout")
     },
   })
+  const startsWithIntake = Boolean(onSelectPlan)
+
+  const startCheckout = async (plan: LineageMembershipPlan) => {
+    if (onSelectPlan) {
+      onSelectPlan(plan)
+      return
+    }
+
+    const result = await checkout.executeAsync({ pricingPlanId: plan.id })
+
+    if (result?.data?.checkoutUrl) {
+      window.location.assign(result.data.checkoutUrl)
+      return
+    }
+
+    if (result?.serverError) {
+      toast.error(result.serverError)
+    }
+  }
 
   if (plans.length === 0) {
     return (
@@ -54,7 +80,10 @@ export function LineageMembershipCheckout({ plans }: LineageMembershipCheckoutPr
         <Badge variant="outline">Membership</Badge>
         <strong>Lineage membership</strong>
         <Note className="text-sm">
-          Choose a paid lineage tier after or alongside the profile claim intake.
+          {startsWithIntake
+            ? "Pick a price, complete the join intake, then continue to Checkout."
+            : "Choose an annual lineage tier to continue to Checkout."}{" "}
+          The discounted Elite rate is for verified BJJ black belts.
         </Note>
       </Stack>
 
@@ -92,12 +121,14 @@ export function LineageMembershipCheckout({ plans }: LineageMembershipCheckoutPr
             <Button
               className="w-full"
               variant="primary"
-              suffix={<ArrowUpRightIcon />}
-              isPending={checkout.isPending}
-              disabled={checkout.isPending}
-              onClick={() => checkout.execute({ pricingPlanId: plan.id })}
+              suffix={startsWithIntake ? <ArrowRightIcon /> : <ArrowUpRightIcon />}
+              isPending={!startsWithIntake && checkout.isPending}
+              disabled={!startsWithIntake && checkout.isPending}
+              onClick={() => {
+                void startCheckout(plan)
+              }}
             >
-              {plan.ctaLabel}
+              {startsWithIntake ? getIntakeCtaLabel(plan) : plan.ctaLabel}
             </Button>
           </Stack>
         </Card>

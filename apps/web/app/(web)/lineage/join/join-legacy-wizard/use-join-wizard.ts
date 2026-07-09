@@ -17,9 +17,11 @@ export type ClaimableTree = {
 export function useJoinWizard({
   claimableTree,
   initialNodeId,
+  initialMembershipPath = "FREE",
 }: {
   claimableTree?: ClaimableTree
   initialNodeId?: string
+  initialMembershipPath?: JoinLegacyFormValues["membershipPath"]
 }) {
   const [currentStep, setCurrentStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
@@ -55,7 +57,7 @@ export function useJoinWizard({
       discoverySource: "INSTRUCTOR",
       discoverySourceOther: "",
       shareConsent: false,
-      membershipPath: "FREE",
+      membershipPath: initialMembershipPath,
       treeId: claimableTree?.id,
       nodeId: initialNodeId ?? "",
     },

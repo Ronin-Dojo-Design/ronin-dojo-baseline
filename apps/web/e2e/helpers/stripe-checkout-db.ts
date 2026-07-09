@@ -76,6 +76,7 @@ mock.module("~/lib/notifications", () => ({
   notifyAdminOfPremiumTool: async () => {},
   notifyCustomerOfMerchOrder: async () => {},
   notifySubmitterOfPremiumTool: async () => {},
+  notifyUserOfLifecycleEvent: async () => {},
   notifyUserOfTournamentRegistration: async () => {},
 }))
 

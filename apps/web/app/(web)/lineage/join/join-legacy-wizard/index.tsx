@@ -22,15 +22,17 @@ import { useJoinWizard, type ClaimableTree } from "./use-join-wizard"
 export function JoinLegacyWizard({
   claimableTree,
   initialNodeId,
+  initialMembershipPath,
   compIsLifetime,
   joinOptions,
 }: {
   claimableTree?: ClaimableTree
   initialNodeId?: string
+  initialMembershipPath?: Parameters<typeof useJoinWizard>[0]["initialMembershipPath"]
   compIsLifetime?: boolean
   joinOptions: JoinWizardOptions
 }) {
-  const wizard = useJoinWizard({ claimableTree, initialNodeId })
+  const wizard = useJoinWizard({ claimableTree, initialNodeId, initialMembershipPath })
   const errorCount = Object.keys(wizard.form.formState.errors).length
 
   // Claim-link arrival (?node=) → this is a granted-comp claim path: the claimant

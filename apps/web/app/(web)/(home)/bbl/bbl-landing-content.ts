@@ -158,7 +158,7 @@ export const valueProps = [
     icon: "chart",
     title: "Membership Paths for Every Role",
     description:
-      "Free members explore lineage and profiles, Premium unlocks full content and progress tools, and Instructor/School Owner tiers add student and academy management.",
+      "Free members explore lineage and profiles. Premium is $35/year; Elite is $65/year, with a $45/year verified-black-belt rate.",
   },
   {
     icon: "swords",
@@ -356,7 +356,7 @@ export const faqs = [
   {
     question: "Is there a cost to join?",
     answer:
-      "Basic lineage tracking is free. Premium features for school owners and advanced tracking are coming soon.",
+      "Basic lineage tracking is free. Premium is $35/year, Elite is $65/year, and verified BJJ black belts can join Elite at the $45/year black-belt rate.",
   },
 ]
 

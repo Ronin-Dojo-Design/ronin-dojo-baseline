@@ -41,22 +41,23 @@ export const pathCards: Array<{
     value: "FREE",
     title: "Free profile",
     eyebrow: "Start verified",
-    description: "Submit your lineage, profile, and claim intent for steward review.",
-    bullets: ["Private steward review", "Claimable Passport intake", "Upgrade later"],
+    description: "Submit your lineage, profile, and claim intent for steward review at no cost.",
+    bullets: ["Free to start", "Private steward review", "Upgrade later"],
   },
   {
     value: "PREMIUM",
-    title: "Premium lineage membership",
-    eyebrow: "Most popular",
-    description: "Save the same review intake, then choose a paid lineage membership tier.",
-    bullets: ["Enhanced profile", "Lineage membership checkout", "Built for active practitioners"],
+    title: "Premium Member — $35/year",
+    eyebrow: "Full profile",
+    description: "Complete the intake first, then continue to the $35/year Premium checkout.",
+    bullets: ["Enhanced profile", "Annual membership", "Built for active practitioners"],
   },
   {
     value: "ELITE",
-    title: "Elite lineage support",
+    title: "Elite Member — $65/year",
     eyebrow: "Schools & leaders",
-    description: "For instructors, academies, and multi-generation legacy stewardship.",
-    bullets: ["School-friendly intake", "Legacy support", "Priority steward context"],
+    description:
+      "For instructors, school owners, and legacy stewards. Verified BJJ black belts can use the $45/year Elite rate.",
+    bullets: ["School-friendly intake", "Priority steward context", "$45/year black-belt rate"],
   },
 ]
 

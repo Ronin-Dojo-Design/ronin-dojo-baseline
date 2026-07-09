@@ -224,7 +224,7 @@ export const createLineageMembershipCheckout = userActionClient
       subscription_data: mode === "subscription" ? { metadata } : undefined,
       allow_promotion_codes: coupon ? undefined : true,
       discounts: coupon ? [{ coupon }] : undefined,
-      success_url: `${origin}/lineage/join/success?sessionId={CHECKOUT_SESSION_ID}`,
+      success_url: `${origin}/app/profile?complete=1&checkout=lineage-membership&sessionId={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/lineage/join?cancelled=true`,
     })
 
@@ -232,5 +232,5 @@ export const createLineageMembershipCheckout = userActionClient
       throw new Error("Unable to create a Stripe Checkout Session for this membership.")
     }
 
-    redirect(checkout.url)
+    return { checkoutUrl: checkout.url }
   })

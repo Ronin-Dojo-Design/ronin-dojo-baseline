@@ -631,9 +631,11 @@ describe("createLineageMembershipCheckout", () => {
       organizationId: fx.orgIds[0],
       brand: requestBrand,
     })
-    expect(checkoutArgs.success_url).toContain("/lineage/join/success")
+    expect(checkoutArgs.success_url).toContain(
+      "/app/profile?complete=1&checkout=lineage-membership&sessionId={CHECKOUT_SESSION_ID}",
+    )
     expect(checkoutArgs.cancel_url).toContain("/lineage/join?cancelled=true")
-    expect(redirectState.url).toBe("https://checkout.stripe.test/session_0097")
+    expect(result?.data?.checkoutUrl).toBe("https://checkout.stripe.test/session_0097")
   })
 
   it("creates subscription Checkout from lineage membership recurrence fields", async () => {
@@ -657,6 +659,7 @@ describe("createLineageMembershipCheckout", () => {
     expect(checkoutArgs.customer_creation).toBeUndefined()
     expect(checkoutArgs.invoice_creation).toBeUndefined()
     expect(checkoutArgs.allow_promotion_codes).toBe(true)
+    expect(result?.data?.checkoutUrl).toBe("https://checkout.stripe.test/session_0097")
   })
 
   it("rejects cross-brand, program-scoped, inactive, no-entitlement, unmarked, and unmapped plans", async () => {

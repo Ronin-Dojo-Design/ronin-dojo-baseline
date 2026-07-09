@@ -16,9 +16,12 @@ import {
 
 test.skip(process.env.E2E_STRIPE_MOCK !== "1", "Requires E2E_STRIPE_MOCK=1")
 
+const CHECKOUT_REDIRECT_TIMEOUT_MS = 60_000
+const PROFILE_ONBOARDING_TIMEOUT_MS = 30_000
+
 test.describe("Lineage membership Checkout E2E", () => {
   test.describe.configure({ mode: "serial" })
-  test.setTimeout(120_000)
+  test.setTimeout(180_000)
 
   let authUser: AuthenticatedUser
   let fixture: LineageMembershipCheckoutFixture
@@ -44,6 +47,17 @@ test.describe("Lineage membership Checkout E2E", () => {
     await createAuthenticatedSession(page, authUser.userId)
   })
 
+  test("fresh pricing cards open the join intake before checkout", async ({ page }) => {
+    await page.goto("/lineage/join")
+
+    const plan = page.getByTestId(`lineage-membership-plan-${fixture.oneTimePlanId}`)
+    await expect(plan.getByRole("heading", { name: fixture.oneTimePlanName })).toBeVisible()
+    await plan.getByRole("button", { name: "Start Premium intake" }).click()
+
+    await expect(page.getByRole("heading", { name: "Join the Legacy" })).toBeVisible()
+    await expect(page.getByRole("radio", { name: "Premium Member — $35/year" })).toBeChecked()
+  })
+
   test("cancel return keeps lineage access ungranted", async ({ page }) => {
     await page.goto("/lineage/join?cancelled=true")
 
@@ -60,18 +74,26 @@ test.describe("Lineage membership Checkout E2E", () => {
     expect(state.programEnrollmentCount).toBe(0)
   })
 
-  test("one-time checkout returns to success and grants purchase entitlement", async ({ page }) => {
-    await page.goto("/lineage/join")
+  test("one-time checkout returns to dashboard onboarding and grants purchase entitlement", async ({
+    page,
+  }) => {
+    await page.goto("/lineage/join?submitted=true#lineage-membership")
 
     const plan = page.getByTestId(`lineage-membership-plan-${fixture.oneTimePlanId}`)
     await expect(plan.getByRole("heading", { name: fixture.oneTimePlanName })).toBeVisible()
     await plan.getByRole("button", { name: "Join Legacy" }).click()
 
     await expect(page).toHaveURL(
-      url => url.pathname === "/lineage/join/success" && Boolean(url.searchParams.get("sessionId")),
-      { timeout: 30_000 },
+      url =>
+        url.pathname === "/app/profile" &&
+        url.searchParams.get("complete") === "1" &&
+        url.searchParams.get("checkout") === "lineage-membership" &&
+        Boolean(url.searchParams.get("sessionId")),
+      { timeout: CHECKOUT_REDIRECT_TIMEOUT_MS },
     )
-    await expect(page.getByRole("heading", { name: "Lineage Membership Confirmed" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Profile Photo" })).toBeVisible({
+      timeout: PROFILE_ONBOARDING_TIMEOUT_MS,
+    })
 
     const sessionId = new URL(page.url()).searchParams.get("sessionId")
     expect(sessionId).toBeTruthy()
@@ -94,16 +116,23 @@ test.describe("Lineage membership Checkout E2E", () => {
   test("subscription checkout grants then revokes subscription entitlement", async ({ page }) => {
     const subscriptionId = `sub_e2e_lineage_${fixture.suffix}_browser`
 
-    await page.goto("/lineage/join")
+    await page.goto("/lineage/join?submitted=true#lineage-membership")
 
     const plan = page.getByTestId(`lineage-membership-plan-${fixture.subscriptionPlanId}`)
     await expect(plan.getByRole("heading", { name: fixture.subscriptionPlanName })).toBeVisible()
     await plan.getByRole("button", { name: "Start Monthly" }).click()
 
     await expect(page).toHaveURL(
-      url => url.pathname === "/lineage/join/success" && Boolean(url.searchParams.get("sessionId")),
-      { timeout: 30_000 },
+      url =>
+        url.pathname === "/app/profile" &&
+        url.searchParams.get("complete") === "1" &&
+        url.searchParams.get("checkout") === "lineage-membership" &&
+        Boolean(url.searchParams.get("sessionId")),
+      { timeout: CHECKOUT_REDIRECT_TIMEOUT_MS },
     )
+    await expect(page.getByRole("heading", { name: "Profile Photo" })).toBeVisible({
+      timeout: PROFILE_ONBOARDING_TIMEOUT_MS,
+    })
 
     const sessionId = new URL(page.url()).searchParams.get("sessionId")
     expect(sessionId).toBeTruthy()
