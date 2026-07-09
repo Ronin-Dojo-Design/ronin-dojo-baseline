@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { clampListPageParams } from "~/server/admin/list-query"
 import { db } from "~/services/db"
 
 const mediaRowInclude = {
@@ -16,7 +17,8 @@ export const findMedia = async (params: {
   page?: number
   perPage?: number
 }) => {
-  const { brand, type, title, page = 1, perPage = 24 } = params
+  const { brand, type, title } = params
+  const { page, perPage } = clampListPageParams(params.page ?? 1, params.perPage ?? 24)
   const skip = (page - 1) * perPage
 
   const where: Prisma.MediaWhereInput = {

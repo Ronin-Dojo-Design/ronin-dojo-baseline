@@ -1,5 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
-import { runAdminListTransaction } from "~/server/admin/list-query"
+import { clampListPageParams, runAdminListTransaction } from "~/server/admin/list-query"
 import { db } from "~/services/db"
 
 export const findOrgSettings = async (organizationId: string) => {
@@ -62,8 +62,8 @@ export const findOrganizationsWithSettingsPaginated = async (params: {
   perPage?: number
   sort?: Array<{ id: string; desc: boolean }>
 }) => {
-  const { page = 1, perPage = 50, sort = [] } = params
-  const orderBy = resolveOrgOrderBy(sort)
+  const { page, perPage } = clampListPageParams(params.page ?? 1, params.perPage ?? 50)
+  const orderBy = resolveOrgOrderBy(params.sort ?? [])
 
   return runAdminListTransaction({
     perPage,
