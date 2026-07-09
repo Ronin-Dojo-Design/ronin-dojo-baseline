@@ -1,65 +1,20 @@
-import { BuildingIcon } from "lucide-react"
-import { Badge } from "~/components/common/badge"
-import { H2 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
-import { Wrapper } from "~/components/common/wrapper"
-import { findAllOrganizationsWithSettings } from "~/server/admin/org-settings/queries"
+import { Suspense } from "react"
+import { OrganizationsTable } from "~/app/app/organizations/_components/organizations-table"
+import { DataTableSkeleton } from "~/components/data-table/data-table-skeleton"
+import { findOrganizationsWithSettingsPaginated } from "~/server/admin/org-settings/queries"
+import { organizationsTableParamsCache } from "~/server/admin/org-settings/schema"
 
-export default async () => {
-  const organizations = await findAllOrganizationsWithSettings()
+/**
+ * Per-org theme-override list — migrated onto the ONE `AdminCollection` frame
+ * (ADR 0045, WL-P2-34). Row → `/app/organizations/[id]/theme` editor.
+ */
+export default async ({ searchParams }: PageProps<"/app/organizations">) => {
+  const { page, perPage } = organizationsTableParamsCache.parse(await searchParams)
+  const organizationsPromise = findOrganizationsWithSettingsPaginated({ page, perPage })
 
   return (
-    <Wrapper size="lg" gap="sm">
-      <div className="flex items-center gap-3">
-        <BuildingIcon className="size-6" />
-        <div>
-          <H2>Organizations</H2>
-          <p className="text-sm text-muted-foreground">
-            Manage per-org theme overrides. Click an organization to edit its theme.
-          </p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        {organizations.length === 0 && (
-          <p className="text-sm text-muted-foreground py-8 text-center">
-            No organizations found. Create one first.
-          </p>
-        )}
-
-        {organizations.map(org => {
-          const hasTheme =
-            org.orgSettings &&
-            (org.orgSettings.primaryColor || org.orgSettings.accentColor || org.orgSettings.logoUrl)
-
-          return (
-            <Link
-              key={org.id}
-              href={`/app/organizations/${org.id}/theme`}
-              className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <BuildingIcon className="size-5 text-muted-foreground" />
-                <div>
-                  <p className="font-medium">{org.name}</p>
-                  <p className="text-sm text-muted-foreground">{org.slug}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline">{org.brand}</Badge>
-                {hasTheme && <Badge variant="primary">Themed</Badge>}
-                {org.orgSettings?.primaryColor && (
-                  <div
-                    className="size-5 rounded-full border"
-                    style={{ backgroundColor: `hsl(${org.orgSettings.primaryColor})` }}
-                    title={`Primary: ${org.orgSettings.primaryColor}`}
-                  />
-                )}
-              </div>
-            </Link>
-          )
-        })}
-      </div>
-    </Wrapper>
+    <Suspense fallback={<DataTableSkeleton title="Organizations" />}>
+      <OrganizationsTable organizationsPromise={organizationsPromise} />
+    </Suspense>
   )
 }

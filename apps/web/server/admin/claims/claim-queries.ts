@@ -1,6 +1,6 @@
 import "server-only"
 
-import { Brand } from "~/.generated/prisma/client"
+import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { db } from "~/services/db"
 
 /**
@@ -40,16 +40,50 @@ const profileClaimSelect = {
   claimant: { select: { id: true, name: true, email: true } },
 } as const
 
+const pendingProfileClaimsWhere: Prisma.ProfileClaimRequestWhereInput = {
+  brand: Brand.BBL,
+  subjectType: "ORGANIZATION",
+  status: { in: ["PENDING", "NEEDS_INFO"] },
+}
+
 export async function findPendingProfileClaims() {
   return db.profileClaimRequest.findMany({
-    where: {
-      brand: Brand.BBL,
-      subjectType: "ORGANIZATION",
-      status: { in: ["PENDING", "NEEDS_INFO"] },
-    },
+    where: pendingProfileClaimsWhere,
     orderBy: { createdAt: "desc" },
     select: profileClaimSelect,
   })
+}
+
+export type ProfileClaimRow = Awaited<ReturnType<typeof findPendingProfileClaims>>[number]
+
+/**
+ * Paginated shape of the pending profile-claim queue for the `AdminCollection` frame
+ * (ADR 0045), mirroring `findPeople` (`{ rows, total, pageCount }`). Same rows, same
+ * filter (`ORGANIZATION` + `PENDING`/`NEEDS_INFO`), same `createdAt desc` order as
+ * `findPendingProfileClaims`; only pagination is layered on so the frame's pager wires
+ * correctly.
+ */
+export async function findPendingProfileClaimsPaginated(params: {
+  page?: number
+  perPage?: number
+}) {
+  const { page = 1, perPage = 50 } = params
+  const skip = (page - 1) * perPage
+
+  const [rows, total] = await db.$transaction([
+    db.profileClaimRequest.findMany({
+      where: pendingProfileClaimsWhere,
+      orderBy: { createdAt: "desc" },
+      select: profileClaimSelect,
+      take: perPage,
+      skip,
+    }),
+    db.profileClaimRequest.count({ where: pendingProfileClaimsWhere }),
+  ])
+
+  const pageCount = Math.max(1, Math.ceil(total / perPage))
+
+  return { rows, total, pageCount }
 }
 
 export async function findProfileClaimById(id: string) {
@@ -59,15 +93,7 @@ export async function findProfileClaimById(id: string) {
   })
 }
 
-/** Subject display label for a claim row (org name or person display name). */
-export function profileClaimSubjectLabel(claim: {
-  subjectType: "PERSON" | "ORGANIZATION"
-  organization: { name: string } | null
-  directoryProfile: {
-    passport: { displayName: string | null } | null
-  } | null
-}): string {
-  if (claim.subjectType === "ORGANIZATION")
-    return claim.organization?.name ?? "Unknown organization"
-  return claim.directoryProfile?.passport?.displayName ?? "Unknown profile"
-}
+// `profileClaimSubjectLabel` moved to the client-safe `./claim-labels` (Prisma-in-client
+// -chrome Turbopack trap). Re-exported here so existing server-component importers keep
+// their `~/server/admin/claims/claim-queries` import path.
+export { profileClaimSubjectLabel } from "./claim-labels"
