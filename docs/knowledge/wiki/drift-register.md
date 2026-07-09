@@ -574,3 +574,10 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Risk:** any local upload-path work silently blames the code (the 0499 uploader verification had to build a session-local S3 shim on :9100 + a corrected private worktree `.env` to proceed). Prod unaffected (R2).
 - **Fix direction:** restore the runbook values in the operator's `.env` + `docker compose up -d minio minio-init`. Operator's call (agents must not edit the canonical `.env` — [[operator-script-caution]] + env is gitignored).
 - **Status: OPEN** (operator action; workaround pattern documented in SESSION_0499 findings).
+
+### D-042 — ADR 0045 D5 lists `/app/leads-pipeline` as an AdminCollection conformance target, but it's a kanban on the shared `AdminKanban` kernel (SESSION_0515)
+
+- **What:** ADR 0045 D5 (and WL-P2-34) enumerate `/app/leads-pipeline` among the non-kit stragglers to migrate onto the `AdminCollection` (data-table) frame. But `app/app/leads-pipeline/_components/leads-pipeline.tsx:10` imports `AdminKanban` from `@ronin-dojo/ui-kit/kanban` and renders board m-cards — it is a **kanban** on a shared ui-kit kernel, already kernel-conformant. `/app/leads` already provides the data-table view of the same `Lead` data.
+- **Risk:** a future conformance sweep, taking the ADR/ledger literally, would convert the CRM pipeline board into a flat table — a **feature regression** (loses the kanban UX) + duplicates `/app/leads`. SESSION_0515 caught this at bow-in and swapped `/app/media` in for the batch instead.
+- **Fix direction:** amend ADR 0045 D5 to STRIKE `/app/leads-pipeline` from the conformance-target list (a kanban is not an `AdminCollection` candidate; the AdminKanban kernel is the correct shared primitive for board surfaces). WL-P2-34 already annotated. Amendment is a docs-only edit.
+- **Status: OPEN** (ADR 0045 D5 amendment pending — flagged by Giddy hostile-close, SESSION_0515).
