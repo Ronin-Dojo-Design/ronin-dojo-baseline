@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0520 — FI-001 pre-send blockers: profile/belt/certs bugs + timeline on profile"
 slug: session-0520
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-09
 updated: 2026-07-09
 last_agent: claude-session-0520
@@ -187,6 +187,14 @@ belt / certificates) — parallelizable but one coherent Cody unless a bug prove
 - **Governance:** FI-001 send gate re-expanded (operator grill); FI-022–FI-026 blocker rows +
   G-008 (parked visual expansion) recorded; duplicate-React-key defect on `/app/users/[id]`
   spawned as a chip task.
+- **Quality gauntlet (operator-ordered) → MERGE → PROD:** fallow-fix-loop (revalidate race fixed,
+  recipient-options extracted, audit gate ✗→✓) → code-quality matrix (9.2–9.3, no caps) → hostile
+  close (Giddy/Doug/Desi; all riders landed; Kaizen 9) → pr-review-score-fix loop on PR #202
+  (accelerator yes×3) → local `next build` ✓ 201/201 → **full CI green** (Playwright ×3 browsers,
+  unit, tsc, Oxc; one transient Neon P1001 on a docs-only re-run classified env-infra → redeploy
+  ✓) → operator "Merge" → **squash-merged `0f1f5173`** (carries 0519's `f5b90880`) → **Vercel
+  Production ● Ready**, `blackbeltlegacy.com` 200. Local main rebase-synced (redundant pre-squash
+  commit dropped after byte-identical containment proof).
 
 ## Decisions resolved
 
@@ -226,22 +234,39 @@ Full diff = 43 files on PR #202 (`git diff origin/main...HEAD --stat` is canonic
 | `bun run format:check` (apps/web, 1875 files) | PASS (after Doug's P1 oxfmt fix) |
 | `git diff --check` | PASS |
 | Doug hostile review | 8.9/10 — sound; P1/P2 fixed in-session, P3 riders applied |
+| PR #202 CI (final run on code tip) | PASS — Playwright chromium 20m26s / firefox 9m06s / webkit 9m09s, unit 4m, tsc, Oxc; Vercel preview ✓ (transient Neon P1001 → redeploy ✓ Ready 3m) |
+| Local `bun run build` | PASS — compiled 52s, 201/201 static pages, sitemap ✓ |
+| Squash-merge + prod deploy | `0f1f5173` on `main`; Vercel Production ● Ready (3m); `blackbeltlegacy.com` HEAD 200 |
+| `bash scripts/bow-out-gates.sh` | PASS — task log 7 rows; wiki:lint 0 err / 48 pre-existing warn; Graphify 16,823 / 32,517 / 2,276; fallow introduced findings 0; git clean on `main` |
 
 ## Open decisions / blockers
 
-None. Push and Brian's send remain explicitly unauthorized.
+None blocking. Merged + deployed (operator "Merge"). **Brian's send stays gated** on the FI-024
+profile design pass + the operator's explicit "send Brian now".
 
 ## Next session
 
 ### Goal
 
-Profile design-consistency pass: BBLApp-aligned profile page, one-surface inline edit (port
-LineageProfileDrawer), uploader-not-URL cleanup, belt-card readability, timeline design pass.
+FI-024 profile design-consistency pass — the LAST FI-001 pre-send blocker: BBLApp-aligned profile
+page, one-surface inline edit (port the LineageProfileDrawer pattern; retire the separate edit
+pages), uploader-not-URL cleanup, belt-card readability, timeline scrollytelling design pass.
+
+### Inputs to read
+
+`docs/sprints/SESSION_0520.md` (grill outcome §4 = the locked design spec) · POST_LAUNCH_SOT FI-024
+row · `profile-tier-packaging-0502` + `page-review-page2-lineage-0504` memories · the
+ronin-dojo-monorepo BBLApp profile surfaces · `LineageProfileDrawer` source.
 
 ### First task
 
 Desi audits the current profile view + edit surfaces vs the ronin-dojo-monorepo BBLApp and the
-LineageProfileDrawer inline-edit pattern; returns the prioritized conform list for Cody.
+LineageProfileDrawer inline-edit pattern; returns the prioritized conform list for Cody. (Giddy
+merge-order note honored: this lane opens AFTER #202 landed — done.)
+
+### Candidate after FI-024
+
+FI-001 send sequence (`--backfill`→`--send`→`--grant`) on the operator's explicit word.
 
 ## Review log
 
@@ -289,7 +314,7 @@ LineageProfileDrawer inline-edit pattern; returns the prioritized conform list f
   renumbered FI-026, full-ID-space grep run, FS-0030 appended); all gates independently green on his run.
 - **Desi:** pass-with-notes — dialog is a faithful clone of the admin idiom; MEDIUM (expiry `min`)
   fixed in-session; LOWs (PlusIcon prefix, `gap-2`, reset-on-cancel paired with walk-in) deferred as
-  polish, non-gating.
+  polish, non-gating → ledgered **WL-P3-37**.
 - **Dirstarter docs check:** live index checked (no server-action/revalidation doc at index level) +
   local `dirstarter-component-inventory.md` §8. **Verdict: partially aligned** — ctx-revalidate seam
   bypass is commented + ledgered (WL-P2-43).
@@ -310,3 +335,47 @@ LineageProfileDrawer inline-edit pattern; returns the prioritized conform list f
 3. **Scale confidence:** 100 = 9.8 · 1,000 = 9.5 · 10,000 = 9.0 (the top-200 recipient picker cap and
    the `getMemberAwards` full-select are the first things to pinch; both named, neither near-term).
    Aggregate **9 — proceed.**
+
+## ADR / ubiquitous-language check
+
+- ADR update **not required.** No architectural decision was made or changed: every fix extends an
+  existing ratified pattern (RankEntry compatibility boundary per ADR 0043/SOT-ADR; the admin
+  create-dialog idiom; the safe-actions client). The ctx-revalidate seam gap is a wiring item
+  (WL-P2-43), not a decision.
+- Ubiquitous language update **not required.** No new domain term; `ActiveUser`/`toRecipientOptions`
+  are implementation-level and inventoried in `custom-component-inventory.md`.
+
+## Reflections
+
+- **The reported symptom is not the root cause — and neither is the first diagnosis.** FI-025's
+  diagnosis agent found a real bug (missing layout revalidation) that was NOT the bug the operator
+  felt (an inert button). Only the mandatory browser round-trip exposed the second layer. The
+  session's rule that "done means" = an empirical round-trip, never a plausible fix, is what caught
+  it. Corollary (Giddy F7): keep confident pre-diagnosis pattern-matching out of bow-in grounding.
+- **One symptom, one class:** a single "update user doesn't save" report unpacked into a 14-form
+  kernel-level defect (Base UI default `type="button"`), including a member-facing feedback widget
+  that mouse users could never submit. Sweeping the class the moment a second instance appears paid
+  for itself; the kernel guard (WL-P2-44) is the durable end of it.
+- **Ledger IDs need mechanization, not vigilance:** FS-0030 happened twice in one session — the
+  second time immediately after fixing the first. Vigilance demonstrably does not scale; the
+  `ledger-id-next` helper does.
+- **Verification found more than review:** three of the session's four "already known" facts moved
+  when tested against the live app (belt data already healed on prod; timeline already on the
+  profile; certs 90% built). Driving the app before building is the cheapest work-avoidance there is.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | New code files carry `@added SESSION_0520` JETTY headers (certificate-issue-dialog, recipient-options); `custom-component-inventory.md` + `wiring-ledger.md` + `POST_LAUNCH_SOT.md` frontmatter bumped to 2026-07-09 / claude-session-0520; code files need no frontmatter. |
+| Backlinks/index sweep | SESSION_0520 ↔ SESSION_0519 + POST_LAUNCH_SOT paired at open; wiki index row added at close (this commit). |
+| Wiki lint | `bun run wiki:lint` via gate runner — 0 errors / 48 warnings, all pre-existing. |
+| Kaizen reflection | Reflections + 3 Kaizen answers present (aggregate 9). |
+| Hostile close review | Giddy PASS-w/riders (landed) · Doug 9.3 · Desi pass-w/notes — recorded above with Dirstarter gate (partially aligned, ledgered WL-P2-43). |
+| Code-quality gate (Class-A) | Users/sweep unit = Class A, composite 9.3/10, no hard cap (REVIEW_02); Class-B units 9.2–9.3. |
+| Runtime verification (Doug) | 4 flows browser-driven end-to-end + full CI (Playwright ×3, unit, tsc) + prod HEAD 200; prod DB parity 63/63/0 read-only. |
+| Review & Recommend | Next session = FI-024 (the last pre-send blocker) — goal/inputs/first-task written; matches board-top FI-001 lane. |
+| Memory sweep | None needed — all durable learnings routed to repo ledgers (WL-P2-43/44, FS-0030) and existing docs (merge-to-main.md already covers squash-redundant branches); no new operator preference surfaced. |
+| Next session unblock check | UNBLOCKED — FI-024 Desi audit needs no operator input; the send after it stays operator-gated by design. |
+| Git hygiene | `main` = `origin/main` = `0f1f5173` (squash of PR #202, merged on operator "Merge"); session branch deleted local+remote; close commit = docs-only free push (no CI matrix/deploy), hash reported at bow-out. |
+| Graphify update | 16,823 nodes / 32,517 edges / 2,276 communities (gate runner, pre-commit). |

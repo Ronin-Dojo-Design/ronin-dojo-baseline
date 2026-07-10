@@ -4,8 +4,8 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-07-09
-last_agent: codex-session-0519
+updated: 2026-07-10
+last_agent: claude-session-0520
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0347.md
@@ -120,6 +120,7 @@ follow-ups, not silent nulls.
 | WL-P3-36 | `apps/web/components/web/forms/color-field.test.tsx` (extend) or a thin e2e over the 3 theme routes | Test coverage gap (ColorField interaction) | **SESSION_0512 (Giddy hostile-close FINDING_02, medium):** the static half is covered (`color-field.test.tsx` SSR-proves `id`/`aria-*`/`placeholder` land on the text input + swatch color-vs-checkerboard), but the **DOM-interaction** half is unproven: a picker drag emitting an `isHslSafe` triplet, the popover opening, and `field.ref` actually landing (SSR ignores refs). Proven on 0 surfaces today — a future popover/text-wiring refactor could silently break focus-on-error or the picker→triplet write. | Add a DOM/interaction test (RTL+happy-dom, or one thin Playwright spec that opens the popover on a theme route, drags the picker, asserts the field value normalizes to an `isHslSafe` triplet). Not a WL-P2-36 blocker (Doug + Giddy both non-blocking). |
 | WL-P3-33 | `apps/web/server/admin/people/queries.ts`; `apps/web/server/web/entitlements/queries.ts:9` | Test coverage gap | **SESSION_0510 (Doug ×2):** the new `findPeople`/resolver-mirrors have no unit test (three populations + placeholder gating were runtime-proven ad hoc); `hasEntitlement` has no isolated unit test (transitive via `register.concurrency.test.ts`). Neither is a defect. | Add `server/admin/people/queries.test.ts` (populations + gating) + a `hasEntitlement` isolation test. |
 | WL-P3-34 | `apps/web/app/admin/layout.tsx:19,25` | Authz drift (retiring surface) | **SESSION_0510 Giddy N-2:** the deprecated `/admin` shell still uses raw `role !== "admin" && role !== "tournament_director"` for area admission + Shell `userRole` label — the one live coarse gate the 4-axes law doesn't touch (out of scope for the `/app` sweep). | Convert to `can()`/`isAdmin()` when `/admin` is retired, or sooner so the deprecated surface's raw check doesn't erode the ratified law. |
+| WL-P3-37 | `apps/web/app/app/certificates/_components/certificate-issue-dialog.tsx` + `components/admin/tournaments/walk-in-registration-dialog.tsx` + `certificate-issuance-list.tsx:25` | UI polish (Desi LOWs, SESSION_0520) | **SESSION_0520 (Desi pass-with-notes):** (a) issue-dialog trigger lacks the `prefix={<PlusIcon />}` the sibling admin add-triggers carry; (b) issuance-list header flex row lacks `gap-2` (H4/button can collide ~320px); (c) both dialogs keep stale values on cancel→reopen (`form.reset()` only on success) — fix as a PAIR to stay consistent. | Three one-line-ish polish edits; bundle into the FI-024 design pass or any certificates touch. |
 
 ## localStorage / sessionStorage gaps
 
