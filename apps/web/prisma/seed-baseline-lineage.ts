@@ -1776,7 +1776,9 @@ async function main() {
         "carlos-gracie-sr": false,
         "carlos-gracie-jr": false,
         "rorion-gracie": true,
-        "rigan-machado": true,
+        // The founder roots (Carlos Sr → Carlos Jr → Rigan) are NOT claimable — the untouchable
+        // top of the lineage (operator, SESSION_0522). Rigan flipped true→false here.
+        "rigan-machado": false,
         "bob-bass": true,
         "rick-williams": true,
         "erik-paulson": true,
