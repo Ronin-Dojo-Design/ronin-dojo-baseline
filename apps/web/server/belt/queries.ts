@@ -74,8 +74,11 @@ export function rankEntryStatusForAward(
 ): RankEntryStatus {
   if (verificationStatus === "VERIFIED") return "VERIFIED"
   if (verificationStatus === "DISPUTED") return "DISPUTED"
-  // IMPORTED is provenance, not a RankEntry status. It remains unverified until
-  // a steward explicitly verifies the corresponding entry.
+  // IMPORTED = verified truth for BBL's established lineage (operator decision, SESSION_0522):
+  // imported awards render as VERIFIED entries. Provenance is retained on
+  // RankAward.verificationStatus, so belt-gate still treats IMPORTED awards as
+  // authority-owned / read-only — this only governs the member-facing RankEntry status.
+  if (verificationStatus === "IMPORTED") return "VERIFIED"
   return "UNVERIFIED"
 }
 
