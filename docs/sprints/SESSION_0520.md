@@ -236,3 +236,22 @@ LineageProfileDrawer), uploader-not-URL cleanup, belt-card readability, timeline
 
 Desi audits the current profile view + edit surfaces vs the ronin-dojo-monorepo BBLApp and the
 LineageProfileDrawer inline-edit pattern; returns the prioritized conform list for Cody.
+
+## Review log
+
+### SESSION_0520_REVIEW_01 — Doug diff verification
+
+- **Reviewed tasks:** TASK_02–05 + sweep. **Verdict:** sound, 8.9/10 — P1 (oxfmt) + P2 (FI-020 ID
+  collision) fixed in-session; P3 riders (createPerson + revokeCertificate layout revalidate) applied.
+- Cleared hostile checks: Base UI default-type premise verified in node_modules; belt parity structural;
+  schema move single-consumer; sweep zero-collateral (no Cancels, no nested forms, no misses).
+
+### SESSION_0520_REVIEW_02 — code-quality matrix scores (post fallow-fix-loop)
+
+- **Belt read-ceiling fix** — Class B. Composite **9.3/10**, no cap (headless + tests + prod probe).
+- **Certificate issuance** — Class B. Composite **9.2/10**, no cap. Race fix headless-proven; dialog +
+  `recipient-options` helper JETTY'd + inventoried this pass.
+- **Users revalidation + inert-button sweep** — Class A. Composite **9.3/10**, no cap.
+- **Verdict (matrix §5):** Strong — ship with named follow-ups: ctx-revalidate typed param; `expiresAt`
+  temporal bounds; slim gate-only award select; inherited ReportForm/WalkInDialog CRAP.
+- Basis: code-quality-matrix §2–§6; fallow delta dead-code 9→8, dupes 53→51, audit gate ✗→✓.

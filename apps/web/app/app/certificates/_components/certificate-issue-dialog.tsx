@@ -1,5 +1,15 @@
 "use client"
 
+/**
+ * Issue-certificate dialog — the affordance that drives the previously-orphaned
+ * `issueCertificate` action (FI-022): recipient picker (User id-space via
+ * `findActiveUsers`/`toRecipientOptions`) + optional expiry, on the template
+ * detail page's issuance list.
+ *
+ * @added SESSION_0520 — cloned from the walk-in-registration-dialog pattern
+ *   (the repo's admin create-dialog idiom); shared formatting lives in
+ *   components/admin/recipient-options.ts.
+ */
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { useRouter } from "next/navigation"
