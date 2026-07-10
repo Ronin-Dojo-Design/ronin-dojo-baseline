@@ -6,7 +6,7 @@ import { type UseFormReturn, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Checkbox } from "~/components/common/checkbox"
-import { AvatarField, DateField, TextAreaField, TextField } from "~/components/common/fields"
+import { DateField, TextAreaField, TextField } from "~/components/common/fields"
 import {
   Form,
   FormControl,
@@ -28,6 +28,8 @@ import {
 } from "~/components/common/select"
 import { CountryField } from "~/components/web/belt/country-field"
 import { ProfileHero } from "~/components/web/profile/profile-hero"
+import { AvatarUploader } from "~/components/web/uploader"
+import { ImageFieldUploader } from "~/components/web/uploader/image-field-uploader"
 import { initialsOf } from "~/lib/directory/facet-result"
 import { updateDirectoryProfileAsAdmin, updatePassportAsAdmin } from "~/server/admin/people/actions"
 import {
@@ -193,7 +195,8 @@ export function PassportEditor({
       <PassportForm
         form={passportForm.form}
         onSubmit={passportForm.handleSubmitWithAction}
-        userId={userId}
+        isAdmin={isAdmin}
+        adminPassportId={adminPassportId}
       />
       <DirectoryProfileForm
         form={directoryForm.form}
@@ -212,11 +215,13 @@ export function PassportEditor({
 function PassportForm({
   form,
   onSubmit,
-  userId,
+  isAdmin,
+  adminPassportId,
 }: {
   form: UseFormReturn<any>
   onSubmit: React.FormEventHandler<HTMLFormElement>
-  userId: string
+  isAdmin: boolean
+  adminPassportId?: string
 }) {
   return (
     <section>
@@ -292,12 +297,35 @@ function PassportForm({
             type="tel"
           />
 
-          <AvatarField
-            form={form}
+          {/* H2 (FI-024): the avatar is an uploader, never a URL text field. Owner mode uses the
+              belt-ringed `AvatarUploader` (free-tier `uploadAndPromotePassportAvatar`, keyed to the
+              session user). Admin mode CANNOT use that action (it promotes the ADMIN's own avatar),
+              so it uses `ImageFieldUploader` through the admin-bypassing `uploadMedia` seam — the
+              cropped URL then rides the admin passport form's submit to the target Passport. */}
+          <FormField
             control={form.control}
             name="avatarUrl"
-            path={`passports/${userId}/avatar`}
-            className="@md:col-span-2"
+            render={({ field }) => (
+              <FormItem className="@md:col-span-2">
+                <FormLabel>Profile photo</FormLabel>
+                {isAdmin ? (
+                  <ImageFieldUploader
+                    value={field.value || null}
+                    onChange={url => field.onChange(url ?? "")}
+                    uploadPathPrefix={`passports/${adminPassportId}/avatar`}
+                    presets={["circle", "square"]}
+                    defaultPreset="circle"
+                    cropTitle="Crop the profile photo"
+                  />
+                ) : (
+                  <AvatarUploader
+                    initialAvatarUrl={field.value || null}
+                    onAvatarUrl={url => field.onChange(url)}
+                  />
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
           />
 
           <TextAreaField
@@ -393,24 +421,25 @@ function DirectoryProfileForm({
 
           <CountryField control={form.control} name="locationCountry" label="Country" />
 
+          {/* H2 (FI-024): the cover is an uploader (wide crop preset), never a URL text field. The
+              same entitlement-gated `uploadMedia` seam the old `FormMedia` upload button used —
+              only the confusing dual URL input is gone. */}
           <FormField
             control={form.control}
             name="coverPhotoUrl"
             render={({ field }) => (
-              <FormMedia
-                form={form}
-                field={field}
-                path={`profiles/${userId}/cover`}
-                className="@md:col-span-2"
-              >
-                {field.value && (
-                  <img
-                    src={field.value}
-                    alt="Cover preview"
-                    className="h-32 w-full rounded-md object-cover"
-                  />
-                )}
-              </FormMedia>
+              <FormItem className="@md:col-span-2">
+                <FormLabel>Cover photo</FormLabel>
+                <ImageFieldUploader
+                  value={field.value || null}
+                  onChange={url => field.onChange(url ?? "")}
+                  uploadPathPrefix={`profiles/${userId}/cover`}
+                  presets={["wide"]}
+                  defaultPreset="wide"
+                  cropTitle="Crop your cover photo"
+                />
+                <FormMessage />
+              </FormItem>
             )}
           />
 

@@ -1,8 +1,7 @@
 import { PencilIcon } from "lucide-react"
-import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
 import { Prose } from "~/components/common/prose"
+import { EditProfileButton } from "~/components/web/passport/profile-edit-drawer"
 import { bblHeadingFontClass } from "~/components/web/ui/brand-typography"
 import { Section } from "~/components/web/ui/section"
 import { MeSectionEmpty } from "./me-section-empty"
@@ -18,14 +17,9 @@ export function AboutSection({ bio }: { bio: string | null }) {
           title="Add a short bio"
           description="Introduce yourself — your background, the disciplines you train, and what the art means to you. Your bio shows here and on your public profile."
           action={
-            <Button
-              variant="primary"
-              size="md"
-              prefix={<PencilIcon />}
-              render={<Link href="/app/profile" />}
-            >
+            <EditProfileButton variant="primary" size="md" prefix={<PencilIcon />}>
               Write your bio
-            </Button>
+            </EditProfileButton>
           }
         />
       </div>

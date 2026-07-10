@@ -268,12 +268,9 @@ function ClaimCtaButton({
 }) {
   if (state === "CLAIMED_MINE") {
     return (
-      <Button
-        variant="secondary"
-        size="md"
-        className="w-full"
-        render={<Link href="/app/profile" />}
-      >
+      // FI-024 H1: route to the inline `PassportEditor` on `/me` (auto-opens on the `#edit` hash),
+      // not the retired `/app/profile` edit destination.
+      <Button variant="secondary" size="md" className="w-full" render={<Link href="/me#edit" />}>
         This profile is yours →
       </Button>
     )

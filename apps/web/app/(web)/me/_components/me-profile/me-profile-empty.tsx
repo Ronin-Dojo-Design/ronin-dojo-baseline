@@ -1,7 +1,6 @@
 import { IdCardIcon, PencilIcon } from "lucide-react"
-import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
 import { Wrapper } from "~/components/common/wrapper"
+import { EditProfileButton } from "~/components/web/passport/profile-edit-drawer"
 import { MeSectionEmpty } from "./me-section-empty"
 
 /**
@@ -20,9 +19,9 @@ export function MeProfileEmpty() {
         title="Set up your Passport"
         description="Your member profile isn't set up yet. Add your identity details — name, belt, school, and bio — to publish your Passport and join the directory."
         action={
-          <Button variant="primary" prefix={<PencilIcon />} render={<Link href="/app/profile" />}>
+          <EditProfileButton variant="primary" prefix={<PencilIcon />}>
             Complete your profile
-          </Button>
+          </EditProfileButton>
         }
         className="py-fluid-lg"
       />

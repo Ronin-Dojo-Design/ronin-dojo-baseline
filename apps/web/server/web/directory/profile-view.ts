@@ -15,6 +15,9 @@ import {
   type LineageAncestryEntry,
 } from "~/server/web/lineage/ancestry"
 import type { MyProfile } from "~/server/web/directory/profile-projection"
+import { canUploadMediaForUser } from "~/server/web/media/permissions"
+import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
+import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
 import { getOwnLineageProfile } from "~/server/web/lineage/queries"
 import {
   getDashboardMediaAttachments,
@@ -42,6 +45,18 @@ import { db } from "~/services/db"
  *    rich media exactly as the pre-refactor `loadDirectoryProfile` did.
  */
 
+/**
+ * The owner's editable Passport + DirectoryProfile forms, mounted by the inline-edit drawer
+ * (FI-024 H1). Loaded eagerly so any edit affordance on `/me` opens the ONE `PassportEditor`
+ * in-place instead of bouncing to `/app/profile`. Null when the profile isn't provisioned.
+ */
+export type OwnerEditorData = {
+  userId: string
+  passport: PassportOne
+  directoryProfile: DirectoryProfileOne
+  canUploadVideo: boolean
+}
+
 /** The owner (`/me`) arm — the member viewing their own Passport. */
 export type OwnerProfileView = {
   isOwner: true
@@ -52,6 +67,14 @@ export type OwnerProfileView = {
   lineageProfile: Awaited<ReturnType<typeof getOwnLineageProfile>>
   /** Public IMAGE attachments for the gallery grid. */
   galleryImages: DashboardMediaAttachment[]
+  /**
+   * The owner's PUBLIC promotion up-chain [founder … member] (FI-024 H3) — the SAME walk the
+   * public directory arm renders. Empty when the owner has no public lineage node / up-chain; the
+   * `AncestrySection` self-gates (renders nothing under 2 entries).
+   */
+  ancestry: LineageAncestryEntry[]
+  /** Inline-edit form data (FI-024 H1); `null` when the profile isn't provisioned (empty state). */
+  editor: OwnerEditorData | null
   viewerContext: { isOwner: true; renderPolicy: LineageProfileDetailRenderPolicy }
 }
 
@@ -88,21 +111,37 @@ export async function loadProfileViewForOwner(userId: string): Promise<OwnerProf
       profile: null,
       lineageProfile: null,
       galleryImages: [],
+      ancestry: [],
+      editor: null,
       viewerContext,
     }
   }
 
-  const [lineageProfile, attachments] = await Promise.all([
-    profile.lineageNodeId ? getOwnLineageProfile(userId) : Promise.resolve(null),
-    getDashboardMediaAttachments({
-      brand,
-      // The `/me` page already authenticated; the media ACL needs the session user object.
-      user: session!.user,
-      target: { kind: "passport", id: profile.passportId },
-    }),
-  ])
+  const [lineageProfile, attachments, ancestry, passport, directoryProfile, canUploadVideo] =
+    await Promise.all([
+      profile.lineageNodeId ? getOwnLineageProfile(userId) : Promise.resolve(null),
+      getDashboardMediaAttachments({
+        brand,
+        // The `/me` page already authenticated; the media ACL needs the session user object.
+        user: session!.user,
+        target: { kind: "passport", id: profile.passportId },
+      }),
+      // FI-024 H3: the owner's PUBLIC lineage up-chain, rendered by the same `AncestrySection`
+      // the public directory arm uses. The walk is PUBLIC-only, so it self-gates for a member
+      // whose node isn't public.
+      getLineageAncestryForPassport(profile.passportId),
+      // FI-024 H1: the editable Passport + DirectoryProfile forms for the inline-edit drawer —
+      // the SAME payloads the `/app/profile` Profile tab feeds the ONE `PassportEditor`.
+      getPassportByUserId(userId),
+      getDirectoryProfileByUserId(userId),
+      canUploadMediaForUser(session!.user, brand),
+    ])
 
   const galleryImages = (attachments ?? []).filter(attachment => attachment.type === "IMAGE")
+
+  // Both are provisioned together at sign-up; only mount the editor when both are present.
+  const editor: OwnerEditorData | null =
+    passport && directoryProfile ? { userId, passport, directoryProfile, canUploadVideo } : null
 
   return {
     isOwner: true,
@@ -110,6 +149,8 @@ export async function loadProfileViewForOwner(userId: string): Promise<OwnerProf
     profile,
     lineageProfile,
     galleryImages,
+    ancestry,
+    editor,
     viewerContext,
   }
 }

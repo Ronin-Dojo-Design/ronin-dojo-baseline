@@ -1,8 +1,7 @@
 import { MedalIcon } from "lucide-react"
 import dynamic from "next/dynamic"
-import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
+import { EditProfileButton } from "~/components/web/passport/profile-edit-drawer"
 import { bblHeadingFontClass } from "~/components/web/ui/brand-typography"
 import { Section } from "~/components/web/ui/section"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
@@ -35,9 +34,9 @@ export function BeltHistorySection({
           title="Your belt journey starts here"
           description="When an instructor logs a promotion it appears here as a dated, attributed timeline. Set your current belt now so your Passport shows your rank."
           action={
-            <Button variant="secondary" size="md" render={<Link href="/app/profile" />}>
+            <EditProfileButton variant="secondary" size="md">
               Set your current belt
-            </Button>
+            </EditProfileButton>
           }
         />
       </div>

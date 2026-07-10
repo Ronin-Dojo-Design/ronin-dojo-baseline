@@ -28,7 +28,7 @@ export type PublicPassportDTO = {
   socialLinks: PublicPassportRow["socialLinks"]
   /** Public directory slug, when the Passport has a directory profile. */
   slug: string | null
-  /** Most-recent-first; empty when the member hides ranks (`showRanks === false`). */
+  /** Highest-belt-first (rank `sortOrder` desc, then `awardedAt` desc); empty when the member hides ranks (`showRanks === false`). */
   ranks: PublicPassportRank[]
   /** Convenience: highest/most-recent rank, or null when hidden/none. */
   currentRank: PublicPassportRank | null

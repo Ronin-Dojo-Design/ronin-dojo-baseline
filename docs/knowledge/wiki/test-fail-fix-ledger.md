@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-07-08
-last_agent: claude-session-0511
+updated: 2026-07-10
+last_agent: claude-session-0521
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -56,6 +56,20 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
 — see `sop-test-writing.md` §2.
 
 ## Active Clusters
+
+### TFF-010 — paywall e2e seed: unique `code` derived by truncating OFF the unique suffix (P2002 under parallel workers)
+
+- **Status:** `open` (workaround known; background chip spawned SESSION_0521).
+- **What broke:** first FI-024 round-trip run hit a P2002 on `Discipline @@unique([code, brand])`.
+  `apps/web/e2e/helpers/seed-directory-paywall-db.ts` (~lines 30, 136): `makeRunId()` appends a UUID for
+  uniqueness, but `code = slugify('dp-' + runId).slice(0, 16)` truncates to exactly `dp-{13-digit-ms}` —
+  **dropping the UUID**. Two seeds in the same millisecond (parallel Playwright workers) collide.
+- **Repro:** run `e2e/directory/profile-paywall.spec.ts` with >1 worker so two seeds land in the same ms;
+  single-worker (`--workers=1`) clears it (how Doug disambiguated the false-red, SESSION_0521).
+- **Fix direction:** keep the code within its 16-char budget but derived from the *unique* part (short
+  base36/hash of the UUID), or widen the code discipline. Not part of any FI-024 diff — pre-existing infra.
+- **Reusable pattern:** a "unique" key derived from a **truncated non-unique prefix** of a unique value is
+  a collision class, not uniqueness — check what the `slice()` actually keeps.
 
 ### TFF-006 — billing portal/checkout cluster flakes in the full suite *under `--parallel=1`* (105-file scale)
 

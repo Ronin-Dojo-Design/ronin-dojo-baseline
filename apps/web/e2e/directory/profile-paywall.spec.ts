@@ -87,7 +87,11 @@ test.describe("/me owner render (unified ProfileView)", () => {
     await expect(page.getByRole("heading", { level: 1, name: fixture.freeName })).toBeVisible()
     // The bio renders (tier-independent for the owner — a member always sees their own profile).
     await expect(page.getByText(fixture.bio)).toBeVisible()
-    // Owner-only affordance: the "Edit profile" action (never shown on the public arm).
-    await expect(page.getByRole("link", { name: /edit profile/i })).toBeVisible()
+    // Owner-only affordance (FI-024 H1): the "Edit profile" action opens the inline
+    // `PassportEditor` drawer in-place — it is now a button, not a bounce to `/app/profile`.
+    const editProfile = page.getByRole("button", { name: /edit profile/i })
+    await expect(editProfile).toBeVisible()
+    await editProfile.click()
+    await expect(page.getByRole("heading", { name: /edit your passport/i })).toBeVisible()
   })
 })
