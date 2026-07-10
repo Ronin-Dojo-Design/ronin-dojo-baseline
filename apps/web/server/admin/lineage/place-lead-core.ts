@@ -1,9 +1,11 @@
+import { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import type { Brand } from "~/.generated/prisma/client"
 import { parseLeadLineageMeta } from "~/server/admin/leads/lineage-selections"
 import {
   materializeTrainedUnder,
   materializeVisualPlacement,
 } from "~/server/admin/lineage/claim-finalize"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { createPassport, ensurePassportForUser } from "~/server/identity/person-service"
 import {
   CREATE_LINEAGE_MEMBER_ERROR,
@@ -41,13 +43,56 @@ export type PlaceLeadIntoLineageResult = {
 }
 
 /**
+ * Mint the lead's DECLARED belt — the rank they named on the Join-the-Legacy form
+ * (`meta.currentRankId`), which placement historically dropped (the Jay Farrell /
+ * Tony's-students bug). Inside the placement transaction, create the member's stated
+ * `RankAward` for that rank — `source: STATED`, `verificationStatus: UNVERIFIED` (a
+ * self-submit; a steward verifies it via `verifyRankEntry`) — then sync the canonical
+ * `RankEntry`. Mirrors the create shape in `server/admin/users/actions.ts` (createPerson).
+ *
+ * Idempotent + defensive: skips when the lead named no rank, when the id no longer
+ * resolves to a Rank, or when the member already holds ANY award for that rank — so a
+ * re-run (auto-place then manual place) never double-mints. Returns the minted award id,
+ * or null when nothing was minted.
+ */
+async function ensureDeclaredRankAward(
+  tx: Tx,
+  { passportId, currentRankId }: { passportId: string; currentRankId: string | null },
+): Promise<string | null> {
+  if (!currentRankId) return null
+
+  const rank = await tx.rank.findUnique({ where: { id: currentRankId }, select: { id: true } })
+  if (!rank) return null
+
+  const existing = await tx.rankAward.findFirst({
+    where: { passportId, rankId: currentRankId },
+    select: { id: true },
+  })
+  if (existing) return null
+
+  const award = await tx.rankAward.create({
+    data: {
+      passportId,
+      rankId: currentRankId,
+      source: RankAwardSource.STATED,
+      verificationStatus: RankAwardVerificationStatus.UNVERIFIED,
+    },
+    select: { id: true },
+  })
+  await syncRankEntryFromAward(tx, award.id)
+  return award.id
+}
+
+/**
  * FI-003 — the transactional core of "PLACE a Join-the-Legacy signup on the canonical lineage tree
  * UNDER the instructor they named". This is NOT an approval or a verification: membership is automatic
  * (ADR 0035 / bbl-verification-claim-display-model, SESSION_0474) — a new self-submit is *placed* under
  * their declared instructor on every lineage surface and starts **Unverified**. Placement is not gated
  * behind any approval; the SEPARATE existing Verify toggle (Brian / Tony Hua / the member's RBAC
- * instructor) is the only thing that flips `LineageNode.isVerified`. This core never verifies, never
- * mints a RankAward, and never marks the member claimable.
+ * instructor) is the only thing that flips `LineageNode.isVerified`. This core never verifies (never
+ * flips `LineageNode.isVerified`) and never marks the member claimable. It DOES mint the signup's
+ * **declared belt** — the rank they named on the form (`meta.currentRankId`) — as an UNVERIFIED
+ * self-submit `RankAward` so their belt is not silently dropped; a steward verifies it separately.
  *
  * Runs INSIDE an existing `$transaction` (caller passes `tx`) so it stays directly unit-testable via
  * the SOP §5d rolled-back-tx pattern (no session mocks) AND is reused by two callers with no forked
@@ -73,12 +118,16 @@ export type PlaceLeadIntoLineageResult = {
  *   4. `materializeTrainedUnder` → the VERIFIED `INSTRUCTOR_STUDENT` edge (instructor → student).
  *   5. `materializeVisualPlacement` → seed `primaryVisualParentMemberId` = the instructor's member so
  *      the student renders UNDER them (instructor-not-a-member → left at root, existing semantics).
- *   6. Audit-log write.
+ *   6. `ensureDeclaredRankAward` → mint the belt the signup NAMED on the form (`meta.currentRankId`)
+ *      as an UNVERIFIED self-submit `RankAward` + synced `RankEntry` (idempotent — skips if the rank
+ *      is unknown or the member already holds it).
+ *   7. Audit-log write.
  *
  * Idempotent: a re-run finds the student already a member (`createLineageMember` throws
- * `MEMBER_EXISTS`) → resolves the existing placement and returns `alreadyPlaced: true` with no further
- * placement writes (the edge + visual materializers are themselves idempotent). Verification stays
- * Unverified — nothing here ever sets `LineageNode.isVerified` (self-submit truth, ADR 0035).
+ * `MEMBER_EXISTS`) → resolves the existing placement (and heals the declared belt if it was never
+ * minted) and returns `alreadyPlaced: true`; the edge, visual, and belt-mint materializers are all
+ * idempotent. Verification stays Unverified — nothing here ever sets `LineageNode.isVerified`
+ * (self-submit truth, ADR 0035).
  */
 export const placeLeadIntoLineage = async (
   tx: Tx,
@@ -94,7 +143,7 @@ export const placeLeadIntoLineage = async (
   const source = meta && typeof meta === "object" ? (meta as { source?: unknown }).source : null
   if (source !== "join-the-legacy") throw new Error(PLACE_LEAD_ERROR.NOT_JOIN_LEGACY)
 
-  const { trainedUnderNodeId } = parseLeadLineageMeta(lead.meta)
+  const { trainedUnderNodeId, currentRankId } = parseLeadLineageMeta(lead.meta)
   if (!trainedUnderNodeId) throw new Error(PLACE_LEAD_ERROR.NO_INSTRUCTOR)
 
   // Canonical tree (brand-scoped) must exist.
@@ -132,6 +181,12 @@ export const placeLeadIntoLineage = async (
       },
     })
     if (priorMember) {
+      // Heal the declared belt for a member placed before the mint existed (idempotent —
+      // no-ops when they already hold the award).
+      await ensureDeclaredRankAward(tx, {
+        passportId: priorMember.node.passportId,
+        currentRankId,
+      })
       return {
         alreadyPlaced: true,
         passportId: priorMember.node.passportId,
@@ -231,6 +286,11 @@ export const placeLeadIntoLineage = async (
     trainedUnderNodeId,
   })
 
+  // Mint the signup's declared belt (the rank named on the form) as an UNVERIFIED
+  // self-submit award — otherwise a join-signup's belt is silently dropped. A steward
+  // verifies it later via `verifyRankEntry`.
+  const rankAwardMinted = await ensureDeclaredRankAward(tx, { passportId, currentRankId })
+
   await tx.auditLog.create({
     data: {
       brand,
@@ -249,6 +309,7 @@ export const placeLeadIntoLineage = async (
         trainedUnderRelationshipId,
         placeholderCreated,
         alreadyPlaced,
+        rankAwardMinted,
       },
     },
   })

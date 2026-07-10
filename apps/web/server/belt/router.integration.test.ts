@@ -153,7 +153,9 @@ beforeAll(async () => {
         passportId: memberPassport.id,
         rankId: blueRankId,
         rankAwardId: blueAward.id,
-        status: "UNVERIFIED",
+        // IMPORTED award → VERIFIED entry (SESSION_0522): the backfill this fixture
+        // mirrors now derives an IMPORTED award to a VERIFIED member-facing RankEntry.
+        status: "VERIFIED",
       },
       {
         passportId: otherPassport.id,
@@ -238,9 +240,10 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
     })
     const blue = data.ranks.find(rank => rank.rank.id === fx.blueRankId)
 
-    // The legacy Award retains IMPORTED provenance, but the profile's
-    // member-facing status comes from its RankEntry compatibility anchor.
-    expect(blue?.card?.verificationStatus).toBe("UNVERIFIED")
+    // The legacy Award retains IMPORTED provenance, but the profile's member-facing
+    // status comes from its RankEntry compatibility anchor — and IMPORTED derives to
+    // VERIFIED (SESSION_0522: BBL's established lineage is verified truth).
+    expect(blue?.card?.verificationStatus).toBe("VERIFIED")
   })
 
   it("ALLOWS enriching the IMPORTED ceiling belt (blue) — milestone editable, award stays read-only", async () => {
@@ -249,9 +252,10 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
       story: "my blue journey",
     })
     expect(card.rankId).toBe(fx.blueRankId)
-    // The award retains IMPORTED provenance, while the canonical member-facing
-    // RankEntry status is UNVERIFIED; enriching never promotes either state.
-    expect(card.verificationStatus).toBe("UNVERIFIED")
+    // The award retains IMPORTED provenance (fact stays read-only), while the
+    // canonical member-facing RankEntry status derives to VERIFIED (SESSION_0522
+    // IMPORTED→VERIFIED mapping); enriching a milestone changes neither.
+    expect(card.verificationStatus).toBe("VERIFIED")
     expect(card.isFactEditable).toBe(false)
     expect(card.milestone?.story).toBe("my blue journey")
     expect(
@@ -259,7 +263,7 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
         where: { rankAwardId: fx.blueAwardId },
         select: { status: true },
       }),
-    ).toEqual({ status: "UNVERIFIED" })
+    ).toEqual({ status: "VERIFIED" })
   })
 
   it("enriches a self-added backfill BELOW the ceiling (white) — VERIFIED-by-implication, fact editable (B1)", async () => {
@@ -479,7 +483,9 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
         where: { rankAwardId: fx.blueAwardId },
         select: { status: true },
       }),
-    ).toEqual({ status: "UNVERIFIED" })
+      // IMPORTED award derives to a VERIFIED entry (SESSION_0522); the fill-blanks
+      // fact edit re-syncs the entry but leaves the award's IMPORTED provenance intact.
+    ).toEqual({ status: "VERIFIED" })
   })
 
   it("DENIES the owner CHANGING the now-FILLED date on the IMPORTED award (no overwrite → FORBIDDEN)", async () => {
@@ -674,7 +680,8 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
         where: { rankAwardId: filledAwardId },
         select: { status: true },
       }),
-    ).toEqual({ status: "UNVERIFIED" })
+      // IMPORTED award → VERIFIED entry (SESSION_0522); the admin fact write re-syncs it.
+    ).toEqual({ status: "VERIFIED" })
 
     // Established admin-mutation pattern: audit-log the write.
     const audit = await db.auditLog.findFirst({

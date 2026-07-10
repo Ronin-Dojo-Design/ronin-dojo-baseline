@@ -199,6 +199,7 @@ function DrawerBody({
             onSelectStudent={onSelectStudent}
             disciplineId={disciplineId}
             studentsCarouselVariant={studentsCarouselVariant}
+            canVerifyRank={isAdmin}
           />
         </TabsContent>
 

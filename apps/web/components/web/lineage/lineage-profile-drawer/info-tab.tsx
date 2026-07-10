@@ -1,15 +1,20 @@
 "use client"
 
-import { ShieldOffIcon } from "lucide-react"
+import { ShieldCheckIcon, ShieldOffIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useAction } from "next-safe-action/hooks"
 import type { CSSProperties } from "react"
+import { toast } from "sonner"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { H6 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
 import { StudentsCarousel } from "~/components/web/lineage/students-carousel"
 import { StudentsCarouselV2 } from "~/components/web/lineage/students-carousel-v2"
+import { verifyRankEntry } from "~/server/belt/verify-rank-entry"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
 import type { DrawerAccount, DrawerRankAward } from "./drawer-types"
 import { formatDate, initials } from "./use-drawer-profile"
@@ -25,6 +30,7 @@ export function InfoTab({
   onSelectStudent,
   disciplineId,
   studentsCarouselVariant,
+  canVerifyRank,
 }: {
   profile: LineageNodeProfile
   currentRank: NonNullable<DrawerRankAward>["rank"] | null
@@ -37,7 +43,13 @@ export function InfoTab({
   disciplineId?: string | null
   /** "v2" → the SESSION_0496 player-card rail; undefined/"v1" → the original carousel. */
   studentsCarouselVariant?: "v1" | "v2"
+  /** Steward (belt.admin) viewer → shows the "Verify" affordance on an Unverified rank. */
+  canVerifyRank?: boolean
 }) {
+  // The canonical member-facing rank status (IMPORTED awards derive to VERIFIED); the
+  // "Unverified" badge + steward Verify affordance key off the RankEntry, not the award.
+  const rankEntry = currentAward?.rankEntry ?? null
+  const isRankUnverified = rankEntry?.status === "UNVERIFIED"
   // Promoter identity prefers the historical Passport promoter (SESSION_0391),
   // falling back to the real-account actor that performed the award.
   const awardedBy = currentAward?.awardedByPassport
@@ -79,6 +91,14 @@ export function InfoTab({
               <Badge variant="outline" size="sm">
                 {discipline.name}
               </Badge>
+            )}
+            {isRankUnverified && (
+              <>
+                <Badge variant="warning" size="sm" prefix={<ShieldOffIcon />}>
+                  Unverified
+                </Badge>
+                {canVerifyRank && rankEntry && <RankVerifyButton rankEntryId={rankEntry.id} />}
+              </>
             )}
           </Stack>
         ) : (
@@ -182,5 +202,34 @@ export function InfoTab({
         </>
       )}
     </Stack>
+  )
+}
+
+/**
+ * Steward "Verify" button beside an Unverified rank badge (SESSION_0522). Flips the
+ * member's RankEntry UNVERIFIED → VERIFIED via `verifyRankEntry` (gated on `belt.admin`
+ * server-side). Mirrors the `useAction` + `sonner` + `router.refresh()` idiom from
+ * `lead-lineage-place.tsx`; only mounts for `belt.admin` viewers on an unverified rank.
+ */
+function RankVerifyButton({ rankEntryId }: { rankEntryId: string }) {
+  const router = useRouter()
+  const { execute, isPending } = useAction(verifyRankEntry, {
+    onSuccess: () => {
+      toast.success("Rank verified.")
+      router.refresh()
+    },
+    onError: ({ error }) => toast.error(error.serverError ?? "Could not verify this rank."),
+  })
+
+  return (
+    <Button
+      size="xs"
+      variant="primary"
+      prefix={<ShieldCheckIcon className="size-3.5" />}
+      isPending={isPending}
+      onClick={() => execute({ rankEntryId })}
+    >
+      Verify
+    </Button>
   )
 }

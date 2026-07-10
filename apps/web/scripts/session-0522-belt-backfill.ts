@@ -26,7 +26,12 @@ const syncVerifiedEntry = (
 ) =>
   tx.rankEntry.upsert({
     where: { rankAwardId: a.rankAwardId },
-    create: { rankAwardId: a.rankAwardId, passportId: a.passportId, rankId: a.rankId, status: "VERIFIED" },
+    create: {
+      rankAwardId: a.rankAwardId,
+      passportId: a.passportId,
+      rankId: a.rankId,
+      status: "VERIFIED",
+    },
     update: { passportId: a.passportId, rankId: a.rankId, status: "VERIFIED" },
   })
 
@@ -39,7 +44,9 @@ const db = new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
 const meta = (m: unknown) => (m && typeof m === "object" ? (m as Record<string, unknown>) : {})
 
 async function main() {
-  console.log(`\n### SESSION_0522 belt backfill — ${APPLY ? "APPLY (writing)" : "DRY RUN (no writes)"} ###\n`)
+  console.log(
+    `\n### SESSION_0522 belt backfill — ${APPLY ? "APPLY (writing)" : "DRY RUN (no writes)"} ###\n`,
+  )
 
   const tree = await db.lineageTree.findFirstOrThrow({
     where: { slug: TREE_SLUG },
@@ -111,7 +118,9 @@ async function main() {
   console.log("")
 
   // ---- PART B: mint awards for no-award members with a lead rank ----
-  console.log("== PART B: mint VERIFIED award+entry for no-award members with a lead currentRankId ==")
+  console.log(
+    "== PART B: mint VERIFIED award+entry for no-award members with a lead currentRankId ==",
+  )
   const leads = await db.lead.findMany({
     where: { meta: { path: ["source"], equals: "join-the-legacy" } },
     select: { id: true, firstName: true, lastName: true, meta: true },
@@ -133,7 +142,9 @@ async function main() {
     const passportId = mem.node.passportId
     const existing = mem.node.passport.rankAwardsEarned.find(a => a.rankId === rankId)
     if (existing) {
-      skipped.push(`${mem.node.passport.displayName}: already has award for that rank (${existing.verificationStatus})`)
+      skipped.push(
+        `${mem.node.passport.displayName}: already has award for that rank (${existing.verificationStatus})`,
+      )
       continue
     }
     const rank = await db.rank.findUnique({ where: { id: rankId }, select: { name: true } })

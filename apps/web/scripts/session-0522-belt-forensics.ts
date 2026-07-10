@@ -44,7 +44,9 @@ async function main() {
         where: { id: m.currentRankId },
         select: { name: true, shortName: true },
       })
-      console.log(`      → currentRankId resolves to: ${rank?.name ?? "UNRESOLVED"} (${rank?.shortName ?? "?"})`)
+      console.log(
+        `      → currentRankId resolves to: ${rank?.name ?? "UNRESOLVED"} (${rank?.shortName ?? "?"})`,
+      )
     }
   }
 
@@ -92,7 +94,9 @@ async function main() {
   console.log(
     `  tree=${TREE_SLUG} brand=${tree.brand} published=${tree.isPublished} members=${members.length}`,
   )
-  console.log(`  hasVERIFIEDentry=${verified}  hasNonVerifiedEntry=${nonVerified}  noEntry=${noEntry}`)
+  console.log(
+    `  hasVERIFIEDentry=${verified}  hasNonVerifiedEntry=${nonVerified}  noEntry=${noEntry}`,
+  )
   console.log(`  members with NO RankAward=${noAward.length}`)
 
   console.log("\n=== (3) BACKFILL TARGET: no-award members that HAVE a lead-rank source ===")

@@ -106,10 +106,34 @@ async function makeOrg(tx: Tx): Promise<string> {
   return org.id
 }
 
-/** A Join-the-Legacy lead carrying `meta.trainedUnderNodeId` (`Lead.organizationId` is required). */
+/** A minimal discipline → rank-system → rank chain; returns the created Rank id. */
+async function makeRank(tx: Tx): Promise<string> {
+  const discipline = await tx.discipline.create({
+    data: { name: uid("discipline"), slug: uid("discipline") },
+    select: { id: true },
+  })
+  const rankSystem = await tx.rankSystem.create({
+    data: { name: uid("rank-system"), disciplineId: discipline.id },
+    select: { id: true },
+  })
+  const rank = await tx.rank.create({
+    data: { name: uid("blue"), sortOrder: 6, rankSystemId: rankSystem.id },
+    select: { id: true },
+  })
+  return rank.id
+}
+
+/**
+ * A Join-the-Legacy lead carrying `meta.trainedUnderNodeId` (`Lead.organizationId` is required).
+ * Pass `currentRankId` to also carry the signup's declared belt (the rank they named on the form).
+ */
 async function makeLead(
   tx: Tx,
-  { email, trainedUnderNodeId }: { email: string; trainedUnderNodeId: string },
+  {
+    email,
+    trainedUnderNodeId,
+    currentRankId,
+  }: { email: string; trainedUnderNodeId: string; currentRankId?: string },
 ): Promise<string> {
   const organizationId = await makeOrg(tx)
   const lead = await tx.lead.create({
@@ -120,7 +144,11 @@ async function makeLead(
       lastName: "Student",
       source: "WEBSITE",
       organizationId,
-      meta: { source: "join-the-legacy", trainedUnderNodeId },
+      meta: {
+        source: "join-the-legacy",
+        trainedUnderNodeId,
+        ...(currentRankId ? { currentRankId } : {}),
+      },
     },
     select: { id: true },
   })
@@ -325,6 +353,69 @@ describe("placeLeadIntoLineage — FI-003", () => {
       })
       expect(after?.status).toBe("PENDING")
       expect(after?.passportId).toBe(ownPassport.id)
+    })
+  })
+
+  it("mints the DECLARED belt (UNVERIFIED self-submit) when the lead names a currentRankId, idempotently", async () => {
+    await inRolledBackTx(async tx => {
+      const treeId = await makeCanonicalTree(tx)
+      const root = await makePerson(tx, "rigan", { treeId })
+      const instructor = await makePerson(tx, "tony", { treeId, parentMemberId: root.memberId })
+      const actorUserId = await makeUser(tx, `${uid("actor")}@test.local`)
+      const email = `${uid("belt")}@test.local`
+      await makeUser(tx, email)
+      const rankId = await makeRank(tx)
+      const leadId = await makeLead(tx, {
+        email,
+        trainedUnderNodeId: instructor.nodeId,
+        currentRankId: rankId,
+      })
+
+      const result = await placeLeadIntoLineage(tx, { leadId, actorUserId, brand: BRAND })
+
+      // The declared belt is minted as a self-submit award (source STATED, UNVERIFIED, no
+      // approver) — a steward verifies it later via verifyRankEntry; nothing here promotes it.
+      const award = await tx.rankAward.findFirst({
+        where: { passportId: result.passportId, rankId },
+        select: { source: true, verificationStatus: true, awardedById: true },
+      })
+      expect(award).not.toBeNull()
+      expect(award?.source).toBe("STATED")
+      expect(award?.verificationStatus).toBe("UNVERIFIED")
+      expect(award?.awardedById).toBeNull()
+
+      // …and its canonical RankEntry is synced UNVERIFIED (the compatibility anchor).
+      const entry = await tx.rankEntry.findFirst({
+        where: { passportId: result.passportId, rankId },
+        select: { status: true },
+      })
+      expect(entry?.status).toBe("UNVERIFIED")
+
+      // Idempotent — a re-run (auto-place then manual place) never double-mints the belt.
+      await placeLeadIntoLineage(tx, { leadId, actorUserId, brand: BRAND })
+      const awardCount = await tx.rankAward.count({
+        where: { passportId: result.passportId, rankId },
+      })
+      expect(awardCount).toBe(1)
+    })
+  })
+
+  it("mints NO belt when the lead carries no currentRankId (nothing declared → nothing minted)", async () => {
+    await inRolledBackTx(async tx => {
+      const treeId = await makeCanonicalTree(tx)
+      const root = await makePerson(tx, "rigan", { treeId })
+      const instructor = await makePerson(tx, "tony", { treeId, parentMemberId: root.memberId })
+      const actorUserId = await makeUser(tx, `${uid("actor")}@test.local`)
+      const email = `${uid("nobelt")}@test.local`
+      await makeUser(tx, email)
+      const leadId = await makeLead(tx, { email, trainedUnderNodeId: instructor.nodeId })
+
+      const result = await placeLeadIntoLineage(tx, { leadId, actorUserId, brand: BRAND })
+
+      const awardCount = await tx.rankAward.count({ where: { passportId: result.passportId } })
+      expect(awardCount).toBe(0)
+      const entryCount = await tx.rankEntry.count({ where: { passportId: result.passportId } })
+      expect(entryCount).toBe(0)
     })
   })
 })

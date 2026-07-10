@@ -313,6 +313,12 @@ export const lineageNodeProfilePayload = {
           promotionEvent: {
             select: { id: true, title: true, slug: true, eventDate: true },
           },
+          // @added SESSION_0522 — the canonical member-facing RankEntry status (id for the
+          // steward Verify affordance in the drawer). IMPORTED awards derive to VERIFIED, so
+          // the drawer keys the "Unverified" badge off the entry, not the award's provenance.
+          rankEntry: {
+            select: { id: true, status: true },
+          },
         },
         // [0] is read as "current rank" by the drawer (deriveDrawerProfileView) +
         // canvas-model + students-carousel. Order by highest belt (Rank.sortOrder)
