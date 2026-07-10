@@ -262,6 +262,21 @@ LineageProfileDrawer inline-edit pattern; returns the prioritized conform list f
   temporal bounds; slim gate-only award select; inherited ReportForm/WalkInDialog CRAP.
 - Basis: code-quality-matrix §2–§6; fallow delta dead-code 9→8, dupes 53→51, audit gate ✗→✓.
 
+### SESSION_0520_REVIEW_03 — pr-review-score-fix loop, PR #202 (single pass)
+
+- **Step 1 Review:** satisfied at all_hands depth in-session (Doug 8.9→9.3, Giddy hostile close,
+  Desi, 3 fallow finders, code-quality matrix 9.2–9.3); every finding fixed on-branch or ledgered.
+- **Step 2 Score:** binary accelerator **yes/yes/yes**; reviewer gate ≈ **9.3** pre-CI.
+- **CI (all read):** Playwright chromium 19m17s / firefox 8m31s / webkit 9m50s **pass** ·
+  unit suite 4m07s **pass** · tsc **pass** · Oxc **pass** · Vercel preview **deployed** ·
+  CodeRabbit + Vercel Agent Review skipping (not failures). Local `bun run build` ✓ 201/201 pages.
+- **Step 3 Giddy gate:** intent aligned, function proven (now incl. full-suite + 3-browser e2e);
+  the 9.3-vs-9.5 gap is entirely ledgered deferred-improvement (WL-P2-43/44, FS-0030 mechanization,
+  Desi LOWs) — not incomplete verification. Verdict: **READY (pending operator go)**; merge held per
+  explicit-push-authorization.
+- **Step 4 top-3:** WL-P2-43 seam param · WL-P2-44 kernel Button guard · FS-0030 `ledger-id-next`.
+- **Step 5 Petey triage:** intended ✓ · right place ✓ · improvable-not-incorrect ✓.
+
 ## Hostile close review
 
 - **Giddy:** PASS-with-riders — plan sanity held (the diagnosis gate + browser round-trip structurally
