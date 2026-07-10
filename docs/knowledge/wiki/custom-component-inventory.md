@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-05
-last_agent: claude-session-0499
+updated: 2026-07-09
+last_agent: claude-session-0520
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -176,6 +176,8 @@ SESSION_0202 added the user-dashboard editor preview surface:
 | Divisions editor | `app/admin/tournaments/_components/divisions-editor.tsx` | Division setup for a tournament. |
 | Registrations table | `components/admin/tournaments/registrations-table.tsx` (+ columns/toolbar) | TanStack-based registrations list with row actions. |
 | Rule sets table | `app/admin/tournaments/rule-sets/_components/rule-sets-table.tsx` (+ delete-dialog/columns/toolbar) | Admin CRUD for rule sets. |
+| Recipient options helper | `components/admin/recipient-options.ts` | SESSION_0520: `ActiveUser` type + `toRecipientOptions` — the ONE shape/format for admin "pick a user" `ComboboxSelector` pickers (**User id-space**, not passport — the belt promoter pickers are don't-merge twins). Producers: `findActiveUsers`; consumers: walk-in-registration-dialog, certificate-issue-dialog. |
+| Certificate issue dialog | `app/app/certificates/_components/certificate-issue-dialog.tsx` | SESSION_0520 (FI-022): drives the previously-orphaned `issueCertificate` action from the template detail page — clone of the walk-in create-dialog idiom (recipient picker + optional expiry; layout-typed revalidate + `router.refresh`). |
 
 ---
 

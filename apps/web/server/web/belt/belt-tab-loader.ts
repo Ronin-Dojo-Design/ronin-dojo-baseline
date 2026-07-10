@@ -3,7 +3,12 @@ import "server-only"
 import { Brand } from "~/.generated/prisma/client"
 import type { CreatableOption } from "~/components/common/creatable-combobox"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
-import { gateAwardSelect, getBjjDisciplineId } from "~/server/belt/queries"
+import {
+  gateAwardSelect,
+  getBjjDisciplineId,
+  getMemberAwards,
+  toGateAward,
+} from "~/server/belt/queries"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
@@ -48,8 +53,10 @@ async function getBeltPromoterOptions(): Promise<CreatableOption[]> {
  * The "Belts" tab server load (Slice 5 — Petey Plan 0477 §Slice 5).
  *
  * Loads EVERYTHING the belt-journey grid needs in ONE pass (no N+1): the acting
- * member's Passport, their active BJJ RankEntries, the ceiling (`pickTopAwardInDiscipline`,
- * BJJ-scoped, via `ceilingSortOrder`), and the full BJJ rank ladder in `sortOrder`.
+ * member's Passport, their active BJJ RankEntries (card membership/status), their
+ * RankAwards (the editability ceiling — `getMemberAwards` + `ceilingSortOrder`,
+ * BJJ-scoped, the SAME pair the write gate uses; FI-021), and the full BJJ rank
+ * ladder in `sortOrder`.
  * The shared `gateAwardSelect` now joins each milestone's `MediaAttachment → Media`
  * rows to their `url`/`type`, so `toBeltCard` emits render-ready media directly —
  * no separate select or URL-reconciliation pass (SESSION_0492 cleanup).
@@ -87,13 +94,15 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
 
   const disciplineId = await getBjjDisciplineId()
 
-  // ONE pass: the ladder, the member's BJJ entries+milestone media, and the option
-  // lists in parallel. Entries are pre-ordered by `rank.sortOrder desc` so the gate's
+  // ONE pass: the ladder, the member's BJJ entries+milestone media, their RankAwards
+  // (the ceiling source — same `getMemberAwards` the WRITE gate in `server/belt/router.ts`
+  // reads, so read/write ceilings cannot diverge; FI-021), and the option lists in
+  // parallel. Both award reads are pre-ordered by `rank.sortOrder desc` so the gate's
   // "first in discipline" ceiling rule holds.
-  const [ladder, entries, joinOptions, promoterOptions] = await Promise.all([
+  const [ladder, entries, awards, joinOptions, promoterOptions] = await Promise.all([
     getBjjRanksForClaimPicker(),
     db.rankEntry.findMany({
-      // PENDING records are proposed higher ranks and never affect the active ceiling.
+      // PENDING records are proposed higher ranks and never contribute a belt card.
       where: {
         passportId: passport.id,
         status: { not: "PENDING" },
@@ -102,6 +111,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
       select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
       orderBy: { rank: { sortOrder: "desc" } },
     }),
+    getMemberAwards(passport.id),
     getJoinWizardOptions(),
     getBeltPromoterOptions(),
   ])
@@ -109,6 +119,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
   const { ceiling, ranks } = projectProfileBeltEntries({
     ladder,
     entries,
+    awards: awards.map(toGateAward),
     disciplineId,
   })
 

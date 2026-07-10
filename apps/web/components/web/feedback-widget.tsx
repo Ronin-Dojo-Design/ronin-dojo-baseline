@@ -128,7 +128,7 @@ const FeedbackWidgetForm = ({ toastId, setDismissed }: FeedbackWidgetFormProps) 
             {t("dismiss_button")}
           </Button>
 
-          <Button size="sm" className="text-xs flex-1" isPending={action.isPending}>
+          <Button type="submit" size="sm" className="text-xs flex-1" isPending={action.isPending}>
             {t("send_button")}
           </Button>
         </Stack>

@@ -183,7 +183,7 @@ export function WeighInPanel({ registrationId, userId, weighInsPromise }: WeighI
                     )}
                   />
 
-                  <Button size="md" isPending={action.isPending}>
+                  <Button type="submit" size="md" isPending={action.isPending}>
                     Record Weight
                   </Button>
                 </form>

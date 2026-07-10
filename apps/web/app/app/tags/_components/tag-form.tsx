@@ -133,7 +133,7 @@ export function TagForm({ children, className, title, tag, toolsPromise, ...prop
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             {tag ? "Update tag" : "Create tag"}
           </Button>
         </div>

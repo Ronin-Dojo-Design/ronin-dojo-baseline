@@ -143,7 +143,7 @@ export function StaffAssignmentForm({
           )}
         />
 
-        <Button size="md" isPending={action.isPending}>
+        <Button type="submit" size="md" isPending={action.isPending}>
           Assign Staff
         </Button>
       </form>

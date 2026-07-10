@@ -146,3 +146,19 @@ aggregator reads it with no new parser logic.
   *capability* is this goal (GL); the *running PRs* surface automatically once the source ships.
 - **Why:** closes the OTHER half of the Loop-of-Loops — inbound ledger debt **and** outbound open-PR
   review become one auto-surfaced backlog; the operator just runs `/bow-in`.
+
+### G-008 — BBL lineage/profile visual expansion (parked direction)
+
+- **Status:** open — P2 (direction, not vital; worked on "as we go")
+- **Objective:** the operator's stated visual roadmap for the lineage/profile surfaces, captured at
+  SESSION_0520 so it is documented but explicitly **does not gate the FI-001 send**:
+  (a) refine the **V2 beta cards** and promote them to a visible option alongside the cinematic
+  explorer and board/tree; (b) add a **view-method toggle** (list/card-style, like the posts toggle)
+  for the tree, including a **new simplified file-tree style**, pulling the operator's uipkge.dev
+  components — organization-chart, tree-chart, timeline, tree-table, sheet
+  (`https://uipkge.dev/react/components/*`); (c) **another BBL Galaxy attempt**.
+- **Lane:** lineage explorer / design system. **Depends on:** nothing hard; enabled now that
+  instructor/student modeling + the Passport-DTO-on-anything pattern exist.
+- **Why:** the verified lineage graph is the moat; richer, switchable visualizations deepen it. The
+  **scrollytelling timeline** is the operator's top visual, but it is a **pre-send Group-1 item
+  (FI-023)**, not parked here — G-008 holds the non-gating expansion only.

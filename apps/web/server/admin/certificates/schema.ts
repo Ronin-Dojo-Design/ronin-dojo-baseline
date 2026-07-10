@@ -41,3 +41,13 @@ export const certificateTemplateSchema = z.object({
 })
 
 export type CertificateTemplateSchema = z.infer<typeof certificateTemplateSchema>
+
+export const issueCertificateSchema = z.object({
+  certificateTemplateId: z.string().min(1),
+  // FK to User.id — the issuance picker must supply user ids, not passport ids.
+  userId: z.string().min(1, "Recipient is required"),
+  certificationId: z.string().optional(),
+  // Full ISO datetime (original action contract) or the YYYY-MM-DD a date input
+  // emits; "" = untouched optional input (treated as no expiry by the action).
+  expiresAt: z.union([z.iso.datetime(), z.iso.date(), z.literal("")]).optional(),
+})

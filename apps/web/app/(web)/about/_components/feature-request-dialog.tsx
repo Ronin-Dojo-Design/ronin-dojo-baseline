@@ -122,7 +122,9 @@ export const FeatureRequestDialog = ({
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
                   Cancel
                 </Button>
-                <Button isPending={action.isPending}>Send it to the DojoBots</Button>
+                <Button type="submit" isPending={action.isPending}>
+                  Send it to the DojoBots
+                </Button>
               </Stack>
             </Stack>
           </Form>

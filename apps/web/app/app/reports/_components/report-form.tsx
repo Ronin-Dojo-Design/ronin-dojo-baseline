@@ -144,7 +144,7 @@ export function ReportForm({ children, className, title, report, ...props }: Rep
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             Update report
           </Button>
         </div>

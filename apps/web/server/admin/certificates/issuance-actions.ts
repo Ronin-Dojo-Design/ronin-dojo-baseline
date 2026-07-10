@@ -1,17 +1,12 @@
 "use server"
 
 import { randomBytes } from "node:crypto"
+import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { z } from "zod/v4"
 import { Brand } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
-
-const issueCertificateSchema = z.object({
-  certificateTemplateId: z.string(),
-  userId: z.string(),
-  certificationId: z.string().optional(),
-  expiresAt: z.string().datetime().optional(),
-})
+import { issueCertificateSchema } from "~/server/admin/certificates/schema"
 
 function generateCertificateNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase()
@@ -51,9 +46,15 @@ export const issueCertificate = adminActionClient
       },
     })
 
+    // Layout-typed so the dynamic /app/certificates/[id] child (where the issuance
+    // list lives) is busted too — plain-path revalidation only touches the exact
+    // segment (precedent: server/admin/users/actions.ts). Must run BEFORE the
+    // response returns: the dialog's onSuccess router.refresh() re-renders
+    // immediately, and a revalidation deferred into after() races it (stale list).
+    revalidatePath("/app/certificates", "layout")
+
     after(async () => {
       revalidate({
-        paths: ["/app/certificates"],
         tags: ["certificates", `certificate-${certificateTemplateId}`],
       })
     })
@@ -74,6 +75,10 @@ export const revokeCertificate = adminActionClient
         tags: ["certificates", `certificate-issuance-${id}`],
       })
     })
+
+    // Same layout-typed revalidation as issueCertificate: the issuance list renders on the
+    // dynamic /app/certificates/[id] page, which tag/path revalidation alone doesn't bust.
+    revalidatePath("/app/certificates", "layout")
 
     return issuance
   })

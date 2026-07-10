@@ -304,7 +304,7 @@ export const CreateProgramForm = ({
                 </Button>
               )}
 
-              <Button size="md" prefix={<SaveIcon />} isPending={action.isPending}>
+              <Button type="submit" size="md" prefix={<SaveIcon />} isPending={action.isPending}>
                 {program ? "Update Program" : "Create Program"}
               </Button>
             </Stack>
