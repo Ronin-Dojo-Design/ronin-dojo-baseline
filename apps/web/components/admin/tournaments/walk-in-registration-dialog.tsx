@@ -5,6 +5,7 @@ import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hoo
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
+import { type ActiveUser, toRecipientOptions } from "~/components/admin/recipient-options"
 import { Button } from "~/components/common/button"
 import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
@@ -48,7 +49,7 @@ type WalkInDialogProps = {
   tournamentId: string
   divisions: Array<{ id: string; name: string; roleRequiredId: string | null }>
   roles: Array<{ id: string; name: string }>
-  users: Array<{ id: string; name: string | null; email: string }>
+  users: ActiveUser[]
   isOpen: boolean
   setIsOpen: (open: boolean) => void
 }
@@ -92,15 +93,7 @@ export function WalkInRegistrationDialog({
     },
   )
 
-  // Format `${user.name ?? user.email} <${user.email}>` for the picker.
-  const userOptions = useMemo(
-    () =>
-      users.map(u => ({
-        id: u.id,
-        name: `${u.name ?? u.email} <${u.email}>`,
-      })),
-    [users],
-  )
+  const userOptions = useMemo(() => toRecipientOptions(users), [users])
 
   // Switch the discriminated-union branch and clear inactive fields so
   // zodResolver doesn't choke on stale values from the other branch.

@@ -23,13 +23,14 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/common/form"
+import { type ActiveUser, toRecipientOptions } from "~/components/admin/recipient-options"
 import { Input } from "~/components/common/input"
 import { issueCertificate } from "~/server/admin/certificates/issuance-actions"
 import { issueCertificateSchema } from "~/server/admin/certificates/schema"
 
 type CertificateIssueDialogProps = {
   templateId: string
-  users: Array<{ id: string; name: string | null; email: string }>
+  users: ActiveUser[]
 }
 
 export function CertificateIssueDialog({ templateId, users }: CertificateIssueDialogProps) {
@@ -61,16 +62,7 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
     },
   )
 
-  // Format `${user.name ?? user.email} <${user.email}>` for the picker
-  // (same shape as the walk-in registration recipient picker).
-  const userOptions = useMemo(
-    () =>
-      users.map(u => ({
-        id: u.id,
-        name: `${u.name ?? u.email} <${u.email}>`,
-      })),
-    [users],
-  )
+  const userOptions = useMemo(() => toRecipientOptions(users), [users])
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

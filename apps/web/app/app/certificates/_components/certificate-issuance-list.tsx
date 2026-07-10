@@ -2,6 +2,7 @@
 
 import { useAction } from "next-safe-action/hooks"
 import { CertificateIssueDialog } from "~/app/app/certificates/_components/certificate-issue-dialog"
+import type { ActiveUser } from "~/components/admin/recipient-options"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
@@ -13,7 +14,7 @@ type Issuance = Awaited<ReturnType<typeof findIssuancesByTemplate>>[number]
 type Props = {
   templateId: string
   issuances: Issuance[]
-  users: Array<{ id: string; name: string | null; email: string }>
+  users: ActiveUser[]
 }
 
 export function CertificateIssuanceList({ templateId, issuances, users }: Props) {

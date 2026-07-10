@@ -51,5 +51,3 @@ export const issueCertificateSchema = z.object({
   // emits; "" = untouched optional input (treated as no expiry by the action).
   expiresAt: z.union([z.iso.datetime(), z.iso.date(), z.literal("")]).optional(),
 })
-
-export type IssueCertificateSchema = z.infer<typeof issueCertificateSchema>

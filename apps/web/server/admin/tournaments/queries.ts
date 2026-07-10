@@ -10,6 +10,7 @@ import type {
   TournamentRolesTableSchema,
   TournamentsTableSchema,
 } from "~/server/admin/tournaments/schema"
+import type { ActiveUser } from "~/components/admin/recipient-options"
 import { db } from "~/services/db"
 
 /**
@@ -17,9 +18,7 @@ import { db } from "~/services/db"
  * registration, certificate issuance). Top 200 ordered by name (nulls last
  * via secondary email sort).
  */
-export const findActiveUsers = async (): Promise<
-  Array<{ id: string; name: string | null; email: string }>
-> => {
+export const findActiveUsers = async (): Promise<ActiveUser[]> => {
   return db.user.findMany({
     where: { archivedAt: null, isPlaceholder: false },
     select: { id: true, name: true, email: true },

@@ -46,11 +46,14 @@ export const issueCertificate = adminActionClient
       },
     })
 
+    // Layout-typed so the dynamic /app/certificates/[id] child (where the issuance
+    // list lives) is busted too — plain-path revalidation only touches the exact
+    // segment (precedent: server/admin/users/actions.ts). Must run BEFORE the
+    // response returns: the dialog's onSuccess router.refresh() re-renders
+    // immediately, and a revalidation deferred into after() races it (stale list).
+    revalidatePath("/app/certificates", "layout")
+
     after(async () => {
-      // Layout-typed so the dynamic /app/certificates/[id] child (where the
-      // issuance list lives) is busted too — plain-path revalidation only
-      // touches the exact segment (precedent: server/admin/users/actions.ts).
-      revalidatePath("/app/certificates", "layout")
       revalidate({
         tags: ["certificates", `certificate-${certificateTemplateId}`],
       })
