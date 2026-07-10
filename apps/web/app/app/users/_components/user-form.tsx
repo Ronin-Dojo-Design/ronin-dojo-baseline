@@ -158,7 +158,7 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             Update user
           </Button>
         </div>

@@ -191,7 +191,7 @@ export function CategoryForm({
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             {category ? "Update category" : "Create category"}
           </Button>
         </div>

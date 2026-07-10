@@ -1,5 +1,6 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
 import { after } from "next/server"
 import { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import { removeS3Directories } from "~/lib/media"
@@ -15,46 +16,48 @@ type AppDb = typeof appDb
 
 export const updateUser = adminActionClient
   .inputSchema(userSchema)
-  .action(
-    async ({ parsedInput: { id, ...input }, ctx: { db, revalidate, brand, user: actor } }) => {
-      if (!id) {
-        throw new Error("User id is required.")
+  .action(async ({ parsedInput: { id, ...input }, ctx: { db, brand, user: actor } }) => {
+    if (!id) {
+      throw new Error("User id is required.")
+    }
+
+    const updated = await db.$transaction(async tx => {
+      const before = await tx.user.findUnique({ where: { id }, select: { role: true } })
+      const roleChanged = input.role !== undefined && input.role !== before?.role
+
+      // A role change through the generic edit gets the same self-guard + audit as the dedicated
+      // role action — an admin cannot change their own role (WL-P2-20 / risk-register #11).
+      if (roleChanged && id === actor.id) {
+        throw new Error("You cannot change your own role.")
       }
 
-      const updated = await db.$transaction(async tx => {
-        const before = await tx.user.findUnique({ where: { id }, select: { role: true } })
-        const roleChanged = input.role !== undefined && input.role !== before?.role
+      const user = await tx.user.update({ where: { id }, data: input })
 
-        // A role change through the generic edit gets the same self-guard + audit as the dedicated
-        // role action — an admin cannot change their own role (WL-P2-20 / risk-register #11).
-        if (roleChanged && id === actor.id) {
-          throw new Error("You cannot change your own role.")
-        }
+      if (roleChanged) {
+        await tx.auditLog.create({
+          data: {
+            brand,
+            action: "user.role.changed",
+            entityType: "User",
+            entityId: id,
+            userId: actor.id,
+            before: { role: before?.role ?? null },
+            after: { role: input.role },
+          },
+        })
+      }
 
-        const user = await tx.user.update({ where: { id }, data: input })
+      return user
+    })
 
-        if (roleChanged) {
-          await tx.auditLog.create({
-            data: {
-              brand,
-              action: "user.role.changed",
-              entityType: "User",
-              entityId: id,
-              userId: actor.id,
-              before: { role: before?.role ?? null },
-              after: { role: input.role },
-            },
-          })
-        }
+    // The edit form lives on the dynamic detail page (/app/users/[id]); a plain path
+    // revalidation only busts the list, so the detail page re-renders stale values on
+    // return (the /admin→/app stale-revalidate class). Layout-typed revalidation covers
+    // the whole /app/users subtree, list + every [id] page.
+    revalidatePath("/app/users", "layout")
 
-        return user
-      })
-
-      revalidate({ paths: ["/app/users"] })
-
-      return updated
-    },
-  )
+    return updated
+  })
 
 export const deleteUsers = adminActionClient
   .inputSchema(idsSchema)
@@ -88,7 +91,7 @@ export const deleteUsers = adminActionClient
  */
 export const createPerson = adminActionClient
   .inputSchema(createPersonSchema)
-  .action(async ({ parsedInput, ctx: { db, revalidate, brand, user } }) => {
+  .action(async ({ parsedInput, ctx: { db, brand, user } }) => {
     const {
       name,
       displayName,
@@ -175,14 +178,16 @@ export const createPerson = adminActionClient
       }
     })
 
-    revalidate({ paths: ["/app/users"] })
+    // Layout-typed for consistency with updateUser/updateUserRole: create redirects into the
+    // dynamic /app/users/[id] subtree, which plain path revalidation doesn't bust.
+    revalidatePath("/app/users", "layout")
 
     return created
   })
 
 export const updateUserRole = adminActionClient
   .inputSchema(userSchema.pick({ id: true, role: true }))
-  .action(async ({ parsedInput: { id, role }, ctx: { db, revalidate, brand, user: actor } }) => {
+  .action(async ({ parsedInput: { id, role }, ctx: { db, brand, user: actor } }) => {
     if (!id || !role) {
       throw new Error("User id and role are required.")
     }
@@ -213,7 +218,9 @@ export const updateUserRole = adminActionClient
       return user
     })
 
-    revalidate({ paths: ["/app/users"] })
+    // Same stale-revalidate fix as updateUser: the role toggle is viewed on the dynamic
+    // detail page, so bust the whole /app/users subtree.
+    revalidatePath("/app/users", "layout")
 
     return updated
   })

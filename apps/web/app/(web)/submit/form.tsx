@@ -173,7 +173,12 @@ export const SubmitForm = ({ className, ...props }: ComponentProps<"form">) => {
         />
 
         <div className="col-span-full">
-          <Button variant="primary" isPending={action.isPending} className="flex min-w-32">
+          <Button
+            type="submit"
+            variant="primary"
+            isPending={action.isPending}
+            className="flex min-w-32"
+          >
             {t("submit_button")}
           </Button>
         </div>

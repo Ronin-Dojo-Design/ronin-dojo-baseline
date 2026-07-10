@@ -427,7 +427,7 @@ export const CreateScheduleForm = ({
                 </Button>
               )}
 
-              <Button size="md" prefix={<SaveIcon />} isPending={action.isPending}>
+              <Button type="submit" size="md" prefix={<SaveIcon />} isPending={action.isPending}>
                 {schedule ? "Update Schedule" : "Create Schedule"}
               </Button>
             </Stack>

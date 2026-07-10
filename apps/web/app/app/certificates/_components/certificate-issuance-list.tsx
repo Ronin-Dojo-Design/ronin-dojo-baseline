@@ -1,6 +1,7 @@
 "use client"
 
 import { useAction } from "next-safe-action/hooks"
+import { CertificateIssueDialog } from "~/app/app/certificates/_components/certificate-issue-dialog"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
@@ -12,15 +13,17 @@ type Issuance = Awaited<ReturnType<typeof findIssuancesByTemplate>>[number]
 type Props = {
   templateId: string
   issuances: Issuance[]
+  users: Array<{ id: string; name: string | null; email: string }>
 }
 
-export function CertificateIssuanceList({ templateId: _templateId, issuances }: Props) {
+export function CertificateIssuanceList({ templateId, issuances, users }: Props) {
   const { execute: revokeAction, isPending } = useAction(revokeCertificate)
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <H4>Issued Certificates ({issuances.length})</H4>
+        <CertificateIssueDialog templateId={templateId} users={users} />
       </div>
 
       {issuances.length === 0 ? (

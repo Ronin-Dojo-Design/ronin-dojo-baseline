@@ -38,7 +38,7 @@ mock.module("next/cache", () => ({
 import { Brand } from "~/.generated/prisma/client"
 import { appRouter } from "~/server/router"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
-import { gateAwardSelect } from "~/server/belt/queries"
+import { gateAwardSelect, getMemberAwards, toGateAward } from "~/server/belt/queries"
 import { db } from "~/services/db"
 
 const TS = Date.now()
@@ -219,7 +219,7 @@ const expectCode = async (
 
 describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () => {
   it("loads the /app/profile belt projection from RankEntry status", async () => {
-    const [entries, ladder] = await Promise.all([
+    const [entries, ladder, awards] = await Promise.all([
       db.rankEntry.findMany({
         where: { passportId: fx.memberPassportId, status: { not: "PENDING" } },
         select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
@@ -228,10 +228,12 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
         where: { id: { in: [fx.whiteRankId, fx.blueRankId] } },
         select: { id: true, name: true, colorHex: true, sortOrder: true },
       }),
+      getMemberAwards(fx.memberPassportId),
     ])
     const data = projectProfileBeltEntries({
       ladder,
       entries,
+      awards: awards.map(toGateAward),
       disciplineId: entries[0]!.rankAward.rank.rankSystem.disciplineId!,
     })
     const blue = data.ranks.find(rank => rank.rank.id === fx.blueRankId)
@@ -283,6 +285,104 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
 
   it("DENIES creating a belt WAY above the ceiling (brown → FORBIDDEN)", async () => {
     await expectCode(member().upsertBeltMilestone({ rankId: fx.brownRankId }), "FORBIDDEN")
+  })
+})
+
+describe("profile belt read ceiling — RankAward-sourced, orphan-RankEntry regression (FI-021)", () => {
+  // A member whose TOP award (purple) has NO synced RankEntry — the exact shape
+  // that collapsed the entry-sourced read ceiling while the RankAward-sourced
+  // WRITE gate still allowed edits (belts falsely rendered locked). The read
+  // ceiling must come from getMemberAwards + ceilingSortOrder — the SAME pair
+  // the write gate uses — so it includes the orphan award. (PENDING promotions
+  // live as claims, never RankAwards, so they still cannot raise this ceiling.)
+  let orphanUserId: string
+  let orphanPassportId: string
+
+  beforeAll(async () => {
+    const user = await db.user.create({
+      data: { name: tag("orphan"), email: `${tag("orphan")}@test.local` },
+    })
+    const passport = await db.passport.create({
+      data: { displayName: tag("orphan-pp"), userId: user.id },
+      select: { id: true },
+    })
+    // White: the normal cutover shape — award WITH its synced RankEntry.
+    const white = await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.whiteRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+      select: { id: true },
+    })
+    await db.rankEntry.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.whiteRankId,
+        rankAwardId: white.id,
+        status: "VERIFIED",
+      },
+    })
+    // Purple: the member's TOP award, deliberately WITHOUT a RankEntry (unsynced).
+    await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.purpleRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+    })
+    orphanUserId = user.id
+    orphanPassportId = passport.id
+  })
+
+  afterAll(async () => {
+    await db.rankAward.deleteMany({ where: { passportId: orphanPassportId } })
+    await db.passport.deleteMany({ where: { id: orphanPassportId } })
+    await db.user.deleteMany({ where: { id: orphanUserId } })
+  })
+
+  it("a RankAward with NO RankEntry still sets the read ceiling (read gate == write gate)", async () => {
+    // Mirror the loader's exact read seam (belt-tab-loader.ts): RankEntries for
+    // cards, getMemberAwards for the ceiling.
+    const [entries, ladder, awards] = await Promise.all([
+      db.rankEntry.findMany({
+        where: { passportId: orphanPassportId, status: { not: "PENDING" } },
+        select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
+        orderBy: { rank: { sortOrder: "desc" } },
+      }),
+      db.rank.findMany({
+        where: { id: { in: [fx.whiteRankId, fx.blueRankId, fx.purpleRankId] } },
+        select: { id: true, name: true, colorHex: true, sortOrder: true },
+        orderBy: { sortOrder: "asc" },
+      }),
+      getMemberAwards(orphanPassportId),
+    ])
+    const purple = ladder.find(rank => rank.id === fx.purpleRankId)!
+    const white = ladder.find(rank => rank.id === fx.whiteRankId)!
+
+    const data = projectProfileBeltEntries({
+      ladder,
+      entries,
+      awards: awards.map(toGateAward),
+      disciplineId: awards[0]!.rank.rankSystem!.disciplineId!,
+    })
+
+    // The orphan (entry-less) purple award IS the ceiling — not the white entry.
+    expect(entries.some(entry => entry.rankId === fx.purpleRankId)).toBe(false)
+    expect(data.ceiling).toBe(purple.sortOrder)
+    expect(data.ceiling).toBeGreaterThan(white.sortOrder)
+
+    // And the WRITE gate agrees: enriching blue (below the orphan ceiling) is
+    // ALLOWED — the read model can never render a belt locked that the write
+    // path accepts.
+    const card = await asMember({ id: orphanUserId, role: "user" }).upsertBeltMilestone({
+      rankId: fx.blueRankId,
+      story: "orphan-ceiling blue journey",
+    })
+    expect(card.rankId).toBe(fx.blueRankId)
+    expect(card.milestone?.story).toBe("orphan-ceiling blue journey")
   })
 })
 

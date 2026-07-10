@@ -237,7 +237,7 @@ export function RuleSetForm({
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             {ruleSet ? "Update rule set" : "Create rule set"}
           </Button>
         </div>

@@ -164,7 +164,7 @@ export function TournamentRoleForm({
             Cancel
           </Button>
 
-          <Button size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={action.isPending}>
             {role ? "Update role" : "Create role"}
           </Button>
         </div>

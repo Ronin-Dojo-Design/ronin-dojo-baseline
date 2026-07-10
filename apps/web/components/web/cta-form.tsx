@@ -99,6 +99,7 @@ export const CTAForm = ({
           />
 
           <Button
+            type="submit"
             isPending={action.isPending}
             className={cx(
               "shrink-0",
