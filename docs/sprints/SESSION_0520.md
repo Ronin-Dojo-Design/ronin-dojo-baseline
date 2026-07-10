@@ -172,7 +172,7 @@ belt / certificates) — parallelizable but one coherent Cody unless a bug prove
 - **Inert-button sweep:** 13 more forms with the same dead-save-button class fixed (incl. the
   member-facing feedback widget — previously submit-only via mod+Enter — and the newsletter CTA);
   6 audited as already-working (header-button onClick pattern).
-- **FI-021 (belt lock):** read ceiling re-sourced from RankAward (the write gate's exact helper) so
+- **FI-026 (belt lock):** read ceiling re-sourced from RankAward (the write gate's exact helper) so
   entry-coverage gaps can never falsely lock belts again; orphan-entry regression test added.
   Browser-verified: all belts to Black-1st editable, higher ranks locked with promotion CTA.
   Read-only live-prod probe: 63/63 award↔entry parity, 0 orphans — prod data already healed;
@@ -184,7 +184,7 @@ belt / certificates) — parallelizable but one coherent Cody unless a bug prove
 - **FI-023 (timeline):** verified ALREADY RENDERING on `/directory/[slug]` AND `/me`
   (LineageStorySequence via AncestrySection — "the hand-coded BBLApp design Tony Hua asked for
   twice"). Remaining ask = prominence + explorer view-toggle → FI-024/G-008 design lane.
-- **Governance:** FI-001 send gate re-expanded (operator grill); FI-021–FI-025 blocker rows +
+- **Governance:** FI-001 send gate re-expanded (operator grill); FI-022–FI-026 blocker rows +
   G-008 (parked visual expansion) recorded; duplicate-React-key defect on `/app/users/[id]`
   spawned as a chip task.
 
@@ -197,11 +197,17 @@ belt / certificates) — parallelizable but one coherent Cody unless a bug prove
 
 ## Files touched
 
-| File | Change |
-| --- | --- |
-| `docs/sprints/SESSION_0520.md` | Opened the session; recorded the grill outcome + plan. |
-| `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md` | Re-gated FI-001; added blockers FI-021–FI-025 (Update-User row is FI-025 — FI-020 was already taken by the 0499 pinned 2-axis-explorer idea; the closed-session ID keeps precedence). |
-| `docs/knowledge/wiki/goals-ledger.md` | Added G-008 (parked lineage/profile visual expansion). |
+Full diff = 43 files on PR #202 (`git diff origin/main...HEAD --stat` is canonical). By group:
+
+| Group | Files | Change |
+| --- | --- | --- |
+| FI-025 users fix | `server/admin/users/actions.ts` · `app/app/users/_components/user-form.tsx` | Inert submit button + layout-typed revalidation (updateUser/updateUserRole/createPerson). |
+| Inert-button sweep | 13 form components (tags, staff-assignment, tournament-role, rule-set, categories, weigh-in, reports, submit, feature-request, cta-form, feedback-widget, schedule, program) | `type="submit"` on the primary action button only. |
+| FI-026 belt fix | `server/belt/profile-projection.ts` · `server/web/belt/belt-tab-loader.ts` · `server/belt/router.integration.test.ts` | RankAward-sourced read ceiling + orphan-entry regression test. |
+| FI-022 certificates | `app/app/certificates/_components/certificate-issue-dialog.tsx` (new) · `certificate-issuance-list.tsx` · `[id]/page.tsx` · `server/admin/certificates/{issuance-actions,schema}.ts` · `issuance-actions.safe-action.test.ts` (new) | Issue dialog wired to the orphaned action; layout revalidation (sync, pre-return); expiry `min`; safe-action test. |
+| Fallow extraction | `components/admin/recipient-options.ts` (new) · `components/admin/tournaments/walk-in-registration-dialog.tsx` · `server/admin/tournaments/queries.ts` | One `ActiveUser` + `toRecipientOptions` shared by both admin pickers. |
+| Docs/governance | `SESSION_0519.md` (rides with f5b90880) · `SESSION_0520.md` · `POST_LAUNCH_SOT.md` (FI-001 re-gate + FI-022–026) · `goals-ledger.md` (G-008) · `wiring-ledger.md` (WL-P2-43/44) · `failed-steps-log.md` (FS-0030) · `custom-component-inventory.md` (2 entries) | Ledger routing + session records (`wiki/index.md` at bow-out). |
+| Tooling | `.claude/launch.json` (new) | Preview-server launch config (used by this session's browser verification; operator may drop). |
 
 ## Verification
 
@@ -212,7 +218,7 @@ belt / certificates) — parallelizable but one coherent Cody unless a bug prove
 | Read-only prod Neon probe (`.env.prod`, count-only) | PASS — 63 RankAwards / 63 RankEntries / 0 orphans |
 | Browser: cert template → Issue dialog → issuance → `/certificates/verify/[code]` | PASS — "✓ Valid Certificate"; proof data deleted after |
 | Browser: `/directory/brian-scott` + `/me` scrollytelling | PASS — story scenes render (screenshot in transcript) |
-| `bun test server/belt/router.integration.test.ts` | PASS — 31/31 incl. new FI-021 orphan-entry regression |
+| `bun test server/belt/router.integration.test.ts` | PASS — 31/31 incl. new FI-026 orphan-entry regression |
 | `bun test server/admin/certificates/issuance-actions.safe-action.test.ts` | PASS — 1 test / 8 assertions (re-run post-riders) |
 | `bun test server/admin/users/create-person.safe-action.test.ts` | PASS — 1 test / 4 assertions (re-run post-riders) |
 | `bun run typecheck` (apps/web) | PASS |
@@ -255,3 +261,37 @@ LineageProfileDrawer inline-edit pattern; returns the prioritized conform list f
 - **Verdict (matrix §5):** Strong — ship with named follow-ups: ctx-revalidate typed param; `expiresAt`
   temporal bounds; slim gate-only award select; inherited ReportForm/WalkInDialog CRAP.
 - Basis: code-quality-matrix §2–§6; fallow delta dead-code 9→8, dupes 53→51, audit gate ✗→✓.
+
+## Hostile close review
+
+- **Giddy:** PASS-with-riders — plan sanity held (the diagnosis gate + browser round-trip structurally
+  forced discovery of the inert-button layer the grounding pre-diagnosis missed); Dirstarter **partially
+  aligned** (sweep = clean extension; direct `revalidatePath` = justified seam bypass, now ledgered
+  WL-P2-43); merge base clean/linear on origin/main; scope widenings each logged. Riders all landed
+  in-session: WL-P2-43 + WL-P2-44 rows, PR #202 lineage note, `.claude/launch.json` kept + logged
+  (it is the preview-server config this session actively used), files-touched table regenerated.
+- **Doug (delta re-verify):** 9.3 — P1/P3s verified in-tree; found the second ID collision (FI-021 →
+  renumbered FI-026, full-ID-space grep run, FS-0030 appended); all gates independently green on his run.
+- **Desi:** pass-with-notes — dialog is a faithful clone of the admin idiom; MEDIUM (expiry `min`)
+  fixed in-session; LOWs (PlusIcon prefix, `gap-2`, reset-on-cancel paired with walk-in) deferred as
+  polish, non-gating.
+- **Dirstarter docs check:** live index checked (no server-action/revalidation doc at index level) +
+  local `dirstarter-component-inventory.md` §8. **Verdict: partially aligned** — ctx-revalidate seam
+  bypass is commented + ledgered (WL-P2-43).
+- **Kaizen aggregate:** 9 — proceed.
+
+### Kaizen triage
+
+1. **Safe and secure?** Provably safe: all four fixes browser-verified end-to-end (round-trip persist,
+   ceiling live, instant issuance list, verify page); authz unchanged everywhere (Doug traced self-role
+   guard + audit + adminActionClient + brand check); prod probed read-only. Documented-not-proven:
+   the `expiresAt` schema permissiveness relies on the admin gate (test that would close it: a zod
+   refine + boundary test if policy hardens); the walk-in dialog after the helper extraction has
+   typecheck+identical-string proof but no runtime drive (test: one walk-in registration in dev).
+2. **Failed steps prevented?** One new class this session: FS-0030 (ledger IDs assigned without a
+   global grep — twice, the second after fixing the first). Smallest prevention: the grep-first rule
+   now in FS-0030 + a mechanized `ledger-id-next` helper (open). Also carried FS-0027 discipline
+   correctly (all test runs single-file) and the commit-before-loops rule (no stash clobber).
+3. **Scale confidence:** 100 = 9.8 · 1,000 = 9.5 · 10,000 = 9.0 (the top-200 recipient picker cap and
+   the `getMemberAwards` full-select are the first things to pinch; both named, neither near-term).
+   Aggregate **9 — proceed.**

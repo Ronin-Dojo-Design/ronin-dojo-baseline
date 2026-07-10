@@ -608,6 +608,27 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   deferrals (exit 1); a clean file → exit 0.
 - **Status:** mitigated.
 
+### FS-0030 — Ledger IDs assigned without grepping the full ID space (twice in one session)
+
+- **Session:** SESSION_0520 (Claude). Caught in-session by Doug (hostile diff review → FI-020; hostile
+  delta re-verify → FI-021).
+- **Step failed:** new POST_LAUNCH_SOT rows were numbered by reading only the visually-adjacent table
+  block ("last row is FI-019 → next is FI-020"), not by grepping the whole docs tree. FI-020 was already
+  the 0499 pinned 2-axis-explorer idea (a separate table block lower in the SAME file); after fixing
+  that, the replacement block STILL reused FI-021, which belonged to 0501's admin-nav item. Three docs
+  briefly disagreed on what FI-021 meant.
+- **Root cause:** "monotonic IDs" was enforced by local table inspection, not a global uniqueness check.
+  The SOT's running list has two visually-separated table blocks, so tail-reading one block lies.
+- **Impact:** LOW — docs-only, caught pre-merge both times; but the identical miss twice in one session
+  after *explicitly fixing the first instance* makes it a pattern, not a slip.
+- **Corrective action:** (a) this entry; (b) the rule: before assigning any `<PREFIX>-NNN` ledger id, run
+  `grep -rc "<PREFIX>-0*NNN" docs/` for the candidate and take the first zero-hit number (as done for
+  FI-025/FI-026); (c) candidate mechanization: a `ledger-id-next.ts` helper or a deferral-guard extension
+  that flags duplicate ledger ids across docs.
+- **Verification:** `for id in FI-020..FI-029; grep -rl` sweep run SESSION_0520 — FI-022–026 unique,
+  FI-026+ free; SESSION_0520/POST_LAUNCH_SOT/goals-ledger now agree.
+- **Status:** mitigated (manual rule); mechanization open.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
 Read this section at bow-in instead of skimming all 16 entries.

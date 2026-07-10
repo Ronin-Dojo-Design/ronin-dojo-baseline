@@ -115,7 +115,14 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
                 <FormItem>
                   <FormLabel>Expires (optional)</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} value={field.value ?? ""} />
+                    {/* min = today: the UI shouldn't mint an instantly-"Expired" cert; the
+                        schema stays permissive so programmatic imports can backdate. */}
+                    <Input
+                      type="date"
+                      min={new Date().toISOString().slice(0, 10)}
+                      {...field}
+                      value={field.value ?? ""}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
