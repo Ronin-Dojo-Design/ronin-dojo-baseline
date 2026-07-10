@@ -43,7 +43,7 @@ type LifecycleCatalogEntry = {
   sample: LifecycleSample
 }
 
-const PROFILE_URL = "https://blackbeltlegacy.com/me"
+const PROFILE_URL = "https://blackbeltlegacy.com/app/profile"
 const BILLING_URL = "https://blackbeltlegacy.com/app/membership"
 
 // FI-012: single-sourced from `lib/notifications.ts` so the admin preview renders the

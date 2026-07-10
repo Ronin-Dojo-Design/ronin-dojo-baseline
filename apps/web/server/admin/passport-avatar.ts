@@ -54,6 +54,6 @@ export const setPassportAvatarAsAdmin = adminActionClient
       allowAdminOverride: true,
     })
 
-    revalidate({ paths: ["/me", "/app/profile"], tags: ["passport", "lineage"] })
+    revalidate({ paths: ["/app/profile"], tags: ["passport", "lineage"] })
     return { avatarUrl: promotion.avatarUrl }
   })

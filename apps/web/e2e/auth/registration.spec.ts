@@ -37,11 +37,11 @@ test.describe("Registration E2E (magic-link member front door)", () => {
         expect(token).toBeTruthy()
       }).toPass({ timeout: 30_000 })
 
-      await page.goto(`/api/auth/magic-link/verify?token=${token}&callbackURL=/me`)
-      await expect(page).toHaveURL(url => url.pathname === "/me", { timeout: 30_000 })
-      // /me is now the member's Passport *profile* (SESSION_0410): the page H1 is the
-      // member's display name, so confirm arrival via the stable "My Passport"
-      // breadcrumb landmark instead of a static page heading.
+      await page.goto(`/api/auth/magic-link/verify?token=${token}&callbackURL=/app/profile`)
+      await expect(page).toHaveURL(url => url.pathname === "/app/profile", { timeout: 30_000 })
+      // SESSION_0522 step 5: `/me` is retired; the canonical authenticated member workspace is
+      // `/app/profile`. Confirm arrival via the stable "My Passport" Quick Links landmark (the
+      // page Intro title is dynamic), which is unique on that page.
       await expect(page.getByRole("link", { name: "My Passport" })).toBeVisible({
         timeout: 30_000,
       })

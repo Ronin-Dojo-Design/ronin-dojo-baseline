@@ -44,6 +44,6 @@ export const setPassportRank = userActionClient
       claimedSchoolId: schoolOrgId?.trim() || null,
     })
 
-    revalidate({ paths: ["/me", "/app/profile"] })
+    revalidate({ paths: ["/app/profile"] })
     return { claimId, status: "pending" as const }
   })

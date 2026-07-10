@@ -3,7 +3,7 @@ import type { Brand } from "~/.generated/prisma/client"
 import { notifyUserOfLifecycleEvent } from "~/lib/notifications"
 import { db } from "~/services/db"
 
-const BBL_PROFILE_URL = "https://blackbeltlegacy.com/me"
+const BBL_PROFILE_URL = "https://blackbeltlegacy.com/app/profile"
 
 /**
  * Fire the existing `profile-claim-approved` lifecycle email after a successful claim

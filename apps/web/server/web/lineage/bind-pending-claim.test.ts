@@ -137,9 +137,9 @@ describe("bindPendingClaim", () => {
 })
 
 describe("buildClaimSignInUrl", () => {
-  it("defaults to /me and stays QUERY-FREE (single `?`, no nested query → no double-decode trap)", () => {
+  it("defaults to /app/profile and stays QUERY-FREE (single `?`, no nested query → no double-decode trap)", () => {
     const url = buildClaimSignInUrl("https://blackbeltlegacy.com")
-    expect(url).toBe("https://blackbeltlegacy.com/auth/login?next=%2Fme")
+    expect(url).toBe("https://blackbeltlegacy.com/auth/login?next=%2Fapp%2Fprofile")
     // Exactly one `?` (the login query) and no bare `/api/auth/magic-link/verify` token.
     expect(url.split("?").length - 1).toBe(1)
     expect(url).not.toContain("token=")
@@ -148,7 +148,7 @@ describe("buildClaimSignInUrl", () => {
 
   it("trims a trailing slash on the base URL", () => {
     expect(buildClaimSignInUrl("https://blackbeltlegacy.com/")).toBe(
-      "https://blackbeltlegacy.com/auth/login?next=%2Fme",
+      "https://blackbeltlegacy.com/auth/login?next=%2Fapp%2Fprofile",
     )
   })
 

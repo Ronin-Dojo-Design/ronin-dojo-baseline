@@ -268,9 +268,14 @@ function ClaimCtaButton({
 }) {
   if (state === "CLAIMED_MINE") {
     return (
-      // FI-024 H1: route to the inline `PassportEditor` on `/me` (auto-opens on the `#edit` hash),
-      // not the retired `/app/profile` edit destination.
-      <Button variant="secondary" size="md" className="w-full" render={<Link href="/me#edit" />}>
+      // SESSION_0522 step 5: `/me` is retired — route to the canonical authenticated member
+      // workspace at `/app/profile`, where the owner edits their Passport.
+      <Button
+        variant="secondary"
+        size="md"
+        className="w-full"
+        render={<Link href="/app/profile" />}
+      >
         This profile is yours →
       </Button>
     )

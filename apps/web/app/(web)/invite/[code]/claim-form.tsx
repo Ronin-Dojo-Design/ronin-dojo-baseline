@@ -28,7 +28,7 @@ export function ClaimForm({ code, organizationName, disciplines, userName }: Cla
   const { execute, isPending } = useAction(claimInvite, {
     onSuccess: ({ data }) => {
       toast.success(`Welcome to ${data?.organizationName}!`)
-      router.push("/me")
+      router.push("/app/profile")
     },
     onError: ({ error }) => {
       toast.error(error.serverError ?? "Failed to claim invite")

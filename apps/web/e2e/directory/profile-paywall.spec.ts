@@ -70,28 +70,17 @@ test.describe("/directory/[slug] paywall field boundary", () => {
 })
 
 /**
- * WL-P2-37 (SESSION_0515 TASK_03) — `/me` owner render through the ONE unified `ProfileView`
- * renderer. The free fixture user viewing their OWN Passport at `/me` gets the full owner arm
- * (bio + edit affordances), tier-independent (a member always sees their own profile in full).
- * Proves the consolidated renderer's owner branch renders the same surface it did pre-refactor.
+ * SESSION_0522 step 5 — `/me` is retired (rank-entry unified data flow §Surfaces + migration
+ * order). A signed-in member hitting the legacy `/me` URL is redirected to the canonical
+ * authenticated member workspace at `/app/profile`. (The former owner-arm `ProfileView` render is
+ * left unreachable behind this redirect and is removed in migration step 7, gated on proofs.)
  */
-test.describe("/me owner render (unified ProfileView)", () => {
-  test("free owner sees their full Passport at /me", async ({ page }) => {
-    // fixture.userIds[0] is the FREE user — sign in as them so /me resolves the owner arm.
+test.describe("/me retired → /app/profile redirect", () => {
+  test("signed-in owner hitting /me lands on /app/profile", async ({ page }) => {
+    // fixture.userIds[0] is the FREE user — a claimed member; any signed-in user redirects.
     await createAuthenticatedSession(page, fixture.userIds[0])
     await page.goto("/me")
 
-    // Owner surface renders (the H1 is the member's own NAME, not a literal "My Passport" —
-    // that string is only the null-name fallback). The name also repeats in the passport-card
-    // H4, so scope to the H1 hero title.
-    await expect(page.getByRole("heading", { level: 1, name: fixture.freeName })).toBeVisible()
-    // The bio renders (tier-independent for the owner — a member always sees their own profile).
-    await expect(page.getByText(fixture.bio)).toBeVisible()
-    // Owner-only affordance (FI-024 H1): the "Edit profile" action opens the inline
-    // `PassportEditor` drawer in-place — it is now a button, not a bounce to `/app/profile`.
-    const editProfile = page.getByRole("button", { name: /edit profile/i })
-    await expect(editProfile).toBeVisible()
-    await editProfile.click()
-    await expect(page.getByRole("heading", { name: /edit your passport/i })).toBeVisible()
+    await expect(page).toHaveURL(url => url.pathname === "/app/profile", { timeout: 30_000 })
   })
 })

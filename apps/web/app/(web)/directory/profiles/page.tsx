@@ -66,7 +66,7 @@ export default async function DirectoryProfilesPage({ searchParams }: Props) {
         <ListingRegisterCta
           title="Train martial arts?"
           description="Join the directory to claim your profile, track your rank, and connect with schools."
-          href="/auth/login?next=/me"
+          href="/auth/login?next=/app/profile"
           cta="Join the directory"
         />
       )}

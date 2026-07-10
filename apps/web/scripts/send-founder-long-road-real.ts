@@ -2,7 +2,7 @@
  * send-founder-long-road-real.ts (SESSION_0418; durable rewrite SESSION_0513)
  *
  * Sends the founder "Long Road" email carrying a DURABLE, public sign-in URL
- * (`buildClaimSignInUrl` → `/auth/login?next=%2Fme`) — NO one-shot magic-link token.
+ * (`buildClaimSignInUrl` → `/auth/login?next=%2Fapp%2Fprofile`) — NO one-shot magic-link token.
  * The prior `mintClaimMagicLink` token was single-use + 7-day: a mail scanner or a
  * late click consumed the one use → dead link (Tony Hua + Bob both hit this). Now the
  * email→node binding (`bindPendingClaim`, 90-day) auto-claims the node on the

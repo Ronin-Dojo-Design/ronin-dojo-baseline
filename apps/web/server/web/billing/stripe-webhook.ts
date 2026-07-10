@@ -38,7 +38,7 @@ const scheduleLifecycleEmail = ({
   tier,
   details,
   ctaLabel = "Open Black Belt Legacy",
-  ctaUrl = "https://blackbeltlegacy.com/me",
+  ctaUrl = "https://blackbeltlegacy.com/app/profile",
   rateLimitKey,
   secondaryNote,
 }: {

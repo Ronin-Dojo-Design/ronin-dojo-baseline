@@ -72,7 +72,7 @@ mock.module("~/lib/notifications", () => ({
 }))
 
 // Stub the magic-link minter so `after()` never calls Better Auth / writes a
-// real verification token. Record the destination so we can assert claim vs /me.
+// real verification token. Record the destination so we can assert claim vs /app/profile.
 // The action also imports the path helpers from this module, so re-export them.
 const mintCalls: Array<{ email: string; nextPath: string }> = []
 // SESSION_0513: the claim path now BINDS a durable pending claim + emails a durable /auth/login
@@ -81,7 +81,7 @@ const mintCalls: Array<{ email: string; nextPath: string }> = []
 const bindCalls: Array<{ email: string; nodeId: string }> = []
 mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
   claimAcceptNextPath: (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`,
-  FREE_SIGNUP_NEXT_PATH: "/me",
+  FREE_SIGNUP_NEXT_PATH: "/app/profile",
   mintClaimMagicLink: async (opts: { email: string; nextPath: string }) => {
     mintCalls.push({ email: opts.email, nextPath: opts.nextPath })
     return `https://blackbeltlegacy.com/api/auth/magic-link/verify?token=stub&callbackURL=stub`
@@ -89,7 +89,7 @@ mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
   bindPendingClaim: async (email: string, nodeId: string) => {
     bindCalls.push({ email, nodeId })
   },
-  buildClaimSignInUrl: (baseUrl: string, nextPath = "/me") =>
+  buildClaimSignInUrl: (baseUrl: string, nextPath = "/app/profile") =>
     `${baseUrl}/auth/login?next=${encodeURIComponent(nextPath)}`,
 }))
 
@@ -399,7 +399,7 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
     expect(claimEmail?.isLifetime).toBe(true)
   })
 
-  it("free signup, no node, signed OUT: mints a /me magic link + free-signup verify email (no claim email)", async () => {
+  it("free signup, no node, signed OUT: mints an /app/profile magic link + free-signup verify email (no claim email)", async () => {
     setTestSession(null)
     const submitter = "free-signup"
     const email = `${tag(submitter)}@test.local`
@@ -416,7 +416,7 @@ describe("createJoinLegacyInterest (wrapped publicActionClient)", () => {
 
     const minted = mintTo(email)
     expect(minted).toHaveLength(1)
-    expect(minted[0]?.nextPath).toBe("/me")
+    expect(minted[0]?.nextPath).toBe("/app/profile")
 
     const sent = notifyTo(email).map(c => c.fn)
     expect(sent).toContain("notifyUserOfBblFreeSignup")

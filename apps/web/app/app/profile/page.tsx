@@ -190,7 +190,7 @@ export default async function ({ searchParams }: PageProps<"/app/profile">) {
               </CardHeader>
               <CardDescription className="line-clamp-none">
                 <Stack direction="column" size="xs" className="items-start">
-                  <Link href="/me">My Passport</Link>
+                  <Link href="/app/profile">My Passport</Link>
                   <Link href="/app/techniques/new">Add technique</Link>
                   <Link href="/directory">Public directory</Link>
                   <Link href="/programs">Programs</Link>

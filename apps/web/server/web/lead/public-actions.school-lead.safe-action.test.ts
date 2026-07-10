@@ -27,7 +27,7 @@ mock.module("~/lib/notifications", () => ({
 
 mock.module("~/server/web/lineage/mint-claim-magic-link", () => ({
   claimAcceptNextPath: (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`,
-  FREE_SIGNUP_NEXT_PATH: "/me",
+  FREE_SIGNUP_NEXT_PATH: "/app/profile",
   mintClaimMagicLink: async () =>
     "https://blackbeltlegacy.com/api/auth/magic-link/verify?token=stub&callbackURL=stub",
 }))

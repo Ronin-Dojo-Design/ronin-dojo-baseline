@@ -20,7 +20,7 @@ import { db } from "~/services/db"
  *   email link → /api/auth/magic-link/verify (sets the session cookie, outside the
  *   gated `(web)` group) → redirects straight to the `callbackURL` == `nextPath`,
  *   either the token-accept route (`/lineage/claim/accept?node=…`, which one-click
- *   claims the node) or `/me` (a plain free signup that just needs an account).
+ *   claims the node) or `/app/profile` (a plain free signup that just needs an account).
  *
  * SESSION_0440: the callbackURL was previously wrapped in a `/preview?token=…&next=…`
  * countdown-gate-bypass hop, but that produced a NESTED `?` for claim links which Better
@@ -47,7 +47,7 @@ import { db } from "~/services/db"
 export const claimAcceptNextPath = (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`
 
 /** Post-preview destination for a plain free signup (no node to claim). */
-export const FREE_SIGNUP_NEXT_PATH = "/me"
+export const FREE_SIGNUP_NEXT_PATH = "/app/profile"
 
 /** Generous-but-bounded window for an email→node pending claim (a founder may read slowly). */
 const PENDING_CLAIM_TTL_MS = 90 * 24 * 60 * 60 * 1000
@@ -111,13 +111,13 @@ export async function bindPendingClaim(email: string, nodeId: string): Promise<b
  * No one-shot token — it points at `/auth/login`, which never expires and cannot be consumed by a
  * mail scanner. The node claim happens via the 90-day `bindPendingClaim` binding + the sign-in
  * reconciliation, NOT via this redirect target, so `nextPath` only decides where the (now-claimed)
- * user lands — `/me` (their profile) is sufficient.
+ * user lands — `/app/profile` (their member workspace) is sufficient.
  *
  * `nextPath` MUST stay QUERY-FREE (a single relative segment). A `?node=` here would re-introduce
  * the Better-Auth callbackURL double-decode trap (a nested `?` → INVALID_CALLBACK_URL); the
  * reconciliation makes it unnecessary anyway.
  */
-export function buildClaimSignInUrl(baseUrl: string, nextPath = "/me"): string {
+export function buildClaimSignInUrl(baseUrl: string, nextPath = "/app/profile"): string {
   const base = baseUrl.replace(/\/+$/, "")
   return `${base}/auth/login?next=${encodeURIComponent(nextPath)}`
 }
@@ -125,7 +125,7 @@ export function buildClaimSignInUrl(baseUrl: string, nextPath = "/me"): string {
 /**
  * SESSION_0419 (legacy nextPath-keyed binding, retained for `mintClaimMagicLink`): persist an
  * email→node binding derived from a claim-accept nextPath. Only a claim-accept nextPath binds a
- * node; a free-signup nextPath (`/me`) is a no-op. Delegates to `bindPendingClaim`.
+ * node; a free-signup nextPath (`/app/profile`) is a no-op. Delegates to `bindPendingClaim`.
  */
 async function persistPendingClaimBinding(email: string, nextPath: string): Promise<void> {
   const nodeId = claimNodeIdFromNextPath(nextPath)
@@ -136,7 +136,7 @@ async function persistPendingClaimBinding(email: string, nextPath: string): Prom
 export async function mintClaimMagicLink(opts: {
   baseUrl: string
   email: string
-  /** Where the recipient lands after verifying — the claim-accept route or `/me`. */
+  /** Where the recipient lands after verifying — the claim-accept route or `/app/profile`. */
   nextPath: string
 }): Promise<string> {
   // The callbackURL MUST be a relative path with at most ONE query string. Better Auth's

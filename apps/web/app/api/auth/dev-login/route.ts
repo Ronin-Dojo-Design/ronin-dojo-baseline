@@ -45,14 +45,14 @@ export async function GET(request: Request) {
   try {
     const verifyResponse = await auth.api.magicLinkVerify({
       headers: request.headers,
-      query: { token: verification.identifier, callbackURL: "/me" },
+      query: { token: verification.identifier, callbackURL: "/app/profile" },
     })
     return verifyResponse
   } catch (error: unknown) {
     // BA's redirect is thrown as an APIError — extract cookies and redirect
     const err = error as { headers?: Headers; statusCode?: number }
     if (err.statusCode === 302 && err.headers) {
-      const response = NextResponse.redirect(new URL("/me", env.BETTER_AUTH_URL))
+      const response = NextResponse.redirect(new URL("/app/profile", env.BETTER_AUTH_URL))
       const setCookies = err.headers.getSetCookie?.() ?? []
       for (const cookie of setCookies) {
         response.headers.append("Set-Cookie", cookie)

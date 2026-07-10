@@ -15,7 +15,7 @@ export const updatePassport = userActionClient
       data: parsedInput,
     })
 
-    revalidate({ paths: ["/me", "/app/profile"] })
+    revalidate({ paths: ["/app/profile"] })
     return passport
   })
 
@@ -33,6 +33,6 @@ export const updateDirectoryProfile = userActionClient
       data: parsedInput,
     })
 
-    revalidate({ paths: ["/me", "/app/profile"] })
+    revalidate({ paths: ["/app/profile"] })
     return profile
   })

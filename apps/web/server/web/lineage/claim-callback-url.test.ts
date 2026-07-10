@@ -34,7 +34,9 @@ function passesOriginCheck(callbackURLValue: string): boolean {
 // The current callbackURL is the bare nextPath (mint-claim-magic-link.ts, SESSION_0440 fix).
 const NODE_ID = "khei911kchy3vz5fhe7jhaj0"
 const claimAcceptNextPath = (nodeId: string) => `/lineage/claim/accept?node=${nodeId}`
-const FREE_SIGNUP_NEXT_PATH = "/me"
+// SESSION_0522: the free-signup landing moved from `/me` (retired) to `/app/profile`; both are
+// single-segment, query-free relative paths, so both pass Better Auth's single-query originCheck.
+const FREE_SIGNUP_NEXT_PATH = "/app/profile"
 
 // The OLD wrapped form, for the regression assertion.
 const oldPreviewCallback = (nextPath: string) =>

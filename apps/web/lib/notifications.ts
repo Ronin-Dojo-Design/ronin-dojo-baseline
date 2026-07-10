@@ -729,16 +729,16 @@ export type BblFreeSignupMagicLinkParams = {
   brand: Brand
   to: string
   firstName?: string | null
-  /** The minted, email-bound magic link that provisions the free account and lands on `/me`. */
+  /** The minted, email-bound magic link that provisions the free account and lands on `/app/profile`. */
   verifyUrl: string
 }
 
 /**
  * Free signup (no profile claim): a guest chose the FREE path without selecting
  * a lineage node, so there is nothing to claim — they just need an account. We
- * mint a `/me` magic link and ship it as the verify-your-email message
+ * mint an `/app/profile` magic link and ship it as the verify-your-email message
  * (SESSION_0418). Better Auth provisions the User + identity shell when the link
- * is verified; clicking lands them on `/me` with free-tier access.
+ * is verified; clicking lands them on `/app/profile` with free-tier access.
  */
 export const notifyUserOfBblFreeSignup = async (params: BblFreeSignupMagicLinkParams) => {
   if (await shouldSkipForRateLimit(`bbl-free-signup:${params.to}`)) return

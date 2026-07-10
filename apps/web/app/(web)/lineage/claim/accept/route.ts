@@ -44,6 +44,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(fallback)
   }
 
-  // Success (claimed or already-claimed replay): land on the claimant's own profile.
-  return NextResponse.redirect(new URL("/me", request.url))
+  // Success (claimed or already-claimed replay): land on the claimant's own profile workspace.
+  return NextResponse.redirect(new URL("/app/profile", request.url))
 }

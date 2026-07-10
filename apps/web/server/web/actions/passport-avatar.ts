@@ -55,6 +55,6 @@ export const uploadAndPromotePassportAvatar = userActionClient
       input: { target, attachmentId: upload.attachmentId },
     })
 
-    revalidate({ paths: ["/me", "/app/profile"] })
+    revalidate({ paths: ["/app/profile"] })
     return { avatarUrl: promotion.avatarUrl }
   })

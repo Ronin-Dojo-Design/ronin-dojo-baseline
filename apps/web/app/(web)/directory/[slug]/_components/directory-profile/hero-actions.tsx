@@ -11,10 +11,10 @@ import type { DirectoryProfile } from "./directory-profile-data"
  * Passport, the identity SoT) + QrShare, which stays gated to a fully-rendered profile.
  *
  * When the viewer owns this Passport (`CLAIMED_MINE`, ADR 0036 / SESSION_0440), a
- * "This profile is yours" manage link leads to `/me#edit` — where the inline `PassportEditor`
- * drawer auto-opens (FI-024 H1) — the claimed-by-me arm of the shared claim-state machine (no
- * Claim CTA on a profile you already own). It routes to `/me` (not into this public page) so the
- * two profile trees stay separate (TICKET-0502-A out of scope).
+ * "This profile is yours" manage link leads to `/app/profile` — the canonical authenticated
+ * member workspace (SESSION_0522 step 5, `/me` retired) — the claimed-by-me arm of the shared
+ * claim-state machine (no Claim CTA on a profile you already own). It routes to the workspace
+ * (not into this public page) so the public read and the owner write surface stay separate.
  */
 export function HeroActions({
   profile,
@@ -28,7 +28,7 @@ export function HeroActions({
   return (
     <Stack size="sm">
       {claimState === "CLAIMED_MINE" && (
-        <Button variant="secondary" size="md" render={<Link href="/me#edit" />}>
+        <Button variant="secondary" size="md" render={<Link href="/app/profile" />}>
           This profile is yours →
         </Button>
       )}

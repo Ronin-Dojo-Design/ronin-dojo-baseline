@@ -334,8 +334,8 @@ async function dispatchJoinLegacyNotifications(opts: {
         })
       }
     } else if (isGuestFreeSubmission) {
-      // Guest free signup with no node to claim → mint a `/me` magic link; Better Auth
-      // provisions the account on verify and lands them on `/me`.
+      // Guest free signup with no node to claim → mint an `/app/profile` magic link; Better Auth
+      // provisions the account on verify and lands them on `/app/profile`.
       const verifyUrl = await mintClaimMagicLink({
         baseUrl: bblOrigin,
         email,
@@ -637,8 +637,8 @@ export const createJoinLegacyInterest = publicActionClient
     // resolve to the recipient's origin (not BETTER_AUTH_URL).
     const bblOrigin = requestOrigin ?? "https://blackbeltlegacy.com"
     // A guest (no session) on the FREE path is the self-serve magic-link case: a claim of an
-    // existing node gets the branded "claim your profile" email; a plain free signup gets a
-    // `/me` verify link. Signed-in users + paid tiers keep the original confirmation email.
+    // existing node gets the branded "claim your profile" email; a plain free signup gets an
+    // `/app/profile` verify link. Signed-in users + paid tiers keep the original confirmation email.
     const isGuestFreeSubmission = membershipPath === "FREE" && !session?.user?.id
     // A guest picking a PAID tier can't run the auth-gated membership checkout. Reconcile
     // them first with an email-bound magic link (the same primitive the FREE path uses):
@@ -708,7 +708,7 @@ export const createJoinLegacyInterest = publicActionClient
       // bounce — the wizard shows the success state and the emailed link finishes the claim.
       claimRequiresSignIn: isClaimOfExistingNode && !session?.user?.id,
       // The founder claiming his own profile → the celebratory founder welcome (submit-time
-      // success state + the `/me` landing both read this).
+      // success state + the `/app/profile` landing both read this).
       isFounder: claimIsFounder,
     }
   })
