@@ -50,19 +50,24 @@ export function InfoTab({
   // "Unverified" badge + steward Verify affordance key off the RankEntry, not the award.
   const rankEntry = currentAward?.rankEntry ?? null
   const isRankUnverified = rankEntry?.status === "UNVERIFIED"
-  // Promoter identity prefers the historical Passport promoter (SESSION_0391),
-  // falling back to the real-account actor that performed the award.
-  const awardedBy = currentAward?.awardedByPassport
-    ? {
-        name: currentAward.awardedByPassport.displayName,
-        image: currentAward.awardedByPassport.avatarUrl,
-      }
-    : (currentAward?.awardedBy ?? null)
   const promotedOn = formatDate(currentAward?.awardedAt ?? null)
   const instructorName =
     instructorRelationship?.fromNode.passport?.displayName ??
     instructorRelationship?.fromNode.passport?.user?.name ??
     null
+  // Awarded By = the promoter. Prefer an explicit historical promoter Passport (SESSION_0391,
+  // set via "Change promoter"); otherwise the member's INSTRUCTOR is the awarder (operator
+  // SESSION_0522: show the instructor, never the admin actor who keyed the record — that legacy
+  // `currentAward.awardedBy` User fallback surfaced e.g. the admin instead of Tony). No promoter
+  // and no instructor → the "lineage-unverified" note.
+  const awardedBy = currentAward?.awardedByPassport
+    ? {
+        name: currentAward.awardedByPassport.displayName,
+        image: currentAward.awardedByPassport.avatarUrl,
+      }
+    : instructorName
+      ? { name: instructorName, image: null as string | null }
+      : null
   const school = latestMembership?.organization ?? null
 
   return (

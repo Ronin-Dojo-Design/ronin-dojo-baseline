@@ -20,7 +20,7 @@ import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
-import { LineageClaimBadge, LineageTrustBadge } from "~/components/web/lineage/lineage-trust-badge"
+import { LineageClaimBadge } from "~/components/web/lineage/lineage-trust-badge"
 import {
   type PromoterChangeContext,
   PromoterChangeModal,
@@ -91,19 +91,18 @@ function DrawerHeaderAvatar({
   )
 }
 
-/** Trust + claim + owning-organization badges row. */
+/** Claim + owning-organization badges row. (The node-trust badge was retired here at
+ *  SESSION_0522 — the RankEntry verification on the Info tab is the single verification axis;
+ *  the remaining `LineageTrustBadge` surfaces are the ledgered follow-up.) */
 function DrawerHeaderBadges({
-  trustStatus,
   claimBadgeStatus,
   organizationName,
 }: {
-  trustStatus: DrawerProfileView["trustStatus"]
   claimBadgeStatus: ReturnType<typeof resolveLineageClaimBadgeStatus>
   organizationName: string | null
 }) {
   return (
     <Stack size="xs" wrap>
-      <LineageTrustBadge status={trustStatus} />
       {claimBadgeStatus && <LineageClaimBadge status={claimBadgeStatus} />}
       {organizationName && (
         <Badge variant="outline" size="sm">
@@ -192,7 +191,6 @@ export function DrawerIdentityHeader({
     panelRankProgress,
     headerRankName,
     headerDisciplineName,
-    trustStatus,
   } = view
   const isClaimed = claimState === "CLAIMED_MINE" || claimState === "CLAIMED_OTHER"
   const claimBadgeStatus = resolveLineageClaimBadgeStatus({
@@ -233,7 +231,6 @@ export function DrawerIdentityHeader({
               </Stack>
             )}
             <DrawerHeaderBadges
-              trustStatus={trustStatus}
               claimBadgeStatus={claimBadgeStatus}
               organizationName={panelAward?.organization?.name ?? null}
             />
