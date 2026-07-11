@@ -1,6 +1,7 @@
 import { H4 } from "~/components/common/heading"
-import type { TechniqueOne } from "~/server/web/techniques/payloads"
 import { Section } from "~/components/web/ui/section"
+import { toVideoEmbedUrl } from "~/lib/video-embed"
+import type { TechniqueOne } from "~/server/web/techniques/payloads"
 
 type TechniqueMediaProps = {
   mediaAttachments: TechniqueOne["mediaAttachments"]
@@ -21,25 +22,38 @@ export function TechniqueMedia({ mediaAttachments, techniqueName }: TechniqueMed
     <Section>
       <H4>Media</H4>
       <div className="grid gap-4 sm:grid-cols-2">
-        {mediaAttachments.map(({ id, media }) => (
-          <div key={id} className="overflow-hidden rounded-lg">
-            {media.mimeType?.startsWith("video/") ? (
-              // oxlint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded technique video; no caption track available
-              <video
-                src={media.url}
-                controls
-                className="w-full aspect-video object-cover"
-                poster={media.thumbnailUrl ?? undefined}
-              />
-            ) : (
-              <img
-                src={media.url}
-                alt={media.altText ?? techniqueName}
-                className="w-full aspect-video object-cover"
-              />
-            )}
-          </div>
-        ))}
+        {mediaAttachments.map(({ id, media }) => {
+          const youTubeEmbed = media.type === "YOUTUBE" ? toVideoEmbedUrl(media.url) : null
+
+          return (
+            <div key={id} className="overflow-hidden rounded-lg">
+              {youTubeEmbed ? (
+                <iframe
+                  src={youTubeEmbed}
+                  title={media.title ?? techniqueName}
+                  className="w-full aspect-video"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              ) : media.mimeType?.startsWith("video/") ? (
+                // oxlint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded technique video; no caption track available
+                <video
+                  src={media.url}
+                  controls
+                  className="w-full aspect-video object-cover"
+                  poster={media.thumbnailUrl ?? undefined}
+                />
+              ) : (
+                <img
+                  src={media.url}
+                  alt={media.altText ?? techniqueName}
+                  className="w-full aspect-video object-cover"
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
     </Section>
   )

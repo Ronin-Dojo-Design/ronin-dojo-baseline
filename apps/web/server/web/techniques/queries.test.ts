@@ -21,6 +21,9 @@ import { db } from "~/services/db"
 // --- Test fixtures ---
 
 const TS = Date.now()
+// Belt fixtures use a NON-numeric marker so they never match the `slug.includes(${TS})`
+// filters the existing assertions use (they'd otherwise inflate those counts).
+const BELT = `bx${Math.random().toString(36).slice(2, 8)}`
 const BRAND_A: Brand = "BASELINE_MARTIAL_ARTS"
 const BRAND_B: Brand = "RONIN_DOJO_DESIGN"
 
@@ -28,6 +31,9 @@ let orgA: string
 let orgB: string
 let disciplineId: string
 let disciplineBId: string
+let whiteRankId: string
+let blueRankId: string
+let purpleRankId: string
 
 beforeAll(async () => {
   // Create orgs for each brand
@@ -127,11 +133,67 @@ beforeAll(async () => {
       position: "STANDING",
     },
   })
+
+  // Belt fixtures (D1): a rank system + 3 ranks on Brand A's discipline, plus techniques
+  // tagged with a single belt via `beltLevelMinId` (exact-match facet). Slugs carry the
+  // BELT marker (not TS) so they don't affect the existing `${TS}` count assertions.
+  const rankSystem = await db.rankSystem.create({
+    data: { name: `Belt RS ${BELT}`, disciplineId },
+  })
+  const whiteRank = await db.rank.create({
+    data: { name: `White ${BELT}`, sortOrder: 1, rankSystemId: rankSystem.id },
+  })
+  const blueRank = await db.rank.create({
+    data: { name: `Blue ${BELT}`, sortOrder: 6, rankSystemId: rankSystem.id },
+  })
+  const purpleRank = await db.rank.create({
+    data: { name: `Purple ${BELT}`, sortOrder: 11, rankSystemId: rankSystem.id },
+  })
+  whiteRankId = whiteRank.id
+  blueRankId = blueRank.id
+  purpleRankId = purpleRank.id
+
+  await db.technique.createMany({
+    data: [
+      {
+        name: `Belt Armbar ${BELT}`,
+        slug: `belt-armbar-${BELT}`,
+        brand: BRAND_A,
+        organizationId: orgA,
+        disciplineId,
+        isPublished: true,
+        category: "SUBMISSION",
+        beltLevelMinId: blueRank.id,
+      },
+      {
+        name: `Belt Triangle ${BELT}`,
+        slug: `belt-triangle-${BELT}`,
+        brand: BRAND_A,
+        organizationId: orgA,
+        disciplineId,
+        isPublished: true,
+        category: "SUBMISSION",
+        beltLevelMinId: whiteRank.id,
+      },
+      {
+        name: `Belt Untagged ${BELT}`,
+        slug: `belt-untagged-${BELT}`,
+        brand: BRAND_A,
+        organizationId: orgA,
+        disciplineId,
+        isPublished: true,
+        category: "SUBMISSION",
+      },
+    ],
+  })
 })
 
 afterAll(async () => {
-  // Cleanup in reverse dependency order
+  // Cleanup in reverse dependency order (belt fixtures first: techniques → ranks → system)
+  await db.technique.deleteMany({ where: { slug: { contains: BELT } } })
   await db.technique.deleteMany({ where: { slug: { contains: `${TS}` } } })
+  await db.rank.deleteMany({ where: { rankSystem: { name: { contains: BELT } } } })
+  await db.rankSystem.deleteMany({ where: { name: { contains: BELT } } })
   await db.discipline.deleteMany({ where: { slug: { in: [`karate-${TS}`, `arnis-${TS}`] } } })
   await db.organization.deleteMany({ where: { slug: { contains: `${TS}` } } })
 })
@@ -145,6 +207,7 @@ const defaultParams = {
   category: "",
   position: "",
   discipline: "",
+  belt: "",
 }
 
 // --- Tests ---
@@ -229,6 +292,51 @@ describe("searchTechniques", () => {
 
       expect(ours.length).toBe(1)
       expect(ours[0].slug).toBe(`front-kick-${TS}`)
+    })
+  })
+
+  describe("belt facet (D1 — exact match on beltLevelMinId)", () => {
+    it("returns only techniques tagged with the selected belt", async () => {
+      const params = { ...defaultParams, belt: blueRankId }
+      const result = await searchTechniques(params, BRAND_A)
+      const slugs = result.techniques.map((t: any) => t.slug)
+
+      expect(slugs).toContain(`belt-armbar-${BELT}`) // tagged Blue
+      expect(slugs).not.toContain(`belt-triangle-${BELT}`) // tagged White
+      expect(slugs).not.toContain(`belt-untagged-${BELT}`) // no tagged belt
+    })
+
+    it("selecting a different belt returns its own techniques", async () => {
+      const params = { ...defaultParams, belt: whiteRankId }
+      const result = await searchTechniques(params, BRAND_A)
+      const slugs = result.techniques.map((t: any) => t.slug)
+
+      expect(slugs).toContain(`belt-triangle-${BELT}`)
+      expect(slugs).not.toContain(`belt-armbar-${BELT}`)
+    })
+
+    it("returns nothing for a belt no technique is tagged with", async () => {
+      const params = { ...defaultParams, belt: purpleRankId }
+      const result = await searchTechniques(params, BRAND_A)
+      const ours = result.techniques.filter((t: any) => t.slug.includes(BELT))
+
+      expect(ours.length).toBe(0)
+    })
+
+    it("no belt filter includes both tagged and untagged techniques", async () => {
+      const result = await searchTechniques(defaultParams, BRAND_A)
+      const slugs = result.techniques.map((t: any) => t.slug)
+
+      expect(slugs).toContain(`belt-armbar-${BELT}`)
+      expect(slugs).toContain(`belt-untagged-${BELT}`)
+    })
+
+    it("selects the tagged belt on the returned payload", async () => {
+      const params = { ...defaultParams, belt: blueRankId }
+      const result = await searchTechniques(params, BRAND_A)
+      const armbar = result.techniques.find((t: any) => t.slug === `belt-armbar-${BELT}`)
+
+      expect(armbar?.beltLevelMin?.id).toBe(blueRankId)
     })
   })
 })
