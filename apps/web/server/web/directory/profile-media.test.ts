@@ -27,7 +27,7 @@ function media(partial: Partial<PublicPassportMedia>): PublicPassportMedia {
     durationSec: null,
     purpose: null,
     techniqueSlug: null,
-    techniqueIsPremium: null,
+    isPremium: false,
     sortOrder: seq,
     ...partial,
   }
@@ -111,7 +111,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           id: "free-slug",
           purpose: "technique-highlight",
           techniqueSlug: "armbar-from-guard",
-          techniqueIsPremium: false,
+          isPremium: false,
           thumbnailUrl: "https://r2.example.com/armbar.jpg",
         }),
       ],
@@ -132,7 +132,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           purpose: "technique-highlight",
           url: "https://r2.example.com/free-reel.mp4",
           techniqueSlug: null,
-          techniqueIsPremium: false,
+          isPremium: false,
         }),
       ],
     })
@@ -152,7 +152,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           purpose: "technique-highlight",
           url: "https://r2.example.com/premium-reel.mp4",
           techniqueSlug: "berimbolo",
-          techniqueIsPremium: true,
+          isPremium: true,
         }),
       ],
     })
@@ -174,7 +174,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           purpose: "technique-highlight",
           url: "https://r2.example.com/leaky-premium.mp4",
           techniqueSlug: null,
-          techniqueIsPremium: true,
+          isPremium: true,
         }),
       ],
     })
@@ -195,7 +195,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           id: "prem-slug",
           purpose: "technique-highlight",
           techniqueSlug: "berimbolo",
-          techniqueIsPremium: true,
+          isPremium: true,
         }),
       ],
     })
@@ -212,7 +212,7 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
           purpose: "technique-highlight",
           url: "https://r2.example.com/entitled-premium.mp4",
           techniqueSlug: null,
-          techniqueIsPremium: true,
+          isPremium: true,
         }),
       ],
     })
@@ -222,5 +222,38 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
     expect(item.locked).toBe(false)
     expect(item.href).toBe("https://r2.example.com/entitled-premium.mp4")
     expect(item.external).toBe(true)
+  })
+
+  it("MIXED per-video: a free reel + a premium reel for the same unauth viewer (free plays, premium locked)", () => {
+    const result = buildProfileMedia({
+      viewerEntitled: false,
+      media: [
+        media({
+          id: "mix-free",
+          purpose: "technique-highlight",
+          techniqueSlug: "hip-escape",
+          isPremium: false,
+        }),
+        media({
+          id: "mix-prem",
+          purpose: "technique-highlight",
+          url: "https://r2.example.com/mixed-premium.mp4",
+          techniqueSlug: "invisible-collar",
+          isPremium: true,
+        }),
+      ],
+    })
+
+    const free = result.techniqueVideos.find(i => i.id === "mix-free")!
+    const prem = result.techniqueVideos.find(i => i.id === "mix-prem")!
+    // Per-video (SESSION_0527): the two reels on one profile gate INDEPENDENTLY — the technique-level
+    // flag could not express this. Free plays; premium locks + withholds its raw url.
+    expect(free.locked).toBe(false)
+    expect(prem.locked).toBe(true)
+    expect(prem.href).toBe("/techniques/invisible-collar")
+    const allHrefs = [...result.featuredMatches, ...result.techniqueVideos, ...result.podcasts].map(
+      i => i.href,
+    )
+    expect(allHrefs.some(href => href.includes("mixed-premium"))).toBe(false)
   })
 })

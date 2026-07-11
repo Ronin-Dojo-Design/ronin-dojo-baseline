@@ -3791,6 +3791,12 @@ model MediaAttachment {
   id        String   @id @default(cuid(2))
   purpose   String?
   sortOrder Int      @default(0)
+  // @added SESSION_0527 Slice 0 — per-video freemium. The gate unit is now the ATTACHMENT so a single
+  // technique can mix free + premium clips (operator decision, SESSION_0526 Fork 2). Backfilled from the
+  // parent Technique.isPremium (behavior-preserving); default false — non-technique attachments
+  // (podcasts/matches/events) were never premium. Preserves the SESSION_0526 A1/A2 no-leak invariants:
+  // a locked premium attachment's playable url is stripped server-side before any client payload.
+  isPremium Boolean  @default(false)
   createdAt DateTime @default(now())
 
   media   Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)

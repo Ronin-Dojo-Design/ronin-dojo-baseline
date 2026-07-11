@@ -20,6 +20,9 @@ const techniqueMediaPayload = {
     // @added SESSION_0525 — the authoring Passport, so the freemium watch-page gate can
     // treat the technique's own author (owner) as entitled even without a paid tier.
     passportId: true,
+    // @added SESSION_0527 Slice 0 — per-video freemium: the gate unit is the attachment, so the
+    // watch page gates + strips EACH tile individually (`gateTechniqueMedia`), not the whole technique.
+    isPremium: true,
   },
   orderBy: { sortOrder: "asc" },
 } satisfies Prisma.Technique$mediaAttachmentsArgs

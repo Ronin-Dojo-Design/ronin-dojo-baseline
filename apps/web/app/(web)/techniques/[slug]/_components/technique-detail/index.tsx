@@ -24,10 +24,7 @@ const TechniqueMedia = dynamic(() => import("./technique-media").then(m => m.Tec
  *
  * @see docs/runbooks/component-launch-sweep-recipe.md
  */
-export function TechniqueDetail({ technique, brand, viewerEntitled }: TechniqueDetailView) {
-  // Freemium: a premium technique locks its media for an unentitled viewer (shows the upgrade CTA).
-  const locked = technique.isPremium && !viewerEntitled
-
+export function TechniqueDetail({ technique, brand, gatedMedia }: TechniqueDetailView) {
   return (
     <BrandTypography brand={brand} className={bblHeadingScopeClass}>
       <Intro>
@@ -38,9 +35,9 @@ export function TechniqueDetail({ technique, brand, viewerEntitled }: TechniqueD
       <TechniqueBadges technique={technique} />
 
       <TechniqueMedia
-        mediaAttachments={technique.mediaAttachments}
+        tiles={gatedMedia.tiles}
+        allLocked={gatedMedia.allLocked}
         techniqueName={technique.name}
-        locked={locked}
       />
 
       <TechniqueProseList title="Teaching Cues" items={technique.teachingCues} />

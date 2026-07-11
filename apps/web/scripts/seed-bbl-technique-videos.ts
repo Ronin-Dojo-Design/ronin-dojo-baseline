@@ -275,7 +275,7 @@ async function main() {
       // 3) MediaAttachment — ONE polymorphic row (technique + author passport).
       const existing = await db.mediaAttachment.findFirst({
         where: { mediaId: media.id, techniqueId: technique.id },
-        select: { id: true, passportId: true },
+        select: { id: true, passportId: true, isPremium: true },
       })
       if (!existing) {
         await db.mediaAttachment.create({
@@ -285,12 +285,16 @@ async function main() {
             passportId,
             purpose: ATTACH_PURPOSE,
             sortOrder,
+            // SESSION_0527 Slice 0 — per-video freemium gate is per-ATTACHMENT now; seed it to match
+            // the technique's premium state so a fresh reseed keeps the free-preview subset correct.
+            isPremium,
           },
         })
-      } else if (existing.passportId !== passportId) {
+      } else if (existing.passportId !== passportId || existing.isPremium !== isPremium) {
         await db.mediaAttachment.update({
           where: { id: existing.id },
-          data: { passportId, purpose: ATTACH_PURPOSE },
+          // Set isPremium on the update path too so a re-run flips existing rows (mirrors the Technique upsert).
+          data: { passportId, purpose: ATTACH_PURPOSE, isPremium },
         })
       }
       stat.attachments += 1

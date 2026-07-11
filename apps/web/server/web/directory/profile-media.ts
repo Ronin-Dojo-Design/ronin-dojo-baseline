@@ -182,7 +182,7 @@ export function buildProfileMedia({
       // card links internally to `/techniques/[slug]` when the attachment references a technique
       // (TuffBuffs `route`), else falls back to the raw video URL (external new tab).
       const internal = item.techniqueSlug != null
-      const locked = item.techniqueIsPremium === true && !viewerEntitled
+      const locked = item.isPremium === true && !viewerEntitled
       // A2 invariant (SESSION_0526): a LOCKED premium reel is only ever publishable through its
       // internal `/techniques/[slug]` gate. If it is locked but has no linked technique slug (a
       // mis-linked premium attachment), DROP it — never fall through to `href = item.url` and leak

@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import type { GatedTechniqueMedia } from "~/server/web/techniques/technique-media-gate"
 import type { TechniqueOne } from "~/server/web/techniques/payloads"
 
 /** Humanize an enum value for display (`SIDE_CONTROL` → `SIDE CONTROL`). */
@@ -17,10 +18,11 @@ export type TechniqueDetailView = {
   /** Resolved request brand — drives which font tokens the typography scope exposes. */
   brand: Brand
   /**
-   * Freemium (SESSION_0525): whether the viewer may watch this technique's video — true for a
-   * free technique or an entitled viewer (premium tier / admin / author). The route resolves it
-   * off the session; when false on a premium technique the media section renders the locked
-   * upgrade state instead of the player.
+   * Freemium (SESSION_0527 Slice 0, per-video): the technique's attachments already gated for THIS
+   * viewer. Each tile is either playable (url present) or locked (url stripped server-side); the
+   * route resolves entitlement off the session and gates before render, so no premium url reaches
+   * the payload of an unentitled viewer (payload-layer no-leak invariant). `allLocked` drives the
+   * single centered upgrade panel (behavior-preserving for a fully-premium technique).
    */
-  viewerEntitled: boolean
+  gatedMedia: GatedTechniqueMedia
 }

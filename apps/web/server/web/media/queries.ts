@@ -76,11 +76,12 @@ export type PublicPassportMedia = {
   /** Linked-technique slug when the attachment references one → internal `/techniques/[slug]` route. */
   techniqueSlug: string | null
   /**
-   * The linked technique's freemium flag (SESSION_0525) — true → premium (locked-preview),
-   * null when the attachment references no technique. Drives the per-item `locked` on the
-   * profile technique rail.
+   * The ATTACHMENT's freemium flag (SESSION_0527 Slice 0, per-video) — true → premium (locked-preview).
+   * The gate unit moved from the whole technique to the attachment, so a profile technique reel is
+   * gated on its OWN flag (backfilled from the parent technique). Drives the per-item `locked` on the
+   * profile technique rail. Non-technique attachments (podcasts/matches) default false → never locked.
    */
-  techniqueIsPremium: boolean | null
+  isPremium: boolean
   sortOrder: number
 }
 
@@ -97,7 +98,8 @@ export async function getPublicPassportMedia(passportId: string): Promise<Public
     select: {
       sortOrder: true,
       purpose: true,
-      technique: { select: { slug: true, isPremium: true } },
+      isPremium: true,
+      technique: { select: { slug: true } },
       media: {
         select: {
           id: true,
@@ -121,7 +123,7 @@ export async function getPublicPassportMedia(passportId: string): Promise<Public
     durationSec: attachment.media.durationSec,
     purpose: attachment.purpose,
     techniqueSlug: attachment.technique?.slug ?? null,
-    techniqueIsPremium: attachment.technique?.isPremium ?? null,
+    isPremium: attachment.isPremium,
     sortOrder: attachment.sortOrder,
   }))
 }
