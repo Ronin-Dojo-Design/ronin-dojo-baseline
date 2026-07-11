@@ -103,6 +103,13 @@ Layering an EffectComposer on top of 50+ compositing DOM subtrees will tank the 
 **Route → Cody (build) → Doug (perf + WebGL screenshot via isolated Playwright chromium) + Desi (visual craft).**
 Independent of every other stream.
 
+**Status: BUILT + VERIFIED SHIP** (`session-0525-galaxy` @ `b29d89db`; Doug 9.6/10, real authenticated WebGL
+screenshot vs prodsnap — bloom/HDR/labels/parallax live, A0 perf win confirmed: 21 DOM els / 0 `<Html>` /
+zero regressions). **Pre-GA follow-up (A3, not a beta blocker):** troika `<Text>` labels currently fetch
+their font from `cdn.jsdelivr.net` via a blob web-worker — works today only because prod CSP is
+report-only + the route is beta-gated. **Self-host the label font** (`<Text font="/fonts/…">`) + verify
+CSP `worker-src`/`font-src` before promoting to the public `/lineage/galaxy` GA. → Cody.
+
 ---
 
 ## 2. Stream B — Member globe  (`globe-data+render`)
