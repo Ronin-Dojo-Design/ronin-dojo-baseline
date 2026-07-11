@@ -97,16 +97,17 @@ function podcastProviderLabel(url: string, durationSec: number | null): string {
 /**
  * Split the public passport media into the three highlight rails. All rails are PUBLIC now
  * (SESSION_0525 freemium): every viewer sees featured matches, podcasts, AND technique reels.
- * The rich-media decision (`profile.canRenderFullProfile` — tier OR admin OR owner) no longer
- * hides the technique rail; it only decides whether a PREMIUM technique reel renders LOCKED
- * (`locked: true` → lock overlay + upgrade CTA) so the viewer sees what they're missing. Free
- * technique reels, podcasts, and matches are never locked.
+ * `viewerEntitled` is the VIEWER's OWN entitlement (admin / viewer-owns-the-content / viewer's own
+ * premium tier — resolved by `isTechniqueViewerEntitled`, NOT the profile owner's tier); it only
+ * decides whether a PREMIUM technique reel renders LOCKED (`locked: true` → lock overlay + upgrade
+ * CTA) so the viewer sees what they're missing. Free technique reels, podcasts, and matches never
+ * lock.
  */
 export function buildProfileMedia({
-  canRenderRichMedia,
+  viewerEntitled,
   media,
 }: {
-  canRenderRichMedia: boolean
+  viewerEntitled: boolean
   media: PublicPassportMedia[]
 }): ProfileMedia {
   const featuredMatches: ProfileMediaItem[] = []
@@ -158,7 +159,7 @@ export function buildProfileMedia({
       // card links internally to `/techniques/[slug]` when the attachment references a technique
       // (TuffBuffs `route`), else falls back to the raw video URL (external new tab).
       const internal = item.techniqueSlug != null
-      const locked = item.techniqueIsPremium === true && !canRenderRichMedia
+      const locked = item.techniqueIsPremium === true && !viewerEntitled
       techniqueVideos.push({
         id: item.id,
         title: item.title ?? "Technique Video",

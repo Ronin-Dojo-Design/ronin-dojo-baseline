@@ -82,6 +82,10 @@ export const techniqueManyPayload = {
   beltLevelMin: techniqueBeltPayload,
   // @added SESSION_0396 — shared listing taxonomy badges (Tool→Listing parity).
   categories: { select: { name: true, slug: true } },
+  // @added SESSION_0525 — media presence (any attachment) so the browse card only shows the
+  // "Premium" lock badge when there is actually a video/image to unlock. A count (not rows) keeps
+  // the faceted grid cheap; mirrors the watch page's `mediaAttachments.length === 0` no-media path.
+  _count: { select: { mediaAttachments: true } },
 } satisfies Prisma.TechniqueSelect
 
 // @added SESSION_0525 (Stream D2) — the video-rail row: the standard many-card payload

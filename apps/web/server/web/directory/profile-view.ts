@@ -12,7 +12,8 @@ import {
   getLineageAncestryForPassport,
   type LineageAncestryEntry,
 } from "~/server/web/lineage/ancestry"
-import { getPublicPassportMedia, type PublicPassportMedia } from "~/server/web/media/queries"
+import { getPublicPassportMedia } from "~/server/web/media/queries"
+import { isTechniqueViewerEntitled } from "~/server/web/techniques/technique-access"
 import type { DirectoryProfileView } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-data"
 import { db } from "~/services/db"
 
@@ -104,26 +105,29 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
   // same account, so reuse the one it threads back (`profile.renderPolicy`) instead of re-querying.
   const renderPolicy = profile.renderPolicy
 
-  // `canRenderFullProfile` is the projector's rich-media decision (tier OR admin OR owner) — the
-  // SAME gate cover/video/social ride. Freemium (SESSION_0525): the highlight rails are now PUBLIC
-  // (matches/podcasts/technique reels show to EVERY viewer), so load public media for any real
-  // profile; `canRenderRichMedia` no longer gates the load — it only decides whether a PREMIUM
-  // technique reel renders LOCKED (`buildProfileMedia` per-item). Placeholders load nothing.
-  const canRenderRichMedia = profile.canRenderFullProfile
-  const shouldLoadMedia = !profile.isClaimablePlaceholder
-
-  const [origin, viewerClaimState, claimFunnelHref, ancestry, publicMedia] = await Promise.all([
-    getRequestOrigin(),
-    resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
-    resolveClaimFunnelHref(profile),
-    // Placeholder profiles early-return to the claim teaser (no sections) — skip the walk.
-    profile.isClaimablePlaceholder
-      ? Promise.resolve<LineageAncestryEntry[]>([])
-      : getLineageAncestryForPassport(profile.passportId),
-    shouldLoadMedia
-      ? getPublicPassportMedia(profile.passportId)
-      : Promise.resolve<PublicPassportMedia[]>([]),
-  ])
+  // Freemium (SESSION_0525): the highlight rails are PUBLIC — matches/podcasts/technique reels show
+  // to EVERY viewer, including on unclaimed PLACEHOLDER legend profiles (bob-bass, david-meyer…), so
+  // the curated public media loads for any profile. Whether a PREMIUM technique reel renders LOCKED
+  // keys off the VIEWER's OWN entitlement (`isTechniqueViewerEntitled`: admin / viewer-owns-the-
+  // content / viewer's own premium tier) — NOT the profile owner's tier. `canRenderFullProfile`
+  // still gates the private/rich fields in the projection.
+  const [origin, viewerClaimState, claimFunnelHref, ancestry, publicMedia, viewerEntitled] =
+    await Promise.all([
+      getRequestOrigin(),
+      resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
+      resolveClaimFunnelHref(profile),
+      // Placeholder profiles skip the ancestry walk (the teaser shows no ancestry section).
+      profile.isClaimablePlaceholder
+        ? Promise.resolve<LineageAncestryEntry[]>([])
+        : getLineageAncestryForPassport(profile.passportId),
+      getPublicPassportMedia(profile.passportId),
+      isTechniqueViewerEntitled({
+        userId: viewerUserId,
+        role: session?.user?.role,
+        // The rail's reels are authored by this profile's passport → owner = viewer owns it.
+        authorPassportIds: [profile.passportId],
+      }),
+    ])
 
   return {
     isOwner: false,
@@ -134,7 +138,7 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     claimFunnelHref,
     viewerClaimState,
     ancestry,
-    profileMedia: buildProfileMedia({ canRenderRichMedia, media: publicMedia }),
+    profileMedia: buildProfileMedia({ viewerEntitled, media: publicMedia }),
     viewerContext: { isOwner: false, renderPolicy },
   }
 }

@@ -17,6 +17,9 @@ type TechniqueCardProps = Omit<ComponentProps<typeof ListingCard>, "href" | "nam
 }
 
 const TechniqueCard = ({ technique, hasVideo, thumbnailUrl, ...props }: TechniqueCardProps) => {
+  // Premium lock badge only where there's actually media to unlock (SESSION_0525 fix) — the ~61
+  // video-less curriculum entries default to premium but have nothing gated, so no badge for them.
+  const showPremiumBadge = technique.isPremium && technique._count.mediaAttachments > 0
   return (
     <ListingCard
       href={`/techniques/${technique.slug}`}
@@ -45,10 +48,10 @@ const TechniqueCard = ({ technique, hasVideo, thumbnailUrl, ...props }: Techniqu
       headerBadges={
         // With a poster hero the play overlay already signals video, so the Video badge
         // only shows as the no-poster fallback (Foundational always; the Premium lock badge
-        // shows on every premium technique — the "locked preview" upsell signal).
-        (technique.isFoundational || technique.isPremium || (hasVideo && !thumbnailUrl)) && (
+        // shows on premium techniques that HAVE media — the "locked preview" upsell signal).
+        (technique.isFoundational || showPremiumBadge || (hasVideo && !thumbnailUrl)) && (
           <div className="ml-auto flex items-center gap-1.5">
-            {technique.isPremium && (
+            {showPremiumBadge && (
               <Badge variant="warning" prefix={<LockIcon className="size-3" />}>
                 Premium
               </Badge>

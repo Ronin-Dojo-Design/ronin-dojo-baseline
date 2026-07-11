@@ -29,9 +29,9 @@ import type { PublicProfileView } from "~/server/web/directory/profile-view"
  * initial bundle with SSR kept. About + Ranks stay eager.
  */
 
-// SESSION_0525 C1: the profile-highlight rails ship the client Embla carousel — same lazy boundary
-// as the other client-JS sections (SSR kept, chunk split off the initial bundle). Self-hides when
-// the rich-media-gated `profileMedia` DTO is empty (free tier / no member media).
+// SESSION_0525: the profile-highlight rails ship the client Embla carousel — same lazy boundary
+// as the other client-JS sections (SSR kept, chunk split off the initial bundle). PUBLIC for every
+// viewer (freemium); self-hides when the `profileMedia` DTO is empty (no curated member media).
 const ProfileHighlightsSection = dynamic(() =>
   import("./profile-highlights-section").then(m => m.ProfileHighlightsSection),
 )
@@ -67,17 +67,27 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
   // has an open claim (ADR 0036, SESSION_0440).
   if (profile.isClaimablePlaceholder) {
     return (
-      <ProfileClaimTeaser
-        subjectType="PERSON"
-        subjectId={profile.id}
-        claimState={viewerClaimState}
-        claimFunnelHref={claimFunnelHref}
-        name={user.name}
-        avatarUrl={user.image}
-        coverPhotoUrl={profile.coverPhotoUrl}
-        subtitle={[profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null}
-        tags={user.ranks.map(rankAward => rankAward.name).filter(Boolean)}
-      />
+      <>
+        <ProfileClaimTeaser
+          subjectType="PERSON"
+          subjectId={profile.id}
+          claimState={viewerClaimState}
+          claimFunnelHref={claimFunnelHref}
+          name={user.name}
+          avatarUrl={user.image}
+          coverPhotoUrl={profile.coverPhotoUrl}
+          subtitle={
+            [profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null
+          }
+          tags={user.ranks.map(rankAward => rankAward.name).filter(Boolean)}
+        />
+        {/* SESSION_0525: legend placeholders (bob-bass, david-meyer, chris-haueter…) still showcase
+            their curated PUBLIC Highlights — Featured Matches, Podcasts, technique reels — alongside
+            the claim teaser. Curated public media, safe on an unclaimed profile; self-hides empty. */}
+        <div className="mx-auto w-full min-w-0 max-w-2xl px-4 pb-8 sm:px-6">
+          <ProfileHighlightsSection media={view.profileMedia} />
+        </div>
+      </>
     )
   }
 
@@ -101,7 +111,8 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
       >
         <AboutSection profile={profile} />
         <VideoIntroSection videoIntroUrl={profile.videoIntroUrl} />
-        {/* SESSION_0525 C1: rich-media-gated technique-video + podcast rails (empty → self-hides). */}
+        {/* SESSION_0525: PUBLIC matches/podcasts/technique-reel rails; premium reels lock per-viewer
+            (empty → self-hides). */}
         <ProfileHighlightsSection media={view.profileMedia} />
         <RanksSection profile={profile} />
         <AncestrySection ancestry={ancestry} />
