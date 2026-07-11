@@ -5,6 +5,7 @@ import {
   materializeTrainedUnder,
   materializeVisualPlacement,
 } from "~/server/admin/lineage/claim-finalize"
+import { getBjjDisciplineId } from "~/server/belt/queries"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { createPassport, ensurePassportForUser } from "~/server/identity/person-service"
 import {
@@ -50,10 +51,22 @@ export type PlaceLeadIntoLineageResult = {
  * self-submit; a steward verifies it via `verifyRankEntry`) — then sync the canonical
  * `RankEntry`. Mirrors the create shape in `server/admin/users/actions.ts` (createPerson).
  *
+ * Discipline-scoped: mints ONLY when the named rank belongs to the BBL BJJ discipline.
+ * This helper is reachable UNAUTHENTICATED (public Join-the-Legacy signup →
+ * `createJoinLegacyInterest`'s `after()` hook → `autoPlaceSignupOnLineage` →
+ * `placeLeadIntoLineage`) with `currentRankId` only length-validated, so without this
+ * guard an anon could mint a `RankAward` for ANY rank cuid — a different discipline's or
+ * another product's rank — onto the public canonical tree. Mirrors the belt-router
+ * self-submit discipline guard (`server/belt/router.ts`); an out-of-discipline rank is
+ * skipped exactly like an unknown rank (no mint). No ceiling check is applied: a fresh
+ * signup is award-less (ceiling resolves null → every declaration would reject), which
+ * would drop a legit high belt (Jay Farrell). The belt stays UNVERIFIED + steward-reviewed
+ * — that is the accepted control for "is this belt real".
+ *
  * Idempotent + defensive: skips when the lead named no rank, when the id no longer
- * resolves to a Rank, or when the member already holds ANY award for that rank — so a
- * re-run (auto-place then manual place) never double-mints. Returns the minted award id,
- * or null when nothing was minted.
+ * resolves to a Rank, when the rank is not in the BJJ discipline, or when the member
+ * already holds ANY award for that rank — so a re-run (auto-place then manual place) never
+ * double-mints. Returns the minted award id, or null when nothing was minted.
  */
 async function ensureDeclaredRankAward(
   tx: Tx,
@@ -61,8 +74,17 @@ async function ensureDeclaredRankAward(
 ): Promise<string | null> {
   if (!currentRankId) return null
 
-  const rank = await tx.rank.findUnique({ where: { id: currentRankId }, select: { id: true } })
+  const rank = await tx.rank.findUnique({
+    where: { id: currentRankId },
+    select: { id: true, rankSystem: { select: { disciplineId: true } } },
+  })
   if (!rank) return null
+
+  // Discipline-scope the mint (public unauthenticated reachability — see docstring): only
+  // the declared belt for a BBL BJJ rank is minted. An out-of-discipline rank is skipped
+  // with the same semantics as an unknown rank. Discipline id is stable reference data.
+  const bjjDisciplineId = await getBjjDisciplineId(tx)
+  if (rank.rankSystem?.disciplineId !== bjjDisciplineId) return null
 
   const existing = await tx.rankAward.findFirst({
     where: { passportId, rankId: currentRankId },

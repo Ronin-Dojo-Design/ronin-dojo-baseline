@@ -21,6 +21,7 @@ function makeMember({
   colorHex = null as string | null,
   rankName = "Black Belt",
   disciplineName = null as string | null,
+  rankEntryStatus = null as "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" | null,
 }: {
   id: string
   nodeId?: string
@@ -39,6 +40,8 @@ function makeMember({
   colorHex?: string | null
   rankName?: string
   disciplineName?: string | null
+  /** WL-P2-46: the award's canonical RankEntry status — the ONE trust source. */
+  rankEntryStatus?: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" | null
 }): LineageTreeMemberRow {
   return {
     id,
@@ -62,31 +65,33 @@ function makeMember({
         avatarUrl,
         user: isPlaceholder ? null : { id: `user-${id}`, name, image: null, memberships: [] },
         directoryProfile: null,
-        rankAwardsEarned: colorHex
-          ? [
-              {
-                id: `ra-${id}`,
-                awardedAt: new Date(),
-                location: null,
-                rank: {
-                  id: `rank-${id}`,
-                  name: rankName,
-                  shortName: null,
-                  colorHex,
-                  sortOrder: 10,
-                  rankSystem: {
-                    id: "rs-1",
-                    name: "BJJ",
-                    discipline: disciplineName
-                      ? { id: "d-1", name: disciplineName, slug: "bjj", code: "BJJ" }
-                      : null,
+        rankAwardsEarned:
+          colorHex || rankEntryStatus
+            ? [
+                {
+                  id: `ra-${id}`,
+                  awardedAt: new Date(),
+                  location: null,
+                  rank: {
+                    id: `rank-${id}`,
+                    name: rankName,
+                    shortName: null,
+                    colorHex,
+                    sortOrder: 10,
+                    rankSystem: {
+                      id: "rs-1",
+                      name: "BJJ",
+                      discipline: disciplineName
+                        ? { id: "d-1", name: disciplineName, slug: "bjj", code: "BJJ" }
+                        : null,
+                    },
                   },
+                  awardedBy: null,
+                  awardedByPassport: null,
+                  rankEntry: rankEntryStatus ? { status: rankEntryStatus } : null,
                 },
-                awardedBy: null,
-                awardedByPassport: null,
-              },
-            ]
-          : [],
+              ]
+            : [],
         affiliations: [],
       },
     },
@@ -129,9 +134,9 @@ describe("toLineageVisual", () => {
     assert.equal(n.rankLabel, "Black Belt · BJJ")
   })
 
-  test("resolves trustStatus via resolveLineageTrustStatus", () => {
-    const verified = makeMember({ id: "m1", isVerified: true })
-    const disputed = makeMember({ id: "m2", verificationStatus: "DISPUTED" })
+  test("resolves trustStatus via resolveLineageTrustStatus (from the rank entry, WL-P2-46)", () => {
+    const verified = makeMember({ id: "m1", rankEntryStatus: "VERIFIED" })
+    const disputed = makeMember({ id: "m2", rankEntryStatus: "DISPUTED" })
     const pending = makeMember({
       id: "m3",
       claimRequests: [{ status: "PENDING" }],

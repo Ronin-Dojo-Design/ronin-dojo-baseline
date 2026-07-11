@@ -59,7 +59,12 @@ async function ensurePremiumEntitlement() {
   return entitlement
 }
 
-async function createProfileFixture(name: "free" | "premium") {
+async function createProfileFixture(
+  name: "free" | "premium",
+  // WL-P2-46: trust sources from the award's canonical RankEntry status — mirror production by
+  // minting the entry alongside the award (the migration anchor is 1:1 per RankAward).
+  entryStatus: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" = "UNVERIFIED",
+) {
   const user = await db.user.create({
     data: {
       id: tag(`${name}-user`),
@@ -109,13 +114,17 @@ async function createProfileFixture(name: "free" | "premium") {
     },
   })
 
-  await db.rankAward.create({
+  const award = await db.rankAward.create({
     data: {
       passportId,
       rankId,
       awardedAt: new Date("2026-02-01T00:00:00.000Z"),
       organizationId,
     },
+    select: { id: true },
+  })
+  await db.rankEntry.create({
+    data: { rankAwardId: award.id, passportId, rankId, status: entryStatus },
   })
 
   return user
@@ -170,7 +179,8 @@ beforeAll(async () => {
   const entitlement = await ensurePremiumEntitlement()
   entitlementId = entitlement.id
 
-  const freeUser = await createProfileFixture("free")
+  // Free user's current rank is DISPUTED → trust "disputed" (sourced from the RankEntry, WL-P2-46).
+  const freeUser = await createProfileFixture("free", "DISPUTED")
   freeUserId = freeUser.id
   const freeLineageNode = await db.lineageNode.create({
     data: {

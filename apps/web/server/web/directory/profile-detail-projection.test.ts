@@ -77,6 +77,8 @@ function detailFixture(): DirectoryProfileDetail {
               discipline: { id: "discipline-1", name: "BJJ", slug: "bjj", code: "bjj" },
             },
           },
+          // Trust source (WL-P2-46): the current rank's RankEntry status → "verified".
+          rankEntry: { status: "VERIFIED" },
         },
         {
           id: "rank-award-2",
@@ -92,6 +94,7 @@ function detailFixture(): DirectoryProfileDetail {
               discipline: { id: "discipline-1", name: "BJJ", slug: "bjj", code: "bjj" },
             },
           },
+          rankEntry: { status: "VERIFIED" },
         },
       ],
     },

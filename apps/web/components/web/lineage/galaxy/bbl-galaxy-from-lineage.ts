@@ -1,4 +1,4 @@
-import { memberTopRankAward } from "~/lib/lineage/canvas-model"
+import { memberTopRankAward, memberTrustStatus } from "~/lib/lineage/canvas-model"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import type { LineageTreePublicResult } from "~/server/web/lineage/payloads"
 import type {
@@ -69,9 +69,13 @@ export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGa
   const disciplineId = result.tree.disciplineId
 
   // Verified-only galaxy (spec security rule: no disputed/unverified public stars). The
-  // query already scopes to PUBLIC; this drops any unverified node so `verifiedStatus` is
-  // truthful by construction, and edges to dropped nodes fall away below.
-  const members = result.members.filter(member => member.node.isVerified === true)
+  // query already scopes to PUBLIC; this drops any member whose current rank isn't VERIFIED so
+  // `verifiedStatus` is truthful by construction, and edges to dropped nodes fall away below.
+  // Trust now sources from the top non-PENDING RankEntry (`memberTrustStatus`, LR 0008) —
+  // discipline-scoped to this BJJ tree — not the retired node-level `isVerified` flag.
+  const members = result.members.filter(
+    member => memberTrustStatus(member.node, disciplineId) === "VERIFIED",
+  )
   const generationByMemberId = computeGenerations(members)
   const nodeIdByMemberId = new Map(members.map(member => [member.id, member.nodeId]))
 

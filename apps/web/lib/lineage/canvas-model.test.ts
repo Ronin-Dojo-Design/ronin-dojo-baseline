@@ -11,6 +11,7 @@ import {
   memberSchool,
   memberTopRank,
   memberTopRankAward,
+  memberTrustStatus,
   memberSchoolLabel,
   nodeDisplayName,
   resolveLineageMemberView,
@@ -360,25 +361,35 @@ describe("member view-model derivations", () => {
 })
 
 describe("resolveLineageMemberView — the one ruleset every surface shares", () => {
-  function withAward(node: LineageNodeRow, name: string, color: string) {
+  function withAward(
+    node: LineageNodeRow,
+    name: string,
+    color: string,
+    entryStatus: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" | null = null,
+  ) {
     node.passport.rankAwardsEarned = [
       {
         rank: {
           name,
           colorHex: color,
           sortOrder: 8,
-          rankSystem: { discipline: { name: "Brazilian Jiu-Jitsu" } },
+          rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj", name: "Brazilian Jiu-Jitsu" } },
         },
+        rankEntry: entryStatus ? { status: entryStatus } : null,
       },
     ] as never
     return node
   }
 
   test("verified member → verified trust, highest awarded belt, no claim badge", () => {
-    // Verification is `node.isVerified` (ADR 0035) — NOT a per-award field.
-    const node = withAward(makeNode({ id: "v", name: "Verified" }), "Black Belt", "#111111")
-    node.isVerified = true
-    node.verificationStatus = "VERIFIED"
+    // Trust is the top non-PENDING `RankEntry.status` (WL-P2-46) — NOT the node-level flag.
+    const node = withAward(
+      makeNode({ id: "v", name: "Verified" }),
+      "Black Belt",
+      "#111111",
+      "VERIFIED",
+    )
+    // Node flag deliberately LEFT false to prove trust comes from the entry, not `node.isVerified`.
     const view = resolveLineageMemberView(node)
     assert.equal(view.trustStatus, "verified")
     assert.equal(view.rankLabel, "Black Belt · Brazilian Jiu-Jitsu")
@@ -386,13 +397,79 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
     assert.equal(view.claimBadgeStatus, null)
   })
 
-  test("fresh member (node not verified) → unverified trust, belt still shows", () => {
-    // makeNode defaults: isVerified false, verificationStatus UNVERIFIED, has a linked user.
-    const node = withAward(makeNode({ id: "u", name: "Fresh" }), "Purple Belt", "#7c3aed")
+  test("fresh member (unverified rank entry) → unverified trust, belt still shows", () => {
+    // makeNode defaults: has a linked user (not placeholder); the entry is UNVERIFIED.
+    const node = withAward(
+      makeNode({ id: "u", name: "Fresh" }),
+      "Purple Belt",
+      "#7c3aed",
+      "UNVERIFIED",
+    )
     const view = resolveLineageMemberView(node)
     assert.equal(view.trustStatus, "unverified")
     assert.equal(view.rankLabel, "Purple Belt · Brazilian Jiu-Jitsu")
     assert.equal(view.beltColor, "#7c3aed")
+  })
+
+  test("memberTrustStatus: top non-PENDING entry, discipline-scoped like memberTopRank", () => {
+    const node = makeNode({ id: "t", name: "Trust" })
+    node.passport.rankAwardsEarned = [
+      {
+        rank: {
+          sortOrder: 8,
+          rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj" } },
+        },
+        rankEntry: { status: "PENDING" }, // highest belt PENDING → skipped
+      },
+      {
+        rank: {
+          sortOrder: 6,
+          rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj" } },
+        },
+        rankEntry: { status: "VERIFIED" }, // next non-PENDING → the trust
+      },
+    ] as never
+    assert.equal(memberTrustStatus(node), "VERIFIED")
+    assert.equal(memberTrustStatus(node, "disc-bjj"), "VERIFIED")
+    // A discipline the member holds no entry in → null (node not verified → no fallback).
+    assert.equal(memberTrustStatus(node, "disc-tkd"), null)
+    // No awards → null (→ unverified/imported at the resolver).
+    node.passport.rankAwardsEarned = [] as never
+    assert.equal(memberTrustStatus(node), null)
+  })
+
+  test("memberTrustStatus: BELTLESS member falls back to node membership verification (WL-P2-46)", () => {
+    // A documented lineage member with NO belt → the node's membership verification carries trust.
+    const node = makeNode({ id: "bl", name: "Beltless" })
+    node.passport.rankAwardsEarned = [] as never
+    node.isVerified = true
+    assert.equal(memberTrustStatus(node), "VERIFIED")
+    node.isVerified = false
+    node.verificationStatus = "DISPUTED"
+    assert.equal(memberTrustStatus(node), "DISPUTED")
+    node.verificationStatus = "PENDING"
+    assert.equal(memberTrustStatus(node), null)
+    // A present RankEntry ALWAYS wins over the node fallback (a VERIFIED belt on a node-unverified
+    // member reads verified; a DISPUTED belt reads disputed).
+    node.isVerified = true
+    node.verificationStatus = "VERIFIED"
+    node.passport.rankAwardsEarned = [
+      {
+        rank: { sortOrder: 6, rankSystem: { id: "rs", discipline: { id: "d" } } },
+        rankEntry: { status: "DISPUTED" },
+      },
+    ] as never
+    assert.equal(memberTrustStatus(node), "DISPUTED")
+  })
+
+  test("resolveLineageMemberView: beltless node-verified → verified badge (kept in galaxy)", () => {
+    const node = makeNode({ id: "blv", name: "Beltless Verified" })
+    node.passport.rankAwardsEarned = [] as never
+    node.isVerified = true
+    assert.equal(resolveLineageMemberView(node).trustStatus, "verified")
+    // Beltless + node not verified → the unchanged unverified path.
+    node.isVerified = false
+    assert.equal(resolveLineageMemberView(node).trustStatus, "unverified")
   })
 
   test("claimable placeholder → claim badge surfaces (drawer/directory only)", () => {

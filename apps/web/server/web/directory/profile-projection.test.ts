@@ -57,6 +57,8 @@ function profileFixture(): DirectoryProfileList {
             rankSystem: { id: "rank-system-1", name: "BJJ Belt System" },
           },
           awardedAt: new Date("2026-01-01T00:00:00.000Z"),
+          // Trust source (WL-P2-46): the current rank's RankEntry status → "verified".
+          rankEntry: { status: "VERIFIED" },
         },
         {
           id: "rank-award-2",
@@ -68,6 +70,7 @@ function profileFixture(): DirectoryProfileList {
             rankSystem: { id: "rank-system-1", name: "BJJ Belt System" },
           },
           awardedAt: new Date("2025-01-01T00:00:00.000Z"),
+          rankEntry: { status: "VERIFIED" },
         },
       ],
     },

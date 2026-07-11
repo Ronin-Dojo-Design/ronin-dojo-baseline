@@ -47,6 +47,12 @@ export const publicPassportPayload = {
           },
         },
       },
+      // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008).
+      // Carries the RankEntry status alongside the award so the directory trust badge reads the
+      // SAME source (`pickTopTrustStatus`) as the lineage surfaces, retiring `node.isVerified`.
+      rankEntry: {
+        select: { status: true },
+      },
     },
   },
 } satisfies Prisma.PassportSelect

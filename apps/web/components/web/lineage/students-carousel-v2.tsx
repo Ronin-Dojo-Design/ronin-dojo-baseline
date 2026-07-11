@@ -24,6 +24,7 @@ import {
   memberInitials,
   memberSchool,
   memberTopRank,
+  memberTrustStatus,
   nodeDisplayName,
 } from "~/lib/lineage/canvas-model"
 import { cx } from "~/lib/utils"
@@ -38,7 +39,7 @@ import type { LineageTreeMemberRow } from "~/server/web/lineage/payloads"
  * Same belt-group Accordion + BeltSwatch header as V1 (grouping shared via V1's
  * exported `groupByBelt`, ADR 0035 awarded truth); the inner row is the L1 Embla
  * `Carousel` of 168px player cards — dominant square avatar (verified corner check,
- * `node.isVerified`), 2-line name, `BeltSwatch flat-bar` + rank, country flag
+ * `memberTrustStatus` — top non-PENDING RankEntry), 2-line name, `BeltSwatch flat-bar` + rank, country flag
  * (`countryFlagEmoji`) + school logo + name (paired via `memberSchool` so the logo
  * always matches the label's org). NO premium ring/gold.
  *
@@ -179,6 +180,9 @@ function StudentCard({
   const name = nodeDisplayName(student.node)
   const avatar = memberAvatarSrc(student.node)
   const rank = memberTopRank(student.node, disciplineId)
+  // Trust from the member's current rank (top non-PENDING RankEntry, LR 0008), discipline-scoped
+  // to this tree — the SAME source the card badge/drawer read, not the retired `node.isVerified`.
+  const isVerified = memberTrustStatus(student.node, disciplineId) === "VERIFIED"
   const school = memberSchool(student.node)
   const country = student.node.passport?.directoryProfile?.locationCountry ?? null
   const flag = countryFlagEmoji(country)
@@ -224,7 +228,7 @@ function StudentCard({
             {avatarElement}
           </motion.span>
         )}
-        {student.node.isVerified && (
+        {isVerified && (
           <span
             title="Verified"
             className="absolute right-1 top-1 z-10 flex items-center justify-center rounded-full border bg-background p-0.5 text-green-700 dark:text-green-300"

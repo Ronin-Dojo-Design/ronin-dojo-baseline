@@ -106,7 +106,11 @@ async function makeOrg(tx: Tx): Promise<string> {
   return org.id
 }
 
-/** A minimal discipline → rank-system → rank chain; returns the created Rank id. */
+/**
+ * A minimal discipline → rank-system → rank chain in a FRESH (non-BJJ) discipline; returns
+ * the created Rank id. Used for the discipline-scope negative case — the declared-belt mint
+ * is BJJ-scoped (`ensureDeclaredRankAward`), so a rank outside BJJ must never be minted.
+ */
 async function makeRank(tx: Tx): Promise<string> {
   const discipline = await tx.discipline.create({
     data: { name: uid("discipline"), slug: uid("discipline") },
@@ -118,6 +122,19 @@ async function makeRank(tx: Tx): Promise<string> {
   })
   const rank = await tx.rank.create({
     data: { name: uid("blue"), sortOrder: 6, rankSystemId: rankSystem.id },
+    select: { id: true },
+  })
+  return rank.id
+}
+
+/**
+ * A SEEDED BJJ rank id (the declared-belt mint is discipline-scoped to BJJ). Reads the same
+ * ladder the app resolves via `getBjjDisciplineId` — never a parallel discipline. The seed
+ * ranks are read, never mutated.
+ */
+async function bjjRankId(tx: Tx): Promise<string> {
+  const rank = await tx.rank.findFirstOrThrow({
+    where: { rankSystem: { discipline: { code: "bjj" } } },
     select: { id: true },
   })
   return rank.id
@@ -356,7 +373,7 @@ describe("placeLeadIntoLineage — FI-003", () => {
     })
   })
 
-  it("mints the DECLARED belt (UNVERIFIED self-submit) when the lead names a currentRankId, idempotently", async () => {
+  it("mints the DECLARED belt (UNVERIFIED self-submit) when the lead names a BJJ currentRankId, idempotently", async () => {
     await inRolledBackTx(async tx => {
       const treeId = await makeCanonicalTree(tx)
       const root = await makePerson(tx, "rigan", { treeId })
@@ -364,7 +381,9 @@ describe("placeLeadIntoLineage — FI-003", () => {
       const actorUserId = await makeUser(tx, `${uid("actor")}@test.local`)
       const email = `${uid("belt")}@test.local`
       await makeUser(tx, email)
-      const rankId = await makeRank(tx)
+      // The declared-belt mint is discipline-scoped to BJJ, so the named rank must be a
+      // real seeded BJJ rank for the mint to fire.
+      const rankId = await bjjRankId(tx)
       const leadId = await makeLead(tx, {
         email,
         trainedUnderNodeId: instructor.nodeId,
@@ -416,6 +435,54 @@ describe("placeLeadIntoLineage — FI-003", () => {
       expect(awardCount).toBe(0)
       const entryCount = await tx.rankEntry.count({ where: { passportId: result.passportId } })
       expect(entryCount).toBe(0)
+    })
+  })
+
+  it("mints NO belt when the declared rank is OUTSIDE the BJJ discipline (public mint is discipline-scoped)", async () => {
+    // Security regression: `ensureDeclaredRankAward` is reachable UNAUTHENTICATED (public
+    // Join-the-Legacy signup → autoPlaceSignupOnLineage) with `currentRankId` only
+    // length-validated. An out-of-discipline rank cuid (another discipline's / another
+    // product's rank) must NOT mint a RankAward onto the public canonical tree — the mint
+    // is BJJ-scoped, mirroring the belt-router self-submit guard.
+    await inRolledBackTx(async tx => {
+      const treeId = await makeCanonicalTree(tx)
+      const root = await makePerson(tx, "rigan", { treeId })
+      const instructor = await makePerson(tx, "tony", { treeId, parentMemberId: root.memberId })
+      const actorUserId = await makeUser(tx, `${uid("actor")}@test.local`)
+      const email = `${uid("offdiscipline")}@test.local`
+      await makeUser(tx, email)
+      // A rank in a FRESH non-BJJ discipline — resolves to a real Rank, but not a BJJ one.
+      const nonBjjRankId = await makeRank(tx)
+      const leadId = await makeLead(tx, {
+        email,
+        trainedUnderNodeId: instructor.nodeId,
+        currentRankId: nonBjjRankId,
+      })
+
+      const result = await placeLeadIntoLineage(tx, { leadId, actorUserId, brand: BRAND })
+
+      // Placement still succeeds (membership is automatic) — only the belt mint is skipped.
+      expect(result.alreadyPlaced).toBe(false)
+
+      // NO award/entry for the out-of-discipline rank (nor any other rank).
+      const award = await tx.rankAward.findFirst({
+        where: { passportId: result.passportId, rankId: nonBjjRankId },
+        select: { id: true },
+      })
+      expect(award).toBeNull()
+      const awardCount = await tx.rankAward.count({ where: { passportId: result.passportId } })
+      expect(awardCount).toBe(0)
+      const entryCount = await tx.rankEntry.count({ where: { passportId: result.passportId } })
+      expect(entryCount).toBe(0)
+
+      // …and the placement audit records the mint as null (nothing minted).
+      const audit = await tx.auditLog.findFirst({
+        where: { action: "lineage.lead.placed-on-tree", entityId: result.memberId },
+        select: { after: true },
+      })
+      expect(
+        (audit?.after as { rankAwardMinted?: unknown } | null)?.rankAwardMinted ?? null,
+      ).toBeNull()
     })
   })
 })

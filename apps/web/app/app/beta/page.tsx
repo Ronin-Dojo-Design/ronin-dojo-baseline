@@ -27,6 +27,12 @@ const BETA_FEATURES = [
     description:
       "An expressive take on the admin console — swipeable group decks with live-count bento tiles. The flat grouped index it mirrors ships at /app/sections.",
   },
+  {
+    href: "/app/beta/galaxy",
+    name: "Lineage Galaxy",
+    description:
+      "The cinematic 3D constellation of the verified public lineage — legends, instructors, and students as stars on orbital generations. Click a node to open its lineage profile.",
+  },
 ] as const
 
 export default function BetaIndexPage() {

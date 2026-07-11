@@ -1,10 +1,13 @@
+import type { RankEntryStatus } from "~/.generated/prisma/client"
 import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
 import {
   type LineageClaimBadgeStatus,
   type LineageTrustStatus,
+  type TrustRankAward,
   pickLineageClaimStatus,
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
+  resolveMemberTrustStatus,
 } from "~/lib/lineage/trust-status"
 import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 
@@ -81,8 +84,28 @@ export function memberTopRank(node: LineageNodeRow, disciplineId?: string | null
 }
 
 /**
- * Belt color hex for the member's shown rank. Null → no swatch. Verification is a
- * SEPARATE axis (`node.isVerified`) and never filters which belt shows.
+ * THE member's *trust* status = the top non-PENDING `RankEntry.status` (belt-trust axis, LR 0008),
+ * discipline-scoped exactly like `memberTopRank` (the tree/board/cards pass the tree's discipline;
+ * the drawer/directory omit it for highest-overall). When the member is BELTLESS (no non-PENDING
+ * entry), it falls back to the node's membership verification so a documented-but-beltless verified
+ * lineage member still reads verified (WL-P2-46) — the RankEntry still WINS whenever it exists. This
+ * is the ONE place "how verified is this member" is decided — every surface reads it. Null → no rank
+ * AND no node verification. Thin node wrapper over `resolveMemberTrustStatus` (row + profile nodes).
+ */
+export function memberTrustStatus(
+  node: {
+    passport?: { rankAwardsEarned?: readonly TrustRankAward[] } | null
+    isVerified?: boolean | null
+    verificationStatus?: string | null
+  },
+  disciplineId?: string | null,
+): RankEntryStatus | null {
+  return resolveMemberTrustStatus(node.passport?.rankAwardsEarned ?? [], node, disciplineId)
+}
+
+/**
+ * Belt color hex for the member's shown rank. Null → no swatch. Verification is a SEPARATE
+ * axis (`memberTrustStatus`, the top non-PENDING RankEntry) and never filters which belt shows.
  */
 export function memberBeltColor(node: LineageNodeRow, disciplineId?: string | null): string | null {
   return memberTopRank(node, disciplineId)?.colorHex ?? null
@@ -144,7 +167,7 @@ export type LineageMemberView = {
   beltColor: string | null
   rankLabel: string | null
   schoolLabel: string | null
-  /** The ONE verification axis: `node.isVerified` (ADR 0035). NOT per-award. */
+  /** The ONE trust axis: the top non-PENDING `RankEntry.status` (`memberTrustStatus`, LR 0008). */
   trustStatus: LineageTrustStatus
   /** Claim affordance — surfaced ONLY on the drawer + directory, never on the tree. */
   claimBadgeStatus: LineageClaimBadgeStatus | null
@@ -156,11 +179,11 @@ export type LineageMemberView = {
  * presentation from this one function, so a person looks identical everywhere and
  * there is exactly one place to change the rules.
  *
- * Verification is the single `node.isVerified` axis (ADR 0035 §5; `RankAward.
- * verificationStatus` is vestigial and never drives display). Belt = highest awarded
- * rank, scoped to `opts.disciplineId` on discipline-scoped surfaces (the tree/board/cards
- * pass the tree's discipline; drawer/directory omit it for multi-discipline display).
- * `isClaimable` is the per-viewer claim affordance — consumed only by surfaces that show it.
+ * Trust is the single `memberTrustStatus` axis — the top non-PENDING `RankEntry.status`
+ * (LR 0008; the node-level `isVerified` / `verificationStatus` axis is retired from display).
+ * Belt = highest awarded rank, scoped to `opts.disciplineId` on discipline-scoped surfaces (the
+ * tree/board/cards pass the tree's discipline; drawer/directory omit it for multi-discipline
+ * display). `isClaimable` is the per-viewer claim affordance — consumed only by surfaces that show it.
  */
 export function resolveLineageMemberView(
   node: LineageNodeRow,
@@ -174,8 +197,7 @@ export function resolveLineageMemberView(
     rankLabel: memberRankLabel(node, opts.disciplineId),
     schoolLabel: memberSchoolLabel(node),
     trustStatus: resolveLineageTrustStatus({
-      verificationStatus: node.verificationStatus,
-      isVerified: node.isVerified,
+      rankStatus: memberTrustStatus(node, opts.disciplineId),
       isPlaceholder: node.passport?.user == null,
       claimStatus,
     }),

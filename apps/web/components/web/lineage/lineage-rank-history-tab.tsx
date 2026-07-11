@@ -11,6 +11,7 @@ import { Separator } from "~/components/common/separator"
 import { Stack } from "~/components/common/stack"
 import { LineageRankProgressionPanel } from "~/components/web/lineage/lineage-rank-progression-panel"
 import { nameInitials } from "~/lib/identity/passport-display"
+import { memberTrustStatus } from "~/lib/lineage/canvas-model"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
@@ -28,14 +29,17 @@ function formatDate(date: Date | string | null | undefined): string {
 }
 
 function sourceBadge(profile: LineageNodeProfile) {
-  if (profile.verificationStatus === "DISPUTED") {
+  // Trust from the member's rank (top non-PENDING RankEntry, LR 0008) — the SAME source every
+  // other lineage surface reads, retiring the node-level `verificationStatus`/`isVerified` axis.
+  const trustStatus = memberTrustStatus(profile)
+  if (trustStatus === "DISPUTED") {
     return (
       <Badge variant="danger" size="sm" prefix={<TriangleAlertIcon />}>
         Disputed source
       </Badge>
     )
   }
-  if (profile.verificationStatus === "VERIFIED" || profile.isVerified) {
+  if (trustStatus === "VERIFIED") {
     return (
       <Badge variant="success" size="sm" prefix={<CheckIcon />}>
         Verified source
@@ -76,8 +80,8 @@ export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile
           </Badge>
         </Stack>
         <Note className="text-xs">
-          Verification is currently tracked on the lineage profile and relationships, not on
-          individual rank awards.
+          Verification reflects the member&apos;s current rank; instructor-relationship verification
+          is shown on the Lineage tab.
         </Note>
       </Stack>
 

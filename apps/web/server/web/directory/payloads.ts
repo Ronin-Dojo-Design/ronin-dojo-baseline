@@ -68,6 +68,12 @@ export const directoryRankAwardPayload = {
     },
   },
   awardedAt: true,
+  // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008).
+  // The directory card's trust badge derives from the top award's RankEntry status
+  // (`pickTopTrustStatus`), the SAME source the lineage tree/drawer read — not `node.isVerified`.
+  rankEntry: {
+    select: { status: true },
+  },
 } satisfies Prisma.RankAwardSelect
 
 export const directoryProfileListPayload = {
@@ -100,10 +106,13 @@ export const directoryProfileListPayload = {
           memberships: { select: directoryMembershipPayload },
         },
       },
+      // NOT `take: 1` — the trust resolver (`resolveMemberTrustStatus`) must see the full award
+      // set so it can skip a top award whose `RankEntry` is null/unsynced and read a lower verified
+      // belt's status, matching the detail page (WL-P2-46 — surfaces must AGREE, LR 0008). The
+      // DISPLAYED belt is still top-only via `.slice(0, 1)` in the projection.
       rankAwardsEarned: {
         select: directoryRankAwardPayload,
         orderBy: { rank: { sortOrder: "desc" as const } },
-        take: 1,
       },
     },
   },

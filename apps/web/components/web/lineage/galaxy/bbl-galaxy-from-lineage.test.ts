@@ -40,6 +40,8 @@ const member = (
     discipline?: string | null
     awardYear?: number | null
     verified?: boolean
+    /** WL-P2-46: a documented lineage member with NO belt — trust comes from the node fallback. */
+    beltless?: boolean
   } = {},
 ): Member => ({
   id,
@@ -49,7 +51,11 @@ const member = (
   visualGroupId: opts.group ?? null,
   node: {
     slug: `slug-${id}`,
-    isVerified: opts.verified ?? true,
+    // WL-P2-46 beltless fallback: node membership verification carries trust ONLY when the member
+    // has no belt. `verified` drives BOTH the belt entry (when present) and this node flag; when a
+    // belt IS present the RankEntry always wins, so this only matters for the beltless case.
+    isVerified: opts.verified !== false,
+    verificationStatus: opts.verified === false ? "UNVERIFIED" : "VERIFIED",
     passport: {
       id: `passport-${id}`,
       displayName: opts.displayName ?? null,
@@ -58,15 +64,18 @@ const member = (
       socialLinks: [],
       directoryProfile: null,
       user: opts.accountName ? { id: `user-${id}`, name: opts.accountName, image: null } : null,
-      // TASK_06: rankAwardsEarned is the source projectPublicPassport uses for rankLabel.
-      rankAwardsEarned: opts.rankName
-        ? [
+      // Belted members carry one award whose RankEntry status encodes `verified` (the belt-trust
+      // axis, LR 0008); `rankAwardsEarned` also feeds projectPublicPassport's rankLabel. A beltless
+      // member has NO award → trust resolves via the node fallback above.
+      rankAwardsEarned: opts.beltless
+        ? []
+        : [
             {
               id: `award-${id}`,
               awardedAt: opts.awardYear ? new Date(Date.UTC(opts.awardYear, 0, 1)) : null,
               rank: {
                 id: `rank-${id}`,
-                name: opts.rankName,
+                name: opts.rankName ?? "Belt",
                 shortName: null,
                 colorHex: null,
                 rankSystem: {
@@ -77,9 +86,9 @@ const member = (
                     : null,
                 },
               },
+              rankEntry: { status: opts.verified === false ? "UNVERIFIED" : "VERIFIED" },
             },
-          ]
-        : [],
+          ],
     },
   },
 })
@@ -197,6 +206,30 @@ describe("lineageTreeToGalaxyGraph", () => {
     expect(graph.nodes.map(n => n.id)).toEqual(["node-root"])
     // the root→ghost edge is dropped because ghost was filtered out
     expect(graph.edges).toHaveLength(0)
+    expect(graph.nodes.every(n => n.verifiedStatus === "VERIFIED")).toBe(true)
+  })
+
+  it("keeps a BELTLESS node-verified member via the node fallback (WL-P2-46)", () => {
+    // A documented lineage member with NO belt but node-verified must STAY in the public galaxy
+    // (pure top-RankEntry would have dropped them — the regression this fallback fixes).
+    const graph = lineageTreeToGalaxyGraph(
+      build([
+        member("root", { displayName: "Root", verified: true }),
+        member("beltless", {
+          parent: "root",
+          displayName: "Documented",
+          beltless: true,
+          verified: true,
+        }),
+        member("beltless-unverified", {
+          parent: "root",
+          displayName: "Beltless Unverified",
+          beltless: true,
+          verified: false,
+        }),
+      ]),
+    )
+    expect(graph.nodes.map(n => n.id).sort()).toEqual(["node-beltless", "node-root"])
     expect(graph.nodes.every(n => n.verifiedStatus === "VERIFIED")).toBe(true)
   })
 })

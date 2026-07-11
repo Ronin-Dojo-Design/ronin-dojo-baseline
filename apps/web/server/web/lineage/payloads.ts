@@ -114,8 +114,8 @@ export const lineageNodeRowPayload = {
         },
       },
       // The member's awarded belts (ordered highest-first). Display reads the top
-      // one via `memberTopRank(node, disciplineId?)`; verification is a separate
-      // node-level axis (ADR 0035) and never filters the award shown here.
+      // one via `memberTopRank(node, disciplineId?)`; trust reads the top non-PENDING
+      // `rankEntry.status` via `memberTrustStatus` (LR 0008) and never filters the award shown here.
       // ⚠ NO `take` — the discipline-scoped resolver `.find()`s the highest award
       //   IN the tree's discipline (ADR 0035 §3), so a `take: 1` here would hand it
       //   only the GLOBAL top award and blank out any multi-discipline member whose
@@ -149,6 +149,12 @@ export const lineageNodeRowPayload = {
             },
           },
           ...rankAwardPromoterPayload,
+          // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis.
+          // `memberTrustStatus` reads the top non-PENDING entry status here (LR 0008), retiring
+          // the node-level `isVerified`/`verificationStatus` read for the tree/board/cards/list/galaxy.
+          rankEntry: {
+            select: { status: true },
+          },
         },
         // Ordered highest belt first (Rank.sortOrder desc, awardedAt as tiebreak — a plain
         // `awardedAt desc` floats NULL-dated awards to [0] via Postgres NULLS-FIRST, which

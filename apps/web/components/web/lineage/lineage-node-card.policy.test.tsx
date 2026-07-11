@@ -76,6 +76,8 @@ const node = {
           image: null,
         },
         awardedByPassport: null,
+        // WL-P2-46: trust sources from the top non-PENDING RankEntry, not `node.isVerified`.
+        rankEntry: { status: "VERIFIED" },
       },
     ],
   },
@@ -95,7 +97,7 @@ describe("LineageNodeCard tier policy", () => {
 
     expect(html).toContain("Public Name")
     expect(html).toContain("Black Belt")
-    // Free cards show the single node-level trust badge (Verified/Unverified)...
+    // Free cards show the single rank-derived trust badge (Verified/Unverified, WL-P2-46)...
     expect(html).toContain("Verified")
     // ...but NOT the Claim badge — claim affordance moved to the drawer + directory only (SESSION_0474).
     expect(html).not.toContain("Claimable")

@@ -6,6 +6,8 @@ import {
   pickLineageClaimStatus,
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
+  resolveMemberTrustStatus,
+  type TrustRankAward,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type {
@@ -22,7 +24,13 @@ type ProfileViewer = {
 
 type UserTrustSource = {
   isPlaceholder?: boolean | null
+  // The member's awarded belts, carrying each award's canonical `RankEntry.status` — the ONE
+  // member-facing rank-trust source (LR 0008). Trust derives from the top non-PENDING entry, the
+  // SAME source (and SAME `resolveMemberTrustStatus` choke point) the lineage tree/drawer read.
+  rankAwards?: readonly TrustRankAward[]
   lineageNode?: {
+    // Beltless fallback ONLY (WL-P2-46): a documented-but-beltless verified member still reads
+    // verified. A present RankEntry always wins over these node fields.
     isVerified?: boolean | null
     verificationStatus?: "PENDING" | "VERIFIED" | "DISPUTED" | null
     claimRequests?: { status: "PENDING" | "APPROVED" | "DENIED" | "NEEDS_INFO" | "CANCELLED" }[]
@@ -106,9 +114,10 @@ function trustSummaryForUser(user: UserTrustSource) {
   const claimStatus = pickLineageClaimStatus(user.lineageNode?.claimRequests)
 
   return {
+    // Trust from the member's rank (top non-PENDING RankEntry), else the beltless node fallback
+    // (WL-P2-46) — the SAME choke point the lineage surfaces read; claim axis still from the node.
     trustStatus: resolveLineageTrustStatus({
-      verificationStatus: user.lineageNode?.verificationStatus,
-      isVerified: user.lineageNode?.isVerified,
+      rankStatus: resolveMemberTrustStatus(user.rankAwards ?? [], user.lineageNode ?? {}),
       isPlaceholder: user.isPlaceholder,
       claimStatus,
     }),
@@ -289,6 +298,7 @@ export function projectDirectoryDetailProfile({
     isOwnProfile: account != null && viewerUserId === account.id,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
+      rankAwards: profile.passport.rankAwardsEarned,
       lineageNode: profile.passport.lineageNode,
     }),
     // RICH media — gated.
@@ -353,6 +363,7 @@ export function projectDirectoryProfileListItem({
     canRenderFullProfile,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
+      rankAwards: profile.passport.rankAwardsEarned,
       lineageNode: profile.passport.lineageNode,
     }),
     // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.

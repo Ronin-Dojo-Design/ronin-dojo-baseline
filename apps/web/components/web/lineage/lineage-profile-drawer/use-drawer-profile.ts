@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
+import { memberTrustStatus } from "~/lib/lineage/canvas-model"
 import { pickLineageClaimStatus, resolveLineageTrustStatus } from "~/lib/lineage/trust-status"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
@@ -93,9 +94,11 @@ export function deriveDrawerProfileView(profile: LineageNodeProfile) {
     headerRankName: panelRank?.name ?? null,
     headerDisciplineName: panelRank?.rankSystem?.discipline?.name ?? discipline?.name ?? null,
     claimStatus,
+    // Trust from the member's rank (top non-PENDING RankEntry) — the SAME source the info-tab's
+    // current-rank badge (SESSION_0522) + every other surface read (LR 0008). The drawer is
+    // multi-discipline, so no disciplineId scoping (highest-overall).
     trustStatus: resolveLineageTrustStatus({
-      verificationStatus: profile.verificationStatus,
-      isVerified: profile.isVerified,
+      rankStatus: memberTrustStatus(profile),
       isPlaceholder: profile.passport?.user == null,
       claimStatus,
     }),
