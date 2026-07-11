@@ -81,7 +81,12 @@ async function makeAwardWithEntry(
 
 beforeAll(async () => {
   const adminUser = await db.user.create({
-    data: { id: tag("admin"), name: tag("admin"), email: `${tag("admin")}@test.local`, role: "admin" },
+    data: {
+      id: tag("admin"),
+      name: tag("admin"),
+      email: `${tag("admin")}@test.local`,
+      role: "admin",
+    },
     select: { id: true },
   })
   const memberUser = await db.user.create({

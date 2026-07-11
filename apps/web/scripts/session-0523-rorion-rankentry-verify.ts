@@ -66,7 +66,9 @@ async function main() {
     where: { status: "UNVERIFIED", rankAward: { verificationStatus: "IMPORTED" } },
     data: { status: "VERIFIED" },
   })
-  console.log(`\nAPPLIED — ${result.count} RankEntry row(s) set VERIFIED (awards untouched / still IMPORTED).`)
+  console.log(
+    `\nAPPLIED — ${result.count} RankEntry row(s) set VERIFIED (awards untouched / still IMPORTED).`,
+  )
 
   // Re-query proof.
   const remaining = await db.rankEntry.count({
