@@ -213,15 +213,48 @@ lands; Slice 3 depends on Slice 2 (needs the attach UI). Fan out only where genu
 
 - Slice-0 gate rewire + adversarial tests are HELD pending operator sign-off on the approach.
 
-## Next session
+## Next session — Slice 3 (create sheet + sequencing rail) then Slice 4
 
 ### Goal
 
-Continue the CRUD slices not completed this session.
+Build the public "Add technique" authoring flow: a plus-card in the `/techniques` rail (shown only to
+authorized creators) opens a scrollable bottom magnetic sheet = the FULL technique create form + a
+dnd-sequenced mixed photo/video media rail (add photo cards + video cards, drag to order), with the
+per-clip Premium toggle (Slice 2) and URL-paste video input. Then Slice 4 (profile podcast/match
+authoring, same card→sheet). Defer promote-to-library (`Technique.isFeatured`) to a fast-follow.
+
+### Operator design decisions (2026-07-11)
+
+- **Sheet = FULL create** (not quick-add), **scrollable**, WITH a **sequencing media rail**: add photo
+  cards + video cards (mixed), drag to sequence. Per-clip premium toggle in the rail.
+- **Promote-to-library: DEFERRED** to a fast-follow (this session: authored techniques attach to the
+  creator's own profile/curriculum, belt-tagged — Fork A).
+- Defaults (operator can override): plus-card visible to authorized creators only; video via URL-paste
+  (R2 uploader stays admin-only on the full `/app/techniques` form).
+
+### Reuse map (scoped this session — reuse-first, no 5th authz)
+
+- **Bottom sheet:** `components/common/sheet.tsx` (base). Patterns: `nav/mab-upload-sheet.tsx`,
+  `directory/directory-filter-sheet.tsx`.
+- **Sequencing media rail:** `app/app/content/_components/content-media-panel.tsx` — dnd-kit sortable
+  cards (grip-drag, reorder, save-order, remove). Adapt for technique + add the Slice-2 premium toggle
+  + URL-paste video. Reorder action pattern: `reorderContentAtomMediaAttachments`.
+- **Form:** existing `app/(web)/dashboard/technique-form.tsx` (now has belt tag) — mount scrollable in
+  the sheet.
+- **Create-permission (Fork B):** mirror `server/web/media/permissions.ts#canUploadMediaForUser` →
+  new `canCreateTechniqueForUser` = `can()` RBAC ∨ staff role (OWNER/INSTRUCTOR, already in
+  `createTechnique`) ∨ Elite entitlement (`server/web/entitlements/queries.ts`). Extend the existing
+  `createTechnique` gate; do NOT build a 5th authz.
+- **Media attach/premium:** reuse Slice-2 `setWebMediaPremium` + the `apply-media` pipeline; new
+  uploads default FREE.
+- **Flow:** create technique (draft, unpublished) → the sequencing rail operates on its id
+  (repo-consistent attach-after-create, like `MediaAttachmentManager` / `ContentMediaPanel`).
 
 ### First task
 
-Resume at the first pending slice.
+Build `canCreateTechniqueForUser` (extend the `createTechnique` gate), then the "Add technique"
+plus-card → bottom-sheet composing `TechniqueForm` + the adapted sequencing media rail. Cody builds →
+Doug verifies. Then Slice 4.
 
 ## Review log
 
