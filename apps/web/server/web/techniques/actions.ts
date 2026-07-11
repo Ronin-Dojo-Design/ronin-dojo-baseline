@@ -1,6 +1,7 @@
 "use server"
 
 import { actionClient } from "~/lib/safe-actions"
+import { getTechniqueBeltOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
 export const findTechniqueFilterOptions = actionClient.action(async () => {
@@ -11,22 +12,9 @@ export const findTechniqueFilterOptions = actionClient.action(async () => {
     orderBy: { name: "asc" },
   })
 
-  // Belt options (Stream D1). Scope to the rank systems of disciplines that actually have
-  // published techniques (BBL → BJJ's IBJJF ladder), so the facet lists relevant belts
-  // instead of every rank system. `id` matches the technique's `beltLevelMinId` FK exactly.
-  const techniqueDisciplines = await db.technique.findMany({
-    where: { isPublished: true },
-    select: { disciplineId: true },
-    distinct: ["disciplineId"],
-  })
-  const disciplineIds = techniqueDisciplines.map(t => t.disciplineId)
-  const belts = disciplineIds.length
-    ? await db.rank.findMany({
-        where: { rankSystem: { disciplineId: { in: disciplineIds } } },
-        select: { id: true, name: true, shortName: true, colorHex: true },
-        orderBy: [{ rankSystem: { name: "asc" } }, { sortOrder: "asc" }],
-      })
-    : []
+  // Belt options (Stream D1) — shared with the author form (SESSION_0527 Slice 1) so the facet and
+  // the belt-tag selector ride ONE list; `id` matches the technique's `beltLevelMinId` FK exactly.
+  const belts = await getTechniqueBeltOptions()
 
   return {
     disciplines: disciplines.map(d => ({ slug: d.slug, name: d.name })),

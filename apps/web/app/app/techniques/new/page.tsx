@@ -5,6 +5,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
+import { getTechniqueBeltOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,6 +39,7 @@ export default async function NewTechniquePage() {
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
+  const belts = await getTechniqueBeltOptions()
 
   return (
     <>
@@ -49,7 +51,11 @@ export default async function NewTechniquePage() {
         ]}
       />
 
-      <TechniqueForm organizationId={membership.organization.id} disciplines={disciplines} />
+      <TechniqueForm
+        organizationId={membership.organization.id}
+        disciplines={disciplines}
+        belts={belts}
+      />
     </>
   )
 }

@@ -8,6 +8,7 @@ import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
+import { getTechniqueBeltOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
 type Props = { params: Promise<{ id: string }> }
@@ -41,6 +42,7 @@ export default async function EditTechniquePage({ params }: Props) {
       position: true,
       category: true,
       difficultyLevel: true,
+      beltLevelMinId: true,
       isGi: true,
       isFoundational: true,
       requiresPartner: true,
@@ -72,6 +74,7 @@ export default async function EditTechniquePage({ params }: Props) {
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   })
+  const belts = await getTechniqueBeltOptions()
 
   const mediaAttachments =
     (await getDashboardMediaAttachments({
@@ -93,6 +96,7 @@ export default async function EditTechniquePage({ params }: Props) {
       <TechniqueForm
         organizationId={technique.organizationId}
         disciplines={disciplines}
+        belts={belts}
         technique={technique}
       />
 

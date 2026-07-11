@@ -69,6 +69,7 @@ const formSchema = z.object({
   position: z.string().optional(),
   category: z.string().optional(),
   difficultyLevel: z.string().optional(),
+  beltLevelMinId: z.string().optional(),
   isGi: z.boolean().optional(),
   isFoundational: z.boolean().optional(),
   requiresPartner: z.boolean().optional(),
@@ -84,10 +85,12 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 type Discipline = { id: string; name: string }
+type Belt = { id: string; name: string; shortName: string | null }
 
 type TechniqueFormProps = {
   organizationId: string
   disciplines: Discipline[]
+  belts: Belt[]
   technique?: {
     id: string
     name: string
@@ -97,6 +100,7 @@ type TechniqueFormProps = {
     position: string | null
     category: string | null
     difficultyLevel: string | null
+    beltLevelMinId: string | null
     isGi: boolean | null
     isFoundational: boolean
     requiresPartner: boolean
@@ -110,7 +114,12 @@ type TechniqueFormProps = {
   }
 }
 
-export function TechniqueForm({ organizationId, disciplines, technique }: TechniqueFormProps) {
+export function TechniqueForm({
+  organizationId,
+  disciplines,
+  belts,
+  technique,
+}: TechniqueFormProps) {
   const router = useRouter()
   const isEdit = !!technique
 
@@ -124,6 +133,7 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
       position: technique?.position ?? "",
       category: technique?.category ?? "",
       difficultyLevel: technique?.difficultyLevel ?? "",
+      beltLevelMinId: technique?.beltLevelMinId ?? "",
       isGi: technique?.isGi ?? false,
       isFoundational: technique?.isFoundational ?? false,
       requiresPartner: technique?.requiresPartner ?? false,
@@ -153,6 +163,7 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
       position: values.position || undefined,
       category: values.category || undefined,
       difficultyLevel: values.difficultyLevel || undefined,
+      beltLevelMinId: values.beltLevelMinId || undefined,
       teachingCues: values.teachingCues?.split("\n").filter(Boolean) ?? [],
       commonErrors: values.commonErrors?.split("\n").filter(Boolean) ?? [],
     }
@@ -320,6 +331,34 @@ export function TechniqueForm({ organizationId, disciplines, technique }: Techni
                         {difficultyOptions.map(v => (
                           <SelectItem key={v} value={v}>
                             {v}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="beltLevelMinId"
+                render={({ field }) => (
+                  <FormItem className="flex-1 min-w-40">
+                    <FormLabel>Belt</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      items={Object.fromEntries(belts.map(b => [b.id, b.name]))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select belt" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {belts.map(b => (
+                          <SelectItem key={b.id} value={b.id}>
+                            {b.name}
                           </SelectItem>
                         ))}
                       </SelectContent>

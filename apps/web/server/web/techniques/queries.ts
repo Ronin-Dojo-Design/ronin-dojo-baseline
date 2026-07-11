@@ -15,6 +15,38 @@ import { db } from "~/services/db"
 
 const SORTABLE_TECHNIQUE_COLUMNS = ["name", "curriculum_order"] as const
 
+/** A belt the author can tag a technique with (SESSION_0525 Stream D1) — id matches `beltLevelMinId`. */
+export type TechniqueBeltOption = {
+  id: string
+  name: string
+  shortName: string | null
+  colorHex: string | null
+}
+
+/**
+ * Belt options for tagging/filtering techniques (SESSION_0525 Stream D1). Scoped to the rank systems
+ * of disciplines that have published techniques (BBL → BJJ's IBJJF ladder), so `id` matches the
+ * technique's `beltLevelMinId` FK exactly (memory: picker id-space MUST match the FK). Shared by the
+ * browse facet (`findTechniqueFilterOptions`) and the author form (SESSION_0527 Slice 1) so both ride
+ * one belt list.
+ */
+export const getTechniqueBeltOptions = async (): Promise<TechniqueBeltOption[]> => {
+  const techniqueDisciplines = await db.technique.findMany({
+    where: { isPublished: true },
+    select: { disciplineId: true },
+    distinct: ["disciplineId"],
+  })
+  const disciplineIds = techniqueDisciplines.map(t => t.disciplineId)
+  if (!disciplineIds.length) {
+    return []
+  }
+  return db.rank.findMany({
+    where: { rankSystem: { disciplineId: { in: disciplineIds } } },
+    select: { id: true, name: true, shortName: true, colorHex: true },
+    orderBy: [{ rankSystem: { name: "asc" } }, { sortOrder: "asc" }],
+  })
+}
+
 export const searchTechniques = async (
   search: TechniqueFilterParams,
   brand: Brand,

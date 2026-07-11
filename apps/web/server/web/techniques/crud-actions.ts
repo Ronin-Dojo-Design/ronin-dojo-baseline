@@ -44,6 +44,9 @@ const createTechniqueSchema = z.object({
   position: TechniquePosition.nullish(),
   category: TechniqueCategory.nullish(),
   difficultyLevel: DifficultyLevel.nullish(),
+  // @added SESSION_0527 Slice 1 — the tagged belt (`beltLevelMinId` FK → Rank). Author picks one
+  // belt (KISS scalar-belt model, Stream D1); drives the browse belt facet + the per-belt rail.
+  beltLevelMinId: z.string().nullish(),
   isGi: z.boolean().nullish(),
   isFoundational: z.boolean().optional(),
   requiresPartner: z.boolean().optional(),
