@@ -17,6 +17,8 @@ export const BBL_ROUTES = {
   directory: "/directory",
   // SESSION_0485: /posts retired → canonical blog is /blog (ADR 0042).
   posts: "/blog",
+  // SESSION_0525 E3: the live members' CommunityPost surface (distinct from the staff blog).
+  community: "/posts",
   schools: "/schools",
   schoolRegister: "/organizations/new",
   techniques: "/techniques",
@@ -71,8 +73,19 @@ export type DirtyDozenMember = {
   school: string
   location: string
   image?: string
+  /**
+   * Slug of the member's legacy promotion article on `/blog` (SESSION_0525 E2). When
+   * absent, the Dirty Dozen card falls back to the lineage route (no article yet).
+   */
+  articleSlug?: string
+  /** Short card blurb rendered under the belt badge (SESSION_0525 E2). */
+  teaser?: string
 }
 
+// The five Rigan-Machado–promoted "Dirty Dozen" members (epic D4), Bob-Bass-first.
+// `articleSlug` points at the legacy promotion articles seeded by
+// `scripts/seed-dirty-dozen-articles.ts`; Rick Williams and Chris Haueter have no
+// article yet (E1 — awaiting editorial), so their cards fall back to the lineage route.
 export const dirtyDozen: DirtyDozenMember[] = [
   {
     name: "Bob Bass",
@@ -81,6 +94,9 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
     image: `${IMG}/bob-bass-classic.jpg`,
+    articleSlug: "bob-bass-coral-belt-promotion",
+    teaser:
+      "Competition legend whose 1995 Pan Am win over Márcio Feitosa is a landmark of American BJJ — the first American promoted to coral belt by Rigan Machado.",
   },
   {
     name: "Rick Williams",
@@ -89,6 +105,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
     image: `${IMG}/rick-williams.jpg`,
+    teaser: "Competition and teaching legacy among Rigan Machado's first American black belts.",
   },
   {
     name: "David Meyer",
@@ -97,6 +114,9 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "David Meyer BJJ",
     location: "Los Angeles, CA",
     image: `${IMG}/david-meyer.jpg`,
+    articleSlug: "dave-meyer-coral-belt-south-bay",
+    teaser:
+      "One of Rigan Machado's earliest American students, honored with the coral belt after three decades on the mat.",
   },
   {
     name: "Chris Haueter",
@@ -105,6 +125,8 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "Combat Base",
     location: "Los Angeles, CA",
     image: `${IMG}/chris-haueter.jpg`,
+    teaser:
+      "Combat Base founder and one of the Dirty Dozen — instrumental in spreading BJJ across America.",
   },
   {
     name: "John Will",
@@ -113,13 +135,9 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "John Will Martial Arts",
     location: "Australia",
     image: `${IMG}/john-will.jpg`,
-  },
-  {
-    name: "Renato Magno",
-    rank: "7th Degree Coral Belt",
-    dirtyDozenRank: null,
-    school: "Street Sports",
-    location: "Santa Monica, CA",
+    articleSlug: "john-will-coral-belt-australia",
+    teaser:
+      "Australia's BJJ pioneer — he returned home with Rigan Machado's black belt and built the art on a continent that had barely heard of it.",
   },
 ]
 
@@ -432,7 +450,9 @@ export const promos: PromoContent[] = [
     description:
       "Members share techniques, tips, seminars, and Q&A in one verified feed. Follow instructors, save favorites, and stay connected to your lineage as it evolves.",
     image: BBL_IMAGES.heroNoGi,
-    primaryCta: { label: "Read the Blog", href: BBL_ROUTES.posts },
+    // SESSION_0525 E3: point the community CTA at the real CommunityPost surface (/posts),
+    // not the staff blog (/blog). The staff-blog gallery renders directly below this promo.
+    primaryCta: { label: "Open the Community Feed", href: BBL_ROUTES.community },
     secondaryCta: { label: "Register Now", href: BBL_ROUTES.register },
     benefitsHeading: "Member Benefits",
     benefits: [

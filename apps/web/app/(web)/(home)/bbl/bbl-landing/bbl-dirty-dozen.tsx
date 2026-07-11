@@ -27,7 +27,7 @@ export const BblDirtyDozen = ({ rankColors }: { rankColors: StaticBblRankColorMa
       {dirtyDozen.map(member => (
         <CarouselSlide key={member.name} className="basis-[78%] sm:basis-[260px]">
           <Link
-            href={BBL_ROUTES.lineage}
+            href={member.articleSlug ? `/blog/${member.articleSlug}` : BBL_ROUTES.lineage}
             className="block h-full rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
           >
             <div className="relative aspect-square bg-muted">
@@ -56,6 +56,9 @@ export const BblDirtyDozen = ({ rankColors }: { rankColors: StaticBblRankColorMa
               <BeltBadge rank={member.rank} colorHex={rankColors[member.rank] ?? null} />
               <p className="text-sm text-muted-foreground truncate">{member.school}</p>
               <p className="text-xs text-muted-foreground">{member.location}</p>
+              {member.teaser && (
+                <p className="text-sm text-muted-foreground pt-1">{member.teaser}</p>
+              )}
             </div>
           </Link>
         </CarouselSlide>

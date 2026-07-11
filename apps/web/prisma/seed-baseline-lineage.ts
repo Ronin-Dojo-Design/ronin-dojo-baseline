@@ -831,22 +831,23 @@ async function ensureRankAward(
   return created.id
 }
 
-// The 7 "Dirty Dozen" cohort members assigned to the visual group.
+// The 5 Rigan-Machado–promoted "Dirty Dozen" members assigned to the visual group
+// (SESSION_0525 E0 / epic D4). `bill-hosken` and `jerry-smith` remain lineage members
+// but are no longer part of the Dozen visual group. Order is Bob-Bass-first (his own
+// account to the operator; conventional lists put him at #8).
 const DIRTY_DOZEN_KEYS = [
   "bob-bass",
   "rick-williams",
   "david-meyer",
   "chris-haueter",
   "john-will",
-  "bill-hosken",
-  "jerry-smith",
 ] as const
 
 // DIRTY_DOZEN_LABEL moved to ~/lib/lineage/dirty-dozen (shared with comp-grant detection).
 
 /**
  * Ensure the Dirty Dozen cohort LineageVisualGroup on the rigan tree and
- * assign the 7 cohort members to it. Idempotent: findFirst by the
+ * assign the 5 cohort members to it. Idempotent: findFirst by the
  * @@unique [treeId, parentMemberId, groupType, promotionDate].
  */
 async function ensureDirtyDozenGroup(
