@@ -47,7 +47,7 @@ with two coordination points (shared `schema.prisma`; one cross-stream data depe
 |---|---|---|
 | D1 | Send vs scope | **Proceed now, additive schema OK.** All 5 streams buildable now; send decoupled. |
 | D2 | Galaxy postprocessing dep | **Add pmndrs `postprocessing` + `@react-three/postprocessing`** (same org as installed fiber/drei). Enables UnrealBloom + ACES tone-mapping. |
-| D3 | Technique gating | **Per-video free/premium toggle**, admin-settable; metadata (existence, filters, thumbnails) always free. Watching a *premium-flagged* video needs Premium+. This is OLD BBL's `isPremium` model. Default granularity = **per-`Technique`** (each technique = one lesson video); escalate to per-`MediaAttachment` only if techniques routinely carry multiple independently-gated videos (open sub-decision O1). |
+| D3 | Technique gating | **Per-video free/premium toggle**, admin-settable; metadata (existence, filters, thumbnails) always free. Watching a *premium-flagged* video needs Premium+. This is OLD BBL's `isPremium` model. Granularity = **per-`MediaAttachment`** (operator, O1 §8) — the premium flag is per-video, so one technique can mix free + premium clips. |
 | D4 | Dirty Dozen roster | **The five Rigan-Machado–promoted members of the historical Dozen:** Bob Bass (#8), Rick Williams (#9), Chris Haueter (#10), David Meyer (#11), John Will (#12). Exclude Renato Magno (not on the official list), Cindy Omatsu, Bill Hosken, Jerry Smith. Apply BBL editorial framing (**Bob Bass first**, per his own account to the operator — conventional lists put him #8). Canonical source = BJJ Heroes "Dirty Dozen" list. |
 | D5 | Two post surfaces | Confirmed both live: **Blog `Post` `/blog`** (staff: Brian + Tony Hua) vs **Community `CommunityPost` `/posts`** (members). Operator wants a **staff-blog card gallery below the community-posts CTA** on the landing. |
 
@@ -120,11 +120,10 @@ prod BBL org has none).
   (+ `Passport.currentResidence` fallback) — commit a `city → lat/lng` lookup or a one-time geocode script
   output; **no runtime geocoding dependency / API key**. **Done:** every seeded member with a location has
   coordinates; migration hand-authored + `migrate deploy` (see §7 shared-DB rule).
-- **B1 — Globe render.** Add a globe lib — **recommended `cobe`** (lightweight, matches the azmth dotted
-  look, no `three` dep) *or* `three-globe` (rides the installed three, lives in an R3F canvas). Build the
-  globe with member pins; pin → profile drawer/link. **Done:** globe renders real member pins from B0 data
-  on a route TBD (candidate: `/app/beta/globe`, mirroring the galaxy beta gate). *(Lib choice = open
-  sub-decision O2 — confirm with Desi on the look.)*
+- **B1 — Globe render.** Add **`three-globe`** (operator, O2 §8 — rides the installed three, R3F-native,
+  same stack as the galaxy). Build the globe with member pins; pin → profile drawer/link, on the
+  **`/app/beta/globe`** beta route (operator, O3 §8 — mirrors the galaxy beta gate). **Done:** globe renders
+  real member pins from B0 data on the beta route.
 
 **Depends on:** B0 → B1. **Route → Cody → Doug + Desi.** Otherwise independent. **Note:** B0's coordinates
 are exactly what a future Directory map (Stream C, deferred) would reuse — B0 unblocks both.
@@ -172,10 +171,10 @@ session** lane. **Route → Cody per slice → Desi (design/reuse) + Doug (verif
 
 | Slice | Work | Notes |
 |---|---|---|
-| **D0** | **Gating field (schema, additive)** — `Technique.isPremium Boolean @default(false)` (or `accessTier`), admin-settable | Per D3 / O1; hand-authored migration (§7) |
+| **D0** | **Gating field (schema, additive)** — per-**`MediaAttachment`** premium flag (operator O1 §8: video-by-video), admin-settable; a technique can mix free + premium clips | hand-authored migration (§7) |
 | **D1** | **Belt facet end-to-end** — belt param in `schema.ts`, `BeltFilter` facet, **Rank-range predicate** in `queries.ts` (`beltLevelMin/Max` via `sortOrder`), select belt in `payloads.ts`, belt badge on `technique-card.tsx` | Decision resolved: range FKs |
 | **D2** | **Technique video carousel/rails** — per-position (and/or per-category) snap-scroll rails w/ arrows/dots/video-indicator | Greenfield; reuse Embla `Carousel` |
-| **D3** | **Gating render** — gate video playback behind Premium+ when `isPremium`; crown badge on gated cards; metadata always public | Reuse `canRenderRichMedia`/entitlement-key pattern from `lineage-tier-policy.ts` |
+| **D3** | **Gating render** — gate video playback behind Premium+ when the **attachment** is premium-flagged; crown badge per gated video; metadata always public | Reuse `canRenderRichMedia`/entitlement-key pattern from `lineage-tier-policy.ts` |
 | **D4** ⏸ | View toggle (grid/list/rail), richer card (thumbnail/play/duration), richer watch page (YouTube/Vimeo/signed-URL) | Lower priority; can trail |
 
 **Depends on:** D0 → D3. D1, D2 independent. **Route → Cody → Doug + Desi.** Independent of A/B/C/E.
@@ -250,17 +249,18 @@ E0 (roster) ──► E1 (articles), E2 (card wiring)
 
 ---
 
-## 8. Open sub-decisions (non-blocking — resolve at build)
+## 8. Sub-decisions — RESOLVED (operator, SESSION_0525)
 
-- **O1 — Technique gate granularity:** per-`Technique` (default; each technique = one video) vs
-  per-`MediaAttachment` (literal "video by video" if a technique carries multiple videos). Confirm against
-  real technique→video cardinality when D0 starts.
-- **O2 — Globe lib:** `cobe` (recommended — light, dotted-marker azmth look) vs `three-globe`/`react-globe.gl`
-  (reuse installed three, R3F-native). Decide with Desi on the target look when B1 starts.
-- **O3 — Globe route:** `/app/beta/globe` (beta-gated, mirrors galaxy) vs a public landing surface. Default
-  beta while data coverage is thin (tens of pins).
-- **O4 — Renato's legacy article:** publish as a standalone `/blog` Post (un-linked to a Dozen card) vs
-  hold. Editorial call at E1.
+- **O1 — Technique gate granularity → per-`MediaAttachment`** (video by video, literal). The premium
+  flag lives on the video attachment, NOT on `Technique` — one technique can carry a mix of free +
+  premium videos. Reshapes D0/D3 (§4): gating field on `MediaAttachment` (or the technique-media join),
+  playback gated per-attachment, crown badge per-video.
+- **O2 — Globe lib → `three-globe`** (rides the installed `three`, R3F-native — same fiber/drei stack as
+  the galaxy). Not `cobe`.
+- **O3 — Globe route → beta** (`/app/beta/globe`, mirroring the galaxy beta gate) while pin coverage is thin.
+- **O4 — Renato's legacy article → publish standalone.** Seed `renato-magno-coral-belt` into `Post` as a
+  published `/blog` post on its own (coral-belt promotion), NOT linked to any Dozen card and NOT under
+  Dirty Dozen framing. Folded into the in-flight E lane (SendMessage, SESSION_0525).
 
 ---
 
