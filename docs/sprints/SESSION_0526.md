@@ -2,7 +2,7 @@
 title: "SESSION 0526 — quality pass over SESSION_0525 landed work, THEN technique/podcast CRUD (grill-first)"
 slug: session-0526
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-11
 updated: 2026-07-11
 last_agent: claude-session-0526
@@ -189,9 +189,21 @@ previously-untested freemium seam.
 - **Create permission (Fork B):** a **3-way OR** — (1) **Elite membership tier**, (2) **staff roles**
   (OWNER/INSTRUCTOR), (3) **RBAC entitlement** the operator/admin can grant to ANY user regardless of tier
   (jr staffer / intern). Reuse the existing `can()` RBAC — do NOT build a 5th authz system.
-- **Open (still to grill before build):** media-input mechanism (YouTube URL field vs uploader; video excepted
-  til A5); premium granularity (per-Technique `isPremium` today vs per-video); podcast/match authoring surface
-  (Passport-attached `MediaAttachment{purpose}`); AdminCollection `/app/tools` conformance for the manage list.
+- **Media input (Fork 1):** BOTH — a URL-paste field (YouTube/Vimeo; general per Fork B) **plus** an R2
+  uploader gated **admin-only for now** (operator wants to test the upload flow before promoting it to
+  elite/RBAC).
+- **Premium granularity (Fork 2):** **PER-VIDEO** (`MediaAttachment.isPremium`) — a technique can mix free +
+  premium clips. Requires a hand-authored additive migration + rewiring the freemium gate off
+  `Technique.isPremium` onto the per-attachment flag (must preserve the SESSION_0526 A1/A2 no-leak invariants).
+- **Podcast/match authoring (Fork 3):** BOTH — member self-service via the `/me` ProfileEditDrawer AND a staff
+  admin path. (`MediaAttachment{passportId, purpose}`.)
+- **Manage surface (Fork 4):** add the fields to the existing `/app/techniques` form THIS build; fold the
+  manage-list into the `/app/tools` AdminCollection pattern as a fast-follow ticket.
+
+### Phase 1 pushed
+
+`69bd2ecd..7fcadb15 → origin/main` (operator-authorized "Push now"; `bun run build` exit 0 first). Fires CI +
+BBL prod deploy. Fast-forward, no rebase needed.
 
 ### Review synthesis (Doug + Giddy)
 
@@ -229,50 +241,142 @@ extracting.
 
 ## What landed
 
-<!-- filled at bow-out -->
+**Phase 1 — behavior-preserving quality pass (SHIPPED to main, `69bd2ecd..7fcadb15`).**
+
+- **Security-hygiene (headline):** the public `/techniques` browse rail no longer ships the raw premium
+  `media.url` to the client (A1 — poster derived server-side, `url` stripped from the DTO); `buildProfileMedia`
+  closes the `locked && !slug → href = item.url` leak (A2). Curation-hygiene today (premium = public YouTube),
+  but closes a real private-URL leak for any future R2-hosted premium video.
+- **Complexity/dead-code:** `toMediaItem` dedup mapper (C1), `TechniqueHeaderBadges` (C2), `TechniqueMediaItem`
+  (C3), `KIND_ICON` lookup + inventory (C4); deleted `EMPTY_PROFILE_MEDIA`, un-exported 4 internal-only symbols.
+- **Tests:** +2 pinning tests (`isTechniqueViewerEntitled`, `buildProfileMedia`) on the previously-untested
+  freemium seam.
+- Fallow delta proven down; no CAUTION/live-lane file touched (D2 reverted to keep `profile-view.ts` pristine).
+
+**Phase 2 — technique/podcast/media CRUD: fully grilled + planned (build deferred to a fresh session).** 6
+operator design decisions captured; a 5-slice tracer-bullet build plan produced (see Next session).
 
 ## Decisions resolved
 
-<!-- filled at bow-out -->
+- **A1/A2 security fix treated as in-scope** for the quality pass (UX-invisible, highest-value; operator
+  authorized the push).
+- **Phase 2 (6 decisions):** view-all = existing `canRenderRichMedia` (no work); Elite-created → own profile,
+  staff promotes to library; create-permission = Elite tier ∨ staff role ∨ grantable RBAC `can()`; media input
+  = URL field (general) + R2 uploader (admin-only, experimental); premium granularity = **per-video**
+  (`MediaAttachment.isPremium`); podcast/match authoring = member (`/me`) + staff; manage-list = add fields now,
+  `/app/tools` AdminCollection conform as fast-follow.
+- **Execution:** Phase-2 build runs in a FRESH session (per operator's fresh-chat-for-big-work rule) — the
+  per-video-premium migration rewires the just-hardened freemium gate.
 
 ## Files touched
 
-<!-- filled at bow-out -->
+- 8 SAFE source files (technique-access/rail/card/media, profile-media, profile-media-card, payloads, queries)
+  + 2 new pinning tests + `custom-component-inventory.md` (C4 row). Committed `7fcadb15`, pushed to main.
+- `docs/sprints/SESSION_0526.md` (this file — close).
 
 ## Verification
 
-<!-- filled at bow-out -->
+- **Gates:** typecheck ✓ · lint:check ✓ (no new warnings) · format:check ✓ · `bun run build` exit 0 ·
+  touched tests 6+9 ✓.
+- **Runtime (worktree dev server, anonymous):** `/techniques` rail = 0 raw watch/embed URLs, 64 posters, 231
+  internal links; watch pages = 9 premium locked with **0 URL leaks**, 3 free previews play.
+- **Fallow:** dead exports 10→4, dead-code 26→20, avg cyclo 3.0→2.8, p90 6→5, maintainability 86.3→87.1.
 
 ## Open decisions / blockers
 
 - Phase 2 (technique/podcast CRUD) is BLOCKED pending the operator's design grill answers.
 
-## Next session
+## Next session — build Phase 2 technique/podcast/media CRUD
 
 ### Goal
 
-<!-- filled at bow-out -->
+Build the technique/podcast/media authoring CRUD per the SESSION_0526 5-slice plan so authors add content
+without seed scripts, gated Elite-tier ∨ staff-role ∨ grantable RBAC. Chain: Cody builds → Giddy + Doug verify
+→ Petey bow-out.
 
 ### First task
 
-<!-- filled at bow-out -->
+**Slice 0 — per-video premium (gates the rest).** Add `MediaAttachment.isPremium Boolean @default(false)`
+(hand-authored ADDITIVE migration, never `migrate-dev`); backfill `= parent Technique.isPremium` for existing
+technique attachments (behavior-preserving); rewire the CALLERS (watch tile `technique-media.tsx`, rail,
+`buildProfileMedia`) to gate per-attachment. **Must preserve the SESSION_0526 A1/A2 no-leak invariants** —
+re-run the anon runtime proof (0 URL leaks) + add a mixed free/premium technique test. Then Slice 1 (belt tag),
+2 (video attach + admin R2 uploader), 3 (`canCreateTechnique` 3-way OR + Fork-A scope), 4 (profile podcast/match
+authoring member+staff). Slice 5 (`/app/tools` AdminCollection conform) = fast-follow, not this build.
+
+Open sub-fork to resolve at build time: the staff "promote Elite technique → canonical library" mechanism
+(proposed: a `Technique.isFeatured`/library-scope flag + staff action).
 
 ## Review log
 
-<!-- filled during/at close -->
+### SESSION_0526_REVIEW_01 — quality-pass review (Giddy + Doug)
+
+- **Reviewed tasks:** SESSION_0526_TASK_02, _03, _04
+- **Dirstarter docs check:** not applicable (behavior-preserving refactor of custom surfaces; no L1 baseline touched)
+- **Sources:** local source + fallow audit + worktree runtime verification
+- **Verdict:** The pass did its job and then some — Doug's correctness/security angle surfaced a real
+  payload-layer exposure (raw premium URL on the public browse rail) that the gates could never catch; it was
+  fixed and runtime-proven. Giddy's merge-risk map kept the fixes strictly on freemium net-new files, leaving
+  every live-lane-owned file untouched. Scores 7.6–8.9; reuse is clean (no god-component, no 5th authz).
 
 ## Hostile close review
 
-<!-- filled at close -->
+### SESSION_0526 — quality pass + Phase-2 plan
+
+1. **Plan sanity:** Sound. The pass was scoped to the exact landed diff and split yours-vs-inherited honestly;
+   the biggest find (rail URL exposure) came from reviewing rendered payloads, not just source.
+2. **Dirstarter compliance:** Extends — no baseline touched; reuse-first (ListingCard/Carousel/tier policy).
+3. **Security:** IMPROVED. A public surface was leaking raw premium URLs to the client; now provably stripped
+   (anon fetch: 0 URLs). Watch-page + profile-rail gates re-verified (0 leaks across 9 premium techniques).
+4. **Data integrity:** A2 made the premium⟹slug invariant explicit + test-pinned (was implicit).
+5. **Lifecycle proof:** Rail/watch/profile flows rendered + asserted at runtime, not source-only.
+6. **Verification honesty:** Gates + 2 new pinning tests + headless anon runtime proof. Full test suite NOT run
+   (standing `bun test`→real-Resend hazard) — mitigated by scoped hermetic tests + runtime verify.
+7. **Workflow honesty:** Own worktree; no live-lane file touched (D2 reverted); one authorized push.
+8. **Merge readiness:** Merged (fast-forward to main, build green).
+
+**Kaizen triage.**
+1. *Safe/secure + proving tests?* Provably safe: rail/watch/profile no-leak (anon runtime proof + 2 pinning
+   tests). Not-yet-proven: the deferred CAUTION un-exports (left for owning lanes); the per-video-premium rewire
+   (Phase 2) will re-touch the gate — its test is the mixed free/premium runtime proof.
+2. *Failed steps preventable?* Zero hard failed steps. One process nicety: the gate runner under-flagged
+   hostile-review as "docs-only" because the code had already pushed before close — noted, not a regression.
+3. *Confidence at scale (100/1k/10k):* 9 / 9 / 9 — behavior-preserving, the hot-path change REMOVED work
+   (smaller client payload), and the security posture strictly improved.
+
+**Aggregate: 9 → proceed.**
 
 ## ADR / ubiquitous-language check
 
-<!-- filled at close -->
+No ADR for Phase 1 (behavior-preserving). Phase 2's **per-video premium** (`MediaAttachment.isPremium`
+replacing whole-technique `Technique.isPremium` as the gate unit) is a model change — capture it as an ADR/SOT
+note during the Phase-2 build. Amends [[profile-media-freemium-model-0525]].
 
 ## Reflections
 
-<!-- filled at close -->
+- **Reviewing rendered payloads beat reviewing source.** The one finding that mattered — a public rail shipping
+  raw premium URLs — is invisible to typecheck/lint and to a source read that stops at "the UI hides it." Doug
+  caught it by tracing the client-component boundary; the anon `bun fetch` + grep turned it from a claim into
+  proof. Keep that reflex: for any freemium surface, grep the served payload for the thing that should be gated.
+- **The merge-risk map was the real enabler.** With 6+ live lanes mid-flight, the value wasn't the fixes — it
+  was Giddy's SAFE-vs-CAUTION classification that let the pass touch only freemium net-new files and revert the
+  one CAUTION-file edit. Discipline (skip + note) over marginal dead-code wins.
+- **Grill-first paid off before a line was written.** The operator's answers reshaped the build (per-video not
+  per-technique; both media inputs with an admin-gated uploader; RBAC-grantable creation) — none of which the
+  default plan assumed. Planning the build now and deferring execution to a fresh session keeps the
+  gate-rewiring migration out of the dumb zone.
 
 ## Full close evidence
 
-<!-- filled at close -->
+| Gate | Result |
+| --- | --- |
+| Task log | PASS (5 tasks; TASK_05 → next session) |
+| Format / lint / typecheck | PASS (typecheck 0 · lint:check 0 err · format:check clean) |
+| Build | PASS (`bun run build` exit 0) |
+| Tests | PASS (2 new pinning tests 6+9; full suite skipped — Resend hazard) |
+| Runtime verify | PASS (anon: rail 0 raw URLs / 64 posters; watch 9 premium 0 leaks) |
+| Fallow delta | dead-exports 10→4 · dead-code 26→20 · avg-cyclo 3.0→2.8 · maintainability 86.3→87.1 |
+| Graphify | refreshed at close (gate runner) |
+| Git state | branch=session-0526-quality-crud · Phase-1 code pushed `69bd2ecd→7fcadb15` · close docs pending push |
+| Boundary | no live-lane/CAUTION file touched (D2 reverted) |
+| Ledger cross-off | none (FI-001 parked; WL-P2-37/-46 owned by other lanes — not resolved here) |
