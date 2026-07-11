@@ -15,8 +15,8 @@ export type TechniqueBelt = {
   colorHex?: string | null
 }
 
-/** Validate a `Rank.colorHex` for inline styling; null when missing/malformed. */
-export function beltHexTint(hex: string | null | undefined): string | null {
+/** Validate a `Rank.colorHex` for inline styling; null when missing/malformed. Internal-only (SESSION_0526 D3). */
+function beltHexTint(hex: string | null | undefined): string | null {
   return hex && /^#[0-9a-f]{6}$/i.test(hex) ? hex : null
 }
 

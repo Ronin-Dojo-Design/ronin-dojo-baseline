@@ -1,6 +1,7 @@
 import type { Prisma } from "~/.generated/prisma/client"
 
-export const techniqueMediaPayload = {
+// Internal-only (SESSION_0526 D3) — composed into the technique payloads below, not imported elsewhere.
+const techniqueMediaPayload = {
   select: {
     id: true,
     media: {
@@ -23,14 +24,14 @@ export const techniqueMediaPayload = {
   orderBy: { sortOrder: "asc" },
 } satisfies Prisma.Technique$mediaAttachmentsArgs
 
-export const techniqueDisciplinePayload = {
+const techniqueDisciplinePayload = {
   select: { id: true, name: true, slug: true },
 }
 
 // @added SESSION_0525 (Stream D1) — the tagged belt (`beltLevelMin` FK). `colorHex`
 // drives the on-card belt chip (ADR 0022 — never a hardcoded hex); `name`/`shortName`
 // label it. Single-belt model: `beltLevelMax` is intentionally not selected this lane.
-export const techniqueBeltPayload = {
+const techniqueBeltPayload = {
   select: { id: true, name: true, shortName: true, colorHex: true, sortOrder: true },
 }
 
@@ -88,11 +89,13 @@ export const techniqueManyPayload = {
   _count: { select: { mediaAttachments: true } },
 } satisfies Prisma.TechniqueSelect
 
-// @added SESSION_0525 (Stream D2) — the video-rail row: the standard many-card payload
-// PLUS the first attached video (`VIDEO` upload or `YOUTUBE` embed), so the rail card can
-// show a poster thumbnail + play indicator. Kept OFF the main grid's `techniqueManyPayload`
-// so the faceted grid pays no per-card subquery.
-export const techniqueRailPayload = {
+// @added SESSION_0525 (Stream D2), hardened SESSION_0526 (A1) — the video-rail SELECT: the standard
+// many-card payload PLUS the first attached video (`VIDEO` upload or `YOUTUBE` embed). The raw media
+// `url` is fetched here ONLY so the poster can be derived SERVER-SIDE (`getTechniqueRails`); it is
+// stripped from the shipped `TechniqueRail` DTO, so a premium reel's playable url never reaches the
+// client rail (freemium leak fix). Kept OFF `techniqueManyPayload` so the faceted grid pays no
+// per-card subquery.
+export const techniqueRailSelect = {
   ...techniqueManyPayload,
   mediaAttachments: {
     where: { media: { type: { in: ["VIDEO", "YOUTUBE"] } } },
@@ -104,4 +107,19 @@ export const techniqueRailPayload = {
 
 export type TechniqueOne = Prisma.TechniqueGetPayload<{ select: typeof techniqueOnePayload }>
 export type TechniqueMany = Prisma.TechniqueGetPayload<{ select: typeof techniqueManyPayload }>
-export type TechniqueRail = Prisma.TechniqueGetPayload<{ select: typeof techniqueRailPayload }>
+
+/** The raw row the rail SELECT returns — includes the server-only media `url`. Never shipped as-is. */
+export type TechniqueRailRow = Prisma.TechniqueGetPayload<{ select: typeof techniqueRailSelect }>
+
+/**
+ * The rail row SHIPPED to the client: the browse-card fields PLUS a derived video poster. The raw
+ * media `url` is intentionally ABSENT (SESSION_0526 A1) — only `{ type, posterUrl }` crosses the
+ * wire, derived server-side in `getTechniqueRails`. `video` is null when the technique has no
+ * rail-eligible video attachment.
+ */
+export type TechniqueRail = TechniqueMany & {
+  video: {
+    type: TechniqueRailRow["mediaAttachments"][number]["media"]["type"]
+    posterUrl: string | null
+  } | null
+}

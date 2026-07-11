@@ -18,6 +18,51 @@ type TechniqueMediaProps = {
 }
 
 /**
+ * One media tile (SESSION_0526 C3 — extracted from the nested `youTubeEmbed ? iframe : isVideo ?
+ * video : img` ternary). A YOUTUBE attachment embeds via iframe; an uploaded `video/*` file plays
+ * inline; anything else renders as an image. Only reached on the UNLOCKED path — the parent returns
+ * the upgrade panel early for a gated premium technique, so no media url is emitted for a locked reel.
+ */
+function TechniqueMediaItem({
+  media,
+  techniqueName,
+}: {
+  media: TechniqueOne["mediaAttachments"][number]["media"]
+  techniqueName: string
+}) {
+  const youTubeEmbed = media.type === "YOUTUBE" ? toVideoEmbedUrl(media.url) : null
+
+  return (
+    <div className="overflow-hidden rounded-lg">
+      {youTubeEmbed ? (
+        <iframe
+          src={youTubeEmbed}
+          title={media.title ?? techniqueName}
+          className="w-full aspect-video"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerPolicy="strict-origin-when-cross-origin"
+          allowFullScreen
+        />
+      ) : media.mimeType?.startsWith("video/") ? (
+        // oxlint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded technique video; no caption track available
+        <video
+          src={media.url}
+          controls
+          className="w-full aspect-video object-cover"
+          poster={media.thumbnailUrl ?? undefined}
+        />
+      ) : (
+        <img
+          src={media.url}
+          alt={media.altText ?? techniqueName}
+          className="w-full aspect-video object-cover"
+        />
+      )}
+    </div>
+  )
+}
+
+/**
  * Media gallery (images + user-uploaded technique videos). The heaviest, last-painted
  * section, so the orchestrator `next/dynamic`-loads it (SSR kept). Renders nothing when
  * the technique has no attachments; renders the locked upgrade panel when a premium
@@ -60,38 +105,9 @@ export function TechniqueMedia({ mediaAttachments, techniqueName, locked }: Tech
     <Section>
       <H4>Media</H4>
       <div className="grid gap-4 sm:grid-cols-2">
-        {mediaAttachments.map(({ id, media }) => {
-          const youTubeEmbed = media.type === "YOUTUBE" ? toVideoEmbedUrl(media.url) : null
-
-          return (
-            <div key={id} className="overflow-hidden rounded-lg">
-              {youTubeEmbed ? (
-                <iframe
-                  src={youTubeEmbed}
-                  title={media.title ?? techniqueName}
-                  className="w-full aspect-video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
-                />
-              ) : media.mimeType?.startsWith("video/") ? (
-                // oxlint-disable-next-line jsx-a11y/media-has-caption -- user-uploaded technique video; no caption track available
-                <video
-                  src={media.url}
-                  controls
-                  className="w-full aspect-video object-cover"
-                  poster={media.thumbnailUrl ?? undefined}
-                />
-              ) : (
-                <img
-                  src={media.url}
-                  alt={media.altText ?? techniqueName}
-                  className="w-full aspect-video object-cover"
-                />
-              )}
-            </div>
-          )
-        })}
+        {mediaAttachments.map(({ id, media }) => (
+          <TechniqueMediaItem key={id} media={media} techniqueName={techniqueName} />
+        ))}
       </div>
     </Section>
   )

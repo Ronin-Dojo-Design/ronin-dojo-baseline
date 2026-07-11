@@ -3,6 +3,9 @@ import { Badge } from "~/components/common/badge"
 import { Link } from "~/components/common/link"
 import type { ProfileMediaItem } from "~/server/web/directory/profile-media"
 
+/** Per-kind play glyph (SESSION_0526 C4 — lookup replaces the nested-ternary icon pick). */
+const KIND_ICON = { video: PlayIcon, podcast: MicIcon } as const
+
 /**
  * One profile-highlight card (SESSION_0525 C1) — parity with the legacy `MediaCarousel` /
  * `TuffBuffsMediaCarousel` cards. A podcast card links OUT to an external provider in a new tab
@@ -21,8 +24,9 @@ export function ProfileMediaCard({
 }) {
   // Freemium (SESSION_0525): a locked premium reel swaps the play glyph for a lock and adds a
   // "Premium" corner badge — visible-but-locked, so the viewer sees what a paid tier unlocks. The
-  // card still links to the technique page, which renders the full upgrade CTA.
-  const Icon = item.locked ? LockKeyholeIcon : kind === "video" ? PlayIcon : MicIcon
+  // card still links to the technique page, which renders the full upgrade CTA. Locked → lock glyph;
+  // otherwise the kind picks its glyph.
+  const Icon = item.locked ? LockKeyholeIcon : KIND_ICON[kind]
   // External → new tab + noopener; internal → in-app navigation (no target).
   const externalProps = item.external
     ? { target: "_blank" as const, rel: "noopener noreferrer" }

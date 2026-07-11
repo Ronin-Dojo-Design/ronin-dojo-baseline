@@ -141,8 +141,91 @@ TASK_02 finders run in parallel (disjoint read-only angles). TASK_03 fixes are s
 
 ## Task log
 
-- SESSION_0526_TASK_01 — in-progress (fallow baseline captured)
-- SESSION_0526_TASK_02..05 — pending
+- SESSION_0526_TASK_01 — DONE (fallow baseline: 26 dead / 14 dup / 39 complexity; 0 real dead files)
+- SESSION_0526_TASK_02 — DONE (Doug correctness/security + Giddy code-quality scoring + merge-risk)
+- SESSION_0526_TASK_03 — DONE (Cody behavior-preserving fixes, SAFE fileset; D2 reverted to keep CAUTION file pristine)
+- SESSION_0526_TASK_04 — DONE (gates green + fallow delta + runtime security re-verify; HELD at push gate)
+- SESSION_0526_TASK_05 — Phase-2 grill in progress (operator answered create-scope + create-permission forks)
+
+### Phase 1 results (behavior-preserving quality pass — HELD at push gate)
+
+**Security-hygiene fix (headline, behavior-preserving at the UX layer):**
+- **A1** `/techniques` browse rail no longer ships raw premium `media.url` to the client. `techniqueRailSelect`
+  fetches `url` server-side only; `toRailRow` derives `posterUrl` (`thumbnail ?? toVideoThumbnailUrl(url)`) and
+  strips `url` before the client DTO. **Runtime proof (anon fetch /techniques):** rawWatchUrls 0 · rawEmbedUrls
+  0 · posterThumbs 64 · internal links 231 (rail renders identically; funnel intact).
+- **A2** `buildProfileMedia`: `locked && !internal → drop` (no fall-through to `href = item.url`); premium⟹slug
+  invariant now explicit + test-pinned.
+- **Watch-page gate re-verified (anon):** 12 techniques → 9 premium locked with **0 url leaks**, 3 free previews
+  play. The C3 extraction preserved the parent's early locked-return.
+
+**Fallow delta (new-only vs `2bf6c06b`):**
+
+| Metric | Before | After |
+| --- | --- | --- |
+| Dead-code issues | 26 | 20 |
+| Unused exports | 10 | 4 (4 left = deferred CAUTION `directory/payloads.ts`) |
+| Dead-export rate | 11.9% | 7.1% |
+| Avg cyclomatic | 3.0 | 2.8 |
+| p90 cyclomatic | 6 | 5 |
+| Maintainability | 86.3 | 87.1 |
+| Duplication | 14 groups | 14 (all seed/test one-offs — intentionally untouched) |
+
+Per-function: `TechniqueCard` CRITICAL→CRAP 30 · `ProfileMediaCard` 56→42 · `technique-media` ternary → extracted
+`TechniqueMediaItem` (relocated, parent simpler) · `buildProfileMedia` de-duped via module-level `toMediaItem`
+(cyclo ~unchanged — classifier branching is inherent; win = dedup + coverage). +2 pinning tests on the
+previously-untested freemium seam.
+
+**Gates:** typecheck ✓ · lint:check ✓ (no new warnings after D2 revert) · format:check ✓ · touched tests 6+9 ✓.
+**Boundary:** no CAUTION/live-lane file touched (D2 reverted → `profile-view.ts` pristine).
+
+### Phase 2 grill — operator decisions (2026-07-11)
+
+- **Viewing:** premium (+elite/legend, which inherit) view ALL techniques = the existing `canRenderRichMedia`
+  gate. No new work; confirmed.
+- **Create scope (Fork A):** Elite-created techniques attach to the creator's **own profile/curriculum**
+  (belt-tagged); staff can **promote/feature** the best into the canonical BBL library. No unmoderated content
+  in the shared curriculum.
+- **Create permission (Fork B):** a **3-way OR** — (1) **Elite membership tier**, (2) **staff roles**
+  (OWNER/INSTRUCTOR), (3) **RBAC entitlement** the operator/admin can grant to ANY user regardless of tier
+  (jr staffer / intern). Reuse the existing `can()` RBAC — do NOT build a 5th authz system.
+- **Open (still to grill before build):** media-input mechanism (YouTube URL field vs uploader; video excepted
+  til A5); premium granularity (per-Technique `isPremium` today vs per-video); podcast/match authoring surface
+  (Passport-attached `MediaAttachment{purpose}`); AdminCollection `/app/tools` conformance for the manage list.
+
+### Review synthesis (Doug + Giddy)
+
+**Security (headline).** The `/techniques` browse rail ships the raw premium `media.url` to the client
+(`techniqueRailPayload` selects `media.url`; `technique-rail.tsx` is a client component deriving the poster
+from it). `/techniques` is public. Premium content today is **public YouTube** (`type: YOUTUBE`), so this is
+a **curation/paywall-hygiene** issue now, but a **real private-URL leak the moment any R2-hosted premium video
+ships** through the same path. Fix = derive the poster server-side, ship `{type, posterUrl}`, drop `url` for
+the rail. UX-invisible. Watch page + profile rail were verified PROTECTED at the payload layer.
+
+**Latent invariant** (`buildProfileMedia`): premium⟹technique-link⟹slug is implicit; if a premium attachment
+ever lacked a technique link it falls through to `href = item.url` (raw-URL leak). Add an explicit guard.
+
+**Code-quality scores** (net-new SAFE files): technique-access 8.9 · public-profile 8.6 · profile-media 8.1 ·
+profile-media-card 8.1 · technique-card 8.0 · technique-media 8.0 · profile-projection 7.6 (CAUTION-lane).
+
+**Merge-risk classification.** SAFE (deep-refactor OK): technique-access, profile-media, technique-card /
+-rail / -rails, technique-media, profile-media-card, profile-highlights-section, profile-claim-button,
+media/queries (new `getPublicPassportMedia` only). CAUTION/SKIP (surgical dead-code only — a named live lane
+may own): profile-projection (WL-P2-46 + AdminCollection+Passport), profile-view (WL-P2-37), public-profile
+(WL-P2-37 + page-review), hero-actions (page-review), galaxy + lineage-ancestry-timeline (page-review /lineage,
+Doug 9.6, WebGL).
+
+**Test-net inversion:** the SAFE (freely-refactorable) functions have NO unit test; the pinning tests cover
+only the CAUTION projectors. → Add pinning tests for `isTechniqueViewerEntitled` + `buildProfileMedia` BEFORE
+extracting.
+
+### Deferred follow-ups (CAUTION merge-risk — NOT touched this session)
+
+- `directory/payloads.ts` un-exports (directoryPassportPayload / -Membership / -Affiliation / -RankAward) —
+  AdminCollection+Passport lane may own; note as follow-up.
+- profile-projection / profile-view / public-profile / hero-actions extractions — owned by live lanes.
+- galaxy `GalaxyNode` (123L) presentational extraction — page-review /lineage lane.
+- Seed-script + test-file duplication (14 groups, 270 lines) — one-off entry points, low value.
 
 ## What landed
 

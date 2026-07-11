@@ -5,7 +5,6 @@ import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { H3 } from "~/components/common/heading"
 import { BeltSwatch } from "~/components/web/techniques/technique-belt-badge"
 import { TechniqueCard } from "~/components/web/techniques/technique-card"
-import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import type { TechniqueRail as TechniqueRailItem } from "~/server/web/techniques/payloads"
 
 type TechniqueRailProps = {
@@ -51,23 +50,18 @@ export function TechniqueRail({
       </header>
 
       <Carousel ariaLabel={`${title} techniques`} edgeFades>
-        {techniques.map(technique => {
-          const video = technique.mediaAttachments[0]?.media
-          // YOUTUBE Media carries a stored thumbnail; fall back to deriving it from the
-          // watch URL (VIDEO uploads use their own `thumbnailUrl`, else no poster).
-          const posterUrl = video ? (video.thumbnailUrl ?? toVideoThumbnailUrl(video.url)) : null
-
-          return (
-            <CarouselSlide key={technique.slug} width={280}>
-              <TechniqueCard
-                technique={technique}
-                hasVideo={Boolean(video)}
-                thumbnailUrl={posterUrl}
-                className="h-full"
-              />
-            </CarouselSlide>
-          )
-        })}
+        {techniques.map(technique => (
+          // The poster is derived SERVER-SIDE (SESSION_0526 A1); the raw media url never ships to the
+          // client, so the rail just consumes `video.posterUrl` + the play indicator.
+          <CarouselSlide key={technique.slug} width={280}>
+            <TechniqueCard
+              technique={technique}
+              hasVideo={Boolean(technique.video)}
+              thumbnailUrl={technique.video?.posterUrl ?? null}
+              className="h-full"
+            />
+          </CarouselSlide>
+        ))}
       </Carousel>
     </section>
   )

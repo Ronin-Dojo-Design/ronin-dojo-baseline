@@ -2,11 +2,13 @@ import { performance } from "node:perf_hooks"
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, Prisma } from "~/.generated/prisma/client"
 import { parseSort } from "~/server/web/_shared/sortable"
+import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import {
   type TechniqueRail,
+  type TechniqueRailRow,
   techniqueManyPayload,
   techniqueOnePayload,
-  techniqueRailPayload,
+  techniqueRailSelect,
 } from "~/server/web/techniques/payloads"
 import type { TechniqueFilterParams } from "~/server/web/techniques/schema"
 import { db } from "~/services/db"
@@ -109,18 +111,38 @@ type RailBucket = {
  * Belt rails order by `Rank.sortOrder` (white→blue→purple) and lead; category rails follow
  * biggest-first; the uncategorized rail is last. Each rail is capped for the carousel.
  */
+/**
+ * Map a raw rail row to the client DTO: derive the video poster SERVER-SIDE (the stored thumbnail,
+ * else the YouTube `hqdefault` from the watch url) and DROP the raw media `url` so it never reaches
+ * the client rail (SESSION_0526 A1). The poster + lock + watch-page link is the freemium teaser; the
+ * playable url stays server-side and the watch page re-gates it.
+ */
+const toRailRow = (row: TechniqueRailRow): TechniqueRail => {
+  const { mediaAttachments, ...many } = row
+  const media = mediaAttachments[0]?.media
+  return {
+    ...many,
+    video: media
+      ? { type: media.type, posterUrl: media.thumbnailUrl ?? toVideoThumbnailUrl(media.url) }
+      : null,
+  }
+}
+
 export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGroup[]> => {
   "use cache"
 
   cacheTag("techniques")
   cacheLife("minutes")
 
-  const techniques = await db.technique.findMany({
+  const rows = await db.technique.findMany({
     where: { brand, isPublished: true },
     orderBy: [{ isFoundational: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
-    select: techniqueRailPayload,
+    select: techniqueRailSelect,
     take: 500,
   })
+  // Derive posters + strip raw urls at the query boundary — buckets and the client rail only ever
+  // see the `{ type, posterUrl }` DTO (SESSION_0526 A1).
+  const techniques = rows.map(toRailRow)
 
   const buckets = new Map<string, RailBucket>()
   for (const technique of techniques) {

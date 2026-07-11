@@ -48,17 +48,12 @@ export type ProfileMedia = {
   podcasts: ProfileMediaItem[]
 }
 
-export const EMPTY_PROFILE_MEDIA: ProfileMedia = {
-  featuredMatches: [],
-  techniqueVideos: [],
-  podcasts: [],
-}
-
 // YouTube watch/short/embed/youtu.be → `hqdefault` thumbnail (mirrors the legacy
 // `buildYoutubeThumbnail`), so a YOUTUBE attachment with no stored poster still shows one.
+// Internal-only (SESSION_0526 D3) — the single consumer is `toMediaItem` below.
 const YOUTUBE_ID = /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/
 
-export function buildYoutubeThumbnail(url: string | null | undefined): string | null {
+function buildYoutubeThumbnail(url: string | null | undefined): string | null {
   const id = url?.match(YOUTUBE_ID)?.[1]
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
 }
@@ -95,6 +90,35 @@ function podcastProviderLabel(url: string, durationSec: number | null): string {
 }
 
 /**
+ * Collapse the three near-identical rail pushes (SESSION_0526 C1) into ONE mapper. Every
+ * `ProfileMediaItem` shares the id + title-fallback + derived thumbnail; only the destination
+ * (`href` / `external`), the `subtitle`, and the freemium `locked` flag differ per rail. Output is
+ * byte-identical to the three former inline objects.
+ */
+function toMediaItem(
+  item: PublicPassportMedia,
+  fields: {
+    defaultTitle: string
+    href: string
+    external: boolean
+    subtitle: string | null
+    locked: boolean
+  },
+): ProfileMediaItem {
+  return {
+    id: item.id,
+    title: item.title ?? fields.defaultTitle,
+    // A YOUTUBE attachment with no stored poster derives one from the watch url (parity: legacy
+    // `buildYoutubeThumbnail`); everything else uses its own thumbnail or the card kind placeholder.
+    thumbnailUrl: item.thumbnailUrl ?? buildYoutubeThumbnail(item.url),
+    href: fields.href,
+    external: fields.external,
+    subtitle: fields.subtitle,
+    locked: fields.locked,
+  }
+}
+
+/**
  * Split the public passport media into the three highlight rails. All rails are PUBLIC now
  * (SESSION_0525 freemium): every viewer sees featured matches, podcasts, AND technique reels.
  * `viewerEntitled` is the VIEWER's OWN entitlement (admin / viewer-owns-the-content / viewer's own
@@ -115,7 +139,6 @@ export function buildProfileMedia({
   const podcasts: ProfileMediaItem[] = []
 
   for (const item of media) {
-    const thumbnailUrl = item.thumbnailUrl ?? buildYoutubeThumbnail(item.url)
     const purpose = (item.purpose ?? "").toLowerCase()
     // Purpose is the curation axis (operator, SESSION_0525): `podcast` vs `match` vs `technique-highlight`.
     // Podcast wins first (a podcast may be a YOUTUBE-typed link), then `match` (checked BEFORE the
@@ -128,29 +151,29 @@ export function buildProfileMedia({
     if (isMatch) {
       // Featured match → PUBLIC marquee legend content (mission/funnel), shown to EVERY viewer;
       // external YouTube link-out, surfaced first. Never locked.
-      featuredMatches.push({
-        id: item.id,
-        title: item.title ?? "Featured Match",
-        thumbnailUrl,
-        href: item.url,
-        external: true,
-        subtitle: "Match",
-        locked: false,
-      })
+      featuredMatches.push(
+        toMediaItem(item, {
+          defaultTitle: "Featured Match",
+          href: item.url,
+          external: true,
+          subtitle: "Match",
+          locked: false,
+        }),
+      )
       continue
     }
     if (isPodcast) {
       // Podcasts are PUBLIC (operator, SESSION_0525) — promotional legend content, every viewer;
       // external provider link-out (Spotify-feel lane), opens in a new tab. Never locked.
-      podcasts.push({
-        id: item.id,
-        title: item.title ?? "Podcast Highlight",
-        thumbnailUrl,
-        href: item.url,
-        external: true,
-        subtitle: podcastProviderLabel(item.url, item.durationSec),
-        locked: false,
-      })
+      podcasts.push(
+        toMediaItem(item, {
+          defaultTitle: "Podcast Highlight",
+          href: item.url,
+          external: true,
+          subtitle: podcastProviderLabel(item.url, item.durationSec),
+          locked: false,
+        }),
+      )
       continue
     }
     if (isTechnique) {
@@ -160,15 +183,22 @@ export function buildProfileMedia({
       // (TuffBuffs `route`), else falls back to the raw video URL (external new tab).
       const internal = item.techniqueSlug != null
       const locked = item.techniqueIsPremium === true && !viewerEntitled
-      techniqueVideos.push({
-        id: item.id,
-        title: item.title ?? "Technique Video",
-        thumbnailUrl,
-        href: internal ? `/techniques/${item.techniqueSlug}` : item.url,
-        external: !internal,
-        subtitle: "Technique",
-        locked,
-      })
+      // A2 invariant (SESSION_0526): a LOCKED premium reel is only ever publishable through its
+      // internal `/techniques/[slug]` gate. If it is locked but has no linked technique slug (a
+      // mis-linked premium attachment), DROP it — never fall through to `href = item.url` and leak
+      // the raw playable url as an external link to a viewer who isn't entitled to it.
+      if (locked && !internal) {
+        continue
+      }
+      techniqueVideos.push(
+        toMediaItem(item, {
+          defaultTitle: "Technique Video",
+          href: internal ? `/techniques/${item.techniqueSlug}` : item.url,
+          external: !internal,
+          subtitle: "Technique",
+          locked,
+        }),
+      )
     }
   }
 
