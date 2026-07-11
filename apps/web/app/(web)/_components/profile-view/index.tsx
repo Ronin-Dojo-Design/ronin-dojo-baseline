@@ -1,27 +1,19 @@
 import type { ProfileView } from "~/server/web/directory/profile-view"
-import { OwnerProfile } from "./owner-profile"
 import { PublicProfile } from "./public-profile"
 
 /**
- * ONE profile renderer for BOTH surfaces (WL-P2-37 / TICKET-0502-A).
+ * The ONE profile renderer (WL-P2-37 / TICKET-0502-A → SESSION_0525 C0).
  *
- * `/me` and `/directory/[slug]` both resolve a `ProfileView` (via `loadProfileViewForOwner`
- * / `loadProfileViewBySlug`) and hand it here. This single entry branches on the viewer
- * context's `isOwner` discriminant — the ONE place the two surfaces diverge — into the owner
- * arm (own Passport: edit affordances, gallery, identity/affiliations cards, full render) or
- * the public arm (tier-gated rich media, claim/upgrade CTAs, trust badges).
+ * `/directory/[slug]` resolves a `ProfileView` (via `loadProfileViewBySlug`) and hands it here.
+ * The former owner arm (`/me` own-Passport render + its `me-profile/*` section tree + the inline
+ * `ProfileEditDrawer`) was deleted with the `/me` redirect — `/me` now redirects to `/app/profile`
+ * (SESSION_0522 TASK_04 → migration step 7), so the only live surface is the public read. The
+ * viewer-context `isOwner` discriminant is gone; `ProfileView` is now the single public arm.
  *
- * Both arms share the reused `ListingDetail` chrome + `BjjPassportCard` credential; the loader
- * (`loadProfileViewForOwner`/`loadProfileViewBySlug`) and this orchestrator are now unified on the
- * ONE `ProfileView` read model + entry. The per-section leaves (hero badges/actions, about, sidebar,
- * ranks/belt-history) STILL have parallel owner/public implementations — reconciling those two
- * section-leaf trees into one is a ledgered follow-up (TICKET-0502-A / TASK_03). The tier contract
- * (`canRenderProfile` / `canRenderRichMedia`) is applied entirely in the projection; the public arm
- * consumes the already-gated fields, so rendering stays presentation-only.
+ * The tier contract (`canRenderProfile` / `canRenderRichMedia`) is applied entirely in the
+ * projection; this arm consumes the already-gated fields, so rendering stays presentation-only and
+ * cannot leak a private field. Belt colors stay data-driven (`Rank.colorHex` → `BeltSwatch`).
  */
 export function ProfileView({ view }: { view: ProfileView }) {
-  if (view.isOwner) {
-    return <OwnerProfile view={view} />
-  }
   return <PublicProfile view={view} />
 }

@@ -29,6 +29,12 @@ import type { PublicProfileView } from "~/server/web/directory/profile-view"
  * initial bundle with SSR kept. About + Ranks stay eager.
  */
 
+// SESSION_0525 C1: the profile-highlight rails ship the client Embla carousel — same lazy boundary
+// as the other client-JS sections (SSR kept, chunk split off the initial bundle). Self-hides when
+// the rich-media-gated `profileMedia` DTO is empty (free tier / no member media).
+const ProfileHighlightsSection = dynamic(() =>
+  import("./profile-highlights-section").then(m => m.ProfileHighlightsSection),
+)
 const AncestrySection = dynamic(() =>
   import("~/app/(web)/directory/[slug]/_components/directory-profile/ancestry-section").then(
     m => m.AncestrySection,
@@ -95,6 +101,8 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
       >
         <AboutSection profile={profile} />
         <VideoIntroSection videoIntroUrl={profile.videoIntroUrl} />
+        {/* SESSION_0525 C1: rich-media-gated technique-video + podcast rails (empty → self-hides). */}
+        <ProfileHighlightsSection media={view.profileMedia} />
         <RanksSection profile={profile} />
         <AncestrySection ancestry={ancestry} />
         <OrganizationsSection profile={profile} />

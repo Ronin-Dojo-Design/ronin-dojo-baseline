@@ -1,159 +1,46 @@
 import { Brand } from "~/.generated/prisma/client"
-import {
-  FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
-  type LineageProfileDetailRenderPolicy,
-} from "~/lib/entitlements/lineage-tier-policy"
+import type { LineageProfileDetailRenderPolicy } from "~/lib/entitlements/lineage-tier-policy"
 import { getServerSession } from "~/lib/auth"
 import { buildAbsoluteUrl, getRequestOrigin } from "~/lib/request-url"
 import {
   type ClaimViewerState,
   resolveViewerClaimState,
 } from "~/server/web/claims/resolve-viewer-claim-state"
-import { findProfileBySlug, getOwnDirectoryProfile } from "~/server/web/directory/queries"
+import { findProfileBySlug } from "~/server/web/directory/queries"
+import { buildProfileMedia, type ProfileMedia } from "~/server/web/directory/profile-media"
 import {
   getLineageAncestryForPassport,
   type LineageAncestryEntry,
 } from "~/server/web/lineage/ancestry"
-import type { MyProfile } from "~/server/web/directory/profile-projection"
-import { canUploadMediaForUser } from "~/server/web/media/permissions"
-import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
-import { getDirectoryProfileByUserId, getPassportByUserId } from "~/server/web/passport/queries"
-import { getOwnLineageProfile } from "~/server/web/lineage/queries"
-import {
-  getDashboardMediaAttachments,
-  type DashboardMediaAttachment,
-} from "~/server/web/media/queries"
+import { getPublicPassportMedia, type PublicPassportMedia } from "~/server/web/media/queries"
 import type { DirectoryProfileView } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-data"
 import { db } from "~/services/db"
 
 /**
- * ONE profile read model, keyed by either the session user (`/me`) or a slug
- * (`/directory/[slug]`), backing the ONE `ProfileView` renderer (WL-P2-37, TICKET-0502-A).
+ * The ONE public profile read model, keyed by slug (`/directory/[slug]`), backing the ONE
+ * `ProfileView` renderer (WL-P2-37, TICKET-0502-A → SESSION_0525 C0).
  *
- * Both surfaces used to have their own loader + renderer + section copies. This consolidates
- * the ASSEMBLY: the underlying projectors + payloads + derivations (`getOwnDirectoryProfile`
- * / `getOwnLineageProfile` / `findProfileBySlug` + the retired `loadDirectoryProfile`'s
- * origin/claim-funnel/location derivations, absorbed here) are reused verbatim so the tier
- * contract + on-the-wire shapes stay byte-identical (the pinning tests + paywall e2e are the
- * net). The renderer branches on the returned `viewerContext.isOwner`.
- *
- * Viewer context is the single seam that lets ONE renderer serve both:
- *  - `isOwner: true`  → `/me`: owner affordances (edit, gallery, identity/affiliations cards),
- *    all sections, tier-independent (a member always sees their own profile in full — the
- *    existing `canRenderRichMediaForViewer` "own profile" rule, ADR 0025).
- *  - `isOwner: false` → `/directory/[slug]`: public tier-gated render; `renderPolicy` gates
- *    rich media exactly as the pre-refactor `loadDirectoryProfile` did.
+ * The owner (`/me`) arm — `loadProfileViewForOwner` + `OwnerProfileView` + the `me-profile/*`
+ * section tree — was deleted with the `/me` redirect (SESSION_0522 TASK_04 → migration step 7):
+ * `/me` now redirects to `/app/profile`, so the only live read is the public one. The projectors +
+ * payloads + derivations (`findProfileBySlug` + the retired `loadDirectoryProfile`'s
+ * origin/claim-funnel/location derivations, absorbed here) are reused verbatim so the tier contract
+ * + on-the-wire shape stay byte-identical (the pinning tests + paywall e2e are the net).
  */
-
-/**
- * The owner's editable Passport + DirectoryProfile forms, mounted by the inline-edit drawer
- * (FI-024 H1). Loaded eagerly so any edit affordance on `/me` opens the ONE `PassportEditor`
- * in-place instead of bouncing to `/app/profile`. Null when the profile isn't provisioned.
- */
-export type OwnerEditorData = {
-  userId: string
-  passport: PassportOne
-  directoryProfile: DirectoryProfileOne
-  canUploadVideo: boolean
-}
-
-/** The owner (`/me`) arm — the member viewing their own Passport. */
-export type OwnerProfileView = {
-  isOwner: true
-  brand: Brand
-  /** The owner's projected directory profile; `null` when not yet provisioned (→ empty state). */
-  profile: MyProfile | null
-  /** Lineage node profile backing the dated belt-history timeline; `null` when unplaced. */
-  lineageProfile: Awaited<ReturnType<typeof getOwnLineageProfile>>
-  /** Public IMAGE attachments for the gallery grid. */
-  galleryImages: DashboardMediaAttachment[]
-  /**
-   * The owner's PUBLIC promotion up-chain [founder … member] (FI-024 H3) — the SAME walk the
-   * public directory arm renders. Empty when the owner has no public lineage node / up-chain; the
-   * `AncestrySection` self-gates (renders nothing under 2 entries).
-   */
-  ancestry: LineageAncestryEntry[]
-  /** Inline-edit form data (FI-024 H1); `null` when the profile isn't provisioned (empty state). */
-  editor: OwnerEditorData | null
-  viewerContext: { isOwner: true; renderPolicy: LineageProfileDetailRenderPolicy }
-}
 
 /** The public (`/directory/[slug]`) arm — a visitor viewing someone's public profile. */
 export type PublicProfileView = DirectoryProfileView & {
   isOwner: false
+  /**
+   * Rich-media-gated profile-highlight rails (technique videos + podcasts) — parity with the
+   * legacy "Profile Highlights" (SESSION_0525 C1). Assembled here (not in the projector) so the
+   * section stays fetch-free; EMPTY on the free tier / placeholders (the gate is applied below).
+   */
+  profileMedia: ProfileMedia
   viewerContext: { isOwner: false; renderPolicy: LineageProfileDetailRenderPolicy }
 }
 
-export type ProfileView = OwnerProfileView | PublicProfileView
-
-/**
- * `/me` — the authenticated member's own profile view. No tier/visibility gate: the owner
- * always sees their own profile in full, so the render policy is fixed to the free BASIC
- * policy purely to satisfy the shared `viewerContext` shape — the renderer keys owner-vs-public
- * off `isOwner`, never off the policy, on this arm.
- */
-export async function loadProfileViewForOwner(userId: string): Promise<OwnerProfileView> {
-  const brand = Brand.BBL
-  const viewerContext = {
-    isOwner: true as const,
-    renderPolicy: FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
-  }
-
-  const [session, profile] = await Promise.all([
-    getServerSession(),
-    getOwnDirectoryProfile({ userId, brand }),
-  ])
-
-  if (!profile) {
-    return {
-      isOwner: true,
-      brand,
-      profile: null,
-      lineageProfile: null,
-      galleryImages: [],
-      ancestry: [],
-      editor: null,
-      viewerContext,
-    }
-  }
-
-  const [lineageProfile, attachments, ancestry, passport, directoryProfile, canUploadVideo] =
-    await Promise.all([
-      profile.lineageNodeId ? getOwnLineageProfile(userId) : Promise.resolve(null),
-      getDashboardMediaAttachments({
-        brand,
-        // The `/me` page already authenticated; the media ACL needs the session user object.
-        user: session!.user,
-        target: { kind: "passport", id: profile.passportId },
-      }),
-      // FI-024 H3: the owner's PUBLIC lineage up-chain, rendered by the same `AncestrySection`
-      // the public directory arm uses. The walk is PUBLIC-only, so it self-gates for a member
-      // whose node isn't public.
-      getLineageAncestryForPassport(profile.passportId),
-      // FI-024 H1: the editable Passport + DirectoryProfile forms for the inline-edit drawer —
-      // the SAME payloads the `/app/profile` Profile tab feeds the ONE `PassportEditor`.
-      getPassportByUserId(userId),
-      getDirectoryProfileByUserId(userId),
-      canUploadMediaForUser(session!.user, brand),
-    ])
-
-  const galleryImages = (attachments ?? []).filter(attachment => attachment.type === "IMAGE")
-
-  // Both are provisioned together at sign-up; only mount the editor when both are present.
-  const editor: OwnerEditorData | null =
-    passport && directoryProfile ? { userId, passport, directoryProfile, canUploadVideo } : null
-
-  return {
-    isOwner: true,
-    brand,
-    profile,
-    lineageProfile,
-    galleryImages,
-    ancestry,
-    editor,
-    viewerContext,
-  }
-}
+export type ProfileView = PublicProfileView
 
 /**
  * Account-optional claim funnel for a placeholder person. Returns the `/lineage/join` wizard
@@ -217,7 +104,12 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
   // same account, so reuse the one it threads back (`profile.renderPolicy`) instead of re-querying.
   const renderPolicy = profile.renderPolicy
 
-  const [origin, viewerClaimState, claimFunnelHref, ancestry] = await Promise.all([
+  // `canRenderFullProfile` is the projector's rich-media decision (tier OR admin OR owner) — the
+  // SAME gate cover/video/social ride. Only pull public media when eligible + not a placeholder.
+  const canRenderRichMedia = profile.canRenderFullProfile
+  const shouldLoadMedia = canRenderRichMedia && !profile.isClaimablePlaceholder
+
+  const [origin, viewerClaimState, claimFunnelHref, ancestry, publicMedia] = await Promise.all([
     getRequestOrigin(),
     resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
     resolveClaimFunnelHref(profile),
@@ -225,6 +117,9 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     profile.isClaimablePlaceholder
       ? Promise.resolve<LineageAncestryEntry[]>([])
       : getLineageAncestryForPassport(profile.passportId),
+    shouldLoadMedia
+      ? getPublicPassportMedia(profile.passportId)
+      : Promise.resolve<PublicPassportMedia[]>([]),
   ])
 
   return {
@@ -236,6 +131,7 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     claimFunnelHref,
     viewerClaimState,
     ancestry,
+    profileMedia: buildProfileMedia({ canRenderRichMedia, media: publicMedia }),
     viewerContext: { isOwner: false, renderPolicy },
   }
 }

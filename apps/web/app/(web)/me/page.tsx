@@ -12,9 +12,11 @@ import { getServerSession } from "~/lib/auth"
  * (`useAuthCallbackUrl` → `searchParams.get("next")`), which MUST stay a single same-origin
  * relative path — a nested `?` re-triggers the Better-Auth double-decode trap.
  *
- * The former owner-arm renderer (`ProfileView` / `loadProfileViewForOwner` /
- * `me/_components/me-profile/*`) is intentionally left in place; it becomes unreachable behind
- * this redirect and is removed in migration step 7 (gated on data + browser proofs).
+ * The former owner-arm renderer (`OwnerProfile` / `loadProfileViewForOwner` /
+ * `me/_components/me-profile/*` / the inline `ProfileEditDrawer`) was deleted in migration step 7
+ * (SESSION_0525 C0) now that this redirect makes it unreachable; the public read
+ * (`/directory/[slug]` → `PublicProfile`) and the `/app/profile` dashboard editor are the only
+ * live profile surfaces.
  */
 export default async function MePage() {
   const session = await getServerSession()

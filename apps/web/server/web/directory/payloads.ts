@@ -177,63 +177,9 @@ export type DirectoryProfileDetail = Prisma.DirectoryProfileGetPayload<{
   select: typeof directoryProfileDetailPayload
 }>
 
-// ---------------------------------------------------------------------------
-// Self payload — the owner's own profile (`/me`).
-//
-// @added SESSION_0410 — the authenticated member-profile surface (BBL_PARITY_SPEC §2).
-// Owner-scoped: a member always sees their OWN profile in full, so this widens the
-// detail payload with the identity fields the editor owns but the public projection
-// never exposes (placeOfBirth, startedTrainingAt, dob) plus the canonical Affiliation
-// list (role + isCurrent, not just the current-org facet) and a current-rank join for
-// the BJJ Passport card. Promotion *provenance* (promoter/school per belt) is NOT here —
-// that is the lineage read model's `LineageNodeProfile`, fed to the one timeline.
-// @changed issue #134 surface-2 — rankAwardsEarned now uses publicPassportPayload.rankAwardsEarned
-// (awardedAt desc, full discipline shape) instead of the manual take:1 + sortOrder desc select.
-// ---------------------------------------------------------------------------
-
-export const directoryProfileSelfPayload = {
-  id: true,
-  passportId: true,
-  slug: true,
-  visibility: true,
-  locationCity: true,
-  locationRegion: true,
-  locationCountry: true,
-  passport: {
-    select: {
-      id: true,
-      displayName: true,
-      avatarUrl: true,
-      bio: true,
-      socialLinks: true,
-      placeOfBirth: true,
-      currentResidence: true,
-      startedTrainingAt: true,
-      user: { select: { id: true, name: true, image: true } },
-      // The owner's lineage node (if any) — keyed for the owner-scoped timeline fetch.
-      lineageNode: { select: { id: true } },
-      // Canonical person↔org axis (ADR 0025). Current first, then most-recently touched.
-      affiliations: {
-        select: {
-          id: true,
-          role: true,
-          isCurrent: true,
-          schoolName: true,
-          organization: { select: { id: true, name: true, slug: true, city: true, state: true } },
-        },
-        orderBy: [{ isCurrent: "desc" as const }, { updatedAt: "desc" as const }],
-      },
-      // Canonical public rank select (awardedAt desc, full discipline shape for the BJJ Passport card).
-      rankAwardsEarned: publicPassportPayload.rankAwardsEarned,
-      // Canonical directoryProfile link required by projectPublicPassport for showRanks gate.
-      directoryProfile: publicPassportPayload.directoryProfile,
-    },
-  },
-} satisfies Prisma.DirectoryProfileSelect
-
-export type DirectoryProfileSelf = Prisma.DirectoryProfileGetPayload<{
-  select: typeof directoryProfileSelfPayload
-}>
+// The `/me` owner self-payload (`directoryProfileSelfPayload` / `DirectoryProfileSelf`) was
+// deleted with the owner arm (SESSION_0525 C0) — `/me` redirects to `/app/profile`, so the only
+// live directory read is the public detail payload above.
 
 // Filter-options payloads (id/name/sortOrder selects) were removed in
 // SESSION_0350 with their only consumer `getDirectoryFilterOptions`; the
