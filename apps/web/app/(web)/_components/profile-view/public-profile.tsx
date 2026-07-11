@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
 import { ListingDetail } from "~/components/web/listing/listing-detail"
-import { ProfileClaimTeaser } from "~/components/web/claims/profile-claim-teaser"
 import { IntroDescription } from "~/components/web/ui/intro"
 import { AboutSection } from "~/app/(web)/directory/[slug]/_components/directory-profile/about-section"
 import { ProfileCoverBanner } from "~/app/(web)/directory/[slug]/_components/directory-profile/cover-banner"
@@ -60,37 +59,12 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
   const { profile, profileUrl, locationLine, viewerClaimState, claimFunnelHref, ancestry } = view
   const { user } = profile
 
-  // Legacy placeholder (no real account) → show the claim teaser instead of an empty
-  // profile. HIDDEN/private already 404'd in the loader; a tier-gated profile still
-  // renders its listing preview below. The placeholder maps to UNCLAIMED / PENDING_MINE;
-  // the teaser swaps its claim form for a "pending review" note when the viewer already
-  // has an open claim (ADR 0036, SESSION_0440).
-  if (profile.isClaimablePlaceholder) {
-    return (
-      <>
-        <ProfileClaimTeaser
-          subjectType="PERSON"
-          subjectId={profile.id}
-          claimState={viewerClaimState}
-          claimFunnelHref={claimFunnelHref}
-          name={user.name}
-          avatarUrl={user.image}
-          coverPhotoUrl={profile.coverPhotoUrl}
-          subtitle={
-            [profile.locationCity, profile.locationRegion].filter(Boolean).join(", ") || null
-          }
-          tags={user.ranks.map(rankAward => rankAward.name).filter(Boolean)}
-        />
-        {/* SESSION_0525: legend placeholders (bob-bass, david-meyer, chris-haueter…) still showcase
-            their curated PUBLIC Highlights — Featured Matches, Podcasts, technique reels — alongside
-            the claim teaser. Curated public media, safe on an unclaimed profile; self-hides empty. */}
-        <div className="mx-auto w-full min-w-0 max-w-2xl px-4 pb-8 sm:px-6">
-          <ProfileHighlightsSection media={view.profileMedia} />
-        </div>
-      </>
-    )
-  }
-
+  // Placeholder (no real account) now renders the SAME FULL profile as a claimed one
+  // (SESSION_0525, operator directive) — hero/about/ranks/ancestry + the PUBLIC Highlights rails —
+  // with a single "Claim this profile" CTA in the hero actions (see `HeroActions`) instead of the
+  // retired page-replacing teaser. HIDDEN/private already 404'd in the loader; rich-only fields stay
+  // gated by the projection. The upgrade CTA is suppressed for placeholders — the claim CTA is the
+  // one call-to-action for an unclaimed profile (dual CTAs would be redundant/confusing).
   return (
     <>
       <ProfileCoverBanner coverPhotoUrl={profile.coverPhotoUrl} />
@@ -104,7 +78,12 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
         title={user.name ?? "Directory Profile"}
         badges={<HeroBadges profile={profile} />}
         actions={
-          <HeroActions profile={profile} profileUrl={profileUrl} claimState={viewerClaimState} />
+          <HeroActions
+            profile={profile}
+            profileUrl={profileUrl}
+            claimState={viewerClaimState}
+            claimFunnelHref={claimFunnelHref}
+          />
         }
         intro={locationLine && <IntroDescription>{locationLine}</IntroDescription>}
         sidebar={<ProfileSidebar profile={profile} ancestry={ancestry} />}
@@ -121,7 +100,9 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
         {/* Mobile-only labeled home of the passport credential (SESSION_0501 P0);
             desktop keeps it in the sidebar slot above. */}
         <PassportSection profile={profile} profileUrl={profileUrl} ancestry={ancestry} />
-        {!profile.canRenderFullProfile && <UpgradeSection />}
+        {/* Upgrade CTA only for a CLAIMED-but-gated (free) profile; a placeholder's single CTA is
+            the hero "Claim this profile" button (SESSION_0525 — no dual CTA). */}
+        {!profile.canRenderFullProfile && !profile.isClaimablePlaceholder && <UpgradeSection />}
       </ListingDetail>
     </>
   )

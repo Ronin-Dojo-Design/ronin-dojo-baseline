@@ -8,10 +8,7 @@ import {
 } from "~/server/web/claims/resolve-viewer-claim-state"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 import { buildProfileMedia, type ProfileMedia } from "~/server/web/directory/profile-media"
-import {
-  getLineageAncestryForPassport,
-  type LineageAncestryEntry,
-} from "~/server/web/lineage/ancestry"
+import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
 import { getPublicPassportMedia } from "~/server/web/media/queries"
 import { isTechniqueViewerEntitled } from "~/server/web/techniques/technique-access"
 import type { DirectoryProfileView } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-data"
@@ -116,10 +113,9 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
       getRequestOrigin(),
       resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
       resolveClaimFunnelHref(profile),
-      // Placeholder profiles skip the ancestry walk (the teaser shows no ancestry section).
-      profile.isClaimablePlaceholder
-        ? Promise.resolve<LineageAncestryEntry[]>([])
-        : getLineageAncestryForPassport(profile.passportId),
+      // Placeholders now render the FULL profile (SESSION_0525), so their public ancestry chain
+      // loads too — it's public lineage data, safe on an unclaimed profile.
+      getLineageAncestryForPassport(profile.passportId),
       getPublicPassportMedia(profile.passportId),
       isTechniqueViewerEntitled({
         userId: viewerUserId,
