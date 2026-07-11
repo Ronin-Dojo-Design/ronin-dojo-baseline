@@ -4,7 +4,9 @@ import { getBrandSiteConfig } from "~/config/site"
 import { bblBodyFont as bodyFont, bblHeadingFont as headingFont } from "~/lib/fonts"
 import { cx } from "~/lib/utils"
 import { findBrandSettings } from "~/server/admin/brand-settings/queries"
+import { findPublishedPosts } from "~/server/web/posts/queries"
 import { BblReveal } from "../bbl-reveal"
+import { BblBlogGallery } from "./bbl-blog-gallery"
 import { BblCelebration } from "./bbl-celebration"
 import { BblFaq } from "./bbl-faq"
 import { BblFeatures } from "./bbl-features"
@@ -52,10 +54,11 @@ export const BblLanding = async () => {
     ...timeline.map(entry => entry.rank),
   ]
 
-  const [marqueeRows, brandSettings, staticRankColors] = await Promise.all([
+  const [marqueeRows, brandSettings, staticRankColors, blogPosts] = await Promise.all([
     getPromotionMarqueeRows(),
     findBrandSettings(Brand.BBL),
     getStaticBblRankColors(staticRankLabels),
+    findPublishedPosts(Brand.BBL),
   ])
   const brandLogoUrl = brandSettings?.logoUrl ?? null
   const brandName = getBrandSiteConfig(Brand.BBL).name
@@ -75,7 +78,7 @@ export const BblLanding = async () => {
     <BblFinalCta key="final-cta" />,
     <BblCelebration key="celebration" logoUrl={brandLogoUrl} brandName={brandName} />,
     <BblTreeTeaser key="tree" />,
-    <BblPromos key="promos" />,
+    <BblPromos key="promos" communityGallery={<BblBlogGallery posts={blogPosts} />} />,
   ]
 
   return (
