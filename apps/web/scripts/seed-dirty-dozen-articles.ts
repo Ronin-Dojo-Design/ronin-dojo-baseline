@@ -24,7 +24,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { Brand, PostStatus, PrismaClient } from "~/.generated/prisma/client"
 import { uniqueSlugsExtension } from "~/prisma/extensions/unique-slugs"
 
-const AUTHOR_EMAIL = "tonyhua08@gmail.com" // Tony Hua — BBL admin (public byline; matches seed-dirty-dozen-post)
+const AUTHOR_EMAIL = "mrbscott@gmail.com" // Brian Scott — BBL admin (public byline; SESSION_0525 operator directive)
 const PUBLISH_DATE = "2026-01-17" // legacy featuredArticles date
 
 const IMG = "/brand/blackbeltlegacy"
