@@ -160,6 +160,13 @@ gets **deleted, not merged**.
 component — most are shared (flag-only), so scope shrinks to page-owned islands + net-new feature files.
 Keep public presentation components fetch-free (no private-field leak); person-rooted reads only.
 
+**C1 parity target = the Tuff Buffs "Spotify carousel"** (operator, SESSION_0525): monorepo
+`src/brands/tuffbuffs/components/PublicProfileCarousels.jsx` + `shared/TuffBuffsMediaCarousel.jsx` — 3 rails
+(Podcast Highlights = Spotify-feel external link-out, Technique Reels, Recent Posts). Item shape
+`{id, title, subtitle=provider, thumbnail, url|route}`; `url`→open external new tab, `route`→internal.
+New-app source = `passport.mediaAttachments` by `purpose` (`podcast`→external `Media.url`; `technique-highlight`
+→route). (Supersedes the older BBLApp `MediaCarousel.jsx` reference — same idea, more evolved.)
+
 **Sequencing:** C0 first (cleanup), then C1–C5 in parallel-ish slices; C6 waits on B0. This is a **2–3
 session** lane. **Route → Cody per slice → Desi (design/reuse) + Doug (verify).**
 
