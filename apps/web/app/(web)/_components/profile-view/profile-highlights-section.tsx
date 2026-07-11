@@ -48,7 +48,11 @@ function HighlightRail({
 }
 
 export function ProfileHighlightsSection({ media }: { media: ProfileMedia }) {
-  if (media.techniqueVideos.length === 0 && media.podcasts.length === 0) {
+  if (
+    media.featuredMatches.length === 0 &&
+    media.techniqueVideos.length === 0 &&
+    media.podcasts.length === 0
+  ) {
     return null
   }
 
@@ -56,6 +60,12 @@ export function ProfileHighlightsSection({ media }: { media: ProfileMedia }) {
     <Section>
       <H4>Profile Highlights</H4>
       <div className="flex w-full flex-col gap-8">
+        <HighlightRail
+          title="Featured Matches"
+          subtitle="Legendary bouts — opens in a new tab"
+          kind="video"
+          items={media.featuredMatches}
+        />
         <HighlightRail
           title="Technique Videos"
           subtitle="Reels from their curriculum"

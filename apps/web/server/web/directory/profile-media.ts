@@ -37,11 +37,16 @@ export type ProfileMediaItem = {
 }
 
 export type ProfileMedia = {
+  featuredMatches: ProfileMediaItem[]
   techniqueVideos: ProfileMediaItem[]
   podcasts: ProfileMediaItem[]
 }
 
-export const EMPTY_PROFILE_MEDIA: ProfileMedia = { techniqueVideos: [], podcasts: [] }
+export const EMPTY_PROFILE_MEDIA: ProfileMedia = {
+  featuredMatches: [],
+  techniqueVideos: [],
+  podcasts: [],
+}
 
 // YouTube watch/short/embed/youtu.be → `hqdefault` thumbnail (mirrors the legacy
 // `buildYoutubeThumbnail`), so a YOUTUBE attachment with no stored poster still shows one.
@@ -95,24 +100,37 @@ export function buildProfileMedia({
   canRenderRichMedia: boolean
   media: PublicPassportMedia[]
 }): ProfileMedia {
-  if (!canRenderRichMedia) {
-    return EMPTY_PROFILE_MEDIA
-  }
-
+  const featuredMatches: ProfileMediaItem[] = []
   const techniqueVideos: ProfileMediaItem[] = []
   const podcasts: ProfileMediaItem[] = []
 
   for (const item of media) {
     const thumbnailUrl = item.thumbnailUrl ?? buildYoutubeThumbnail(item.url)
     const purpose = (item.purpose ?? "").toLowerCase()
-    // Purpose is the curation axis (operator, SESSION_0525): `podcast` vs `technique-highlight`.
-    // Podcast wins first (a podcast may be a YOUTUBE-typed link); the technique rail also absorbs
+    // Purpose is the curation axis (operator, SESSION_0525): `podcast` vs `match` vs `technique-highlight`.
+    // Podcast wins first (a podcast may be a YOUTUBE-typed link), then `match` (checked BEFORE the
+    // technique fallback, since a match clip is also a YOUTUBE type); the technique rail then absorbs
     // any other public video attachment so a plain uploaded technique clip still surfaces.
     const isPodcast = purpose.includes("podcast")
+    const isMatch = purpose.includes("match")
     const isTechnique = purpose.includes("technique") || isVideoType(item.type)
 
+    if (isMatch) {
+      // Featured match → PUBLIC marquee legend content (mission/funnel), shown to EVERY viewer
+      // (not rich-media-gated); external YouTube link-out, surfaced first.
+      featuredMatches.push({
+        id: item.id,
+        title: item.title ?? "Featured Match",
+        thumbnailUrl,
+        href: item.url,
+        external: true,
+        subtitle: "Match",
+      })
+      continue
+    }
     if (isPodcast) {
-      // Podcast → external provider link-out (Spotify-feel lane), opens in a new tab.
+      // Podcasts are PUBLIC (operator, SESSION_0525) — promotional legend content, every viewer;
+      // external provider link-out (Spotify-feel lane), opens in a new tab.
       podcasts.push({
         id: item.id,
         title: item.title ?? "Podcast Highlight",
@@ -121,7 +139,14 @@ export function buildProfileMedia({
         external: true,
         subtitle: podcastProviderLabel(item.url, item.durationSec),
       })
-    } else if (isTechnique) {
+      continue
+    }
+    // Technique rail is the rich-media upsell — premium / admin / owner only (the per-video freemium
+    // lock, which shows locked-but-visible premium reels, is a follow-up slice).
+    if (!canRenderRichMedia) {
+      continue
+    }
+    if (isTechnique) {
       // Technique reel → internal `/techniques/[slug]` route when the attachment links a technique
       // (TuffBuffs `route`), else fall back to the raw video URL (external new tab).
       const internal = item.techniqueSlug != null
@@ -136,5 +161,5 @@ export function buildProfileMedia({
     }
   }
 
-  return { techniqueVideos, podcasts }
+  return { featuredMatches, techniqueVideos, podcasts }
 }

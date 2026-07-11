@@ -42,7 +42,11 @@ type VideoSeed = {
   /** YouTube video id. */
   id: string
   title: string
-  /** Defaults to true; the crude-title entry is seeded unpublished pending an operator rename. */
+  /** Optional canonical slug override (else derived from the title). */
+  slug?: string
+  /** Optional technique description (lesson copy / backstory). */
+  description?: string
+  /** Defaults to true. */
   publish?: boolean
 }
 
@@ -98,11 +102,13 @@ const GROUPS: BeltGroup[] = [
       { id: "AA0rA99asZU", title: "Half Guard - Lock Down Counter to Leg Bar" },
       { id: "XKzRajSPx0k", title: "Arm Bar Counter to the Counter" },
       { id: "6iW7xcnYrJU", title: "North South Choke" },
-      // Crude real title withheld — seeded unpublished for an operator rename.
+      // Bob Bass's "A**hole Choke" — semi-censored per operator (SESSION_0525); his real move name.
       {
         id: CRUDE_TITLE_VIDEO_ID,
-        title: "Purple Belt Technique — title pending review",
-        publish: false,
+        title: "A**hole Choke and Failed A**hole Choke",
+        slug: "a-hole-choke",
+        description:
+          "The A**hole Choke is Bob Bass's calling card for the over-eager seminar attendee — the young buck who comes at him full-bore with something to prove. Bob obliges with a grin: \"Ok, a**hole, here ya go!\" The lesson covers the finish and, just as important, the failed version — because knowing why it doesn't lock up is how you make sure it does.",
       },
       {
         id: "U_3491uykqU",
@@ -188,7 +194,7 @@ async function main() {
     let sortOrder = 0
     for (const video of group.videos) {
       const publish = video.publish ?? true
-      const slug = slugify(video.title, video.id)
+      const slug = video.slug ?? slugify(video.title, video.id)
       const watchUrl = `https://www.youtube.com/watch?v=${video.id}`
       const thumbnailUrl = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`
 
@@ -213,6 +219,7 @@ async function main() {
           brand: BRAND,
           name: video.title,
           slug,
+          description: video.description ?? null,
           isPublished: publish,
           disciplineId: discipline.id,
           organizationId: org.id,

@@ -105,6 +105,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "South Bay Jiu Jitsu",
     location: "Los Angeles, CA",
     image: `${IMG}/rick-williams.jpg`,
+    articleSlug: "rick-williams-dirty-dozen",
     teaser: "Competition and teaching legacy among Rigan Machado's first American black belts.",
   },
   {
@@ -125,6 +126,7 @@ export const dirtyDozen: DirtyDozenMember[] = [
     school: "Combat Base",
     location: "Los Angeles, CA",
     image: `${IMG}/chris-haueter.jpg`,
+    articleSlug: "chris-haueter-dirty-dozen",
     teaser:
       "Combat Base founder and one of the Dirty Dozen — instrumental in spreading BJJ across America.",
   },
