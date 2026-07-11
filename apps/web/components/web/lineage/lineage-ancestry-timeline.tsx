@@ -98,11 +98,9 @@ function TimelineEntry({
 
         <Stack size="xs" direction="column" wrap={false} className="min-w-0">
           <Stack size="sm" direction="row" wrap className="items-center">
-            {/* C1-9 (token-only): raw `text-primary` (BBL red #E52421) is 4.25:1 on the dark
-                timeline — below AA 4.5:1. Lift lightness on dark by mixing the SAME primary
-                token toward white (brand-agnostic derivation, never a hardcoded red); light
-                mode keeps the pure token. */}
-            <span className="truncate font-bold text-primary italic dark:text-[color-mix(in_oklab,var(--color-primary),white_22%)] [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
+            {/* White member names (operator, SESSION_0525) — `text-foreground` reads white on the
+                dark BBL profile (and dark on light), replacing the brand-red/pinkish name hue. */}
+            <span className="truncate font-bold text-foreground italic [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
               {entry.displayName}
             </span>
             {isOwner && (

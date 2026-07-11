@@ -1,10 +1,6 @@
 import { H4 } from "~/components/common/heading"
 import { LineageAncestryTimeline } from "~/components/web/lineage/lineage-ancestry-timeline"
-import { LineageStorySequence } from "~/components/web/lineage/lineage-story/lineage-story-sequence"
-import { chainHasStoryScenes } from "~/components/web/lineage/lineage-story/scene-model"
 import { Section } from "~/components/web/ui/section"
-import { bblHeadingFont } from "~/lib/fonts"
-import { cx } from "~/lib/utils"
 import type { LineageAncestryEntry } from "~/server/web/lineage/ancestry"
 
 /**
@@ -29,19 +25,9 @@ export function AncestrySection({ ancestry }: { ancestry: LineageAncestryEntry[]
     return null
   }
 
-  if (chainHasStoryScenes(ancestry)) {
-    return (
-      <Section>
-        <H4>Lineage</H4>
-        {/* Story mode takes the FULL content width (col-span-3, heading above) —
-            operator direction: full-width cinematic sections. */}
-        <div className={cx("md:col-span-3", bblHeadingFont.variable)}>
-          <LineageStorySequence entries={ancestry} />
-        </div>
-      </Section>
-    )
-  }
-
+  // Basic vertical timeline on the profile (operator, SESSION_0525): the scroll-driven Lineage
+  // Journey scrollytelling stays in beta (`/app/beta/lineage-journey`) until its kinks are worked
+  // out; the public profile always renders the plain timeline.
   return (
     <Section>
       <H4>Lineage</H4>
