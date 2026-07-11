@@ -60,9 +60,12 @@ with two coordination points (shared `schema.prisma`; one cross-stream data depe
 - **Galaxy palette:** keep the role palette (root/legend/instructor/student is **semantic**, not brand
   color); document it; do **not** wire to `BrandSettings` (format mismatch — galaxy hex vs SoT HSL
   triples — for near-zero visual gain).
-- **Technique belt filter:** **Rank-range FKs** (`beltLevelMin/Max` bounded by `Rank.sortOrder`), not
-  `Tag[]`. Schema is purpose-built for the range; `min==max` reproduces OLD's single-belt behavior; the
-  Tag route would leave the FKs dead.
+- **Technique belt filter → single belt tag** (operator override, SESSION_0525 — KISS): the min/max
+  **range is over-engineered for now**. A member tags a technique with one belt via the existing
+  `beltLevelMinId` FK (no schema change; `beltLevelMaxId` unused); the facet filters on **exact belt
+  match** (like OLD BBL's scalar belt). Multi-belt / range semantics deferred (a later Technique↔Rank
+  m2m if wanted). Related follow-up: a member-facing "tag your technique with a belt" author control
+  (see §4 note).
 - **Directory scope:** keep the clean faceted listing (the "what would Apple do" answer); **add** the
   member carousels; **defer** the WP-style map behind the globe's geo data (§7 cross-stream dep); **skip**
   distance/program facets for now.
@@ -172,12 +175,18 @@ session** lane. **Route → Cody per slice → Desi (design/reuse) + Doug (verif
 | Slice | Work | Notes |
 |---|---|---|
 | **D0** | **Gating field (schema, additive)** — per-**`MediaAttachment`** premium flag (operator O1 §8: video-by-video), admin-settable; a technique can mix free + premium clips | hand-authored migration (§7) |
-| **D1** | **Belt facet end-to-end** — belt param in `schema.ts`, `BeltFilter` facet, **Rank-range predicate** in `queries.ts` (`beltLevelMin/Max` via `sortOrder`), select belt in `payloads.ts`, belt badge on `technique-card.tsx` | Decision resolved: range FKs |
+| **D1** | **Belt facet end-to-end** — belt param in `schema.ts`, `BeltFilter` facet, **exact-match predicate** in `queries.ts` on `beltLevelMinId` (single tag, no range), select belt in `payloads.ts`, belt badge (`Rank.colorHex`) on `technique-card.tsx` | Single belt tag (operator KISS) |
 | **D2** | **Technique video carousel/rails** — per-position (and/or per-category) snap-scroll rails w/ arrows/dots/video-indicator | Greenfield; reuse Embla `Carousel` |
 | **D3** | **Gating render** — gate video playback behind Premium+ when the **attachment** is premium-flagged; crown badge per gated video; metadata always public | Reuse `canRenderRichMedia`/entitlement-key pattern from `lineage-tier-policy.ts` |
 | **D4** ⏸ | View toggle (grid/list/rail), richer card (thumbnail/play/duration), richer watch page (YouTube/Vimeo/signed-URL) | Lower priority; can trail |
 
 **Depends on:** D0 → D3. D1, D2 independent. **Route → Cody → Doug + Desi.** Independent of A/B/C/E.
+
+> **Author-tag follow-up (operator, SESSION_0525):** the person creating a technique post should be able
+> to **tag it with a belt** themselves (sets `beltLevelMinId`). That's a create/edit **author control** —
+> distinct from the D1 read-side facet. Open scoping question: is technique authoring **member-open** or
+> instructor/admin-only today, and does a create/edit technique form exist to mount the belt `Select` into?
+> New slice **D5** once scoped; not in the Wave 1 D1/D2 lane.
 
 ---
 
