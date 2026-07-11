@@ -78,14 +78,15 @@ export const techniqueManyPayload = {
 } satisfies Prisma.TechniqueSelect
 
 // @added SESSION_0525 (Stream D2) — the video-rail row: the standard many-card payload
-// PLUS a lightweight "has a video?" probe (one filtered `MediaAttachment`, so the rail
-// card can show a play indicator without pulling the full media list). Kept OFF the main
-// grid's `techniqueManyPayload` so the faceted grid pays no per-card subquery.
+// PLUS the first attached video (`VIDEO` upload or `YOUTUBE` embed), so the rail card can
+// show a poster thumbnail + play indicator. Kept OFF the main grid's `techniqueManyPayload`
+// so the faceted grid pays no per-card subquery.
 export const techniqueRailPayload = {
   ...techniqueManyPayload,
   mediaAttachments: {
-    where: { media: { type: "VIDEO" } },
-    select: { id: true },
+    where: { media: { type: { in: ["VIDEO", "YOUTUBE"] } } },
+    select: { media: { select: { type: true, url: true, thumbnailUrl: true } } },
+    orderBy: { sortOrder: "asc" },
     take: 1,
   },
 } satisfies Prisma.TechniqueSelect

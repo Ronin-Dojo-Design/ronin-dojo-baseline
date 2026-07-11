@@ -4,6 +4,7 @@ import { Badge } from "~/components/common/badge"
 import { Carousel, CarouselSlide } from "~/components/common/carousel"
 import { H3 } from "~/components/common/heading"
 import { TechniqueCard } from "~/components/web/techniques/technique-card"
+import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import type { TechniqueRail as TechniqueRailItem } from "~/server/web/techniques/payloads"
 
 type TechniqueRailProps = {
@@ -38,15 +39,23 @@ export function TechniqueRail({ title, subtitle, total, techniques }: TechniqueR
       </header>
 
       <Carousel ariaLabel={`${title} techniques`} edgeFades>
-        {techniques.map(technique => (
-          <CarouselSlide key={technique.slug} width={280}>
-            <TechniqueCard
-              technique={technique}
-              hasVideo={technique.mediaAttachments.length > 0}
-              className="h-full"
-            />
-          </CarouselSlide>
-        ))}
+        {techniques.map(technique => {
+          const video = technique.mediaAttachments[0]?.media
+          // YOUTUBE Media carries a stored thumbnail; fall back to deriving it from the
+          // watch URL (VIDEO uploads use their own `thumbnailUrl`, else no poster).
+          const posterUrl = video ? (video.thumbnailUrl ?? toVideoThumbnailUrl(video.url)) : null
+
+          return (
+            <CarouselSlide key={technique.slug} width={280}>
+              <TechniqueCard
+                technique={technique}
+                hasVideo={Boolean(video)}
+                thumbnailUrl={posterUrl}
+                className="h-full"
+              />
+            </CarouselSlide>
+          )
+        })}
       </Carousel>
     </section>
   )
