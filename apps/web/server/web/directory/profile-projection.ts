@@ -10,11 +10,7 @@ import {
   type TrustRankAward,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
-import type {
-  DirectoryProfileDetail,
-  DirectoryProfileList,
-  DirectoryProfileSelf,
-} from "~/server/web/directory/payloads"
+import type { DirectoryProfileDetail, DirectoryProfileList } from "~/server/web/directory/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 
 type ProfileViewer = {
@@ -124,109 +120,6 @@ function trustSummaryForUser(user: UserTrustSource) {
     claimBadgeStatus: resolveLineageClaimBadgeStatus({
       claimStatus,
     }),
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Owner self-profile projection (`/me`) — SESSION_0410.
-//
-// The member-facing read model for the authenticated profile page. Unlike the
-// public projections above there is no tier/visibility gate: a member always
-// sees their own profile in full (the `canRenderRichMediaForViewer` "own
-// profile" rule, ADR 0025). Pure presentation shaping — no DB.
-// ---------------------------------------------------------------------------
-
-export type MyProfileAffiliation = {
-  id: string
-  /** Linked-org name when present, otherwise the free-text school label. */
-  name: string | null
-  /** Org slug for deep-linking to `/schools/[slug]`; null for free-text affiliations. */
-  slug: string | null
-  role: DirectoryProfileSelf["passport"]["affiliations"][number]["role"]
-  isCurrent: boolean
-}
-
-export type MyProfile = {
-  passportId: string
-  slug: string | null
-  name: string | null
-  /** Resolved avatar (Passport avatar → account image → brand default). */
-  avatarUrl: string | null
-  bio: string | null
-  socialLinks: Record<string, string> | null
-  visibility: DirectoryProfileSelf["visibility"]
-  /** Any location field set — used for the "Based in" identity bit. */
-  locationLine: string | null
-  placeOfBirth: string | null
-  startedTrainingAt: Date | null
-  /** Highest earned belt, projected for the BJJ Passport card. */
-  currentRank: { name: string; colorHex: string | null; disciplineLabel: string | null } | null
-  /** Current school for the card header (linked-org name → free-text label). */
-  schoolLabel: string | null
-  affiliations: MyProfileAffiliation[]
-  /** The owner's lineage node id — null when they have no lineage placement yet. */
-  lineageNodeId: string | null
-}
-
-export function projectOwnProfile({
-  profile,
-  brand,
-}: {
-  profile: DirectoryProfileSelf
-  brand?: string | null
-}): MyProfile {
-  const { passport } = profile
-
-  // Project identity through the canonical public passport projector (issue #134 surface-2).
-  // showRanks: true — the owner always sees their own ranks in full (no gate for /me).
-  const passportDto = projectPublicPassport(passport, { brand, showRanks: true })
-  const currentRankFromDto = passportDto.currentRank
-
-  const currentRank = currentRankFromDto
-    ? {
-        name: currentRankFromDto.name,
-        colorHex: currentRankFromDto.colorHex,
-        // disciplineName is the full discipline name (e.g. "Brazilian Jiu-Jitsu").
-        disciplineLabel: currentRankFromDto.disciplineName ?? null,
-      }
-    : null
-
-  const affiliations: MyProfileAffiliation[] = passport.affiliations.map(affiliation => ({
-    id: affiliation.id,
-    name: affiliation.organization?.name ?? affiliation.schoolName,
-    slug: affiliation.organization?.slug ?? null,
-    role: affiliation.role,
-    isCurrent: affiliation.isCurrent,
-  }))
-
-  const currentAffiliation = affiliations.find(a => a.isCurrent) ?? affiliations[0] ?? null
-
-  // "Based in" string: prefer the structured DirectoryProfile location (city/region/country the
-  // member set for the directory), falling back to the Passport's free-text `currentResidence`
-  // (the Pods-imported residence — added by the SESSION_0410 currentResidence migration). Without
-  // this fallback the imported residence never surfaced on /me.
-  const locationLine =
-    [profile.locationCity, profile.locationRegion, profile.locationCountry]
-      .filter(Boolean)
-      .join(", ") ||
-    passport.currentResidence ||
-    null
-
-  return {
-    passportId: profile.passportId,
-    slug: profile.slug,
-    name: passportDto.displayName,
-    avatarUrl: passportDto.avatarUrl,
-    bio: passport.bio ?? null,
-    socialLinks: (passport.socialLinks as Record<string, string> | null) ?? null,
-    visibility: profile.visibility,
-    locationLine,
-    placeOfBirth: passport.placeOfBirth ?? null,
-    startedTrainingAt: passport.startedTrainingAt ?? null,
-    currentRank,
-    schoolLabel: currentAffiliation?.name ?? null,
-    affiliations,
-    lineageNodeId: passport.lineageNode?.id ?? null,
   }
 }
 
