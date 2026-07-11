@@ -77,7 +77,13 @@ export const buildContentSecurityPolicy = (env: NodeJS.ProcessEnv = process.env)
     ],
     "font-src": ["'self'", "data:"],
     "connect-src": connectSrc,
-    "frame-src": ["https://checkout.stripe.com", "https://billing.stripe.com"],
+    "frame-src": [
+      "https://checkout.stripe.com",
+      "https://billing.stripe.com",
+      // SESSION_0525 — technique/reel videos embed YouTube iframes (watch + nocookie hosts).
+      "https://www.youtube.com",
+      "https://www.youtube-nocookie.com",
+    ],
     "form-action": ["'self'", "https://checkout.stripe.com", "https://billing.stripe.com"],
     "frame-ancestors": ["'none'"],
     "base-uri": ["'self'"],

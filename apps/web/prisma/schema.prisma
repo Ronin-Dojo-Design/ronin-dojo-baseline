@@ -3854,6 +3854,10 @@ model Technique {
   commonErrors      String[]
   safetyNotes       String?
   isPublished       Boolean            @default(false)
+  // @added SESSION_0525 — technique freemium (locked-preview). Default premium: most
+  // curriculum content is gated; a free-preview subset is flipped to false by the seed.
+  // Drives the browse-card lock badge + the watch-page/profile-rail entitlement gate.
+  isPremium         Boolean            @default(true)
   sortOrder         Int                @default(0)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @default(now())

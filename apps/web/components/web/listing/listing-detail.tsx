@@ -10,7 +10,7 @@ import { Sticky } from "~/components/web/ui/sticky"
  * Lifts the sticky hero + actions cluster + content/sidebar/related layout out of the L1 tool-detail
  * page (`app/(web)/[slug]/page.tsx`) so the bespoke `/directory/[slug]` and `/schools/[slug]` pages
  * render Tool-grade chrome. **Chrome only:** the divergent bodies and the three distinct claim systems
- * (tool dialog / ProfileClaimTeaser / OrgClaimCta) stay per-entity, passed in as slots — exactly how
+ * (tool dialog / ProfileClaimButton / OrgClaimCta) stay per-entity, passed in as slots — exactly how
  * `ListingCard` shares the card chrome but not the data. The L1 tool page keeps its own bespoke layout
  * (ToolButton / screenshot / Ad), so it is intentionally NOT routed through this.
  */

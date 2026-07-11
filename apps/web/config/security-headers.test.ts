@@ -68,6 +68,13 @@ describe("security headers baseline (RISK #2)", () => {
     )
   })
 
+  it("allowlists YouTube for frame-src (technique/reel video embeds)", () => {
+    const csp = buildContentSecurityPolicy({ NODE_ENV: "production" } as NodeJS.ProcessEnv)
+
+    expect(csp).toContain("https://www.youtube.com")
+    expect(csp).toContain("https://www.youtube-nocookie.com")
+  })
+
   it("locks down clickjacking + base-uri + object-src and upgrades mixed content in prod", () => {
     const csp = buildContentSecurityPolicy({ NODE_ENV: "production" } as NodeJS.ProcessEnv)
 

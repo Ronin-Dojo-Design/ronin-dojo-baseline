@@ -75,6 +75,12 @@ export type PublicPassportMedia = {
   purpose: string | null
   /** Linked-technique slug when the attachment references one → internal `/techniques/[slug]` route. */
   techniqueSlug: string | null
+  /**
+   * The linked technique's freemium flag (SESSION_0525) — true → premium (locked-preview),
+   * null when the attachment references no technique. Drives the per-item `locked` on the
+   * profile technique rail.
+   */
+  techniqueIsPremium: boolean | null
   sortOrder: number
 }
 
@@ -91,7 +97,7 @@ export async function getPublicPassportMedia(passportId: string): Promise<Public
     select: {
       sortOrder: true,
       purpose: true,
-      technique: { select: { slug: true } },
+      technique: { select: { slug: true, isPremium: true } },
       media: {
         select: {
           id: true,
@@ -115,6 +121,7 @@ export async function getPublicPassportMedia(passportId: string): Promise<Public
     durationSec: attachment.media.durationSec,
     purpose: attachment.purpose,
     techniqueSlug: attachment.technique?.slug ?? null,
+    techniqueIsPremium: attachment.technique?.isPremium ?? null,
     sortOrder: attachment.sortOrder,
   }))
 }

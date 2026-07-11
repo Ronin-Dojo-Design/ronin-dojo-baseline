@@ -16,6 +16,9 @@ export const techniqueMediaPayload = {
     },
     purpose: true,
     sortOrder: true,
+    // @added SESSION_0525 — the authoring Passport, so the freemium watch-page gate can
+    // treat the technique's own author (owner) as entitled even without a paid tier.
+    passportId: true,
   },
   orderBy: { sortOrder: "asc" },
 } satisfies Prisma.Technique$mediaAttachmentsArgs
@@ -49,6 +52,8 @@ export const techniqueOnePayload = {
   teachingCues: true,
   commonErrors: true,
   safetyNotes: true,
+  // @added SESSION_0525 — freemium gate flag for the watch page.
+  isPremium: true,
   sortOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -69,12 +74,18 @@ export const techniqueManyPayload = {
   isGi: true,
   isFoundational: true,
   requiresPartner: true,
+  // @added SESSION_0525 — freemium flag drives the browse-card "Premium" lock badge.
+  isPremium: true,
   sortOrder: true,
   discipline: techniqueDisciplinePayload,
   // @added SESSION_0525 (Stream D1) — tagged belt for the on-card belt chip.
   beltLevelMin: techniqueBeltPayload,
   // @added SESSION_0396 — shared listing taxonomy badges (Tool→Listing parity).
   categories: { select: { name: true, slug: true } },
+  // @added SESSION_0525 — media presence (any attachment) so the browse card only shows the
+  // "Premium" lock badge when there is actually a video/image to unlock. A count (not rows) keeps
+  // the faceted grid cheap; mirrors the watch page's `mediaAttachments.length === 0` no-media path.
+  _count: { select: { mediaAttachments: true } },
 } satisfies Prisma.TechniqueSelect
 
 // @added SESSION_0525 (Stream D2) — the video-rail row: the standard many-card payload
