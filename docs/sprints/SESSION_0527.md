@@ -238,19 +238,48 @@ lands; Slice 3 depends on Slice 2 (needs the attach UI). Fan out only where genu
 
 ## Open decisions / blockers
 
-- Slice-0 gate rewire + adversarial tests are HELD pending operator sign-off on the approach.
+- **Push HELD** — 4 commits await the operator's explicit "go" (apps/web push → CI + BBL prod deploy;
+  the additive `MediaAttachment.isPremium` migration auto-applies to Neon prod via prebuild).
+- **Slice 2 remainder** (URL-paste video input + admin-gating the R2 uploader) — deferred into the
+  Slice-3 grill (overlaps media-input policy + create-permission RBAC).
+- **Authoring UI unverified behind auth** — the belt-tag form + premium toggle are source+type verified,
+  not live-clicked; carried as a next-session first task.
+- Slice-3 open sub-fork (promote-to-library `Technique.isFeatured`) — DEFERRED to a fast-follow.
 
-## Next session — Slice 3 (create sheet + sequencing rail) then Slice 4
+## Next session — QUALITY-PASS the 0527 landed work, THEN grill/plan Slice 3
 
 ### Goal
 
-Build the public "Add technique" authoring flow: a plus-card in the `/techniques` rail (shown only to
-authorized creators) opens a scrollable bottom magnetic sheet = the FULL technique create form + a
-dnd-sequenced mixed photo/video media rail (add photo cards + video cards, drag to order), with the
-per-clip Premium toggle (Slice 2) and URL-paste video input. Then Slice 4 (profile podcast/match
-authoring, same card→sheet). Defer promote-to-library (`Technique.isFeatured`) to a fast-follow.
+Mirror the SESSION_0526→0525 pattern: Slices 0/1/2 shipped fast (Slice 0 strongly proven, but the
+authoring UI is unverified-behind-auth and Slice 2 has a deferred remainder). So the next session runs
+a **quality pass FIRST** over the 0527 landed diff — carry the SESSION_0527 hostile-review follow-ups,
+then `/fallow-fix-loop` + `/code-quality` (behavior-preserving) — THEN `/grill-me` (and/or
+`/grill-with-docs`) to lock Petey's Slice-3 plan (the full-create sheet + sequencing rail). **If
+planning lands short, implement Slice 3 the same session; if not, this next session is code-review +
+plan only, and the session after is Slice-3 implementation.** (Operator directive, 2026-07-11.)
 
-### Operator design decisions (2026-07-11)
+### First tasks (in order)
+
+1. **Hostile-close-review carry-overs** (from SESSION_0527 — the two gaps the review named):
+   - **Live-verify (authenticated) the authoring UI** — the one verification gap: log in as an
+     owner/instructor and exercise `/app/techniques/new` + `/app/techniques/[id]` (the belt-tag field
+     saves + reloads) and the per-clip **Premium/Free toggle** on the technique `MediaAttachmentManager`
+     (flips `isPremium`, badge updates, public gate flips). Source+type verified this session; not
+     live-clicked (behind auth).
+   - **Slice 2 remainder** — the deferred **URL-paste video input** + **admin-gating the R2 uploader**;
+     these overlap the create-permission RBAC + media-input policy, so fold them into the Slice-3 grill.
+2. **`/fallow-fix-loop`** over the 0527 diff (`origin/main..` the merge base) — CRAP/dupes/dead-code
+   diagnosis + multi-angle review + behavior-preserving fixes + re-verify (headless) + re-run fallow to
+   prove the delta. SKIP any file a live sibling lane owns.
+3. **`/code-quality`** score the net-new files (`technique-media-gate.ts`, the watch/profile gate
+   rewire, `setWebMediaPremium`/`applyWebMediaPremium`, `getTechniqueBeltOptions`, the seed change) —
+   is it Apple/Facebook-grade? Apply the gap-closing fixes.
+4. **`/grill-me` and/or `/grill-with-docs`** — set Petey's Slice-3 implementation plan using the design
+   decisions + reuse map below (resolve the media-input policy from step 1's Slice-2 remainder).
+5. **Implement-or-split** — short plan → build Slice 3 (Cody → Doug) this session; otherwise close as a
+   review+plan session and implement Slice 3 the session after. Then Slice 4.
+
+### Slice-3 design decisions (2026-07-11)
 
 - **Sheet = FULL create** (not quick-add), **scrollable**, WITH a **sequencing media rail**: add photo
   cards + video cards (mixed), drag to sequence. Per-clip premium toggle in the rail.
@@ -277,11 +306,12 @@ authoring, same card→sheet). Defer promote-to-library (`Technique.isFeatured`)
 - **Flow:** create technique (draft, unpublished) → the sequencing rail operates on its id
   (repo-consistent attach-after-create, like `MediaAttachmentManager` / `ContentMediaPanel`).
 
-### First task
+### Slice-3 build sketch (post-grill, for the implement step)
 
-Build `canCreateTechniqueForUser` (extend the `createTechnique` gate), then the "Add technique"
-plus-card → bottom-sheet composing `TechniqueForm` + the adapted sequencing media rail. Cody builds →
-Doug verifies. Then Slice 4.
+When Slice 3 implements (per the First-tasks step 5): build `canCreateTechniqueForUser` (extend the
+`createTechnique` gate — mirror `canUploadMediaForUser`), then the "Add technique" plus-card →
+bottom-sheet composing `TechniqueForm` + the adapted `content-media-panel` sequencing rail (with the
+Slice-2 premium toggle + the resolved URL-paste input). Cody builds → Doug verifies. Then Slice 4.
 
 ## Review log
 
