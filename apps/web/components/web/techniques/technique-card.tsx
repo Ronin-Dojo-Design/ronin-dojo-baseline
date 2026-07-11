@@ -1,6 +1,6 @@
 "use client"
 
-import { PlayIcon } from "lucide-react"
+import { LockIcon, PlayIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import { Badge } from "~/components/common/badge"
 import { ListingCard, ListingCardSkeleton } from "~/components/web/listing/listing-card"
@@ -43,10 +43,16 @@ const TechniqueCard = ({ technique, hasVideo, thumbnailUrl, ...props }: Techniqu
         ) : undefined
       }
       headerBadges={
-        // With a poster hero the play overlay already signals video, so the header badge
-        // only shows as the no-poster fallback (or Foundational, always).
-        (technique.isFoundational || (hasVideo && !thumbnailUrl)) && (
+        // With a poster hero the play overlay already signals video, so the Video badge
+        // only shows as the no-poster fallback (Foundational always; the Premium lock badge
+        // shows on every premium technique — the "locked preview" upsell signal).
+        (technique.isFoundational || technique.isPremium || (hasVideo && !thumbnailUrl)) && (
           <div className="ml-auto flex items-center gap-1.5">
+            {technique.isPremium && (
+              <Badge variant="warning" prefix={<LockIcon className="size-3" />}>
+                Premium
+              </Badge>
+            )}
             {hasVideo && !thumbnailUrl && (
               <Badge variant="danger" prefix={<PlayIcon className="size-3 fill-current" />}>
                 Video

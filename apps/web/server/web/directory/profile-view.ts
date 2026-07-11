@@ -105,9 +105,12 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
   const renderPolicy = profile.renderPolicy
 
   // `canRenderFullProfile` is the projector's rich-media decision (tier OR admin OR owner) — the
-  // SAME gate cover/video/social ride. Only pull public media when eligible + not a placeholder.
+  // SAME gate cover/video/social ride. Freemium (SESSION_0525): the highlight rails are now PUBLIC
+  // (matches/podcasts/technique reels show to EVERY viewer), so load public media for any real
+  // profile; `canRenderRichMedia` no longer gates the load — it only decides whether a PREMIUM
+  // technique reel renders LOCKED (`buildProfileMedia` per-item). Placeholders load nothing.
   const canRenderRichMedia = profile.canRenderFullProfile
-  const shouldLoadMedia = canRenderRichMedia && !profile.isClaimablePlaceholder
+  const shouldLoadMedia = !profile.isClaimablePlaceholder
 
   const [origin, viewerClaimState, claimFunnelHref, ancestry, publicMedia] = await Promise.all([
     getRequestOrigin(),

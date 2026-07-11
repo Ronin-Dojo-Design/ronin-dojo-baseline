@@ -16,4 +16,11 @@ export type TechniqueDetailView = {
   technique: TechniqueOne
   /** Resolved request brand — drives which font tokens the typography scope exposes. */
   brand: Brand
+  /**
+   * Freemium (SESSION_0525): whether the viewer may watch this technique's video — true for a
+   * free technique or an entitled viewer (premium tier / admin / author). The route resolves it
+   * off the session; when false on a premium technique the media section renders the locked
+   * upgrade state instead of the player.
+   */
+  viewerEntitled: boolean
 }

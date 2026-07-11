@@ -53,6 +53,12 @@ type VideoSeed = {
 type BeltGroup = {
   beltName: "White Belt" | "Blue Belt" | "Purple Belt"
   author: "brian" | "bob"
+  /**
+   * Freemium preview (SESSION_0525): the first `freeCount` videos in the group (by sortOrder)
+   * seed with `isPremium = false` — everyone can watch them; the rest stay premium (locked
+   * preview). Operator spec: 3 free per author → White(brian)=3, Purple(bob)=3, Blue=0.
+   */
+  freeCount?: number
   videos: VideoSeed[]
 }
 
@@ -63,6 +69,8 @@ const GROUPS: BeltGroup[] = [
   {
     beltName: "White Belt",
     author: "brian",
+    // 3 free-preview videos (Brian's first 3 by sortOrder); the rest premium.
+    freeCount: 3,
     videos: [
       { id: "BHfkD14tm6c", title: "How to Tie Your Belt - Half Method" },
       { id: "lOz81dx31jQ", title: "How to Tie Your Belt - Quarter Method" },
@@ -96,6 +104,8 @@ const GROUPS: BeltGroup[] = [
   {
     beltName: "Purple Belt",
     author: "bob",
+    // 3 free-preview videos (Bob's first 3 by sortOrder); the rest premium.
+    freeCount: 3,
     videos: [
       { id: "HXCWU1a7Ls0", title: "Back Mount Escape to Double Leg Pin Set" },
       { id: "x4EWOWFNw7w", title: "Side Mount #5 Escape" },
@@ -184,26 +194,35 @@ async function main() {
 
   const authorPassportId = { brian: brian.passport.id, bob: bob.id }
 
-  const counts: Record<string, { techniques: number; published: number; attachments: number }> = {}
+  const counts: Record<
+    string,
+    { techniques: number; published: number; free: number; attachments: number }
+  > = {}
 
   for (const group of GROUPS) {
     const beltLevelMinId = beltIdByName.get(group.beltName)!
     const passportId = authorPassportId[group.author]
-    const stat = { techniques: 0, published: 0, attachments: 0 }
+    const freeCount = group.freeCount ?? 0
+    const stat = { techniques: 0, published: 0, free: 0, attachments: 0 }
 
     let sortOrder = 0
     for (const video of group.videos) {
       const publish = video.publish ?? true
+      // Freemium (SESSION_0525): the first `freeCount` videos in the group (by sortOrder) are
+      // free-preview (`isPremium = false`); the rest stay premium (locked). Set on BOTH the
+      // create and update paths so a re-run flips existing rows too.
+      const isPremium = sortOrder >= freeCount
       const slug = video.slug ?? slugify(video.title, video.id)
       const watchUrl = `https://www.youtube.com/watch?v=${video.id}`
       const thumbnailUrl = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`
 
       if (DRY_RUN) {
         console.log(
-          `  [dry] ${group.beltName} ${publish ? "" : "(unpublished) "}${slug}  <- ${video.id}`,
+          `  [dry] ${group.beltName} ${publish ? "" : "(unpublished) "}${isPremium ? "" : "[FREE] "}${slug}  <- ${video.id}`,
         )
         stat.techniques += 1
         if (publish) stat.published += 1
+        if (!isPremium) stat.free += 1
         stat.attachments += 1
         sortOrder += 1
         continue
@@ -221,15 +240,17 @@ async function main() {
           slug,
           description: video.description ?? null,
           isPublished: publish,
+          isPremium,
           disciplineId: discipline.id,
           organizationId: org.id,
           beltLevelMinId,
         },
-        update: { disciplineId: discipline.id, beltLevelMinId },
+        update: { disciplineId: discipline.id, beltLevelMinId, isPremium },
         select: { id: true },
       })
       stat.techniques += 1
       if (publish) stat.published += 1
+      if (!isPremium) stat.free += 1
 
       // 2) Media (YOUTUBE) — dedupe by watch URL (Media has no natural unique key).
       let media = await db.media.findFirst({
@@ -282,7 +303,7 @@ async function main() {
   console.log(`\n${DRY_RUN ? "[DRY RUN] " : ""}Seed complete:`)
   for (const [belt, stat] of Object.entries(counts)) {
     console.log(
-      `  ${belt}: ${stat.techniques} techniques (${stat.published} published), ${stat.attachments} attachments`,
+      `  ${belt}: ${stat.techniques} techniques (${stat.published} published, ${stat.free} free), ${stat.attachments} attachments`,
     )
   }
 }

@@ -16,6 +16,9 @@ export const techniqueMediaPayload = {
     },
     purpose: true,
     sortOrder: true,
+    // @added SESSION_0525 — the authoring Passport, so the freemium watch-page gate can
+    // treat the technique's own author (owner) as entitled even without a paid tier.
+    passportId: true,
   },
   orderBy: { sortOrder: "asc" },
 } satisfies Prisma.Technique$mediaAttachmentsArgs
@@ -49,6 +52,8 @@ export const techniqueOnePayload = {
   teachingCues: true,
   commonErrors: true,
   safetyNotes: true,
+  // @added SESSION_0525 — freemium gate flag for the watch page.
+  isPremium: true,
   sortOrder: true,
   createdAt: true,
   updatedAt: true,
@@ -69,6 +74,8 @@ export const techniqueManyPayload = {
   isGi: true,
   isFoundational: true,
   requiresPartner: true,
+  // @added SESSION_0525 — freemium flag drives the browse-card "Premium" lock badge.
+  isPremium: true,
   sortOrder: true,
   discipline: techniqueDisciplinePayload,
   // @added SESSION_0525 (Stream D1) — tagged belt for the on-card belt chip.

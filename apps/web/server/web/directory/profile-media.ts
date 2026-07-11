@@ -34,6 +34,12 @@ export type ProfileMediaItem = {
   external: boolean
   /** Small caption under the title (provider label for podcasts, "Technique" for reels). */
   subtitle: string | null
+  /**
+   * Freemium (SESSION_0525): true → this is a PREMIUM technique reel the viewer isn't entitled to,
+   * so the card renders a lock overlay + upgrade affordance instead of a plain play button. Always
+   * false for podcasts and featured matches (public promo content) and for free technique reels.
+   */
+  locked: boolean
 }
 
 export type ProfileMedia = {
@@ -89,9 +95,12 @@ function podcastProviderLabel(url: string, durationSec: number | null): string {
 }
 
 /**
- * Split the public passport media into the two highlight rails, gated by the resolved rich-media
- * decision (`profile.canRenderFullProfile` — tier OR admin OR owner, the SAME alias the projector
- * uses for cover/video/social). Returns EMPTY when not eligible so the section self-hides on free.
+ * Split the public passport media into the three highlight rails. All rails are PUBLIC now
+ * (SESSION_0525 freemium): every viewer sees featured matches, podcasts, AND technique reels.
+ * The rich-media decision (`profile.canRenderFullProfile` — tier OR admin OR owner) no longer
+ * hides the technique rail; it only decides whether a PREMIUM technique reel renders LOCKED
+ * (`locked: true` → lock overlay + upgrade CTA) so the viewer sees what they're missing. Free
+ * technique reels, podcasts, and matches are never locked.
  */
 export function buildProfileMedia({
   canRenderRichMedia,
@@ -116,8 +125,8 @@ export function buildProfileMedia({
     const isTechnique = purpose.includes("technique") || isVideoType(item.type)
 
     if (isMatch) {
-      // Featured match → PUBLIC marquee legend content (mission/funnel), shown to EVERY viewer
-      // (not rich-media-gated); external YouTube link-out, surfaced first.
+      // Featured match → PUBLIC marquee legend content (mission/funnel), shown to EVERY viewer;
+      // external YouTube link-out, surfaced first. Never locked.
       featuredMatches.push({
         id: item.id,
         title: item.title ?? "Featured Match",
@@ -125,12 +134,13 @@ export function buildProfileMedia({
         href: item.url,
         external: true,
         subtitle: "Match",
+        locked: false,
       })
       continue
     }
     if (isPodcast) {
       // Podcasts are PUBLIC (operator, SESSION_0525) — promotional legend content, every viewer;
-      // external provider link-out (Spotify-feel lane), opens in a new tab.
+      // external provider link-out (Spotify-feel lane), opens in a new tab. Never locked.
       podcasts.push({
         id: item.id,
         title: item.title ?? "Podcast Highlight",
@@ -138,18 +148,17 @@ export function buildProfileMedia({
         href: item.url,
         external: true,
         subtitle: podcastProviderLabel(item.url, item.durationSec),
+        locked: false,
       })
       continue
     }
-    // Technique rail is the rich-media upsell — premium / admin / owner only (the per-video freemium
-    // lock, which shows locked-but-visible premium reels, is a follow-up slice).
-    if (!canRenderRichMedia) {
-      continue
-    }
     if (isTechnique) {
-      // Technique reel → internal `/techniques/[slug]` route when the attachment links a technique
-      // (TuffBuffs `route`), else fall back to the raw video URL (external new tab).
+      // Technique reel → PUBLIC/VISIBLE to every viewer (SESSION_0525 freemium). A PREMIUM reel the
+      // viewer isn't entitled to renders LOCKED (lock overlay + upgrade CTA); free reels play. The
+      // card links internally to `/techniques/[slug]` when the attachment references a technique
+      // (TuffBuffs `route`), else falls back to the raw video URL (external new tab).
       const internal = item.techniqueSlug != null
+      const locked = item.techniqueIsPremium === true && !canRenderRichMedia
       techniqueVideos.push({
         id: item.id,
         title: item.title ?? "Technique Video",
@@ -157,6 +166,7 @@ export function buildProfileMedia({
         href: internal ? `/techniques/${item.techniqueSlug}` : item.url,
         external: !internal,
         subtitle: "Technique",
+        locked,
       })
     }
   }
