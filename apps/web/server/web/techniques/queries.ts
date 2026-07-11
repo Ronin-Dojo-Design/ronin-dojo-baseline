@@ -71,24 +71,43 @@ export const searchTechniques = async (
 
 // --- Video rails (Stream D2) ---
 
-/** Techniques with no `category` are grouped into a single trailing rail. */
+/** Techniques with no `category` AND no belt fall into a single trailing rail. */
 export const UNCATEGORIZED_RAIL = "UNCATEGORIZED"
 const RAIL_ITEM_CAP = 15
 const MAX_RAILS = 8
 const MIN_RAIL_ITEMS = 2
 
+/** The belt identity of a belt-rail (label + `Rank.colorHex` accent). */
+export type TechniqueRailBelt = { name: string; colorHex: string | null }
+
 export type TechniqueRailGroup = {
-  category: string
-  /** Total techniques in the category (the rail is capped at {@link RAIL_ITEM_CAP}). */
+  /** Stable rail key: `cat:<enum>`, `belt:<rankId>`, or the uncategorized sentinel. */
+  key: string
+  /** The positional `TechniqueCategory` enum for a category rail; null for a belt rail. */
+  category: string | null
+  /** Present for a belt rail (drives the `Rank.name` title + colour accent); null otherwise. */
+  belt: TechniqueRailBelt | null
+  /** Total techniques in the rail (the carousel shows a capped subset). */
   total: number
   techniques: TechniqueRail[]
 }
 
+type RailBucket = {
+  key: string
+  category: string | null
+  belt: (TechniqueRailBelt & { sortOrder: number }) | null
+  techniques: TechniqueRail[]
+}
+
 /**
- * Per-category technique rails for the browse-by-category carousels (Stream D2). One
- * cached fetch of the brand's published techniques, grouped by the positional `category`
- * enum in memory (per-category queries would pipeline the local pg adapter). Rails are
- * ordered biggest-first with the uncategorized rail last; each is capped for the carousel.
+ * Browse-by-rail technique carousels (Stream D2, hybrid grouping). One cached fetch of the
+ * brand's published techniques, grouped in memory (per-group queries would pipeline the
+ * local pg adapter):
+ *   - a technique WITH a positional `category` → its per-category rail;
+ *   - a technique with NO category but a tagged belt (`beltLevelMin`) → its per-belt rail;
+ *   - neither → the single uncategorized rail.
+ * Belt rails order by `Rank.sortOrder` (white→blue→purple) and lead; category rails follow
+ * biggest-first; the uncategorized rail is last. Each rail is capped for the carousel.
  */
 export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGroup[]> => {
   "use cache"
@@ -103,27 +122,43 @@ export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGrou
     take: 500,
   })
 
-  const groups = new Map<string, TechniqueRail[]>()
+  const buckets = new Map<string, RailBucket>()
   for (const technique of techniques) {
-    const key = technique.category ?? UNCATEGORIZED_RAIL
-    const list = groups.get(key)
-    if (list) {
-      list.push(technique)
+    let bucket: Omit<RailBucket, "techniques">
+    if (technique.category) {
+      bucket = { key: `cat:${technique.category}`, category: technique.category, belt: null }
+    } else if (technique.beltLevelMin) {
+      const { id, name, colorHex, sortOrder } = technique.beltLevelMin
+      bucket = { key: `belt:${id}`, category: null, belt: { name, colorHex, sortOrder } }
     } else {
-      groups.set(key, [technique])
+      bucket = { key: UNCATEGORIZED_RAIL, category: UNCATEGORIZED_RAIL, belt: null }
+    }
+
+    const existing = buckets.get(bucket.key)
+    if (existing) {
+      existing.techniques.push(technique)
+    } else {
+      buckets.set(bucket.key, { ...bucket, techniques: [technique] })
     }
   }
 
-  return [...groups.entries()]
-    .filter(([, list]) => list.length >= MIN_RAIL_ITEMS)
+  // Order: belt rails first (by Rank.sortOrder), then category rails (biggest-first),
+  // then the uncategorized rail. `railRank` groups the three kinds; ties break within kind.
+  const railRank = (b: RailBucket) => (b.belt ? 0 : b.key === UNCATEGORIZED_RAIL ? 2 : 1)
+
+  return [...buckets.values()]
+    .filter(b => b.techniques.length >= MIN_RAIL_ITEMS)
     .sort((a, b) => {
-      if (a[0] === UNCATEGORIZED_RAIL) return 1
-      if (b[0] === UNCATEGORIZED_RAIL) return -1
-      return b[1].length - a[1].length
+      const kindDelta = railRank(a) - railRank(b)
+      if (kindDelta !== 0) return kindDelta
+      if (a.belt && b.belt) return a.belt.sortOrder - b.belt.sortOrder
+      return b.techniques.length - a.techniques.length
     })
     .slice(0, MAX_RAILS)
-    .map(([category, list]) => ({
+    .map(({ key, category, belt, techniques: list }) => ({
+      key,
       category,
+      belt: belt ? { name: belt.name, colorHex: belt.colorHex } : null,
       total: list.length,
       techniques: list.slice(0, RAIL_ITEM_CAP),
     }))
