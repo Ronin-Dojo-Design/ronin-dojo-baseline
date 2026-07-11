@@ -6,6 +6,7 @@ import type { Brand } from "~/.generated/prisma/client"
 import { Button } from "~/components/common/button"
 import { TechniqueListingSkeleton } from "~/components/web/techniques/technique-listing"
 import { TechniqueQuery } from "~/components/web/techniques/technique-query"
+import { TechniqueRails } from "~/components/web/techniques/technique-rails"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
@@ -28,9 +29,9 @@ type TechniquesIndexView = {
 
 /**
  * Public technique-library orchestrator — the folder module's barrel and only export
- * (component-launch-sweep recipe). Thin: it composes the header + the streamed query +
- * lazy cross-links inside the brand typography scope, and renders the JSON-LD sibling;
- * the route owns metadata + brand resolution.
+ * (component-launch-sweep recipe). Thin: it composes the header + the browse-by-category
+ * rails (Stream D2) + the streamed faceted query + lazy cross-links inside the brand
+ * typography scope, and renders the JSON-LD sibling; the route owns metadata + brand.
  *
  * Brand seam: the visible body renders inside `BrandTypography` (`bblHeadingScopeClass`)
  * so the heading + body inherit the BBL type tokens under BBL and degrade to the app
@@ -58,6 +59,14 @@ export function TechniquesIndex({
             BJJ Graph
           </Button>
         </Intro>
+
+        <Section>
+          <Section.Content>
+            <Suspense fallback={null}>
+              <TechniqueRails brand={brand} />
+            </Suspense>
+          </Section.Content>
+        </Section>
 
         <Section>
           <Section.Content>

@@ -12,6 +12,14 @@ export const filterTriggerClassName = "w-auto min-w-40 max-sm:flex-1"
 /** Shared option shape the static-enum filters map their values into. */
 export type FilterOption = { value: string; label: string }
 
+/** A belt option (a `Rank`) — `id` matches the technique's `beltLevelMinId` FK; `colorHex` tints the row swatch. */
+export type BeltFilterOption = {
+  id: string
+  name: string
+  shortName: string | null
+  colorHex: string | null
+}
+
 /** The live filter state for the technique facet bar (component-launch-sweep step 1). */
 export function useTechniqueFilters() {
   const { filters, updateFilters } = useFilters<TechniqueFilterSchema>()
@@ -29,4 +37,18 @@ export function useTechniqueDisciplineOptions(): FilterOption[] {
   useEffect(execute, [execute])
 
   return (result.data?.disciplines ?? []).map(({ slug, name }) => ({ value: slug, label: name }))
+}
+
+/**
+ * Belt facet options (Stream D1), loaded from the same server action on mount. Mirrors
+ * {@link useTechniqueDisciplineOptions}; the belt filter hides itself when the brand's
+ * technique disciplines carry no ranks. (Both hooks call the one cheap options action —
+ * accepted duplicate fetch, matching the established per-facet idiom.)
+ */
+export function useTechniqueBeltOptions(): BeltFilterOption[] {
+  const { result, execute } = useAction(findTechniqueFilterOptions)
+
+  useEffect(execute, [execute])
+
+  return result.data?.belts ?? []
 }

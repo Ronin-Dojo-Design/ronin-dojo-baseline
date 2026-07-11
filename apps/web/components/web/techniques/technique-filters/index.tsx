@@ -1,5 +1,6 @@
 "use client"
 
+import { BeltFilter } from "./belt-filter"
 import { CategoryFilter } from "./category-filter"
 import { DisciplineFilter } from "./discipline-filter"
 import { PositionFilter } from "./position-filter"
@@ -14,9 +15,10 @@ import { PositionFilter } from "./position-filter"
  * loader live in `use-technique-filters`.
  *
  * Facets: category + position are static enums (inlined to avoid bundling the Prisma
- * client client-side); discipline loads brand-scoped options and hides itself when the
- * brand has none. Clearing is handled by the global `Filters` reset (no cross-facet
- * resets — unlike directory's discipline→rank, techniques have no discipline-scoped facet).
+ * client client-side); discipline + belt load brand-scoped options from the server and
+ * hide themselves when there are none (belt = the tagged-belt facet, Stream D1). Clearing
+ * is handled by the global `Filters` reset (no cross-facet resets — unlike directory's
+ * discipline→rank, the technique belt facet is flat, not discipline-scoped).
  *
  * @see docs/runbooks/component-launch-sweep-recipe.md
  */
@@ -25,6 +27,7 @@ export const TechniqueFilters = () => {
     <>
       <CategoryFilter />
       <PositionFilter />
+      <BeltFilter />
       <DisciplineFilter />
     </>
   )
