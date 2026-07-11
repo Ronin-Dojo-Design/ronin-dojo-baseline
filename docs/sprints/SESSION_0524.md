@@ -228,7 +228,7 @@ scripts/session-0524-wp-belt-backfill.ts`; `--apply` is forbidden until separate
 | -------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
 | SESSION_0524_TASK_01 | landed                   | Live prod re-derived 33/33 targets; local WP SQL reconciled all 33 by exact normalized name with structured rank evidence. |
 | SESSION_0524_TASK_02 | landed                   | Guarded script built, reviewed, gated, committed; exact 33-action dry-run fingerprint `07e66320…0974c` shown.              |
-| SESSION_0524_TASK_03 | blocked on required gate | Await explicit operator authorization of the fingerprinted 33-action production apply; no write attempted.                 |
+| SESSION_0524_TASK_03 | landed | Operator authorized apply (via SESSION_0525): 33 actions applied on live prod in one serializable transaction; **Jerry C. Smith Jr. operator-overridden BR0→BK0** (out-of-band evidence, `--override-rank`). AFTER proof: 84 RankEntry-VERIFIED, 0 regressions, 0 fallback, 0 awardless. |
 
 ## What landed
 
@@ -266,6 +266,13 @@ verificationStatus=IMPORTED)` preserves legacy provenance/read-only belt-gate se
   84; intended RankEntry-only fixes 4; OLD→RankEntry regressions 33; membership fallback 33; no RankAward 33.
 - Final dry-run: exact matches/ranks for 33/33; no write attempted; plan SHA-256
   `07e663209aa7046e6f5a830f00feaa9a5e94e5e8d8122a960ab6d7591450974c`.
+- **Applied (SESSION_0525, operator-authorized).** Operator directed one override: Jerry C. Smith Jr.'s WP
+  record carries only a stale Brown Belt (BR0) value; the operator asserted his real Black Belt out-of-band,
+  so `--override-rank="Jerry C. Smith Jr.=BK0"` was used. Override plan SHA-256
+  `24a78dd28ab650b8f4b9c0eeeb9711f6b05fcaad78e94518af86506bf3450b2c`. Serializable all-or-nothing
+  transaction; post-apply row proof 33/33 IMPORTED awards + VERIFIED entries; AFTER cross-axis probe:
+  RankEntry-VERIFIED 51→84, OLD→RankEntry regressions 33→0, membership fallback 33→0, no-RankAward 33→0.
+  Jerry's award notes record `operator-directed BK0 supersedes WordPress-derived BR0`.
 - `bunx oxlint scripts/session-0524-wp-belt-backfill.ts` — pass.
 - `bun run typecheck` — pass (`next typegen` + `tsc --noEmit`).
 - `bun run lint:check` — pass with the repo's pre-existing warnings; no warning in the new script.

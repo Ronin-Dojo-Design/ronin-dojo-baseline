@@ -73,6 +73,25 @@ const RANK_ORDER = {
 
 type RankShortName = keyof typeof RANK_ORDER
 
+// Operator rank overrides ("<displayName>=<SHORT>[,...]"): applied only when the operator has out-of-band
+// evidence that supersedes the WordPress record (SESSION_0525: Jerry C. Smith Jr. is a black belt; his WP
+// record only carries a stale Brown Belt Gravity Forms value). Fail-closed: an unknown short name throws,
+// and a name matching no live target throws later.
+const RANK_OVERRIDES = new Map<string, RankShortName>(
+  (argumentValue("--override-rank") ?? "")
+    .split(",")
+    .map(pair => pair.trim())
+    .filter(Boolean)
+    .map(pair => {
+      const eq = pair.lastIndexOf("=")
+      if (eq < 1) throw new Error(`Invalid --override-rank entry (want "Name=SHORT"): ${pair}`)
+      const shortName = pair.slice(eq + 1).trim()
+      if (!(shortName in RANK_ORDER))
+        throw new Error(`Invalid --override-rank shortName: ${shortName}`)
+      return [pair.slice(0, eq).trim().toLowerCase(), shortName as RankShortName] as const
+    }),
+)
+
 const SUPPORTED_MEMBER_POST_TYPES = new Set([
   "bbl_member",
   "bbl_member_profile",
@@ -592,6 +611,7 @@ type BackfillPlanItem = LiveTarget & {
   rankId: string
   rankName: string
   rankShortName: RankShortName
+  overrideNote?: string
   wpRecords: Array<Pick<WpPost, "id" | "status" | "type">>
   evidence: RankEvidence[]
 }
@@ -689,6 +709,10 @@ function planFingerprint(items: BackfillPlanItem[], wpFile: { size: number; mtim
 
 function notesFor(item: BackfillPlanItem) {
   const recordSummary = item.wpRecords.map(record => `${record.id}:${record.type}`).join(",")
+  if (item.overrideNote) {
+    const wpAll = item.evidence.map(evidence => `[${evidence.rank}] ${evidence.source}`).join("; ")
+    return `SESSION_0524 WordPress belt backfill from blackbeltlegacy.local; records=${recordSummary}; ${item.overrideNote} (operator directive SESSION_0525); WP evidence=${wpAll}`
+  }
   const selectedEvidence = item.evidence
     .filter(evidence => evidence.rank === item.rankShortName)
     .map(evidence => evidence.source)
@@ -969,20 +993,30 @@ async function main() {
   }
 
   const neededShortNames = [
-    ...new Set([...selectedByTarget.values()].map(item => item.rankShortName)),
+    ...new Set([
+      ...[...selectedByTarget.values()].map(item => item.rankShortName),
+      ...RANK_OVERRIDES.values(),
+    ]),
   ].sort((left, right) => RANK_ORDER[left] - RANK_ORDER[right])
   const rankByShortName = await resolveBjjRanks(neededShortNames)
+  const appliedOverrides = new Set<string>()
   const plan: BackfillPlanItem[] = targetSet.targets.map(target => {
     const selected = selectedByTarget.get(target.displayName)
     if (!selected)
       throw new Error(`Internal error: no selected WordPress rank for ${target.displayName}`)
-    const rank = rankByShortName.get(selected.rankShortName)
-    if (!rank) throw new Error(`Internal error: no Prisma rank for ${selected.rankShortName}`)
+    const override = RANK_OVERRIDES.get(target.displayName.toLowerCase())
+    if (override) appliedOverrides.add(target.displayName.toLowerCase())
+    const effectiveShortName = override ?? selected.rankShortName
+    const rank = rankByShortName.get(effectiveShortName)
+    if (!rank) throw new Error(`Internal error: no Prisma rank for ${effectiveShortName}`)
     return {
       ...target,
       rankId: rank.id,
       rankName: rank.name,
-      rankShortName: selected.rankShortName,
+      rankShortName: effectiveShortName,
+      overrideNote: override
+        ? `operator-directed ${effectiveShortName} supersedes WordPress-derived ${selected.rankShortName}`
+        : undefined,
       wpRecords: selected.candidates.map(candidate => ({
         id: candidate.post.id,
         status: candidate.post.status,
@@ -991,6 +1025,11 @@ async function main() {
       evidence: selected.evidence,
     }
   })
+  // Fail-closed: every requested override must have matched exactly one live target.
+  for (const name of RANK_OVERRIDES.keys()) {
+    if (!appliedOverrides.has(name))
+      throw new Error(`--override-rank "${name}" matched no live target; refusing (fail-closed)`)
+  }
   const fingerprint = planFingerprint(plan, { size: wpFile.size, mtimeMs: wpFile.mtimeMs })
 
   console.log(`\n== Exact ${plan.length}-action plan ==`)
@@ -1023,6 +1062,7 @@ async function main() {
       `    ALL evidence: ${item.evidence.map(evidence => `[${evidence.rank}] ${evidence.source}`).join(" ; ")}`,
     )
     console.log("    change: RankAward ∅ → STATED/IMPORTED; RankEntry ∅ → VERIFIED")
+    if (item.overrideNote) console.log(`    OPERATOR OVERRIDE (SESSION_0525): ${item.overrideNote}`)
   }
   console.log(`\nPlan fingerprint (sha256): ${fingerprint}`)
 
