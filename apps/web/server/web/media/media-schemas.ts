@@ -55,6 +55,15 @@ export const promotePassportAvatarMediaSchema = z.object({
   attachmentId: z.string().min(1),
 })
 
+// SESSION_0527 Slice 2 — per-video freemium authoring: flip one attachment's `isPremium` flag (the
+// gate unit introduced in Slice 0). Re-authorized server-side for the target like every media action.
+export const setWebMediaPremiumSchema = z.object({
+  target: mediaAttachTargetSchema,
+  attachmentId: z.string().min(1),
+  isPremium: z.boolean(),
+})
+
 export type UploadWebMediaInput = z.infer<typeof uploadWebMediaSchema>
 export type RemoveWebMediaInput = z.infer<typeof removeWebMediaSchema>
 export type PromotePassportAvatarMediaInput = z.infer<typeof promotePassportAvatarMediaSchema>
+export type SetWebMediaPremiumInput = z.infer<typeof setWebMediaPremiumSchema>

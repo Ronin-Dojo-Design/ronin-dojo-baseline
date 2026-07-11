@@ -11,6 +11,7 @@ import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
 import type {
   PromotePassportAvatarMediaInput,
   RemoveWebMediaInput,
+  SetWebMediaPremiumInput,
   UploadWebMediaInput,
 } from "~/server/web/media/media-schemas"
 import {
@@ -201,6 +202,57 @@ export async function applyWebMediaRemoval({
   })
 
   return { removed: true }
+}
+
+/**
+ * Authorize → verify the attachment belongs to the target → flip its `isPremium` flag
+ * (SESSION_0527 Slice 2, per-video freemium authoring). Combining `attachmentId` with the target FK
+ * in one `where` enforces the attachment actually belongs to the target the caller claims — the same
+ * ownership guard `applyWebMediaRemoval` uses. The public freemium gate (`gateTechniqueMedia`,
+ * `buildProfileMedia`) reads this flag, so the action revalidates the technique surfaces.
+ */
+export async function applyWebMediaPremium({
+  db,
+  brand,
+  user,
+  input,
+}: {
+  db: AppDb
+  brand: Brand
+  user: AuthzUser
+  input: SetWebMediaPremiumInput
+}): Promise<{ attachmentId: string; isPremium: boolean }> {
+  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  if (!authorized) {
+    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+
+  const attachment = await db.mediaAttachment.findFirst({
+    where: { id: input.attachmentId, ...mediaTargetWhere(input.target) },
+    select: { id: true },
+  })
+  if (!attachment) {
+    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
+  }
+
+  await db.mediaAttachment.update({
+    where: { id: attachment.id },
+    data: { isPremium: input.isPremium },
+  })
+
+  await db.auditLog.create({
+    data: {
+      brand,
+      action: "media.premium.set",
+      entityType: MEDIA_TARGET_ENTITY_TYPE[input.target.kind],
+      entityId: input.target.id,
+      organizationId: auditOrganizationId(input.target),
+      userId: user.id,
+      after: { attachmentId: attachment.id, isPremium: input.isPremium },
+    },
+  })
+
+  return { attachmentId: attachment.id, isPremium: input.isPremium }
 }
 
 /**

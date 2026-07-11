@@ -12,6 +12,8 @@ export type DashboardMediaAttachment = {
   title: string | null
   altText: string | null
   isPublic: boolean
+  /** Per-video freemium flag (SESSION_0527 Slice 2) — drives the technique media premium toggle. */
+  isPremium: boolean
   sortOrder: number
 }
 
@@ -38,6 +40,7 @@ export async function getDashboardMediaAttachments({
     select: {
       id: true,
       sortOrder: true,
+      isPremium: true,
       media: {
         select: {
           id: true,
@@ -60,6 +63,7 @@ export async function getDashboardMediaAttachments({
     title: attachment.media.title,
     altText: attachment.media.altText,
     isPublic: attachment.media.isPublic,
+    isPremium: attachment.isPremium,
     sortOrder: attachment.sortOrder,
   }))
 }

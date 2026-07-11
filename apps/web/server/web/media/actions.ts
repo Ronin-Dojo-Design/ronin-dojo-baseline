@@ -4,12 +4,14 @@ import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
 import {
   applyPassportAvatarPromotion,
+  applyWebMediaPremium,
   applyWebMediaRemoval,
   applyWebMediaUpload,
 } from "~/server/web/media/apply-media"
 import {
   promotePassportAvatarMediaSchema,
   removeWebMediaSchema,
+  setWebMediaPremiumSchema,
   uploadWebMediaSchema,
 } from "~/server/web/media/media-schemas"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
@@ -87,6 +89,19 @@ export const removeWebMedia = userActionClient
     const result = await applyWebMediaRemoval({ db, brand: Brand.BBL, user, input: parsedInput })
 
     revalidate(revalidateForTarget(parsedInput.target))
+
+    return result
+  })
+
+export const setWebMediaPremium = userActionClient
+  .inputSchema(setWebMediaPremiumSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const result = await applyWebMediaPremium({ db, brand: Brand.BBL, user, input: parsedInput })
+
+    // Also bust the PUBLIC technique surfaces — the freemium gate keys off this flag on the browse
+    // rail + watch page + profile reels, not just the dashboard.
+    const rt = revalidateForTarget(parsedInput.target)
+    revalidate({ paths: [...rt.paths, "/techniques"], tags: [...rt.tags, "techniques"] })
 
     return result
   })

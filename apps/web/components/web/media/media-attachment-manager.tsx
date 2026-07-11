@@ -1,6 +1,12 @@
 "use client"
 
-import { Trash2Icon, UploadIcon, UserRoundCheckIcon } from "lucide-react"
+import {
+  LockKeyholeIcon,
+  LockOpenIcon,
+  Trash2Icon,
+  UploadIcon,
+  UserRoundCheckIcon,
+} from "lucide-react"
 import { useAction } from "next-safe-action/hooks"
 import { type ChangeEvent, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -15,6 +21,7 @@ import { Stack } from "~/components/common/stack"
 import {
   promotePassportAvatarMedia,
   removeWebMedia,
+  setWebMediaPremium,
   uploadWebMedia,
 } from "~/server/web/media/actions"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
@@ -63,6 +70,9 @@ export function MediaAttachmentManager({
           title: caption || null,
           altText: null,
           isPublic: data.isPublic,
+          // New uploads default to FREE (per-video freemium, SESSION_0527) — the author opts a clip
+          // into premium via the toggle below; nothing is gated by accident.
+          isPremium: false,
           sortOrder: current.length,
         },
       ])
@@ -85,6 +95,20 @@ export function MediaAttachmentManager({
     },
     onError: ({ error: { serverError } }) => {
       toast.error(serverError ?? "Failed to remove media.")
+    },
+  })
+
+  const setPremium = useAction(setWebMediaPremium, {
+    onSuccess: ({ data }) => {
+      if (!data) return
+      setAttachments(current =>
+        current.map(item =>
+          item.attachmentId === data.attachmentId ? { ...item, isPremium: data.isPremium } : item,
+        ),
+      )
+    },
+    onError: ({ error: { serverError } }) => {
+      toast.error(serverError ?? "Failed to update premium state.")
     },
   })
 
@@ -184,6 +208,12 @@ export function MediaAttachmentManager({
                   </Badge>
                 )}
 
+                {target.kind === "technique" && attachment.isPremium && (
+                  <Badge size="sm" variant="warning" className="absolute bottom-1 left-1">
+                    Premium
+                  </Badge>
+                )}
+
                 <Stack size="xs" direction="column" className="absolute right-1 top-1">
                   {target.kind === "passport" &&
                     attachment.type === "IMAGE" &&
@@ -204,6 +234,25 @@ export function MediaAttachmentManager({
                         Use as avatar
                       </Button>
                     )}
+
+                  {target.kind === "technique" && (
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant={attachment.isPremium ? "primary" : "secondary"}
+                      prefix={attachment.isPremium ? <LockKeyholeIcon /> : <LockOpenIcon />}
+                      isPending={setPremium.isPending}
+                      onClick={() =>
+                        setPremium.execute({
+                          target,
+                          attachmentId: attachment.attachmentId,
+                          isPremium: !attachment.isPremium,
+                        })
+                      }
+                    >
+                      {attachment.isPremium ? "Premium" : "Free"}
+                    </Button>
+                  )}
 
                   <Button
                     type="button"

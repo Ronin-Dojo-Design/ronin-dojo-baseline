@@ -9,6 +9,7 @@ mock.module("~/lib/media", () => ({
 
 import {
   applyPassportAvatarPromotion,
+  applyWebMediaPremium,
   applyWebMediaRemoval,
   applyWebMediaUpload,
 } from "~/server/web/media/apply-media"
@@ -46,6 +47,7 @@ function makeDb(state: FakeState = {}) {
     attachments: [] as any[],
     audits: [] as any[],
     mediaUpdates: [] as any[],
+    attachmentUpdates: [] as any[],
     passportUpdates: [] as any[],
     passportUpdateMany: [] as any[],
   }
@@ -121,6 +123,12 @@ function makeDb(state: FakeState = {}) {
       },
       count: async ({ where }: any) =>
         attachments.filter(row => row.mediaId === where.mediaId).length,
+      update: async ({ where, data }: any) => {
+        const row = attachments.find(r => r.id === where.id)
+        if (row) Object.assign(row, data)
+        created.attachmentUpdates.push({ where, data })
+        return { id: where.id, ...data }
+      },
     },
     auditLog: {
       create: async ({ data }: any) => {
@@ -532,6 +540,86 @@ describe("web media removal", () => {
     expect(created.passportUpdateMany[0]).toMatchObject({
       where: { id: "pass-self", avatarUrl: "https://s3.example.com/media/avatar.png" },
       data: { avatarUrl: null },
+    })
+  })
+})
+
+describe("web media premium toggle (SESSION_0527 Slice 2)", () => {
+  it("rejects an unauthorized (non-author) toggle", async () => {
+    const { db } = makeDb({
+      techniques: { "tech-1": "org-1" },
+      authorizedOrgIds: [], // editor is not an author of org-1
+      attachments: [
+        { id: "attach-1", mediaId: "media-1", techniqueId: "tech-1", isPremium: false },
+      ],
+    })
+
+    await expectRejectsWithMessage(
+      applyWebMediaPremium({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-1" },
+          attachmentId: "attach-1",
+          isPremium: true,
+        },
+      }),
+      WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED,
+    )
+  })
+
+  it("rejects toggling an attachment that does not belong to the target", async () => {
+    const { db } = makeDb({
+      techniques: { "tech-1": "org-1" },
+      authorizedOrgIds: ["org-1"],
+      // attachment belongs to a DIFFERENT technique — the target-FK guard must reject it.
+      attachments: [
+        { id: "attach-1", mediaId: "media-1", techniqueId: "tech-OTHER", isPremium: false },
+      ],
+    })
+
+    await expectRejectsWithMessage(
+      applyWebMediaPremium({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-1" },
+          attachmentId: "attach-1",
+          isPremium: true,
+        },
+      }),
+      WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND,
+    )
+  })
+
+  it("flips isPremium and audits an authorized toggle", async () => {
+    const { db, created, attachments } = makeDb({
+      techniques: { "tech-1": "org-1" },
+      authorizedOrgIds: ["org-1"],
+      attachments: [
+        { id: "attach-1", mediaId: "media-1", techniqueId: "tech-1", isPremium: false },
+      ],
+    })
+
+    const result = await applyWebMediaPremium({
+      db,
+      brand,
+      user: editorUser,
+      input: {
+        target: { kind: "technique", id: "tech-1" },
+        attachmentId: "attach-1",
+        isPremium: true,
+      },
+    })
+
+    expect(result).toEqual({ attachmentId: "attach-1", isPremium: true })
+    expect(attachments[0].isPremium).toBe(true)
+    expect(created.audits[0]).toMatchObject({
+      action: "media.premium.set",
+      entityType: "Technique",
+      after: { attachmentId: "attach-1", isPremium: true },
     })
   })
 })
