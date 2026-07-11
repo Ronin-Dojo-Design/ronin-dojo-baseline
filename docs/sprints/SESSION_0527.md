@@ -175,10 +175,10 @@ lands; Slice 3 depends on Slice 2 (needs the attach UI). Fan out only where genu
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0527_TASK_00 | landed (held at push) | Slice 0 shipped on branch: migration applied to dev DB (0 mismatch backfill), gate rewired per-attachment with server-side url-strip, adversarial no-leak tests + anon runtime proof (0 premium url leaks). All gates green. HELD at push gate. |
-| SESSION_0527_TASK_01 | pending | Slice 1 belt tag |
-| SESSION_0527_TASK_02 | pending | Slice 2 video attach + admin R2 uploader |
-| SESSION_0527_TASK_03 | pending | Slice 3 create-permission + scope + add-card sheet |
-| SESSION_0527_TASK_04 | pending | Slice 4 profile podcast/match authoring |
+| SESSION_0527_TASK_01 | landed (held at push) | Slice 1 belt-tag field on /app/techniques form (shared belt-options query, id-space = FK). `eae10497` |
+| SESSION_0527_TASK_02 | core landed (held at push) | Slice 2 CORE: per-video premium authoring toggle on MediaAttachmentManager (technique-only) + setWebMediaPremium action + 3 authz tests + runtime mixed-case proof. `5ff5dc12`. DEFERRED to 3–4 design pass: URL-paste media input + admin-gating the R2 uploader (overlaps create-permission RBAC). |
+| SESSION_0527_TASK_03 | pending (design pause) | Slice 3 create-permission 3-way OR + Fork-A scope + "Add technique" card→bottom-sheet |
+| SESSION_0527_TASK_04 | pending (design pause) | Slice 4 profile podcast/match authoring member+staff (card→bottom-sheet) |
 
 ## What landed
 
