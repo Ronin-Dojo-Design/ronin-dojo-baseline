@@ -182,11 +182,12 @@ session** lane. **Route → Cody per slice → Desi (design/reuse) + Doug (verif
 
 **Depends on:** D0 → D3. D1, D2 independent. **Route → Cody → Doug + Desi.** Independent of A/B/C/E.
 
-> **Author-tag follow-up (operator, SESSION_0525):** the person creating a technique post should be able
-> to **tag it with a belt** themselves (sets `beltLevelMinId`). That's a create/edit **author control** —
-> distinct from the D1 read-side facet. Open scoping question: is technique authoring **member-open** or
-> instructor/admin-only today, and does a create/edit technique form exist to mount the belt `Select` into?
-> New slice **D5** once scoped; not in the Wave 1 D1/D2 lane.
+> **Author-tag slice D5 (operator, SESSION_0525):** the person creating a technique post tags it with a
+> belt themselves. The author form **already exists** — `/app/techniques/new` + `/app/techniques/[id]` →
+> `app/(web)/dashboard/technique-form.tsx` + `server/web/techniques/crud-actions.ts`. So **D5 = mount a
+> belt `Select`** (brand-scoped `Rank` options) into that form, wired to `beltLevelMinId` via
+> `crud-actions.ts` + `schema.ts`. Small; not greenfield; not in the Wave 1 D1/D2 lane. (Confirm the exact
+> authoring permission gate at build — it's in the authenticated `/app` area.)
 
 ---
 
@@ -206,6 +207,16 @@ Both surfaces confirmed live: **Blog `Post` `/blog`** (staff) vs **Community `Co
 
 **Depends on:** E0 → E1/E2 (roster must be fixed before article-linking). E3 independent. **Route → Cody →
 Doug + Desi.** Independent of A/B/C/D.
+
+> **Content roadmap (operator, SESSION_0525):**
+> - **E1 missing articles** — Rick Williams + Chris Haueter drafted from **web research** (Haueter is
+>   web-rich; Rick is thin → operator supplies personal experience to flesh out). Drafts are **review-first**
+>   — public `/blog` content is **not published/seeded without operator sign-off** (and Rick's operator
+>   input). Draft agent dispatched SESSION_0525.
+> - **Podcast series (future, "at some point")** — a podcast with **each** Dirty Dozen member + a **group
+>   episode of the five** (possibly with Rigan). Feeds the **C1 podcast carousel** on profiles and future
+>   blog/media surfaces — C1's podcast rail should anticipate a per-member podcast media type. Backlog, not
+>   scheduled.
 
 ---
 
