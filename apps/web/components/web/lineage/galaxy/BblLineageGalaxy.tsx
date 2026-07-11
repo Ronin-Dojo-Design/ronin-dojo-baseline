@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Html, OrbitControls, Sparkles, Stars } from "@react-three/drei"
+import { Billboard, OrbitControls, Sparkles, Stars, Text } from "@react-three/drei"
+import { Bloom, EffectComposer, ToneMapping, Vignette } from "@react-three/postprocessing"
+import { ToneMappingMode } from "postprocessing"
 import gsap from "gsap"
 import * as THREE from "three"
 
@@ -31,11 +33,37 @@ type BblLineageGalaxyProps = {
   onSelectNode?: (node: BblGalaxyNode) => void
 }
 
+// Semantic role palette (NOT brand color — root/legend/instructor/student is meaning, not theme).
 const ROLE_COLOR: Record<BblGalaxyNode["role"], string> = {
   ROOT_STAR: "#f8d98a",
   LEGEND_STAR: "#d7a74c",
   INSTRUCTOR_PLANET: "#63d6ff",
   STUDENT_MOON: "#d8d8e8",
+}
+
+// HDR-range emissive (>1) so the bright anchors exceed the bloom luminance threshold and read as
+// light sources; moons stay sub-threshold so the field never washes out. (A1)
+const ROLE_EMISSIVE_INTENSITY: Record<BblGalaxyNode["role"], number> = {
+  ROOT_STAR: 2.8,
+  LEGEND_STAR: 2,
+  INSTRUCTOR_PLANET: 1.15,
+  STUDENT_MOON: 0.65,
+}
+
+// Always-on labels for the few anchor stars; planets/moons label on hover/selection only, so a
+// 65+ node graph never mounts 65 text meshes at once (A0 LOD gating; replaces per-node DOM <Html>).
+const ROLE_LABEL_ALWAYS: Record<BblGalaxyNode["role"], boolean> = {
+  ROOT_STAR: true,
+  LEGEND_STAR: true,
+  INSTRUCTOR_PLANET: false,
+  STUDENT_MOON: false,
+}
+
+const ROLE_LABEL_SIZE: Record<BblGalaxyNode["role"], number> = {
+  ROOT_STAR: 0.5,
+  LEGEND_STAR: 0.42,
+  INSTRUCTOR_PLANET: 0.32,
+  STUDENT_MOON: 0.28,
 }
 
 function GalaxyShell({
@@ -61,8 +89,7 @@ function GalaxyShell({
       <pointLight position={[-8, 5, 6]} intensity={1.3} color="#7fd7ff" />
       <pointLight position={[8, -4, -8]} intensity={1} color="#b46cff" />
 
-      <Stars radius={80} depth={40} count={2400} factor={4} fade speed={0.28} />
-      <Sparkles count={130} scale={[24, 9, 18]} size={2.8} speed={0.25} />
+      <Starfield />
 
       <TimelineBands groups={graph.groups} />
       <GalaxyEdges nodes={nodes} edges={graph.edges} />
@@ -79,6 +106,72 @@ function GalaxyShell({
       <CameraZoomController selectedNode={selectedNode} nodes={nodes} />
       <OrbitControls makeDefault enableDamping dampingFactor={0.075} />
     </>
+  )
+}
+
+/**
+ * Layered parallax star field (A2). Two drei <Stars> point clouds at different radii/densities
+ * drift at slightly different rates, so nearer stars slide past farther ones — a visibly deeper
+ * "pop-off" field than a single flat <Stars>. <Sparkles> adds the near foreground dust.
+ */
+function Starfield() {
+  const farRef = useRef<THREE.Group | null>(null)
+  const midRef = useRef<THREE.Group | null>(null)
+
+  useFrame((_, delta) => {
+    // delta-scaled so the drift is frame-rate independent; different rates = parallax depth cue.
+    if (farRef.current) farRef.current.rotation.y += delta * 0.006
+    if (midRef.current) midRef.current.rotation.y += delta * 0.014
+  })
+
+  return (
+    <>
+      <group ref={farRef}>
+        <Stars radius={165} depth={70} count={7000} factor={3} saturation={0} fade speed={0.12} />
+      </group>
+      <group ref={midRef}>
+        <Stars
+          radius={95}
+          depth={45}
+          count={3400}
+          factor={4.2}
+          saturation={0.16}
+          fade
+          speed={0.3}
+        />
+      </group>
+      <Sparkles
+        count={220}
+        scale={[30, 12, 22]}
+        size={2.6}
+        speed={0.22}
+        opacity={0.55}
+        color="#bcd8ff"
+      />
+    </>
+  )
+}
+
+/**
+ * Postprocessing stack (A1). NOTE: <EffectComposer> forces `gl.toneMapping = NoToneMapping` while
+ * mounted (restoring it on unmount), so the renderer's ACESFilmic setting is bypassed here — the
+ * tone-map must run as the final effect instead. Bloom runs first on the linear HDR buffer
+ * (frameBufferType HalfFloat), so HDR-range emissive stars bloom, then ACES compresses the result.
+ * A HalfFloat buffer is required so emissive values >1 survive to exceed the bloom threshold.
+ */
+function GalaxyEffects() {
+  return (
+    <EffectComposer frameBufferType={THREE.HalfFloatType}>
+      <Bloom
+        mipmapBlur
+        intensity={0.9}
+        luminanceThreshold={0.8}
+        luminanceSmoothing={0.28}
+        radius={0.75}
+      />
+      <Vignette eskil={false} offset={0.26} darkness={0.72} />
+      <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+    </EffectComposer>
   )
 }
 
@@ -111,115 +204,182 @@ function GalaxyNode({
   onSelectNode?: (node: BblGalaxyNode) => void
 }) {
   const groupRef = useRef<THREE.Group | null>(null)
+  const [hovered, setHovered] = useState(false)
   const color = ROLE_COLOR[node.role]
   const size = getGalaxyNodeSize(node)
+  const isStar = node.role === "ROOT_STAR" || node.role === "LEGEND_STAR"
+  const showLabel = isSelected || hovered || ROLE_LABEL_ALWAYS[node.role]
+  const labelSize = ROLE_LABEL_SIZE[node.role]
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return
 
     const pulse = Math.sin(clock.elapsedTime * 2.1 + node.orbitIndex) * 0.045
-    const selectedScale = isSelected ? 1.3 : 1
+    const selectedScale = isSelected ? 1.3 : hovered ? 1.12 : 1
 
     groupRef.current.scale.setScalar(selectedScale + pulse)
   })
 
   return (
     <group ref={groupRef} position={[node.position.x, node.position.y, node.position.z]}>
-      <mesh onClick={() => onSelectNode?.(node)}>
+      <mesh
+        onClick={event => {
+          event.stopPropagation()
+          onSelectNode?.(node)
+        }}
+        onPointerOver={event => {
+          event.stopPropagation()
+          setHovered(true)
+        }}
+        onPointerOut={() => setHovered(false)}
+      >
         <sphereGeometry args={[size, 32, 32]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={node.role === "ROOT_STAR" ? 1.5 : 0.88}
+          emissiveIntensity={ROLE_EMISSIVE_INTENSITY[node.role]}
+          toneMapped={false}
+          fog={false}
           roughness={0.25}
           metalness={0.08}
         />
       </mesh>
 
+      {/* Additive inner halo — blooms crisply (A2 glow refinement). */}
       <mesh>
-        <sphereGeometry args={[size * 1.55, 32, 32]} />
-        <meshBasicMaterial color={color} transparent opacity={isSelected ? 0.2 : 0.09} />
+        <sphereGeometry args={[size * 1.55, 24, 24]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={isSelected ? 0.28 : hovered ? 0.2 : 0.12}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          toneMapped={false}
+          fog={false}
+        />
       </mesh>
+
+      {/* Wider, fainter outer glow — stars only, for the light-source read. */}
+      {isStar ? (
+        <mesh>
+          <sphereGeometry args={[size * 2.6, 24, 24]} />
+          <meshBasicMaterial
+            color={color}
+            transparent
+            opacity={isSelected ? 0.12 : 0.07}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            toneMapped={false}
+            fog={false}
+          />
+        </mesh>
+      ) : null}
 
       {node.role !== "STUDENT_MOON" ? (
         <mesh rotation={[Math.PI / 2.1, 0, 0]}>
           <torusGeometry args={[size * 1.95, 0.015, 8, 90]} />
-          <meshBasicMaterial color={color} transparent opacity={0.78} />
+          <meshBasicMaterial color={color} transparent opacity={0.7} toneMapped={false} />
         </mesh>
       ) : null}
 
-      <Html
-        center
-        distanceFactor={node.role === "ROOT_STAR" ? 8 : 10}
-        position={[0, size + 0.35, 0]}
-      >
-        <button
-          type="button"
-          onClick={() => onSelectNode?.(node)}
-          className={[
-            "group min-w-24 rounded-full border px-3 py-1.5 text-left shadow-2xl backdrop-blur-md transition",
-            isSelected
-              ? "border-yellow-300 bg-black/80 text-yellow-100"
-              : "border-white/15 bg-black/55 text-white hover:border-yellow-200/70 hover:bg-black/75",
-          ].join(" ")}
-        >
-          <span className="flex items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/20 bg-white/10 text-[10px] font-semibold">
-              {node.photoUrl ? (
-                <img src={node.photoUrl} alt="" className="h-full w-full object-cover" />
-              ) : (
-                node.initials
-              )}
-            </span>
-
-            <span className="min-w-0">
-              <span className="block truncate text-[11px] font-semibold leading-tight">
-                {node.displayName}
-              </span>
-              {node.rankLabel ? (
-                <span className="block truncate text-[9px] uppercase tracking-[0.18em] text-white/60">
-                  {node.rankLabel}
-                </span>
-              ) : null}
-            </span>
-          </span>
-        </button>
-      </Html>
+      {showLabel ? (
+        <Billboard position={[0, size + 0.5, 0]}>
+          <Text
+            fontSize={labelSize}
+            color={isSelected ? "#fde68a" : "#ffffff"}
+            anchorX="center"
+            anchorY="bottom"
+            maxWidth={6}
+            outlineWidth={0.012}
+            outlineColor="#02030a"
+            outlineOpacity={0.85}
+            fillOpacity={isSelected || hovered ? 1 : 0.82}
+          >
+            {node.displayName}
+          </Text>
+          {(isSelected || hovered) && node.rankLabel ? (
+            <Text
+              position={[0, -0.12, 0]}
+              fontSize={labelSize * 0.52}
+              color="#cbd5f5"
+              anchorX="center"
+              anchorY="top"
+              letterSpacing={0.08}
+              outlineWidth={0.008}
+              outlineColor="#02030a"
+              outlineOpacity={0.8}
+            >
+              {node.rankLabel.toUpperCase()}
+            </Text>
+          ) : null}
+        </Billboard>
+      ) : null}
     </group>
   )
 }
 
+/**
+ * Lineage edges as two merged THREE.LineSegments (primary / secondary), allocated once per
+ * graph layout via useMemo and disposed on change — replaces the previous per-render
+ * BufferGeometry + LineBasicMaterial allocation for every edge (A0 perf ceiling). Built
+ * imperatively and mounted via <primitive> because R3F's <line> JSX intrinsic collides with
+ * React's SVG <line> in the type system.
+ */
 function GalaxyEdges({ nodes, edges }: { nodes: PositionedNode[]; edges: BblGalaxyEdge[] }) {
-  const nodeById = useMemo(() => new Map(nodes.map(node => [node.id, node])), [nodes])
+  const object = useMemo(() => {
+    const nodeById = new Map(nodes.map(node => [node.id, node]))
 
-  return (
-    <>
-      {edges.map(edge => {
+    const buildSegments = (isPrimary: boolean, colorHex: string, opacity: number) => {
+      const points: number[] = []
+
+      for (const edge of edges) {
+        if ((edge.relationshipType === "PRIMARY_LINEAGE") !== isPrimary) continue
         const source = nodeById.get(edge.sourceId)
         const target = nodeById.get(edge.targetId)
+        if (!source || !target) continue
 
-        if (!source || !target) return null
+        points.push(
+          source.position.x,
+          source.position.y,
+          source.position.z,
+          target.position.x,
+          target.position.y,
+          target.position.z,
+        )
+      }
 
-        const geometry = new THREE.BufferGeometry().setFromPoints([
-          new THREE.Vector3(source.position.x, source.position.y, source.position.z),
-          new THREE.Vector3(target.position.x, target.position.y, target.position.z),
-        ])
+      const geometry = new THREE.BufferGeometry()
+      geometry.setAttribute("position", new THREE.Float32BufferAttribute(points, 3))
+      const material = new THREE.LineBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity,
+      })
 
-        const isPrimary = edge.relationshipType === "PRIMARY_LINEAGE"
+      return new THREE.LineSegments(geometry, material)
+    }
 
-        // Build the line imperatively and mount via <primitive>. R3F's <line> JSX intrinsic
-        // collides with React's SVG <line> in the type system (resolves to SVGLineElement),
-        // so a constructed THREE.Line keeps it type-safe.
-        const material = new THREE.LineBasicMaterial({
-          color: isPrimary ? "#d7a74c" : "#7fd7ff",
-          transparent: true,
-          opacity: isPrimary ? 0.42 : 0.24,
-        })
+    const group = new THREE.Group()
+    group.add(buildSegments(true, "#d7a74c", 0.42))
+    group.add(buildSegments(false, "#7fd7ff", 0.24))
 
-        return <primitive key={edge.id} object={new THREE.Line(geometry, material)} />
-      })}
-    </>
-  )
+    return group
+  }, [nodes, edges])
+
+  useEffect(() => {
+    return () => {
+      object.traverse(child => {
+        if (child instanceof THREE.LineSegments) {
+          child.geometry.dispose()
+          const material = child.material
+          if (Array.isArray(material)) material.forEach(item => item.dispose())
+          else material.dispose()
+        }
+      })
+    }
+  }, [object])
+
+  return <primitive object={object} />
 }
 
 function CameraZoomController({
@@ -369,11 +529,15 @@ export function BblLineageGalaxy({ graph, onSelectNode }: BblLineageGalaxyProps)
         onFollowPath={handleFollowPath}
       />
 
-      <Canvas camera={{ position: [0, 8, 20], fov: 52 }}>
+      <Canvas
+        camera={{ position: [0, 8, 20], fov: 52 }}
+        gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1 }}
+      >
         <color attach="background" args={["#02030a"]} />
-        <fog attach="fog" args={["#02030a", 18, 42]} />
+        <fog attach="fog" args={["#02030a", 24, 68]} />
 
         <GalaxyShell graph={graph} selectedNode={selectedNode} onSelectNode={handleSelectNode} />
+        <GalaxyEffects />
       </Canvas>
     </section>
   )
