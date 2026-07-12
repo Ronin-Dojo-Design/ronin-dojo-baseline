@@ -158,7 +158,10 @@ export function TechniqueForm({
       teachingCues: technique?.teachingCues?.join("\n") ?? "",
       commonErrors: technique?.commonErrors?.join("\n") ?? "",
       safetyNotes: technique?.safetyNotes ?? "",
-      isPublished: technique?.isPublished ?? false,
+      // SESSION_0529 Desi P1 — AUTHORED creates publish by default: the flagship member flow
+      // otherwise stranded a draft behind a 404 link (the profile watch read is published-only and
+      // no author-facing publish UI exists yet). Org-canonical mode keeps its draft-first default.
+      isPublished: technique?.isPublished ?? (authored ? true : false),
     },
   })
 
@@ -501,7 +504,9 @@ export function TechniqueForm({
                   <FormControl>
                     <Switch checked={field.value} onCheckedChange={field.onChange} />
                   </FormControl>
-                  <FormLabel>Published</FormLabel>
+                  {/* Authored mode speaks member language (Desi P1) — the flag drives the public
+                      profile curriculum + watch page, not an org "publish" workflow. */}
+                  <FormLabel>{authored ? "Show on my public profile" : "Published"}</FormLabel>
                 </FormItem>
               )}
             />

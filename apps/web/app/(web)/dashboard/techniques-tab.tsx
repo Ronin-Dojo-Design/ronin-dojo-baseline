@@ -45,11 +45,14 @@ export async function DashboardTechniquesTab() {
 
   // Row link: the viewer's OWN authored rows watch on their profile-scoped route (profile-only rows
   // are OFF the canonical `/techniques/[slug]` by the ADR 0046 D4 discovery gate); everything else
-  // keeps the canonical watch link.
+  // keeps the canonical watch link. DRAFTS render UNLINKED (Desi P1): BOTH public watch reads are
+  // published-only, so a draft link is a guaranteed 404 — the row's existing "Draft" status badge
+  // carries the state.
   const rows = techniques.map(technique => ({
     ...technique,
-    href:
-      technique.authorPassportId && technique.authorPassportId === identity?.id && profileSlug
+    href: !technique.isPublished
+      ? null
+      : technique.authorPassportId && technique.authorPassportId === identity?.id && profileSlug
         ? `/directory/${profileSlug}/techniques/${technique.slug}`
         : `/techniques/${technique.slug}`,
   }))

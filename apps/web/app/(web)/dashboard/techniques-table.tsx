@@ -22,8 +22,12 @@ type TechniqueRow = {
   isPublished: boolean
   difficultyLevel: string | null
   createdAt: Date
-  /** Watch link, resolved server-side (SESSION_0529): profile-scoped for own authored rows. */
-  href: string
+  /**
+   * Watch link, resolved server-side (SESSION_0529): profile-scoped for own authored rows.
+   * `null` for DRAFTS (Desi P1) — the public watch reads are published-only, so a draft link
+   * would 404; the name renders unlinked and the Status column's "Draft" badge carries the state.
+   */
+  href: string | null
   discipline: { id: string; name: string } | null
   organization: { id: string; name: string } | null
 }
@@ -72,9 +76,13 @@ export function TechniquesTable({ techniques, showOrgCreate = false }: Technique
           {techniques.map(t => (
             <TableRow key={t.id}>
               <TableCell>
-                <Link href={t.href} className="font-medium">
-                  {t.name}
-                </Link>
+                {t.href ? (
+                  <Link href={t.href} className="font-medium">
+                    {t.name}
+                  </Link>
+                ) : (
+                  <span className="font-medium">{t.name}</span>
+                )}
               </TableCell>
               <TableCell>
                 {t.discipline && <Badge variant="soft">{t.discipline.name}</Badge>}
