@@ -81,7 +81,11 @@ const MIGRATED_DASHBOARD_APP_ROUTES = [
 
 const APP_TAB_REDIRECTS = [
   { source: "/app/events", destination: "/app/profile?tab=events" },
-  { source: "/app/techniques", destination: "/app/profile?tab=techniques" },
+  // FI-027 (SESSION_0530): /app/techniques is now a STAFF AdminCollection index, not a
+  // memberless route — so it is NO LONGER tab-redirected to the profile techniques tab (that
+  // rule shadowed the new index entirely). Reachability is gated by the page's inline
+  // requirePermission(techniques.manage); non-staff fall through to the guard's /app redirect.
+  // Members still author via /app/profile?tab=techniques directly (the MAB deep-link + tab).
 ] as const
 
 const matchStaticOrPath = (pathname: string, source: string, destination: string) => {

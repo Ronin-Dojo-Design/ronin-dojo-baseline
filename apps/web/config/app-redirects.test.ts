@@ -246,8 +246,10 @@ describe("migrated admin app redirects", () => {
 
   it("resolves exact app index routes to addressable profile tabs", () => {
     expect(resolveAppTabRedirect("/app/events")).toBe("/app/profile?tab=events")
-    expect(resolveAppTabRedirect("/app/techniques")).toBe("/app/profile?tab=techniques")
     expect(resolveAppTabRedirect("/app/events/new")).toBe(null)
+    // FI-027: /app/techniques is now a staff AdminCollection index, NOT tab-redirected to the
+    // member profile tab (that rule shadowed the index). It is gated by requirePermission only.
+    expect(resolveAppTabRedirect("/app/techniques")).toBe(null)
     expect(resolveAppTabRedirect("/app/techniques/new")).toBe(null)
   })
 })

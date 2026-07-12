@@ -25,7 +25,12 @@ const SCOPE_OPTIONS: { value: TechniquesTableSchema["scope"]; label: string }[] 
 
 export function TechniquesTable({ techniquesPromise }: TechniquesTableProps) {
   const { rows, total, pageCount } = use(techniquesPromise)
-  const [{ perPage, sort, scope }, setParams] = useQueryStates(techniquesTableParamsSchema)
+  // shallow:false — the scope write must trigger a server round-trip (re-run the RSC →
+  // re-query findTechniquesForAdmin), matching useDataTable's own non-shallow pagination/sort/name
+  // writes. Without it the URL flips to ?scope=… but the rows stay on the old view until reload.
+  const [{ perPage, sort, scope }, setParams] = useQueryStates(techniquesTableParamsSchema, {
+    shallow: false,
+  })
 
   const columns = useMemo(() => getColumns(), [])
 
