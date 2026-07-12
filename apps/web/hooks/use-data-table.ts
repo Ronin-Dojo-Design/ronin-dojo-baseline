@@ -30,6 +30,8 @@ import { useMemo, useState } from "react"
 import { getSortingStateParser } from "~/lib/parsers"
 import type { DataTableFilterField, ExtendedSortingState } from "~/types"
 
+const EMPTY_COLUMN_FILTERS: ColumnFiltersState = []
+
 type UseDataTableProps<TData> = Omit<
   TableOptions<TData>,
   | "state"
@@ -132,6 +134,22 @@ type UseDataTableProps<TData> = Omit<
     }
   }
 
+/**
+ * Restore declared initial filters when a controlled filter update removes them.
+ * This keeps the toolbar state aligned with server params that use the same defaults:
+ * clearing a defaulted facet means "reset to default", while selecting another value
+ * (or every value to represent All) is preserved verbatim.
+ */
+export function mergeDefaultColumnFilters(
+  filters: ColumnFiltersState,
+  defaults: ColumnFiltersState = [],
+): ColumnFiltersState {
+  const activeIds = new Set(filters.map(filter => filter.id))
+  const missingDefaults = defaults.filter(filter => !activeIds.has(filter.id))
+
+  return missingDefaults.length > 0 ? [...filters, ...missingDefaults] : filters
+}
+
 export function useDataTable<TData>({
   pageCount = -1,
   filterFields = [],
@@ -165,6 +183,7 @@ export function useDataTable<TData>({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
     initialState?.columnVisibility ?? {},
   )
+  const defaultColumnFilters = initialState?.columnFilters ?? EMPTY_COLUMN_FILTERS
 
   const [page, setPage] = useQueryState(
     "page",
@@ -187,18 +206,28 @@ export function useDataTable<TData>({
   const filterParsers = useMemo(() => {
     return filterFields.reduce<Record<string, SingleParser<string> | SingleParser<string[]>>>(
       (acc, field) => {
+        const defaultFilter = defaultColumnFilters.find(filter => filter.id === field.id)
+
         if (field.options) {
           // Faceted filter
-          acc[field.id] = parseAsArrayOf(parseAsString, ",").withOptions(queryStateOptions)
+          const parser = parseAsArrayOf(parseAsString, ",").withOptions(queryStateOptions)
+          acc[field.id] = Array.isArray(defaultFilter?.value)
+            ? parser.withDefault(defaultFilter.value.map(String))
+            : parser
         } else {
           // Search filter
-          acc[field.id] = parseAsString.withOptions(queryStateOptions)
+          const parser = parseAsString.withOptions(queryStateOptions)
+          const defaultValue = Array.isArray(defaultFilter?.value)
+            ? defaultFilter.value[0]
+            : defaultFilter?.value
+          acc[field.id] =
+            typeof defaultValue === "string" ? parser.withDefault(defaultValue) : parser
         }
         return acc
       },
       {},
     )
-  }, [filterFields, queryStateOptions])
+  }, [defaultColumnFilters, filterFields, queryStateOptions])
 
   const [filterValues, setFilterValues] = useQueryStates(filterParsers)
 
@@ -234,18 +263,23 @@ export function useDataTable<TData>({
 
   // Filter
   const initialColumnFilters: ColumnFiltersState = useMemo(() => {
-    return enableAdvancedFilter
-      ? []
-      : Object.entries(filterValues).reduce<ColumnFiltersState>((filters, [key, value]) => {
-          if (value !== null) {
-            filters.push({
-              id: key,
-              value: Array.isArray(value) ? value : [value],
-            })
-          }
-          return filters
-        }, [])
-  }, [filterValues, enableAdvancedFilter])
+    if (enableAdvancedFilter) return []
+
+    const parsedFilters = Object.entries(filterValues).reduce<ColumnFiltersState>(
+      (filters, [key, value]) => {
+        if (value !== null) {
+          filters.push({
+            id: key,
+            value: Array.isArray(value) ? value : [value],
+          })
+        }
+        return filters
+      },
+      [],
+    )
+
+    return mergeDefaultColumnFilters(parsedFilters, defaultColumnFilters)
+  }, [defaultColumnFilters, filterValues, enableAdvancedFilter])
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initialColumnFilters)
 
@@ -265,7 +299,9 @@ export function useDataTable<TData>({
       if (enableAdvancedFilter) return
 
       setColumnFilters(prev => {
-        const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
+        const requestedNext =
+          typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
+        const next = mergeDefaultColumnFilters(requestedNext, defaultColumnFilters)
 
         const filterUpdates = next.reduce<Record<string, string | string[] | null>>(
           (acc, filter) => {
@@ -291,7 +327,14 @@ export function useDataTable<TData>({
         return next
       })
     },
-    [debouncedSetFilterValues, enableAdvancedFilter, filterableColumns, searchableColumns, setPage],
+    [
+      debouncedSetFilterValues,
+      defaultColumnFilters,
+      enableAdvancedFilter,
+      filterableColumns,
+      searchableColumns,
+      setPage,
+    ],
   )
 
   const table = useReactTable({

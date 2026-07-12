@@ -3,15 +3,16 @@
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { ComponentProps } from "react"
-import { type Post, PostStatus } from "~/.generated/prisma/browser"
+import { PostStatus } from "~/.generated/prisma/browser"
 import { PostActions } from "~/app/app/blog/_components/post-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import type { PostAdminRow } from "~/server/admin/posts/queries"
 
-export const getColumns = (): ColumnDef<Post>[] => {
+export const getColumns = (): ColumnDef<PostAdminRow>[] => {
   const statusBadges: Record<PostStatus, ComponentProps<typeof Badge>> = {
     [PostStatus.Draft]: { variant: "soft" },
     [PostStatus.Scheduled]: { variant: "info" },
@@ -57,6 +58,12 @@ export const getColumns = (): ColumnDef<Post>[] => {
       },
     },
     {
+      id: "author",
+      enableSorting: false,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Author" />,
+      cell: ({ row }) => <Note>{row.original.author.name ?? "—"}</Note>,
+    },
+    {
       accessorKey: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => (
@@ -65,7 +72,7 @@ export const getColumns = (): ColumnDef<Post>[] => {
     },
     {
       accessorKey: "publishedAt",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Published At" />,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Published" />,
       cell: ({ row }) =>
         row.original.publishedAt ? (
           <Note>{formatDate(row.getValue<Date>("publishedAt"))}</Note>
@@ -74,9 +81,9 @@ export const getColumns = (): ColumnDef<Post>[] => {
         ),
     },
     {
-      accessorKey: "createdAt",
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
-      cell: ({ row }) => <Note>{formatDate(row.getValue<Date>("createdAt"))}</Note>,
+      accessorKey: "updatedAt",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Updated" />,
+      cell: ({ row }) => <Note>{formatDate(row.getValue<Date>("updatedAt"))}</Note>,
     },
     {
       id: "actions",

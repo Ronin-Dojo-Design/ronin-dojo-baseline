@@ -2,7 +2,6 @@
 
 import { EllipsisIcon, TrashIcon } from "lucide-react"
 import type { ComponentProps } from "react"
-import type { Post } from "~/.generated/prisma/browser"
 import { PostsDeleteDialog } from "~/app/app/blog/_components/posts-delete-dialog"
 import { Button } from "~/components/common/button"
 import {
@@ -16,7 +15,7 @@ import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
 
 type PostActionsProps = ComponentProps<typeof Button> & {
-  post: Post
+  post: { id: string; slug: string }
 }
 
 export const PostActions = ({ className, post, ...props }: PostActionsProps) => {

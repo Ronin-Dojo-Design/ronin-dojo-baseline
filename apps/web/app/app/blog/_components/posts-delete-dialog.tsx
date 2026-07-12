@@ -1,11 +1,10 @@
 import type { PropsWithChildren } from "react"
 import { toast } from "sonner"
-import type { Post } from "~/.generated/prisma/browser"
 import { DeleteDialog } from "~/components/admin/dialogs/delete-dialog"
 import { deletePosts } from "~/server/admin/posts/actions"
 
 type PostsDeleteDialogProps = PropsWithChildren<{
-  posts: Post[]
+  posts: Array<{ id: string }>
   onExecute?: () => void
 }>
 

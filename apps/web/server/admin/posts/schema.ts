@@ -6,18 +6,21 @@ import {
   parseAsStringEnum,
 } from "nuqs/server"
 import * as z from "zod"
-import { type Post, PostStatus } from "~/.generated/prisma/browser"
+import { PostStatus } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
+import type { PostAdminRow } from "./queries"
 
 export const postsTableParamsSchema = {
   title: parseAsString.withDefault(""),
-  sort: getSortingStateParser<Post>().withDefault([{ id: "createdAt", desc: true }]),
+  sort: getSortingStateParser<PostAdminRow>().withDefault([{ id: "updatedAt", desc: true }]),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(25),
   from: parseAsString.withDefault(""),
   to: parseAsString.withDefault(""),
   operator: parseAsStringEnum(["and", "or"]).withDefault("and"),
-  status: parseAsArrayOf(parseAsStringEnum<PostStatus>(Object.values(PostStatus))).withDefault([]),
+  status: parseAsArrayOf(parseAsStringEnum<PostStatus>(Object.values(PostStatus))).withDefault([
+    PostStatus.Draft,
+  ]),
 }
 
 export const postsTableParamsCache = createSearchParamsCache(postsTableParamsSchema)

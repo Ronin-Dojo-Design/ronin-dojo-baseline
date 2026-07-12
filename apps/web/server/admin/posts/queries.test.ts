@@ -1,93 +1,116 @@
 /**
- * SESSION_0138 TASK_01 — Integration test for findPosts brand filtering.
- *
- * Proves that `findPosts` forwards the `where` parameter (including `{ brand }`)
- * into the Prisma query, closing the Kaizen aggregate gap from SESSION_0137.
+ * SESSION_0531 TASK_01 — Posts AdminCollection query contract.
  *
  * Run: cd apps/web && bun test server/admin/posts/queries.test.ts
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module
 import { beforeEach, describe, expect, it, mock } from "bun:test"
+import type { PostsTableSchema } from "~/server/admin/posts/schema"
 
-// ---------------------------------------------------------------------------
-// Default search params matching PostsTableSchema defaults
-// ---------------------------------------------------------------------------
-const defaultSearch = {
+let capturedFindManyArgs: any
+let capturedCountArgs: any
+let countResult = 0
+
+mock.module("~/services/db", () => ({
+  db: {
+    $transaction: async (queries: Promise<unknown>[]) => Promise.all(queries),
+    post: {
+      findMany: (args: unknown) => {
+        capturedFindManyArgs = args
+        return Promise.resolve([])
+      },
+      count: (args: unknown) => {
+        capturedCountArgs = args
+        return Promise.resolve(countResult)
+      },
+    },
+  },
+}))
+
+const defaultSearch: PostsTableSchema = {
   title: "",
-  sort: [{ id: "createdAt", desc: true }],
+  sort: [{ id: "updatedAt", desc: true }],
   page: 1,
   perPage: 25,
   from: "",
   to: "",
   operator: "and",
-  status: [],
+  status: ["Draft"],
 }
 
 describe("findPosts", () => {
-  describe("brand filtering", () => {
-    let capturedFindManyArgs: unknown
-    let capturedCountArgs: unknown
+  beforeEach(() => {
+    capturedFindManyArgs = undefined
+    capturedCountArgs = undefined
+    countResult = 0
+  })
 
-    beforeEach(() => {
-      capturedFindManyArgs = undefined
-      capturedCountArgs = undefined
+  it("preserves extraWhere brand scope in both transaction queries", async () => {
+    const { findPosts } = await import("./queries")
 
-      mock.module("~/services/db", () => ({
-        db: {
-          $transaction: async (queries: Promise<unknown>[]) => {
-            return Promise.all(queries)
-          },
-          post: {
-            findMany: (args: unknown) => {
-              capturedFindManyArgs = args
-              return Promise.resolve([])
-            },
-            count: (args: unknown) => {
-              capturedCountArgs = args
-              return Promise.resolve(0)
-            },
-          },
-        },
-      }))
+    await findPosts(defaultSearch, { brand: "BBL" })
+
+    expect(capturedFindManyArgs.where.brand).toBe("BBL")
+    expect(capturedCountArgs.where.brand).toBe("BBL")
+    expect(capturedFindManyArgs.where.AND).toContainEqual({
+      status: { in: ["Draft"] },
+    })
+  })
+
+  it("composes search filters beneath extraWhere", async () => {
+    const { findPosts } = await import("./queries")
+
+    await findPosts({ ...defaultSearch, title: "Test Post" }, { brand: "BBL" })
+
+    expect(capturedFindManyArgs.where).toMatchObject({ brand: "BBL" })
+    expect(capturedFindManyArgs.where.AND).toContainEqual({
+      title: { contains: "Test Post", mode: "insensitive" },
+    })
+  })
+
+  it("returns the shared collection shape and selects only row fields", async () => {
+    const { findPosts } = await import("./queries")
+    countResult = 26
+
+    const result = await findPosts(defaultSearch, { brand: "BBL" })
+
+    expect(result).toEqual({ rows: [], total: 26, pageCount: 2 })
+    expect(capturedFindManyArgs.select).toEqual({
+      id: true,
+      title: true,
+      slug: true,
+      status: true,
+      publishedAt: true,
+      updatedAt: true,
+      author: { select: { name: true } },
+    })
+    expect(capturedFindManyArgs.include).toBeUndefined()
+  })
+
+  it("clamps hostile paging and falls back from an unallowlisted sort", async () => {
+    const { findPosts } = await import("./queries")
+
+    await findPosts({
+      ...defaultSearch,
+      page: -4,
+      perPage: 0,
+      sort: [{ id: "content", desc: false } as any],
     })
 
-    it("passes brand filter into Prisma where clause", async () => {
-      const { findPosts } = await import("./queries")
+    expect(capturedFindManyArgs.skip).toBe(0)
+    expect(capturedFindManyArgs.take).toBe(1)
+    expect(capturedFindManyArgs.orderBy).toEqual([{ updatedAt: "desc" }, { id: "asc" }])
+  })
 
-      await findPosts(defaultSearch as any, { brand: "BASELINE_MARTIAL_ARTS" })
+  it("threads only allowlisted collection sorts to Prisma", async () => {
+    const { findPosts } = await import("./queries")
 
-      // Verify findMany received the brand filter
-      expect(capturedFindManyArgs).toBeDefined()
-      const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
-
-      // Verify count also received the brand filter
-      expect(capturedCountArgs).toBeDefined()
-      const countWhere = (capturedCountArgs as any).where
-      expect(countWhere.brand).toBe("BASELINE_MARTIAL_ARTS")
+    await findPosts({
+      ...defaultSearch,
+      sort: [{ id: "title", desc: false }, { id: "author", desc: true } as any],
     })
 
-    it("does not include brand filter when where is omitted", async () => {
-      const { findPosts } = await import("./queries")
-
-      await findPosts(defaultSearch as any)
-
-      const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBeUndefined()
-    })
-
-    it("merges brand filter with other search filters", async () => {
-      const { findPosts } = await import("./queries")
-
-      const searchWithTitle = { ...defaultSearch, title: "Test Post" }
-      await findPosts(searchWithTitle as any, { brand: "RONIN_DOJO_DESIGN" })
-
-      const findManyWhere = (capturedFindManyArgs as any).where
-      expect(findManyWhere.brand).toBe("RONIN_DOJO_DESIGN")
-      // The AND clause should contain the title filter
-      expect(findManyWhere.AND).toBeDefined()
-      expect(findManyWhere.AND.length).toBeGreaterThan(0)
-    })
+    expect(capturedFindManyArgs.orderBy).toEqual([{ title: "asc" }, { id: "asc" }])
   })
 })

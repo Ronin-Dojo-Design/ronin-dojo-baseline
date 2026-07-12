@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
 
-// WL-P2-34 (ADR 0045): /app/claims, /app/organizations, /app/media migrated onto the ONE
+// WL-P2-34 (ADR 0045): /app/claims, /app/organizations, /app/media, /app/blog migrated onto the ONE
 // AdminCollection frame. FI-027 (SESSION_0530): /app/techniques is a SIBLING AdminCollection
 // (staff-only, `techniques.manage` — the admin role's `"*"` wildcard passes the inline guard).
 // Temporary conformance smoke — asserts each migrated route renders the shared DataTable frame
@@ -15,17 +15,48 @@ test.describe("AdminCollection conformance smoke", () => {
     for (const id of createdUserIds) await cleanupTestUser(id)
   })
 
-  for (const path of ["/app/claims", "/app/organizations", "/app/media", "/app/techniques"]) {
+  for (const path of [
+    "/app/claims",
+    "/app/organizations",
+    "/app/media",
+    "/app/techniques",
+    "/app/blog",
+  ]) {
     test(`admin sees the AdminCollection table at ${path}`, async ({ page }) => {
       const { userId } = await createAuthenticatedUser(page, { role: "admin" })
       createdUserIds.push(userId)
 
       await page.goto(path)
 
-      await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+      await expect(page.locator("table").first()).toBeVisible({
+        timeout: 30_000,
+      })
       await expect(page.locator("body")).not.toContainText("404")
     })
   }
+
+  test("Posts opens on the visible Draft editorial queue", async ({ page }) => {
+    const { userId } = await createAuthenticatedUser(page, { role: "admin" })
+    createdUserIds.push(userId)
+
+    await page.goto("/app/blog")
+    const table = page.locator("table").first()
+    await expect(table).toBeVisible({ timeout: 30_000 })
+
+    for (const heading of ["Title", "Author", "Status", "Published", "Updated"]) {
+      await expect(
+        table.getByRole("columnheader", { name: new RegExp(heading, "i") }),
+      ).toBeVisible()
+    }
+
+    const statusFilter = page.getByRole("button", { name: /status.*draft/i })
+    await expect(statusFilter).toBeVisible()
+    await statusFilter.click()
+
+    for (const status of ["Draft", "Scheduled", "Published"]) {
+      await expect(page.getByRole("option", { name: new RegExp(status, "i") })).toBeVisible()
+    }
+  })
 
   // SESSION_0515 (Giddy MED): the claims/orgs `sort` param was a dead wire — the header rendered
   // sortable but the query hard-coded `orderBy`. Sort is now threaded through the query, so a
@@ -35,7 +66,9 @@ test.describe("AdminCollection conformance smoke", () => {
     createdUserIds.push(userId)
 
     await page.goto("/app/organizations")
-    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator("table").first()).toBeVisible({
+      timeout: 30_000,
+    })
 
     const firstCell = page.locator("tbody tr td:first-child").first()
     const bodyRows = page.locator("tbody tr")
