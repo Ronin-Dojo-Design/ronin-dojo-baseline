@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-12
 author: Brian + Copilot
-last_agent: claude-session-0530
+last_agent: claude-session-0532
 ---
 
 # LLM Wiki Index
@@ -198,6 +198,11 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 
 | Page | Type | Lesson |
 | --- | --- | --- |
+| [LR 0013 — Don't build what was literally asked](../../learning/ddd/learning-records/0013-dont-build-what-was-literally-asked.md) | learning | Ground-first, grill the conflict when a request contradicts a ratified ADR/LR; the capability usually already ~90% exists — the fix is often deleting a wrong branch (SESSION_0532 synthesis of 0486/0494/0521/0489). |
+| [LR 0012 — Adversarial review with prod-shaped fixtures](../../learning/ddd/learning-records/0012-adversarial-review-with-prod-shaped-fixtures.md) | learning | 100+ green tests hid a self-approve CRITICAL because the fixture lacked the grant prod creates; test who *gains* access first; two lenses catch what neither finds alone (0491/0492/0495). |
+| [LR 0011 — Extend a hot path by not touching it](../../learning/ddd/learning-records/0011-extend-the-hot-path-by-not-touching-it.md) | learning | Route at the caller + a sibling core so identity regression stays re-testable; DRY polices knowledge not shape; share the kernel, not the data (0489/0488/0498/0519). |
+| [LR 0010 — Make the wrong state unrepresentable](../../learning/ddd/learning-records/0010-make-the-wrong-state-unrepresentable.md) | learning | Encode the invariant in the type (absent field / discriminated union / sink-guard); a trust badge must read the fact it certifies (0526/0527/0512/0484). |
+| [LR 0009 — Green isn't verified](../../learning/ddd/learning-records/0009-green-isnt-verified.md) | learning | Every gate can pass while the feature is unreachable, empty, or leaking; drive the real surface on real data — the live smoke is the load-bearing gate (0511/0529/0530). |
 | [LR 0008 — One source read everywhere; "display-dead" isn't "removable"](../../learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md) | learning | Consistency = one resolver read everywhere, not N surfaces hand-synced; a zero-reader field can still be load-bearing. |
 | [LR 0007 — The discoverability heuristic; "built" isn't "pointed"](../../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md) | learning | Dead-code heuristics over-flag the load-bearing; an artifact does nothing until the read-path points at it. |
 | [LR 0006 — Design systems & UI kits](../../learning/ddd/learning-records/0006-design-systems-and-ui-kits.md) | learning | One foundation + a few single-purpose pieces; tokens are the contract. |

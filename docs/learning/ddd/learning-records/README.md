@@ -2,7 +2,7 @@
 title: "Giddy Learning Records — index"
 slug: learning-records-index
 type: index
-updated: 2026-06-30
+updated: 2026-07-12
 ---
 
 # Giddy Learning Records — index
@@ -14,6 +14,11 @@ lesson. Read the one(s) on your lane; don't bulk-read. Newest first.
 
 | # | Record | The lesson in one line |
 | --- | --- | --- |
+| 0013 | [Don't build what was literally asked](0013-dont-build-what-was-literally-asked.md) | A dispatch is a request, not a spec: **ground against the code + canon before building**, lead the grill with any ADR/LR conflict, verify the spec's *mechanisms*, and inventory first — the capability is usually already ~90% there and the fix is often *deleting a wrong branch*. |
+| 0012 | [Adversarial review with prod-shaped fixtures](0012-adversarial-review-with-prod-shaped-fixtures.md) | "Tests pass" ≠ "safe to ship": seed fixtures the way **production** seeds them, test **who *gains* access** first, prove each guard by neutralize-and-restore, and run independent lenses (security *and* architecture) in parallel — before push. |
+| 0011 | [Extend the hot path by not touching it](0011-extend-the-hot-path-by-not-touching-it.md) | Extend a hot path by **routing at the caller + a sibling**, not an `if` inside it (untouched tests = the proof); DRY polices duplicated *knowledge*, not similar *shapes*; **share the kernel, keep the data local**. |
+| 0010 | [Make the wrong state unrepresentable](0010-make-the-wrong-state-unrepresentable.md) | The durable security/consistency fix isn't a remembered rule — it's a **type that can't hold the bad value** (absent field, discriminated union, sink-guard, constraint); and a trust signal must **read the exact fact it certifies**. |
+| 0009 | [Green isn't verified](0009-green-isnt-verified.md) | Typecheck + lint + unit tests + build green checks *slices*, never the *flow*: **drive the real surface, as the real user, against real (and live-prod) data** — the live smoke is the load-bearing gate, CI is the backstop. |
 | 0008 | [One source read everywhere; "display-dead" isn't "removable"](0008-one-source-read-everywhere-and-the-display-dead-field.md) | Consistency across surfaces = **one resolver read everywhere**, not N surfaces hand-synced; a field with no readers today can still be load-bearing tomorrow — prove it dead before deleting. |
 | 0007 | [The discoverability heuristic; "built" isn't "pointed"](0007-the-discoverability-heuristic-and-built-not-pointed.md) | The dead-code heuristic over-flags the **load-bearing**; and building an artifact (doc/board/agent) does nothing until the **read-path points at it**. (This audit's own root cause.) |
 | 0006 | [Design systems & UI kits](0006-design-systems-and-ui-kits.md) | A design system = **one foundation + a few single-purpose pieces**, not three half-systems or a `kind`-union god-component; tokens are the contract. |

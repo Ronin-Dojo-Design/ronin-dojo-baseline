@@ -4,8 +4,8 @@ slug: human-code-runbook
 type: reference
 status: active
 created: 2026-06-09
-updated: 2026-07-09
-last_agent: claude-session-0474
+updated: 2026-07-12
+last_agent: claude-session-0532
 pairs_with:
   - docs/knowledge/wiki/concepts/passport-and-shells.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -264,6 +264,144 @@ record, the cause is almost always *two of them reading two different fields* �
 wrong one," it's "point them both at the one source." (Same family as §7's cache lesson; canon:
 [ADR 0035](../../architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md),
 [`lineage-data-wiring-flow`](../../product/black-belt-legacy/lineage-data-wiring-flow.md), `[[lineage-rank-display-awarded-truth]]`.)
+
+### 9. "It's green" vs "it works" — and why you still have to click the thing
+
+> The compiler and the tests are your two robots. They are fast and tireless and they **cannot see your app.**
+
+- **Typecheck** = "do the puzzle pieces *fit*?" (right field names, no missing values). It never runs your app.
+- **Tests** = "does the *logic* do what I said — for the situations I thought of?" They run tiny pieces against
+  *made-up* data. They cannot see the real database, an *empty* result, or a page nobody wired up.
+- **`next build`** = "will it *compile* for production?" Catches a few things the fast typecheck misses, still
+  never opens a browser.
+- **The live app** = the only thing that checks *the actual journey, on the actual data, on the actual screen.*
+
+The WordPress parallel: a plugin can activate with no PHP errors (green) and still show a blank widget because
+the *content* isn't there, or the template never calls it. "No errors" was never "it works." Real examples from
+this codebase, all **100% green** when they broke: a blog page that built and rendered locally but shipped
+**empty** (posts are DB rows; the push doesn't carry data); a family-tree page that rendered **nothing** for a
+member with no ancestry data yet; a brand-new admin page that passed 1,366 tests and was **completely
+unreachable** because an old redirect sent the URL elsewhere before the page loaded. **What to do:** after "it's
+green," drive the real thing — open the page, click the actual flow, on real data; for a locked/paid surface,
+check what the *server actually sent*, not just what the screen hides. "Done" means "I watched it work." When
+something looks broken, reproduce it live first — half the time "broken" is "built, works, just unreachable" (a
+10-minute fix, not a rebuild). (Canon: `[[green-isnt-verified]]` — Learning Record 0009.)
+
+### 10. Why a locked video has *no URL at all* (the freemium / no-leak model)
+
+> The senior way to hide something isn't to *cover* it — it's to never hand it out.
+
+Technique videos are **freemium**: some are free, most are locked. The lock is decided by the **viewer** — "are
+*you* entitled to watch this?" (a paid tier, the admin, or the clip's own author) — not by the owner. The one
+helper that answers it is `isTechniqueViewerEntitled` (`server/web/techniques/technique-access.ts`).
+
+Here's the counter-intuitive part. For a locked clip we do **not** send the video's address to the browser and
+hide it with CSS. We make sure the page is **never even given the address.** Look at the locked shape in
+`server/web/techniques/technique-media-gate.ts`: `LockedTileMedia` literally has **no `url` field** — and no
+YouTube poster either (`thumbnailUrl: null`). Why kill the poster too? A YouTube thumbnail's address *contains
+the video id*, and the id rebuilds the watch link — so for an unlisted premium clip **the poster IS the
+content.** The gate strips the url and the thumbnail server-side, and the *type itself* has no slot for them, so
+no render branch can ever emit a src.
+
+WordPress analogy: not "load the paid post, then hide it with CSS" — but "never query the paid post into the page
+in the first place." Why build it this way: if the address isn't in the response, no amount of clever
+inspecting-the-page can reveal it. The leak is **impossible**, not merely hidden. (This is the human version of
+Learning Record 0010, "make the wrong state unrepresentable.")
+
+### 11. Every admin list is the same table with different columns (the AdminCollection law)
+
+Every staff "list of things" page — People, Schools, Techniques, Organizations, Claims, Blog posts — is the
+**same table component**: `AdminCollection` (`components/admin/admin-collection.tsx`). You don't rebuild the
+table. You pick your **columns** and write **one query**, and you get sorting, filtering, pagination, faceted
+search, and select-checkboxes for free. A row opens a **detail page**, which opens the **one editor** for that
+kind of thing (for a person, the single `PassportEditor`).
+
+Look at two that already conform: `app/app/claims/_components/claims-table.tsx` and
+`app/app/techniques/_components/techniques-table.tsx` — both are just `<AdminCollection ...>` with their own
+columns and data. The frame owns the frame; the columns, the query, and the row actions stay with the caller.
+
+WordPress analogy: it's the admin list-table you already know from custom post types — same table UI everywhere,
+only the columns change per type. Why it matters: "make a new admin screen" shrinks to a tiny job, and every
+admin screen looks and behaves the same, so there's nothing new to learn per screen. The rule (the operator's
+500-session north star, ratified in
+[ADR 0045](../../architecture/decisions/0045-admin-collection-one-surface-law.md)): **never hand-roll a bespoke
+admin list — conform to the one frame.** A single-record *settings* form (like Appearance) is deliberately not an
+`AdminCollection`; that frame is for *lists*. (This is the one-source-of-truth idea from §8, applied to admin
+screens.)
+
+### 12. How a belt gets *verified* (the RankEntry model) — companion to §8
+
+§8 explained how a belt is **displayed** (the highest awarded rank, computed). This section explains how a belt
+becomes **verified** — a different question.
+
+A belt is a **fact**: a promotion record. In the schema that record is a `RankEntry` (with a `RankAward` row
+still underneath it as the migration anchor — mid-transition; see the caveat below). "Is this belt verified?" is
+a **separate yes/no** carried on that record, not part of *which* belt shows. The status ladder is
+`PENDING | UNVERIFIED | VERIFIED | DISPUTED` (`RankEntryStatus`). A member who self-enters a belt starts
+**UNVERIFIED**. A steward reviewing the member's claim (a `RankEntryReview`) turns it **VERIFIED**. Historical
+belts brought over from the old site count as verified-by-import (`RankAwardVerificationStatus.IMPORTED`).
+
+Now the part that trips people up: there are **two facts that look like one but aren't.** "This *person* is a
+verified lineage member" is a single flag on the tree node (`LineageNode.isVerified`, from §8). "This *specific
+belt* is verified" is the status on the rank record above. They're different because some historical members are
+well-documented (verified members) but have **no belt on file** — so both facts have to exist independently.
+
+WordPress analogy: the old site had a belt field *and* a separate "is this confirmed?" checkbox — same idea, but
+now the confirmation is a real approval step (a steward review), not a manual toggle anyone can flip. **Caveat to
+follow the code, not this summary:** the repo is mid-migration — `RankEntry` is the canonical target aggregate,
+but the *display* path in §8 still reads `RankAward` today, and there's also a per-award `verificationStatus` that
+is **not** used for the display badge. If the model names shift under you, trust the schema
+(`apps/web/prisma/schema.prisma`) and `rank-entry-unified-data-flow.md`.
+
+### 13. Four kinds of "admin" that share words but not meaning (the authz axes)
+
+"Admin," "permission," "role" — in this app those words name **four separate systems** that mean different
+things. Don't merge them in your head:
+
+1. **Platform role** — what you can do across the *whole* app. This is the `can(user, "...")` / RBAC check
+   (`server/orpc/permissions.ts`, keys in `server/orpc/roles.ts` `APP_AREA_PERMISSIONS`). `admin` = `"*"` (all
+   of them).
+2. **Membership role** — your standing *inside one school/org* (Owner, Head Instructor). Local to that org, not
+   the platform.
+3. **Lineage access** — a grant to edit *part of the family tree* (`TREE_ADMIN`, `TREE_EDITOR`, `BRANCH_EDITOR`,
+   `NODE_EDITOR`; `LINEAGE_RESOURCE_GRANTS` in `roles.ts`).
+4. **Commerce entitlement** — what your *paid tier* unlocks (Premium/Elite/Legend rich media, etc.).
+
+A person can be high on one axis and zero on another (a school Owner with no platform role; a paying member who
+can't edit anything). The tempting mistake is to **merge them** because they all sound like "permissions" — but
+they answer different questions, so the codebase deliberately keeps four and **forbids building a fifth**. When a
+new capability is needed, you add a *key* to an existing axis (the FI-019 precedent), never a new system.
+
+WordPress analogy: not one "user role" dropdown, but **four independent capability systems** layered together.
+(This is the human version of Learning Record 0011's "DRY polices *knowledge*, not similar-looking *shapes* —
+different axes doing different jobs don't merge"; ratified verdict at SESSION_0509: keep the four layered,
+conform them, don't consolidate.)
+
+### 14. The environment traps that look like bugs (but aren't your code)
+
+> When something breaks in a way that makes no sense, check this list *before* blaming your code.
+
+A short field guide to gotchas that *look* like your code failed but are really the environment or the tooling.
+
+- **(a) The shared-database migrate trap (0487).** Several work-copies (git worktrees) share **one** local
+  database. So the ordinary "create a migration" dev command can try to **reset** it — wiping everyone. Here,
+  migrations are **hand-written** and replayed on a throwaway database instead. If a migrate command offers to
+  reset, stop; that's the trap, not a broken schema.
+- **(b) `bun run lint` edits your files (0493).** In `apps/web`, lint is the *fixing* variant, not just the
+  checking one. It can silently rewrite files — so a git diff can show "phantom" changes you never typed. If
+  files changed and you didn't touch them, suspect the linter before suspecting a bug.
+- **(c) The id-mixup hidden by a swallowed error (0497).** There are two different id systems — a family-tree
+  **node** id and a person's **Passport** id — and both are just text. So putting one where the other belongs
+  slips *past* the type-checker and only blows up at runtime, often buried under a blanket "something went wrong"
+  toast (`P2003`). The fix is to read the id from the *matching* source, never to translate one into the other
+  inside the handler.
+- **(d) A rebase needs a reinstall (0490).** After you pull in other people's work, someone may have added a new
+  dependency. Until you re-run `bun install`, the type-checker will fail on a file you *never touched* — because
+  the package it imports isn't on disk yet. After any rebase that touches `package.json`/`bun.lock`, reinstall.
+- **(e) Form buttons that don't submit (0520).** The UI kit's buttons default to a **non-submitting** type
+  (`type="button"`). So a form can silently do *nothing* on click until its primary button is explicitly told
+  `type="submit"`. One sweep found 19 forms with this — including a feedback widget mouse users could never send.
+  "The form does nothing and throws no error" is almost always this.
 
 ## See also
 
