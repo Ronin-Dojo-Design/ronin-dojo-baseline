@@ -260,6 +260,10 @@ export const findTechniqueBySlug = async (slug: string, brand: Brand) => {
     // watch slug until featured. Also disambiguates now that slug is no longer globally unique — the
     // authored profile watch (Slice 3B) will key by author+slug/id, not this canonical slug lookup.
     where: { slug, brand, isPublished: true, ...TECHNIQUE_DISCOVERY_WHERE },
+    // Deterministic tiebreak (SESSION_0528 Doug flag 2): if a canonical org technique and a featured
+    // authored technique ever share `(brand, slug)`, the canonical (null-author) row wins the public
+    // watch page — never a nondeterministic `findFirst`.
+    orderBy: { authorPassportId: { sort: "asc", nulls: "first" } },
     select: techniqueOnePayload,
   })
 }

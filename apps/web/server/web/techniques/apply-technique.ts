@@ -24,6 +24,9 @@ async function hasOrgStaffRole(
     where: {
       userId,
       organizationId,
+      // Only an ACTIVE membership authorizes — a CANCELLED OWNER/INSTRUCTOR must not (matches
+      // `canCreateTechniqueForUser`, SESSION_0528 Doug P3).
+      status: "ACTIVE",
       roleAssignments: { some: { role: { code: { in: [...TECHNIQUE_STAFF_ROLES] } } } },
     },
     select: { id: true },
@@ -147,9 +150,12 @@ async function canEditTechnique(
 }
 
 /**
- * Edit a technique's fields. Ownership axes (`authorPassportId`, `organizationId`) are NOT re-homed here
- * — `authored` is stripped and only content columns flow through — so an edit can never move a technique
- * between authors/schools (that is a promote/transfer concern, out of scope for authoring).
+ * Edit a technique's CONTENT fields only. The ownership/identity axes — `organizationId` (school),
+ * `authorPassportId`, `slug`, `disciplineId` — are stripped here, so an edit can never re-home a
+ * technique between schools/authors or change its identity (SESSION_0528 Doug P2). This is the ADR-D4
+ * guard in code: without the strip, an author could set `organizationId` on their own profile-only row
+ * and it would pass the discovery filter into the public browse WITHOUT staff `isFeatured` promotion.
+ * Re-homing/promoting is a separate staff concern (Slice 3C), not an authoring edit.
  */
 export async function applyUpdateTechnique({
   db,
@@ -160,7 +166,14 @@ export async function applyUpdateTechnique({
   user: SessionUser
   input: UpdateTechniqueInput
 }) {
-  const { id, authored: _authored, ...data } = input
+  const {
+    id,
+    authored: _authored,
+    organizationId: _organizationId,
+    slug: _slug,
+    disciplineId: _disciplineId,
+    ...data
+  } = input
 
   const technique = await db.technique.findUniqueOrThrow({
     where: { id },
