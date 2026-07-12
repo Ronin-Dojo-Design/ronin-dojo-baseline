@@ -244,6 +244,69 @@ export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGrou
     }))
 }
 
+/**
+ * SESSION_0529 Slice 3B — the AUTHORED watch read (ADR 0046). Deliberately does NOT apply
+ * `TECHNIQUE_DISCOVERY_WHERE`: a profile-only authored row (org null, not featured) is excluded from
+ * the canonical browse/watch by design, but it MUST render on its author's profile surfaces. This is
+ * not a discovery bypass — the `where` ALWAYS requires the `authorPassportId`, so the only way to
+ * reach a profile-only row is through the author's own profile route (`/directory/[slug]/techniques/
+ * [techniqueSlug]`), never an enumerable public slug. `isPublished` stays required (public surface;
+ * author draft-preview is a follow-on). Same payload as the canonical watch, so the same per-clip
+ * freemium gate (`gateTechniqueMedia`) applies downstream.
+ */
+export const findAuthoredTechnique = async ({
+  authorPassportId,
+  slug,
+  brand,
+}: {
+  authorPassportId: string
+  slug: string
+  brand: Brand
+}) => {
+  "use cache"
+
+  // Same invalidation contract as `findTechniqueBySlug` — per-slug + the broad `techniques` tag
+  // (media attach/premium-flip mutations bust `techniques`, see `revalidateForTarget`).
+  cacheTag(`technique-${slug}`, "techniques")
+  cacheLife("minutes")
+
+  return db.technique.findFirst({
+    where: { slug, brand, authorPassportId, isPublished: true },
+    select: techniqueOnePayload,
+  })
+}
+
+/**
+ * SESSION_0529 Slice 3B — a passport's published authored techniques for the PUBLIC profile
+ * "Curriculum" rail (ADR 0046: the profile surface filters by `authorPassportId`, org-grouped or
+ * profile-only alike). Selects only what the rail card needs: name/slug + the first attachment's
+ * poster inputs and per-clip `isPremium` (the locked predicate). The raw media `url` is fetched ONLY
+ * to derive a YouTube poster server-side — the shaped `ProfileMediaItem` never carries it.
+ */
+export const findAuthoredCurriculum = async (authorPassportId: string) => {
+  "use cache"
+
+  cacheTag("techniques")
+  cacheLife("minutes")
+
+  return db.technique.findMany({
+    where: { authorPassportId, isPublished: true },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      mediaAttachments: {
+        select: {
+          isPremium: true,
+          media: { select: { type: true, url: true, thumbnailUrl: true } },
+        },
+        orderBy: { sortOrder: "asc" },
+      },
+    },
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+  })
+}
+
 export const findTechniqueBySlug = async (slug: string, brand: Brand) => {
   "use cache"
 

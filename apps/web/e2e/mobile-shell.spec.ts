@@ -15,10 +15,23 @@
  *   cd apps/web && PW_BASE_URL=http://localhost:3502 bunx playwright test mobile-shell.spec.ts --project=chromium
  */
 import { expect, test } from "@playwright/test"
-import { cleanupTestUser, createAuthenticatedUser } from "./helpers/auth"
+import { cleanupTestUser, createAuthenticatedUser, grantTestEntitlement } from "./helpers/auth"
 
-test.beforeEach(() => {
+test.beforeEach(async ({ page }) => {
   test.skip(Boolean(process.env.CI), "mobile-shell e2e is a local/manual screenshot aid")
+  // The Next DEV overlay badge (<nextjs-portal>) floats bottom-left and intercepts taps on the
+  // mobile-viewport fixed chrome (a pre-existing /lineage BottomNav hydration warning trips it —
+  // see SESSION_0529 notes; not a shell regression). This spec only ever runs against dev
+  // servers, so keep removing the overlay element (an injected <style> gets wiped when React
+  // regenerates the document tree after the hydration mismatch; the portal itself is not
+  // React-owned, so removal sticks until the overlay re-appends it).
+  await page.addInitScript(() => {
+    setInterval(() => {
+      for (const portal of Array.from(document.querySelectorAll("nextjs-portal"))) {
+        portal.remove()
+      }
+    }, 250)
+  })
 })
 
 const MOBILE = { width: 390, height: 844 }
@@ -31,6 +44,9 @@ test.describe("Epic B mobile shell", () => {
   test("admin: 4-tab nav, always-on into /app, MAB drag/persist/toggle + bottom-sheet", async ({
     page,
   }) => {
+    // SESSION_0529: the technique-action deep-link detour adds a dev-mode compile of /app/profile;
+    // the default 30s budget was already tight for this long multi-step local aid.
+    test.setTimeout(120_000)
     page.setViewportSize(MOBILE)
     const admin = await createAuthenticatedUser(page, { role: "admin", name: "MAB Admin" })
 
@@ -75,15 +91,54 @@ test.describe("Epic B mobile shell", () => {
       // Back to a `(web)` page for the MAB interaction proof.
       await page.goto("/lineage")
 
-      // Fan opens; 4 admin actions present. NO in-fan disable control (SESSION_0501:
-      // the EyeOff item masqueraded as an action — on/off lives on the More drawer toggle).
+      // Fan opens; 5 admin actions present (SESSION_0529 3B added "Add a technique"). NO in-fan
+      // disable control (SESSION_0501: the EyeOff item masqueraded as an action — on/off lives on
+      // the More drawer toggle).
       await mab.click()
       await expect(page.getByRole("button", { name: /create post/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /upload photo or media/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /log a promotion/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /claim or verify/i })).toBeVisible()
+      await expect(page.getByRole("button", { name: /add a technique/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /hide the quick actions/i })).toHaveCount(0)
+      // 5-item fan geometry (SESSION_0529): the count-scaled radius must keep every fan item fully
+      // inside the viewport AND non-overlapping (adjacent centers ≥ 44px apart). Let the staggered
+      // fan-out springs settle first — boundingBox mid-flight reads converging (smaller) distances.
+      await page.waitForTimeout(900)
+      {
+        const names = [
+          /claim or verify/i,
+          /create post/i,
+          /upload photo or media/i,
+          /log a promotion/i,
+          /add a technique/i,
+        ]
+        const centers: { x: number; y: number }[] = []
+        for (const name of names) {
+          const box = (await page.getByRole("button", { name }).boundingBox())!
+          expect(box.x).toBeGreaterThanOrEqual(0)
+          expect(box.y).toBeGreaterThanOrEqual(0)
+          expect(box.x + box.width).toBeLessThanOrEqual(MOBILE.width)
+          expect(box.y + box.height).toBeLessThanOrEqual(MOBILE.height)
+          centers.push({ x: box.x + box.width / 2, y: box.y + box.height / 2 })
+        }
+        for (let i = 1; i < centers.length; i++) {
+          const dx = centers[i].x - centers[i - 1].x
+          const dy = centers[i].y - centers[i - 1].y
+          expect(Math.hypot(dx, dy)).toBeGreaterThanOrEqual(44)
+        }
+      }
       await page.screenshot({ path: `${SHOTS}/admin-03-fan-open.png` })
+
+      // The technique action deep-links to the profile Techniques tab with the authored-create
+      // sheet auto-open (?tab=techniques&create=technique).
+      await page.getByRole("button", { name: /add a technique/i }).click()
+      await page.waitForURL(/\/app\/profile\?tab=techniques&create=technique/)
+      await expect(page.getByRole("heading", { name: /^add a technique$/i })).toBeVisible()
+      await page.screenshot({ path: `${SHOTS}/admin-03b-technique-sheet.png` })
+      await page.keyboard.press("Escape")
+      await page.goto("/lineage")
+      await mab.click()
 
       // Upload → bottom-sheet.
       await page.getByRole("button", { name: /upload photo or media/i }).click()
@@ -174,6 +229,77 @@ test.describe("Epic B mobile shell", () => {
       await page.screenshot({ path: `${SHOTS}/member-01-nav-no-mab.png` })
     } finally {
       await cleanupTestUser(member.userId)
+    }
+  })
+
+  test("elite non-admin: MAB one-action fan + full authored create round-trip (SESSION_0529 3B)", async ({
+    page,
+  }) => {
+    // The round-trip compiles /app/profile + fires several server actions on a dev server.
+    test.setTimeout(120_000)
+    page.setViewportSize(MOBILE)
+    const elite = await createAuthenticatedUser(page, { role: "user", name: "MAB Elite" })
+
+    try {
+      // Elite entitlement (LINEAGE_ELITE) passes `canCreateTechniqueForUser` → the MAB mounts for
+      // this NON-admin with exactly one fan action; the four admin actions stay admin-gated.
+      grantTestEntitlement(elite.userId, "LINEAGE_ELITE", "BBL")
+
+      await page.goto("/lineage")
+      const mab = page.locator(MAB_TRIGGER)
+      await expect(mab).toBeVisible()
+      await mab.click()
+
+      await expect(page.getByRole("button", { name: /add a technique/i })).toBeVisible()
+      await expect(page.getByRole("button", { name: /create post/i })).toHaveCount(0)
+      await expect(page.getByRole("button", { name: /upload photo or media/i })).toHaveCount(0)
+      await expect(page.getByRole("button", { name: /log a promotion/i })).toHaveCount(0)
+      await expect(page.getByRole("button", { name: /claim or verify/i })).toHaveCount(0)
+      await page.screenshot({ path: `${SHOTS}/elite-01-one-action-fan.png` })
+
+      // Deep-link lands on the Techniques tab with the authored-create sheet open.
+      await page.getByRole("button", { name: /add a technique/i }).click()
+      await page.waitForURL(/\/app\/profile\?tab=techniques&create=technique/)
+      await expect(page.getByRole("heading", { name: /^add a technique$/i })).toBeVisible()
+      await page.screenshot({ path: `${SHOTS}/elite-02-technique-sheet.png` })
+
+      // Round-trip step 1 — details: fill the authored form (no organization field involved).
+      await page.getByPlaceholder("Arm Bar").fill("Flying Triangle E2E")
+      await page.getByPlaceholder("arm-bar").fill(`flying-triangle-e2e-${Date.now()}`)
+      await page.getByText("Select discipline").click()
+      await page.getByRole("option").first().click()
+      await page.getByRole("button", { name: /create technique/i }).click()
+
+      // Step 2 — media: the sheet advances IN PLACE to the clip manager. No R2 upload row for
+      // members (URL-paste only).
+      await expect(
+        page.getByRole("heading", { name: /add videos — flying triangle e2e/i }),
+      ).toBeVisible()
+      await expect(page.getByRole("button", { name: /^upload$/i })).toHaveCount(0)
+      await page
+        .getByPlaceholder("Paste a YouTube link")
+        .fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+      await page.getByRole("button", { name: /add video/i }).click()
+
+      // The clip tile lands FREE by default; flip it premium via the per-clip toggle.
+      const freeToggle = page.getByRole("button", { name: /^free$/i })
+      await expect(freeToggle).toBeVisible()
+      await page.screenshot({ path: `${SHOTS}/elite-03-clip-added-free.png` })
+      await freeToggle.click()
+      await expect(page.getByRole("button", { name: /^premium$/i })).toBeVisible()
+      await page.screenshot({ path: `${SHOTS}/elite-04-clip-premium.png` })
+
+      // Done → the sheet closes and the techniques list shows the new authored row. Programmatic
+      // click: the Next DEV overlay badge (<nextjs-portal>, tripped by the pre-existing /lineage
+      // BottomNav hydration warning) overlaps this corner and intercepts the pointer hit-test.
+      await page
+        .getByRole("button", { name: /^done$/i })
+        .evaluate(el => (el as HTMLElement).click())
+      await expect(page.getByRole("heading", { name: /add videos/i })).toHaveCount(0)
+      await expect(page.getByRole("link", { name: "Flying Triangle E2E" })).toBeVisible()
+      await page.screenshot({ path: `${SHOTS}/elite-05-technique-in-list.png` })
+    } finally {
+      await cleanupTestUser(elite.userId)
     }
   })
 

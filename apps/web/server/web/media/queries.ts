@@ -14,6 +14,8 @@ export type DashboardMediaAttachment = {
   isPublic: boolean
   /** Per-video freemium flag (SESSION_0527 Slice 2) — drives the technique media premium toggle. */
   isPremium: boolean
+  /** Poster for external (YOUTUBE) media (SESSION_0529 Slice 3B) — the tile can't render a watch url. */
+  thumbnailUrl: string | null
   sortOrder: number
 }
 
@@ -49,6 +51,7 @@ export async function getDashboardMediaAttachments({
           title: true,
           altText: true,
           isPublic: true,
+          thumbnailUrl: true,
         },
       },
     },
@@ -64,6 +67,7 @@ export async function getDashboardMediaAttachments({
     altText: attachment.media.altText,
     isPublic: attachment.media.isPublic,
     isPremium: attachment.isPremium,
+    thumbnailUrl: attachment.media.thumbnailUrl,
     sortOrder: attachment.sortOrder,
   }))
 }

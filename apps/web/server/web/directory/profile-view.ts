@@ -11,6 +11,7 @@ import { buildProfileMedia, type ProfileMedia } from "~/server/web/directory/pro
 import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
 import { getPublicPassportMedia } from "~/server/web/media/queries"
 import { isTechniqueViewerEntitled } from "~/server/web/techniques/technique-access"
+import { findAuthoredCurriculum } from "~/server/web/techniques/queries"
 import type { DirectoryProfileView } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-data"
 import { db } from "~/services/db"
 
@@ -108,22 +109,32 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
   // keys off the VIEWER's OWN entitlement (`isTechniqueViewerEntitled`: admin / viewer-owns-the-
   // content / viewer's own premium tier) — NOT the profile owner's tier. `canRenderFullProfile`
   // still gates the private/rich fields in the projection.
-  const [origin, viewerClaimState, claimFunnelHref, ancestry, publicMedia, viewerEntitled] =
-    await Promise.all([
-      getRequestOrigin(),
-      resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
-      resolveClaimFunnelHref(profile),
-      // Placeholders now render the FULL profile (SESSION_0525), so their public ancestry chain
-      // loads too — it's public lineage data, safe on an unclaimed profile.
-      getLineageAncestryForPassport(profile.passportId),
-      getPublicPassportMedia(profile.passportId),
-      isTechniqueViewerEntitled({
-        userId: viewerUserId,
-        role: session?.user?.role,
-        // The rail's reels are authored by this profile's passport → owner = viewer owns it.
-        authorPassportIds: [profile.passportId],
-      }),
-    ])
+  const [
+    origin,
+    viewerClaimState,
+    claimFunnelHref,
+    ancestry,
+    publicMedia,
+    viewerEntitled,
+    authoredCurriculum,
+  ] = await Promise.all([
+    getRequestOrigin(),
+    resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
+    resolveClaimFunnelHref(profile),
+    // Placeholders now render the FULL profile (SESSION_0525), so their public ancestry chain
+    // loads too — it's public lineage data, safe on an unclaimed profile.
+    getLineageAncestryForPassport(profile.passportId),
+    getPublicPassportMedia(profile.passportId),
+    isTechniqueViewerEntitled({
+      userId: viewerUserId,
+      role: session?.user?.role,
+      // The rail's reels are authored by this profile's passport → owner = viewer owns it.
+      authorPassportIds: [profile.passportId],
+    }),
+    // SESSION_0529 Slice 3B — the profile's published AUTHORED techniques (ADR 0046: the profile
+    // surface keys off `authorPassportId`) feed the "Curriculum" highlight rail.
+    findAuthoredCurriculum(profile.passportId),
+  ])
 
   return {
     isOwner: false,
@@ -134,7 +145,25 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     claimFunnelHref,
     viewerClaimState,
     ancestry,
-    profileMedia: buildProfileMedia({ viewerEntitled, media: publicMedia }),
+    profileMedia: buildProfileMedia({
+      viewerEntitled,
+      media: publicMedia,
+      curriculum: {
+        profileSlug: slug,
+        // The raw media url is shaper INPUT only (server-side poster derivation) — the shaped
+        // curriculum item is poster + internal watch link, never a playable url.
+        techniques: authoredCurriculum.map(technique => ({
+          id: technique.id,
+          name: technique.name,
+          slug: technique.slug,
+          attachments: technique.mediaAttachments.map(attachment => ({
+            isPremium: attachment.isPremium,
+            url: attachment.media.url,
+            thumbnailUrl: attachment.media.thumbnailUrl,
+          })),
+        })),
+      },
+    }),
     viewerContext: { isOwner: false, renderPolicy },
   }
 }

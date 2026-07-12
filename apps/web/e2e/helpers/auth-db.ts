@@ -72,7 +72,35 @@ async function createUser(options: AuthUserOptions = {}) {
   return { userId: user.id, name, email, token: session.token }
 }
 
+/**
+ * Idempotently grant a user an entitlement by (brand, key) — SESSION_0529 Slice 3B, so the
+ * mobile-shell spec can exercise the Elite (non-admin) MAB technique action. The Entitlement row is
+ * upserted (it may already exist in a seeded DB); the ACTIVE UserEntitlement is a MANUAL_GRANT.
+ */
+async function grantEntitlement(payload: { userId: string; key: string; brand: string }) {
+  const entitlement = await prisma.entitlement.upsert({
+    where: { brand_key: { brand: payload.brand as any, key: payload.key } },
+    update: {},
+    create: { brand: payload.brand as any, key: payload.key, name: payload.key },
+    select: { id: true },
+  })
+  await prisma.userEntitlement.create({
+    data: {
+      userId: payload.userId,
+      entitlementId: entitlement.id,
+      sourceType: "MANUAL_GRANT",
+      status: "ACTIVE",
+    },
+  })
+}
+
 async function cleanupUser(userId: string) {
+  await prisma.userEntitlement.deleteMany({ where: { userId } })
+  // Authored techniques + uploaded media (SESSION_0529 Slice 3B round-trip): Technique.author is
+  // SetNull (a user delete would orphan the rows) and Media.uploadedBy has no cascade (it would
+  // block the user delete), so both are removed explicitly. MediaAttachment cascades from Media.
+  await prisma.technique.deleteMany({ where: { author: { userId } } })
+  await prisma.media.deleteMany({ where: { uploadedById: userId } })
   await prisma.auditLog.deleteMany({ where: { userId } })
   await prisma.dataSubjectRequest.deleteMany({
     where: { OR: [{ userId }, { fulfilledBy: userId }] },
@@ -164,6 +192,13 @@ if (command === "create-user") {
   if (!payload?.email) throw new Error("Missing email")
 
   await cleanupUserByEmail(payload.email)
+} else if (command === "grant-entitlement") {
+  const payload = decodePayload<{ userId: string; key: string; brand: string }>()
+  if (!payload?.userId || !payload.key || !payload.brand) {
+    throw new Error("Missing userId/key/brand")
+  }
+
+  await grantEntitlement(payload)
 } else {
   throw new Error(`Unknown auth-db command: ${command ?? "<missing>"}`)
 }

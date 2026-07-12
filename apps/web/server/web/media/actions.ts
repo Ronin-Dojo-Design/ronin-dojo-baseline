@@ -6,11 +6,15 @@ import {
   applyPassportAvatarPromotion,
   applyWebMediaPremium,
   applyWebMediaRemoval,
+  applyWebMediaReorder,
   applyWebMediaUpload,
+  applyWebMediaUrlAttach,
 } from "~/server/web/media/apply-media"
 import {
+  attachWebMediaUrlSchema,
   promotePassportAvatarMediaSchema,
   removeWebMediaSchema,
+  reorderWebMediaSchema,
   setWebMediaPremiumSchema,
   uploadWebMediaSchema,
 } from "~/server/web/media/media-schemas"
@@ -27,6 +31,11 @@ function revalidateForTarget(target: MediaAttachTarget) {
       break
     case "technique":
       paths.push(`/dashboard/techniques/${target.id}`)
+      // @added SESSION_0529 (Slice 3B) — the cached technique reads (`findTechniqueBySlug`,
+      // `findAuthoredTechnique`, `findAuthoredCurriculum`) all ride the `techniques` tag; without it
+      // an attach/remove/url-paste left the watch page + profile curriculum rail stale for the
+      // cacheLife TTL. Mirrors the Doug SESSION_0528 P2 fix already applied to `setWebMediaPremium`.
+      tags.push("techniques")
       break
     case "organization":
       tags.push("organization")
@@ -62,6 +71,29 @@ export const uploadWebMedia = userActionClient
       input: parsedInput,
       allowVideo: true,
     })
+
+    revalidate(revalidateForTarget(parsedInput.target))
+
+    return result
+  })
+
+// SESSION_0529 Slice 3B — member URL-paste video attach (YouTube-only, validated in the apply
+// helper). The authored-technique sheet's video path; no file, no R2 — see `applyWebMediaUrlAttach`.
+export const attachWebMediaUrl = userActionClient
+  .inputSchema(attachWebMediaUrlSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const result = await applyWebMediaUrlAttach({ db, brand: Brand.BBL, user, input: parsedInput })
+
+    revalidate(revalidateForTarget(parsedInput.target))
+
+    return result
+  })
+
+// SESSION_0529 Slice 3B — persist the dnd sequencing rail's order (`sortOrder` = index).
+export const reorderWebMediaAttachments = userActionClient
+  .inputSchema(reorderWebMediaSchema)
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    const result = await applyWebMediaReorder({ db, brand: Brand.BBL, user, input: parsedInput })
 
     revalidate(revalidateForTarget(parsedInput.target))
 

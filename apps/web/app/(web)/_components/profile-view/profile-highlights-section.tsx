@@ -51,7 +51,8 @@ export function ProfileHighlightsSection({ media }: { media: ProfileMedia }) {
   if (
     media.featuredMatches.length === 0 &&
     media.techniqueVideos.length === 0 &&
-    media.podcasts.length === 0
+    media.podcasts.length === 0 &&
+    media.curriculum.length === 0
   ) {
     return null
   }
@@ -71,6 +72,15 @@ export function ProfileHighlightsSection({ media }: { media: ProfileMedia }) {
           subtitle="Reels from their curriculum"
           kind="video"
           items={media.techniqueVideos}
+        />
+        {/* SESSION_0529 Slice 3B (ADR 0046) — AUTHORED techniques (Technique rows keyed by
+            authorPassportId), distinct in source from the passport-attachment reels above. Cards
+            link internally to the profile-scoped authored watch route. */}
+        <HighlightRail
+          title="Curriculum"
+          subtitle="Techniques they teach"
+          kind="video"
+          items={media.curriculum}
         />
         <HighlightRail
           title="Podcast Highlights"

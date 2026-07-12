@@ -28,8 +28,10 @@ const dataset: Array<Record<string, unknown>> = [
   {
     id: "t-org",
     brand: "BBL",
+    slug: "org-armbar",
     isPublished: true,
     organizationId: "org-1",
+    authorPassportId: null,
     isFeatured: false,
     category: "SUBMISSION",
     beltLevelMin: null,
@@ -39,8 +41,10 @@ const dataset: Array<Record<string, unknown>> = [
   {
     id: "t-featured",
     brand: "BBL",
+    slug: "featured-berimbolo",
     isPublished: true,
     organizationId: null,
+    authorPassportId: "pass-author",
     isFeatured: true,
     category: "SUBMISSION",
     beltLevelMin: null,
@@ -50,8 +54,38 @@ const dataset: Array<Record<string, unknown>> = [
   {
     id: "t-profile-only",
     brand: "BBL",
+    slug: "profile-only-armbar",
     isPublished: true,
     organizationId: null,
+    authorPassportId: "pass-author",
+    isFeatured: false,
+    category: "SUBMISSION",
+    beltLevelMin: null,
+    // A premium clip — the authored read must still compose with the per-clip gate (no-leak).
+    mediaAttachments: [
+      {
+        id: "att-premium",
+        isPremium: true,
+        passportId: "pass-author",
+        media: {
+          type: "VIDEO",
+          url: "https://r2.example.com/secret-reel.mp4",
+          thumbnailUrl: "https://r2.example.com/poster.jpg",
+          title: "Secret reel",
+          mimeType: "video/mp4",
+          altText: null,
+        },
+      },
+    ],
+  },
+  // Authored DRAFT — the public authored read must NOT return unpublished rows.
+  {
+    id: "t-draft",
+    brand: "BBL",
+    slug: "draft-kimura",
+    isPublished: false,
+    organizationId: null,
+    authorPassportId: "pass-author",
     isFeatured: false,
     category: "SUBMISSION",
     beltLevelMin: null,
@@ -60,6 +94,7 @@ const dataset: Array<Record<string, unknown>> = [
 ]
 
 const findManyWheres: any[] = []
+const findFirstWheres: any[] = []
 mock.module("~/services/db", () => ({
   db: {
     technique: {
@@ -67,13 +102,22 @@ mock.module("~/services/db", () => ({
         findManyWheres.push(where)
         return dataset.filter(r => matchesWhere(r, where))
       },
+      findFirst: async ({ where }: any) => {
+        findFirstWheres.push(where)
+        return dataset.find(r => matchesWhere(r, where)) ?? null
+      },
       count: async ({ where }: any) => dataset.filter(r => matchesWhere(r, where)).length,
     },
     $transaction: async (ops: Promise<unknown>[]) => Promise.all(ops),
   },
 }))
 
-import { getTechniqueRails, searchTechniques } from "~/server/web/techniques/queries"
+import {
+  findAuthoredTechnique,
+  getTechniqueRails,
+  searchTechniques,
+} from "~/server/web/techniques/queries"
+import { gateTechniqueMedia } from "~/server/web/techniques/technique-media-gate"
 
 const defaultParams = {
   q: "",
@@ -106,5 +150,60 @@ describe("technique discovery filter (ADR 0046 D4 — no leak)", () => {
     expect(passedIds).toContain("t-org")
     expect(passedIds).toContain("t-featured")
     expect(passedIds).not.toContain("t-profile-only")
+  })
+})
+
+describe("findAuthoredTechnique — un-gated authored read (SESSION_0529 Slice 3B)", () => {
+  const authoredArgs = {
+    authorPassportId: "pass-author",
+    slug: "profile-only-armbar",
+    brand: "BBL" as any,
+  }
+
+  it("returns the author's PROFILE-ONLY row (no discovery filter) — and the where always carries the author key", async () => {
+    findFirstWheres.length = 0
+    const technique = await findAuthoredTechnique(authoredArgs)
+
+    expect(technique?.id).toBe("t-profile-only")
+    // The read must never become a second public discovery path: the where is ALWAYS
+    // author-keyed + published-only, and never applies the D4 OR-filter.
+    const where = findFirstWheres.at(-1)
+    expect(where.authorPassportId).toBe("pass-author")
+    expect(where.isPublished).toBe(true)
+    expect(where.OR).toBeUndefined()
+    expect(where.AND).toBeUndefined()
+  })
+
+  it("404-seam: a slug under a DIFFERENT passport does not resolve (author-keying)", async () => {
+    const technique = await findAuthoredTechnique({
+      ...authoredArgs,
+      authorPassportId: "pass-someone-else",
+    })
+    expect(technique).toBeNull()
+  })
+
+  it("404-seam: an UNPUBLISHED authored row does not resolve on the public read", async () => {
+    const technique = await findAuthoredTechnique({ ...authoredArgs, slug: "draft-kimura" })
+    expect(technique).toBeNull()
+  })
+
+  it("still gates premium: an unentitled viewer's locked tile ships NO playable url", async () => {
+    const technique = await findAuthoredTechnique(authoredArgs)
+    const gated = gateTechniqueMedia((technique as any).mediaAttachments, false)
+
+    expect(gated.tiles).toHaveLength(1)
+    const tile = gated.tiles[0]
+    expect(tile.locked).toBe(true)
+    // No-leak invariant: the locked tile's media has no `url` key at all.
+    expect("url" in tile.media).toBe(false)
+    expect(JSON.stringify(gated)).not.toContain("secret-reel")
+  })
+
+  it("the author (entitled) still gets the playable url", async () => {
+    const technique = await findAuthoredTechnique(authoredArgs)
+    const gated = gateTechniqueMedia((technique as any).mediaAttachments, true)
+
+    expect(gated.tiles[0].locked).toBe(false)
+    expect((gated.tiles[0].media as any).url).toBe("https://r2.example.com/secret-reel.mp4")
   })
 })

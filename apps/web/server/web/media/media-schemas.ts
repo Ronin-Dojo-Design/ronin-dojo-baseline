@@ -63,7 +63,29 @@ export const setWebMediaPremiumSchema = z.object({
   isPremium: z.boolean(),
 })
 
+// SESSION_0529 Slice 3B — member URL-paste video attach (authored techniques). No file, no R2: the
+// url is stored as an external `type: YOUTUBE` Media (provider-validated in the apply helper) and
+// attached to the target. Re-authorized server-side for the target like every media action.
+export const attachWebMediaUrlSchema = z.object({
+  target: mediaAttachTargetSchema,
+  url: z.string().url().max(500),
+  title: z.string().max(200).optional(),
+})
+
+// SESSION_0529 Slice 3B — persist a drag-reorder of a target's attachments (`sortOrder` = array
+// index). Every id must belong to the target (enforced in the apply helper), no duplicates.
+export const reorderWebMediaSchema = z.object({
+  target: mediaAttachTargetSchema,
+  attachmentIds: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(100)
+    .refine(ids => new Set(ids).size === ids.length, "Duplicate attachment ids."),
+})
+
 export type UploadWebMediaInput = z.infer<typeof uploadWebMediaSchema>
 export type RemoveWebMediaInput = z.infer<typeof removeWebMediaSchema>
 export type PromotePassportAvatarMediaInput = z.infer<typeof promotePassportAvatarMediaSchema>
 export type SetWebMediaPremiumInput = z.infer<typeof setWebMediaPremiumSchema>
+export type AttachWebMediaUrlInput = z.infer<typeof attachWebMediaUrlSchema>
+export type ReorderWebMediaInput = z.infer<typeof reorderWebMediaSchema>

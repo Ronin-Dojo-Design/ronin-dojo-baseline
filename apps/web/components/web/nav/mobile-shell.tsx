@@ -2,8 +2,10 @@ import { BottomNav } from "~/components/web/nav/bottom-nav"
 import { Mab } from "~/components/web/nav/mab"
 import { isAdmin } from "~/lib/authz-predicates"
 import { getServerSession } from "~/lib/auth"
+import { Brand } from "~/.generated/prisma/client"
 import { can } from "~/server/orpc/permissions"
 import { findApprovedStyleOptions } from "~/server/web/community/queries"
+import { canCreateTechniqueForUser } from "~/server/web/techniques/permissions"
 
 /**
  * MobileShell — the B0/B1 server wrapper that mounts the mobile chrome (SESSION_0500).
@@ -11,8 +13,12 @@ import { findApprovedStyleOptions } from "~/server/web/community/queries"
  * Resolves the session + `can()` permissions SERVER-SIDE (so `SessionUser`/`can()` never
  * enter the client bundle — the Sidebar precedent) and passes plain booleans to the client
  * `Mab`. The `BottomNav` is LOGGED-IN-only (it self-gates on the client via `useSession` and
- * renders nothing for guests); the `Mab` is ADMIN-ONLY for now and only mounted when the admin
- * has at least one permitted action.
+ * renders nothing for guests).
+ *
+ * @changed SESSION_0529 (Slice 3B) — the MAB mount is no longer admin-only: it also mounts for
+ * any user passing `canCreateTechniqueForUser` (Elite / staff / RBAC), who gets (typically) a
+ * one-action fan. The four pre-existing actions stay ADMIN-gated exactly as before (`admin &&
+ * can(...)`) so broadening the mount does not broaden them.
  *
  * Mounted once PER layout tree (v2, SESSION_0500): in the `(web)` public layout AND the `/app`
  * console layout, so a signed-in member keeps the bottom nav across both. Not hoisted to the
@@ -24,20 +30,31 @@ export const MobileShell = async ({ userAvatarUrl }: { userAvatarUrl?: string | 
   const session = await getServerSession()
   const user = session?.user ?? null
 
-  // ADMIN-ONLY gate for the whole MAB (operator, B1). Each action is additionally can()-gated;
-  // under today's flat roles all four are admin-only, but the per-action gate keeps the
-  // widening path honest (promotion path documented in lib/mab-preferences.ts).
-  const showMab = isAdmin(user)
+  const admin = isAdmin(user)
+
+  // Authoring capability (SESSION_0529 Slice 3B): RBAC `techniques.manage` short-circuits via
+  // `can()` before any DB hit (admins pay nothing extra); members resolve staff-role/entitlement.
+  const technique = user != null && (await canCreateTechniqueForUser(user, Brand.BBL))
 
   const permissions = {
-    claim: showMab && can(user, "claims.manage"),
-    post: showMab && can(user, "posts.manage"),
-    upload: showMab && can(user, "media.manage"),
-    promotion: showMab && can(user, "tournaments.manage"),
+    // The four B1 actions stay admin-only (operator, B1) — each additionally can()-gated; under
+    // today's flat roles all four are admin-only, but the per-action gate keeps the widening path
+    // honest (promotion path documented in lib/mab-preferences.ts).
+    claim: admin && can(user, "claims.manage"),
+    post: admin && can(user, "posts.manage"),
+    upload: admin && can(user, "media.manage"),
+    promotion: admin && can(user, "tournaments.manage"),
+    technique,
   }
 
+  const showMab = admin || permissions.technique
+
   const anyMabAction =
-    permissions.claim || permissions.post || permissions.upload || permissions.promotion
+    permissions.claim ||
+    permissions.post ||
+    permissions.upload ||
+    permissions.promotion ||
+    permissions.technique
 
   // Only fetch the community styles (for the Create-Post dialog) when the MAB will render its
   // post action — signed-out / non-admin visitors skip the query.

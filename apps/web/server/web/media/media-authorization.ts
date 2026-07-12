@@ -117,13 +117,25 @@ export async function authorizeMediaTarget({
     case "technique": {
       const technique = await db.technique.findFirst({
         where: { id: target.id, brand },
-        select: { organizationId: true },
+        select: { organizationId: true, authorPassportId: true },
       })
-      // @changed SESSION_0528 (ADR 0046) — `organizationId` is now nullable. Org-owned techniques
-      // authorize via their school exactly as before; an authored profile-only technique (null org)
-      // fails closed here — its author-owner media authoring wires up in Slice 3B (attach-to-authored),
-      // not this org-scoped media gate.
-      if (!technique?.organizationId) return false
+      if (!technique) return false
+      // @changed SESSION_0529 (Slice 3B, ADR 0046 D2) — the AUTHOR owns their technique's media.
+      // `authorPassportId` is the ownership axis; `organizationId` is a soft school grouping — so the
+      // author authorizes whether the row is profile-only (org null) OR grouped under their school
+      // (org derived from their Affiliation at create). Mirrors `canEditTechnique` in
+      // apply-technique.ts. Canonical rows (null author) skip this with zero extra queries.
+      if (technique.authorPassportId) {
+        const passport = await db.passport.findFirst({
+          where: { userId: user.id },
+          select: { id: true },
+        })
+        if (passport && passport.id === technique.authorPassportId) return true
+      }
+      // Org-owned path exactly as before (SESSION_0528): school staff authorize via the org; a
+      // genuinely unowned row (null org AND null/foreign author) fails closed — admins already
+      // passed at the global `isAdmin` line above.
+      if (!technique.organizationId) return false
       return isOrgAuthor(db, brand, user.id, technique.organizationId)
     }
 

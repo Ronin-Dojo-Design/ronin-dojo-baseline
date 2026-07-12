@@ -11,7 +11,9 @@ import {
   applyPassportAvatarPromotion,
   applyWebMediaPremium,
   applyWebMediaRemoval,
+  applyWebMediaReorder,
   applyWebMediaUpload,
+  applyWebMediaUrlAttach,
 } from "~/server/web/media/apply-media"
 import { authorizeMediaTarget } from "~/server/web/media/media-authorization"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
@@ -26,7 +28,14 @@ const editorUser = { id: "user-editor", role: "user" }
 
 type FakeState = {
   authorizedOrgIds?: string[]
-  techniques?: Record<string, string>
+  /**
+   * techniqueId → owning orgId (legacy string form: canonical row, author null) OR the full
+   * ownership pair (SESSION_0529 Slice 3B author-path tests).
+   */
+  techniques?: Record<
+    string,
+    string | { organizationId: string | null; authorPassportId: string | null }
+  >
   courses?: Record<string, string>
   passports?: Record<string, string>
   attachments?: Array<Record<string, unknown>>
@@ -66,8 +75,10 @@ function makeDb(state: FakeState = {}) {
     },
     technique: {
       findFirst: async ({ where }: any) => {
-        const organizationId = state.techniques?.[where.id]
-        return organizationId ? { organizationId } : null
+        const entry = state.techniques?.[where.id]
+        if (!entry) return null
+        // Legacy string form = canonical org row (author null); object form = explicit pair.
+        return typeof entry === "string" ? { organizationId: entry, authorPassportId: null } : entry
       },
     },
     course: {
@@ -78,6 +89,14 @@ function makeDb(state: FakeState = {}) {
     },
     passport: {
       findFirst: async ({ where }: any) => {
+        // The technique author path looks the CALLER's passport up by userId (SESSION_0529 3B);
+        // the passport-target path looks the owner up by passport id.
+        if (where.userId !== undefined) {
+          const entry = Object.entries(state.passports ?? {}).find(
+            ([, userId]) => userId === where.userId,
+          )
+          return entry ? { id: entry[0] } : null
+        }
         const userId = state.passports?.[where.id]
         return userId ? { userId } : null
       },
@@ -116,6 +135,14 @@ function makeDb(state: FakeState = {}) {
           }
           return true
         }) ?? null,
+      findMany: async ({ where }: any) =>
+        attachments.filter(row => {
+          if (where.id?.in && !where.id.in.includes(row.id)) return false
+          for (const key of FK_KEYS) {
+            if (where[key] !== undefined) return row[key] === where[key]
+          }
+          return true
+        }),
       delete: async ({ where }: any) => {
         const index = attachments.findIndex(row => row.id === where.id)
         if (index >= 0) attachments.splice(index, 1)
@@ -219,6 +246,215 @@ describe("web media authorization", () => {
     })
     expect(self).toBe(true)
     expect(other).toBe(false)
+  })
+})
+
+describe("technique media authorization — author path (SESSION_0529 Slice 3B, ADR 0046 D2)", () => {
+  it("authorizes the AUTHOR of a profile-only (org-null) technique", async () => {
+    const { db } = makeDb({
+      techniques: { "tech-authored": { organizationId: null, authorPassportId: "pass-self" } },
+      passports: { "pass-self": editorUser.id },
+    })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: editorUser,
+      target: { kind: "technique", id: "tech-authored" },
+    })
+    expect(ok).toBe(true)
+  })
+
+  it("authorizes the AUTHOR of an org-GROUPED authored technique even when they are not org staff", async () => {
+    const { db } = makeDb({
+      techniques: { "tech-authored": { organizationId: "org-1", authorPassportId: "pass-self" } },
+      authorizedOrgIds: [], // NOT staff of org-1 — the org is a soft grouping, the author owns it
+      passports: { "pass-self": editorUser.id },
+    })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: editorUser,
+      target: { kind: "technique", id: "tech-authored" },
+    })
+    expect(ok).toBe(true)
+  })
+
+  it("rejects a NON-author (their passport is not the author's)", async () => {
+    const { db } = makeDb({
+      techniques: {
+        "tech-authored": { organizationId: null, authorPassportId: "pass-someone-else" },
+      },
+      passports: { "pass-self": editorUser.id },
+    })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: editorUser,
+      target: { kind: "technique", id: "tech-authored" },
+    })
+    expect(ok).toBe(false)
+  })
+
+  it("fails CLOSED for a genuinely unowned row (null org AND null author)", async () => {
+    const { db } = makeDb({
+      techniques: { "tech-orphan": { organizationId: null, authorPassportId: null } },
+      passports: { "pass-self": editorUser.id },
+    })
+    const ok = await authorizeMediaTarget({
+      db,
+      brand,
+      user: editorUser,
+      target: { kind: "technique", id: "tech-orphan" },
+    })
+    expect(ok).toBe(false)
+  })
+})
+
+describe("web media URL attach (SESSION_0529 Slice 3B — member video path, no R2)", () => {
+  const YT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  const YT_THUMB = "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
+
+  it("author attaches a YouTube url: Media { type YOUTUBE, derived poster, public } + attachment + audit", async () => {
+    const { db, created } = makeDb({
+      techniques: { "tech-authored": { organizationId: null, authorPassportId: "pass-self" } },
+      passports: { "pass-self": editorUser.id },
+    })
+
+    const result = await applyWebMediaUrlAttach({
+      db,
+      brand,
+      user: editorUser,
+      input: { target: { kind: "technique", id: "tech-authored" }, url: YT_URL },
+    })
+
+    expect(result).toMatchObject({
+      mediaId: "media-created",
+      attachmentId: "attach-created",
+      url: YT_URL,
+      thumbnailUrl: YT_THUMB,
+      isPublic: true,
+    })
+    expect(created.media[0]).toMatchObject({
+      brand,
+      type: "YOUTUBE",
+      url: YT_URL,
+      thumbnailUrl: YT_THUMB,
+      isPublic: true,
+    })
+    expect(created.attachments[0]).toMatchObject({
+      mediaId: "media-created",
+      techniqueId: "tech-authored",
+    })
+    expect(created.audits[0]).toMatchObject({
+      action: "media.attached",
+      entityType: "Technique",
+      entityId: "tech-authored",
+      userId: editorUser.id,
+    })
+  })
+
+  it("rejects a non-YouTube url (provider validation) and persists nothing", async () => {
+    const { db, created } = makeDb({
+      techniques: { "tech-authored": { organizationId: null, authorPassportId: "pass-self" } },
+      passports: { "pass-self": editorUser.id },
+    })
+
+    await expectRejectsWithMessage(
+      applyWebMediaUrlAttach({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-authored" },
+          url: "https://evil.example.com/video.mp4",
+        },
+      }),
+      WEB_MEDIA_ERROR.VIDEO_URL_UNSUPPORTED,
+    )
+    expect(created.media).toHaveLength(0)
+    expect(created.attachments).toHaveLength(0)
+  })
+
+  it("rejects an unauthorized caller server-side", async () => {
+    const { db } = makeDb({
+      techniques: {
+        "tech-authored": { organizationId: null, authorPassportId: "pass-someone-else" },
+      },
+      passports: { "pass-self": editorUser.id },
+    })
+
+    await expectRejectsWithMessage(
+      applyWebMediaUrlAttach({
+        db,
+        brand,
+        user: editorUser,
+        input: { target: { kind: "technique", id: "tech-authored" }, url: YT_URL },
+      }),
+      WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED,
+    )
+  })
+})
+
+describe("web media reorder (SESSION_0529 Slice 3B — dnd sequencing persistence)", () => {
+  const authoredState = () => ({
+    techniques: {
+      "tech-authored": { organizationId: null, authorPassportId: "pass-self" } as const,
+    },
+    passports: { "pass-self": editorUser.id },
+    attachments: [
+      { id: "att-1", mediaId: "m1", techniqueId: "tech-authored", sortOrder: 0 },
+      { id: "att-2", mediaId: "m2", techniqueId: "tech-authored", sortOrder: 1 },
+      { id: "att-3", mediaId: "m3", techniqueId: "tech-authored", sortOrder: 2 },
+    ],
+  })
+
+  it("persists the new order (sortOrder = array index) and audits it", async () => {
+    const { db, created, attachments } = makeDb(authoredState())
+
+    const result = await applyWebMediaReorder({
+      db,
+      brand,
+      user: editorUser,
+      input: {
+        target: { kind: "technique", id: "tech-authored" },
+        attachmentIds: ["att-3", "att-1", "att-2"],
+      },
+    })
+
+    expect(result).toEqual({ reordered: true })
+    const orderById = Object.fromEntries(attachments.map(row => [row.id, row.sortOrder]))
+    expect(orderById).toEqual({ "att-3": 0, "att-1": 1, "att-2": 2 })
+    expect(created.audits[0]).toMatchObject({
+      action: "media.reordered",
+      entityType: "Technique",
+      after: { attachmentIds: ["att-3", "att-1", "att-2"] },
+    })
+  })
+
+  it("rejects the whole batch when any id belongs to ANOTHER target (FK ownership guard)", async () => {
+    const state = authoredState()
+    state.attachments.push({
+      id: "att-foreign",
+      mediaId: "m4",
+      techniqueId: "tech-OTHER",
+      sortOrder: 0,
+    })
+    const { db, attachments } = makeDb(state)
+
+    await expectRejectsWithMessage(
+      applyWebMediaReorder({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-authored" },
+          attachmentIds: ["att-foreign", "att-1"],
+        },
+      }),
+      WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND,
+    )
+    // Nothing was reordered.
+    expect(attachments.find(row => row.id === "att-1")?.sortOrder).toBe(0)
   })
 })
 

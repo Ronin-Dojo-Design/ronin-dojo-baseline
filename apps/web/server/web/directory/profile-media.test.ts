@@ -12,7 +12,7 @@
 // @ts-expect-error - bun:test is a Bun runtime module
 import { describe, expect, it } from "bun:test"
 import type { PublicPassportMedia } from "~/server/web/media/queries"
-import { buildProfileMedia } from "./profile-media"
+import { type AuthoredCurriculumTechnique, buildProfileMedia } from "./profile-media"
 
 // Fixture factory — one attachment with sane defaults; each case overrides the axis it exercises.
 let seq = 0
@@ -224,6 +224,11 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
     expect(item.external).toBe(true)
   })
 
+  it("curriculum defaults to an EMPTY rail when no curriculum input is provided (pre-3B callers)", () => {
+    const result = buildProfileMedia({ viewerEntitled: false, media: [] })
+    expect(result.curriculum).toEqual([])
+  })
+
   it("MIXED per-video: a free reel + a premium reel for the same unauth viewer (free plays, premium locked)", () => {
     const result = buildProfileMedia({
       viewerEntitled: false,
@@ -255,5 +260,121 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
       i => i.href,
     )
     expect(allHrefs.some(href => href.includes("mixed-premium"))).toBe(false)
+  })
+})
+
+describe("buildProfileMedia — curriculum rail (SESSION_0529 Slice 3B, ADR 0046)", () => {
+  // Fixture factory — one authored technique; each case overrides the axis it exercises.
+  let techSeq = 0
+  function authoredTechnique(
+    partial: Partial<AuthoredCurriculumTechnique>,
+  ): AuthoredCurriculumTechnique {
+    techSeq += 1
+    return {
+      id: `tech_${techSeq}`,
+      name: "Armbar From Guard",
+      slug: "armbar-from-guard",
+      attachments: [],
+      ...partial,
+    }
+  }
+
+  const curriculumOf = (techniques: AuthoredCurriculumTechnique[], viewerEntitled = false) =>
+    buildProfileMedia({
+      viewerEntitled,
+      media: [],
+      curriculum: { profileSlug: "bob-bass", techniques },
+    }).curriculum
+
+  it("maps a technique to a profile-scoped INTERNAL watch link (no url field on the item)", () => {
+    const items = curriculumOf([
+      authoredTechnique({
+        id: "t1",
+        name: "Berimbolo",
+        slug: "berimbolo",
+        attachments: [
+          {
+            isPremium: false,
+            url: "https://youtu.be/dQw4w9WgXcQ",
+            thumbnailUrl: null,
+          },
+        ],
+      }),
+    ])
+
+    expect(items).toHaveLength(1)
+    const item = items[0]
+    expect(item.title).toBe("Berimbolo")
+    expect(item.href).toBe("/directory/bob-bass/techniques/berimbolo")
+    expect(item.external).toBe(false)
+    expect(item.subtitle).toBe("Technique")
+    // Poster derives from the YouTube url when no stored thumbnail exists.
+    expect(item.thumbnailUrl).toBe(YT_THUMB)
+    // No-leak shape: ProfileMediaItem has no `url` field by design.
+    expect("url" in item).toBe(false)
+  })
+
+  it("locks a technique whose clips are ALL premium for an unentitled viewer", () => {
+    const items = curriculumOf([
+      authoredTechnique({
+        attachments: [
+          { isPremium: true, url: "https://r2.example.com/prem-1.mp4", thumbnailUrl: null },
+          { isPremium: true, url: "https://r2.example.com/prem-2.mp4", thumbnailUrl: null },
+        ],
+      }),
+    ])
+
+    expect(items[0].locked).toBe(true)
+    // The raw playable url never reaches the shaped item (an R2 clip has no derivable poster →
+    // the card falls back to its placeholder, NEVER the raw url).
+    expect(JSON.stringify(items)).not.toContain("r2.example.com")
+  })
+
+  it("does NOT lock when ANY clip is free (the viewer has something to watch)", () => {
+    const items = curriculumOf([
+      authoredTechnique({
+        attachments: [
+          { isPremium: true, url: "https://r2.example.com/prem.mp4", thumbnailUrl: null },
+          { isPremium: false, url: "https://youtu.be/dQw4w9WgXcQ", thumbnailUrl: null },
+        ],
+      }),
+    ])
+
+    expect(items[0].locked).toBe(false)
+  })
+
+  it("does NOT lock a technique with zero clips (nothing to gate)", () => {
+    const items = curriculumOf([authoredTechnique({ attachments: [] })])
+    expect(items[0].locked).toBe(false)
+    expect(items[0].thumbnailUrl).toBeNull()
+  })
+
+  it("an ENTITLED viewer sees an all-premium technique unlocked", () => {
+    const items = curriculumOf(
+      [
+        authoredTechnique({
+          attachments: [
+            { isPremium: true, url: "https://r2.example.com/prem.mp4", thumbnailUrl: null },
+          ],
+        }),
+      ],
+      true,
+    )
+    expect(items[0].locked).toBe(false)
+  })
+
+  it("prefers the stored thumbnail over the derived YouTube poster", () => {
+    const items = curriculumOf([
+      authoredTechnique({
+        attachments: [
+          {
+            isPremium: false,
+            url: "https://youtu.be/dQw4w9WgXcQ",
+            thumbnailUrl: "https://r2.example.com/custom-poster.jpg",
+          },
+        ],
+      }),
+    ])
+    expect(items[0].thumbnailUrl).toBe("https://r2.example.com/custom-poster.jpg")
   })
 })

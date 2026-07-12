@@ -7,6 +7,7 @@ import {
   MedalIcon,
   PenSquareIcon,
   PlusIcon,
+  SwordsIcon,
   XIcon,
 } from "lucide-react"
 import { AnimatePresence, motion, type PanInfo } from "motion/react"
@@ -56,14 +57,17 @@ type MabAction = {
 
 type MabProps = {
   /**
-   * Which actions this admin is permitted (server-resolved `can()` booleans). Absent/false
-   * keys are simply not passed. Order is stable: claim, post, upload, promotion.
+   * Which actions this user is permitted (server-resolved booleans). Absent/false
+   * keys are simply not passed. Order is stable: claim, post, upload, promotion, technique.
+   * `technique` (SESSION_0529 Slice 3B) is capability-gated (`canCreateTechniqueForUser`), not
+   * admin-gated — an Elite non-admin gets a one-action fan.
    */
   permissions: {
     claim: boolean
     post: boolean
     upload: boolean
     promotion: boolean
+    technique: boolean
   }
   /** Approved community styles for the Create-Post dialog (server-fetched once in the shell). */
   postStyles: { id: string; name: string }[]
@@ -96,6 +100,25 @@ function nearestCorner(x: number, y: number): MabCorner {
   return `${vertical}-${horizontal}` as MabCorner
 }
 
+// Minimum center-to-center distance between adjacent fanned items: the 44px (`size-11`) button
+// plus breathing room, so neighbors never overlap.
+const MIN_ITEM_CHORD = 48
+
+/**
+ * Count-scaled fan radius (SESSION_0529 Slice 3B). The sweep is hard-capped to the inward 90°
+ * quadrant (SESSION_0501 P0 — the cap itself is untouched), so a 5th action shrinks the per-item
+ * step to 22.5°; at the base 76px radius adjacent size-11 (44px) buttons would then sit ~30px
+ * apart center-to-center → overlap. The chord between neighbors is `2·r·sin(step/2)`, so grow the
+ * radius until it clears MIN_ITEM_CHORD. Counts ≤ 4 keep the shipped 76px geometry byte-for-byte
+ * (the 4-item admin fan is unchanged); the sweep still points inward, so a larger radius cannot
+ * cross the docked viewport edges in any corner.
+ */
+function fanRadius(count: number, stepDegrees: number) {
+  if (count <= 4 || stepDegrees === 0) return FAN_RADIUS
+  const stepRad = (stepDegrees * Math.PI) / 180
+  return Math.max(FAN_RADIUS, MIN_ITEM_CHORD / (2 * Math.sin(stepRad / 2)))
+}
+
 /** Offset of a fanned item from the FAB center, given its index and the corner geometry. */
 function fanOffset(index: number, count: number, corner: MabCorner) {
   const { baseAngle, direction } = CORNER_CONFIG[corner]
@@ -104,9 +127,10 @@ function fanOffset(index: number, count: number, corner: MabCorner) {
   // steps, 90° total; 2 items keep the roomy 68°). Every offset therefore points up/down and
   // inward — nothing can cross the docked viewport edges in any corner.
   const step = count > 1 ? Math.min(ITEM_ARC_DEGREES, QUADRANT_DEGREES / (count - 1)) : 0
+  const radius = fanRadius(count, step)
   const angle = baseAngle + index * step * direction
   const rad = (angle * Math.PI) / 180
-  return { x: Math.cos(rad) * FAN_RADIUS, y: -Math.sin(rad) * FAN_RADIUS }
+  return { x: Math.cos(rad) * radius, y: -Math.sin(rad) * radius }
 }
 
 export const Mab = ({ permissions, postStyles }: MabProps) => {
@@ -195,6 +219,16 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
       labelKey: "action_promotion",
       icon: MedalIcon,
       onSelect: () => router.push("/app/events/new"),
+    })
+  }
+  if (permissions.technique) {
+    // SESSION_0529 Slice 3B — deep-links to the /app/profile Techniques tab with the authored
+    // create sheet auto-open (`DashboardTabs` reads ?tab, `AuthoredTechniqueCreate` reads ?create).
+    actions.push({
+      id: "technique",
+      labelKey: "action_technique",
+      icon: SwordsIcon,
+      onSelect: () => router.push("/app/profile?tab=techniques&create=technique"),
     })
   }
 

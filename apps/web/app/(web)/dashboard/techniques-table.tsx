@@ -22,19 +22,28 @@ type TechniqueRow = {
   isPublished: boolean
   difficultyLevel: string | null
   createdAt: Date
+  /** Watch link, resolved server-side (SESSION_0529): profile-scoped for own authored rows. */
+  href: string
   discipline: { id: string; name: string } | null
   organization: { id: string; name: string } | null
 }
 
 type TechniquesTableProps = {
   techniques: TechniqueRow[]
+  /**
+   * Whether the org-canonical create page (`/app/techniques/new`, OWNER/INSTRUCTOR-gated) is
+   * reachable for this viewer (SESSION_0529 Slice 3B) — an Elite non-staff author would 404 there,
+   * so the button hides and the authored plus-card is their create path.
+   */
+  showOrgCreate?: boolean
 }
 
-export function TechniquesTable({ techniques }: TechniquesTableProps) {
+export function TechniquesTable({ techniques, showOrgCreate = false }: TechniquesTableProps) {
   if (techniques.length === 0) {
     return (
       <Note>
-        No techniques found. You need to be an owner or instructor of a school to manage techniques.
+        No techniques yet. School owners/instructors and Elite members can add techniques to their
+        curriculum.
       </Note>
     )
   }
@@ -43,9 +52,11 @@ export function TechniquesTable({ techniques }: TechniquesTableProps) {
     <Stack size="lg" direction="column">
       <Stack size="sm" direction="row" className="items-center justify-between">
         <H4>Techniques ({techniques.length})</H4>
-        <Button size="sm" variant="primary" render={<Link href="/app/techniques/new" />}>
-          Add Technique
-        </Button>
+        {showOrgCreate && (
+          <Button size="sm" variant="primary" render={<Link href="/app/techniques/new" />}>
+            Add Technique
+          </Button>
+        )}
       </Stack>
 
       <Table>
@@ -61,7 +72,7 @@ export function TechniquesTable({ techniques }: TechniquesTableProps) {
           {techniques.map(t => (
             <TableRow key={t.id}>
               <TableCell>
-                <Link href={`/techniques/${t.slug}`} className="font-medium">
+                <Link href={t.href} className="font-medium">
                   {t.name}
                 </Link>
               </TableCell>

@@ -9,11 +9,14 @@ import { MAX_WEB_UPLOAD_BYTES } from "~/server/web/media/media-schemas"
 import { getMediaConfig } from "~/services/s3"
 import { WEB_MEDIA_ERROR } from "~/server/web/media/media-errors"
 import type {
+  AttachWebMediaUrlInput,
   PromotePassportAvatarMediaInput,
   RemoveWebMediaInput,
+  ReorderWebMediaInput,
   SetWebMediaPremiumInput,
   UploadWebMediaInput,
 } from "~/server/web/media/media-schemas"
+import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import {
   MEDIA_TARGET_ENTITY_TYPE,
   type MediaAttachTarget,
@@ -180,6 +183,144 @@ export async function applyWebMediaUpload({
 
     return { attachmentId: attachment.id, mediaId: media.id, url, isPublic: input.isPublic }
   })
+}
+
+export type WebMediaUrlAttachResult = {
+  attachmentId: string
+  mediaId: string
+  url: string
+  thumbnailUrl: string | null
+  isPublic: boolean
+}
+
+/**
+ * SESSION_0529 Slice 3B — attach an EXTERNAL video by URL (the member video path; the R2 file
+ * uploader stays out of the member UI). Authorize → validate the provider (YouTube-only: the one
+ * provider with a derivable static poster + a safe embed id shape, `lib/video-embed`) → create
+ * `Media { type: YOUTUBE }` + `MediaAttachment` + `AuditLog`. `isPublic: true` — a YouTube link is
+ * inherently public content; the freemium gate rides the ATTACHMENT `isPremium` flag (default
+ * false), not the visibility flag. No S3/R2 write anywhere on this path.
+ */
+export async function applyWebMediaUrlAttach({
+  db,
+  brand,
+  user,
+  input,
+}: {
+  db: AppDb
+  brand: Brand
+  user: AuthzUser
+  input: AttachWebMediaUrlInput
+}): Promise<WebMediaUrlAttachResult> {
+  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  if (!authorized) {
+    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+
+  const url = input.url.trim()
+  // YouTube-only: `toVideoThumbnailUrl` returns a poster ONLY for a parseable YouTube video id
+  // (charset-validated, SESSION_0495 C1-11) — anything else (Vimeo, arbitrary urls) is rejected.
+  const thumbnailUrl = toVideoThumbnailUrl(url)
+  if (!thumbnailUrl) {
+    throw new Error(WEB_MEDIA_ERROR.VIDEO_URL_UNSUPPORTED)
+  }
+
+  return db.$transaction(async tx => {
+    const txDb = tx as AppDb
+
+    const media = await txDb.media.create({
+      data: {
+        brand,
+        type: "YOUTUBE",
+        url,
+        thumbnailUrl,
+        title: input.title,
+        isPublic: true,
+        uploadedBy: { connect: { id: user.id } },
+      },
+      select: { id: true },
+    })
+
+    const attachment = await txDb.mediaAttachment.create({
+      data: {
+        mediaId: media.id,
+        ...mediaTargetCreateData(input.target),
+      },
+      select: { id: true },
+    })
+
+    await txDb.auditLog.create({
+      data: {
+        brand,
+        action: "media.attached",
+        entityType: MEDIA_TARGET_ENTITY_TYPE[input.target.kind],
+        entityId: input.target.id,
+        organizationId: auditOrganizationId(input.target),
+        userId: user.id,
+        after: {
+          mediaId: media.id,
+          attachmentId: attachment.id,
+          url,
+          isPublic: true,
+          source: "url",
+        },
+      },
+    })
+
+    return { attachmentId: attachment.id, mediaId: media.id, url, thumbnailUrl, isPublic: true }
+  })
+}
+
+/**
+ * SESSION_0529 Slice 3B — persist a drag-reorder (`sortOrder` = array index). Authorize the target,
+ * then verify EVERY id belongs to it (the same combined-where ownership guard the other mutate
+ * flows use) before writing — a foreign/missing id rejects the whole batch, so one author can never
+ * reorder another target's rail.
+ */
+export async function applyWebMediaReorder({
+  db,
+  brand,
+  user,
+  input,
+}: {
+  db: AppDb
+  brand: Brand
+  user: AuthzUser
+  input: ReorderWebMediaInput
+}): Promise<{ reordered: true }> {
+  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
+  if (!authorized) {
+    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+
+  const owned = await db.mediaAttachment.findMany({
+    where: { id: { in: input.attachmentIds }, ...mediaTargetWhere(input.target) },
+    select: { id: true },
+  })
+  // The schema already rejects duplicate ids, so a count mismatch = a foreign/missing attachment.
+  if (owned.length !== input.attachmentIds.length) {
+    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
+  }
+
+  await db.$transaction(async tx => {
+    const txDb = tx as AppDb
+    for (const [index, id] of input.attachmentIds.entries()) {
+      await txDb.mediaAttachment.update({ where: { id }, data: { sortOrder: index } })
+    }
+    await txDb.auditLog.create({
+      data: {
+        brand,
+        action: "media.reordered",
+        entityType: MEDIA_TARGET_ENTITY_TYPE[input.target.kind],
+        entityId: input.target.id,
+        organizationId: auditOrganizationId(input.target),
+        userId: user.id,
+        after: { attachmentIds: input.attachmentIds },
+      },
+    })
+  })
+
+  return { reordered: true }
 }
 
 /**

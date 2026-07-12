@@ -127,3 +127,8 @@ export function readRegisteredUserByEmail(email: string) {
 export function cleanupTestUserByEmail(email: string) {
   runAuthDbCommand<void>("cleanup-user-by-email", { email })
 }
+
+/** Grant an ACTIVE entitlement (brand+key) to a test user — cleaned up by `cleanupTestUser`. */
+export function grantTestEntitlement(userId: string, key: string, brand = "BBL") {
+  runAuthDbCommand<void>("grant-entitlement", { userId, key, brand })
+}

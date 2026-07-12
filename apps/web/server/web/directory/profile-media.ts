@@ -46,6 +46,29 @@ export type ProfileMedia = {
   featuredMatches: ProfileMediaItem[]
   techniqueVideos: ProfileMediaItem[]
   podcasts: ProfileMediaItem[]
+  /**
+   * SESSION_0529 Slice 3B (ADR 0046) — the profile's AUTHORED techniques (`Technique` rows keyed by
+   * `authorPassportId`, published only), distinct in SOURCE from `techniqueVideos` (which keys off
+   * passport `MediaAttachment`s). Cards link INTERNALLY to the profile-scoped authored watch route
+   * (`/directory/[slug]/techniques/[techniqueSlug]`); never a raw media url.
+   */
+  curriculum: ProfileMediaItem[]
+}
+
+/**
+ * Input row for the curriculum rail (SESSION_0529 Slice 3B) — a published authored technique with
+ * its ordered attachments' poster inputs + per-clip `isPremium`. The raw `url` is consumed ONLY
+ * server-side to derive a YouTube poster; it never reaches the shaped `ProfileMediaItem`.
+ */
+export type AuthoredCurriculumTechnique = {
+  id: string
+  name: string
+  slug: string
+  attachments: {
+    isPremium: boolean
+    url: string
+    thumbnailUrl: string | null
+  }[]
 }
 
 // YouTube watch/short/embed/youtu.be → `hqdefault` thumbnail (mirrors the legacy
@@ -130,13 +153,43 @@ function toMediaItem(
 export function buildProfileMedia({
   viewerEntitled,
   media,
+  curriculum,
 }: {
   viewerEntitled: boolean
   media: PublicPassportMedia[]
+  /**
+   * SESSION_0529 Slice 3B — the profile's published authored techniques + the profile slug their
+   * watch links live under. Optional so the shaper's pre-existing three-rail callers/tests are
+   * untouched; absent → an empty curriculum rail (the section self-hides).
+   */
+  curriculum?: { profileSlug: string; techniques: AuthoredCurriculumTechnique[] }
 }): ProfileMedia {
   const featuredMatches: ProfileMediaItem[] = []
   const techniqueVideos: ProfileMediaItem[] = []
   const podcasts: ProfileMediaItem[] = []
+
+  // Curriculum rail (SESSION_0529 Slice 3B): one card per AUTHORED technique. `locked` mirrors the
+  // watch page's per-clip gate at rail granularity — locked only when the technique HAS clips, ALL
+  // of them are premium, and the viewer isn't entitled (any free clip → an unentitled viewer still
+  // has something to watch → unlocked; zero clips → nothing to gate → unlocked). The card is
+  // poster + INTERNAL link only — `ProfileMediaItem` carries no media url by design, and the
+  // poster falls back to a derived YouTube thumbnail, never the raw playable url.
+  const curriculumItems: ProfileMediaItem[] = curriculum
+    ? curriculum.techniques.map(technique => {
+        const hasClips = technique.attachments.length > 0
+        const hasFreeClip = technique.attachments.some(attachment => !attachment.isPremium)
+        const poster = technique.attachments[0]
+        return {
+          id: technique.id,
+          title: technique.name,
+          thumbnailUrl: poster ? (poster.thumbnailUrl ?? buildYoutubeThumbnail(poster.url)) : null,
+          href: `/directory/${curriculum.profileSlug}/techniques/${technique.slug}`,
+          external: false,
+          subtitle: "Technique",
+          locked: hasClips && !hasFreeClip && !viewerEntitled,
+        }
+      })
+    : []
 
   for (const item of media) {
     const purpose = (item.purpose ?? "").toLowerCase()
@@ -202,5 +255,5 @@ export function buildProfileMedia({
     }
   }
 
-  return { featuredMatches, techniqueVideos, podcasts }
+  return { featuredMatches, techniqueVideos, podcasts, curriculum: curriculumItems }
 }

@@ -8,6 +8,7 @@
   "action_post": "Create post",
   "action_upload": "Upload photo or media",
   "action_promotion": "Log a promotion",
+  "action_technique": "Add a technique",
   "upload_title": "Upload media",
   "upload_description": "Add a photo or video to the media library.",
   "upload_manage_link": "Manage the media library"

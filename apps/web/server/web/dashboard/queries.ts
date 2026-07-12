@@ -70,18 +70,25 @@ export const findUserOrganization = cache(async (userId: string, brand: Brand) =
 })
 
 export const findUserTechniques = cache(async (userId: string, brand: Brand) => {
-  // Find techniques for organizations the user owns/instructs
+  // Techniques the user can manage: their org-library rows (OWNER/INSTRUCTOR school staff) PLUS
+  // their own AUTHORED rows (ADR 0046 D2 — `authorPassportId` via the user's Passport, org-grouped
+  // or profile-only alike; SESSION_0529 Slice 3B).
   return db.technique.findMany({
     where: {
-      organization: {
-        brand,
-        memberships: {
-          some: {
-            userId,
-            roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+      OR: [
+        {
+          organization: {
+            brand,
+            memberships: {
+              some: {
+                userId,
+                roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+              },
+            },
           },
         },
-      },
+        { brand, author: { userId } },
+      ],
     },
     select: {
       id: true,
@@ -91,6 +98,7 @@ export const findUserTechniques = cache(async (userId: string, brand: Brand) => 
       difficultyLevel: true,
       createdAt: true,
       updatedAt: true,
+      authorPassportId: true,
       discipline: { select: { id: true, name: true } },
       organization: { select: { id: true, name: true } },
     },

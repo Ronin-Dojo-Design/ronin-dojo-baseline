@@ -15,6 +15,16 @@ type AppDb = typeof appDb
 /** OWNER/INSTRUCTOR of a school may author/edit that school's techniques (ADR 0046 D5). */
 const TECHNIQUE_STAFF_ROLES = ["OWNER", "INSTRUCTOR"] as const
 
+/**
+ * Prisma P2002 (unique-constraint violation), duck-typed on `code` rather than `instanceof
+ * PrismaClientKnownRequestError` so it holds across driver adapters and hermetic test fakes
+ * (SESSION_0529 Slice 3B). Inside the authored create the ONLY unique index that can fire is the
+ * DB-managed partial `Technique_authored_slug_key` — the canonical partial index excludes rows
+ * where `authorPassportId IS NOT NULL` — so a P2002 here IS the duplicate-authored-slug case.
+ */
+const isUniqueConstraintError = (error: unknown): boolean =>
+  typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002"
+
 async function hasOrgStaffRole(
   db: AppDb,
   userId: string,
@@ -83,16 +93,26 @@ export async function applyCreateTechnique({
     })
     const org = affiliation?.organization ?? null
 
-    return db.technique.create({
-      data: {
-        ...data,
-        brand: org?.brand ?? brandContext,
-        organizationId: org?.id ?? null,
-        authorPassportId: passport.id,
-        teachingCues: data.teachingCues ?? [],
-        commonErrors: data.commonErrors ?? [],
-      },
-    })
+    try {
+      return await db.technique.create({
+        data: {
+          ...data,
+          brand: org?.brand ?? brandContext,
+          organizationId: org?.id ?? null,
+          authorPassportId: passport.id,
+          teachingCues: data.teachingCues ?? [],
+          commonErrors: data.commonErrors ?? [],
+        },
+      })
+    } catch (error) {
+      // Duplicate (brand, authorPassportId, slug) → the member-facing friendly message, caught
+      // LOCALLY so the shared `lib/safe-actions.ts` P2002 mapping (which would render the useless
+      // "A technique with this brand already exists") stays untouched for every other action.
+      if (isUniqueConstraintError(error)) {
+        throw new Error(TECHNIQUE_ERROR.AUTHORED_SLUG_TAKEN)
+      }
+      throw error
+    }
   }
 
   // Org-canonical path (author null) — unchanged gate + brand derivation.

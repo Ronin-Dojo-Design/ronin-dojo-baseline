@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 import { z } from "zod"
 import { Button } from "~/components/common/button"
 import {
@@ -88,7 +89,18 @@ type Discipline = { id: string; name: string }
 type Belt = { id: string; name: string; shortName: string | null }
 
 type TechniqueFormProps = {
-  organizationId: string
+  /** Org-canonical mode (`/app/techniques/new` + `[id]`) — OWNER/INSTRUCTOR school library rows. */
+  organizationId?: string
+  /**
+   * Authored mode (SESSION_0529 Slice 3B, ADR 0046 D5): submits `authored: true` and NO
+   * `organizationId` — the capability-gated action sets `authorPassportId` from the session's own
+   * Passport and derives the school from the caller's current Affiliation server-side.
+   */
+  authored?: boolean
+  /** Overrides the default post-create redirect (the sheet advances to its media step). */
+  onSuccess?: (technique: { id: string; name: string; slug: string }) => void
+  /** Overrides the default Cancel behavior (`router.back()`) — the sheet closes itself. */
+  onCancel?: () => void
   disciplines: Discipline[]
   belts: Belt[]
   technique?: {
@@ -116,6 +128,9 @@ type TechniqueFormProps = {
 
 export function TechniqueForm({
   organizationId,
+  authored,
+  onSuccess,
+  onCancel,
   disciplines,
   belts,
   technique,
@@ -147,12 +162,27 @@ export function TechniqueForm({
     },
   })
 
+  // Surface server errors (e.g. the friendly authored duplicate-slug P2002 message,
+  // SESSION_0529 Slice 3B) — previously failures were silent.
+  const onError = ({ error }: { error: { serverError?: string } }) => {
+    toast.error(error.serverError ?? "Failed to save the technique.")
+  }
+
   const { execute: executeCreate, isPending: isCreating } = useAction(createTechnique, {
-    onSuccess: () => router.push("/app/profile"),
+    onSuccess: ({ data }) => {
+      // The sheet flow (authored mode) advances in place instead of navigating away.
+      if (onSuccess && data) {
+        onSuccess({ id: data.id, name: data.name, slug: data.slug })
+        return
+      }
+      router.push("/app/profile")
+    },
+    onError,
   })
 
   const { execute: executeUpdate, isPending: isUpdating } = useAction(updateTechnique, {
     onSuccess: () => router.push("/app/profile"),
+    onError,
   })
 
   const isPending = isCreating || isUpdating
@@ -170,6 +200,9 @@ export function TechniqueForm({
 
     if (isEdit) {
       executeUpdate({ id: technique.id, organizationId, ...payload } as any)
+    } else if (authored) {
+      // Authored path: `authored: true`, NO organizationId — the server derives the school.
+      executeCreate({ authored: true, ...payload } as any)
     } else {
       executeCreate({ organizationId, ...payload } as any)
     }
@@ -478,7 +511,7 @@ export function TechniqueForm({
             <Button type="submit" isPending={isPending}>
               {isEdit ? "Save Changes" : "Create Technique"}
             </Button>
-            <Button type="button" variant="secondary" onClick={() => router.back()}>
+            <Button type="button" variant="secondary" onClick={onCancel ?? (() => router.back())}>
               Cancel
             </Button>
           </Stack>

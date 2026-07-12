@@ -8,4 +8,7 @@ export const WEB_MEDIA_ERROR = {
   ATTACHMENT_NOT_FOUND: "Media attachment not found for this item.",
   INVALID_FILE: "Only image and video files up to 25MB are allowed.",
   AVATAR_IMAGE_REQUIRED: "Only image attachments can be used as a Passport avatar.",
+  // SESSION_0529 Slice 3B — the member URL-paste video path accepts YouTube links only (the one
+  // provider we can derive a static poster for + embed safely; matches `type: YOUTUBE` Media).
+  VIDEO_URL_UNSUPPORTED: "Paste a YouTube video link (watch, share, or Shorts URL).",
 } as const

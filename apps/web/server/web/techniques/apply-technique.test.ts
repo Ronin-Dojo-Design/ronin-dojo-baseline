@@ -166,6 +166,51 @@ describe("applyCreateTechnique — authored path (ADR 0046 D5)", () => {
       }),
     ).rejects.toThrow(TECHNIQUE_ERROR.PASSPORT_REQUIRED)
   })
+
+  it("(3B) maps a P2002 on the authored partial unique index to the friendly duplicate-slug message", async () => {
+    setEliteEntitled(["user-elite"])
+    const { db } = makeDb({
+      passports: { "user-elite": "pass-elite" },
+      affiliations: { "pass-elite": null },
+    })
+    // Duck-typed Prisma P2002 — the DB-managed partial index (`Technique_authored_slug_key`)
+    // surfaces the constraint NAME (not mapped fields) since Prisma's schema doesn't know it.
+    db.technique.create = async () => {
+      throw Object.assign(new Error("Unique constraint failed"), {
+        code: "P2002",
+        meta: { target: "Technique_authored_slug_key" },
+      })
+    }
+
+    await expect(
+      applyCreateTechnique({
+        db,
+        user: asUser({ id: "user-elite", role: "user" }),
+        brandContext: brand,
+        input: { ...baseInput, authored: true },
+      }),
+    ).rejects.toThrow(TECHNIQUE_ERROR.AUTHORED_SLUG_TAKEN)
+  })
+
+  it("(3B) rethrows a NON-P2002 create failure unchanged (no over-broad catch)", async () => {
+    setEliteEntitled(["user-elite"])
+    const { db } = makeDb({
+      passports: { "user-elite": "pass-elite" },
+      affiliations: { "pass-elite": null },
+    })
+    db.technique.create = async () => {
+      throw new Error("connection reset")
+    }
+
+    await expect(
+      applyCreateTechnique({
+        db,
+        user: asUser({ id: "user-elite", role: "user" }),
+        brandContext: brand,
+        input: { ...baseInput, authored: true },
+      }),
+    ).rejects.toThrow("connection reset")
+  })
 })
 
 describe("applyCreateTechnique — org-canonical path (unchanged gate)", () => {

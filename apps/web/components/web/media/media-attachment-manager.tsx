@@ -1,14 +1,42 @@
 "use client"
 
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import {
+  GripVerticalIcon,
+  LinkIcon,
   LockKeyholeIcon,
   LockOpenIcon,
+  RotateCcwIcon,
+  SaveIcon,
   Trash2Icon,
   UploadIcon,
   UserRoundCheckIcon,
 } from "lucide-react"
 import { useAction } from "next-safe-action/hooks"
-import { type ChangeEvent, useRef, useState } from "react"
+import {
+  type ChangeEvent,
+  type CSSProperties,
+  Fragment,
+  type ReactNode,
+  useRef,
+  useState,
+} from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -18,9 +46,12 @@ import { H6 } from "~/components/common/heading"
 import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
+import { cx } from "~/lib/utils"
 import {
+  attachWebMediaUrl,
   promotePassportAvatarMedia,
   removeWebMedia,
+  reorderWebMediaAttachments,
   setWebMediaPremium,
   uploadWebMedia,
 } from "~/server/web/media/actions"
@@ -33,7 +64,20 @@ type MediaAttachmentManagerProps = {
   title?: string
   description?: string
   avatarUrl?: string | null
+  /**
+   * R2 file-upload row (SESSION_0529 Slice 3B). Default true (every pre-existing surface keeps its
+   * uploader); the member authored-technique sheet sets false — the R2 upload path stays out of the
+   * member UI (members attach video by URL instead).
+   */
+  allowUpload?: boolean
+  /** YouTube URL-paste attach row (SESSION_0529 Slice 3B) — the member video path. Default false. */
+  allowUrlAttach?: boolean
+  /** dnd sequencing (SESSION_0529 Slice 3B, adapted from `content-media-panel`). Default false. */
+  sortable?: boolean
 }
+
+const attachmentIds = (attachments: DashboardMediaAttachment[]) =>
+  attachments.map(({ attachmentId }) => attachmentId)
 
 /**
  * Shared dashboard surface for the capability-gated web media pipeline. Renders
@@ -42,6 +86,10 @@ type MediaAttachmentManagerProps = {
  * action is re-authorized server-side for `target`; this component only mirrors
  * the result optimistically. Reused across the PromotionEvent gallery,
  * Technique, and Organization surfaces (SESSION_0322).
+ *
+ * SESSION_0529 (Slice 3B) adds three default-off/default-on knobs for the member
+ * authored-technique sheet — URL-paste video attach, dnd ordering, and hiding the
+ * R2 uploader — all riding the same server pipeline (no parallel media seam).
  */
 export function MediaAttachmentManager({
   target,
@@ -49,6 +97,9 @@ export function MediaAttachmentManager({
   title = "Media",
   description = "Upload images or video. Public items appear on the public page.",
   avatarUrl = null,
+  allowUpload = true,
+  allowUrlAttach = false,
+  sortable = false,
 }: MediaAttachmentManagerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const publicToggleId = `media-public-${target.kind}-${target.id}`
@@ -56,6 +107,9 @@ export function MediaAttachmentManager({
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl)
   const [isPublic, setIsPublic] = useState(false)
   const [caption, setCaption] = useState("")
+  const [videoUrl, setVideoUrl] = useState("")
+  // The last-persisted order — Save/Reset appear only while the on-screen order diverges from it.
+  const [savedIds, setSavedIds] = useState<string[]>(() => attachmentIds(initialAttachments))
 
   const upload = useAction(uploadWebMedia, {
     onSuccess: ({ data }) => {
@@ -73,9 +127,11 @@ export function MediaAttachmentManager({
           // New uploads default to FREE (per-video freemium, SESSION_0527) — the author opts a clip
           // into premium via the toggle below; nothing is gated by accident.
           isPremium: false,
+          thumbnailUrl: null,
           sortOrder: current.length,
         },
       ])
+      setSavedIds(current => [...current, data.attachmentId])
       setCaption("")
       toast.success("Media uploaded.")
     },
@@ -84,10 +140,39 @@ export function MediaAttachmentManager({
     },
   })
 
+  const urlAttach = useAction(attachWebMediaUrl, {
+    onSuccess: ({ data }) => {
+      if (!data) return
+      setAttachments(current => [
+        ...current,
+        {
+          attachmentId: data.attachmentId,
+          mediaId: data.mediaId,
+          url: data.url,
+          type: "YOUTUBE",
+          title: null,
+          altText: null,
+          isPublic: data.isPublic,
+          // Same free-by-default contract as uploads — the author opts a clip into premium.
+          isPremium: false,
+          thumbnailUrl: data.thumbnailUrl,
+          sortOrder: current.length,
+        },
+      ])
+      setSavedIds(current => [...current, data.attachmentId])
+      setVideoUrl("")
+      toast.success("Video added.")
+    },
+    onError: ({ error: { serverError, validationErrors } }) => {
+      toast.error(validationErrors?.url?._errors?.[0] ?? serverError ?? "Failed to add the video.")
+    },
+  })
+
   const remove = useAction(removeWebMedia, {
     onSuccess: ({ input }) => {
       const removedAttachment = attachments.find(item => item.attachmentId === input.attachmentId)
       setAttachments(current => current.filter(item => item.attachmentId !== input.attachmentId))
+      setSavedIds(current => current.filter(id => id !== input.attachmentId))
       if (removedAttachment?.url === currentAvatarUrl) {
         setCurrentAvatarUrl(null)
       }
@@ -109,6 +194,16 @@ export function MediaAttachmentManager({
     },
     onError: ({ error: { serverError } }) => {
       toast.error(serverError ?? "Failed to update premium state.")
+    },
+  })
+
+  const reorder = useAction(reorderWebMediaAttachments, {
+    onSuccess: ({ input }) => {
+      setSavedIds(input.attachmentIds)
+      toast.success("Order saved.")
+    },
+    onError: ({ error: { serverError } }) => {
+      toast.error(serverError ?? "Failed to save the order.")
     },
   })
 
@@ -138,6 +233,77 @@ export function MediaAttachmentManager({
     event.target.value = ""
   }
 
+  const handleUrlAttach = () => {
+    const url = videoUrl.trim()
+    if (!url) return
+    urlAttach.execute({ target, url })
+  }
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const currentIds = attachmentIds(attachments)
+  const hasOrderChanges =
+    sortable &&
+    savedIds.length === currentIds.length &&
+    savedIds.some((id, index) => currentIds[index] !== id)
+  const isDragDisabled = reorder.isPending || attachments.length < 2
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return
+    setAttachments(items => {
+      const oldIndex = items.findIndex(({ attachmentId }) => attachmentId === String(active.id))
+      const newIndex = items.findIndex(({ attachmentId }) => attachmentId === String(over.id))
+      if (oldIndex === -1 || newIndex === -1) return items
+      return arrayMove(items, oldIndex, newIndex)
+    })
+  }
+
+  const handleResetOrder = () => {
+    setAttachments(current =>
+      savedIds
+        .map(id => current.find(item => item.attachmentId === id))
+        .filter((item): item is DashboardMediaAttachment => item != null),
+    )
+  }
+
+  const tiles = attachments.map(attachment => {
+    const card = (
+      <MediaAttachmentCard
+        attachment={attachment}
+        target={target}
+        currentAvatarUrl={currentAvatarUrl}
+        isPromotingAvatar={promoteAvatar.isPending}
+        isSettingPremium={setPremium.isPending}
+        isRemoving={remove.isPending}
+        onPromoteAvatar={id =>
+          promoteAvatar.execute({
+            target: { kind: "passport", id: target.id },
+            attachmentId: id,
+          })
+        }
+        onSetPremium={(id, isPremium) =>
+          setPremium.execute({ target, attachmentId: id, isPremium })
+        }
+        onRemove={id => remove.execute({ target, attachmentId: id })}
+      />
+    )
+
+    return sortable ? (
+      <SortableAttachmentTile
+        key={attachment.attachmentId}
+        id={attachment.attachmentId}
+        disabled={isDragDisabled}
+      >
+        {card}
+      </SortableAttachmentTile>
+    ) : (
+      <Fragment key={attachment.attachmentId}>{card}</Fragment>
+    )
+  })
+
   return (
     <Card hover={false}>
       <CardHeader direction="column" size="xs">
@@ -146,72 +312,155 @@ export function MediaAttachmentManager({
       </CardHeader>
 
       <Stack direction="column" size="md" className="w-full">
-        <Stack size="sm" wrap className="w-full items-center">
-          <Input
-            placeholder="Optional caption"
-            value={caption}
-            onChange={event => setCaption(event.target.value)}
-            className="min-w-48 flex-1"
-          />
-          <label
-            htmlFor={publicToggleId}
-            className="flex items-center gap-2 whitespace-nowrap text-sm"
-          >
-            <Checkbox
-              id={publicToggleId}
-              checked={isPublic}
-              onCheckedChange={checked => setIsPublic(checked === true)}
+        {allowUpload && (
+          <Stack size="sm" wrap className="w-full items-center">
+            <Input
+              placeholder="Optional caption"
+              value={caption}
+              onChange={event => setCaption(event.target.value)}
+              className="min-w-48 flex-1"
             />
-            Public
-          </label>
-          <Button
-            type="button"
-            size="sm"
-            prefix={<UploadIcon />}
-            isPending={upload.isPending}
-            onClick={() => inputRef.current?.click()}
-          >
-            Upload
-          </Button>
-        </Stack>
-
-        {attachments.length === 0 ? (
-          <Hint>No media yet. Uploaded images and video appear here.</Hint>
-        ) : (
-          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
-            {attachments.map(attachment => (
-              <MediaAttachmentCard
-                key={attachment.attachmentId}
-                attachment={attachment}
-                target={target}
-                currentAvatarUrl={currentAvatarUrl}
-                isPromotingAvatar={promoteAvatar.isPending}
-                isSettingPremium={setPremium.isPending}
-                isRemoving={remove.isPending}
-                onPromoteAvatar={id =>
-                  promoteAvatar.execute({
-                    target: { kind: "passport", id: target.id },
-                    attachmentId: id,
-                  })
-                }
-                onSetPremium={(id, isPremium) =>
-                  setPremium.execute({ target, attachmentId: id, isPremium })
-                }
-                onRemove={id => remove.execute({ target, attachmentId: id })}
+            <label
+              htmlFor={publicToggleId}
+              className="flex items-center gap-2 whitespace-nowrap text-sm"
+            >
+              <Checkbox
+                id={publicToggleId}
+                checked={isPublic}
+                onCheckedChange={checked => setIsPublic(checked === true)}
               />
-            ))}
-          </div>
+              Public
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              prefix={<UploadIcon />}
+              isPending={upload.isPending}
+              onClick={() => inputRef.current?.click()}
+            >
+              Upload
+            </Button>
+          </Stack>
         )}
 
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*,video/*"
-          onChange={handleChange}
-          className="hidden"
-        />
+        {allowUrlAttach && (
+          <Stack size="sm" wrap className="w-full items-center">
+            <Input
+              placeholder="Paste a YouTube link"
+              value={videoUrl}
+              onChange={event => setVideoUrl(event.target.value)}
+              className="min-w-48 flex-1"
+            />
+            <Button
+              type="button"
+              size="sm"
+              prefix={<LinkIcon />}
+              isPending={urlAttach.isPending}
+              onClick={handleUrlAttach}
+            >
+              Add video
+            </Button>
+          </Stack>
+        )}
+
+        {hasOrderChanges && (
+          <Stack size="xs" wrap className="w-full items-center">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              prefix={<RotateCcwIcon />}
+              disabled={reorder.isPending}
+              onClick={handleResetOrder}
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="primary"
+              prefix={<SaveIcon />}
+              isPending={reorder.isPending}
+              onClick={() => reorder.execute({ target, attachmentIds: currentIds })}
+            >
+              Save order
+            </Button>
+          </Stack>
+        )}
+
+        {attachments.length === 0 ? (
+          <Hint>
+            {allowUrlAttach
+              ? "No videos yet. Paste a YouTube link above to add your first clip."
+              : "No media yet. Uploaded images and video appear here."}
+          </Hint>
+        ) : sortable ? (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext items={currentIds} strategy={rectSortingStrategy}>
+              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">{tiles}</div>
+            </SortableContext>
+          </DndContext>
+        ) : (
+          <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">{tiles}</div>
+        )}
+
+        {allowUpload && (
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,video/*"
+            onChange={handleChange}
+            className="hidden"
+          />
+        )}
       </Stack>
     </Card>
+  )
+}
+
+/**
+ * Sortable wrapper for one attachment tile (SESSION_0529 Slice 3B) — the dnd-kit `useSortable`
+ * wiring adapted from `content-media-panel.tsx` (reuse the ordering pattern, don't rebuild dnd).
+ * The grip button carries the drag listeners so the card's own buttons stay tappable.
+ */
+function SortableAttachmentTile({
+  id,
+  disabled,
+  children,
+}: {
+  id: string
+  disabled: boolean
+  children: ReactNode
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    disabled,
+  })
+
+  const style: CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className={cx("relative", isDragging && "z-10 opacity-70")}>
+      {children}
+      <Button
+        type="button"
+        size="xs"
+        variant="secondary"
+        prefix={<GripVerticalIcon />}
+        aria-label="Drag to reorder"
+        disabled={disabled}
+        className="absolute bottom-1 right-1 cursor-grab touch-none"
+        {...attributes}
+        {...listeners}
+      />
+    </div>
   )
 }
 
@@ -248,6 +497,19 @@ function MediaAttachmentCard({
     <div className="relative overflow-hidden rounded-md border bg-background">
       {attachment.type === "VIDEO" ? (
         <video src={attachment.url} className="aspect-square w-full object-cover" muted />
+      ) : attachment.type === "YOUTUBE" ? (
+        // External video: render the stored poster (never the watch url) — CSS background, the
+        // ProfileMediaCard idiom, so a missing poster degrades to the muted placeholder.
+        <div
+          role="img"
+          aria-label={attachment.title ?? "YouTube video"}
+          className="aspect-square w-full bg-muted bg-cover bg-center"
+          style={
+            attachment.thumbnailUrl
+              ? { backgroundImage: `url("${attachment.thumbnailUrl}")` }
+              : undefined
+          }
+        />
       ) : (
         <img
           src={attachment.url}
