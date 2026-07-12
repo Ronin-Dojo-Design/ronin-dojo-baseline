@@ -174,14 +174,26 @@ type RailBucket = {
  * else the YouTube `hqdefault` from the watch url) and DROP the raw media `url` so it never reaches
  * the client rail (SESSION_0526 A1). The poster + lock + watch-page link is the freemium teaser; the
  * playable url stays server-side and the watch page re-gates it.
+ *
+ * @changed SESSION_0529 review pass — the poster derives from the first FREE clip ONLY (mirrors the
+ * profile-rail rule): a premium clip's stored/derived YouTube thumbnail embeds the video id, which
+ * reconstructs the watch URL (for an unlisted premium clip the id IS the content). A premium-only
+ * technique keeps its `video` presence (type → play affordance + lock badge) with `posterUrl: null`
+ * — the card renders its placeholder.
  */
 const toRailRow = (row: TechniqueRailRow): TechniqueRail => {
   const { mediaAttachments, ...many } = row
   const media = mediaAttachments[0]?.media
+  const freeMedia = mediaAttachments.find(attachment => !attachment.isPremium)?.media
   return {
     ...many,
     video: media
-      ? { type: media.type, posterUrl: media.thumbnailUrl ?? toVideoThumbnailUrl(media.url) }
+      ? {
+          type: media.type,
+          posterUrl: freeMedia
+            ? (freeMedia.thumbnailUrl ?? toVideoThumbnailUrl(freeMedia.url))
+            : null,
+        }
       : null,
   }
 }

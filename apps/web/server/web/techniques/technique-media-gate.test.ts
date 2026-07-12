@@ -95,6 +95,56 @@ describe("gateTechniqueMedia — per-video payload-layer no-leak", () => {
     expect(result.allLocked).toBe(false)
   })
 
+  it("SESSION_0529: a LOCKED tile ships NO poster — a YouTube thumbnail embeds the video id (= the watch URL)", () => {
+    const result = gateTechniqueMedia(
+      [
+        {
+          id: "prem-yt",
+          isPremium: true,
+          media: {
+            type: "YOUTUBE",
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            title: "Premium reel",
+            mimeType: null,
+            altText: null,
+          },
+        },
+      ],
+      false,
+    )
+
+    const tile = result.tiles[0]
+    expect(tile.locked).toBe(true)
+    expect(tile.media.thumbnailUrl).toBeNull()
+    // No id bytes anywhere in the gated payload — neither the watch url nor the poster.
+    expect(allStrings(result).some(s => s.includes("dQw4w9WgXcQ"))).toBe(false)
+  })
+
+  it("SESSION_0529: a FREE tile keeps its poster (suppression is locked-only)", () => {
+    const result = gateTechniqueMedia(
+      [
+        {
+          id: "free-yt",
+          isPremium: false,
+          media: {
+            type: "YOUTUBE",
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            title: "Free reel",
+            mimeType: null,
+            altText: null,
+          },
+        },
+      ],
+      false,
+    )
+
+    const tile = result.tiles[0]
+    expect(tile.locked).toBe(false)
+    expect(tile.media.thumbnailUrl).toBe("https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg")
+  })
+
   it("ENTITLED viewer + premium attachment → not locked, url present (unlocked)", () => {
     const result = gateTechniqueMedia(
       [attachment({ id: "prem", isPremium: true, url: PREMIUM_URL })],

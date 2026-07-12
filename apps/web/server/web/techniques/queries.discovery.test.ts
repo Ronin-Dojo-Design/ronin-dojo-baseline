@@ -24,7 +24,9 @@ function matchesWhere(row: Record<string, unknown>, where: Record<string, any>):
 }
 
 const dataset: Array<Record<string, unknown>> = [
-  // Canonical / org-owned library technique — always discoverable.
+  // Canonical / org-owned library technique — always discoverable. Mixed clips: premium FIRST
+  // (stored poster embedding id "AAAAAAAAAAA"), free SECOND (derivable id "BBBBBBBBBBB") — the
+  // rail poster must come from the FREE clip (SESSION_0529 review pass).
   {
     id: "t-org",
     brand: "BBL",
@@ -35,9 +37,23 @@ const dataset: Array<Record<string, unknown>> = [
     isFeatured: false,
     category: "SUBMISSION",
     beltLevelMin: null,
-    mediaAttachments: [],
+    mediaAttachments: [
+      {
+        isPremium: true,
+        media: {
+          type: "YOUTUBE",
+          url: "https://youtu.be/AAAAAAAAAAA",
+          thumbnailUrl: "https://img.youtube.com/vi/AAAAAAAAAAA/hqdefault.jpg",
+        },
+      },
+      {
+        isPremium: false,
+        media: { type: "YOUTUBE", url: "https://youtu.be/BBBBBBBBBBB", thumbnailUrl: null },
+      },
+    ],
   },
   // Authored, PROMOTED to the library (staff flipped isFeatured) — surfaces despite null org.
+  // Premium-ONLY clip → the rail card keeps its video presence but gets NO poster.
   {
     id: "t-featured",
     brand: "BBL",
@@ -48,7 +64,16 @@ const dataset: Array<Record<string, unknown>> = [
     isFeatured: true,
     category: "SUBMISSION",
     beltLevelMin: null,
-    mediaAttachments: [],
+    mediaAttachments: [
+      {
+        isPremium: true,
+        media: {
+          type: "YOUTUBE",
+          url: "https://youtu.be/CCCCCCCCCCC",
+          thumbnailUrl: "https://img.youtube.com/vi/CCCCCCCCCCC/hqdefault.jpg",
+        },
+      },
+    ],
   },
   // Authored PROFILE-ONLY (null org, not featured) — must stay OFF discovery.
   {
@@ -153,6 +178,28 @@ describe("technique discovery filter (ADR 0046 D4 — no leak)", () => {
     expect(passedIds).not.toContain("t-profile-only")
   })
 
+  it("SESSION_0529: rail posters derive from the first FREE clip only — premium ids never reach the rail DTO", async () => {
+    const rails = await getTechniqueRails("BBL" as any)
+    const items = rails.flatMap(rail => rail.techniques)
+
+    const org = items.find((t: any) => t.id === "t-org") as any
+    const featured = items.find((t: any) => t.id === "t-featured") as any
+
+    // Mixed technique: poster derives from the FREE clip (id B), never the premium first clip.
+    expect(org.video).not.toBeNull()
+    expect(org.video.posterUrl).toBe("https://img.youtube.com/vi/BBBBBBBBBBB/hqdefault.jpg")
+
+    // Premium-only technique: video presence kept (play affordance), poster suppressed.
+    expect(featured.video).not.toBeNull()
+    expect(featured.video.posterUrl).toBeNull()
+
+    // No premium id bytes anywhere in the shipped rail payload (raw urls are stripped too).
+    const serialized = JSON.stringify(rails)
+    expect(serialized).not.toContain("AAAAAAAAAAA")
+    expect(serialized).not.toContain("CCCCCCCCCCC")
+    expect(serialized).not.toContain("youtu.be")
+  })
+
   it("(3C) staff isFeatured flip round-trips a profile-only row onto/off the canonical surfaces", async () => {
     const row = dataset.find(r => r.id === "t-profile-only")!
     try {
@@ -227,9 +274,12 @@ describe("findAuthoredTechnique — un-gated authored read (SESSION_0529 Slice 3
     expect(gated.tiles).toHaveLength(1)
     const tile = gated.tiles[0]
     expect(tile.locked).toBe(true)
-    // No-leak invariant: the locked tile's media has no `url` key at all.
+    // No-leak invariant: the locked tile's media has no `url` key at all, and (SESSION_0529
+    // review pass) no poster either.
     expect("url" in tile.media).toBe(false)
+    expect(tile.media.thumbnailUrl).toBeNull()
     expect(JSON.stringify(gated)).not.toContain("secret-reel")
+    expect(JSON.stringify(gated)).not.toContain("poster.jpg")
   })
 
   it("the author (entitled) still gets the playable url", async () => {

@@ -93,18 +93,21 @@ export const techniqueManyPayload = {
 } satisfies Prisma.TechniqueSelect
 
 // @added SESSION_0525 (Stream D2), hardened SESSION_0526 (A1) — the video-rail SELECT: the standard
-// many-card payload PLUS the first attached video (`VIDEO` upload or `YOUTUBE` embed). The raw media
-// `url` is fetched here ONLY so the poster can be derived SERVER-SIDE (`getTechniqueRails`); it is
-// stripped from the shipped `TechniqueRail` DTO, so a premium reel's playable url never reaches the
-// client rail (freemium leak fix). Kept OFF `techniqueManyPayload` so the faceted grid pays no
-// per-card subquery.
+// many-card payload PLUS the leading attached videos (`VIDEO` upload or `YOUTUBE` embed). The raw
+// media `url` is fetched here ONLY so the poster can be derived SERVER-SIDE (`getTechniqueRails`);
+// it is stripped from the shipped `TechniqueRail` DTO, so a premium reel's playable url never
+// reaches the client rail (freemium leak fix). Kept OFF `techniqueManyPayload` so the faceted grid
+// pays no per-card subquery.
+// @changed SESSION_0529 review pass — `isPremium` selected + `take: 10` (was 1): the rail poster
+// now derives from the first FREE clip (`toRailRow`), never a premium one whose YouTube thumbnail
+// would embed the video id (= the watch URL). Bounded take keeps the join cheap.
 export const techniqueRailSelect = {
   ...techniqueManyPayload,
   mediaAttachments: {
     where: { media: { type: { in: ["VIDEO", "YOUTUBE"] } } },
-    select: { media: { select: { type: true, url: true, thumbnailUrl: true } } },
+    select: { isPremium: true, media: { select: { type: true, url: true, thumbnailUrl: true } } },
     orderBy: { sortOrder: "asc" },
-    take: 1,
+    take: 10,
   },
 } satisfies Prisma.TechniqueSelect
 
@@ -118,7 +121,8 @@ export type TechniqueRailRow = Prisma.TechniqueGetPayload<{ select: typeof techn
  * The rail row SHIPPED to the client: the browse-card fields PLUS a derived video poster. The raw
  * media `url` is intentionally ABSENT (SESSION_0526 A1) — only `{ type, posterUrl }` crosses the
  * wire, derived server-side in `getTechniqueRails`. `video` is null when the technique has no
- * rail-eligible video attachment.
+ * rail-eligible video attachment; `posterUrl` is null when it has no FREE clip (SESSION_0529 —
+ * premium posters never reach the rail: a YouTube thumbnail embeds the video id).
  */
 export type TechniqueRail = TechniqueMany & {
   video: {

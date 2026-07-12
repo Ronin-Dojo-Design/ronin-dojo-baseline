@@ -39,11 +39,17 @@ export type PlayableTileMedia = {
   altText: string | null
 }
 
-/** A locked tile carries POSTER-ONLY fields — no `url`, so it is impossible to emit a player src. */
+/**
+ * A locked tile carries NO `url` (impossible to emit a player src) and — since the SESSION_0529
+ * review pass — NO poster either: for YOUTUBE media the stored `thumbnailUrl` is
+ * `img.youtube.com/vi/<id>/…`, and the id reconstructs the watch URL (for an unlisted premium clip
+ * the id IS the content). `null` is encoded in the TYPE, mirroring the url-absence invariant: no
+ * render branch can emit a poster for a locked tile. The lock tile renders its scrim/glyph only.
+ */
 export type LockedTileMedia = {
   type: MediaType
   title: string | null
-  thumbnailUrl: string | null
+  thumbnailUrl: null
 }
 
 export type GatedTechniqueTile =
@@ -76,14 +82,15 @@ export function gateTechniqueMedia(
   const tiles = attachments.map((attachment): GatedTechniqueTile => {
     const locked = attachment.isPremium && !viewerEntitled
     if (locked) {
-      // Strip the playable url server-side — a locked premium tile ships type + poster only.
+      // Strip the playable url AND the poster server-side (SESSION_0529 review pass) — a YouTube
+      // thumbnail embeds the video id, which reconstructs the watch URL. Locked = type + title only.
       return {
         id: attachment.id,
         locked: true,
         media: {
           type: attachment.media.type,
           title: attachment.media.title,
-          thumbnailUrl: attachment.media.thumbnailUrl,
+          thumbnailUrl: null,
         },
       }
     }
