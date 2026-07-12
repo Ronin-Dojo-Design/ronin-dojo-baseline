@@ -421,6 +421,25 @@ One ordered unit inside a Course.
 
 It may represent a lesson, technique, drill, requirement, video, note, or assessment checkpoint.
 
+### Technique
+
+A rich curriculum-library object (name, discipline, belt tag, position/category, cues, media). Distinct
+from a **CurriculumItem** (a unit *inside a Course*). A Technique's owner is two separate axes — its
+**school** and its **author** (ADR 0046):
+
+- **Canonical technique** — an org-seeded library technique with **`authorPassportId = null`**. The
+  existing library. Unique on `(brand, organizationId, slug)`.
+- **Authored-by** (`authorPassportId`) — a member (Elite/staff/RBAC) who created the technique. It surfaces
+  on that member's profile curriculum. Ownership and variants key off this column, **not** the org.
+- **School-grouped curriculum** — techniques grouped by `organizationId` (nullable = the author's school,
+  from their `Affiliation`; `null` → profile-only, ungrouped). "All South Bay techniques" = one school's
+  Techniques across many authors. Not to be confused with a **Course**'s CurriculumItems.
+- **Variant** — one of several independent `Technique` rows with the same `(organizationId, slug)` but
+  different `authorPassportId` (two instructors' rendition of the same move). A *display* grouping, not a
+  schema entity.
+- **Featured** (`isFeatured`) — a staff-promoted authored technique surfaced in the canonical browse;
+  attribution (`authorPassportId`) is preserved.
+
 ## Tournament shells
 
 ### Tournament

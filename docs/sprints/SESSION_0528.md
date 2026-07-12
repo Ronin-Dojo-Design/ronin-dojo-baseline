@@ -246,6 +246,32 @@ dup:e10ef6b5 technique-form↔course-form (both regions untouched by 0527; pulls
 
 ## Decisions resolved
 
+### Phase-1 (quality pass)
+
+- Fix A (cache-invalidation) applied as the one intentional behavior change (security-adjacent premium-gate
+  correctness). B/C/D behavior-preserving. Held at push — awaiting operator go + keep-Fix-A confirm.
+
+### Phase-2 Slice-3 grill (operator, 2026-07-11) — CONVERGED via /grill-with-docs → ADR 0046
+
+The initial "Passport-owned → org nullable-as-owner" (Shape A) was grilled against the platform model and
+**revised to Shape B-refined** (ratified: [ADR 0046](../architecture/decisions/0046-technique-ownership-org-nullable-and-authored-by.md);
+glossary updated: Technique / canonical / authored-by / school-grouped curriculum / variant / featured):
+
+1. **Ownership = TWO axes, not a polymorphic owner:** `Technique.organizationId String?` = the author's
+   **school** (from `Affiliation`; null → profile-only, ungrouped); `Technique.authorPassportId String?` =
+   the author (null = canonical/org-seeded). Ownership + variants key off `authorPassportId`, not the org.
+2. **Variants = independent per-author rows** grouped in the UI (option A; no concept/variant entity).
+   Uniqueness: canonical `(brand, org, slug)` partial `WHERE author IS NULL`; authored `(brand, org, author, slug)`.
+3. **`isFeatured`** = staff promote into canonical browse; attribution preserved. Browse/rails discovery
+   filter `organizationId != null OR isFeatured`; school curriculum filters org; profile filters authorPassportId.
+4. **Gate `canCreateTechniqueForUser`** = `can()` RBAC ∨ staff role ∨ Elite entitlement (mirror
+   `canUploadMediaForUser`; no 5th authz). Edit: author edits own; staff/RBAC edit org; canonical = staff-only.
+5. **Media input** = URL-paste in the sheet + R2 uploader admin-only. **Plus-card** = visible only to
+   `canCreateTechniqueForUser`. **Brand** = `org.brand` when present, else creator's brand context.
+
+Build sub-sliced: **3A** schema (3 additive cols + 2 partial unique indexes) + gate + query audit + adversarial
+tests; **3B** plus-card → sheet (`TechniqueForm` + adapted `content-media-panel` rail + URL-paste); **3C** promote.
+
 ## Files touched
 
 ## Verification
