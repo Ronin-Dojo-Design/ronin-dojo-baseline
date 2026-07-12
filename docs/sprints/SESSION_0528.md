@@ -244,6 +244,29 @@ dup:e10ef6b5 technique-form↔course-form (both regions untouched by 0527; pulls
 - **`getTechniqueFormOptions` sequential queries** — could `Promise.all` (independent). Optional perf; kept sequential in the strict pass.
 - **`TechniqueForm` 373-line/1482-CRAP** + dup:e10ef6b5 (technique-form↔course-form) — pre-existing; file a form-decomposition ticket.
 
+### Slice 3A — technique authored-ownership (server foundation; Cody build → Doug verify → hardening)
+
+The ADR-0046 model, shipped as a self-contained server foundation (NO user-facing UI — that's 3B):
+
+- **Additive migration** (hand-authored, shadow-replayed on a throwaway DB then applied to the shared dev DB —
+  never `migrate-dev`): `Technique.organizationId` nullable, `+authorPassportId` (FK), `+isFeatured`; dropped
+  the composite `@@unique`; two **partial unique indexes** (canonical `(brand,org,slug) WHERE author IS NULL`;
+  authored `(brand,authorPassportId,slug) WHERE author IS NOT NULL`). Shadow-replay caught a real
+  `DROP CONSTRAINT`→`DROP INDEX` bug (Prisma `@@unique` is an index, not a constraint) before it could hit prod.
+- **Both ownership FKs `ON DELETE SET NULL`** (a 2nd migration flipped org from Cascade) — deleting a school
+  demotes its techniques to profile-only, deleting a Passport un-authors them; **no member curriculum is ever
+  hard-deleted** (both verified `confdeltype=n` on the dev DB).
+- **Gate** `canCreateTechniqueForUser` = `can(techniques.manage)` ∨ active OWNER/INSTRUCTOR ∨ `LINEAGE_ELITE`
+  entitlement (mirrors `canUploadMediaForUser`; no 5th authz). Authored create sets `authorPassportId` from the
+  **session's own** passport (not spoofable via input) + derives the school from the caller's current `Affiliation`.
+- **Discovery filter** (`org != null OR isFeatured`) on `searchTechniques`/`getTechniqueRails`/`findTechniqueBySlug`
+  → authored profile-only techniques stay OFF the canonical browse until staff-featured.
+- **Doug-hardening (P2/P3):** edit path strips `organizationId`/`slug`/`disciplineId` (an authored edit can't
+  re-home into a school to skip the `isFeatured` gate); `findTechniqueBySlug` prefers the canonical row
+  (nulls-first) on a `(brand,slug)` collision; `hasOrgStaffRole` filters `status: ACTIVE`.
+- **Blast-radius:** seed/import scripts rewritten off the dropped composite-unique; `media-authorization` fails
+  closed on null-org technique targets; the org-library editor 404s null-org techniques.
+
 ## Decisions resolved
 
 ### Phase-1 (quality pass)
@@ -261,7 +284,8 @@ glossary updated: Technique / canonical / authored-by / school-grouped curriculu
    **school** (from `Affiliation`; null → profile-only, ungrouped); `Technique.authorPassportId String?` =
    the author (null = canonical/org-seeded). Ownership + variants key off `authorPassportId`, not the org.
 2. **Variants = independent per-author rows** grouped in the UI (option A; no concept/variant entity).
-   Uniqueness: canonical `(brand, org, slug)` partial `WHERE author IS NULL`; authored `(brand, org, author, slug)`.
+   Uniqueness: canonical `(brand, org, slug)` partial `WHERE author IS NULL`; authored `(brand, authorPassportId, slug)`
+   (keyed off the author, not the org — one person = one slug, different people = variants).
 3. **`isFeatured`** = staff promote into canonical browse; attribution preserved. Browse/rails discovery
    filter `organizationId != null OR isFeatured`; school curriculum filters org; profile filters authorPassportId.
 4. **Gate `canCreateTechniqueForUser`** = `can()` RBAC ∨ staff role ∨ Elite entitlement (mirror
@@ -274,19 +298,54 @@ tests; **3B** plus-card → sheet (`TechniqueForm` + adapted `content-media-pane
 
 ## Files touched
 
+**Phase 1 (`a225b975`, pushed):** `server/web/media/apply-media.ts` (authorizeAndFindAttachment), `server/web/techniques/queries.ts` (Fix A cacheTag + getTechniqueFormOptions), `app/app/techniques/{new,[id]}/page.tsx`, `components/web/media/media-attachment-manager.tsx` (MediaAttachmentCard).
+
+**Slice 3A (`2746d365`, `4cac7281`, `8b620527`, `bee0d4b3`, `612f16f3`):**
+
+| File | Change |
+| --- | --- |
+| `docs/architecture/decisions/0046-*.md` + `docs/architecture/ubiquitous-language.md` | ADR 0046 + glossary (Technique/canonical/authored-by/variant/featured) |
+| `prisma/schema.prisma` + 2 migrations (`_technique_authored_ownership`, `_technique_org_fk_set_null`) | org nullable, +authorPassportId, +isFeatured, 2 partial unique indexes, both FKs SET NULL |
+| `server/web/techniques/{permissions,apply-technique,crud-schemas,crud-actions,technique-errors}.ts` (+ 2 `.test.ts`) | gate + authored create/edit cores + adversarial tests |
+| `server/web/techniques/queries.ts` | ADR-D4 discovery filter + deterministic slug lookup |
+| `server/web/media/media-authorization.ts` · `app/app/techniques/[id]/page.tsx` · 3 seed/import scripts | null-org blast-radius fixes |
+
 ## Verification
 
+| Gate | Result |
+| --- | --- |
+| typecheck · lint:check · format | PASS (clean on touched) |
+| Tests | Phase-1 38/38; Slice-3A 69/69 (apply-technique 11 + discovery 2 + queries 18 + apply-media 22 + profile 10 + gate 6) |
+| Migrations | clean-room `migrate deploy` on throwaway DB (both migrations) + applied to dev DB; both FKs `confdeltype=n` (SET NULL); partial indexes verified |
+| Runtime | Phase-1: live-verify behind auth (belt field + premium toggle render/flip) + public watch page. Slice-3A (Doug): transactional no-leak probe (profile-only absent from browse+slug, featured surfaces, 0 orphans) |
+| Build | `bun run build` exit 0 (Phase-1; re-run at close via gate runner) |
+| Reviews | Phase-1 code-quality 8.6–9.0; Slice-3A Doug 9.0 (no cap) |
+
 ## Open decisions / blockers
+
+- **3B/3C carried to a fresh session** (operator directive — design-heavy UI, fresh-chat rule).
+- **`Technique.isPremium` browse-badge drift** (SESSION_0527 deferral) — still open; resolve when `Technique.isPremium` is retired.
+- Belt-clear authoring gap + shared `isPending` + `getTechniqueFormOptions` `Promise.all` — named Phase-1 follow-ups.
 
 ## Next session
 
 ### Goal
 
-TBD at bow-out.
+Build **Slice 3B** — the member-facing technique authoring UI on the ADR-0046 foundation: the "Add technique"
+plus-card (visible only to `canCreateTechniqueForUser`) → bottom magnetic sheet composing `TechniqueForm`
++ the adapted `content-media-panel` dnd sequencing rail (with the Slice-2 premium toggle + **URL-paste video**;
+R2 uploader stays admin-only). Then **Slice 3C** — the staff `isFeatured` promote-to-library action + surfacing.
 
 ### First task
 
-TBD at bow-out.
+Wire the authored create flow end-to-end. Reuse: `components/common/sheet.tsx`,
+`app/app/content/_components/content-media-panel.tsx` (dnd rail), `app/(web)/dashboard/technique-form.tsx`,
+`setWebMediaPremium`, `canCreateTechniqueForUser` + `applyCreateTechnique` (3A). **Doug's 3B gotchas (must-honor):**
+(1) the **profile watch page must be an un-gated `(authorPassportId, slug)`/id read** — NOT `findTechniqueBySlug`
+(its discovery filter excludes the very profile-only techniques a member's profile must show); (2) surface a clean
+P2002 message for a duplicate authored slug (`lib/safe-actions.ts` currently maps it to "brand already exists");
+(3) media authoring on a null-org authored technique currently fails closed in `media-authorization.ts` — open it
+for the author. Live-verify behind auth (dev-login harness works; a reversible fixture, reverted). Then 3C.
 
 ## Review log
 
@@ -306,10 +365,45 @@ behavior-preserving fixes applied). Scored per `code-quality-matrix`. All Class 
 No behavior regressions; security proven at every payload boundary; no caps triggered. Composite range
 **8.6–9.0 (Strong / near-gold)**. `code-quality-matrix §5`: ship-with-named-follow-ups.
 
+### SESSION_0528_REVIEW_02 — Slice 3A release-readiness (Doug)
+
+- **Reviewed:** the ADR-0046 schema migration + `canCreateTechniqueForUser` + authored create/edit + discovery filter + adversarial tests.
+- **Verdict:** **9.0/10, no hard cap — release-safe as server foundation.** Migration rehearsal clean (throwaway DB, prodsnap untouched, all indexes/FK match ADR); authz non-bypassable (author id from session, not input; A-can't-edit-B; canonical staff-only); no-leak proven at query + runtime (0 orphans); no regression; 53/53 tests.
+- **Findings → all resolved this session:** P2 edit-path re-home strip + P2 org-FK SET NULL + P3 active-staff + the `findTechniqueBySlug` determinism flag — all applied and re-verified (69/69 tests). The remaining reads (P2002 copy, profile-watch keying, null-org media authoring) are explicit **3B** work, carried in the Next-session gotchas.
+
 ## Hostile close review
+
+- **Giddy (architecture):** PASS — extends the existing model (org/brand-scoping invariant preserved: org = school axis, Passport = owner axis; no polymorphic owner, no 5th authz). ADR 0046 ratifies a hard-to-reverse decision *before* the migration, glossary updated, no god-component.
+- **Doug (QA/release):** PASS — 9.0; migration additive + shadow-replayed (caught a real DROP-CONSTRAINT bug), both FKs SET NULL (no curriculum data-loss), authz non-bypassable, no-leak runtime-proven, 69/69 tests, build green.
+- **Desi (UX):** N/A this session — 3A is server-only (no user-facing surface); the plus-card/sheet UX is 3B (Desi to review then).
+- **Kaizen aggregate: 9 → proceed (land 3A, push on operator go).** The grill-before-migration is the headline: the first-cut "nullable org = owner" would have broken the platform's org/brand-scoping invariant and lost member curriculum on school deletion; grilling it against ADR 0034/0038 + the existing schema converged on the two-axis model and SET NULL FKs before a single prod-bound line shipped.
 
 ## ADR / ubiquitous-language check
 
+- **ADR created:** [ADR 0046](../architecture/decisions/0046-technique-ownership-org-nullable-and-authored-by.md) — technique ownership (org-nullable=school + authored-by + variants + SET NULL FKs). Reconciled to as-built (D3 authored index).
+- **Ubiquitous language updated:** `docs/architecture/ubiquitous-language.md` — Technique (vs CurriculumItem), canonical technique, authored-by, school-grouped curriculum, variant, featured.
+- Amends memory `profile-media-freemium-model-0525`; new memory added for the authoring/ownership model.
+
 ## Reflections
 
+- **The grill earned its keep before a prod migration, not after.** The operator stopped the build to grill the org-nullable decision — and it was the right call twice over: (1) the initial "Passport-owned, org nullable-as-owner" would have broken the platform's org/brand-scoping invariant (ADR 0034/0038); grounding it against the existing schema (org-nullable + passport-owned content *both* already have precedent, but not for the org-scoped *library*) converged on the cleaner two-axis model (org = school, Passport = owner). (2) The school-grouping/variants refinement then *vindicated* keeping the org — it's the grouping axis, not a dummy container. A decision that would have been painful to reverse post-migration cost one grill instead.
+- **Shadow-replay is not ceremony — it caught a real bug.** Cody's first migration used `DROP CONSTRAINT` for a Prisma `@@unique` that is actually an *index*; the clean-room replay on a throwaway DB failed loudly before the file could auto-apply to Neon prod. The standing "hand-author + shadow-replay, never migrate-dev on the shared DB" rule paid for itself.
+- **Two independent reviewers found what one lens misses.** Giddy (cleanup) scoped the Phase-1 fixes to exactly the 0527-introduced debt (killing my instinct to chase the inherited 373-line form); Doug (correctness) found the edit-path re-home hole that turns the ADR-D4 discovery gate into a bypass the moment 3B wires authored editing. Neither was visible from the other's angle.
+- **The concurrency false-positive is a recurring trap.** `git diff origin/main..HEAD` lists files that differ *in either direction*, so every merged-but-parked sibling worktree looked like it "owned" all 24 of my files. The merge-base directional diff (`$(merge-base)..HEAD`) is the correct ownership question — worth making the default in the concurrency-guard step.
+
 ## Full close evidence
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS (5 Phase-1 tasks landed; Slice 3A landed + hardened; 3B/3C → next session) |
+| Format / lint / typecheck | PASS (clean on touched) |
+| Build | PASS (`bun run build` exit 0; re-confirmed at close) |
+| Tests | PASS (Phase-1 38/38 · Slice-3A 69/69) |
+| Migrations | PASS (2 additive, shadow-replayed on throwaway + applied to dev; both FKs SET NULL verified) |
+| Runtime verify | PASS (Phase-1 live-verify behind auth + watch page; Slice-3A Doug no-leak probe 0 orphans) |
+| Reviews | code-quality 8.6–9.0 · Doug 3A 9.0 · hostile aggregate 9 |
+| ADR / glossary | ADR 0046 + ubiquitous-language updated |
+| Graphify | refreshed at close |
+| Git state | Phase-1 pushed (`a225b975`); 5 commits `2746d365..612f16f3` + bow-out doc — landing on operator "Land 3A" go |
+| Boundary | no live-lane collision (all siblings merged/parked); migrate-dev never run on shared DB |
+| Memory | swept — new authoring/ownership memory added; concurrency-guard lesson captured |

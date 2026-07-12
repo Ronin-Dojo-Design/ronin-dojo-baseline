@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-07
-last_agent: codex-session-0509
+updated: 2026-07-11
+last_agent: claude-session-0528
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
