@@ -40,13 +40,17 @@ test.describe("AdminCollection conformance smoke", () => {
     createdUserIds.push(userId)
 
     await page.goto("/app/blog")
-    const table = page.locator("table").first()
-    await expect(table).toBeVisible({ timeout: 30_000 })
 
-    for (const heading of ["Title", "Author", "Status", "Published", "Updated"]) {
-      await expect(
-        table.getByRole("columnheader", { name: new RegExp(heading, "i") }),
-      ).toBeVisible()
+    // Wait for the REAL AdminCollection table, not the Suspense fallback: `DataTableSkeleton` also
+    // renders a `<table>`, so `page.locator("table").first()` can bind to it and its placeholder
+    // headers are unnamed. Waiting for a NAMED column header (page-scoped, generous timeout) proves
+    // the skeleton was replaced. Headers render regardless of row data, so this is seed-independent —
+    // the Drafts default is empty in CI (0 seeded drafts, WL-P2-58) but the `<thead>` still renders.
+    await expect(page.getByRole("columnheader", { name: /Title/i })).toBeVisible({
+      timeout: 30_000,
+    })
+    for (const heading of ["Author", "Status", "Published", "Updated"]) {
+      await expect(page.getByRole("columnheader", { name: new RegExp(heading, "i") })).toBeVisible()
     }
 
     const statusFilter = page.getByRole("button", { name: /status.*draft/i })
