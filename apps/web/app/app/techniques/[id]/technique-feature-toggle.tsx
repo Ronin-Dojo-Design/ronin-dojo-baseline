@@ -43,10 +43,12 @@ export function TechniqueFeatureToggle({
   return (
     <Card hover={false}>
       <CardHeader direction="column" size="xs">
-        <H6 render={props => <h2 {...props}>{props.children}</h2>}>Library promotion</H6>
+        <H6 render={props => <h2 {...props}>{props.children}</h2>}>
+          Feature in the public library
+        </H6>
         <CardDescription>
-          Featuring puts this technique on the public browse, rails, and canonical watch page —
-          including an authored, profile-only technique (staff-only; ADR 0046).
+          Promote this technique to the canonical browse, rails, and watch page — including an
+          authored, profile-only technique.
         </CardDescription>
       </CardHeader>
 

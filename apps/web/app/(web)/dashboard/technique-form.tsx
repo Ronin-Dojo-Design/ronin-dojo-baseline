@@ -3,9 +3,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { slugify } from "~/lib/slug"
 import { Button } from "~/components/common/button"
 import {
   Form,
@@ -165,6 +167,16 @@ export function TechniqueForm({
     },
   })
 
+  // Authored mode (the profile create sheet) hides the raw slug field — a member shouldn't
+  // hand-edit a URL slug — and derives it from the name. Create-only: authored edit isn't reachable
+  // (the `[id]` editor renders org mode), and gating on `!isEdit` also guards against silently
+  // re-slugging an existing row's URL if that ever changes. Org/admin mode keeps the editable slug.
+  const nameValue = form.watch("name")
+  useEffect(() => {
+    if (!authored || isEdit) return
+    form.setValue("slug", slugify(nameValue))
+  }, [authored, isEdit, nameValue, form])
+
   // Surface server errors (e.g. the friendly authored duplicate-slug P2002 message,
   // SESSION_0529 Slice 3B) — previously failures were silent.
   const onError = ({ error }: { error: { serverError?: string } }) => {
@@ -215,7 +227,9 @@ export function TechniqueForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <Stack size="lg" direction="column">
-          <H4>{isEdit ? "Edit Technique" : "New Technique"}</H4>
+          {/* Authored mode is embedded in the create sheet, which supplies its own DrawerTitle —
+              rendering this H4 too stacked two headings (WL-P2-52). Org/admin mode keeps it. */}
+          {!authored && <H4>{isEdit ? "Edit Technique" : "New Technique"}</H4>}
 
           <Stack size="md" direction="column">
             <FormField
@@ -232,20 +246,24 @@ export function TechniqueForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="slug"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Slug</FormLabel>
-                  <FormControl>
-                    <Input placeholder="arm-bar" {...field} />
-                  </FormControl>
-                  <Hint>URL-friendly identifier (lowercase, dashes)</Hint>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Authored mode derives the slug from the name (see the effect above) and hides this
+                field — a member shouldn't hand-edit a URL slug. Org/admin mode keeps it editable. */}
+            {!authored && (
+              <FormField
+                control={form.control}
+                name="slug"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <FormControl>
+                      <Input placeholder="arm-bar" {...field} />
+                    </FormControl>
+                    <Hint>URL-friendly identifier (lowercase, dashes)</Hint>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

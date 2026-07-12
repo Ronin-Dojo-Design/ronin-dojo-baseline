@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { Brand, type DirectoryVisibility } from "~/.generated/prisma/client"
 import { TechniqueDetail } from "~/app/(web)/techniques/[slug]/_components/technique-detail"
+import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
 import { findAuthoredTechnique } from "~/server/web/techniques/queries"
 import {
@@ -38,7 +39,7 @@ export default async function AuthoredTechniqueWatchPage({ params }: PageProps) 
     : ["PUBLIC"]
   const profile = await db.directoryProfile.findFirst({
     where: { slug, visibility: { in: allowedVisibility } },
-    select: { passportId: true },
+    select: { passportId: true, passport: { select: { displayName: true } } },
   })
 
   if (!profile) {
@@ -71,5 +72,21 @@ export default async function AuthoredTechniqueWatchPage({ params }: PageProps) 
     : true
   const gatedMedia = gateTechniqueMedia(attachments, viewerEntitled)
 
-  return <TechniqueDetail technique={technique} brand={Brand.BBL} gatedMedia={gatedMedia} />
+  // WL-P2-52 — a profile-scoped watch page needs attribution + a way back: crumb up to the
+  // author's directory profile (Directory → {profile} → {technique}). Mirrors the `[id]`/`new`
+  // editor breadcrumbs.
+  const profileName = profile.passport?.displayName ?? slug
+
+  return (
+    <>
+      <Breadcrumbs
+        items={[
+          { url: "/directory", title: "Directory" },
+          { url: `/directory/${slug}`, title: profileName },
+          { url: `/directory/${slug}/techniques/${techniqueSlug}`, title: technique.name },
+        ]}
+      />
+      <TechniqueDetail technique={technique} brand={Brand.BBL} gatedMedia={gatedMedia} />
+    </>
+  )
 }
