@@ -89,6 +89,14 @@ org staff/RBAC edit any in their org; canonical (null author) is staff/RBAC-only
 
 ## Consequences
 
+- **Both ownership FKs are `ON DELETE SET NULL`** (SESSION_0528, Doug P2). Deleting a school Organization
+  demotes its techniques to profile-only (`organizationId → null`); deleting a Passport un-authors them
+  (`authorPassportId → null`). Neither ever hard-deletes a member's authored curriculum — the axes are soft
+  by design. (If canonical org-library rows should instead die with their org, that is an app-level
+  conditional delete, not a blanket Cascade.)
+- **The edit path strips the ownership/identity axes** (`organizationId`, `authorPassportId`, `slug`,
+  `disciplineId`) — an authoring edit changes content only, never re-homes a technique into a school (which
+  would bypass the D4 `isFeatured` promotion into the public browse). Re-home/promote is a staff concern.
 - **Migration is additive** (three columns + two partial unique indexes; hand-authored, shadow-replayed —
   never `migrate-dev` on the shared local DB). Existing org-owned techniques are unaffected (org stays set,
   `authorPassportId` null, `isFeatured` false).

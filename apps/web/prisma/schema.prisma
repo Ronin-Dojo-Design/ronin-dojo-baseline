@@ -3881,7 +3881,10 @@ model Technique {
   // @changed SESSION_0528 (ADR 0046 D1) — organizationId is now the author's SCHOOL and is
   // nullable (null = profile-only, ungrouped). Existing library techniques keep their org.
   // onDelete stays Cascade (unchanged) — deleting a school removes its techniques as before.
-  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // @changed SESSION_0528 (ADR 0046 D1, Doug P2) — SetNull, not Cascade: the org is a SOFT grouping
+  // (the author's school), the Passport is the owner. Deleting a school DEMOTES its techniques to
+  // profile-only (organizationId → null), never destroys a member's authored curriculum.
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   organizationId   String?
   // @added SESSION_0528 (ADR 0046 D2) — authored-by Passport carries ownership + per-author
   // variants. null = canonical / org-seeded (the existing library). onDelete: SetNull un-authors
