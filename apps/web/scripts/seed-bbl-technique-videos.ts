@@ -230,24 +230,33 @@ async function main() {
 
       // 1) Technique — upsert by the (brand, organizationId, slug) composite unique.
       //    Update touches only structural links so an operator's later rename/publish sticks.
-      const technique = await db.technique.upsert({
-        where: {
-          brand_organizationId_slug: { brand: BRAND, organizationId: org.id, slug },
-        },
-        create: {
-          brand: BRAND,
-          name: video.title,
-          slug,
-          description: video.description ?? null,
-          isPublished: publish,
-          isPremium,
-          disciplineId: discipline.id,
-          organizationId: org.id,
-          beltLevelMinId,
-        },
-        update: { disciplineId: discipline.id, beltLevelMinId, isPremium },
+      // Canonical (author-null) library technique. The composite @@unique was replaced by a partial
+      // unique index (ADR 0046) that Prisma can't target as a WhereUniqueInput, so this is a
+      // findFirst-then-update/create manual upsert (behavior-preserving).
+      const existingTechnique = await db.technique.findFirst({
+        where: { brand: BRAND, organizationId: org.id, slug, authorPassportId: null },
         select: { id: true },
       })
+      const technique = existingTechnique
+        ? await db.technique.update({
+            where: { id: existingTechnique.id },
+            data: { disciplineId: discipline.id, beltLevelMinId, isPremium },
+            select: { id: true },
+          })
+        : await db.technique.create({
+            data: {
+              brand: BRAND,
+              name: video.title,
+              slug,
+              description: video.description ?? null,
+              isPublished: publish,
+              isPremium,
+              disciplineId: discipline.id,
+              organizationId: org.id,
+              beltLevelMinId,
+            },
+            select: { id: true },
+          })
       stat.techniques += 1
       if (publish) stat.published += 1
       if (!isPremium) stat.free += 1

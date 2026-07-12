@@ -59,6 +59,11 @@ export default async function EditTechniquePage({ params }: Props) {
 
   if (!technique) notFound()
 
+  // @changed SESSION_0528 (ADR 0046) — `organizationId` is now nullable. This org-library editor stays
+  // org-membership-gated; an authored profile-only technique (null org) has no org gate and is edited
+  // via the profile authoring flow (Slice 3B), so it 404s here. Narrows org to a non-null string below.
+  if (!technique.organizationId) notFound()
+
   // Verify user has access
   const membership = await db.membership.findFirst({
     where: {

@@ -15,6 +15,17 @@ import { db } from "~/services/db"
 
 const SORTABLE_TECHNIQUE_COLUMNS = ["name", "curriculum_order"] as const
 
+/**
+ * ADR 0046 D4 discovery filter. The canonical browse / rails / watch surface shows library techniques
+ * (org set) PLUS authored techniques that staff have promoted (`isFeatured`). Authored profile-only rows
+ * (`organizationId` null, not featured) stay OFF discovery until featured — they surface on their author's
+ * profile curriculum (keyed by `authorPassportId`, Slice 3B), never on the public browse. Applied via a
+ * top-level `OR`, so callers that already use `OR` (the `q` text search) compose it under `AND`.
+ */
+const TECHNIQUE_DISCOVERY_WHERE: Prisma.TechniqueWhereInput = {
+  OR: [{ organizationId: { not: null } }, { isFeatured: true }],
+}
+
 /** A belt the author can tag a technique with (SESSION_0525 Stream D1) — id matches `beltLevelMinId`. */
 export type TechniqueBeltOption = {
   id: string
@@ -79,6 +90,8 @@ export const searchTechniques = async (
   const whereQuery: Prisma.TechniqueWhereInput = {
     brand,
     isPublished: true,
+    // Discovery gate (ADR 0046 D4) under AND so it composes with the `q` text-search OR below.
+    AND: [TECHNIQUE_DISCOVERY_WHERE],
     ...(category && { category: category as any }),
     ...(position && { position: position as any }),
     ...(discipline && { discipline: { slug: discipline } }),
@@ -180,7 +193,7 @@ export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGrou
   cacheLife("minutes")
 
   const rows = await db.technique.findMany({
-    where: { brand, isPublished: true },
+    where: { brand, isPublished: true, ...TECHNIQUE_DISCOVERY_WHERE },
     orderBy: [{ isFoundational: "desc" }, { sortOrder: "asc" }, { name: "asc" }],
     select: techniqueRailSelect,
     take: 500,
@@ -243,7 +256,10 @@ export const findTechniqueBySlug = async (slug: string, brand: Brand) => {
   cacheLife("minutes")
 
   return db.technique.findFirst({
-    where: { slug, brand, isPublished: true },
+    // Discovery gate (ADR 0046 D4): an authored profile-only technique is NOT reachable via the public
+    // watch slug until featured. Also disambiguates now that slug is no longer globally unique — the
+    // authored profile watch (Slice 3B) will key by author+slug/id, not this canonical slug lookup.
+    where: { slug, brand, isPublished: true, ...TECHNIQUE_DISCOVERY_WHERE },
     select: techniqueOnePayload,
   })
 }

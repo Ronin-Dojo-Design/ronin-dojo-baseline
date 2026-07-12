@@ -137,8 +137,10 @@ async function main() {
           }
         : undefined
 
-    const existing = await db.technique.findUnique({
-      where: { brand_organizationId_slug: { brand: BRAND, organizationId: org.id, slug } },
+    // Canonical (author-null) library technique. The composite @@unique was replaced by a partial
+    // unique index (ADR 0046) that Prisma can't target as a WhereUniqueInput → findFirst.
+    const existing = await db.technique.findFirst({
+      where: { brand: BRAND, organizationId: org.id, slug, authorPassportId: null },
       select: { id: true },
     })
 

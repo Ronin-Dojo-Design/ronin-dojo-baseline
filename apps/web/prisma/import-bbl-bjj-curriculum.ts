@@ -392,74 +392,84 @@ async function main() {
       ...linkedCurriculum.flatMap(item => item?.technique.tags ?? []),
     ]
 
-    const technique = await db.technique.upsert({
+    // Canonical (author-null) library technique keyed on (brand, organizationId, slug). The composite
+    // @@unique was replaced by a partial unique index (ADR 0046) that Prisma can't target as a
+    // WhereUniqueInput, so this is a findFirst-then-update/create manual upsert.
+    const existingTechnique = await db.technique.findFirst({
       where: {
-        brand_organizationId_slug: {
-          brand: BRAND,
-          organizationId: organization.id,
-          slug: node.id,
-        },
-      },
-      update: {
-        name: node.label,
-        description: node.description,
-        disciplineId: discipline.id,
-        category: categoryForNode(node.type),
-        position: positionForNode(node),
-        difficultyLevel: minLevel ? difficultyForLevel(minLevel) : null,
-        isFoundational: node.type === "position" || (minLevel !== null && minLevel <= 3),
-        requiresPartner: true,
-        requiresEquipment: false,
-        movementPattern: humanize(node.type),
-        rangeBand: "BJJ graph",
-        teachingCues,
-        commonErrors: [],
-        safetyNotes:
-          node.type === "submission" ? "Practice submissions with controlled pressure." : null,
-        isPublished: true,
-        sortOrder: index + 1,
-        categories: {
-          connect: [{ slug: "bjj-technique-graph" }],
-        },
-        tags: {
-          connectOrCreate: Array.from(new Set(tagSlugs)).map(slug => ({
-            where: { slug },
-            create: { slug, name: humanize(slug) },
-          })),
-        },
-      },
-      create: {
         brand: BRAND,
         organizationId: organization.id,
-        disciplineId: discipline.id,
-        name: node.label,
         slug: node.id,
-        description: node.description,
-        category: categoryForNode(node.type),
-        position: positionForNode(node),
-        difficultyLevel: minLevel ? difficultyForLevel(minLevel) : null,
-        isFoundational: node.type === "position" || (minLevel !== null && minLevel <= 3),
-        requiresPartner: true,
-        requiresEquipment: false,
-        movementPattern: humanize(node.type),
-        rangeBand: "BJJ graph",
-        teachingCues,
-        commonErrors: [],
-        safetyNotes:
-          node.type === "submission" ? "Practice submissions with controlled pressure." : null,
-        isPublished: true,
-        sortOrder: index + 1,
-        categories: {
-          connect: [{ slug: "bjj-technique-graph" }],
-        },
-        tags: {
-          connectOrCreate: Array.from(new Set(tagSlugs)).map(slug => ({
-            where: { slug },
-            create: { slug, name: humanize(slug) },
-          })),
-        },
+        authorPassportId: null,
       },
+      select: { id: true },
     })
+
+    const technique = existingTechnique
+      ? await db.technique.update({
+          where: { id: existingTechnique.id },
+          data: {
+            name: node.label,
+            description: node.description,
+            disciplineId: discipline.id,
+            category: categoryForNode(node.type),
+            position: positionForNode(node),
+            difficultyLevel: minLevel ? difficultyForLevel(minLevel) : null,
+            isFoundational: node.type === "position" || (minLevel !== null && minLevel <= 3),
+            requiresPartner: true,
+            requiresEquipment: false,
+            movementPattern: humanize(node.type),
+            rangeBand: "BJJ graph",
+            teachingCues,
+            commonErrors: [],
+            safetyNotes:
+              node.type === "submission" ? "Practice submissions with controlled pressure." : null,
+            isPublished: true,
+            sortOrder: index + 1,
+            categories: {
+              connect: [{ slug: "bjj-technique-graph" }],
+            },
+            tags: {
+              connectOrCreate: Array.from(new Set(tagSlugs)).map(slug => ({
+                where: { slug },
+                create: { slug, name: humanize(slug) },
+              })),
+            },
+          },
+        })
+      : await db.technique.create({
+          data: {
+            brand: BRAND,
+            organizationId: organization.id,
+            disciplineId: discipline.id,
+            name: node.label,
+            slug: node.id,
+            description: node.description,
+            category: categoryForNode(node.type),
+            position: positionForNode(node),
+            difficultyLevel: minLevel ? difficultyForLevel(minLevel) : null,
+            isFoundational: node.type === "position" || (minLevel !== null && minLevel <= 3),
+            requiresPartner: true,
+            requiresEquipment: false,
+            movementPattern: humanize(node.type),
+            rangeBand: "BJJ graph",
+            teachingCues,
+            commonErrors: [],
+            safetyNotes:
+              node.type === "submission" ? "Practice submissions with controlled pressure." : null,
+            isPublished: true,
+            sortOrder: index + 1,
+            categories: {
+              connect: [{ slug: "bjj-technique-graph" }],
+            },
+            tags: {
+              connectOrCreate: Array.from(new Set(tagSlugs)).map(slug => ({
+                where: { slug },
+                create: { slug, name: humanize(slug) },
+              })),
+            },
+          },
+        })
 
     techniqueIdByNodeId.set(node.id, technique.id)
     techniquesUpserted++

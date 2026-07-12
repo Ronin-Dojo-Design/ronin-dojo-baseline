@@ -119,7 +119,11 @@ export async function authorizeMediaTarget({
         where: { id: target.id, brand },
         select: { organizationId: true },
       })
-      if (!technique) return false
+      // @changed SESSION_0528 (ADR 0046) — `organizationId` is now nullable. Org-owned techniques
+      // authorize via their school exactly as before; an authored profile-only technique (null org)
+      // fails closed here — its author-owner media authoring wires up in Slice 3B (attach-to-authored),
+      // not this org-scoped media gate.
+      if (!technique?.organizationId) return false
       return isOrgAuthor(db, brand, user.id, technique.organizationId)
     }
 

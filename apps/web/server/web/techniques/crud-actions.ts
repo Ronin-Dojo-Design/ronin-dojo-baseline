@@ -1,95 +1,20 @@
 "use server"
 
-import { z } from "zod"
+import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
-
-const TechniqueCategory = z.enum([
-  "STRIKE",
-  "KICK",
-  "THROW",
-  "SUBMISSION",
-  "SWEEP",
-  "ESCAPE",
-  "BLOCK",
-  "FORM",
-  "DRILL",
-  "CONDITIONING",
-  "TRANSITION",
-  "TAKEDOWN",
-])
-
-const TechniquePosition = z.enum([
-  "STANDING",
-  "GUARD",
-  "HALF_GUARD",
-  "MOUNT",
-  "SIDE_CONTROL",
-  "BACK",
-  "TURTLE",
-  "CLINCH",
-  "OPEN",
-])
-
-const DifficultyLevel = z.enum(["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"])
-
-const createTechniqueSchema = z.object({
-  organizationId: z.string(),
-  disciplineId: z.string(),
-  name: z.string().min(1).max(200),
-  slug: z
-    .string()
-    .max(200)
-    .regex(/^[a-z0-9-]+$/),
-  description: z.string().max(5000).optional(),
-  position: TechniquePosition.nullish(),
-  category: TechniqueCategory.nullish(),
-  difficultyLevel: DifficultyLevel.nullish(),
-  // @added SESSION_0527 Slice 1 — the tagged belt (`beltLevelMinId` FK → Rank). Author picks one
-  // belt (KISS scalar-belt model, Stream D1); drives the browse belt facet + the per-belt rail.
-  beltLevelMinId: z.string().nullish(),
-  isGi: z.boolean().nullish(),
-  isFoundational: z.boolean().optional(),
-  requiresPartner: z.boolean().optional(),
-  requiresEquipment: z.boolean().optional(),
-  movementPattern: z.string().max(200).optional(),
-  rangeBand: z.string().max(200).optional(),
-  teachingCues: z.array(z.string()).optional(),
-  commonErrors: z.array(z.string()).optional(),
-  safetyNotes: z.string().max(2000).optional(),
-  isPublished: z.boolean().optional(),
-})
-
-const updateTechniqueSchema = createTechniqueSchema.partial().extend({
-  id: z.string(),
-})
+import { applyCreateTechnique, applyUpdateTechnique } from "~/server/web/techniques/apply-technique"
+import { createTechniqueSchema, updateTechniqueSchema } from "~/server/web/techniques/crud-schemas"
 
 export const createTechnique = userActionClient
   .inputSchema(createTechniqueSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const { organizationId, ...data } = parsedInput
-
-    // Verify user is owner or instructor
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: user.id,
-        organizationId,
-        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      },
-    })
-    if (!membership) {
-      throw new Error("You are not authorized to create techniques for this organization")
-    }
-
-    const org = await db.organization.findUniqueOrThrow({ where: { id: organizationId } })
-
-    const technique = await db.technique.create({
-      data: {
-        ...data,
-        brand: org.brand,
-        organizationId,
-        teachingCues: data.teachingCues ?? [],
-        commonErrors: data.commonErrors ?? [],
-      },
+    const technique = await applyCreateTechnique({
+      db,
+      user,
+      // Single-brand collapse: the creator's brand context is BBL. The authored path overrides this
+      // with the school's brand when the author has a current org affiliation (ADR 0046 D5).
+      brandContext: Brand.BBL,
+      input: parsedInput,
     })
 
     revalidate({ tags: ["techniques"], paths: ["/app/profile", "/app/techniques", "/techniques"] })
@@ -99,29 +24,7 @@ export const createTechnique = userActionClient
 export const updateTechnique = userActionClient
   .inputSchema(updateTechniqueSchema)
   .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
-    const { id, ...data } = parsedInput
-
-    // Verify ownership
-    const technique = await db.technique.findUniqueOrThrow({
-      where: { id },
-      include: { organization: { select: { id: true } } },
-    })
-
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: user.id,
-        organizationId: technique.organization.id,
-        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      },
-    })
-    if (!membership) {
-      throw new Error("You are not authorized to edit this technique")
-    }
-
-    const updated = await db.technique.update({
-      where: { id },
-      data,
-    })
+    const updated = await applyUpdateTechnique({ db, user, input: parsedInput })
 
     revalidate({
       tags: ["techniques", `technique-${updated.slug}`],

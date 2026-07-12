@@ -1113,6 +1113,10 @@ model Passport {
 
   // @added SESSION_0498 (Epic A) — 1:0..1 story-scene satellite for the lineage scroll story.
   storyScene LineageStoryScene?
+
+  // @added SESSION_0528 (ADR 0046 D2) — techniques this person authored (their profile curriculum,
+  // `where authorPassportId = me`). Back-relation for `Technique.author`.
+  authoredTechniques Technique[]
 }
 
 model DirectoryProfile {
@@ -3864,20 +3868,32 @@ model Technique {
   // curriculum content is gated; a free-preview subset is flipped to false by the seed.
   // Drives the browse-card lock badge + the watch-page/profile-rail entitlement gate.
   isPremium         Boolean            @default(true)
+  // @added SESSION_0528 (ADR 0046 D4) — staff "promote to library" flips this; an authored
+  // profile-only technique (org null, not featured) stays OFF the canonical browse/rails/watch
+  // discovery until featured, while keeping its `authorPassportId` attribution.
+  isFeatured        Boolean            @default(false)
   sortOrder         Int                @default(0)
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @default(now())
 
-  discipline     Discipline   @relation(fields: [disciplineId], references: [id])
-  disciplineId   String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  organizationId String
-  style          Style?       @relation(fields: [styleId], references: [id])
-  styleId        String?
-  beltLevelMin   Rank?        @relation("TechBeltMin", fields: [beltLevelMinId], references: [id])
-  beltLevelMinId String?
-  beltLevelMax   Rank?        @relation("TechBeltMax", fields: [beltLevelMaxId], references: [id])
-  beltLevelMaxId String?
+  discipline       Discipline    @relation(fields: [disciplineId], references: [id])
+  disciplineId     String
+  // @changed SESSION_0528 (ADR 0046 D1) — organizationId is now the author's SCHOOL and is
+  // nullable (null = profile-only, ungrouped). Existing library techniques keep their org.
+  // onDelete stays Cascade (unchanged) — deleting a school removes its techniques as before.
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId   String?
+  // @added SESSION_0528 (ADR 0046 D2) — authored-by Passport carries ownership + per-author
+  // variants. null = canonical / org-seeded (the existing library). onDelete: SetNull un-authors
+  // (never deletes) the row when a person is removed.
+  author           Passport?     @relation(fields: [authorPassportId], references: [id], onDelete: SetNull)
+  authorPassportId String?
+  style            Style?        @relation(fields: [styleId], references: [id])
+  styleId          String?
+  beltLevelMin     Rank?         @relation("TechBeltMin", fields: [beltLevelMinId], references: [id])
+  beltLevelMinId   String?
+  beltLevelMax     Rank?         @relation("TechBeltMax", fields: [beltLevelMaxId], references: [id])
+  beltLevelMaxId   String?
 
   // @added   Wave D (SESSION_0026)
   // @why     Technique ↔ MediaAttachment relation for attaching media to techniques
@@ -3897,10 +3913,19 @@ model Technique {
   // @added SESSION_0397 — polymorphic Bookmark (Save persistence). subjectType=TECHNIQUE.
   bookmarks Bookmark[]
 
-  @@unique([brand, organizationId, slug])
+  // @changed SESSION_0528 (ADR 0046 D3) — the composite `@@unique([brand, organizationId, slug])`
+  // is REPLACED by two PARTIAL unique indexes created in the migration SQL:
+  //   canonical: UNIQUE (brand, organizationId, slug) WHERE authorPassportId IS NULL
+  //   authored:  UNIQUE (brand, authorPassportId, slug) WHERE authorPassportId IS NOT NULL
+  // Prisma cannot express a partial WHERE in `@@unique`, so they are DB-managed and intentionally
+  // absent here. Verified SESSION_0528: `prisma migrate diff` (schema ↔ DB) ignores filtered/partial
+  // indexes entirely and reports ZERO Technique drift — they are invisible to Prisma tooling, not
+  // flagged. Regardless, migrations are hand-authored + shadow-replayed — never `migrate dev` on the
+  // shared local DB (it would reset it). See the migration file.
   @@index([brand, disciplineId])
   @@index([position, category])
   @@index([disciplineId, difficultyLevel])
+  @@index([authorPassportId])
 }
 
 model TechniquePrerequisite {
