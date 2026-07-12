@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-11
-last_agent: claude-session-0527
+updated: 2026-07-12
+last_agent: claude-session-0529
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -545,6 +545,20 @@ Net-new mobile chrome (`apps/web/components/web/nav/`): an always-on 4-tab botto
 | `SwRegister` + `sw.js` + `offline.html` | `apps/web/components/web/pwa/sw-register.tsx`, `apps/web/public/` | — | PWA layer (SESSION_0501): prod-only SW registration; navigations network-first (HTML NEVER cached — stale-deploy-safe), statics SWR, `/api` + `/app` bypassed; zero-JS offline page. Manifest icons are placeholders (chip `task_8f36f0c6`). Cache `VERSION` bump = manual discipline. |
 
 Follow-ups: WL-P3-29 (`findUserEnrollments` double-fetch `cache()`), WL-P3-30 (`.fallow/` gitignore), WL-P3-31 (promote the non-admin MAB-absence e2e to CI) remain open. FI-021 + the `BblMemberRail` `isMobile` prune + the PWA layer shipped SESSION_0501 (note: `579253b8`'s commit message mislabels the rail prune as "WL-P3-29" — the prune had no WL row; WL-P3-29 is the unrelated double-fetch item, still open).
+
+## Technique authoring — plus-card sheet, MAB technique action, promote (SESSION_0529, ADR 0046 3B/3C)
+
+The member-facing authoring surface on the 3A two-axis ownership foundation. Reuse-first: no new sheet/dnd/uploader primitives.
+
+| Component | Path | Contract | Notable behavior |
+| --- | --- | --- | --- |
+| `AuthoredTechniqueCreate` | `apps/web/app/(web)/dashboard/authored-technique-create.tsx` | plus-card + bottom `Drawer`; server-resolved `canCreate` boolean | 2-phase create (details → media); composes `TechniqueForm` (authored mode: `authored: true`, NO `organizationId`) + `MediaAttachmentManager`; `?create=technique` deep-link auto-opens then strips the param (the MAB action's target). |
+| `TechniqueFeatureToggle` | `apps/web/app/app/techniques/[id]/technique-feature-toggle.tsx` | Switch card; staff-mounted | 3C promote: flips `Technique.isFeatured` via `setTechniqueFeatured` (`can(techniques.manage)` ONLY — an Elite author cannot self-promote; action re-checks server-side; before/after audit). |
+| `shouldMountMab` | `apps/web/components/web/nav/mab-mount.ts` | `(user) => boolean` server predicate | THE one MAB mount predicate (admin ∨ `canCreateTechniqueForUser`). Consumed by `mobile-shell.tsx` AND the community feed (`viewer.hasMab` hides the create-post FAB — never two FABs on one corner). Extend HERE, not at call sites. |
+| `Mab` `technique` action + count-scaled radius | `apps/web/components/web/nav/mab.tsx` | `permissions.technique` boolean | 5th fan action (SwordsIcon → deep-link). Fan radius scales by count (≤4 byte-preserves 76px; 5 → ~123px so 44px buttons keep ≥48px chords inside the SESSION_0501 90° quadrant cap — do NOT touch the cap). |
+| `MediaAttachmentManager` knobs | `apps/web/components/web/media/media-attachment-manager.tsx` | `allowUpload` / `allowUrlAttach` / `sortable` (all default-off) | Presentation-row toggles on the ONE media pipeline (member sheet: URL-paste ON, R2 upload OFF — the server independently gates file upload via `canUploadMediaForUser` on technique targets). Split-trigger: 4th boolean knob or first knob×knob conditional (WL-P2-49). |
+| `findAuthoredTechnique` / `findAuthoredCurriculum` | `apps/web/server/web/techniques/queries.ts` | author-keyed reads, NO discovery filter | The UN-gated authored reads (profile watch + Curriculum rail). `where` ALWAYS carries `authorPassportId` + `isPublished` — never let these become a second public-discovery path (ADR 0046 D4). |
+| Curriculum rail | `apps/web/server/web/directory/profile-media.ts` + `profile-highlights-section.tsx` | 4th `ProfileMediaItem[]` rail | Authored `Technique` rows on the public profile (distinct source from the passport-attachment reels rail). Locked ⇒ `thumbnailUrl: null` (poster suppression); posters derive from FREE clips only (viewer-independent — a premium clip's YouTube id never reaches a rail card). |
 
 ## How to update this file
 

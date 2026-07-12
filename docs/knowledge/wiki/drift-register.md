@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-04
-last_agent: claude-session-0496
+updated: 2026-07-12
+last_agent: claude-session-0529
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
@@ -581,3 +581,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Risk:** a future conformance sweep, taking the ADR/ledger literally, would convert the CRM pipeline board into a flat table — a **feature regression** (loses the kanban UX) + duplicates `/app/leads`. SESSION_0515 caught this at bow-in and swapped `/app/media` in for the batch instead.
 - **Fix direction:** amend ADR 0045 D5 to STRIKE `/app/leads-pipeline` from the conformance-target list (a kanban is not an `AdminCollection` candidate; the AdminKanban kernel is the correct shared primitive for board surfaces). WL-P2-34 already annotated. Amendment is a docs-only edit.
 - **Status: OPEN** (ADR 0045 D5 amendment pending — flagged by Giddy hostile-close, SESSION_0515).
+
+### D-043 — `lib/safe-actions.ts` generic P2002 handler reads `meta.target`, which does not exist under the live pg driver adapter (SESSION_0529)
+
+- **What:** the shared next-safe-action error handler maps Prisma P2002 to a friendly "A {model} with this
+  {field} already exists" by reading `e.meta.target[0]` — but Doug's live probe (SESSION_0529) proved that
+  under `@prisma/adapter-pg` the error carries NO `meta.target` (`metaKeys: ["modelName","driverAdapterError"]`;
+  the constraint name lives in `meta.driverAdapterError.cause.originalMessage`). So in prod, EVERY action's
+  unique-constraint violation degrades to the generic fallback message. Unit tests pass because they use the
+  classic error shape.
+- **Risk:** silent UX degradation on every duplicate-value submit across the app; future devs "fix" it
+  per-action instead of at the seam (the technique path already had to — `isAuthoredSlugConflict`).
+- **Fix direction:** port the adapter-shape parsing from `server/web/techniques/apply-technique.ts`
+  (`isAuthoredSlugConflict`, live-verified SESSION_0529) into the shared handler, keeping `meta.target` as the
+  second recognized shape; add a test using the real captured adapter error shape.
+- **Status: OPEN** — scheduled in the WL-P2-49 shared-seams cleanup lane (SESSION_0529 grill Q6, operator-ratified).

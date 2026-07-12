@@ -4,8 +4,8 @@ slug: post-launch-sot
 type: sot
 status: active
 created: 2026-06-20
-updated: 2026-07-10
-last_agent: claude-session-0521
+updated: 2026-07-12
+last_agent: claude-session-0529
 pairs_with:
   - docs/knowledge/wiki/files/feature-request-dialog.md
   - docs/petey-plan-0419-post-launch-sweep.md
@@ -95,6 +95,9 @@ this table. IDs are monotonic `FI-NNN` (carried over from the retired intake led
 | FI-020 | **2-axis lineage explorer — PINNED idea (operator, SESSION_0499):** generation-deck interaction — each ancestor card carries a horizontal StudentsCarousel of their students at that belt-rank grouping (browse the breadth), vertical scroll-snaps descend the generations, cards overlay iTunes-cover-flow-style, the person's NAME rotates vertical and lands as the card's left-edge spine. **Operator ruled: NOT for the directory vertical timeline — candidate for the lineage tree canvas board surface, later.** The timeline stays the single authored story spine. Fragments that DO stay on the timeline lane (A3 bucket): name-dedup (renders ~3× per card) + a more substantial H→V element than the tiny marker (e.g. the name-spine treatment standalone). | idea | P3 | pinned | Revisit at the next lineage-canvas design lane; pairs with FI-018 (StudentsCarousel winner) + WL-P2-23 (ancestor deep-links) |
 
 | FI-021 | **Mobile entry point for `/app` admin CRUD sections** (SESSION_0500 Epic B follow-up): the always-on bottom nav made the `/app` console Sidebar `max-md:hidden`, so ~30 admin/staff CRUD sections lost their mobile entry point (reachable by URL, unlinked). Also prune the now-dead `BblMemberRail` `isMobile` branch. | gap | P2 | **resolved (SESSION_0501, `579253b8`)** — ONE `config/admin-sections.ts` (7 groups × 36 items, gates verbatim + icon-uniqueness test-asserted) drives the new server-filtered `/app/sections` grouped index, the regrouped desktop sidebar, an admin "Sections" NavSheet link, and the beta `/app/beta/command-deck`; `BblMemberRail` `isMobile` branch pruned. Doug SHIP 9.6 (36/36 gates independently diffed; mobile-shell e2e 3/3 live). | Follow-on forks: admin belt-edit mount → `/app/users/[id]` belts tab (operator-ratified, next lane); Command Deck promote-or-delete decision after operator plays with it. |
+
+| FI-027 | **Techniques AdminCollection** — `/app/techniques` index data-table as a SIBLING collection of `/app/tools` (the AdminCollection pattern; NOT a mount underneath): name · author · school · featured · published · premium-mix columns; default **"Pending promotion"** chip (authored ∧ published ∧ ¬featured); `can(techniques.manage)`-gated; row → existing `[id]` editor. Completes the 3C promote loop (staff have the Feature toggle but NO list surface to discover authored techniques). | feature | P1 | **queued (SESSION_0529 grill Q1 — operator-ratified shape (b); next-session candidate #1)** | — |
+| FI-028 | **Community-posts freemium slice** — read = everyone with premium posts visible-but-locked (technique-video no-leak pattern); **create = Premium ∨ Elite ∨ RBAC ∨ staff/admin** via `canCreateCommunityPostForUser` (mirror `canCreateTechniqueForUser`; no 5th authz). ⚠ Behavior change: FREE members LOSE post-creation (deliberate ladder: Premium = community posting, Elite = technique authoring) — composer shows upgrade CTA. Includes: MAB member "post" action (restores 1-tap create after the SESSION_0529 FAB de-collision) + the double-listing/premium-divergence authoring warning (grill Q3: warn-at-authoring, NO read-layer dedupe). Own grill at build: locked-post display (teaser vs full-hide), who sets premium per-post, grandfathering. | feature | P1 | **queued (SESSION_0529 grill Q2+Q3 — operator-ratified)** | — |
 
 <!-- Append new rows above. Resolve in place: Status → MVP_LIVE (+ link the file-spec) or declined (+ reason). -->
 

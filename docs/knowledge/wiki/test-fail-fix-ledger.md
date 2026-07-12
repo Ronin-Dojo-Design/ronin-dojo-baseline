@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-07-10
-last_agent: claude-session-0521
+updated: 2026-07-12
+last_agent: claude-session-0529
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -194,6 +194,17 @@ suite, and the trigger is the runner config, not the fixtures:
 Proven green 4× consecutively: **418 pass / 0 fail across 75 files, ~67s**. Mechanics now documented in
 [`sop-test-writing.md`](../../runbooks/sops/sop-test-writing.md) §2. Future speed-up path (per-worker DB
 isolation) noted there too.
+
+### TFF-011 — stripe webhook concurrency test is load-sensitive under the full suite (OPEN, SESSION_0529)
+
+- **Symptom:** `apps/web/app/api/stripe/webhooks/route.test.ts:1384` (parallel-webhook capacity race) fails
+  under a full `bun run test` run (400 vs 200) but passes 10/10 isolated. Observed once in three full-suite
+  runs during SESSION_0529 (Doug's first run red; builder's + delta runs green).
+- **Diagnosis (probable):** timing/capacity assumption in the parallel-webhook test breaks under suite-wide
+  load; not diff-related (SESSION_0529 touched no stripe/webhook code).
+- **Fix direction:** make the capacity race deterministic (explicit synchronization or a serialized fixture) —
+  it masks future gate signal until fixed.
+- **Status:** OPEN (SESSION_0529 grill wrap — operator-ratified ledger row).
 
 ## Relationships
 
