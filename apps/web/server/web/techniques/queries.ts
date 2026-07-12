@@ -47,6 +47,19 @@ export const getTechniqueBeltOptions = async (): Promise<TechniqueBeltOption[]> 
   })
 }
 
+/**
+ * The disciplines + belt options a `TechniqueForm` needs. Shared by the create (`/app/techniques/new`)
+ * and edit (`/app/techniques/[id]`) pages so the two load form options identically (SESSION_0528 dedup).
+ */
+export const getTechniqueFormOptions = async () => {
+  const disciplines = await db.discipline.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  })
+  const belts = await getTechniqueBeltOptions()
+  return { disciplines, belts }
+}
+
 export const searchTechniques = async (
   search: TechniqueFilterParams,
   brand: Brand,
@@ -221,7 +234,12 @@ export const getTechniqueRails = async (brand: Brand): Promise<TechniqueRailGrou
 export const findTechniqueBySlug = async (slug: string, brand: Brand) => {
   "use cache"
 
-  cacheTag(`technique-${slug}`)
+  // Tag the per-slug key AND the broad `techniques` tag. `setWebMediaPremium` (per-video freemium
+  // toggle) busts `techniques` but not `technique-${slug}`; without this tag a free→premium flip
+  // would leave the watch page's cached payload serving the clip's playable url until the TTL
+  // expired (Doug SESSION_0528 P2). Broadening invalidation here is safe — technique mutations are
+  // infrequent and the life is `minutes`.
+  cacheTag(`technique-${slug}`, "techniques")
   cacheLife("minutes")
 
   return db.technique.findFirst({

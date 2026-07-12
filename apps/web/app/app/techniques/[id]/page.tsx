@@ -8,7 +8,7 @@ import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
-import { getTechniqueBeltOptions } from "~/server/web/techniques/queries"
+import { getTechniqueFormOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
 type Props = { params: Promise<{ id: string }> }
@@ -70,11 +70,7 @@ export default async function EditTechniquePage({ params }: Props) {
 
   if (!membership) notFound()
 
-  const disciplines = await db.discipline.findMany({
-    select: { id: true, name: true },
-    orderBy: { name: "asc" },
-  })
-  const belts = await getTechniqueBeltOptions()
+  const { disciplines, belts } = await getTechniqueFormOptions()
 
   const mediaAttachments =
     (await getDashboardMediaAttachments({

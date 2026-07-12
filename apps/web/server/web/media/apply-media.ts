@@ -43,6 +43,49 @@ const auditOrganizationId = (target: MediaAttachTarget) =>
   target.kind === "organization" ? target.id : null
 
 /**
+ * Shared preamble for the mutate-an-existing-attachment flows (remove / set-premium /
+ * promote-avatar): authorize the target, then load the attachment via `id` combined with the
+ * target FK so the lookup enforces the attachment actually belongs to the target the caller
+ * claims. `select` is threaded per call site so each keeps its own projection. Throws
+ * `UPLOAD_ACCESS_REQUIRED` / `ATTACHMENT_NOT_FOUND` — the same errors, in the same order, as
+ * the inlined copies this replaces.
+ */
+// A fixed superset projection that covers every mutate-existing-attachment caller: removal needs
+// `mediaId` + `media.url`, avatar-promotion additionally needs `media.type`, premium needs only `id`.
+// Selecting the union (a few unused columns on one already-fetched row) keeps the helper non-generic,
+// which sidesteps Prisma's deep-generic recursion on the polymorphic MediaAttachment relations.
+async function authorizeAndFindAttachment({
+  db,
+  brand,
+  user,
+  target,
+  attachmentId,
+  allowAdminOverride = false,
+}: {
+  db: AppDb
+  brand: Brand
+  user: AuthzUser
+  target: MediaAttachTarget
+  attachmentId: string
+  allowAdminOverride?: boolean
+}) {
+  const authorized = await authorizeMediaTarget({ db, brand, user, target, allowAdminOverride })
+  if (!authorized) {
+    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+
+  const attachment = await db.mediaAttachment.findFirst({
+    where: { id: attachmentId, ...mediaTargetWhere(target) },
+    select: { id: true, mediaId: true, media: { select: { id: true, url: true, type: true } } },
+  })
+  if (!attachment) {
+    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
+  }
+
+  return attachment
+}
+
+/**
  * Authorize → upload to S3 → create `Media` + `MediaAttachment` + `AuditLog`.
  * The S3 upload runs *outside* the DB transaction (no network inside a tx); a
  * failed tx leaves at most an orphaned S3 object, never a half-attached row.
@@ -156,20 +199,13 @@ export async function applyWebMediaRemoval({
   user: AuthzUser
   input: RemoveWebMediaInput
 }): Promise<{ removed: true }> {
-  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
-  if (!authorized) {
-    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
-  }
-
-  // Combining the id with the target FK in one `where` enforces that the
-  // attachment actually belongs to the target the caller claims.
-  const attachment = await db.mediaAttachment.findFirst({
-    where: { id: input.attachmentId, ...mediaTargetWhere(input.target) },
-    select: { id: true, mediaId: true, media: { select: { url: true } } },
+  const attachment = await authorizeAndFindAttachment({
+    db,
+    brand,
+    user,
+    target: input.target,
+    attachmentId: input.attachmentId,
   })
-  if (!attachment) {
-    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
-  }
 
   await db.mediaAttachment.delete({ where: { id: attachment.id } })
 
@@ -222,18 +258,13 @@ export async function applyWebMediaPremium({
   user: AuthzUser
   input: SetWebMediaPremiumInput
 }): Promise<{ attachmentId: string; isPremium: boolean }> {
-  const authorized = await authorizeMediaTarget({ db, brand, user, target: input.target })
-  if (!authorized) {
-    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
-  }
-
-  const attachment = await db.mediaAttachment.findFirst({
-    where: { id: input.attachmentId, ...mediaTargetWhere(input.target) },
-    select: { id: true },
+  const attachment = await authorizeAndFindAttachment({
+    db,
+    brand,
+    user,
+    target: input.target,
+    attachmentId: input.attachmentId,
   })
-  if (!attachment) {
-    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
-  }
 
   await db.mediaAttachment.update({
     where: { id: attachment.id },
@@ -274,28 +305,14 @@ export async function applyPassportAvatarPromotion({
   /** Opt-in admin bypass for promoting an unowned/placeholder passport's avatar. Default false. */
   allowAdminOverride?: boolean
 }): Promise<PassportAvatarPromotionResult> {
-  const authorized = await authorizeMediaTarget({
+  const attachment = await authorizeAndFindAttachment({
     db,
     brand,
     user,
     target: input.target,
+    attachmentId: input.attachmentId,
     allowAdminOverride,
   })
-  if (!authorized) {
-    throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
-  }
-
-  const attachment = await db.mediaAttachment.findFirst({
-    where: { id: input.attachmentId, ...mediaTargetWhere(input.target) },
-    select: {
-      id: true,
-      mediaId: true,
-      media: { select: { id: true, url: true, type: true } },
-    },
-  })
-  if (!attachment) {
-    throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
-  }
   if (attachment.media.type !== "IMAGE") {
     throw new Error(WEB_MEDIA_ERROR.AVATAR_IMAGE_REQUIRED)
   }

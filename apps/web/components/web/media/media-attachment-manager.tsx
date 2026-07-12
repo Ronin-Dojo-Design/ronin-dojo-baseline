@@ -180,94 +180,25 @@ export function MediaAttachmentManager({
         ) : (
           <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
             {attachments.map(attachment => (
-              <div
+              <MediaAttachmentCard
                 key={attachment.attachmentId}
-                className="relative overflow-hidden rounded-md border bg-background"
-              >
-                {attachment.type === "VIDEO" ? (
-                  <video src={attachment.url} className="aspect-square w-full object-cover" muted />
-                ) : (
-                  <img
-                    src={attachment.url}
-                    alt={attachment.altText ?? attachment.title ?? "Uploaded media"}
-                    className="aspect-square w-full object-cover"
-                  />
-                )}
-
-                <Badge
-                  size="sm"
-                  variant={attachment.isPublic ? "success" : "soft"}
-                  className="absolute left-1 top-1"
-                >
-                  {attachment.isPublic ? "Public" : "Private"}
-                </Badge>
-
-                {target.kind === "passport" && currentAvatarUrl === attachment.url && (
-                  <Badge size="sm" variant="info" className="absolute bottom-1 left-1">
-                    Avatar
-                  </Badge>
-                )}
-
-                {target.kind === "technique" && attachment.isPremium && (
-                  <Badge size="sm" variant="warning" className="absolute bottom-1 left-1">
-                    Premium
-                  </Badge>
-                )}
-
-                <Stack size="xs" direction="column" className="absolute right-1 top-1">
-                  {target.kind === "passport" &&
-                    attachment.type === "IMAGE" &&
-                    currentAvatarUrl !== attachment.url && (
-                      <Button
-                        type="button"
-                        size="xs"
-                        variant="secondary"
-                        prefix={<UserRoundCheckIcon />}
-                        isPending={promoteAvatar.isPending}
-                        onClick={() =>
-                          promoteAvatar.execute({
-                            target: { kind: "passport", id: target.id },
-                            attachmentId: attachment.attachmentId,
-                          })
-                        }
-                      >
-                        Use as avatar
-                      </Button>
-                    )}
-
-                  {target.kind === "technique" && (
-                    <Button
-                      type="button"
-                      size="xs"
-                      variant={attachment.isPremium ? "primary" : "secondary"}
-                      prefix={attachment.isPremium ? <LockKeyholeIcon /> : <LockOpenIcon />}
-                      isPending={setPremium.isPending}
-                      onClick={() =>
-                        setPremium.execute({
-                          target,
-                          attachmentId: attachment.attachmentId,
-                          isPremium: !attachment.isPremium,
-                        })
-                      }
-                    >
-                      {attachment.isPremium ? "Premium" : "Free"}
-                    </Button>
-                  )}
-
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="destructive"
-                    prefix={<Trash2Icon />}
-                    isPending={remove.isPending}
-                    onClick={() =>
-                      remove.execute({ target, attachmentId: attachment.attachmentId })
-                    }
-                  >
-                    Remove
-                  </Button>
-                </Stack>
-              </div>
+                attachment={attachment}
+                target={target}
+                currentAvatarUrl={currentAvatarUrl}
+                isPromotingAvatar={promoteAvatar.isPending}
+                isSettingPremium={setPremium.isPending}
+                isRemoving={remove.isPending}
+                onPromoteAvatar={id =>
+                  promoteAvatar.execute({
+                    target: { kind: "passport", id: target.id },
+                    attachmentId: id,
+                  })
+                }
+                onSetPremium={(id, isPremium) =>
+                  setPremium.execute({ target, attachmentId: id, isPremium })
+                }
+                onRemove={id => remove.execute({ target, attachmentId: id })}
+              />
             ))}
           </div>
         )}
@@ -281,5 +212,110 @@ export function MediaAttachmentManager({
         />
       </Stack>
     </Card>
+  )
+}
+
+type MediaAttachmentCardProps = {
+  attachment: DashboardMediaAttachment
+  target: MediaAttachTarget
+  currentAvatarUrl: string | null
+  isPromotingAvatar: boolean
+  isSettingPremium: boolean
+  isRemoving: boolean
+  onPromoteAvatar: (attachmentId: string) => void
+  onSetPremium: (attachmentId: string, isPremium: boolean) => void
+  onRemove: (attachmentId: string) => void
+}
+
+/**
+ * One attachment tile: media preview + public/avatar/premium badges + the per-item actions
+ * (promote-avatar for passports, premium toggle for techniques, remove). The `is*ing` flags are
+ * per-action (not per-item) — every card mirrors the same pending state while any one action runs,
+ * matching the pre-extraction behavior (SESSION_0528 dedup of the 90-line inline map arrow).
+ */
+function MediaAttachmentCard({
+  attachment,
+  target,
+  currentAvatarUrl,
+  isPromotingAvatar,
+  isSettingPremium,
+  isRemoving,
+  onPromoteAvatar,
+  onSetPremium,
+  onRemove,
+}: MediaAttachmentCardProps) {
+  return (
+    <div className="relative overflow-hidden rounded-md border bg-background">
+      {attachment.type === "VIDEO" ? (
+        <video src={attachment.url} className="aspect-square w-full object-cover" muted />
+      ) : (
+        <img
+          src={attachment.url}
+          alt={attachment.altText ?? attachment.title ?? "Uploaded media"}
+          className="aspect-square w-full object-cover"
+        />
+      )}
+
+      <Badge
+        size="sm"
+        variant={attachment.isPublic ? "success" : "soft"}
+        className="absolute left-1 top-1"
+      >
+        {attachment.isPublic ? "Public" : "Private"}
+      </Badge>
+
+      {target.kind === "passport" && currentAvatarUrl === attachment.url && (
+        <Badge size="sm" variant="info" className="absolute bottom-1 left-1">
+          Avatar
+        </Badge>
+      )}
+
+      {target.kind === "technique" && attachment.isPremium && (
+        <Badge size="sm" variant="warning" className="absolute bottom-1 left-1">
+          Premium
+        </Badge>
+      )}
+
+      <Stack size="xs" direction="column" className="absolute right-1 top-1">
+        {target.kind === "passport" &&
+          attachment.type === "IMAGE" &&
+          currentAvatarUrl !== attachment.url && (
+            <Button
+              type="button"
+              size="xs"
+              variant="secondary"
+              prefix={<UserRoundCheckIcon />}
+              isPending={isPromotingAvatar}
+              onClick={() => onPromoteAvatar(attachment.attachmentId)}
+            >
+              Use as avatar
+            </Button>
+          )}
+
+        {target.kind === "technique" && (
+          <Button
+            type="button"
+            size="xs"
+            variant={attachment.isPremium ? "primary" : "secondary"}
+            prefix={attachment.isPremium ? <LockKeyholeIcon /> : <LockOpenIcon />}
+            isPending={isSettingPremium}
+            onClick={() => onSetPremium(attachment.attachmentId, !attachment.isPremium)}
+          >
+            {attachment.isPremium ? "Premium" : "Free"}
+          </Button>
+        )}
+
+        <Button
+          type="button"
+          size="xs"
+          variant="destructive"
+          prefix={<Trash2Icon />}
+          isPending={isRemoving}
+          onClick={() => onRemove(attachment.attachmentId)}
+        >
+          Remove
+        </Button>
+      </Stack>
+    </div>
   )
 }
