@@ -175,7 +175,7 @@ describe("migrated admin app redirects", () => {
       },
       {
         source: "/dashboard/techniques",
-        destination: "/app/techniques",
+        destination: "/app/profile?tab=techniques",
         permanent: true,
       },
       {
@@ -210,6 +210,8 @@ describe("migrated admin app redirects", () => {
     expect(resolveMigratedAppRedirect("/admin/users/abc")).toBe("/app/users/abc")
     expect(resolveMigratedAppRedirect("/dashboard")).toBe("/app/profile")
     expect(resolveMigratedAppRedirect("/dashboard/events/new")).toBe("/app/events/new")
+    // FI-027: the bare member bookmark lands on the profile tab; the deep-link keeps the editor.
+    expect(resolveMigratedAppRedirect("/dashboard/techniques")).toBe("/app/profile?tab=techniques")
     expect(resolveMigratedAppRedirect("/dashboard/techniques/abc")).toBe("/app/techniques/abc")
     expect(resolveMigratedAppRedirect("/dashboard/lineage/tree_123")).toBe(
       "/app/lineage/tree_123/edit",

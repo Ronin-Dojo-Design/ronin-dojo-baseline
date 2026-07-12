@@ -85,6 +85,20 @@ const formSchema = z.object({
   isPublished: z.boolean().optional(),
 })
 
+// Authored mode auto-derives + HIDES the slug (a member shouldn't hand-edit a URL slug), so a name
+// that slugifies to "" (e.g. all-non-ASCII: 巴投 / армбар / गार्ड) would fail the hidden slug field's
+// regex → `handleSubmit` never fires → a silent no-op (WL-P2-52 regression, same class as the
+// SESSION_0529 P1). Surface it on the VISIBLE Name field instead. Org/admin mode shows the slug
+// field, so its own regex already gives visible feedback there — this refine is authored-only.
+// (i18n follow-up: a server-side fallback slug so non-Latin names can be authored — ledgered, not here.)
+const authoredFormSchema = formSchema.extend({
+  name: z
+    .string()
+    .min(1, "Name is required")
+    .max(200)
+    .refine(value => slugify(value).length > 0, "Name must include at least one letter or number"),
+})
+
 type FormValues = z.infer<typeof formSchema>
 
 type Discipline = { id: string; name: string }
@@ -141,7 +155,7 @@ export function TechniqueForm({
   const isEdit = !!technique
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(authored ? authoredFormSchema : formSchema),
     defaultValues: {
       name: technique?.name ?? "",
       slug: technique?.slug ?? "",

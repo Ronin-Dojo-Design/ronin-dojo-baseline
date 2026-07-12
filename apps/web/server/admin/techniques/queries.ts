@@ -2,6 +2,7 @@ import "server-only"
 
 import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { clampListPageParams, runAdminListTransaction } from "~/server/admin/list-query"
+import { resolveTechniqueOrderBy, techniqueScopeWhere } from "~/server/admin/techniques/scope"
 import type { TechniquesTableSchema } from "~/server/admin/techniques/schema"
 import { db } from "~/services/db"
 
@@ -34,42 +35,6 @@ const techniqueAdminSelect = {
 // function would make the two type-reference each other (TS2456). GetPayload depends only on the
 // select const, breaking that cycle.
 export type TechniqueAdminRow = Prisma.TechniqueGetPayload<{ select: typeof techniqueAdminSelect }>
-
-/**
- * The `scope` view control → Prisma where fragment (merged onto the BBL base where).
- * `pending-promotion` is the default queue: authored (owner Passport present), published,
- * not-yet-featured — exactly the rows a staffer promotes on the `[id]` editor.
- */
-const techniqueScopeWhere: Record<TechniquesTableSchema["scope"], Prisma.TechniqueWhereInput> = {
-  "pending-promotion": { authorPassportId: { not: null }, isPublished: true, isFeatured: false },
-  featured: { isFeatured: true },
-  authored: { authorPassportId: { not: null } },
-  all: {},
-}
-
-/** Columns the surface can be ordered by in Prisma (computed cells — Author, School,
- * Premium mix — have no scalar to sort on). Anything else falls back to `createdAt desc`. */
-const TECHNIQUE_ORDERABLE = new Set<keyof Prisma.TechniqueOrderByWithRelationInput>([
-  "name",
-  "isFeatured",
-  "isPublished",
-  "createdAt",
-])
-
-const defaultTechniqueOrderBy: Prisma.TechniqueOrderByWithRelationInput = { createdAt: "desc" }
-
-const resolveTechniqueOrderBy = (
-  sort: Array<{ id: string; desc: boolean }>,
-): Prisma.TechniqueOrderByWithRelationInput => {
-  const primary = sort[0]
-  if (
-    primary &&
-    TECHNIQUE_ORDERABLE.has(primary.id as keyof Prisma.TechniqueOrderByWithRelationInput)
-  ) {
-    return { [primary.id]: primary.desc ? "desc" : "asc" }
-  }
-  return defaultTechniqueOrderBy
-}
 
 /**
  * Paginated Techniques for the `AdminCollection` frame (ADR 0045), routed through

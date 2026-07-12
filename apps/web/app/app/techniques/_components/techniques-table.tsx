@@ -54,7 +54,12 @@ export function TechniquesTable({ techniquesPromise }: TechniquesTableProps) {
         <DataSelect
           options={SCOPE_OPTIONS}
           value={scope}
-          onValueChange={value => setParams({ scope: value as TechniquesTableSchema["scope"] })}
+          // Reset to page 1 on scope change: `scope` lives outside useDataTable's filter loop, so
+          // without this a switch from a multi-page scope while deep in the pager strands the user
+          // on an out-of-range (empty) page.
+          onValueChange={value =>
+            setParams({ scope: value as TechniquesTableSchema["scope"], page: 1 })
+          }
           aria-label="Scope"
           triggerClassName="w-44"
         />

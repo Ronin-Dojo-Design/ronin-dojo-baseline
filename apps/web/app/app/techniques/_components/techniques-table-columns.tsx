@@ -40,12 +40,11 @@ export const getColumns = (): ColumnDef<TechniqueAdminRow>[] => {
     {
       accessorKey: "isFeatured",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Featured" />,
+      // Promote-triage glyph rule: a colored pill is reserved for the few FEATURED rows so they pop;
+      // the not-featured null-glyph is a bare Note, matching the null Author/School cells (badges
+      // carry words, bare Notes carry the "—" glyph).
       cell: ({ row }) =>
-        row.original.isFeatured ? (
-          <Badge variant="info">Featured</Badge>
-        ) : (
-          <Badge variant="outline">—</Badge>
-        ),
+        row.original.isFeatured ? <Badge variant="info">Featured</Badge> : <Note>—</Note>,
     },
     {
       accessorKey: "isPublished",

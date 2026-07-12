@@ -74,7 +74,11 @@ const MIGRATED_DASHBOARD_APP_ROUTES = [
   { source: "/dashboard/lineage/:treeId", destination: "/app/lineage/:treeId/edit" },
   { source: "/dashboard/events", destination: "/app/events" },
   { source: "/dashboard/events/:path*", destination: "/app/events/:path*" },
-  { source: "/dashboard/techniques", destination: "/app/techniques" },
+  // FI-027 (SESSION_0530): post-unshadow, the bare /app/techniques is a STAFF index — so a legacy
+  // MEMBER bookmark of /dashboard/techniques must land on the profile techniques tab (member intent),
+  // not the /app staff-guard redirect. The /:path* variant keeps mapping to /app/techniques/:id (the
+  // [id] editor is author-accessible for org OWNER/INSTRUCTORs), so deep-links still reach the editor.
+  { source: "/dashboard/techniques", destination: "/app/profile?tab=techniques" },
   { source: "/dashboard/techniques/:path*", destination: "/app/techniques/:path*" },
   { source: "/dashboard/:path*", destination: "/app/profile" },
 ] as const

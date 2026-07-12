@@ -48,6 +48,14 @@ describe("DataSelect (WL-P1-7)", () => {
 
     expect(html).toContain("Pick discipline")
   })
+
+  it("forwards aria-label to the trigger button (Base UI Select.Root renders no DOM node)", () => {
+    // WL-P2 a11y fix: aria-label on the root is dropped, so the combobox had no accessible name.
+    // It must land on the actual trigger button.
+    const html = renderToStaticMarkup(<DataSelect options={OPTIONS} aria-label="Discipline" />)
+
+    expect(html).toContain('aria-label="Discipline"')
+  })
 })
 
 describe("DataSelect rich content (SESSION_0355)", () => {

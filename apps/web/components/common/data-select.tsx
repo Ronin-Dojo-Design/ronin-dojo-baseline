@@ -74,6 +74,13 @@ export type DataSelectProps = Omit<SelectRootProps, "items" | "children"> & {
   triggerClassName?: string
   contentClassName?: string
   align?: SelectContentProps["align"]
+  /**
+   * Accessible name for the trigger. Base UI's `Select.Root` renders no DOM node, so an
+   * `aria-label`/`aria-labelledby` passed to the root is dropped — these are forwarded to the
+   * `SelectTrigger` button instead, giving the combobox an accessible name (WL-P2 a11y fix).
+   */
+  "aria-label"?: string
+  "aria-labelledby"?: string
 }
 
 /**
@@ -91,11 +98,20 @@ export function DataSelect({
   triggerClassName,
   contentClassName,
   align,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
   ...rootProps
 }: DataSelectProps) {
   return (
     <Select items={buildSelectItems(options)} {...rootProps}>
-      <SelectTrigger id={id} size={size} disabled={disabled} className={triggerClassName}>
+      <SelectTrigger
+        id={id}
+        size={size}
+        disabled={disabled}
+        className={triggerClassName}
+        aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledby}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent align={align} className={contentClassName}>
