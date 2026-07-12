@@ -66,6 +66,12 @@ type AdminCollectionProps<TData> = {
   /**
    * Remaining table initial state (column pinning, column visibility, row
    * selection, …). Pagination and sorting are wired from `pageSize`/`sorting`.
+   *
+   * `columnFilters` here is a **default-valued faceted filter** (ADR 0045): it seeds the
+   * surface's opening view via the nuqs parser default (e.g. `/app/blog` opens Drafts-first).
+   * It does NOT pin the reset target — an explicit Clear/Reset reaches the unfiltered (All)
+   * view, not the default. Pass a **stable, module-scoped** `columnFilters` reference so the
+   * hook's filter-parser memo stays stable across renders.
    */
   initialState?: UseDataTableInitialState<TData>
 

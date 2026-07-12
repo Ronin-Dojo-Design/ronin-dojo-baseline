@@ -1,24 +1,23 @@
 // @ts-expect-error — bun:test is a Bun runtime module
 import { describe, expect, it } from "bun:test"
-import type { ColumnFiltersState } from "@tanstack/react-table"
-import { mergeDefaultColumnFilters } from "~/hooks/use-data-table"
+import { clearedFilterValue } from "~/hooks/use-data-table"
 
-const draftDefault: ColumnFiltersState = [{ id: "status", value: ["Draft"] }]
-
-describe("mergeDefaultColumnFilters", () => {
-  it("restores a default facet when clear removes it", () => {
-    expect(mergeDefaultColumnFilters([], draftDefault)).toEqual(draftDefault)
+describe("clearedFilterValue", () => {
+  it("clears a defaulted faceted filter to an explicit-empty array (the All sentinel)", () => {
+    // `[]` serializes to `?status=` — a present, empty param that out-ranks the `withDefault`
+    // Drafts-first default, so an explicit Clear reaches the unfiltered (All) view.
+    expect(clearedFilterValue(true, true)).toEqual([])
   })
 
-  it("preserves an explicit replacement for the default facet", () => {
-    const published = [{ id: "status", value: ["Published"] }]
-
-    expect(mergeDefaultColumnFilters(published, draftDefault)).toBe(published)
+  it("clears a defaulted search filter to an explicit-empty string", () => {
+    expect(clearedFilterValue(false, true)).toBe("")
   })
 
-  it("preserves all selected choices as the explicit All view", () => {
-    const allStatuses = [{ id: "status", value: ["Draft", "Scheduled", "Published"] }]
+  it("clears a non-defaulted faceted filter to null (param removed — base-kit behavior)", () => {
+    expect(clearedFilterValue(true, false)).toBeNull()
+  })
 
-    expect(mergeDefaultColumnFilters(allStatuses, draftDefault)).toBe(allStatuses)
+  it("clears a non-defaulted search filter to null (param removed — base-kit behavior)", () => {
+    expect(clearedFilterValue(false, false)).toBeNull()
   })
 })

@@ -85,6 +85,18 @@ pages and the non-kit stragglers (`/app/media` hand-rolled gallery, `/app/organi
 `/app/claims`, `/app/leads-pipeline`) conform incrementally on the cheap path the frame now provides —
 tracked as a follow-up conformance sweep, never a 30-page big-bang in one session.
 
+### D6 — A surface may open on a default-valued faceted filter; an explicit Clear reaches All
+
+An `AdminCollection` surface may pass a **default-valued faceted filter** via
+`initialState.columnFilters` to seed its opening view (SESSION_0531: `/app/blog` opens on the
+Drafts editorial queue). The default is applied only through the nuqs **parser default** — an
+*absent* URL param hydrates to the default on both the server query and the client toolbar. An
+**explicit Clear/Reset** must reach the genuinely-unfiltered (All) view, never snap back to the
+default: the shared hook writes an explicit-empty sentinel (`?status=`) that out-ranks the
+default (see `hooks/use-data-table.ts` `clearedFilterValue`). Surfaces that pass no
+`columnFilters` default are unchanged (the empty fast-path). Pass a stable, module-scoped
+`columnFilters` reference.
+
 ## Dirstarter docs proof
 
 Extension, not replacement: `AdminCollection` wraps the existing `components/data-table/*` L1 kit and

@@ -19,6 +19,10 @@ type PostsTableProps = {
   postsPromise: ReturnType<typeof findPosts>
 }
 
+// `/app/blog` now opens on the Drafts editorial queue (behavior change from the old all-posts
+// view): the seeded `status` facet makes Drafts-first the default via the nuqs parser default.
+// Module-scoped so the reference is stable across renders (the hook keys its filter-parser memo
+// off this identity — see AdminCollection's `initialState` contract).
 const POSTS_INITIAL_STATE = {
   columnFilters: [{ id: "status", value: [PostStatus.Draft] }],
   columnPinning: { right: ["actions"] },
@@ -70,6 +74,7 @@ export function PostsTable({ postsPromise }: PostsTableProps) {
       sorting={sort}
       pageSize={perPage}
       initialState={POSTS_INITIAL_STATE}
+      emptyState="No drafts. Clear the Status filter to see all posts."
       getRowId={row => row.id}
       callToAction={
         <Button

@@ -58,6 +58,51 @@ test.describe("AdminCollection conformance smoke", () => {
     }
   })
 
+  // SESSION_0531 review-wave (P1): the "Clear filters" affordance on the Drafts-DEFAULTED Status
+  // facet must reach the genuinely-unfiltered (All) view, not snap back to Drafts. The fix writes
+  // an explicit-empty `?status=` sentinel (distinct from an absent param, which hydrates to the
+  // default). With published posts seeded, clearing the (0-draft) default view reveals them.
+  test("Posts: clearing the defaulted Status facet reaches the All (unfiltered) view", async ({
+    page,
+  }) => {
+    const { userId } = await createAuthenticatedUser(page, { role: "admin" })
+    createdUserIds.push(userId)
+
+    await page.goto("/app/blog")
+    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+
+    // Open the Drafts-default facet and Clear it.
+    await page.getByRole("button", { name: /status.*draft/i }).click()
+    await page.getByRole("option", { name: /clear filters/i }).click()
+
+    // The clear encodes "cleared to All" as an explicit-empty param, NOT a return-to-default.
+    await expect(page).toHaveURL(/[?&]status=(&|$)/)
+    // All view: seeded published posts are now visible (the Drafts default showed none).
+    await expect(page.locator("tbody tr").first()).toBeVisible({ timeout: 30_000 })
+  })
+
+  // Companion: a NON-defaulted collection (/app/tools passes no `columnFilters` default) must keep
+  // the base-kit behavior — clearing a facet REMOVES the param entirely (no empty sentinel).
+  test("Tools: clearing a non-defaulted Status facet removes the status param", async ({
+    page,
+  }) => {
+    const { userId } = await createAuthenticatedUser(page, { role: "admin" })
+    createdUserIds.push(userId)
+
+    await page.goto("/app/tools")
+    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+
+    // Select a value so the param is written (the facet trigger's exact name is "Status" when
+    // unselected — disambiguates it from the sortable "Status" column header button).
+    await page.getByRole("button", { name: "Status", exact: true }).click()
+    await page.getByRole("option", { name: /published/i }).click()
+    await expect(page).toHaveURL(/status=Published/)
+
+    // Clear from the still-open popover: a non-defaulted facet clears to null (param removed).
+    await page.getByRole("option", { name: /clear filters/i }).click()
+    await expect(page).not.toHaveURL(/status=/)
+  })
+
   // SESSION_0515 (Giddy MED): the claims/orgs `sort` param was a dead wire — the header rendered
   // sortable but the query hard-coded `orderBy`. Sort is now threaded through the query, so a
   // header sort must (a) write the `sort` param to the URL and (b) re-order rows server-side.

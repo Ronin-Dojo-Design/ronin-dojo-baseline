@@ -135,19 +135,25 @@ type UseDataTableProps<TData> = Omit<
   }
 
 /**
- * Restore declared initial filters when a controlled filter update removes them.
- * This keeps the toolbar state aligned with server params that use the same defaults:
- * clearing a defaulted facet means "reset to default", while selecting another value
- * (or every value to represent All) is preserved verbatim.
+ * The value written to the URL when a toolbar filter is removed (Clear-filters / Reset).
+ *
+ * This is the seam that distinguishes an **explicit user clear** from **absent → default
+ * hydration**. A surface that seeds `initialState.columnFilters` (e.g. `/app/blog`'s Drafts-first
+ * Status facet) reaches its default only when the param is *absent* (nuqs `withDefault`). So a
+ * defaulted filter must clear to an *explicit-empty* sentinel — `[]` for a faceted filter, `""`
+ * for a search filter — which nuqs serializes as `?status=` (an empty, present param). That param
+ * out-ranks the default, so the facet reaches the genuinely-unfiltered (All) view instead of
+ * snapping back to the default.
+ *
+ * A non-defaulted filter clears to `null` (param removed) — the unchanged base-kit behavior that
+ * every other `useDataTable` consumer relies on (the `EMPTY_COLUMN_FILTERS` fast-path).
  */
-export function mergeDefaultColumnFilters(
-  filters: ColumnFiltersState,
-  defaults: ColumnFiltersState = [],
-): ColumnFiltersState {
-  const activeIds = new Set(filters.map(filter => filter.id))
-  const missingDefaults = defaults.filter(filter => !activeIds.has(filter.id))
-
-  return missingDefaults.length > 0 ? [...filters, ...missingDefaults] : filters
+export function clearedFilterValue(
+  isFaceted: boolean,
+  isDefaulted: boolean,
+): string | string[] | null {
+  if (!isDefaulted) return null
+  return isFaceted ? [] : ""
 }
 
 export function useDataTable<TData>({
@@ -184,6 +190,16 @@ export function useDataTable<TData>({
     initialState?.columnVisibility ?? {},
   )
   const defaultColumnFilters = initialState?.columnFilters ?? EMPTY_COLUMN_FILTERS
+
+  // The default-valued `columnFilters` seed the nuqs PARSER defaults below (the surface's
+  // Drafts-first hydration), NOT TanStack's reset target. Keep them out of the table's
+  // `initialState` so the toolbar `resetColumnFilters()` clears to the unfiltered (All) view
+  // rather than re-seeding the default facet. No-op for the ~25 consumers that pass no default.
+  const tableInitialState = useMemo(() => {
+    if (!initialState) return initialState
+    const { columnFilters: _seededDefault, ...rest } = initialState
+    return rest
+  }, [initialState])
 
   const [page, setPage] = useQueryState(
     "page",
@@ -265,21 +281,20 @@ export function useDataTable<TData>({
   const initialColumnFilters: ColumnFiltersState = useMemo(() => {
     if (enableAdvancedFilter) return []
 
-    const parsedFilters = Object.entries(filterValues).reduce<ColumnFiltersState>(
-      (filters, [key, value]) => {
-        if (value !== null) {
-          filters.push({
-            id: key,
-            value: Array.isArray(value) ? value : [value],
-          })
-        }
-        return filters
-      },
-      [],
-    )
-
-    return mergeDefaultColumnFilters(parsedFilters, defaultColumnFilters)
-  }, [defaultColumnFilters, filterValues, enableAdvancedFilter])
+    return Object.entries(filterValues).reduce<ColumnFiltersState>((filters, [key, value]) => {
+      // A null value is an absent param. An empty array is the "cleared to All" sentinel
+      // (`?status=`): it persists in the URL to out-rank the default, but it is not a live
+      // toolbar filter — so the facet renders bare and the Reset affordance stays hidden.
+      const isEmptyArray = Array.isArray(value) && value.length === 0
+      if (value !== null && !isEmptyArray) {
+        filters.push({
+          id: key,
+          value: Array.isArray(value) ? value : [value],
+        })
+      }
+      return filters
+    }, [])
+  }, [filterValues, enableAdvancedFilter])
 
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(initialColumnFilters)
 
@@ -299,9 +314,9 @@ export function useDataTable<TData>({
       if (enableAdvancedFilter) return
 
       setColumnFilters(prev => {
-        const requestedNext =
-          typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
-        const next = mergeDefaultColumnFilters(requestedNext, defaultColumnFilters)
+        // No default re-injection here: a removed defaulted facet must be allowed to reach the
+        // All view (see `clearedFilterValue`), not snap back to its default.
+        const next = typeof updaterOrValue === "function" ? updaterOrValue(prev) : updaterOrValue
 
         const filterUpdates = next.reduce<Record<string, string | string[] | null>>(
           (acc, filter) => {
@@ -319,7 +334,12 @@ export function useDataTable<TData>({
 
         for (const prevFilter of prev) {
           if (!next.some(filter => filter.id === prevFilter.id)) {
-            filterUpdates[prevFilter.id] = null
+            // Removed from the toolbar: a defaulted filter clears to an explicit-empty sentinel
+            // (reaching All); a non-defaulted filter clears to null (param removed).
+            filterUpdates[prevFilter.id] = clearedFilterValue(
+              filterableColumns.some(col => col.id === prevFilter.id),
+              defaultColumnFilters.some(filter => filter.id === prevFilter.id),
+            )
           }
         }
 
@@ -333,13 +353,12 @@ export function useDataTable<TData>({
       enableAdvancedFilter,
       filterableColumns,
       searchableColumns,
-      setPage,
     ],
   )
 
   const table = useReactTable({
     ...props,
-    initialState,
+    initialState: tableInitialState,
     pageCount,
     state: {
       pagination,

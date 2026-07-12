@@ -20,32 +20,40 @@ type PostActionsProps = ComponentProps<typeof Button> & {
 
 export const PostActions = ({ className, post, ...props }: PostActionsProps) => {
   return (
-    <Stack size="xs">
-      <PostsDeleteDialog posts={[post]}>
-        <Button variant="ghost" size="sm" prefix={<TrashIcon />} aria-label="Delete" {...props} />
-      </PostsDeleteDialog>
-
-      <DropdownMenu>
+    <Stack size="sm" wrap={false}>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger
           render={
             <Button
-              variant="ghost"
+              aria-label="Open menu"
+              variant="secondary"
               size="sm"
               prefix={<EllipsisIcon />}
-              aria-label="More actions"
-              className={cx("text-muted", className)}
+              className={cx("data-open:bg-accent", className)}
               {...props}
             />
           }
         />
 
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" sideOffset={8}>
           <DropdownMenuItem render={<Link href={`/app/blog/${post.id}`} />}>Edit</DropdownMenuItem>
+
           <DropdownMenuItem render={<Link href={`/blog/${post.slug}`} target="_blank" />}>
             View
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <PostsDeleteDialog posts={[post]}>
+        <Button
+          variant="secondary"
+          size="sm"
+          prefix={<TrashIcon />}
+          aria-label="Delete"
+          className="text-red-500"
+          {...props}
+        />
+      </PostsDeleteDialog>
     </Stack>
   )
 }
