@@ -66,5 +66,14 @@ export const updateTechniqueSchema = createTechniqueSchema.partial().extend({
   id: z.string(),
 })
 
+// @added SESSION_0529 Slice 3C — staff promote/demote to the canonical library (ADR 0046 D4).
+// Deliberately its OWN schema/action (not an `updateTechnique` field): `applyUpdateTechnique`
+// strips ownership/identity axes, and `isFeatured` is a staff-only axis with its own RBAC gate.
+export const setTechniqueFeaturedSchema = z.object({
+  id: z.string(),
+  isFeatured: z.boolean(),
+})
+
 export type CreateTechniqueInput = z.infer<typeof createTechniqueSchema>
 export type UpdateTechniqueInput = z.infer<typeof updateTechniqueSchema>
+export type SetTechniqueFeaturedInput = z.infer<typeof setTechniqueFeaturedSchema>

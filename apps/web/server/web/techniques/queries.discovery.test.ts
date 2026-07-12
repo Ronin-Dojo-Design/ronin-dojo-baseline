@@ -114,6 +114,7 @@ mock.module("~/services/db", () => ({
 
 import {
   findAuthoredTechnique,
+  findTechniqueBySlug,
   getTechniqueRails,
   searchTechniques,
 } from "~/server/web/techniques/queries"
@@ -150,6 +151,38 @@ describe("technique discovery filter (ADR 0046 D4 — no leak)", () => {
     expect(passedIds).toContain("t-org")
     expect(passedIds).toContain("t-featured")
     expect(passedIds).not.toContain("t-profile-only")
+  })
+
+  it("(3C) staff isFeatured flip round-trips a profile-only row onto/off the canonical surfaces", async () => {
+    const row = dataset.find(r => r.id === "t-profile-only")!
+    try {
+      // Promote (what `applySetTechniqueFeatured` persists) → browse + rails + canonical watch.
+      row.isFeatured = true
+
+      const { techniques } = await searchTechniques(defaultParams as any, "BBL" as any)
+      expect(techniques.map((t: any) => t.id)).toContain("t-profile-only")
+
+      findManyWheres.length = 0
+      await getTechniqueRails("BBL" as any)
+      const railWhere = findManyWheres.at(-1)
+      expect(dataset.filter(r => matchesWhere(r, railWhere)).map(r => r.id)).toContain(
+        "t-profile-only",
+      )
+
+      const watch = await findTechniqueBySlug("profile-only-armbar", "BBL" as any)
+      expect((watch as any)?.id).toBe("t-profile-only")
+
+      // Demote → all three drop it again.
+      row.isFeatured = false
+
+      const after = await searchTechniques(defaultParams as any, "BBL" as any)
+      expect(after.techniques.map((t: any) => t.id)).not.toContain("t-profile-only")
+
+      const watchAfter = await findTechniqueBySlug("profile-only-armbar", "BBL" as any)
+      expect(watchAfter).toBeNull()
+    } finally {
+      row.isFeatured = false
+    }
   })
 })
 

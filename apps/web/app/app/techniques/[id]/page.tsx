@@ -1,12 +1,15 @@
 import type { Metadata } from "next"
 import { notFound, redirect } from "next/navigation"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
+import { TechniqueFeatureToggle } from "~/app/app/techniques/[id]/technique-feature-toggle"
 import { MediaAttachmentManager } from "~/components/web/media/media-attachment-manager"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Section } from "~/components/web/ui/section"
 import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
+import { can } from "~/server/orpc/permissions"
+import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
 import { getTechniqueFormOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
@@ -53,27 +56,35 @@ export default async function EditTechniquePage({ params }: Props) {
       commonErrors: true,
       safetyNotes: true,
       isPublished: true,
+      isFeatured: true,
       organizationId: true,
     },
   })
 
   if (!technique) notFound()
 
-  // @changed SESSION_0528 (ADR 0046) — `organizationId` is now nullable. This org-library editor stays
-  // org-membership-gated; an authored profile-only technique (null org) has no org gate and is edited
-  // via the profile authoring flow (Slice 3B), so it 404s here. Narrows org to a non-null string below.
-  if (!technique.organizationId) notFound()
+  // @changed SESSION_0529 (Slice 3C) — platform staff (`techniques.manage` RBAC) may open ANY
+  // technique here, including an authored profile-only (null-org) row: this page hosts the staff
+  // "promote to library" control, and authored rows have no org gate to pass. Non-staff keep the
+  // SESSION_0528 behavior byte-for-byte: null-org rows 404 (authors edit via the profile flow),
+  // org rows require an ACTIVE OWNER/INSTRUCTOR membership (ACTIVE added with the SESSION_0529
+  // review pass — matches `hasOrgStaffRole` + the techniques-tab / new-page gates).
+  const isStaff = can(session.user, APP_AREA_PERMISSIONS.techniques)
 
-  // Verify user has access
-  const membership = await db.membership.findFirst({
-    where: {
-      userId: session.user.id,
-      organizationId: technique.organizationId,
-      roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-    },
-  })
+  if (!isStaff) {
+    if (!technique.organizationId) notFound()
 
-  if (!membership) notFound()
+    const membership = await db.membership.findFirst({
+      where: {
+        userId: session.user.id,
+        organizationId: technique.organizationId,
+        status: "ACTIVE",
+        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
+      },
+    })
+
+    if (!membership) notFound()
+  }
 
   const { disciplines, belts } = await getTechniqueFormOptions()
 
@@ -95,7 +106,7 @@ export default async function EditTechniquePage({ params }: Props) {
       />
 
       <TechniqueForm
-        organizationId={technique.organizationId}
+        organizationId={technique.organizationId ?? undefined}
         disciplines={disciplines}
         belts={belts}
         technique={technique}
@@ -103,6 +114,14 @@ export default async function EditTechniquePage({ params }: Props) {
 
       <Section>
         <Section.Content>
+          {/* SESSION_0529 Slice 3C — staff-only promote/demote (the action re-checks RBAC). */}
+          {isStaff && (
+            <TechniqueFeatureToggle
+              techniqueId={technique.id}
+              initialFeatured={technique.isFeatured}
+            />
+          )}
+
           <MediaAttachmentManager
             target={{ kind: "technique", id: technique.id }}
             initialAttachments={mediaAttachments}

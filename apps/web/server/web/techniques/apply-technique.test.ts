@@ -12,7 +12,11 @@ mock.module("~/server/web/entitlements/queries", () => ({
   hasEntitlement: async (userId: string) => eliteEntitled.has(userId),
 }))
 
-import { applyCreateTechnique, applyUpdateTechnique } from "~/server/web/techniques/apply-technique"
+import {
+  applyCreateTechnique,
+  applySetTechniqueFeatured,
+  applyUpdateTechnique,
+} from "~/server/web/techniques/apply-technique"
 import { TECHNIQUE_ERROR } from "~/server/web/techniques/technique-errors"
 
 const brand = "BBL" as const
@@ -406,5 +410,102 @@ describe("applyUpdateTechnique — edit authority (ADR 0046 D5)", () => {
     })
 
     expect(created.updates).toHaveLength(1)
+  })
+})
+
+describe("applySetTechniqueFeatured — staff promote to library (SESSION_0529 Slice 3C, ADR 0046 D4)", () => {
+  const authoredRow = () => ({
+    "tech-authored": {
+      organizationId: null,
+      authorPassportId: "pass-elite",
+      slug: "flying-armbar",
+      brand: "BBL",
+      isFeatured: false,
+    },
+  })
+
+  it("rejects a NON-staff caller — even the Elite AUTHOR of the technique (no self-promotion)", async () => {
+    setEliteEntitled(["user-elite"])
+    const { db, created } = makeDb({
+      passports: { "user-elite": "pass-elite" },
+      techniques: authoredRow(),
+    })
+
+    await expect(
+      applySetTechniqueFeatured({
+        db,
+        user: asUser({ id: "user-elite", role: "user" }),
+        input: { id: "tech-authored", isFeatured: true },
+      }),
+    ).rejects.toThrow(TECHNIQUE_ERROR.FEATURE_ACCESS_REQUIRED)
+    expect(created.updates).toHaveLength(0)
+    expect(created.audits).toHaveLength(0)
+  })
+
+  it("rejects org staff WITHOUT platform RBAC (canonical promotion is platform-staff-only)", async () => {
+    setEliteEntitled([])
+    const { db, created } = makeDb({
+      memberships: [{ userId: "user-owner", organizationId: "org-1" }],
+      techniques: authoredRow(),
+    })
+
+    await expect(
+      applySetTechniqueFeatured({
+        db,
+        user: asUser({ id: "user-owner", role: "user" }),
+        input: { id: "tech-authored", isFeatured: true },
+      }),
+    ).rejects.toThrow(TECHNIQUE_ERROR.FEATURE_ACCESS_REQUIRED)
+    expect(created.updates).toHaveLength(0)
+  })
+
+  it("platform staff (RBAC techniques.manage via *) flips the flag + writes the audit row", async () => {
+    const { db, created } = makeDb({ techniques: authoredRow() })
+
+    const updated = await applySetTechniqueFeatured({
+      db,
+      user: asUser({ id: "user-admin", role: "admin" }),
+      input: { id: "tech-authored", isFeatured: true },
+    })
+
+    expect(updated).toMatchObject({ id: "tech-authored", isFeatured: true })
+    expect(created.updates[0]).toMatchObject({
+      where: { id: "tech-authored" },
+      data: { isFeatured: true },
+    })
+    expect(created.audits[0]).toMatchObject({
+      action: "technique.featured.set",
+      entityType: "Technique",
+      entityId: "tech-authored",
+      userId: "user-admin",
+      before: { isFeatured: false },
+      after: { isFeatured: true },
+    })
+  })
+
+  it("un-feature round-trips (audit captures the true→false transition)", async () => {
+    const { db, created } = makeDb({
+      techniques: {
+        "tech-authored": {
+          organizationId: null,
+          authorPassportId: "pass-elite",
+          slug: "flying-armbar",
+          brand: "BBL",
+          isFeatured: true,
+        },
+      },
+    })
+
+    const updated = await applySetTechniqueFeatured({
+      db,
+      user: asUser({ id: "user-admin", role: "admin" }),
+      input: { id: "tech-authored", isFeatured: false },
+    })
+
+    expect(updated).toMatchObject({ isFeatured: false })
+    expect(created.audits[0]).toMatchObject({
+      before: { isFeatured: true },
+      after: { isFeatured: false },
+    })
   })
 })

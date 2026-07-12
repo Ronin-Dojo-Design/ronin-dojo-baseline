@@ -102,6 +102,8 @@ org staff/RBAC edit any in their org; canonical (null author) is staff/RBAC-only
   `authorPassportId` null, `isFeatured` false).
 - **Every technique read that assumed a non-null org** must tolerate null (public browse/rails/watch get the
   `organizationId != null OR isFeatured` discovery filter; profile/school surfaces get the new filters).
+- **The authored watch URL contract is `/directory/[slug]/techniques/[techniqueSlug]`** (SESSION_0529 Slice
+  3B) — the profile-scoped, author-keyed public read for rows the D4 filter keeps off `/techniques/[slug]`.
   This is the real blast radius and the reason it was grilled before building.
 - **Reversible-ish, not free:** dropping org-nullability later would require re-homing every authored
   technique — hence the ADR.

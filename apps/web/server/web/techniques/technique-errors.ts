@@ -12,4 +12,8 @@ export const TECHNIQUE_ERROR = {
   // (`Technique_authored_slug_key`: one (brand, authorPassportId, slug) per author). Caught LOCALLY
   // in the authored create path; the generic `lib/safe-actions.ts` P2002 mapping stays untouched.
   AUTHORED_SLUG_TAKEN: "You already have a technique with this name — pick a different one.",
+  // SESSION_0529 Slice 3C — promote-to-library (`isFeatured`) is STAFF-only (ADR 0046 D4/D5):
+  // platform RBAC `techniques.manage`, never the Elite authoring gate — an author cannot
+  // self-promote onto the canonical browse.
+  FEATURE_ACCESS_REQUIRED: "You are not authorized to feature techniques.",
 } as const

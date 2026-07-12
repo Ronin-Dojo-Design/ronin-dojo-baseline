@@ -4,6 +4,7 @@ import { can } from "~/server/orpc/permissions"
 import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 import type {
   CreateTechniqueInput,
+  SetTechniqueFeaturedInput,
   UpdateTechniqueInput,
 } from "~/server/web/techniques/crud-schemas"
 import { canCreateTechniqueForUser } from "~/server/web/techniques/permissions"
@@ -231,4 +232,53 @@ export async function applyUpdateTechnique({
   }
 
   return db.technique.update({ where: { id }, data })
+}
+
+/**
+ * SESSION_0529 Slice 3C — staff promote/demote to the canonical library (ADR 0046 D4).
+ * `isFeatured` is the ONE lever that lifts an authored (org-null) technique onto the public
+ * browse/rails/watch — the discovery filter already honors it, so this flips a flag, nothing else.
+ *
+ * Gate: platform RBAC `techniques.manage` ONLY (ADR 0046 D5 — canonical promotion is a staff
+ * concern). Deliberately NOT `canCreateTechniqueForUser`: an Elite author must never self-promote
+ * their own row onto the canonical surface. Audited (before/after) like the media pipeline.
+ */
+export async function applySetTechniqueFeatured({
+  db,
+  user,
+  input,
+}: {
+  db: AppDb
+  user: SessionUser
+  input: SetTechniqueFeaturedInput
+}) {
+  if (!can(user, APP_AREA_PERMISSIONS.techniques)) {
+    throw new Error(TECHNIQUE_ERROR.FEATURE_ACCESS_REQUIRED)
+  }
+
+  const technique = await db.technique.findUniqueOrThrow({
+    where: { id: input.id },
+    select: { id: true, slug: true, brand: true, isFeatured: true },
+  })
+
+  const updated = await db.technique.update({
+    where: { id: input.id },
+    data: { isFeatured: input.isFeatured },
+    select: { id: true, slug: true, isFeatured: true },
+  })
+
+  await db.auditLog.create({
+    data: {
+      brand: technique.brand,
+      action: "technique.featured.set",
+      entityType: "Technique",
+      entityId: technique.id,
+      organizationId: null,
+      userId: user.id,
+      before: { isFeatured: technique.isFeatured },
+      after: { isFeatured: input.isFeatured },
+    },
+  })
+
+  return updated
 }
