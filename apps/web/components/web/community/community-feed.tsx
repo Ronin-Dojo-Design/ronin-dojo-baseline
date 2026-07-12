@@ -35,7 +35,13 @@ type CommunityFeedProps = {
   posts: CommunityPostMany[]
   /** Approved styles for the create dialog's optional style select. */
   styles: { id: string; name: string }[]
-  viewer: { isAdmin: boolean }
+  /**
+   * @changed SESSION_0529 review fix (Doug P2-3): `hasMab` = the server-resolved
+   * `shouldMountMab` predicate. The mobile create-post FAB hides whenever the radial MAB mounts
+   * for this viewer (admin OR technique-capable member) — the two dock at the same corner and
+   * the MAB (z-50) buried this FAB (z-30) for Elite non-admins.
+   */
+  viewer: { isAdmin: boolean; hasMab: boolean }
   /**
    * Server-batched saved-state (D6): the ids of the posts the viewer has saved, resolved in ONE
    * query on the page render and threaded to each card's `ListingSaveButton initialSaved`. `null` for
@@ -205,10 +211,12 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
       {/* Mobile create-post FAB. The circular `icon` size (SESSION_0495 C2-5) replaces the old
           `lg`-pill + `mx-0! my-0! size-6! rounded-full p-4` hack.
 
-          SESSION_0500 (Epic B): the admin-only radial MAB now owns Create-Post on mobile, so
-          this FAB is HIDDEN for admins (no two FABs). Non-admins have no MAB and keep this
-          direct create affordance. `bottom-20` clears the fixed bottom nav (B0). */}
-      {!viewer.isAdmin && (
+          SESSION_0500 (Epic B) → SESSION_0529 (Doug P2-3): the radial MAB owns the corner when it
+          mounts (admin OR technique-capable member — `shouldMountMab`), so this FAB hides for ANY
+          MAB-holding viewer, not just admins (it was already buried under the z-50 MAB). Viewers
+          without the MAB keep this direct create affordance. `bottom-20` clears the bottom nav.
+          Follow-up ticket: a member-facing "post" MAB action so MAB holders regain 1-tap create. */}
+      {!viewer.hasMab && (
         <Button
           type="button"
           variant="fancy"

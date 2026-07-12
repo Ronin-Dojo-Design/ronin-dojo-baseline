@@ -1,5 +1,6 @@
 import { BottomNav } from "~/components/web/nav/bottom-nav"
 import { Mab } from "~/components/web/nav/mab"
+import { shouldMountMab } from "~/components/web/nav/mab-mount"
 import { isAdmin } from "~/lib/authz-predicates"
 import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
@@ -47,7 +48,11 @@ export const MobileShell = async ({ userAvatarUrl }: { userAvatarUrl?: string | 
     technique,
   }
 
-  const showMab = admin || permissions.technique
+  // THE shared mount predicate (SESSION_0529 review fix, Doug P2-3) — ≡ (admin ∨
+  // permissions.technique) by construction, and the community feed hides its own mobile FAB off
+  // the same helper, so the two create-affordances can never collide at the shared corner.
+  // `canCreateTechniqueForUser` is request-cached, so this re-check costs no extra lookup.
+  const showMab = await shouldMountMab(user)
 
   const anyMabAction =
     permissions.claim ||

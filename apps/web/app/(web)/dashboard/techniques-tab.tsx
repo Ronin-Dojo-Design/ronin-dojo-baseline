@@ -27,10 +27,12 @@ export async function DashboardTechniquesTab() {
     }),
     // Whether the org-canonical editor (`/app/techniques/new`) is reachable — the same
     // OWNER/INSTRUCTOR gate that page enforces, so the table never links a guaranteed 404
-    // to an Elite (non-staff) author.
+    // to an Elite (non-staff) author. ACTIVE-only (SESSION_0529 review fix): a CANCELLED staff
+    // membership must not authorize, matching `hasOrgStaffRole`/`canCreateTechniqueForUser`.
     db.membership.findFirst({
       where: {
         userId: session.user.id,
+        status: "ACTIVE",
         roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
         organization: { brand: Brand.BBL },
       },

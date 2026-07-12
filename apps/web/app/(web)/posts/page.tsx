@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Note } from "~/components/common/note"
 import { CommunityFeed } from "~/components/web/community/community-feed"
+import { shouldMountMab } from "~/components/web/nav/mab-mount"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { Brand } from "~/.generated/prisma/client"
@@ -67,6 +68,11 @@ export default async function ({ searchParams }: Props) {
   // until school data flows onto community posts.
   const school = typeof params.school === "string" ? params.school : undefined
 
+  // SESSION_0529 review fix (Doug P2-3): the SAME mount predicate the MobileShell uses — when the
+  // radial MAB mounts for this viewer, the feed hides its own mobile create-post FAB (the MAB
+  // overlays that corner). Request-cached, so this costs no extra lookup beside the shell's.
+  const hasMab = await shouldMountMab(session?.user)
+
   return (
     <>
       <Breadcrumbs items={breadcrumbs} />
@@ -88,7 +94,7 @@ export default async function ({ searchParams }: Props) {
       <CommunityFeed
         posts={posts}
         styles={styles}
-        viewer={{ isAdmin: isAdmin(session?.user) }}
+        viewer={{ isAdmin: isAdmin(session?.user), hasMab }}
         savedPostIds={savedPostIds ? [...savedPostIds] : null}
         school={school}
       />

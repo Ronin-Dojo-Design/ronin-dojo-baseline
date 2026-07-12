@@ -298,6 +298,16 @@ test.describe("Epic B mobile shell", () => {
       await expect(page.getByRole("heading", { name: /add videos/i })).toHaveCount(0)
       await expect(page.getByRole("link", { name: "Flying Triangle E2E" })).toBeVisible()
       await page.screenshot({ path: `${SHOTS}/elite-05-technique-in-list.png` })
+
+      // SESSION_0529 review fix (Doug P2-3): the community feed's mobile create-post FAB hides
+      // whenever the MAB mounts for the viewer — this Elite member has the MAB, so /posts must
+      // show exactly ONE floating create affordance (the MAB), never the buried twin. The FAB is
+      // the ONLY button with aria-label "New post" (the header + empty-state CTAs are visible-text
+      // buttons and legitimately remain).
+      await page.goto("/posts")
+      await expect(page.locator(MAB_TRIGGER)).toBeVisible()
+      await expect(page.locator('button[aria-label="New post"]')).toHaveCount(0)
+      await page.screenshot({ path: `${SHOTS}/elite-06-posts-single-fab.png` })
     } finally {
       await cleanupTestUser(elite.userId)
     }

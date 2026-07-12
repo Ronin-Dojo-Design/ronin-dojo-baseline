@@ -100,6 +100,7 @@ export async function applyWebMediaUpload({
   input,
   allowAdminOverride = false,
   allowVideo = false,
+  fileUploadCapability = false,
 }: {
   db: AppDb
   brand: Brand
@@ -113,6 +114,16 @@ export async function applyWebMediaUpload({
    * so no stray VIDEO media/attachment ever persists. The general media library opts in.
    */
   allowVideo?: boolean
+  /**
+   * SESSION_0529 review fix (Doug P2-1) — the caller's resolved `canUploadMediaForUser` (RBAC
+   * `media.manage`/`media.upload` ∨ staff/org grants ∨ S3_UPLOAD entitlement), threaded as a
+   * boolean so this core stays hermetic. Enforced for TECHNIQUE targets only: Slice 3B's author
+   * branch in `authorizeMediaTarget` means target-authz alone no longer implies R2 FILE-upload
+   * capability there (operator policy: member video = URL-paste only; R2 stays capability-gated).
+   * Author media MANAGEMENT (url-attach / premium / reorder / remove) is deliberately NOT gated,
+   * and member-owned passport/rankMilestone flows (avatars, belt journey) are unaffected.
+   */
+  fileUploadCapability?: boolean
 }): Promise<WebMediaUploadResult> {
   const authorized = await authorizeMediaTarget({
     db,
@@ -123,6 +134,9 @@ export async function applyWebMediaUpload({
   })
   if (!authorized) {
     throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
+  }
+  if (input.target.kind === "technique" && !fileUploadCapability) {
+    throw new Error(WEB_MEDIA_ERROR.FILE_UPLOAD_CAPABILITY_REQUIRED)
   }
 
   const { file, target } = input
@@ -273,9 +287,10 @@ export async function applyWebMediaUrlAttach({
 
 /**
  * SESSION_0529 Slice 3B — persist a drag-reorder (`sortOrder` = array index). Authorize the target,
- * then verify EVERY id belongs to it (the same combined-where ownership guard the other mutate
- * flows use) before writing — a foreign/missing id rejects the whole batch, so one author can never
- * reorder another target's rail.
+ * then verify the id list is EXACTLY the target's full attachment set (same-set check) before
+ * writing — a foreign/missing id rejects the whole batch (one author can never reorder another
+ * target's rail), and a PARTIAL subset rejects too (review fix P3: writing indexes for a subset
+ * would leave duplicate `sortOrder` positions against the untouched rows).
  */
 export async function applyWebMediaReorder({
   db,
@@ -293,13 +308,17 @@ export async function applyWebMediaReorder({
     throw new Error(WEB_MEDIA_ERROR.UPLOAD_ACCESS_REQUIRED)
   }
 
-  const owned = await db.mediaAttachment.findMany({
-    where: { id: { in: input.attachmentIds }, ...mediaTargetWhere(input.target) },
+  const targetAttachments = await db.mediaAttachment.findMany({
+    where: mediaTargetWhere(input.target),
     select: { id: true },
   })
-  // The schema already rejects duplicate ids, so a count mismatch = a foreign/missing attachment.
-  if (owned.length !== input.attachmentIds.length) {
+  const targetIds = new Set(targetAttachments.map(attachment => attachment.id))
+  // The schema already rejects duplicate input ids, so equal sizes + full membership = same set.
+  if (input.attachmentIds.some(id => !targetIds.has(id))) {
     throw new Error(WEB_MEDIA_ERROR.ATTACHMENT_NOT_FOUND)
+  }
+  if (input.attachmentIds.length !== targetIds.size) {
+    throw new Error(WEB_MEDIA_ERROR.REORDER_SET_INCOMPLETE)
   }
 
   await db.$transaction(async tx => {

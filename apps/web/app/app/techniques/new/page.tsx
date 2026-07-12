@@ -23,10 +23,12 @@ export default async function NewTechniquePage() {
   const session = await getServerSession()
   if (!session?.user) redirect("/auth/login?next=/app/techniques/new")
 
-  // Find org where user is owner/instructor
+  // Find org where user is an ACTIVE owner/instructor (SESSION_0529 review fix — a CANCELLED
+  // staff membership must not authorize; matches `hasOrgStaffRole` + the techniques-tab gate).
   const membership = await db.membership.findFirst({
     where: {
       userId: session.user.id,
+      status: "ACTIVE",
       roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
       organization: { brand: Brand.BBL },
     },

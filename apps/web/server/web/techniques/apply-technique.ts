@@ -16,14 +16,39 @@ type AppDb = typeof appDb
 const TECHNIQUE_STAFF_ROLES = ["OWNER", "INSTRUCTOR"] as const
 
 /**
- * Prisma P2002 (unique-constraint violation), duck-typed on `code` rather than `instanceof
- * PrismaClientKnownRequestError` so it holds across driver adapters and hermetic test fakes
- * (SESSION_0529 Slice 3B). Inside the authored create the ONLY unique index that can fire is the
- * DB-managed partial `Technique_authored_slug_key` — the canonical partial index excludes rows
- * where `authorPassportId IS NOT NULL` — so a P2002 here IS the duplicate-authored-slug case.
+ * Is this Prisma P2002 specifically the AUTHORED partial unique index
+ * (`Technique_authored_slug_key`: one (brand, authorPassportId, slug) per author)? Duck-typed
+ * (not `instanceof`) so it holds across driver adapters and hermetic test fakes, and tightened to
+ * the constraint identity (SESSION_0529 review fix) so any other unique violation rethrows to the
+ * generic handler. Two meta shapes are recognized:
+ *   1. pg driver adapter (VERIFIED live, SESSION_0529 probe): NO `meta.target`; the constraint
+ *      name is in `meta.driverAdapterError.cause.originalMessage` and the columns (incl. a quoted
+ *      `"authorPassportId"`) in `...cause.constraint.fields`.
+ *   2. classic engine / fakes: `meta.target` = index name string or field array.
  */
-const isUniqueConstraintError = (error: unknown): boolean =>
-  typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002"
+const isAuthoredSlugConflict = (error: unknown): boolean => {
+  if (typeof error !== "object" || error === null) return false
+  const e = error as {
+    code?: string
+    meta?: {
+      target?: unknown
+      driverAdapterError?: {
+        cause?: { originalMessage?: string; constraint?: { fields?: unknown } }
+      }
+    }
+  }
+  if (e.code !== "P2002") return false
+
+  const cause = e.meta?.driverAdapterError?.cause
+  const target = e.meta?.target
+  const haystack = [
+    cause?.originalMessage ?? "",
+    Array.isArray(cause?.constraint?.fields) ? cause.constraint.fields.join(",") : "",
+    typeof target === "string" ? target : Array.isArray(target) ? target.join(",") : "",
+  ].join("|")
+
+  return haystack.includes("Technique_authored_slug_key") || haystack.includes("authorPassportId")
+}
 
 async function hasOrgStaffRole(
   db: AppDb,
@@ -108,7 +133,8 @@ export async function applyCreateTechnique({
       // Duplicate (brand, authorPassportId, slug) → the member-facing friendly message, caught
       // LOCALLY so the shared `lib/safe-actions.ts` P2002 mapping (which would render the useless
       // "A technique with this brand already exists") stays untouched for every other action.
-      if (isUniqueConstraintError(error)) {
+      // Any other unique violation / failure rethrows unchanged.
+      if (isAuthoredSlugConflict(error)) {
         throw new Error(TECHNIQUE_ERROR.AUTHORED_SLUG_TAKEN)
       }
       throw error

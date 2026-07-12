@@ -19,6 +19,7 @@ import {
   uploadWebMediaSchema,
 } from "~/server/web/media/media-schemas"
 import type { MediaAttachTarget } from "~/server/web/media/media-targets"
+import { canUploadMediaForUser } from "~/server/web/media/permissions"
 
 function revalidateForTarget(target: MediaAttachTarget) {
   const paths = ["/dashboard"]
@@ -70,6 +71,11 @@ export const uploadWebMedia = userActionClient
       user,
       input: parsedInput,
       allowVideo: true,
+      // SESSION_0529 review fix (Doug P2-1): technique targets additionally require the R2 upload
+      // capability (author target-authz alone ≠ file upload — member video is URL-paste only).
+      // Resolved only when relevant; the flag is a no-op for every other target kind.
+      fileUploadCapability:
+        parsedInput.target.kind === "technique" && (await canUploadMediaForUser(user, Brand.BBL)),
     })
 
     revalidate(revalidateForTarget(parsedInput.target))

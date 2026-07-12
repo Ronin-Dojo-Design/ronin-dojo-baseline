@@ -163,6 +163,45 @@ describe("buildProfileMedia — freemium locking + A2 raw-url invariant", () => 
     expect(item.href).toBe("/techniques/berimbolo")
     // The raw playable url NEVER reaches the client for a locked premium reel.
     expect(item.href).not.toContain("r2.example.com")
+    // SESSION_0529 review fix (Doug P2-2): a LOCKED tile ships NO poster at all.
+    expect(item.thumbnailUrl).toBeNull()
+  })
+
+  it("P2-2: a LOCKED YOUTUBE reel ships NO poster (the thumbnail embeds the video id = the watch URL)", () => {
+    const result = buildProfileMedia({
+      viewerEntitled: false,
+      media: [
+        media({
+          id: "prem-yt",
+          type: "YOUTUBE",
+          url: YT,
+          purpose: "technique-highlight",
+          techniqueSlug: "berimbolo",
+          isPremium: true,
+        }),
+      ],
+    })
+
+    const item = result.techniqueVideos[0]
+    expect(item.locked).toBe(true)
+    expect(item.thumbnailUrl).toBeNull()
+    // Nothing in the shaped output carries the YouTube id (which reconstructs the watch URL).
+    expect(JSON.stringify(result)).not.toContain("dQw4w9WgXcQ")
+    // …while the SAME reel for an ENTITLED viewer keeps its derived poster.
+    const entitled = buildProfileMedia({
+      viewerEntitled: true,
+      media: [
+        media({
+          id: "prem-yt",
+          type: "YOUTUBE",
+          url: YT,
+          purpose: "technique-highlight",
+          techniqueSlug: "berimbolo",
+          isPremium: true,
+        }),
+      ],
+    })
+    expect(entitled.techniqueVideos[0].thumbnailUrl).toBe(YT_THUMB)
   })
 
   it("A2 invariant: a LOCKED premium reel WITHOUT a slug is DROPPED (no raw-url leak)", () => {
@@ -330,6 +369,44 @@ describe("buildProfileMedia — curriculum rail (SESSION_0529 Slice 3B, ADR 0046
     expect(JSON.stringify(items)).not.toContain("r2.example.com")
   })
 
+  it("P2-2: a LOCKED curriculum card ships NO poster (YouTube thumb would leak the video id)", () => {
+    const lockedItems = curriculumOf([
+      authoredTechnique({
+        attachments: [
+          // First clip is a YouTube premium clip WITH a stored poster — both must be withheld.
+          {
+            isPremium: true,
+            url: "https://youtu.be/dQw4w9WgXcQ",
+            thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+          },
+        ],
+      }),
+    ])
+    expect(lockedItems[0].locked).toBe(true)
+    expect(lockedItems[0].thumbnailUrl).toBeNull()
+    expect(JSON.stringify(lockedItems)).not.toContain("dQw4w9WgXcQ")
+
+    // The SAME technique for an entitled viewer is UNLOCKED but still poster-less: rail poster
+    // candidates are FREE clips only (viewer-independent policy — a premium clip's id never
+    // surfaces on a rail card for anyone; the entitled viewer plays it on the watch page).
+    const entitledItems = curriculumOf(
+      [
+        authoredTechnique({
+          attachments: [
+            {
+              isPremium: true,
+              url: "https://youtu.be/dQw4w9WgXcQ",
+              thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+            },
+          ],
+        }),
+      ],
+      true,
+    )
+    expect(entitledItems[0].locked).toBe(false)
+    expect(entitledItems[0].thumbnailUrl).toBeNull()
+  })
+
   it("does NOT lock when ANY clip is free (the viewer has something to watch)", () => {
     const items = curriculumOf([
       authoredTechnique({
@@ -376,5 +453,39 @@ describe("buildProfileMedia — curriculum rail (SESSION_0529 Slice 3B, ADR 0046
       }),
     ])
     expect(items[0].thumbnailUrl).toBe("https://r2.example.com/custom-poster.jpg")
+  })
+})
+
+describe("buildProfileMedia — curriculum poster comes from FREE clips only (P2-2 hardening)", () => {
+  it("an UNLOCKED mixed technique derives its poster from the first FREE clip, never a premium one", () => {
+    const items = buildProfileMedia({
+      viewerEntitled: false,
+      media: [],
+      curriculum: {
+        profileSlug: "bob-bass",
+        techniques: [
+          {
+            id: "t-mixed",
+            name: "Flying Armbar",
+            slug: "flying-armbar",
+            attachments: [
+              // Premium clip FIRST in teaching order — its id must not surface on the card.
+              {
+                isPremium: true,
+                url: "https://youtu.be/jNQXAC9IVRw",
+                thumbnailUrl: "https://img.youtube.com/vi/jNQXAC9IVRw/hqdefault.jpg",
+              },
+              { isPremium: false, url: YT, thumbnailUrl: null },
+            ],
+          },
+        ],
+      },
+    }).curriculum
+
+    expect(items[0].locked).toBe(false)
+    // Poster derives from the FREE clip…
+    expect(items[0].thumbnailUrl).toBe(YT_THUMB)
+    // …and the premium clip's id never reaches the shaped rail.
+    expect(JSON.stringify(items)).not.toContain("jNQXAC9IVRw")
   })
 })

@@ -133,7 +133,11 @@ function toMediaItem(
     title: item.title ?? fields.defaultTitle,
     // A YOUTUBE attachment with no stored poster derives one from the watch url (parity: legacy
     // `buildYoutubeThumbnail`); everything else uses its own thumbnail or the card kind placeholder.
-    thumbnailUrl: item.thumbnailUrl ?? buildYoutubeThumbnail(item.url),
+    // @changed SESSION_0529 review fix (Doug P2-2): a LOCKED tile ships NO poster at all — a
+    // YouTube thumbnail url carries the video id, which reconstructs the watch URL (for an
+    // unlisted premium clip, the id IS the content). The card renders its kind placeholder +
+    // lock treatment instead.
+    thumbnailUrl: fields.locked ? null : (item.thumbnailUrl ?? buildYoutubeThumbnail(item.url)),
     href: fields.href,
     external: fields.external,
     subtitle: fields.subtitle,
@@ -178,15 +182,21 @@ export function buildProfileMedia({
     ? curriculum.techniques.map(technique => {
         const hasClips = technique.attachments.length > 0
         const hasFreeClip = technique.attachments.some(attachment => !attachment.isPremium)
-        const poster = technique.attachments[0]
+        const locked = hasClips && !hasFreeClip && !viewerEntitled
+        // Poster candidates are FREE clips ONLY (SESSION_0529 P2-2 hardening): a premium clip's
+        // stored/derived YouTube thumbnail embeds the video id — the watch URL — so it must never
+        // surface on a rail card, locked OR unlocked. First free clip in teaching order wins.
+        const poster = technique.attachments.find(attachment => !attachment.isPremium)
         return {
           id: technique.id,
           title: technique.name,
-          thumbnailUrl: poster ? (poster.thumbnailUrl ?? buildYoutubeThumbnail(poster.url)) : null,
+          // Locked ⇒ NO poster at all (Doug P2-2): the card renders its placeholder + lock.
+          thumbnailUrl:
+            locked || !poster ? null : (poster.thumbnailUrl ?? buildYoutubeThumbnail(poster.url)),
           href: `/directory/${curriculum.profileSlug}/techniques/${technique.slug}`,
           external: false,
           subtitle: "Technique",
-          locked: hasClips && !hasFreeClip && !viewerEntitled,
+          locked,
         }
       })
     : []

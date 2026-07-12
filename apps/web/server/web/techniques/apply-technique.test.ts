@@ -27,12 +27,25 @@ type FakeState = {
   passports?: Record<string, string>
   /** passportId → current-affiliation org `{ id, brand }` (null = free-text school, profile-only). */
   affiliations?: Record<string, { id: string; brand: string } | null>
-  /** techniqueId → the stored row read by the edit path. */
-  techniques?: Record<string, { organizationId: string | null; authorPassportId: string | null }>
+  /** techniqueId → the stored row read by the edit/feature paths. */
+  techniques?: Record<
+    string,
+    {
+      organizationId: string | null
+      authorPassportId: string | null
+      slug?: string
+      brand?: string
+      isFeatured?: boolean
+    }
+  >
 }
 
 function makeDb(state: FakeState = {}) {
-  const created: { creates: any[]; updates: any[] } = { creates: [], updates: [] }
+  const created: { creates: any[]; updates: any[]; audits: any[] } = {
+    creates: [],
+    updates: [],
+    audits: [],
+  }
 
   const db: any = {
     membership: {
@@ -78,9 +91,16 @@ function makeDb(state: FakeState = {}) {
         return row
       },
       update: async ({ where, data }: any) => {
-        const row = { id: where.id, slug: "some-slug", ...data }
+        const stored = state.techniques?.[where.id]
+        const row = { id: where.id, slug: stored?.slug ?? "some-slug", ...data }
         created.updates.push({ where, data })
         return row
+      },
+    },
+    auditLog: {
+      create: async ({ data }: any) => {
+        created.audits.push(data)
+        return data
       },
     },
   }
@@ -210,6 +230,66 @@ describe("applyCreateTechnique — authored path (ADR 0046 D5)", () => {
         input: { ...baseInput, authored: true },
       }),
     ).rejects.toThrow("connection reset")
+  })
+
+  it("(review fix) maps the REAL pg driver-adapter P2002 shape (no meta.target — SESSION_0529 probe)", async () => {
+    setEliteEntitled(["user-elite"])
+    const { db } = makeDb({
+      passports: { "user-elite": "pass-elite" },
+      affiliations: { "pass-elite": null },
+    })
+    // Byte shape captured from a live duplicate insert against the partial index.
+    db.technique.create = async () => {
+      throw Object.assign(new Error("Unique constraint failed"), {
+        code: "P2002",
+        meta: {
+          modelName: "Technique",
+          driverAdapterError: {
+            name: "DriverAdapterError",
+            cause: {
+              originalCode: "23505",
+              originalMessage:
+                'duplicate key value violates unique constraint "Technique_authored_slug_key"',
+              kind: "UniqueConstraintViolation",
+              constraint: { fields: ["brand", '"authorPassportId"', "slug"] },
+            },
+          },
+        },
+      })
+    }
+
+    await expect(
+      applyCreateTechnique({
+        db,
+        user: asUser({ id: "user-elite", role: "user" }),
+        brandContext: brand,
+        input: { ...baseInput, authored: true },
+      }),
+    ).rejects.toThrow(TECHNIQUE_ERROR.AUTHORED_SLUG_TAKEN)
+  })
+
+  it("(review fix) a P2002 on a DIFFERENT constraint rethrows to the generic handler", async () => {
+    setEliteEntitled(["user-elite"])
+    const { db } = makeDb({
+      passports: { "user-elite": "pass-elite" },
+      affiliations: { "pass-elite": null },
+    })
+    const foreign = Object.assign(new Error("Unique constraint failed"), {
+      code: "P2002",
+      meta: { target: "Technique_canonical_slug_key" },
+    })
+    db.technique.create = async () => {
+      throw foreign
+    }
+
+    await expect(
+      applyCreateTechnique({
+        db,
+        user: asUser({ id: "user-elite", role: "user" }),
+        brandContext: brand,
+        input: { ...baseInput, authored: true },
+      }),
+    ).rejects.toBe(foreign)
   })
 })
 

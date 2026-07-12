@@ -310,6 +310,90 @@ describe("technique media authorization — author path (SESSION_0529 Slice 3B, 
   })
 })
 
+describe("technique R2 file-upload capability gate (SESSION_0529 review fix, Doug P2-1)", () => {
+  const authoredTechniqueState = () => ({
+    techniques: {
+      "tech-authored": { organizationId: null, authorPassportId: "pass-self" } as const,
+    },
+    passports: { "pass-self": editorUser.id },
+  })
+
+  it("rejects a technique FILE upload from an author WITHOUT the upload capability", async () => {
+    const { db, created } = makeDb(authoredTechniqueState())
+
+    await expectRejectsWithMessage(
+      applyWebMediaUpload({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-authored" },
+          file: imageFile(),
+          isPublic: true,
+        },
+        allowVideo: true,
+        // The action resolved `canUploadMediaForUser` → false for a plain Elite author.
+        fileUploadCapability: false,
+      }),
+      WEB_MEDIA_ERROR.FILE_UPLOAD_CAPABILITY_REQUIRED,
+    )
+    expect(created.media).toHaveLength(0)
+    expect(created.attachments).toHaveLength(0)
+  })
+
+  it("allows a technique FILE upload WITH the capability (staff / grants / admin)", async () => {
+    const { db, created } = makeDb(authoredTechniqueState())
+
+    const result = await applyWebMediaUpload({
+      db,
+      brand,
+      user: editorUser,
+      input: {
+        target: { kind: "technique", id: "tech-authored" },
+        file: imageFile(),
+        isPublic: true,
+      },
+      allowVideo: true,
+      fileUploadCapability: true,
+    })
+
+    expect(result.mediaId).toBe("media-created")
+    expect(created.attachments[0]).toMatchObject({ techniqueId: "tech-authored" })
+  })
+
+  it("does NOT gate non-technique targets on the flag (avatars / belt-journey unaffected)", async () => {
+    const { db, created } = makeDb({ authorizedOrgIds: ["org-1"] })
+
+    const result = await applyWebMediaUpload({
+      db,
+      brand,
+      user: editorUser,
+      input: { target: { kind: "organization", id: "org-1" }, file: imageFile(), isPublic: true },
+      // capability omitted → default false; must not affect an organization target.
+    })
+
+    expect(result.mediaId).toBe("media-created")
+    expect(created.attachments[0]).toMatchObject({ organizationId: "org-1" })
+  })
+
+  it("the author's URL-paste path stays OPEN without the file-upload capability", async () => {
+    const { db, created } = makeDb(authoredTechniqueState())
+
+    const result = await applyWebMediaUrlAttach({
+      db,
+      brand,
+      user: editorUser,
+      input: {
+        target: { kind: "technique", id: "tech-authored" },
+        url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      },
+    })
+
+    expect(result.mediaId).toBe("media-created")
+    expect(created.media[0]).toMatchObject({ type: "YOUTUBE" })
+  })
+})
+
 describe("web media URL attach (SESSION_0529 Slice 3B — member video path, no R2)", () => {
   const YT_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
   const YT_THUMB = "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
@@ -455,6 +539,26 @@ describe("web media reorder (SESSION_0529 Slice 3B — dnd sequencing persistenc
     )
     // Nothing was reordered.
     expect(attachments.find(row => row.id === "att-1")?.sortOrder).toBe(0)
+  })
+
+  it("rejects a PARTIAL subset (review fix P3 — must cover the target's FULL attachment set)", async () => {
+    const { db, attachments } = makeDb(authoredState())
+
+    await expectRejectsWithMessage(
+      applyWebMediaReorder({
+        db,
+        brand,
+        user: editorUser,
+        input: {
+          target: { kind: "technique", id: "tech-authored" },
+          // 2 of the 3 owned attachments — a partial write would leave duplicate sort positions.
+          attachmentIds: ["att-3", "att-1"],
+        },
+      }),
+      WEB_MEDIA_ERROR.REORDER_SET_INCOMPLETE,
+    )
+    expect(attachments.find(row => row.id === "att-1")?.sortOrder).toBe(0)
+    expect(attachments.find(row => row.id === "att-3")?.sortOrder).toBe(2)
   })
 })
 
