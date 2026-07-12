@@ -139,7 +139,12 @@ export const ADMIN_SECTION_GROUPS: AdminSectionGroup[] = [
         icon: AwardIcon,
         permission: APP_AREA_PERMISSIONS.certificates,
       },
-      { title: "Techniques", href: "/app/techniques", icon: SwordsIcon },
+      {
+        title: "Techniques",
+        href: "/app/techniques",
+        icon: SwordsIcon,
+        permission: APP_AREA_PERMISSIONS.techniques,
+      },
       {
         title: "Skill Levels",
         href: "/app/skill-levels",

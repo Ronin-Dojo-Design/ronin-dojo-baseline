@@ -2,8 +2,10 @@ import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
 
 // WL-P2-34 (ADR 0045): /app/claims, /app/organizations, /app/media migrated onto the ONE
-// AdminCollection frame. Temporary conformance smoke — asserts each migrated route renders
-// the shared DataTable frame (a <table>) under an admin session rather than crashing.
+// AdminCollection frame. FI-027 (SESSION_0530): /app/techniques is a SIBLING AdminCollection
+// (staff-only, `techniques.manage` — the admin role's `"*"` wildcard passes the inline guard).
+// Temporary conformance smoke — asserts each migrated route renders the shared DataTable frame
+// (a <table>) under an admin session rather than crashing.
 // Every test mints its own admin user; collect ALL ids so afterAll cleans up each one
 // (a single shared `let` only ever teardowns the last, leaking the rest into the shared DB).
 const createdUserIds: string[] = []
@@ -13,7 +15,7 @@ test.describe("AdminCollection conformance smoke", () => {
     for (const id of createdUserIds) await cleanupTestUser(id)
   })
 
-  for (const path of ["/app/claims", "/app/organizations", "/app/media"]) {
+  for (const path of ["/app/claims", "/app/organizations", "/app/media", "/app/techniques"]) {
     test(`admin sees the AdminCollection table at ${path}`, async ({ page }) => {
       const { userId } = await createAuthenticatedUser(page, { role: "admin" })
       createdUserIds.push(userId)

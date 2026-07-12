@@ -34,9 +34,12 @@ describe("admin sections config shape", () => {
     expect(byTitle.get("Posts")?.href).toBe("/app/blog")
     expect(byTitle.get("Privacy")?.href).toBe("/app/privacy/requests")
 
-    // Ungated items stay ungated (visible to every signed-in user).
+    // Events stays ungated (visible to every signed-in user).
     expect(byTitle.get("Events")?.permission).toBeUndefined()
-    expect(byTitle.get("Techniques")?.permission).toBeUndefined()
+
+    // Techniques is gated on `techniques.manage` (FI-027 — the AdminCollection index is
+    // staff-only; authors reach their `[id]`/`new` editors via the profile flow, not this nav).
+    expect(byTitle.get("Techniques")?.permission).toBe(APP_AREA_PERMISSIONS.techniques)
 
     // Lineage keeps its grantee flag + gate.
     expect(byTitle.get("Lineage")?.permission).toBe(APP_AREA_PERMISSIONS.lineage)
@@ -44,7 +47,7 @@ describe("admin sections config shape", () => {
 
     // Every other item is permission-gated.
     const gated = allItems.filter(item => item.permission != null)
-    expect(gated.length).toBe(34)
+    expect(gated.length).toBe(35)
   })
 })
 
@@ -58,27 +61,28 @@ describe("filterAdminSectionGroups", () => {
   it("guest (null user) sees only the ungated items, empty groups dropped", () => {
     const groups = filterAdminSectionGroups(null, false)
     const titles = groups.flatMap(group => group.items.map(item => item.title))
-    expect(titles.sort()).toEqual(["Events", "Techniques"])
-    // No dangling group labels: only the two groups holding ungated items remain.
-    expect(groups.map(group => group.key).sort()).toEqual(["community", "lineage"])
+    expect(titles.sort()).toEqual(["Events"])
+    // No dangling group labels: only the group holding the ungated Events item remains
+    // (Techniques is now gated, so the lineage group has no ungated item to keep it alive).
+    expect(groups.map(group => group.key).sort()).toEqual(["community"])
   })
 
   it("plain member matches guest (no *.manage grants)", () => {
     const groups = filterAdminSectionGroups(asUser("user"), false)
     const titles = groups.flatMap(group => group.items.map(item => item.title))
-    expect(titles.sort()).toEqual(["Events", "Techniques"])
+    expect(titles.sort()).toEqual(["Events"])
   })
 
   it("tournament_director additionally reaches Tournaments via its wildcard", () => {
     const groups = filterAdminSectionGroups(asUser("tournament_director"), false)
     const titles = groups.flatMap(group => group.items.map(item => item.title))
-    expect(titles.sort()).toEqual(["Events", "Techniques", "Tournaments"])
+    expect(titles.sort()).toEqual(["Events", "Tournaments"])
   })
 
   it("an active lineage grant admits the Lineage item (and only it)", () => {
     const groups = filterAdminSectionGroups(asUser("user"), true)
     const titles = groups.flatMap(group => group.items.map(item => item.title))
-    expect(titles.sort()).toEqual(["Events", "Lineage", "Techniques"])
+    expect(titles.sort()).toEqual(["Events", "Lineage"])
   })
 })
 
