@@ -4,8 +4,8 @@ slug: 0045-admin-collection-one-surface-law
 type: adr
 status: accepted
 created: 2026-07-07
-updated: 2026-07-07
-last_agent: claude-session-0510
+updated: 2026-07-12
+last_agent: claude-session-0530
 pairs_with:
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/architecture/decisions/0040-design-system-doctrine-and-card-architecture.md
