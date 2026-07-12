@@ -66,7 +66,11 @@ not a schema concept. No canonical-concept parent entity (YAGNI). Uniqueness spl
 - canonical (author `null`): unique on `(brand, organizationId, slug)` — partial index `WHERE
   author_passport_id IS NULL` (a plain composite `@@unique` with a nullable author column would let
   duplicate canonical rows through, since Postgres treats NULLs as distinct).
-- authored: unique on `(brand, organizationId, authorPassportId, slug)`.
+- authored (author non-null): unique on **`(brand, authorPassportId, slug)`** — partial index `WHERE
+  author_passport_id IS NOT NULL`, keyed off the **author, not the org**. So different authors can share
+  `(org, slug)` (= variants), but one author cannot duplicate their own `(brand, slug)` across schools
+  (a person's curriculum has one "armbar-from-guard"). Implemented `Technique_authored_slug_key`
+  (SESSION_0528 3A).
 
 ### D4 — `isFeatured` promotes into the canonical browse; attribution is preserved
 
