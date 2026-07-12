@@ -4,8 +4,8 @@ slug: agent-systems-map
 type: concept
 status: active
 created: 2026-06-29
-updated: 2026-06-30
-last_agent: claude-session-0476
+updated: 2026-07-12
+last_agent: claude-session-0529
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/rituals/opening.md
@@ -141,6 +141,39 @@ reads its operator-set order (`apps/web/scripts/board-backlog.ts`) and bow-out m
 step) that audits the Verification table for assertion-without-evidence; [Doug](../../agents/doug.md) owns
 "prove, don't assume"; `/verify` and `/fallow-fix-loop` re-prove behavior after a change. The five image
 stages map onto Petey-plan → Cody-build → Doug-verify → evidence-in-SESSION → bow-out-close.
+
+---
+
+## 5b. Epic lane recipe — the multi-slice build+verify chain (SESSION_0529, model-agnostic)
+
+The proven composition for a **multi-slice feature epic** (ran full-cycle at SESSION_0529: technique
+authoring 3B/3C — 6 commits, 3 reviewers, 5 distinct real defects caught pre-push, zero found after).
+**The quality lives in this chain, not in any model** — every defect traced to a process artifact
+(review-axis framing, adversarial live probes, hostile-close rules, gotcha-encoded constraints), so the
+recipe survives model swaps unchanged. Steps:
+
+1. **Gotcha-encoded brief.** The builder's dispatch carries the prior session's reviewer findings as
+   **HARD CONSTRAINTS** (named files + line-level mechanics), not as background reading. Source: the
+   previous SESSION's `Next session` block + the lane memory.
+2. **Structured deliverable contract.** The builder returns data, not prose: files table · exact gate
+   outputs · commit SHA · deviations-with-reasons · needs-sign-off flags. Every downstream handoff
+   (reviewers, operator gate) consumes it cheaply.
+3. **Parallel review wave — Giddy + Doug + (UI lane) Desi on the SAME commit.** Distinct lenses catch
+   distinct defect classes (0529: predicate drift ↔ server-open authz ↔ dead-end happy path — no overlap).
+   **Desi runs IN the wave whenever the diff touches member-facing UI** — dispatching her at close turns
+   her P1 into a push-gate scramble (the 0529 lesson).
+4. **One batched fix pass + the next slice in a single builder resume.** Collect all reviewer fix-nows
+   into ONE package (each its own commit), and let the same agent continue — `SendMessage` resume keeps
+   full context (0529: survived two session-limit kills with zero lost work). Don't respawn per fix.
+5. **Delta verify.** The verifier re-checks only the new commits — independent gate re-run (always incl.
+   `next build` if apps/web), adversarial probes on the NEW seams, commit-split integrity. Live-probe any
+   error-shape/serialization seam: one live probe outranks a green suite (the D-043 lesson).
+6. **Push gate.** Build + verify + show; the operator's explicit go releases the push
+   (explicit-push-authorization).
+
+**Model policy:** dispatches inherit the session model — `model:` overrides are *experiments*, recorded in
+the SESSION file's Operator line so no future reader treats a model as load-bearing. The roster
+(`.claude/agents/*.md`) stays model-unpinned.
 
 ---
 
