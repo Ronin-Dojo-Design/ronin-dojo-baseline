@@ -1,23 +1,18 @@
 "use client"
 
-import { CopyIcon, EllipsisIcon, TrashIcon } from "lucide-react"
+import { CopyIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
 import type { Category } from "~/.generated/prisma/browser"
 import { CategoriesDeleteDialog } from "~/app/app/categories/_components/categories-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem, DropdownMenuSeparator } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
 import { duplicateCategory } from "~/server/admin/categories/actions"
 
 type CategoryActionsProps = ComponentProps<typeof Button> & {
@@ -58,49 +53,28 @@ export const CategoryActions = ({ category, className, ...props }: CategoryActio
 
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
+      <RowActionsMenu className={className} {...props}>
+        {!isCategoryPage && (
+          <DropdownMenuItem render={<Link href={categoryPath} />}>Edit</DropdownMenuItem>
+        )}
 
-        <DropdownMenuContent align="end" sideOffset={8}>
-          {!isCategoryPage && (
-            <DropdownMenuItem render={<Link href={categoryPath} />}>Edit</DropdownMenuItem>
-          )}
+        <DropdownMenuItem render={<Link href={`/categories/${category.slug}`} target="_blank" />}>
+          View
+        </DropdownMenuItem>
 
-          <DropdownMenuItem render={<Link href={`/categories/${category.slug}`} target="_blank" />}>
-            View
-          </DropdownMenuItem>
+        <DropdownMenuSeparator />
 
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={handleDuplicate}>
-            <CopyIcon />
-            Duplicate
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenuItem onClick={handleDuplicate}>
+          <CopyIcon />
+          Duplicate
+        </DropdownMenuItem>
+      </RowActionsMenu>
 
       <CategoriesDeleteDialog
         categories={[category]}
         onExecute={() => router.push("/app/categories")}
       >
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<TrashIcon />}
-          className="text-red-500"
-          {...props}
-        />
+        <RowDeleteButton {...props} />
       </CategoriesDeleteDialog>
     </Stack>
   )

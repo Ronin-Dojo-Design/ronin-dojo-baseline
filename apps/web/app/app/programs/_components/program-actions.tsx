@@ -1,20 +1,16 @@
 "use client"
 
-import { EllipsisIcon, TrashIcon } from "lucide-react"
+import {} from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import type { Program } from "~/.generated/prisma/browser"
 import { ProgramsDeleteDialog } from "~/app/app/programs/_components/programs-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
 
 type ProgramActionsProps = ComponentProps<typeof Button> & {
   program: Program
@@ -29,35 +25,14 @@ export const ProgramActions = ({ program, className, ...props }: ProgramActionsP
 
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
-
-        <DropdownMenuContent align="end" sideOffset={8}>
-          {!isProgramPage && (
-            <DropdownMenuItem render={<Link href={programPath} />}>Edit</DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowActionsMenu className={className} {...props}>
+        {!isProgramPage && (
+          <DropdownMenuItem render={<Link href={programPath} />}>Edit</DropdownMenuItem>
+        )}
+      </RowActionsMenu>
 
       <ProgramsDeleteDialog programs={[program]} onExecute={() => router.push("/app/programs")}>
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<TrashIcon />}
-          className="text-red-500"
-          {...props}
-        />
+        <RowDeleteButton {...props} />
       </ProgramsDeleteDialog>
     </Stack>
   )

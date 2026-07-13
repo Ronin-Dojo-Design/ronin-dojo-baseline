@@ -1,23 +1,18 @@
 "use client"
 
-import { CopyIcon, EllipsisIcon, TrashIcon } from "lucide-react"
+import { CopyIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
 import type { Tag } from "~/.generated/prisma/browser"
 import { TagsDeleteDialog } from "~/app/app/tags/_components/tags-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem, DropdownMenuSeparator } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
 import { duplicateTag } from "~/server/admin/tags/actions"
 
 type TagActionsProps = ComponentProps<typeof Button> & {
@@ -58,44 +53,23 @@ export const TagActions = ({ tag, className, ...props }: TagActionsProps) => {
 
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
+      <RowActionsMenu className={className} {...props}>
+        {!isTagPage && <DropdownMenuItem render={<Link href={tagPath} />}>Edit</DropdownMenuItem>}
 
-        <DropdownMenuContent align="end" sideOffset={8}>
-          {!isTagPage && <DropdownMenuItem render={<Link href={tagPath} />}>Edit</DropdownMenuItem>}
+        <DropdownMenuItem render={<Link href={`/tags/${tag.slug}`} target="_blank" />}>
+          View
+        </DropdownMenuItem>
 
-          <DropdownMenuItem render={<Link href={`/tags/${tag.slug}`} target="_blank" />}>
-            View
-          </DropdownMenuItem>
+        <DropdownMenuSeparator />
 
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={handleDuplicate}>
-            <CopyIcon />
-            Duplicate
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenuItem onClick={handleDuplicate}>
+          <CopyIcon />
+          Duplicate
+        </DropdownMenuItem>
+      </RowActionsMenu>
 
       <TagsDeleteDialog tags={[tag]} onExecute={() => router.push("/app/tags")}>
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<TrashIcon />}
-          className="text-red-500"
-          {...props}
-        />
+        <RowDeleteButton {...props} />
       </TagsDeleteDialog>
     </Stack>
   )

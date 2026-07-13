@@ -1,21 +1,17 @@
 "use client"
 
-import { EllipsisIcon, TrashIcon } from "lucide-react"
+import {} from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import type { TournamentRole } from "~/.generated/prisma/browser"
 import { TournamentRolesDeleteDialog } from "~/app/app/tournaments/roles/_components/tournament-roles-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
-import { cx } from "~/lib/utils"
 
 type TournamentRoleActionsProps = Omit<ComponentProps<typeof Button>, "role"> & {
   role: TournamentRole
@@ -34,41 +30,13 @@ export const TournamentRoleActions = ({
 
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
-
-        <DropdownMenuContent align="end" sideOffset={8}>
-          {!isRolePage && (
-            <DropdownMenuItem render={<Link href={rolePath} />}>Edit</DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <RowActionsMenu className={className} {...props}>
+        {!isRolePage && <DropdownMenuItem render={<Link href={rolePath} />}>Edit</DropdownMenuItem>}
+      </RowActionsMenu>
 
       {role.isSystem ? (
         <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                variant="secondary"
-                size="sm"
-                prefix={<TrashIcon />}
-                className="text-red-500"
-                disabled
-                {...props}
-              />
-            }
-          />
+          <TooltipTrigger render={<RowDeleteButton disabled {...props} />} />
           <TooltipContent>System roles cannot be deleted</TooltipContent>
         </Tooltip>
       ) : (
@@ -76,13 +44,7 @@ export const TournamentRoleActions = ({
           roles={[role]}
           onExecute={() => router.push("/app/tournaments/roles")}
         >
-          <Button
-            variant="secondary"
-            size="sm"
-            prefix={<TrashIcon />}
-            className="text-red-500"
-            {...props}
-          />
+          <RowDeleteButton {...props} />
         </TournamentRolesDeleteDialog>
       )}
     </Stack>
