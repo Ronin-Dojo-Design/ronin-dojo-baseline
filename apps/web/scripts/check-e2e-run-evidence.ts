@@ -57,15 +57,25 @@ function baseRef(): string {
   return "HEAD"
 }
 
-/** Every path changed vs the base — committed, staged, unstaged, and untracked. */
-function changedPaths(base: string): Set<string> {
+/**
+ * Every path changed vs the base — committed, staged, unstaged, and untracked.
+ * Both git invocations run with `-C root` so their output is repo-root-relative
+ * regardless of the caller's cwd: `git diff --name-only` is always root-relative,
+ * but `git ls-files --others` is *cwd-relative*, so running the guard from
+ * `apps/web` (the documented recipe cwd) would otherwise emit untracked specs as
+ * `e2e/…` and slip the `apps/web/e2e/` filter — exactly the FS-0031 marquee case
+ * (a brand-new assertion). Pinning both to `root` keeps them consistent.
+ */
+function changedPaths(root: string, base: string): Set<string> {
   const paths = new Set<string>()
   // Working tree (incl. staged + unstaged committed changes) vs base.
-  for (const p of sh("git", ["diff", "--name-only", base]).split("\n")) {
+  for (const p of sh("git", ["-C", root, "diff", "--name-only", base]).split("\n")) {
     if (p) paths.add(p)
   }
   // New, not-yet-tracked files.
-  for (const p of sh("git", ["ls-files", "--others", "--exclude-standard"]).split("\n")) {
+  for (const p of sh("git", ["-C", root, "ls-files", "--others", "--exclude-standard"]).split(
+    "\n",
+  )) {
     if (p) paths.add(p)
   }
   return paths
@@ -98,7 +108,7 @@ function main() {
   const root = repoRoot()
   const base = baseRef()
 
-  const touched = [...changedPaths(base)].filter(p => p.startsWith(E2E_PREFIX)).sort()
+  const touched = [...changedPaths(root, base)].filter(p => p.startsWith(E2E_PREFIX)).sort()
   if (touched.length === 0) {
     console.log("✓ FS-0031 e2e-evidence guard: no apps/web/e2e/** diff — nothing to gate.")
     return
