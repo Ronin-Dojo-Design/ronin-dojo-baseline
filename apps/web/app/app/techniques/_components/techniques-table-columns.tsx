@@ -53,7 +53,7 @@ export const getColumns = (): ColumnDef<TechniqueAdminRow>[] => {
         row.original.isPublished ? (
           <Badge variant="success">Published</Badge>
         ) : (
-          <Badge variant="outline">Draft</Badge>
+          <Badge variant="soft">Draft</Badge>
         ),
     },
     {
