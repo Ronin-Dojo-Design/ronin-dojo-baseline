@@ -9,6 +9,9 @@
 # Prod-ops creds (Neon + BBL Resend sender); loaded via `bun --env-file=.env.prod`.
 # The tracked `.env.prod.example` documents the shape; the real `.env.prod` is NEVER committed.
 .env.prod
+# FS-0031 — local e2e DB overlay (copy of .env → ronindojo_e2e); loaded via `bun --env-file=.env.e2e`.
+# `.env.e2e.example` documents the shape; the real `.env.e2e` (real secrets) is NEVER committed.
+.env.e2e
 
 # dependencies
 node_modules
@@ -60,4 +63,6 @@ public/robots.txt
 playwright-report/
 test-results/
 e2e/.fixture.json
+# FS-0031 — local e2e run-evidence artifact (Playwright JSON reporter output for the pre-push guard).
+.e2e-run-evidence.json
 public/graphify.html

@@ -178,6 +178,28 @@ record "skipped." See [Graphify Repo Memory Runbook](../runbooks/dev-environment
 
 **Docs Navigator** ([docs-navigator runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never commit it.** `docs/index.html` is generated (~7 MB) and git-ignored; run `bun run docs:nav` whenever you want to browse the latest docs. It is not a close gate and must not enter a commit (it would churn megabytes every session).
 
+### 4c. E2E run-evidence guard (FS-0031)
+
+If this session's diff **touches `apps/web/e2e/**`** (any spec/helper), a new or changed Playwright
+assertion must have been **run locally** before it ships — FS-0031 was three consecutive red-`main`
+pushes from assertions "verified by inspection" because the suite couldn't be run locally. Before the
+pre-push gate:
+
+1. **Provision + seed the small e2e DB once** (idempotent — the heavy `ronindojo_prodsnap` times out
+   on cold admin-list pages, so use the dedicated `ronindojo_e2e`): `cd apps/web && bun run e2e:db:setup`.
+   Requires `apps/web/.env.e2e` (gitignored; shape in `.env.e2e.example` — copy `.env`, override
+   `DATABASE_URL`/`DIRECT_URL` to `ronindojo_e2e`).
+2. **Run the affected spec** against it (sidesteps the FS-0002-banned `bun dev`): start the e2e-bound
+   dev server `bun --env-file=.env.e2e next dev --turbo`, then `bun run test:e2e:local -- <spec>
+   --project=chromium`. This writes the run-evidence artifact `apps/web/.e2e-run-evidence.json`.
+3. **Gate the close on the evidence**: `bun run e2e:evidence:check`. It passes only when a fresh,
+   passing run covers every touched spec; it blocks (with the recipe) on missing/stale evidence.
+   Override only with a real reason: `bun run e2e:evidence:check --waiver="…"`.
+
+This is **not** an installed git hook (supply-chain caution — persistent hooks need explicit
+operator sign-off). You MAY wire a local `pre-push` hook that calls `bun run e2e:evidence:check`
+yourself; the repo ships the guard, not the hook.
+
 ### 5. Bow-out line
 
 State to the user (or in the SESSION file): "Bowed out — SESSION_NNNN closed. Next session goal: {one line}."
