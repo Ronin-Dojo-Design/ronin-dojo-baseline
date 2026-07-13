@@ -1,5 +1,6 @@
 "use client"
 
+import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
@@ -62,7 +63,7 @@ export const getColumns = (): ColumnDef<ProfileClaimRow>[] => {
     {
       accessorKey: "createdAt",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Requested" />,
-      cell: ({ row }) => <Note>{row.getValue<Date>("createdAt").toLocaleDateString()}</Note>,
+      cell: ({ row }) => <Note>{formatDate(row.getValue<Date>("createdAt"))}</Note>,
     },
   ]
 }

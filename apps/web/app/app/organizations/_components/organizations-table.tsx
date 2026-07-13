@@ -26,7 +26,7 @@ export function OrganizationsTable({ organizationsPromise }: OrganizationsTableP
       pageCount={pageCount}
       sorting={sort}
       pageSize={perPage}
-      emptyState="No organizations found. Create one first."
+      emptyState="No organizations found."
     />
   )
 }
