@@ -30,7 +30,7 @@ Recipe (sidesteps the FS-0002-banned \`bun dev\` + the heavy prodsnap tx-timeout
 
   cd apps/web
   bun run e2e:db:setup                                  # small seeded ronindojo_e2e (idempotent)
-  bun --env-file=.env.e2e next dev --turbo &            # dev server on the e2e DB (reused by Playwright)
+  bun run dev:e2e &                                     # loadEnvFile launcher — NOT \`bun --env-file next dev\` (poisons Turbopack's PostCSS worker; FS-0031)
   bun run test:e2e:local -- <spec> --project=chromium   # runs + writes .e2e-run-evidence.json
 
 Then re-run this guard. Override only with a real reason:

@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-07-13
-last_agent: claude-session-0533
+last_agent: claude-session-0534
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -573,6 +573,7 @@ boundary is what keeps the family out of the god-component trap.
 | `RowDeleteButton` | `apps/web/components/admin/row-delete-button.tsx` | `...Button` props | Trailing icon-only red `TrashIcon` (`aria-label="Delete"`). Composes as a `*DeleteDialog` trigger. Standardized the a11y label across surfaces (tool/media were previously unlabelled). |
 | `selectColumn<TData>()` | `apps/web/components/data-table/select-column.tsx` | — (factory) | Parameterless `RowCheckbox` select `ColumnDef` (header indeterminate-ref + row). 5 surfaces legitimately do NOT consume it (certificates/courses/programs/tournaments use a different Base-UI `Checkbox`/shift-select; users has a per-row `disabled` account-gate). |
 | `postStatusBadgeProps` / `postStatusIcon` | `apps/web/components/common/post-status.tsx` | `Record<PostStatus, …>` | Post status badge/facet-glyph vocabulary, mirrors `tool-status.tsx`. Deliberately SEPARATE from `tool-status` (distinct enum) — not a generic god-map. Exhaustive `Record` ⇒ a future 4th status is a compile error. |
+| `AccountActionItems` (SESSION_0534) | `apps/web/app/app/users/_components/account-action-items.tsx` | `{ user: Pick<User,"id"\|"role"\|"banned"> }` | Route-local fragment (NOT a global component) of the shared account-action menu items — Role submenu (`updateUserRole`) + ban/unban + Revoke Sessions — as `RowActionsMenu` children. Consumed by both `person-actions` (list kebab, wraps it after a detail-link item) and `user-actions` (detail account panel, renders it unconditionally). **Invariant: extract the ITEMS, keep the GATING at each caller** — the `!isAdmin` ban predicate is a single copy inside, but the accountless/self guards + delete-per-caller stay outside. |
 
 ## How to update this file
 

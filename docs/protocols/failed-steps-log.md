@@ -691,6 +691,17 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   the assertion carries its own data. The empty-state "No results." row is a `tbody tr` — asserting `tbody
   tr` visible does NOT prove real data exists. Candidate infra: align `setup-e2e-db.ts` to CI's minimal
   shape so local == CI by default.
+- **Candidate infra LANDED (SESSION_0534, `f101ac30`+`66fa0763`).** `setup-e2e-db.ts` stripped to CI's minimal
+  shape (`migrate deploy` only — zero posts/orgs; the tournament fixture is added by Playwright `globalSetup`,
+  matching CI), so a local run reproduces CI's data state **by default**. The two conformance assertions that
+  needed data now **self-seed in-test** via `createOrg`/`deleteOrg` bridges (the A1 pattern). The org-sort test
+  briefly **re-introduced this very anti-pattern** (an absolute desc-first-row `toContainText("Zenith")` coupled
+  to global DB state — two sibling specs seed lexically-greater org names); caught by Doug's full-suite run +
+  collation probe and replaced with a hermetic relative-flip assertion (5/5 isolation). Also fixed the
+  `NODE_OPTIONS`-poisoning dev recipe (→ `bun run dev:e2e` `loadEnvFile` launcher; corrective-action (b) above +
+  `closing.md §4c` updated). The 0533 kebab-codemod empty-import residual did **not** recur (both 0534 Codys
+  pruned emptied imports). **Residual:** the `check-e2e-run-evidence.ts` guard's own printed recipe still shows
+  the poisoning `bun --env-file … next dev` form — fixed to `bun run dev:e2e` at SESSION_0534 close.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
