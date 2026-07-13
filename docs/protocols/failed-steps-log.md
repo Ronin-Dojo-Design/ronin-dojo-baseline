@@ -653,15 +653,18 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   ~120K "dumb zone."
 - **Corrective action:** (a) this FS entry; (b) **the rule — never land a new/changed e2e assertion without
   running the affected spec locally first**, via the reuse-existing-server recipe that sidesteps the banned
-  `bun dev`: start `npx next dev --turbo`, then `CI= npx playwright test <spec> -g "<name>" --project=chromium`
-  (Playwright's `reuseExistingServer: !CI` reuses the running server); (c) prefer selectors a *passing* sibling
+  `bun dev`: start the e2e dev server `bun run dev:e2e`, then `bun run test:e2e:local -- <spec> -g "<name>"
+  --project=chromium` (SESSION_0534: use `test:e2e:local`, NOT a direct `CI= npx playwright test …` — the
+  latter's `auth-db.ts` bridge subprocess auto-loads `.env`/prodsnap, minting the admin session in the wrong
+  DB, so every `/app/*` route 307s and no table renders; `reuseExistingServer: !CI` still reuses the server);
+  (c) prefer selectors a *passing* sibling
   test already exercises over role-NAME on components that set `aria-label`; (d) **queued next-session infra
   (the real fix):** a dedicated small **seeded e2e DB** (not the prodsnap) so heavy pages render locally, + a
   bow-out/pre-push guard that blocks an `e2e/`-touching diff without evidence the affected spec ran (or an
   explicit waiver). Belongs to [Pattern 2 — "green isn't verified"] alongside FS-0028 / the 0495/0511 e2e misses.
-- **Verification:** `CI= npx playwright test admin-collection-conformance -g "Draft editorial queue"` renders the
-  real table + the Drafts facet in CI (green at `33e7b275`; local run blocked by the prodsnap tx-timeout, which
-  is itself the (b) root cause). CI E2E green at `33e7b275`.
+- **Verification:** `bun run test:e2e:local -- admin-collection-conformance -g "Draft editorial queue"
+  --project=chromium` renders the real table + the Drafts facet (against the seeded `ronindojo_e2e`, after
+  `bun run dev:e2e`; CI green at `33e7b275`). CI E2E green at `33e7b275`.
 - **Status:** **RESOLVED (SESSION_0533).** Infra mechanization LANDED: a dedicated small seeded
   `ronindojo_e2e` DB (`apps/web/scripts/setup-e2e-db.ts`, idempotent, refuses non-e2e DB names) + a local-run
   launcher (`scripts/run-e2e-local.ts` + `.env.e2e`) that sidesteps the prodsnap tx-timeout + an

@@ -169,6 +169,13 @@ test.describe("AdminCollection conformance smoke", () => {
   // sortable but the query hard-coded `orderBy`. Sort is now threaded through the query, so a
   // header sort must (a) write the `sort` param to the URL and (b) re-order rows server-side.
   test("sorting the Organizations table by name desc changes row order", async ({ page }) => {
+    // Self-sufficiency (P2-1): this test must not depend on a sibling test compiling /app/organizations
+    // first. In cold `-g` isolation THIS test pays the route's first Turbopack dev compile, which on a
+    // loaded dev box can run well past a minute, so give it a generous ceiling (only ever consumed on a
+    // cold+loaded machine — CI's faster runner + retries never approach it) and commit the nav early
+    // (below) rather than waiting on the full `load`.
+    test.setTimeout(180_000)
+
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     createdUserIds.push(userId)
 
@@ -183,12 +190,14 @@ test.describe("AdminCollection conformance smoke", () => {
     ])
 
     try {
-      await page.goto("/app/organizations")
-      await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+      // `waitUntil: "commit"` returns as soon as the document response starts (absorbs the cold-compile
+      // wait within the goto's own budget) — the explicit anchors below drive the render wait.
+      await page.goto("/app/organizations", { waitUntil: "commit", timeout: 120_000 })
+      await expect(page.locator("table").first()).toBeVisible({ timeout: 90_000 })
       // Wait for the seeded rows so we don't read the Suspense skeleton. Default sort is `name asc`,
       // so the alphabetically-first seeded org ("E2E Aikido House") anchors the first row.
       await expect(page.getByRole("cell", { name: /E2E Aikido House/ })).toBeVisible({
-        timeout: 30_000,
+        timeout: 90_000,
       })
 
       const firstCell = page.locator("tbody tr td:first-child").first()
@@ -204,9 +213,15 @@ test.describe("AdminCollection conformance smoke", () => {
       await expect(page).toHaveURL(/sort=.*name/)
       await expect(page).toHaveURL(/desc/)
 
-      // (b) the server re-orders: the first row flips to the alphabetically-last seeded org.
-      await expect(firstCell).not.toHaveText(beforeFirst)
-      await expect(firstCell).toContainText("E2E Zenith BJJ")
+      // (b) the server re-orders. Assert ONLY the RELATIVE flip of our two bracketing orgs — the desc
+      // first-row is no longer the asc-first ("E2E Aikido House"). NEVER assert an ABSOLUTE desc
+      // first-row (e.g. "Zenith"): a leftover org from a crashed sibling spec can sort lexically AFTER
+      // "Zenith" (en_US.UTF-8) and take the desc first-row, which would falsely redden this gate — the
+      // FS-0031 anti-pattern (coupling an assertion to global DB state). The desc sort re-queries and
+      // re-streams the table server-side, which lags on a loaded dev box, so these carry a generous
+      // timeout — each resolves the instant the first row actually changes (deterministic, not a sleep).
+      await expect(firstCell).not.toHaveText(beforeFirst, { timeout: 30_000 })
+      await expect(firstCell).not.toContainText("E2E Aikido House", { timeout: 30_000 })
     } finally {
       deleteTestOrg(alpha.id)
       deleteTestOrg(omega.id)
