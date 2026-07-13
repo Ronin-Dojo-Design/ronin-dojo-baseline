@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-08
-last_agent: claude-session-0514
+updated: 2026-07-13
+last_agent: claude-session-0532
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -628,6 +628,42 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** `for id in FI-020..FI-029; grep -rl` sweep run SESSION_0520 — FI-022–026 unique,
   FI-026+ free; SESSION_0520/POST_LAUNCH_SOT/goals-ledger now agree.
 - **Status:** mitigated (manual rule); mechanization open.
+
+### FS-0031 — E2E assertions shipped "verified by inspection"; reddened `main` three times in one session
+
+- **Session:** SESSION_0532 (Claude, orchestrator). The originating unrun test came from the SESSION_0531
+  Codex-takeover batch; the two failed "fixes" were the orchestrator's own.
+- **Step failed:** a new Playwright assertion (`e2e/admin/admin-collection-conformance.spec.ts` — "Posts opens
+  on the visible Draft editorial queue") was added and then "fixed" **twice** without ever being *run*, so it
+  reddened `main` e2e three consecutive pushes. Each was "verified by inspection": (1) the original test asserted
+  column headers by role-NAME, but a sortable `DataTableColumnHeader` sets `aria-label` = the sort-state sentence,
+  which OVERRIDES the accessible name — `columnheader { name: /Title/ }` can never match; (2) fix #1 changed only
+  the locator's *scope*, not the failing query (couldn't work); (3) fix #2 (`.filter({hasText})`) was plausible
+  but untested. Only when the orchestrator finally **drove the real surface** (a throwaway DOM-dump spec) did the
+  real cause surface — and fix #3, grounded in the selectors a *passing sibling test* already exercises, went
+  green. This is the exact [[learning-record-0009]] failure ("green isn't verified") committed *by the author of
+  LR 0009, in the same session as writing it.*
+- **Root cause:** the e2e suite **cannot be run locally as-configured**, so authors default to inspection.
+  Two stacked blockers: (a) `playwright.config.ts` `webServer.command` is `bun run dev` — **FS-0002-banned**, so
+  "just run the e2e" isn't a reflex; (b) the local DB is the full **`ronindojo_prodsnap`**, too heavy for some
+  pages — `/app/blog`'s list `$transaction` times out on the cold first hit, so the page never renders locally
+  even when you do run it. CI's small seeded DB renders fine, so the gap is invisible until CI.
+- **Impact:** LOW for prod (Playwright is decoupled from the Vercel deploy — the feature worked throughout), but
+  it reddened `main`'s e2e workflow across three pushes and burned three CI cycles + operator time deep in the
+  ~120K "dumb zone."
+- **Corrective action:** (a) this FS entry; (b) **the rule — never land a new/changed e2e assertion without
+  running the affected spec locally first**, via the reuse-existing-server recipe that sidesteps the banned
+  `bun dev`: start `npx next dev --turbo`, then `CI= npx playwright test <spec> -g "<name>" --project=chromium`
+  (Playwright's `reuseExistingServer: !CI` reuses the running server); (c) prefer selectors a *passing* sibling
+  test already exercises over role-NAME on components that set `aria-label`; (d) **queued next-session infra
+  (the real fix):** a dedicated small **seeded e2e DB** (not the prodsnap) so heavy pages render locally, + a
+  bow-out/pre-push guard that blocks an `e2e/`-touching diff without evidence the affected spec ran (or an
+  explicit waiver). Belongs to [Pattern 2 — "green isn't verified"] alongside FS-0028 / the 0495/0511 e2e misses.
+- **Verification:** `CI= npx playwright test admin-collection-conformance -g "Draft editorial queue"` renders the
+  real table + the Drafts facet in CI (green at `33e7b275`; local run blocked by the prodsnap tx-timeout, which
+  is itself the (b) root cause). CI E2E green at `33e7b275`.
+- **Status:** mitigated (rule + recipe); infra mechanization (seeded e2e DB + `e2e/`-diff guard) **open** —
+  next-session lane.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
