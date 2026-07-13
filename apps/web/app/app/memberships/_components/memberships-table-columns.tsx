@@ -7,17 +7,11 @@
 
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import { ArrowRightIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react"
+import { ArrowRightIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { DropdownMenuItem, DropdownMenuSeparator } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
@@ -145,31 +139,23 @@ function MembershipRowActions({ membership }: { membership: MembershipRow }) {
   }
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
-        }
-      />
-
-      <DropdownMenuContent align="end" sideOffset={8}>
-        {validTransitions.map(target => (
-          <DropdownMenuItem
-            key={target}
-            onClick={() => handleTransition(target as MembershipRow["status"])}
-          >
-            <ArrowRightIcon className="mr-2 size-4" />
-            Transition to {target}
-          </DropdownMenuItem>
-        ))}
-
-        {validTransitions.length > 0 && <DropdownMenuSeparator />}
-
-        <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-          <TrashIcon className="mr-2 size-4" />
-          Delete
+    <RowActionsMenu>
+      {validTransitions.map(target => (
+        <DropdownMenuItem
+          key={target}
+          onClick={() => handleTransition(target as MembershipRow["status"])}
+        >
+          <ArrowRightIcon className="mr-2 size-4" />
+          Transition to {target}
         </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      ))}
+
+      {validTransitions.length > 0 && <DropdownMenuSeparator />}
+
+      <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+        <TrashIcon className="mr-2 size-4" />
+        Delete
+      </DropdownMenuItem>
+    </RowActionsMenu>
   )
 }

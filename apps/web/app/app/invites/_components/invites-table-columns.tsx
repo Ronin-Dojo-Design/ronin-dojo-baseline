@@ -2,17 +2,11 @@
 
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import { CopyIcon, MoreHorizontalIcon, ShieldXIcon, TrashIcon } from "lucide-react"
+import { CopyIcon, ShieldXIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { DropdownMenuItem, DropdownMenuSeparator } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
@@ -121,39 +115,31 @@ function InviteRowActions({ invite }: { invite: InviteRow }) {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="ghost" size="sm" prefix={<MoreHorizontalIcon />} aria-label="Actions" />
-        }
-      />
+    <RowActionsMenu>
+      <DropdownMenuItem onClick={copyLink}>
+        <CopyIcon className="mr-2 size-4" />
+        Copy invite link
+      </DropdownMenuItem>
 
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={copyLink}>
-          <CopyIcon className="mr-2 size-4" />
-          Copy invite link
-        </DropdownMenuItem>
+      <DropdownMenuItem render={<Link href={`/app/invites/${invite.id}`} />}>
+        View details
+      </DropdownMenuItem>
 
-        <DropdownMenuItem render={<Link href={`/app/invites/${invite.id}`} />}>
-          View details
-        </DropdownMenuItem>
+      {invite.status === "PENDING" && (
+        <>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleRevoke} className="text-destructive">
+            <ShieldXIcon className="mr-2 size-4" />
+            Revoke
+          </DropdownMenuItem>
+        </>
+      )}
 
-        {invite.status === "PENDING" && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleRevoke} className="text-destructive">
-              <ShieldXIcon className="mr-2 size-4" />
-              Revoke
-            </DropdownMenuItem>
-          </>
-        )}
-
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleDelete} className="text-destructive">
-          <TrashIcon className="mr-2 size-4" />
-          Delete
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={handleDelete} className="text-destructive">
+        <TrashIcon className="mr-2 size-4" />
+        Delete
+      </DropdownMenuItem>
+    </RowActionsMenu>
   )
 }
