@@ -6,22 +6,27 @@ import { use, useMemo } from "react"
 import { type Tool, ToolStatus, ToolTier } from "~/.generated/prisma/browser"
 import { getColumns } from "~/app/app/tools/_components/tools-table-columns"
 import { ToolsTableToolbarActions } from "~/app/app/tools/_components/tools-table-toolbar-actions"
+import { AdminCollection } from "~/components/admin/admin-collection"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
 import { toolStatusIcon } from "~/components/common/tool-status"
-import { DataTable } from "~/components/data-table/data-table"
-import { DataTableHeader } from "~/components/data-table/data-table-header"
-import { DataTableToolbar } from "~/components/data-table/data-table-toolbar"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
 import { tiersConfig } from "~/config/tiers"
-import { useDataTable } from "~/hooks/use-data-table"
 import type { findTools } from "~/server/admin/tools/queries"
 import { toolsTableParamsSchema } from "~/server/admin/tools/schema"
 import type { DataTableFilterField } from "~/types"
 
 type ToolsTableProps = {
   toolsPromise: ReturnType<typeof findTools>
+}
+
+// Module-scoped so the reference is stable across renders (the hook keys its filter-parser memo
+// off this identity — see AdminCollection's `initialState` contract). Tools is a NON-defaulted
+// collection (no `columnFilters`): clearing a facet removes the param entirely.
+const TOOLS_INITIAL_STATE = {
+  columnVisibility: { submitterEmail: false, createdAt: false },
+  columnPinning: { right: ["actions"] },
 }
 
 export function ToolsTable({ toolsPromise }: ToolsTableProps) {
@@ -64,44 +69,37 @@ export function ToolsTable({ toolsPromise }: ToolsTableProps) {
     },
   ]
 
-  const { table } = useDataTable({
-    data: tools,
-    columns,
-    pageCount,
-    filterFields,
-    shallow: false,
-    clearOnDefault: true,
-    initialState: {
-      pagination: { pageIndex: 0, pageSize: perPage },
-      sorting: sort,
-      columnVisibility: { submitterEmail: false, createdAt: false },
-      columnPinning: { right: ["actions"] },
-    },
-    getRowId: originalRow => originalRow.id,
-  })
-
   return (
-    <DataTable table={table}>
-      <DataTableHeader
-        title="Listings"
-        total={total}
-        callToAction={
-          <Button
-            variant="primary"
-            size="md"
-            prefix={<PlusIcon />}
-            render={<Link href="/app/tools/new" />}
-          >
-            <div className="max-sm:sr-only">New listing</div>
-          </Button>
-        }
-      >
-        <DataTableToolbar table={table} filterFields={filterFields}>
+    <AdminCollection
+      title="Listings"
+      total={total}
+      data={tools}
+      columns={columns}
+      pageCount={pageCount}
+      filterFields={filterFields}
+      sorting={sort}
+      pageSize={perPage}
+      initialState={TOOLS_INITIAL_STATE}
+      emptyState="No listings found."
+      getRowId={originalRow => originalRow.id}
+      callToAction={
+        <Button
+          variant="primary"
+          size="md"
+          prefix={<PlusIcon />}
+          render={<Link href="/app/tools/new" />}
+        >
+          <div className="max-sm:sr-only">New listing</div>
+        </Button>
+      }
+    >
+      {table => (
+        <>
           <ToolsTableToolbarActions table={table} />
           <DateRangePicker align="end" />
           <DataTableViewOptions table={table} />
-        </DataTableToolbar>
-      </DataTableHeader>
-    </DataTable>
+        </>
+      )}
+    </AdminCollection>
   )
 }
