@@ -102,6 +102,39 @@ test.describe("AdminCollection conformance smoke", () => {
     await expect(page).not.toHaveURL(/status=/)
   })
 
+  // SESSION_0533 WL-P2-54 (A1 guard): the row-action shell is being refactored onto the shared
+  // `RowActionsMenu` + `RowDeleteButton` primitives. Pin the destructive path this rewires — the
+  // kebab exposes Edit/View, and the trailing red trash opens the shared `DeleteDialog` confirm
+  // (its confirm control is `aria-label="Delete post"`), with Cancel dismissing without navigating.
+  test("Posts row actions: kebab exposes Edit/View and the trash opens a cancellable confirm", async ({
+    page,
+  }) => {
+    const { userId } = await createAuthenticatedUser(page, { role: "admin" })
+    createdUserIds.push(userId)
+
+    await page.goto("/app/blog")
+    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+    // The Drafts-first queue must have at least one row for the row actions to exist.
+    await expect(page.locator("tbody tr").first()).toBeVisible({ timeout: 30_000 })
+
+    // Open the first row's kebab: Edit + View menu items render.
+    await page.getByRole("button", { name: "Open menu" }).first().click()
+    await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible()
+    await expect(page.getByRole("menuitem", { name: "View" })).toBeVisible()
+    // Dismiss the menu so its positioner doesn't intercept the trash click.
+    await page.keyboard.press("Escape")
+
+    // The trailing red trash (aria-label="Delete") opens the shared DeleteDialog confirm.
+    await page.getByRole("button", { name: "Delete", exact: true }).first().click()
+    await expect(page.getByText("Are you sure?")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Delete post" })).toBeVisible()
+
+    // Cancel dismisses the confirm without navigating away from /app/blog.
+    await page.getByRole("button", { name: "Cancel" }).click()
+    await expect(page.getByText("Are you sure?")).toBeHidden()
+    await expect(page).toHaveURL(/\/app\/blog(\?|$)/)
+  })
+
   // SESSION_0515 (Giddy MED): the claims/orgs `sort` param was a dead wire — the header rendered
   // sortable but the query hard-coded `orderBy`. Sort is now threaded through the query, so a
   // header sort must (a) write the `sort` param to the URL and (b) re-order rows server-side.
