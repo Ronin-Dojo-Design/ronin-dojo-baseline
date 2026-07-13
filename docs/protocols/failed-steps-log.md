@@ -671,6 +671,17 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   Turbopack's PostCSS-worker `NODE_OPTIONS` → the closing.md §4c recipe should move to a `loadEnvFile`
   launcher; and the WL-P2-60 kebab codemod left 11 empty `import {}` lines (a codemod should prune emptied
   imports).
+- **In-session recurrence (FS-0031's own lesson, immediately):** the SESSION_0533 close push reddened
+  `main`'s chromium e2e — the new A1 test (`admin-collection-conformance.spec.ts:109`) asserted a Posts
+  row-action on the **Drafts-first default view**, which requires a draft row. The **local `ronindojo_e2e`
+  seed has 1 draft** (WL-P2-58), so it passed locally + the evidence guard was green; but **CI's e2e DB
+  has published posts and ZERO drafts**, so the Drafts-default was empty → no kebab → timeout. **Root gap:
+  the FS-0031 local e2e seed does NOT mirror CI's data shape** — "runs green locally" on a differently-seeded
+  DB ≠ "runs green in CI." Fixed forward (SESSION_0533): the A1 test now acts on the **All view**
+  (`?status=`, seed-independent w.r.t. draft count), verified locally against a reproduced 0-draft state
+  (10/10). **Standing rule added:** a new/changed e2e assertion must be run locally against a DB whose
+  **data shape matches CI** (empty/minimal), OR seed its own fixture in-test — never rely on a richer local
+  seed. Candidate infra: align `scripts/setup-e2e-db.ts` to CI's minimal shape, or add per-spec fixtures.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 

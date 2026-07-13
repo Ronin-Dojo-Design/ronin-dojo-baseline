@@ -112,9 +112,12 @@ test.describe("AdminCollection conformance smoke", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     createdUserIds.push(userId)
 
-    await page.goto("/app/blog")
+    // Open the ALL view (explicit-empty `?status=`), NOT the Drafts-first default — CI's seed has
+    // published posts but ZERO drafts, so the Drafts-default queue is empty and would have no row to
+    // act on (FS-0031/LR-0009: green-locally-on-a-seeded-DB ≠ green-in-CI). The All view has ≥1 post
+    // in both CI and local, so the row-action assertions are seed-independent w.r.t. draft count.
+    await page.goto("/app/blog?status=")
     await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
-    // The Drafts-first queue must have at least one row for the row actions to exist.
     await expect(page.locator("tbody tr").first()).toBeVisible({ timeout: 30_000 })
 
     // Open the first row's kebab: Edit + View menu items render.
