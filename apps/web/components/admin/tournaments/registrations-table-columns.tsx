@@ -4,12 +4,12 @@ import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import Link from "next/link"
 import type { PaymentStatus, RegistrationStatus } from "~/.generated/prisma/browser"
-import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { RegistrationActions } from "~/components/admin/tournaments/registration-actions"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
+import { selectColumn } from "~/components/data-table/select-column"
 
 export type RegistrationRow = {
   id: string
@@ -41,33 +41,7 @@ const PAYMENT_VARIANT: Record<string, "success" | "warning" | "danger" | "soft">
 
 export function getRegistrationColumns(): ColumnDef<RegistrationRow>[] {
   return [
-    {
-      id: "select",
-      enableSorting: false,
-      enableHiding: false,
-      header: ({ table }) => (
-        <RowCheckbox
-          checked={table.getIsAllPageRowsSelected()}
-          ref={input => {
-            if (input) {
-              input.indeterminate =
-                table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
-            }
-          }}
-          onChange={e => table.toggleAllPageRowsSelected(e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row, table }) => (
-        <RowCheckbox
-          checked={row.getIsSelected()}
-          onChange={e => row.toggleSelected(e.target.checked)}
-          aria-label="Select row"
-          table={table}
-          row={row}
-        />
-      ),
-    },
+    selectColumn<RegistrationRow>(),
     {
       accessorKey: "user.name",
       enableHiding: false,

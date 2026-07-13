@@ -4,11 +4,11 @@ import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { HashIcon } from "lucide-react"
 import { PricingPlanActions } from "~/app/app/pricing-plans/_components/pricing-plan-actions"
-import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { selectColumn } from "~/components/data-table/select-column"
 import type { findPricingPlans } from "~/server/admin/pricing-plans/queries"
 
 type PricingPlanRow = Awaited<ReturnType<typeof findPricingPlans>>["pricingPlans"][number]
@@ -33,33 +33,7 @@ const modelLabels: Record<string, string> = {
 
 export const getColumns = (): ColumnDef<PricingPlanRow>[] => {
   return [
-    {
-      id: "select",
-      enableSorting: false,
-      enableHiding: false,
-      header: ({ table }) => (
-        <RowCheckbox
-          checked={table.getIsAllPageRowsSelected()}
-          ref={input => {
-            if (input) {
-              input.indeterminate =
-                table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
-            }
-          }}
-          onChange={e => table.toggleAllPageRowsSelected(e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row, table }) => (
-        <RowCheckbox
-          checked={row.getIsSelected()}
-          onChange={e => row.toggleSelected(e.target.checked)}
-          aria-label="Select row"
-          table={table}
-          row={row}
-        />
-      ),
-    },
+    selectColumn<PricingPlanRow>(),
     {
       accessorKey: "name",
       enableHiding: false,

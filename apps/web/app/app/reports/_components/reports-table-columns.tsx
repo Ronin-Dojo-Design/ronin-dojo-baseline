@@ -4,42 +4,16 @@ import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { Report, Tool } from "~/.generated/prisma/browser"
 import { ReportActions } from "~/app/app/reports/_components/report-actions"
-import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { selectColumn } from "~/components/data-table/select-column"
 import { reportsConfig } from "~/config/reports"
 
 export const getColumns = (): ColumnDef<Report>[] => {
   return [
-    {
-      id: "select",
-      enableSorting: false,
-      enableHiding: false,
-      header: ({ table }) => (
-        <RowCheckbox
-          checked={table.getIsAllPageRowsSelected()}
-          ref={input => {
-            if (input) {
-              input.indeterminate =
-                table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
-            }
-          }}
-          onChange={e => table.toggleAllPageRowsSelected(e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row, table }) => (
-        <RowCheckbox
-          checked={row.getIsSelected()}
-          onChange={e => row.toggleSelected(e.target.checked)}
-          aria-label="Select row"
-          table={table}
-          row={row}
-        />
-      ),
-    },
+    selectColumn<Report>(),
     {
       accessorKey: "id",
       enableSorting: false,

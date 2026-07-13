@@ -5,11 +5,11 @@ import type { ColumnDef } from "@tanstack/react-table"
 import type { ComponentProps } from "react"
 import { ContentAtomStatus } from "~/.generated/prisma/browser"
 import { ContentAtomActions } from "~/app/app/content/_components/content-atom-actions"
-import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
+import { selectColumn } from "~/components/data-table/select-column"
 import type { findContentAtoms } from "~/server/admin/content/queries"
 
 type ContentAtomRow = Awaited<ReturnType<typeof findContentAtoms>>["atoms"][number]
@@ -25,33 +25,7 @@ export const getColumns = (): ColumnDef<ContentAtomRow>[] => {
   }
 
   return [
-    {
-      id: "select",
-      enableSorting: false,
-      enableHiding: false,
-      header: ({ table }) => (
-        <RowCheckbox
-          checked={table.getIsAllPageRowsSelected()}
-          ref={input => {
-            if (input) {
-              input.indeterminate =
-                table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
-            }
-          }}
-          onChange={e => table.toggleAllPageRowsSelected(e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row, table }) => (
-        <RowCheckbox
-          checked={row.getIsSelected()}
-          onChange={e => row.toggleSelected(e.target.checked)}
-          aria-label="Select row"
-          table={table}
-          row={row}
-        />
-      ),
-    },
+    selectColumn<ContentAtomRow>(),
     {
       accessorKey: "title",
       enableHiding: false,

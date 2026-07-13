@@ -9,7 +9,6 @@ import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
 import { ArrowRightIcon, MoreHorizontalIcon, TrashIcon } from "lucide-react"
 import { toast } from "sonner"
-import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import {
@@ -22,6 +21,7 @@ import {
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
+import { selectColumn } from "~/components/data-table/select-column"
 import { deleteMemberships, transitionMembershipStatus } from "~/server/admin/memberships/actions"
 import { VALID_TRANSITIONS } from "~/server/admin/memberships/constants"
 import type { findMemberships } from "~/server/admin/memberships/queries"
@@ -42,33 +42,7 @@ const statusVariant: Record<
 
 export const getColumns = (): ColumnDef<MembershipRow>[] => {
   return [
-    {
-      id: "select",
-      enableSorting: false,
-      enableHiding: false,
-      header: ({ table }) => (
-        <RowCheckbox
-          checked={table.getIsAllPageRowsSelected()}
-          ref={input => {
-            if (input) {
-              input.indeterminate =
-                table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected()
-            }
-          }}
-          onChange={e => table.toggleAllPageRowsSelected(e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row, table }) => (
-        <RowCheckbox
-          checked={row.getIsSelected()}
-          onChange={e => row.toggleSelected(e.target.checked)}
-          aria-label="Select row"
-          table={table}
-          row={row}
-        />
-      ),
-    },
+    selectColumn<MembershipRow>(),
     {
       id: "name",
       accessorKey: "user.name",
