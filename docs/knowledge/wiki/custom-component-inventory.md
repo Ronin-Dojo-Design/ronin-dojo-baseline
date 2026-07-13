@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-12
-last_agent: claude-session-0529
+updated: 2026-07-13
+last_agent: claude-session-0533
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -559,6 +559,20 @@ The member-facing authoring surface on the 3A two-axis ownership foundation. Reu
 | `MediaAttachmentManager` knobs | `apps/web/components/web/media/media-attachment-manager.tsx` | `allowUpload` / `allowUrlAttach` / `sortable` (all default-off) | Presentation-row toggles on the ONE media pipeline (member sheet: URL-paste ON, R2 upload OFF — the server independently gates file upload via `canUploadMediaForUser` on technique targets). Split-trigger: 4th boolean knob or first knob×knob conditional (WL-P2-49). |
 | `findAuthoredTechnique` / `findAuthoredCurriculum` | `apps/web/server/web/techniques/queries.ts` | author-keyed reads, NO discovery filter | The UN-gated authored reads (profile watch + Curriculum rail). `where` ALWAYS carries `authorPassportId` + `isPublished` — never let these become a second public-discovery path (ADR 0046 D4). |
 | Curriculum rail | `apps/web/server/web/directory/profile-media.ts` + `profile-highlights-section.tsx` | 4th `ProfileMediaItem[]` rail | Authored `Technique` rows on the public profile (distinct source from the passport-attachment reels rail). Locked ⇒ `thumbnailUrl: null` (poster suppression); posters derive from FREE clips only (viewer-independent — a premium clip's YouTube id never reaches a rail card). |
+
+## AdminCollection row-action + select-column primitives (SESSION_0533)
+
+The shared leaf-layer primitives every AdminCollection surface composes (WL-P2-54/55/59). **Load-bearing
+invariant:** `RowActionsMenu` is a shell only — it must NEVER grow an `items`/`kind` prop; a surface that
+needs different items passes them as children, a surface that needs a different trigger stays inline. That
+boundary is what keeps the family out of the god-component trap.
+
+| Component | File | Public props | Notable behavior |
+| --- | --- | --- | --- |
+| `RowActionsMenu` | `apps/web/components/admin/row-actions-menu.tsx` | `children` + `...Button` props | Kebab SHELL only (`DropdownMenu modal={false}` + secondary/Ellipsis trigger `aria-label="Open menu"` + `DropdownMenuContent align="end" sideOffset={8}`). Items are caller-owned children. NEVER add an `items`/`kind` prop. Forwards `className`/`{...props}`. |
+| `RowDeleteButton` | `apps/web/components/admin/row-delete-button.tsx` | `...Button` props | Trailing icon-only red `TrashIcon` (`aria-label="Delete"`). Composes as a `*DeleteDialog` trigger. Standardized the a11y label across surfaces (tool/media were previously unlabelled). |
+| `selectColumn<TData>()` | `apps/web/components/data-table/select-column.tsx` | — (factory) | Parameterless `RowCheckbox` select `ColumnDef` (header indeterminate-ref + row). 5 surfaces legitimately do NOT consume it (certificates/courses/programs/tournaments use a different Base-UI `Checkbox`/shift-select; users has a per-row `disabled` account-gate). |
+| `postStatusBadgeProps` / `postStatusIcon` | `apps/web/components/common/post-status.tsx` | `Record<PostStatus, …>` | Post status badge/facet-glyph vocabulary, mirrors `tool-status.tsx`. Deliberately SEPARATE from `tool-status` (distinct enum) — not a generic god-map. Exhaustive `Record` ⇒ a future 4th status is a compile error. |
 
 ## How to update this file
 

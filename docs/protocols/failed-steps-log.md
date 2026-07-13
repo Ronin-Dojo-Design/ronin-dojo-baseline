@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-07-13
-last_agent: claude-session-0532
+last_agent: claude-session-0533
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -662,8 +662,15 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 - **Verification:** `CI= npx playwright test admin-collection-conformance -g "Draft editorial queue"` renders the
   real table + the Drafts facet in CI (green at `33e7b275`; local run blocked by the prodsnap tx-timeout, which
   is itself the (b) root cause). CI E2E green at `33e7b275`.
-- **Status:** mitigated (rule + recipe); infra mechanization (seeded e2e DB + `e2e/`-diff guard) **open** —
-  next-session lane.
+- **Status:** **RESOLVED (SESSION_0533).** Infra mechanization LANDED: a dedicated small seeded
+  `ronindojo_e2e` DB (`apps/web/scripts/setup-e2e-db.ts`, idempotent, refuses non-e2e DB names) + a local-run
+  launcher (`scripts/run-e2e-local.ts` + `.env.e2e`) that sidesteps the prodsnap tx-timeout + an
+  `e2e/**`-diff run-evidence guard (`scripts/check-e2e-run-evidence.ts`, wired into closing.md §4c — NOT an
+  installed hook). Doug independently reproduced 9 passed locally + runtime-proved the server queries the
+  seeded DB. Residual (ledgered, non-blocking): the `bun --env-file … next dev` recipe form poisons
+  Turbopack's PostCSS-worker `NODE_OPTIONS` → the closing.md §4c recipe should move to a `loadEnvFile`
+  launcher; and the WL-P2-60 kebab codemod left 11 empty `import {}` lines (a codemod should prune emptied
+  imports).
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
