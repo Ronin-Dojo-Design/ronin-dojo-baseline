@@ -145,3 +145,16 @@ export function createTestPost(authorId: string, options?: { status?: "Draft" | 
 export function deleteTestPost(postId: string) {
   runAuthDbCommand<void>("delete-post", { postId })
 }
+
+/**
+ * Seed an `Organization` (brand BBL) so a data-dependent spec has a real row REGARDLESS of the DB's
+ * base seed (CI's e2e DB has exactly one org — the tournament host). Slug is caller-supplied +
+ * token-keyed → unique per test, parallel-safe. Call `deleteTestOrg(id)` for eager cleanup.
+ */
+export function createTestOrg(name: string, slug: string) {
+  return runAuthDbCommand<{ id: string; slug: string }>("create-org", { name, slug })
+}
+
+export function deleteTestOrg(orgId: string) {
+  runAuthDbCommand<void>("delete-org", { orgId })
+}

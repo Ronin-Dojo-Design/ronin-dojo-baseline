@@ -123,6 +123,26 @@ async function deletePost(payload: { postId: string }) {
   await prisma.post.deleteMany({ where: { id: payload.postId } })
 }
 
+/**
+ * Seed a single `Organization` so a data-dependent spec (the org-sort conformance test) has real
+ * rows to order REGARDLESS of the DB's base seed. CI's e2e DB has exactly ONE org (the tournament
+ * host from `globalSetup`), so a sort test that needs ≥2 differently-named rows can't prove the
+ * server re-order there (FS-0031 — the local seed used to add its own orgs, which reddened `main`).
+ * `slug` is caller-supplied + token-keyed → unique per test, parallel-safe. Brand BBL to match the
+ * BBL-scoped surface. Returns the id for eager teardown.
+ */
+async function createOrg(payload: { name: string; slug: string }) {
+  const org = await prisma.organization.create({
+    data: { brand: Brand.BBL, name: payload.name, slug: payload.slug },
+    select: { id: true, slug: true },
+  })
+  return org
+}
+
+async function deleteOrg(payload: { orgId: string }) {
+  await prisma.organization.deleteMany({ where: { id: payload.orgId } })
+}
+
 async function cleanupUser(userId: string) {
   await prisma.userEntitlement.deleteMany({ where: { userId } })
   // Posts authored by the test user (the A1 guard seeds one) — Post.author is a required User FK, so
@@ -241,6 +261,16 @@ if (command === "create-user") {
   if (!payload?.postId) throw new Error("Missing postId")
 
   await deletePost(payload)
+} else if (command === "create-org") {
+  const payload = decodePayload<{ name: string; slug: string }>()
+  if (!payload?.name || !payload.slug) throw new Error("Missing name/slug")
+
+  process.stdout.write(JSON.stringify(await createOrg(payload)))
+} else if (command === "delete-org") {
+  const payload = decodePayload<{ orgId: string }>()
+  if (!payload?.orgId) throw new Error("Missing orgId")
+
+  await deleteOrg(payload)
 } else {
   throw new Error(`Unknown auth-db command: ${command ?? "<missing>"}`)
 }

@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test"
 import {
   cleanupTestUser,
   createAuthenticatedUser,
+  createTestOrg,
   createTestPost,
+  deleteTestOrg,
   deleteTestPost,
 } from "../helpers/auth"
 
@@ -72,17 +74,29 @@ test.describe("AdminCollection conformance smoke", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     createdUserIds.push(userId)
 
-    await page.goto("/app/blog")
-    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+    // Seed a PUBLISHED post so the All view has a real row the Drafts-default hides. CI's e2e DB has
+    // ZERO posts (FS-0031), so asserting the bare `tbody tr` would be satisfied by the empty-state
+    // "No results." row (which is itself a `tbody tr`) — masking the true 0-posts. Self-seeding makes
+    // the assertion carry its own data; `cleanupTestUser` also removes it (`finally` for eager cleanup).
+    const post = await createTestPost(userId, { status: "Published" })
+    try {
+      await page.goto("/app/blog")
+      await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
 
-    // Open the Drafts-default facet and Clear it.
-    await page.getByRole("button", { name: /status.*draft/i }).click()
-    await page.getByRole("option", { name: /clear filters/i }).click()
+      // Open the Drafts-default facet and Clear it.
+      await page.getByRole("button", { name: /status.*draft/i }).click()
+      await page.getByRole("option", { name: /clear filters/i }).click()
 
-    // The clear encodes "cleared to All" as an explicit-empty param, NOT a return-to-default.
-    await expect(page).toHaveURL(/[?&]status=(&|$)/)
-    // All view: seeded published posts are now visible (the Drafts default showed none).
-    await expect(page.locator("tbody tr").first()).toBeVisible({ timeout: 30_000 })
+      // The clear encodes "cleared to All" as an explicit-empty param, NOT a return-to-default.
+      await expect(page).toHaveURL(/[?&]status=(&|$)/)
+      // All view: the seeded PUBLISHED post is now visible by name (the Drafts default hid it). Asserting
+      // the specific cell — not a bare `tbody tr` — proves real data rendered, not the empty-state row.
+      await expect(page.getByRole("cell", { name: "E2E A1 Row-Action Post" }).first()).toBeVisible({
+        timeout: 30_000,
+      })
+    } finally {
+      deleteTestPost(post.id)
+    }
   })
 
   // Companion: a NON-defaulted collection (/app/tools passes no `columnFilters` default) must keep
@@ -158,29 +172,44 @@ test.describe("AdminCollection conformance smoke", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     createdUserIds.push(userId)
 
-    await page.goto("/app/organizations")
-    await expect(page.locator("table").first()).toBeVisible({
-      timeout: 30_000,
-    })
+    // Self-seed two orgs whose names BRACKET the alphabet, so the `name asc`→`desc` flip is provable
+    // regardless of the base seed. CI's e2e DB has exactly ONE org (the tournament host "E2E Dojo …",
+    // which sorts between "Aikido" and "Zenith"), so relying on ≥2 seeded orgs reddened `main`
+    // (FS-0031). Slugs are token-keyed (unique per run) so a crashed prior run can't collide.
+    const token = `${Date.now()}-${test.info().workerIndex}`
+    const [alpha, omega] = await Promise.all([
+      createTestOrg("E2E Aikido House", `e2e-org-aikido-${token}`),
+      createTestOrg("E2E Zenith BJJ", `e2e-org-zenith-${token}`),
+    ])
 
-    const firstCell = page.locator("tbody tr td:first-child").first()
-    const bodyRows = page.locator("tbody tr")
-    const rowCount = await bodyRows.count()
+    try {
+      await page.goto("/app/organizations")
+      await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+      // Wait for the seeded rows so we don't read the Suspense skeleton. Default sort is `name asc`,
+      // so the alphabetically-first seeded org ("E2E Aikido House") anchors the first row.
+      await expect(page.getByRole("cell", { name: /E2E Aikido House/ })).toBeVisible({
+        timeout: 30_000,
+      })
 
-    const beforeFirst = await firstCell.innerText()
+      const firstCell = page.locator("tbody tr td:first-child").first()
+      const beforeFirst = await firstCell.innerText()
+      expect(beforeFirst).toContain("E2E Aikido House")
 
-    // Open the "Organization" column header menu (the trigger's a11y name is the sort-state
-    // sentence, so target the button carrying the visible column title) and choose Descending.
-    await page.getByRole("button").filter({ hasText: "Organization" }).first().click()
-    await page.getByRole("menuitem", { name: /sort descending/i }).click()
+      // Open the "Organization" column header menu (the trigger's a11y name is the sort-state
+      // sentence, so target the button carrying the visible column title) and choose Descending.
+      await page.getByRole("button").filter({ hasText: "Organization" }).first().click()
+      await page.getByRole("menuitem", { name: /sort descending/i }).click()
 
-    // (a) the sort param is now in the URL, encoding a `name` desc sort.
-    await expect(page).toHaveURL(/sort=.*name/)
-    await expect(page).toHaveURL(/desc/)
+      // (a) the sort param is now in the URL, encoding a `name` desc sort.
+      await expect(page).toHaveURL(/sort=.*name/)
+      await expect(page).toHaveURL(/desc/)
 
-    // (b) with ≥2 orgs the server re-orders, so the first row flips from the default `name asc`.
-    if (rowCount >= 2) {
+      // (b) the server re-orders: the first row flips to the alphabetically-last seeded org.
       await expect(firstCell).not.toHaveText(beforeFirst)
+      await expect(firstCell).toContainText("E2E Zenith BJJ")
+    } finally {
+      deleteTestOrg(alpha.id)
+      deleteTestOrg(omega.id)
     }
   })
 })
