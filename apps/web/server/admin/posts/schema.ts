@@ -8,11 +8,12 @@ import {
 import * as z from "zod"
 import { PostStatus } from "~/.generated/prisma/browser"
 import { getSortingStateParser } from "~/lib/parsers"
+import { DEFAULT_POST_SORT } from "./constants"
 import type { PostAdminRow } from "./queries"
 
 export const postsTableParamsSchema = {
   title: parseAsString.withDefault(""),
-  sort: getSortingStateParser<PostAdminRow>().withDefault([{ id: "updatedAt", desc: true }]),
+  sort: getSortingStateParser<PostAdminRow>().withDefault(DEFAULT_POST_SORT),
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(25),
   from: parseAsString.withDefault(""),

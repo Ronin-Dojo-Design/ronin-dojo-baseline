@@ -5,6 +5,7 @@ import {
   parseAsStringEnum,
 } from "nuqs/server"
 import { getSortingStateParser } from "~/lib/parsers"
+import { DEFAULT_TECHNIQUE_SORT } from "./constants"
 import type { TechniqueAdminRow } from "./queries"
 
 /**
@@ -17,7 +18,7 @@ import type { TechniqueAdminRow } from "./queries"
 export const techniquesTableParamsSchema = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(25),
-  sort: getSortingStateParser<TechniqueAdminRow>().withDefault([{ id: "createdAt", desc: true }]),
+  sort: getSortingStateParser<TechniqueAdminRow>().withDefault(DEFAULT_TECHNIQUE_SORT),
   name: parseAsString.withDefault(""),
   scope: parseAsStringEnum([
     "pending-promotion",

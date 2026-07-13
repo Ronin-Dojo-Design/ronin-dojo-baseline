@@ -6,6 +6,7 @@ import {
   getAdminListQueryParts,
   runAdminListTransaction,
 } from "~/server/admin/list-query"
+import { DEFAULT_POST_SORT } from "~/server/admin/posts/constants"
 import type { PostsTableSchema } from "~/server/admin/posts/schema"
 import { db } from "~/services/db"
 
@@ -30,8 +31,6 @@ const POST_ORDERABLE = new Set<keyof Prisma.PostOrderByWithRelationInput>([
   "publishedAt",
   "updatedAt",
 ])
-
-const DEFAULT_POST_SORT = [{ id: "updatedAt", desc: true }]
 
 const resolvePostSort = (sort: Array<{ id: string; desc: boolean }>) => {
   const allowed = sort.filter(item =>

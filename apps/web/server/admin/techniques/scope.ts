@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { defaultTechniqueOrderBy } from "~/server/admin/techniques/constants"
 import type { TechniquesTableSchema } from "~/server/admin/techniques/schema"
 
 /**
@@ -30,8 +31,6 @@ const TECHNIQUE_ORDERABLE = new Set<keyof Prisma.TechniqueOrderByWithRelationInp
   "isPublished",
   "createdAt",
 ])
-
-const defaultTechniqueOrderBy: Prisma.TechniqueOrderByWithRelationInput = { createdAt: "desc" }
 
 export const resolveTechniqueOrderBy = (
   sort: Array<{ id: string; desc: boolean }>,
