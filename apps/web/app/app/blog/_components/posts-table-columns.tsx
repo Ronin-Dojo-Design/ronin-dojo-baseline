@@ -2,23 +2,16 @@
 
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import type { ComponentProps } from "react"
-import { PostStatus } from "~/.generated/prisma/browser"
 import { PostActions } from "~/app/app/blog/_components/post-actions"
 import { RowCheckbox } from "~/components/admin/row-checkbox"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
+import { postStatusBadgeProps } from "~/components/common/post-status"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
 import { DataTableLink } from "~/components/data-table/data-table-link"
 import type { PostAdminRow } from "~/server/admin/posts/queries"
 
 export const getColumns = (): ColumnDef<PostAdminRow>[] => {
-  const statusBadges: Record<PostStatus, ComponentProps<typeof Badge>> = {
-    [PostStatus.Draft]: { variant: "soft" },
-    [PostStatus.Scheduled]: { variant: "info" },
-    [PostStatus.Published]: { variant: "success" },
-  }
-
   return [
     {
       id: "select",
@@ -67,7 +60,7 @@ export const getColumns = (): ColumnDef<PostAdminRow>[] => {
       accessorKey: "status",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
       cell: ({ row }) => (
-        <Badge {...statusBadges[row.original.status]}>{row.original.status}</Badge>
+        <Badge {...postStatusBadgeProps[row.original.status]}>{row.original.status}</Badge>
       ),
     },
     {

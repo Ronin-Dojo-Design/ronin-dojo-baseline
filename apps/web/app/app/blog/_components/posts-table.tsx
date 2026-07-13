@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheckIcon, CircleDashedIcon, CircleDotIcon, PlusIcon } from "lucide-react"
+import { PlusIcon } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { PostStatus } from "~/.generated/prisma/browser"
@@ -10,6 +10,7 @@ import { AdminCollection } from "~/components/admin/admin-collection"
 import { DateRangePicker } from "~/components/admin/date-range-picker"
 import { Button } from "~/components/common/button"
 import { Link } from "~/components/common/link"
+import { postStatusIcon } from "~/components/common/post-status"
 import { DataTableViewOptions } from "~/components/data-table/data-table-view-options"
 import type { findPosts, PostAdminRow } from "~/server/admin/posts/queries"
 import { postsTableParamsSchema } from "~/server/admin/posts/schema"
@@ -47,17 +48,17 @@ export function PostsTable({ postsPromise }: PostsTableProps) {
         {
           label: "Draft",
           value: PostStatus.Draft,
-          icon: <CircleDashedIcon className="text-gray-500" />,
+          icon: postStatusIcon[PostStatus.Draft],
         },
         {
           label: "Published",
           value: PostStatus.Published,
-          icon: <CircleCheckIcon className="text-green-500" />,
+          icon: postStatusIcon[PostStatus.Published],
         },
         {
           label: "Scheduled",
           value: PostStatus.Scheduled,
-          icon: <CircleDotIcon className="text-blue-500" />,
+          icon: postStatusIcon[PostStatus.Scheduled],
         },
       ],
     },
