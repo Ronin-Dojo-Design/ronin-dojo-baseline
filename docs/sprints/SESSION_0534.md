@@ -181,8 +181,8 @@ surfaces prove genuinely disjoint at pre-flight.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0534_TASK_01 | pending | FS-0031 seed-shape hardening + recipe fix + flaky-spec stabilization |
-| SESSION_0534_TASK_02 | pending | AC-ECOSYSTEM-1 bespoke row-action/select migration |
+| SESSION_0534_TASK_01 | landed | FS-0031 seed-shape hardening + recipe fix + flaky-spec stabilization (Cody `f101ac30`+`ceca34ca`+`f7ebdd66`; Doug GO 8.0 + 2 P2s; Cody batch-fix `66fa0763` → org-sort 5/5 isolation + 10/10 hermetic). Deferred: 10 leftover e2e-users + 9 pre-existing full-suite cold flakes → ledger |
+| SESSION_0534_TASK_02 | in-progress | AC-ECOSYSTEM-1 bespoke row-action/select migration |
 | SESSION_0534_TASK_03 | pending | AC-ECOSYSTEM-2 AccountActionItems extraction (gated) |
 
 ## What landed
