@@ -18,18 +18,44 @@ test.describe("Registration E2E (magic-link member front door)", () => {
     await cleanupTestUserByEmail(email)
 
     try {
+      // A freshly-registered user has an incomplete Passport, so /app/profile auto-opens the
+      // profile-enhancement wizard — a MODAL that covers the "My Passport" landmark this test asserts
+      // below (a historical flake: the dialog raced the landing assertion). Pre-seed the same
+      // "onboarding seen" localStorage flags the authenticated helper sets (auth.ts `setSessionCookie`)
+      // so the dialog never ambushes the assertion. `addInitScript` runs before every navigation, so it
+      // is in place when /app/profile loads. Behavior-preserving — a returning user wouldn't see it.
+      await page.addInitScript(() => {
+        try {
+          window.localStorage.setItem("bbl:onboarding:dashboard:v1", "done")
+          window.localStorage.setItem("bbl:onboarding:profile:v1", "done")
+        } catch {
+          // Storage unavailable on the very first about:blank paint — the next navigation re-runs this.
+        }
+      })
+
       await page.goto("/auth/login")
 
       await expect(page.getByRole("heading", { name: /sign in/i, level: 3 })).toBeVisible({
         timeout: 30_000,
       })
-      await page.locator('input[name="email"]').fill(email)
-      await page.getByRole("button", { name: /send me a magic link/i }).click()
 
-      await expect(page).toHaveURL(url => {
-        return url.pathname === "/auth/verify" && url.searchParams.get("email") === email
-      })
+      const emailInput = page.locator('input[name="email"]')
+      await expect(emailInput).toBeVisible()
+      await emailInput.fill(email)
+
+      const submit = page.getByRole("button", { name: /send me a magic link/i })
+      await submit.click()
+
+      // The submit is a CLIENT handler (RHF → `router.push` on success). The historical flake: a COLD
+      // magic-link mutation resolves slower than the default 5s expect budget, so the assertion timed
+      // out before the client nav landed (self-recovers on retry once warm). Wait up to 45s for the nav
+      // to /auth/verify — a deterministic wait that resolves the instant the URL changes, not a blind
+      // sleep. (The mutation always fires: the earlier failure snapshots all show /auth/verify reached.)
+      await expect(page).toHaveURL(/\/auth\/verify(\?|$)/, { timeout: 45_000 })
+
+      // The verify page echoes the address the link was sent to — confirms the right email flowed.
       await expect(page.getByRole("heading", { name: /check your inbox/i })).toBeVisible()
+      await expect(page.getByText(email).first()).toBeVisible()
 
       let token: string | null = null
       await expect(async () => {

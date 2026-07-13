@@ -31,6 +31,16 @@ async function assertRanksGridRenders(page: import("@playwright/test").Page) {
   await page.goto(url)
   await expect(page.locator("body")).toBeVisible()
 
+  // Deterministic settle (repo §14e idiom — never `networkidle`): wait until EITHER the first rank
+  // m-card OR the empty-state copy is on the page before counting, so `cards.count()` can't race the
+  // Suspense render and read 0 mid-stream (the historical flake — self-recovers on retry).
+  await expect(
+    page
+      .getByTestId("m-card")
+      .first()
+      .or(page.getByText(/no ranks defined/i)),
+  ).toBeVisible({ timeout: 15_000 })
+
   const cards = page.getByTestId("m-card")
   const count = await cards.count()
 
@@ -74,6 +84,14 @@ test.describe("/disciplines/[slug]/ranks m-card belt grid", () => {
   }) => {
     const url = await ranksUrl(page)
     await page.goto(url)
+
+    // Same deterministic settle as assertRanksGridRenders — don't race the Suspense render.
+    await expect(
+      page
+        .getByTestId("m-card")
+        .first()
+        .or(page.getByText(/no ranks defined/i)),
+    ).toBeVisible({ timeout: 15_000 })
 
     const cards = page.getByTestId("m-card")
     const count = await cards.count()
