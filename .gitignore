@@ -44,3 +44,6 @@ ronin-baseline.code-workspace
 /bbl-*.jpeg
 docs/orchestration.html
 docs/posters/
+
+# fallow audit cache
+.fallow/

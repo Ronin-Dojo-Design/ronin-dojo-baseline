@@ -1,6 +1,5 @@
 "use client"
 
-import {} from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
 import type { Report } from "~/.generated/prisma/browser"

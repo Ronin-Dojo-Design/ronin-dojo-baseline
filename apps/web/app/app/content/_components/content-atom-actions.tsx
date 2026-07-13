@@ -1,18 +1,13 @@
 "use client"
 
-import { EllipsisIcon, TrashIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import { ContentAtomsDeleteDialog } from "~/app/app/content/_components/content-atoms-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
 import type { findContentAtoms } from "~/server/admin/content/queries"
 
 type ContentAtomRow = Awaited<ReturnType<typeof findContentAtoms>>["atoms"][number]
@@ -23,31 +18,14 @@ type ContentAtomActionsProps = ComponentProps<typeof Button> & {
 
 export const ContentAtomActions = ({ className, atom, ...props }: ContentAtomActionsProps) => {
   return (
-    <Stack size="xs">
+    <Stack size="sm" wrap={false}>
+      <RowActionsMenu className={className} {...props}>
+        <DropdownMenuItem render={<Link href={`/app/content/${atom.id}`} />}>Edit</DropdownMenuItem>
+      </RowActionsMenu>
+
       <ContentAtomsDeleteDialog atoms={[atom]}>
-        <Button variant="ghost" size="sm" prefix={<TrashIcon />} aria-label="Delete" {...props} />
+        <RowDeleteButton {...props} />
       </ContentAtomsDeleteDialog>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              aria-label="More actions"
-              className={cx("text-muted", className)}
-              {...props}
-            />
-          }
-        />
-
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem render={<Link href={`/app/content/${atom.id}`} />}>
-            Edit
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </Stack>
   )
 }
