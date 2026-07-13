@@ -69,12 +69,14 @@ async function main() {
         ? await db.post.update({ where: { id: existing.id }, data })
         : await db.post.create({ data })
 
-      results.push({ action: existing ? "updated" : "created", slug: post.slug, status: post.status })
+      results.push({
+        action: existing ? "updated" : "created",
+        slug: post.slug,
+        status: post.status,
+      })
     }
 
-    console.log(
-      JSON.stringify({ author: author.name ?? author.email, drafts: results }, null, 2),
-    )
+    console.log(JSON.stringify({ author: author.name ?? author.email, drafts: results }, null, 2))
   } finally {
     await db.$disconnect()
   }

@@ -8,4 +8,6 @@ import type { PostAdminRow } from "./queries"
  * (they only ever type-import each other). Multi-column by design — do NOT collapse to a
  * single-column resolver.
  */
-export const DEFAULT_POST_SORT: ExtendedSortingState<PostAdminRow> = [{ id: "updatedAt", desc: true }]
+export const DEFAULT_POST_SORT: ExtendedSortingState<PostAdminRow> = [
+  { id: "updatedAt", desc: true },
+]
