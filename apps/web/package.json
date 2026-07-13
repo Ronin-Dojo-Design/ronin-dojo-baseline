@@ -24,6 +24,7 @@
     "postinstall": "bun run db:generate",
     "test:e2e": "bunx playwright test",
     "e2e:db:setup": "bun --env-file=.env.e2e scripts/setup-e2e-db.ts",
+    "dev:e2e": "node scripts/run-e2e-dev.mjs",
     "test:e2e:local": "bun --env-file=.env.e2e scripts/run-e2e-local.ts",
     "e2e:evidence:check": "bun scripts/check-e2e-run-evidence.ts"
   },

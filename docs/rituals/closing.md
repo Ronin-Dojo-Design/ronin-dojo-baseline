@@ -190,8 +190,12 @@ pre-push gate:
    Requires `apps/web/.env.e2e` (gitignored; shape in `.env.e2e.example` — copy `.env`, override
    `DATABASE_URL`/`DIRECT_URL` to `ronindojo_e2e`).
 2. **Run the affected spec** against it (sidesteps the FS-0002-banned `bun dev`): start the e2e-bound
-   dev server `bun --env-file=.env.e2e next dev --turbo`, then `bun run test:e2e:local -- <spec>
-   --project=chromium`. This writes the run-evidence artifact `apps/web/.e2e-run-evidence.json`.
+   dev server with `cd apps/web && bun run dev:e2e` (= `node scripts/run-e2e-dev.mjs` — a Node
+   launcher that `process.loadEnvFile(".env.e2e")`s the DB URLs then spawns `next dev --turbo`). Do
+   **NOT** use `bun --env-file=.env.e2e next dev` — running `next` under the bun runtime injects a bun
+   loader into the child `NODE_OPTIONS` and poisons Turbopack's PostCSS worker (FS-0031 0533 residual).
+   Then `bun run test:e2e:local -- <spec> --project=chromium`. This writes the run-evidence artifact
+   `apps/web/.e2e-run-evidence.json`.
 3. **Gate the close on the evidence**: `bun run e2e:evidence:check`. It passes only when a fresh,
    passing run covers every touched spec; it blocks (with the recipe) on missing/stale evidence.
    Override only with a real reason: `bun run e2e:evidence:check --waiver="…"`.
