@@ -132,3 +132,16 @@ export function cleanupTestUserByEmail(email: string) {
 export function grantTestEntitlement(userId: string, key: string, brand = "BBL") {
   runAuthDbCommand<void>("grant-entitlement", { userId, key, brand })
 }
+
+/**
+ * Seed a `Post` authored by a test user so a data-dependent spec has a real row to act on regardless
+ * of the DB's base seed (CI's e2e DB has zero posts). Draft by default (lands on the Drafts-first
+ * `/app/blog` default). `cleanupTestUser` also deletes it; call `deleteTestPost` for eager cleanup.
+ */
+export function createTestPost(authorId: string, options?: { status?: "Draft" | "Published" }) {
+  return runAuthDbCommand<{ id: string; slug: string }>("create-post", { authorId, ...options })
+}
+
+export function deleteTestPost(postId: string) {
+  runAuthDbCommand<void>("delete-post", { postId })
+}

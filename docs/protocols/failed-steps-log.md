@@ -671,17 +671,23 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   Turbopack's PostCSS-worker `NODE_OPTIONS` → the closing.md §4c recipe should move to a `loadEnvFile`
   launcher; and the WL-P2-60 kebab codemod left 11 empty `import {}` lines (a codemod should prune emptied
   imports).
-- **In-session recurrence (FS-0031's own lesson, immediately):** the SESSION_0533 close push reddened
-  `main`'s chromium e2e — the new A1 test (`admin-collection-conformance.spec.ts:109`) asserted a Posts
-  row-action on the **Drafts-first default view**, which requires a draft row. The **local `ronindojo_e2e`
-  seed has 1 draft** (WL-P2-58), so it passed locally + the evidence guard was green; but **CI's e2e DB
-  has published posts and ZERO drafts**, so the Drafts-default was empty → no kebab → timeout. **Root gap:
-  the FS-0031 local e2e seed does NOT mirror CI's data shape** — "runs green locally" on a differently-seeded
-  DB ≠ "runs green in CI." Fixed forward (SESSION_0533): the A1 test now acts on the **All view**
-  (`?status=`, seed-independent w.r.t. draft count), verified locally against a reproduced 0-draft state
-  (10/10). **Standing rule added:** a new/changed e2e assertion must be run locally against a DB whose
-  **data shape matches CI** (empty/minimal), OR seed its own fixture in-test — never rely on a richer local
-  seed. Candidate infra: align `scripts/setup-e2e-db.ts` to CI's minimal shape, or add per-spec fixtures.
+- **In-session recurrence — reddened `main` TWICE (FS-0031's own lesson, immediately):** the SESSION_0533
+  close push reddened `main`'s chromium e2e. The new A1 test (`admin-collection-conformance.spec.ts`)
+  asserted a Posts row-action on `/app/blog`, which needs a **real post row**. The **local `ronindojo_e2e`
+  seed has 4 posts** (WL-P2-58/setup-e2e-db) so it passed locally + the evidence guard was green; but
+  **CI's e2e DB has ZERO posts** (`migrate deploy` + the tournament fixture only — no post seed). **The
+  diagnosis itself took two tries** (each a red push): (1) first assumed CI had "published but 0 drafts" →
+  "fixed" by acting on the All view (`?status=`) — but that ALSO failed, because (2) CI has **zero posts at
+  all**, and the `tbody tr` assertion was satisfied by the empty-state **"No results." row** (masking the
+  true 0-posts), so `getByRole("Open menu")` still timed out. **Correct fix (3rd, verified):** the A1 test
+  **seeds its own Draft post in-test** via a new `create-post`/`delete-post` `auth-db.ts` bridge
+  (`createTestPost`/`deleteTestPost`) — fully seed-independent; verified locally against a **reproduced
+  0-posts/0-orgs CI state** (10/10) AND the seeded state (10/10). **Root gap + standing rule:** never verify
+  a data-dependent e2e assertion against a **richer-than-CI local seed** — reproduce CI's ACTUAL data state
+  (delete the rows to mirror CI's empty DB) before pushing, OR (preferred) **seed the fixture in-test** so
+  the assertion carries its own data. The empty-state "No results." row is a `tbody tr` — asserting `tbody
+  tr` visible does NOT prove real data exists. Candidate infra: align `setup-e2e-db.ts` to CI's minimal
+  shape so local == CI by default.
 
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 

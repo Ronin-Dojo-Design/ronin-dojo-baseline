@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test"
-import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
+import {
+  cleanupTestUser,
+  createAuthenticatedUser,
+  createTestPost,
+  deleteTestPost,
+} from "../helpers/auth"
 
 // WL-P2-34 (ADR 0045): /app/claims, /app/organizations, /app/media, /app/blog migrated onto the ONE
 // AdminCollection frame. FI-027 (SESSION_0530): /app/techniques is a SIBLING AdminCollection
@@ -112,30 +117,38 @@ test.describe("AdminCollection conformance smoke", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     createdUserIds.push(userId)
 
-    // Open the ALL view (explicit-empty `?status=`), NOT the Drafts-first default — CI's seed has
-    // published posts but ZERO drafts, so the Drafts-default queue is empty and would have no row to
-    // act on (FS-0031/LR-0009: green-locally-on-a-seeded-DB ≠ green-in-CI). The All view has ≥1 post
-    // in both CI and local, so the row-action assertions are seed-independent w.r.t. draft count.
-    await page.goto("/app/blog?status=")
-    await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator("tbody tr").first()).toBeVisible({ timeout: 30_000 })
+    // Seed a Draft post authored by this admin so the Drafts-first `/app/blog` default has a real row
+    // to act on — CI's e2e DB has ZERO posts (migrate + tournament fixture only), so relying on a
+    // seeded post reddened `main` (FS-0031/LR-0009: the local `ronindojo_e2e` seed is richer than
+    // CI's). Seeding in-test makes the guard seed-independent. `cleanupTestUser` also removes it.
+    const post = await createTestPost(userId, { status: "Draft" })
+    try {
+      await page.goto("/app/blog")
+      await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
+      // The seeded Draft is the row: wait for it by name so we don't act on the Suspense skeleton.
+      await expect(page.getByRole("cell", { name: "E2E A1 Row-Action Post" })).toBeVisible({
+        timeout: 30_000,
+      })
 
-    // Open the first row's kebab: Edit + View menu items render.
-    await page.getByRole("button", { name: "Open menu" }).first().click()
-    await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible()
-    await expect(page.getByRole("menuitem", { name: "View" })).toBeVisible()
-    // Dismiss the menu so its positioner doesn't intercept the trash click.
-    await page.keyboard.press("Escape")
+      // Open the row's kebab: Edit + View menu items render.
+      await page.getByRole("button", { name: "Open menu" }).first().click()
+      await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible()
+      await expect(page.getByRole("menuitem", { name: "View" })).toBeVisible()
+      // Dismiss the menu so its positioner doesn't intercept the trash click.
+      await page.keyboard.press("Escape")
 
-    // The trailing red trash (aria-label="Delete") opens the shared DeleteDialog confirm.
-    await page.getByRole("button", { name: "Delete", exact: true }).first().click()
-    await expect(page.getByText("Are you sure?")).toBeVisible()
-    await expect(page.getByRole("button", { name: "Delete post" })).toBeVisible()
+      // The trailing red trash (aria-label="Delete") opens the shared DeleteDialog confirm.
+      await page.getByRole("button", { name: "Delete", exact: true }).first().click()
+      await expect(page.getByText("Are you sure?")).toBeVisible()
+      await expect(page.getByRole("button", { name: "Delete post" })).toBeVisible()
 
-    // Cancel dismisses the confirm without navigating away from /app/blog.
-    await page.getByRole("button", { name: "Cancel" }).click()
-    await expect(page.getByText("Are you sure?")).toBeHidden()
-    await expect(page).toHaveURL(/\/app\/blog(\?|$)/)
+      // Cancel dismisses the confirm without navigating away from /app/blog.
+      await page.getByRole("button", { name: "Cancel" }).click()
+      await expect(page.getByText("Are you sure?")).toBeHidden()
+      await expect(page).toHaveURL(/\/app\/blog(\?|$)/)
+    } finally {
+      deleteTestPost(post.id)
+    }
   })
 
   // SESSION_0515 (Giddy MED): the claims/orgs `sort` param was a dead wire — the header rendered

@@ -6,7 +6,7 @@
  * e2e/helpers/auth.ts.
  */
 import { PrismaPg } from "@prisma/adapter-pg"
-import { PrismaClient, type UserRole } from "../../.generated/prisma/client"
+import { Brand, PostStatus, PrismaClient, type UserRole } from "../../.generated/prisma/client"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -94,8 +94,40 @@ async function grantEntitlement(payload: { userId: string; key: string; brand: s
   })
 }
 
+/**
+ * Seed a single `Post` authored by a given test user, so a data-dependent spec (the WL-P2-54 A1
+ * row-action guard) has a real row to act on REGARDLESS of the DB's base seed. CI's e2e DB has ZERO
+ * posts (migrate + tournament fixture only), so a test that assumed a seeded post reddened `main`
+ * (FS-0031). Slug is keyed to the author id → unique per test, parallel-safe. Draft by default so it
+ * lands on the `/app/blog` Drafts-first default view.
+ */
+async function createPost(payload: { authorId: string; status?: PostStatus }) {
+  const status = payload.status ?? PostStatus.Draft
+  const post = await prisma.post.create({
+    data: {
+      title: "E2E A1 Row-Action Post",
+      slug: `e2e-a1-${payload.authorId}`,
+      content: "E2E A1 seed content.",
+      plainText: "E2E A1 seed content.",
+      status,
+      publishedAt: status === PostStatus.Published ? new Date() : null,
+      brand: Brand.BBL,
+      author: { connect: { id: payload.authorId } },
+    },
+    select: { id: true, slug: true },
+  })
+  return post
+}
+
+async function deletePost(payload: { postId: string }) {
+  await prisma.post.deleteMany({ where: { id: payload.postId } })
+}
+
 async function cleanupUser(userId: string) {
   await prisma.userEntitlement.deleteMany({ where: { userId } })
+  // Posts authored by the test user (the A1 guard seeds one) — Post.author is a required User FK, so
+  // any authored row must go before the user delete. Defensive backstop even if the spec cleans up.
+  await prisma.post.deleteMany({ where: { authorId: userId } })
   // Authored techniques + uploaded media (SESSION_0529 Slice 3B round-trip): Technique.author is
   // SetNull (a user delete would orphan the rows) and Media.uploadedBy has no cascade (it would
   // block the user delete), so both are removed explicitly. MediaAttachment cascades from Media.
@@ -199,6 +231,16 @@ if (command === "create-user") {
   }
 
   await grantEntitlement(payload)
+} else if (command === "create-post") {
+  const payload = decodePayload<{ authorId: string; status?: PostStatus }>()
+  if (!payload?.authorId) throw new Error("Missing authorId")
+
+  process.stdout.write(JSON.stringify(await createPost(payload)))
+} else if (command === "delete-post") {
+  const payload = decodePayload<{ postId: string }>()
+  if (!payload?.postId) throw new Error("Missing postId")
+
+  await deletePost(payload)
 } else {
   throw new Error(`Unknown auth-db command: ${command ?? "<missing>"}`)
 }
