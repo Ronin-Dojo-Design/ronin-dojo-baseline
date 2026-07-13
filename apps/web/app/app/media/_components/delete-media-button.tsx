@@ -1,10 +1,9 @@
 "use client"
 
-import { Trash2Icon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { DeleteDialog } from "~/components/admin/dialogs/delete-dialog"
-import { Button } from "~/components/common/button"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
 import { deleteMedia } from "~/server/admin/media/actions"
 
 export const DeleteMediaButton = ({ id }: { id: string }) => {
@@ -25,9 +24,7 @@ export const DeleteMediaButton = ({ id }: { id: string }) => {
         },
       }}
     >
-      <Button type="button" size="xs" variant="secondary" prefix={<Trash2Icon />}>
-        Delete
-      </Button>
+      <RowDeleteButton type="button" />
     </DeleteDialog>
   )
 }

@@ -1,25 +1,20 @@
 "use client"
 
 import { isValidUrl } from "@dirstack/utils"
-import { CopyIcon, EllipsisIcon, GlobeIcon, TrashIcon } from "lucide-react"
+import { CopyIcon, GlobeIcon } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import type { ComponentProps } from "react"
 import { toast } from "sonner"
 import type { Tool } from "~/.generated/prisma/browser"
 import { ToolsDeleteDialog } from "~/app/app/tools/_components/tools-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem, DropdownMenuSeparator } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { ExternalLink } from "~/components/web/external-link"
-import { cx } from "~/lib/utils"
 import { duplicateTool } from "~/server/admin/tools/actions"
 
 type ToolActionsProps = ComponentProps<typeof Button> & {
@@ -61,53 +56,30 @@ export const ToolActions = ({ className, tool, ...props }: ToolActionsProps) => 
 
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
+      <RowActionsMenu className={className} {...props}>
+        {!isToolPage && <DropdownMenuItem render={<Link href={toolPath} />}>Edit</DropdownMenuItem>}
 
-        <DropdownMenuContent align="end" sideOffset={8}>
-          {!isToolPage && (
-            <DropdownMenuItem render={<Link href={toolPath} />}>Edit</DropdownMenuItem>
-          )}
+        <DropdownMenuItem render={<Link href={`/${tool.slug}`} target="_blank" />}>
+          View
+        </DropdownMenuItem>
 
-          <DropdownMenuItem render={<Link href={`/${tool.slug}`} target="_blank" />}>
-            View
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem onClick={handleDuplicate}>
+          <CopyIcon />
+          Duplicate
+        </DropdownMenuItem>
+
+        {isValidUrl(tool.websiteUrl) && (
+          <DropdownMenuItem render={<ExternalLink href={tool.websiteUrl} doTrack />}>
+            <GlobeIcon />
+            Visit website
           </DropdownMenuItem>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={handleDuplicate}>
-            <CopyIcon />
-            Duplicate
-          </DropdownMenuItem>
-
-          {isValidUrl(tool.websiteUrl) && (
-            <DropdownMenuItem render={<ExternalLink href={tool.websiteUrl} doTrack />}>
-              <GlobeIcon />
-              Visit website
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+      </RowActionsMenu>
 
       <ToolsDeleteDialog tools={[tool]} onExecute={() => router.push("/app/tools")}>
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<TrashIcon />}
-          className="text-red-500"
-          {...props}
-        />
+        <RowDeleteButton {...props} />
       </ToolsDeleteDialog>
     </Stack>
   )

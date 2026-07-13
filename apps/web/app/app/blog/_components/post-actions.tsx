@@ -1,18 +1,13 @@
 "use client"
 
-import { EllipsisIcon, TrashIcon } from "lucide-react"
 import type { ComponentProps } from "react"
 import { PostsDeleteDialog } from "~/app/app/blog/_components/posts-delete-dialog"
-import { Button } from "~/components/common/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/common/dropdown-menu"
+import { RowActionsMenu } from "~/components/admin/row-actions-menu"
+import { RowDeleteButton } from "~/components/admin/row-delete-button"
+import type { Button } from "~/components/common/button"
+import { DropdownMenuItem } from "~/components/common/dropdown-menu"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
 
 type PostActionsProps = ComponentProps<typeof Button> & {
   post: { id: string; slug: string }
@@ -21,38 +16,16 @@ type PostActionsProps = ComponentProps<typeof Button> & {
 export const PostActions = ({ className, post, ...props }: PostActionsProps) => {
   return (
     <Stack size="sm" wrap={false}>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              aria-label="Open menu"
-              variant="secondary"
-              size="sm"
-              prefix={<EllipsisIcon />}
-              className={cx("data-open:bg-accent", className)}
-              {...props}
-            />
-          }
-        />
+      <RowActionsMenu className={className} {...props}>
+        <DropdownMenuItem render={<Link href={`/app/blog/${post.id}`} />}>Edit</DropdownMenuItem>
 
-        <DropdownMenuContent align="end" sideOffset={8}>
-          <DropdownMenuItem render={<Link href={`/app/blog/${post.id}`} />}>Edit</DropdownMenuItem>
-
-          <DropdownMenuItem render={<Link href={`/blog/${post.slug}`} target="_blank" />}>
-            View
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        <DropdownMenuItem render={<Link href={`/blog/${post.slug}`} target="_blank" />}>
+          View
+        </DropdownMenuItem>
+      </RowActionsMenu>
 
       <PostsDeleteDialog posts={[post]}>
-        <Button
-          variant="secondary"
-          size="sm"
-          prefix={<TrashIcon />}
-          aria-label="Delete"
-          className="text-red-500"
-          {...props}
-        />
+        <RowDeleteButton {...props} />
       </PostsDeleteDialog>
     </Stack>
   )
