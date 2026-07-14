@@ -1,23 +1,14 @@
-import { headers } from "next/headers"
 import type { Graph } from "schema-dts"
 
 /**
- * JSON-LD structured-data block. Rendered only from server components, so it reads
- * the per-request CSP nonce off the `x-nonce` header (minted by proxy.ts,
- * SESSION_0536) and applies it to the `<script>` defensively.
+ * JSON-LD structured-data block.
  *
- * Note: `<script type="application/ld+json">` is a non-executable data block, so
- * most browsers do NOT enforce `script-src` against it — the nonce here is
- * belt-and-suspenders for cross-browser safety once the CSP enforces, not a
- * correctness requirement.
+ * Intentionally NOT nonced (SESSION_0536): `<script type="application/ld+json">` is a
+ * non-executable data block, so `script-src` never governs it — it renders fine under
+ * the strict nonce CSP with no nonce. Adding a nonce here caused a hydration mismatch
+ * (React blanks the `nonce` attribute client-side → server `nonce="…"` vs client
+ * `nonce=""`), so this component stays a plain sync server component.
  */
-export const StructuredData = async ({ data }: { data: Graph }) => {
-  const nonce = (await headers()).get("x-nonce") ?? undefined
-  return (
-    <script
-      type="application/ld+json"
-      nonce={nonce}
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  )
-}
+export const StructuredData = ({ data }: { data: Graph }) => (
+  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
+)
