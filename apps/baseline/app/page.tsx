@@ -1,4 +1,5 @@
 import { brand } from "@/lib/brand";
+import { InquiryForm } from "@/components/inquiry-form";
 
 /**
  * Baseline — the white-label school landing page.
@@ -77,16 +78,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Visit / contact */}
+      {/* Visit / inquiry funnel */}
       <section id="visit" className="px-5 py-16">
-        <div className="mx-auto max-w-3xl rounded-lg border border-border bg-surface p-8 text-center">
-          <h2 className="font-display text-2xl font-bold text-ink">Come train with us</h2>
-          <p className="mt-3 text-muted">
-            Email{" "}
+        <div className="mx-auto max-w-3xl">
+          <InquiryForm />
+          <p className="mt-4 text-center text-sm text-muted">
+            Prefer email? Reach us at{" "}
             <a href={`mailto:${brand.contact.email}`} className="text-primary hover:underline">
               {brand.contact.email}
-            </a>{" "}
-            to book a free intro class.
+            </a>
+            .
           </p>
         </div>
       </section>
