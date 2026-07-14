@@ -1,5 +1,6 @@
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
+import { isAdmin } from "~/lib/authz-predicates"
 import { getLineageProfileDetailRenderPolicyForUser } from "~/server/web/entitlements/lineage-tier-policy"
 
 /**
@@ -31,20 +32,29 @@ export type CommunityViewerContext = {
 
 /**
  * Resolve the current viewer's community read context ONCE. `getServerSession` is request-cached, so
- * calling this alongside the page's other session reads costs no extra roundtrip; the tier lookup is
- * skipped entirely for anon viewers (they can never unlock a premium post).
+ * calling this alongside the page's other session reads costs no extra roundtrip.
+ *
+ * `premiumInScope` gates the paid-tier lookup (mirroring the technique gate's `hasPremiumTechniqueMedia`
+ * short-circuit): the caller passes whether ANY post in scope is premium (`posts.some(p => p.isPremium)`
+ * for a feed; `row.isPremium` for a detail). When it's false — the default-false MVP, i.e. every
+ * current render — the `getLineageProfileDetailRenderPolicyForUser` roundtrip is skipped entirely. This
+ * is SAFE and behavior-preserving: `isCommunityPostViewerEntitled` short-circuits on `!post.isPremium`
+ * BEFORE ever consulting `hasPaidTier`, so an all-free feed never reads the tier leg anyway. The tier
+ * read is also skipped for anon viewers (they can never unlock a premium post).
  */
-export async function resolveCommunityViewerContext(): Promise<CommunityViewerContext> {
+export async function resolveCommunityViewerContext(
+  premiumInScope: boolean,
+): Promise<CommunityViewerContext> {
   const session = await getServerSession()
   const userId = session?.user?.id ?? null
-  const isAdmin = session?.user?.role === "admin"
 
-  const hasPaidTier = userId
-    ? (await getLineageProfileDetailRenderPolicyForUser({ userId, brand: Brand.BBL }))
-        .canRenderRichMedia
-    : false
+  const hasPaidTier =
+    userId && premiumInScope
+      ? (await getLineageProfileDetailRenderPolicyForUser({ userId, brand: Brand.BBL }))
+          .canRenderRichMedia
+      : false
 
-  return { userId, isAdmin, hasPaidTier }
+  return { userId, isAdmin: isAdmin(session?.user), hasPaidTier }
 }
 
 /**

@@ -51,7 +51,7 @@
   "locked_heading": "This is a Premium post",
   "locked_description": "The full breakdown is part of a Black Belt Legacy Premium membership. Reading the free community feed is always free — upgrade to unlock premium posts.",
   "premium_toggle_label": "Make this a Premium post",
-  "premium_toggle_hint": "Premium posts stay in the feed but are visible-but-locked to free members — only Premium members (and you) can read the full post.",
+  "premium_toggle_hint": "Premium posts stay in the feed, but the title and a short preview stay public while the full body, video, and image are locked to Premium members (and you).",
   "share": "Share",
   "share_copy_link": "Copy link",
   "share_native": "Share…",

@@ -54,7 +54,8 @@ const getData = cache(async ({ params }: Props) => {
     notFound()
   }
 
-  const viewerContext = await resolveCommunityViewerContext()
+  // `row.isPremium` short-circuits the paid-tier lookup on a free post (mirrors the technique gate).
+  const viewerContext = await resolveCommunityViewerContext(row.isPremium)
   const view = gateCommunityPost(row, isCommunityPostViewerEntitled(row, viewerContext))
 
   const t = await getTranslations()
@@ -87,7 +88,7 @@ export default async function (props: Props) {
         <CommunityPostFlair type={post.type} />
 
         {post.isPremium && (
-          <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+          <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
             {t("premium_badge")}
           </Badge>
         )}
@@ -121,6 +122,10 @@ export default async function (props: Props) {
     </Intro>
   )
 
+  // Save/Share sidebar — shared by the locked AND unlocked detail. Keeping it on a LOCKED detail is
+  // DELIBERATE (not an oversight): the detail has room, and Save-for-later + Share on the public
+  // teaser (title + excerpt) spread the funnel. Feed cards/rows, which are cramped, drop these for the
+  // single Unlock CTA instead. `text` is the public excerpt — no gated body/media is exposed.
   const sidebar = (
     <Section.Sidebar>
       <CommunityPostActions
