@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { headers } from "next/headers"
 import { ThemeProvider } from "next-themes"
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 import { Search } from "~/components/common/search"
@@ -86,6 +87,12 @@ export default async function ({ children }: LayoutProps<"/">) {
   const timeZone = await getTimeZone()
   const brandSettings = await findBrandSettings(Brand.BBL)
 
+  // Per-request CSP nonce (SESSION_0536) minted by proxy.ts and forwarded on the
+  // `x-nonce` request header. next-themes applies it to its injected inline bootstrap
+  // `<script>`, which is how `script-src` can drop `'unsafe-inline'`. The brand
+  // `<style>` below needs no nonce — style-src keeps `'unsafe-inline'` (locked decision).
+  const nonce = (await headers()).get("x-nonce") ?? undefined
+
   // Runtime --color-* override from DB-driven BrandSettings (HSL-guarded via the
   // shared helper — same path the [data-org] layout uses).
   const brandCss = brandThemeCss(`[data-brand="${Brand.BBL}"]`, brandSettings)
@@ -114,6 +121,7 @@ export default async function ({ children }: LayoutProps<"/">) {
                       defaultTheme="dark"
                       enableSystem={false}
                       disableTransitionOnChange
+                      nonce={nonce}
                     >
                       {children}
                       <Toaster />

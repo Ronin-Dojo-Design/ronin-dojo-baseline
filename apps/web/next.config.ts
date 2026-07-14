@@ -75,10 +75,12 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Global security-header / CSP baseline (RISK #2, P0). Hardening headers are
-  // enforced; the CSP ships Report-Only first (flip CSP_ENFORCE=1 to enforce).
-  // App-agnostic builder in config/security-headers.ts so each product app
-  // (apps/baseline, …) replicates the same posture (SESSION_0465).
+  // Global security-header baseline (RISK #2, P0). This emits the STATIC hardening
+  // headers only (X-*, Referrer-Policy, Permissions-Policy, COOP, HSTS in prod,
+  // Reporting-Endpoints). The Content-Security-Policy is NOT here — it carries a
+  // per-request nonce and is emitted from proxy.ts middleware (SESSION_0536), so a
+  // single CSP header lands on the document response. App-agnostic builder in
+  // config/security-headers.ts so each product app replicates the posture (SESSION_0465).
   async headers() {
     return buildSecurityHeadersConfig()
   },

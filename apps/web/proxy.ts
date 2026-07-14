@@ -1,6 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies"
 import { type NextRequest, NextResponse } from "next/server"
 import { resolveAppTabRedirect, resolveMigratedAppRedirect } from "~/config/app-redirects"
+import { buildContentSecurityPolicy, cspHeaderName } from "~/config/security-headers"
 
 /**
  * Single-brand middleware (BBL only). No host-switching, no brand header
@@ -8,6 +9,9 @@ import { resolveAppTabRedirect, resolveMigratedAppRedirect } from "~/config/app-
  *   1. Migrated-app and app-tab redirects (permanent 308)
  *   2. Auth guard — redirect logged-in users away from /auth, and
  *      unauthenticated users away from /dashboard, /admin
+ *   3. Per-request CSP nonce (SESSION_0536) — on the page-render path only, mint a
+ *      nonce, forward it to the app via the `x-nonce` request header, and attach the
+ *      (Report-Only) Content-Security-Policy carrying that nonce to the response.
  *
  * `/me` is intentionally NOT guarded here (SESSION_0523): it is a retired thin
  * redirect that owns its own anon handling (`me/page.tsx` → `/auth/login?next=/app/profile`).
@@ -50,5 +54,25 @@ export default async function (req: NextRequest) {
     return NextResponse.redirect(new URL(`/auth/login?next=${pathname}${search}`, req.url))
   }
 
-  return NextResponse.next()
+  // Page-render path (SESSION_0536, RISK #2): mint a per-request nonce and thread it
+  // through so `script-src` can drop `'unsafe-inline'` for `'nonce-…'` (Report-Only).
+  // The redirect/auth-guard branches above return before here — they emit no HTML body,
+  // so they need no nonce/CSP.
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
+  const cspValue = buildContentSecurityPolicy(process.env, nonce)
+  const cspHeader = cspHeaderName(process.env)
+
+  // Forward BOTH `x-nonce` (read by `app/layout.tsx` + the JSON-LD `<script>`) and the
+  // CSP itself on the REQUEST headers. Next reads the nonce off the forwarded CSP
+  // request header to auto-nonce its own bootstrap scripts — and it honours the
+  // Report-Only header name too (verified against next@16 app-render.parseRequestHeaders,
+  // which falls back from `content-security-policy` to `content-security-policy-report-only`).
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-nonce", nonce)
+  requestHeaders.set(cspHeader, cspValue)
+
+  const res = NextResponse.next({ request: { headers: requestHeaders } })
+  // The browser only receives (and reports/enforces against) the CSP as a RESPONSE header.
+  res.headers.set(cspHeader, cspValue)
+  return res
 }
