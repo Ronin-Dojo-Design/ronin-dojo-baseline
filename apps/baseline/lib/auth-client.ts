@@ -9,6 +9,6 @@ import { createAuthClient } from "better-auth/react";
  * Used by the local sign-in page (app/login) so the owner can reach the gated
  * admin board.
  */
-export const { signIn, signOut, useSession, admin } = createAuthClient({
+export const { signIn, signOut } = createAuthClient({
   plugins: [adminClient()],
 });

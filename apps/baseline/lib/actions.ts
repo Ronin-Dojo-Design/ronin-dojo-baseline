@@ -128,13 +128,6 @@ export async function listLeads(): Promise<LeadRecord[]> {
   return rows.map(toRecord);
 }
 
-/** Move a lead to a new pipeline stage. Session required. */
-export async function setLeadStatus(id: string, status: LeadStatusValue): Promise<LeadRecord> {
-  await requireAuth();
-  const row = await db.lead.update({ where: { id }, data: { status } });
-  return toRecord(row);
-}
-
 // ---------------------------------------------------------------------------
 // Board reconcile (the AdminKanban BoardStore.save path)
 // ---------------------------------------------------------------------------
