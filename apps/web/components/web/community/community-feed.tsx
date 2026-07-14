@@ -170,9 +170,11 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
             </>
           ) : (
             <>
-              {t("no_posts")}
-              {/* Launch empty state doubles as the funnel entry — same CTA as the header
-                  button; the create dialog's LoginDialog gate handles logged-out (Desi P1). */}
+              {viewer.canCreate ? t("no_posts") : t("no_posts_upgrade")}
+              {/* Launch empty state doubles as the funnel entry — same CTA as the header button.
+                  The dialog gates internally (logged-out → LoginDialog, free → upgrade CTA per
+                  FI-028, capable → form), so the button stays visible for everyone (funnel-first);
+                  a free member gets the upgrade label and reaches the upgrade panel, not a dead wall. */}
               <Button
                 type="button"
                 size="sm"
@@ -180,7 +182,7 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
                 onClick={() => setIsCreateOpen(true)}
                 className="mt-4"
               >
-                {t("new_post")}
+                {viewer.canCreate ? t("new_post") : t("upgrade_cta")}
               </Button>
             </>
           )}
