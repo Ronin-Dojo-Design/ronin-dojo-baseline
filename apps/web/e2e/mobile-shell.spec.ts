@@ -232,7 +232,7 @@ test.describe("Epic B mobile shell", () => {
     }
   })
 
-  test("elite non-admin: MAB one-action fan + full authored create round-trip (SESSION_0529 3B)", async ({
+  test("elite non-admin: MAB two-action fan (post + technique) + full authored create round-trip (SESSION_0529 3B, FI-028)", async ({
     page,
   }) => {
     // The round-trip compiles /app/profile + fires several server actions on a dev server.
@@ -241,8 +241,10 @@ test.describe("Epic B mobile shell", () => {
     const elite = await createAuthenticatedUser(page, { role: "user", name: "MAB Elite" })
 
     try {
-      // Elite entitlement (LINEAGE_ELITE) passes `canCreateTechniqueForUser` → the MAB mounts for
-      // this NON-admin with exactly one fan action; the four admin actions stay admin-gated.
+      // Elite entitlement (LINEAGE_ELITE) passes BOTH `canCreateTechniqueForUser` (AUTHOR techniques)
+      // and — SESSION_0535 FI-028 — `canCreateCommunityPostForUser` (any lineage tier CREATEs posts),
+      // so the MAB mounts for this NON-admin with a TWO-action fan (post + technique). The three
+      // remaining B1 actions (upload / promotion / claim) stay admin-gated.
       grantTestEntitlement(elite.userId, "LINEAGE_ELITE", "BBL")
 
       await page.goto("/lineage")
@@ -251,11 +253,13 @@ test.describe("Epic B mobile shell", () => {
       await mab.click()
 
       await expect(page.getByRole("button", { name: /add a technique/i })).toBeVisible()
-      await expect(page.getByRole("button", { name: /create post/i })).toHaveCount(0)
+      // FI-028: an Elite member is now post-capable, so "create post" IS in the fan (it was
+      // admin-only before this session).
+      await expect(page.getByRole("button", { name: /create post/i })).toBeVisible()
       await expect(page.getByRole("button", { name: /upload photo or media/i })).toHaveCount(0)
       await expect(page.getByRole("button", { name: /log a promotion/i })).toHaveCount(0)
       await expect(page.getByRole("button", { name: /claim or verify/i })).toHaveCount(0)
-      await page.screenshot({ path: `${SHOTS}/elite-01-one-action-fan.png` })
+      await page.screenshot({ path: `${SHOTS}/elite-01-two-action-fan.png` })
 
       // Deep-link lands on the Techniques tab with the authored-create sheet open.
       await page.getByRole("button", { name: /add a technique/i }).click()

@@ -12,6 +12,7 @@ import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { checkBookmarkSubjects } from "~/server/web/bookmarks/saved-subjects"
+import { canCreateCommunityPostForUser } from "~/server/web/community/permissions"
 import { findApprovedStyleOptions, findCommunityPosts } from "~/server/web/community/queries"
 
 // I18n page namespace — the community feed OWNS its namespace; `pages.blog` stays editorial-only
@@ -73,6 +74,13 @@ export default async function ({ searchParams }: Props) {
   // overlays that corner). Request-cached, so this costs no extra lookup beside the shell's.
   const hasMab = await shouldMountMab(session?.user)
 
+  // FI-028: the server-resolved CREATE gate, threaded to the composer via `viewer.canCreate`. A free
+  // member keeps the visible "New post" affordances but the dialog swaps to an upgrade CTA.
+  // Request-cached (shared with `shouldMountMab` above), so this adds no extra lookup.
+  const canCreate = session?.user
+    ? await canCreateCommunityPostForUser(session.user, Brand.BBL)
+    : false
+
   return (
     <>
       <Breadcrumbs items={breadcrumbs} />
@@ -94,7 +102,7 @@ export default async function ({ searchParams }: Props) {
       <CommunityFeed
         posts={posts}
         styles={styles}
-        viewer={{ isAdmin: isAdmin(session?.user), hasMab }}
+        viewer={{ isAdmin: isAdmin(session?.user), hasMab, canCreate }}
         savedPostIds={savedPostIds ? [...savedPostIds] : null}
         school={school}
       />
