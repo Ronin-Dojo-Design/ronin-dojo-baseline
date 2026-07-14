@@ -1,9 +1,12 @@
 import type { Metadata } from "next"
+import { LockKeyholeIcon } from "lucide-react"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
@@ -18,38 +21,53 @@ import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { toVideoEmbedUrl } from "~/lib/video-embed"
+import {
+  isCommunityPostViewerEntitled,
+  resolveCommunityViewerContext,
+} from "~/server/web/community/post-access"
+import { gateCommunityPost } from "~/server/web/community/post-gate"
 import { findCommunityPostBySlug } from "~/server/web/community/queries"
 
 export const dynamicParams = true
 
 type Props = PageProps<"/posts/[slug]">
 
+/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
+const UPGRADE_HREF = "/lineage/join"
+
 /**
  * Community post detail (SESSION_0493, ADR 0042 Amendment 1). HIDDEN posts 404 for everyone except
  * admins — the admin escape hatch exists so a moderator can reach the post to unhide it.
+ *
+ * FI-028b: the fetched row is GATED here (server-side) into a `CommunityPostView` — a locked premium
+ * post's body + media are stripped before anything crosses to render, so the detail never emits the
+ * gated content for an unentitled viewer. The bounded excerpt is kept as the teaser hook.
  */
 const getData = cache(async ({ params }: Props) => {
   const { slug } = await params
   const session = await getServerSession()
   const viewerIsAdmin = isAdmin(session?.user)
 
-  const post = await findCommunityPostBySlug(slug, Brand.BBL, { includeHidden: viewerIsAdmin })
+  const row = await findCommunityPostBySlug(slug, Brand.BBL, { includeHidden: viewerIsAdmin })
 
-  if (!post) {
+  if (!row) {
     notFound()
   }
 
-  const t = await getTranslations()
-  const url = `/posts/${post.slug}`
+  const viewerContext = await resolveCommunityViewerContext()
+  const view = gateCommunityPost(row, isCommunityPostViewerEntitled(row, viewerContext))
 
-  const data = await getPageData(url, post.title, post.excerpt, {
+  const t = await getTranslations()
+  const url = `/posts/${view.post.slug}`
+
+  const data = await getPageData(url, view.post.title, view.post.excerpt, {
     breadcrumbs: [
       { url: "/posts", title: t("navigation.posts") },
-      { url, title: post.title },
+      { url, title: view.post.title },
     ],
   })
 
-  return { post, viewerIsAdmin, ...data }
+  return { view, viewerIsAdmin, ...data }
 })
 
 export const generateMetadata = async (props: Props): Promise<Metadata> => {
@@ -58,52 +76,117 @@ export const generateMetadata = async (props: Props): Promise<Metadata> => {
 }
 
 export default async function (props: Props) {
-  const { post, viewerIsAdmin, breadcrumbs } = await getData(props)
+  const { view, viewerIsAdmin, breadcrumbs } = await getData(props)
   const t = await getTranslations("community")
   const format = await getFormatter()
-  const videoEmbedUrl = toVideoEmbedUrl(post.videoUrl)
+  const post = view.post
+
+  const header = (
+    <Intro>
+      <Stack size="sm">
+        <CommunityPostFlair type={post.type} />
+
+        {post.isPremium && (
+          <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+            {t("premium_badge")}
+          </Badge>
+        )}
+
+        {post.style && (
+          <Badge variant="outline" size="sm">
+            {post.style.name}
+          </Badge>
+        )}
+
+        {post.isHidden && (
+          <Badge variant="danger" size="sm">
+            {t("hidden_badge")}
+          </Badge>
+        )}
+      </Stack>
+
+      <IntroTitle>{post.title}</IntroTitle>
+
+      <Author
+        prefix={t("posted_by")}
+        name={post.authorName}
+        image={post.authorImage}
+        note={
+          <time dateTime={post.createdAt.toISOString()}>
+            {format.dateTime(post.createdAt, { dateStyle: "long" })}
+          </time>
+        }
+        className="mt-4"
+      />
+    </Intro>
+  )
+
+  const sidebar = (
+    <Section.Sidebar>
+      <CommunityPostActions
+        postId={post.id}
+        slug={post.slug}
+        title={post.title}
+        text={post.excerpt}
+        isHidden={post.isHidden}
+        isAdmin={viewerIsAdmin}
+        showSaveLabel
+      />
+    </Section.Sidebar>
+  )
+
+  // Locked premium detail — the teaser: excerpt hook + a centered upgrade panel (NO body, NO iframe,
+  // NO image; those fields don't exist on the locked view). Mirrors the technique watch "all-locked"
+  // upgrade panel idiom.
+  if (view.locked) {
+    return (
+      <>
+        <Breadcrumbs items={breadcrumbs} />
+
+        {header}
+
+        <Section>
+          <Section.Content>
+            <p className="text-lg text-secondary-foreground text-pretty">{post.excerpt}</p>
+
+            <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center">
+              <span className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
+                <LockKeyholeIcon className="size-7" />
+              </span>
+              <div className="flex flex-col gap-1">
+                <p className="font-medium text-foreground">{t("locked_heading")}</p>
+                <p className="max-w-md text-sm text-muted-foreground">{t("locked_description")}</p>
+              </div>
+              <Button
+                variant="primary"
+                size="md"
+                prefix={<LockKeyholeIcon />}
+                render={<Link href={UPGRADE_HREF} />}
+              >
+                {t("unlock_cta")}
+              </Button>
+            </div>
+          </Section.Content>
+
+          {sidebar}
+        </Section>
+      </>
+    )
+  }
+
+  const videoEmbedUrl = toVideoEmbedUrl(view.post.videoUrl)
 
   return (
     <>
       <Breadcrumbs items={breadcrumbs} />
 
-      <Intro>
-        <Stack size="sm">
-          <CommunityPostFlair type={post.type} />
-
-          {post.style && (
-            <Badge variant="outline" size="sm">
-              {post.style.name}
-            </Badge>
-          )}
-
-          {post.isHidden && (
-            <Badge variant="danger" size="sm">
-              {t("hidden_badge")}
-            </Badge>
-          )}
-        </Stack>
-
-        <IntroTitle>{post.title}</IntroTitle>
-
-        <Author
-          prefix={t("posted_by")}
-          name={post.authorName}
-          image={post.authorImage}
-          note={
-            <time dateTime={post.createdAt.toISOString()}>
-              {format.dateTime(post.createdAt, { dateStyle: "long" })}
-            </time>
-          }
-          className="mt-4"
-        />
-      </Intro>
+      {header}
 
       <Section>
         <Section.Content>
-          {post.imageUrl && (
+          {view.post.imageUrl && (
             <Image
-              src={post.imageUrl}
+              src={view.post.imageUrl}
               alt={post.title}
               width={1200}
               height={630}
@@ -113,7 +196,7 @@ export default async function (props: Props) {
             />
           )}
 
-          <Markdown code={post.content} />
+          <Markdown code={view.post.content} />
 
           {/* YouTube/Vimeo links embed via the existing `toVideoEmbedUrl` seam (FI-007 precedent
               on the directory profile); anything else falls back to an external link. */}
@@ -129,24 +212,14 @@ export default async function (props: Props) {
             </div>
           )}
 
-          {post.videoUrl && !videoEmbedUrl && (
-            <ExternalLink href={post.videoUrl} className="font-medium text-primary">
+          {view.post.videoUrl && !videoEmbedUrl && (
+            <ExternalLink href={view.post.videoUrl} className="font-medium text-primary">
               {t("watch_video")}
             </ExternalLink>
           )}
         </Section.Content>
 
-        <Section.Sidebar>
-          <CommunityPostActions
-            postId={post.id}
-            slug={post.slug}
-            title={post.title}
-            text={post.excerpt}
-            isHidden={post.isHidden}
-            isAdmin={viewerIsAdmin}
-            showSaveLabel
-          />
-        </Section.Sidebar>
+        {sidebar}
       </Section>
     </>
   )

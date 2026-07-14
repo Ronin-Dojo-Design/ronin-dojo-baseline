@@ -108,9 +108,9 @@ describe("isCommunityPostViewerEntitled — the VIEWER-keyed read resolver", () 
 
   it("free post → entitled for EVERYONE (incl. anon)", () => {
     expect(isCommunityPostViewerEntitled(free, ANON)).toBe(true)
-    expect(isCommunityPostViewerEntitled(free, { userId: "u", isAdmin: false, hasPaidTier: false })).toBe(
-      true,
-    )
+    expect(
+      isCommunityPostViewerEntitled(free, { userId: "u", isAdmin: false, hasPaidTier: false }),
+    ).toBe(true)
   })
 
   it("premium post + anon → NOT entitled (locked)", () => {
@@ -129,7 +129,11 @@ describe("isCommunityPostViewerEntitled — the VIEWER-keyed read resolver", () 
 
   it("premium post + admin → entitled", () => {
     expect(
-      isCommunityPostViewerEntitled(premium, { userId: "user-admin", isAdmin: true, hasPaidTier: false }),
+      isCommunityPostViewerEntitled(premium, {
+        userId: "user-admin",
+        isAdmin: true,
+        hasPaidTier: false,
+      }),
     ).toBe(true)
   })
 

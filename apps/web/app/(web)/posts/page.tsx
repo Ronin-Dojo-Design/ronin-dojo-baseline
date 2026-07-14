@@ -12,6 +12,11 @@ import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { checkBookmarkSubjects } from "~/server/web/bookmarks/saved-subjects"
+import {
+  isCommunityPostViewerEntitled,
+  resolveCommunityViewerContext,
+} from "~/server/web/community/post-access"
+import { gateCommunityPost } from "~/server/web/community/post-gate"
 import { canCreateCommunityPostForUser } from "~/server/web/community/permissions"
 import { findApprovedStyleOptions, findCommunityPosts } from "~/server/web/community/queries"
 
@@ -81,6 +86,14 @@ export default async function ({ searchParams }: Props) {
     ? await canCreateCommunityPostForUser(session.user, Brand.BBL)
     : false
 
+  // FI-028b READ gate: resolve the viewer's read context ONCE (admin/paid legs), then gate every row
+  // BEFORE it crosses to the client `CommunityFeed`. A locked premium post's body + media are stripped
+  // server-side here (type-encoded) — the raw content-bearing `posts` never reach a client component.
+  const viewerContext = await resolveCommunityViewerContext()
+  const views = posts.map(post =>
+    gateCommunityPost(post, isCommunityPostViewerEntitled(post, viewerContext)),
+  )
+
   return (
     <>
       <Breadcrumbs items={breadcrumbs} />
@@ -100,7 +113,7 @@ export default async function ({ searchParams }: Props) {
       </section>
 
       <CommunityFeed
-        posts={posts}
+        views={views}
         styles={styles}
         viewer={{ isAdmin: isAdmin(session?.user), hasMab, canCreate }}
         savedPostIds={savedPostIds ? [...savedPostIds] : null}
