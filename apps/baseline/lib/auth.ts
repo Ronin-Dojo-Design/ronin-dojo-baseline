@@ -60,6 +60,12 @@ export const auth = betterAuth({
     // email infra). The owner is provisioned by seed; flip this on once a sender
     // is wired.
     requireEmailVerification: false,
+    // Close the public front door (ADR 0038 boundary finding): Baseline is
+    // single-tenant, so the ONLY legitimate accounts are the seeded owner + any
+    // staff the owner provisions via the admin() plugin. Rejects the public
+    // /api/auth/sign-up/email endpoint. (The board gate stays "any authenticated
+    // session" so owner-provisioned members can still use it.)
+    disableSignUp: true,
   },
 
   account: {

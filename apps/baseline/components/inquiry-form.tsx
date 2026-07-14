@@ -45,14 +45,20 @@ export function InquiryForm() {
     }
 
     setSubmitting(true);
-    const result = await createLead(form);
-    setSubmitting(false);
-
-    if (!result.ok) {
-      setError(result.error);
-      return;
+    try {
+      const result = await createLead(form);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      setDone(true);
+    } catch {
+      // A thrown error = a real failure (DB/network), not the {ok:false}
+      // validation path. Show a generic message; never leave "Sending…" stuck.
+      setError("Something went wrong sending your inquiry. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setDone(true);
   }
 
   if (done) {

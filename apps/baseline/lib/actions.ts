@@ -147,25 +147,32 @@ export async function setLeadStatus(id: string, status: LeadStatusValue): Promis
  */
 export async function reconcileBoard(cards: BoardCard[]): Promise<void> {
   await requireAuth();
-  for (const card of cards) {
-    const status = toStatus(card.stage);
-    const existing = await db.lead.findUnique({ where: { id: card.id }, select: { id: true } });
-    if (existing) {
-      // Board-mutable fields only: the stage move + a card rename.
-      await db.lead.update({ where: { id: card.id }, data: { status, name: card.title } });
-    } else {
-      await db.lead.create({
-        data: {
-          id: card.id, // preserve the kernel card id so re-saves UPDATE, not dupe
-          name: card.title,
-          // Lead.email is required; an intake card carries a contact, a bare
-          // quick-add may not — fall back to empty so the board create never fails.
-          email: card.contact?.email?.trim().toLowerCase() || "",
-          phone: card.contact?.phone?.trim() || null,
-          status,
-          source: card.source ?? "board",
-        },
+  // Atomic: a mid-loop failure must not leave partial writes — every card commits
+  // together or none do. All reads/writes below go through the `tx` client.
+  await db.$transaction(async (tx) => {
+    for (const card of cards) {
+      const status = toStatus(card.stage);
+      const existing = await tx.lead.findUnique({
+        where: { id: card.id },
+        select: { id: true },
       });
+      if (existing) {
+        // Board-mutable fields only: the stage move + a card rename.
+        await tx.lead.update({ where: { id: card.id }, data: { status, name: card.title } });
+      } else {
+        await tx.lead.create({
+          data: {
+            id: card.id, // preserve the kernel card id so re-saves UPDATE, not dupe
+            name: card.title,
+            // Lead.email is required; an intake card carries a contact, a bare
+            // quick-add may not — fall back to empty so the board create never fails.
+            email: card.contact?.email?.trim().toLowerCase() || "",
+            phone: card.contact?.phone?.trim() || null,
+            status,
+            source: card.source ?? "board",
+          },
+        });
+      }
     }
-  }
+  });
 }

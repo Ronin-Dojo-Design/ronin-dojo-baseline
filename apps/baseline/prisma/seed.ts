@@ -3,10 +3,10 @@
  *
  * Idempotent, three parts:
  *   1. The owner login (Better Auth) — so the gated admin board (/app) is
- *      reachable headlessly. Created via `auth.api.signUpEmail` (hashes the
- *      password into Account like a real sign-up), then promoted to `owner`
- *      (the admin() plugin's `defaultRole` is `member`). Re-running is a no-op:
- *      we skip the sign-up when the User already exists.
+ *      reachable headlessly. Public sign-up is disabled (single-tenant), so the
+ *      first owner is bootstrapped DIRECTLY: a User + a `credential` Account whose
+ *      password is hashed with Better Auth's own hasher (`auth.$context`), so it
+ *      verifies on sign-in. Re-running is a no-op (upsert + skip-if-credential).
  *   2. The `SchoolSettings` singleton — the one-row white-label config.
  *   3. A few demo `Lead`s (stable ids) so the pipeline board isn't empty on
  *      first sign-in; keyed on seed ids so re-running updates in place (mirrors
@@ -27,14 +27,36 @@ const OWNER_PASSWORD = "baseline-dev-owner";
 const OWNER_NAME = "Baseline Owner";
 
 async function seedOwner() {
-  const existing = await db.user.findUnique({ where: { email: OWNER_EMAIL } });
-  if (!existing) {
-    await auth.api.signUpEmail({
-      body: { email: OWNER_EMAIL, password: OWNER_PASSWORD, name: OWNER_NAME },
+  // Upsert the owner login (idempotent; keep it `owner` on re-runs).
+  const user = await db.user.upsert({
+    where: { email: OWNER_EMAIL },
+    update: { role: "owner" },
+    create: { name: OWNER_NAME, email: OWNER_EMAIL, emailVerified: true, role: "owner" },
+  });
+
+  // Ensure a credential (email+password) account exists so the owner can sign in.
+  // Public sign-up is disabled (lib/auth.ts `disableSignUp`) and the admin
+  // createUser path needs an existing admin session (bootstrap chicken-and-egg),
+  // so we insert the credential DIRECTLY using Better Auth's own password hasher
+  // (`auth.$context.password.hash`) — the produced hash verifies on sign-in.
+  // Idempotent: skip when the owner already has a credential (don't re-salt).
+  const existingCred = await db.account.findFirst({
+    where: { userId: user.id, providerId: "credential" },
+    select: { id: true },
+  });
+  if (!existingCred) {
+    const ctx = await auth.$context;
+    const hashed = await ctx.password.hash(OWNER_PASSWORD);
+    await db.account.create({
+      data: {
+        userId: user.id,
+        // Better Auth's credential account keys accountId = the user id.
+        accountId: user.id,
+        providerId: "credential",
+        password: hashed,
+      },
     });
   }
-  // Promote to owner (sign-up lands as the admin() plugin's default `member`).
-  await db.user.update({ where: { email: OWNER_EMAIL }, data: { role: "owner" } });
 }
 
 async function seedSettings() {
