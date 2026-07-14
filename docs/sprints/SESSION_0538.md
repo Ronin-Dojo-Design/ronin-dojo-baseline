@@ -291,14 +291,35 @@ proven recipe. Build order: 01 → 02 → 03 → 04, running gates at checkpoint
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0538_TASK_01 | pending | baseline_dev schema + init migration (domain + auth) |
-| SESSION_0538_TASK_02 | pending | Baseline per-product Better Auth (D5) |
-| SESSION_0538_TASK_03 | pending | Public inquiry funnel → Lead |
-| SESSION_0538_TASK_04 | pending | Auth-gated admin Leads board |
+| SESSION_0538_TASK_01 | landed | `baseline_dev` first migration `20260714141517_init` (Lead/SchoolSettings + Better Auth tables); `better-auth` dep; isolation proven |
+| SESSION_0538_TASK_02 | landed | Baseline own Better Auth (D5) — `lib/auth.ts`, `api/auth/[...all]`, login page, owner seed; `disableSignUp` (F1 fix) |
+| SESSION_0538_TASK_03 | landed | Public `createLead` funnel + `InquiryForm` → `Lead(NEW)` |
+| SESSION_0538_TASK_04 | landed | Auth-gated admin Leads board (`BASELINE_BOARD` on shared `AdminKanban` via own `createDbBoardStore`) |
 
 ## What landed
 
-<!-- filled at bow-out -->
+Baseline (`apps/baseline`) advanced from a Phase-1 static scaffold to Mammoth's phase — full local
+per-product separation. Two commits on `session-0538-g002` (`1c1eaec1` build, `b66dd746` hardening):
+
+- **TASK_01 — `baseline_dev` schema + first migration.** Added `User/Session/Account/Verification` +
+  `BaselineRole` enum to the schema (kept `Lead/LeadStatus/SchoolSettings`); one greenfield `init` migration
+  (`20260714141517_init`, 6 tables + 2 enums, auth FKs CASCADE, **no cross-product FK**); `better-auth`
+  dep added. **Isolation proven**: `ronindojo` (147 tables/3590 rows) + `mammoth_dev` (11/7) byte-unchanged.
+- **TASK_02 — Baseline's OWN Better Auth (D5).** `lib/auth.ts` (`prismaAdapter` + `admin()` owner/member,
+  fail-loud secret), `app/api/auth/[...all]`, `lib/auth-client.ts`, `app/login` staff sign-in, idempotent
+  owner seed. **No shared identity.** `disableSignUp: true` (F1 hardening) — seed reworked to a direct
+  User+credential-Account insert using Better Auth's own hasher (owner still signs in; public sign-up → 400).
+- **TASK_03 — public inquiry funnel → `Lead`.** `createLead` — the ONLY un-authenticated export; validated
+  (name+email required, email shape, length caps, server-set `status:NEW`/`source:web_form`), returns only
+  `{ok,id}`. `components/inquiry-form.tsx` (client form, try/catch/finally on submit — F2 hardening). The
+  static mailto `#visit` section swapped for `<InquiryForm />` (mailto kept as a secondary line).
+- **TASK_04 — auth-gated admin Leads board.** `BASELINE_BOARD` (a `LeadStatus` pipeline
+  NEW→CONTACTED→TRIAL_BOOKED→ENROLLED→CLOSED) on the shared `AdminKanban` kernel via a Baseline-local
+  `createDbBoardStore` over `baseline_dev`. Single-tenant `requireAuth` (no `ownerId`/IDOR layer);
+  `reconcileBoard` wrapped in `db.$transaction` (F3 hardening); `app/app/page.tsx` server-gated (redirect
+  unauth → `/login`). Board separation from Mammoth is **structural** (separate DBs), not policed.
+
+Local only — no Neon/Vercel/domain cutover (deferred, operator-gated).
 
 ## Decisions resolved
 
@@ -308,52 +329,108 @@ proven recipe. Build order: 01 → 02 → 03 → 04, running gates at checkpoint
 
 ## Files touched
 
-<!-- filled at bow-out -->
-
 | File | Change |
 | --- | --- |
+| `apps/baseline/prisma/schema.prisma` | +`User/Session/Account/Verification` + `BaselineRole` enum |
+| `apps/baseline/prisma/migrations/20260714141517_init/migration.sql` | new — greenfield init (6 tables, 2 enums) |
+| `apps/baseline/prisma/seed.ts` | owner seed (direct User+credential insert, BA hasher) + settings + 3 demo leads |
+| `apps/baseline/package.json` · `bun.lock` | +`better-auth ^1.6.16` (Baseline dep edge) |
+| `apps/baseline/lib/auth.ts` | new — own Better Auth (`admin()`, `disableSignUp`, fail-loud secret) |
+| `apps/baseline/lib/auth-client.ts` | new — Better Auth React client |
+| `apps/baseline/app/api/auth/[...all]/route.ts` | new — `toNextJsHandler(auth)` |
+| `apps/baseline/app/login/page.tsx` | new — staff email+password sign-in |
+| `apps/baseline/lib/actions.ts` | new — public `createLead` + gated `listLeads`/`setLeadStatus`/`reconcileBoard` (`$transaction`) |
+| `apps/baseline/lib/types.ts` | new — DTOs (kept out of the `"use server"` module) |
+| `apps/baseline/lib/board-config.ts` | new — `BASELINE_BOARD` + `leadToCard` |
+| `apps/baseline/lib/board-store-db.ts` | new — `createDbBoardStore` (kernel `BoardStore` port) |
+| `apps/baseline/app/app/page.tsx` · `app/app/leads-board.tsx` | new — server-gated board page + client island |
+| `apps/baseline/components/inquiry-form.tsx` | new — public funnel form (try/catch) |
+| `apps/baseline/app/page.tsx` | `#visit` mailto → `<InquiryForm />` |
+| `apps/baseline/.env.example` | +auth vars + explicit-user note |
+| `docs/architecture/decisions/0038-per-product-database-separation.md` | impl-status: Baseline local Phase 2 landed + cloud-cutover gate |
 
 ## Verification
 
-<!-- filled at bow-out -->
-
 | Command / smoke | Result |
 | --- | --- |
+| `bun run typecheck` (baseline) | ✅ green |
+| `bun run build` (baseline) | ✅ 5 routes (`/`+`/login` static, `/app`+`/api/auth/[...all]` dynamic) |
+| `oxfmt --check` | ✅ baseline 25 + apps/web 1925 files (no regression) |
+| `oxlint` (baseline) | 1 pre-existing warning (`lib/db.ts:29` globalThis, scaffold pattern — not introduced) |
+| Migration isolation | ✅ `ronindojo` 147t/3590r + `mammoth_dev` 11t/7r byte-unchanged (Doug re-verified) |
+| Headless data-layer smoke | ✅ Cody 16-check + Doug 19-check — public/gated boundary, `disableSignUp` 400, owner sign-in, `$transaction` rollback |
+| Live render (lead-driven, `:3100`) | ✅ funnel submit → `Lead` in `baseline_dev` → gated board after owner sign-in; `/app`→`/login` unauth; **0 console errors** |
+| Verifier wave | Doug **GO 9.5** · Giddy **PASS** (ADR 0038 D1/D5 confirmed) |
 
 ## Open decisions / blockers
 
-- Cloud half of G-002 (Neon provision + Vercel + `baselinemartialarts.com` cutover) remains — operator/SHIP
-  gated; RISK #13 (Neon credential rotation) is its precondition.
+- **G-002 cloud half remains** (operator/SHIP-gated) — recorded in ADR 0038 impl-status. **Baseline
+  cloud-cutover gate** before `baselinemartialarts.com` detaches from BBL: rate-limit/captcha the public
+  `createLead`, real `BETTER_AUTH_SECRET`/`URL`, decide `requireEmailVerification`, and **RISK #13 Neon
+  rotation FIRST**. Mammoth cloud half + the `getRequestBrand`/`Brand` prune are separate deferred sub-lanes.
+- **Banked polish (non-blocking):** board cards render the name twice (`title` + `contact.name` are the same
+  value); the kernel `cardKind:"deal"` renders a `$` glyph that reads oddly for a non-monetary school lead —
+  a future Desi pass. `lib/db.ts` globalThis oxlint warning is a pre-existing repo-wide scaffold pattern.
 
 ## Next session
 
 ### Goal
 
-<!-- filled at bow-out -->
+Operator's call. Top G-002-adjacent candidates: the **cloud batch** (Neon + Vercel provisioning for
+Mammoth/Baseline + the Baseline domain cutover — operator-gated, RISK #13 rotation first), OR the next top
+board card. G-002 stays **in-progress** (local half done for all products; cloud half remains).
 
 ### First task
 
-<!-- filled at bow-out -->
+If the cloud batch: rotate the exposed Neon credential (RISK #13), then provision Baseline's Neon + Vercel
+project (rooted `apps/baseline`) with a real `BETTER_AUTH_SECRET`/`URL`, add a rate-limit to `createLead`,
+and cut `baselinemartialarts.com` over from BBL (verify `blackbeltlegacy.com` stays on BBL first — ADR 0039
+D5). Otherwise pick the top non-parked board card (`cd apps/web && bun scripts/board-backlog.ts --top=10`).
 
 ## Review log
 
-<!-- filled at bow-out -->
+### SESSION_0538_REVIEW_01 — verifier wave (Doug + Giddy) + lead live render
+
+- **Reviewed tasks:** SESSION_0538_TASK_01–04.
+- **Dirstarter docs check:** not applicable — mirrors the in-repo Mammoth product; extends the per-app
+  Prisma + Better Auth baselines (no Dirstarter capability replaced).
+- **Sources:** ADR 0038, the Mammoth `clients/mammoth-build-crm` recipe, the migration SQL, live `:3100`
+  render + DB probes.
+- **Verdict:** Doug **GO 9.5/10** (gates green, migration isolation empirically re-proven, 19-check smoke +
+  a signup PoC that confirmed F1); Giddy **PASS** (faithful mirror, surgically scoped to `apps/baseline/**`,
+  ADR 0038 D1/D5 confirmed, Baseline improves on Mammoth twice). **F1** (open self-serve sign-up +
+  session-only board gate) was fixed in-session (`disableSignUp` + seed rework), re-verified. P3-a
+  (form error path) + P3-b (atomic `reconcileBoard`) also fixed. Lead live render: full funnel → gated-board
+  round-trip green, 0 console errors.
+- **Score:** 9.5/10.
+- **Follow-up:** cloud-cutover gate (ADR 0038 impl-status). `/fallow-fix-loop` + `/code-quality` +
+  hostile-close + `/pr-review-fix` run post-PR (operator-requested).
 
 ## Hostile close review
 
-<!-- filled at bow-out -->
+<!-- filled after the post-PR quality gauntlet (hostile-close-review is one of the requested passes) -->
 
 ## ADR / ubiquitous-language check
 
-<!-- filled at bow-out; expected: ADR 0038 confirmed valid (executes its Phase 2 for Baseline), no new ADR. -->
+- **ADR update NOT required (new ADR).** Executes **ADR 0038**'s Phase 2 for the `apps/baseline` peer;
+  Giddy confirmed the ADR valid. Its Implementation-status block was refreshed (Baseline local Phase 2
+  landed + the cloud-cutover gate) — a living-status update, not a decision change.
+- **Ubiquitous-language update NOT required** — no new domain term (Lead/LeadStatus/pipeline already exist).
 
 ## Reflections
 
-<!-- filled at bow-out -->
+<!-- filled at true close, after the quality gauntlet -->
 
 ## Full close evidence
 
-<!-- filled at bow-out -->
+<!-- completed at true close -->
 
 | Step | Proof |
 | --- | --- |
+| Task log | 4 tasks, all landed (`## What landed`) |
+| Gates | typecheck ✓ · oxfmt ✓ (baseline 25 + web 1925) · `next build` ✓ · oxlint (1 pre-existing warn) |
+| Verifier wave | Doug GO 9.5 · Giddy PASS (SESSION_0538_REVIEW_01) |
+| Live render | funnel→Lead→gated board round-trip, 0 console errors (`:3100`) |
+| Migration isolation | `ronindojo` + `mammoth_dev` byte-unchanged |
+| Finding routing | F1 fixed in-session; cloud residual → ADR 0038 impl-status (correct router dest = phased-work, not WL) |
+| ADR check | ADR 0038 confirmed valid; impl-status refreshed |
