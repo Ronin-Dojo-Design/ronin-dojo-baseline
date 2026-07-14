@@ -17,7 +17,7 @@ import {
 } from "~/components/web/ui/feed-filter-bar"
 import { Grid } from "~/components/web/ui/grid"
 import { ResultsCount } from "~/components/web/ui/results-count"
-import type { CommunityPostMany } from "~/server/web/community/payloads"
+import type { CommunityPostView } from "~/server/web/community/post-gate"
 import type { CommunityPostTypeInput } from "~/server/web/community/schema"
 
 /**
@@ -32,7 +32,12 @@ import type { CommunityPostTypeInput } from "~/server/web/community/schema"
  * C1-1/2/3 (mobile sticky, mobile-visible style facet, edge-fade/tighter pills) land through it.
  */
 type CommunityFeedProps = {
-  posts: CommunityPostMany[]
+  /**
+   * The server-GATED feed (FI-028b): each post is already resolved to a `CommunityPostView` — a
+   * locked premium post's body/media were stripped server-side before crossing here, so the client
+   * only ever holds a teaser for a post the viewer can't read.
+   */
+  views: CommunityPostView[]
   /** Approved styles for the create dialog's optional style select. */
   styles: { id: string; name: string }[]
   /**
@@ -63,7 +68,7 @@ type CommunityFeedProps = {
 const ALL = "all" as const
 type TypeFilter = typeof ALL | CommunityPostTypeInput
 
-export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: CommunityFeedProps) => {
+export const CommunityFeed = ({ views, styles, viewer, savedPostIds }: CommunityFeedProps) => {
   const t = useTranslations("community")
   const [view, setView] = useState<FeedView>("grid")
 
@@ -75,24 +80,25 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
   const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   // Style facet derives from the styles PRESENT in the feed (legacy buildPostStyles behavior),
-  // ordered by name — not the full approved catalog.
+  // ordered by name — not the full approved catalog. (Type + style survive the lock strip, so both
+  // filters work on a locked teaser too.)
   const feedStyles = useMemo(() => {
     const seen = new Map<string, string>()
-    for (const post of posts) {
+    for (const { post } of views) {
       if (post.style && !seen.has(post.style.id)) seen.set(post.style.id, post.style.name)
     }
     return [...seen.entries()]
       .map(([id, name]) => ({ value: id, label: name }))
       .sort((a, b) => a.label.localeCompare(b.label))
-  }, [posts])
+  }, [views])
 
   const filtered = useMemo(() => {
-    return posts.filter(post => {
+    return views.filter(({ post }) => {
       if (typeFilter !== ALL && post.type !== typeFilter) return false
       if (styleFilter && post.style?.id !== styleFilter) return false
       return true
     })
-  }, [posts, typeFilter, styleFilter])
+  }, [views, typeFilter, styleFilter])
 
   const hasActiveFilters = typeFilter !== ALL || Boolean(styleFilter)
 
@@ -192,23 +198,23 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
       {!!filtered.length &&
         (view === "grid" ? (
           <Grid>
-            {filtered.map(post => (
+            {filtered.map(postView => (
               <CommunityPostCard
-                key={post.slug}
-                post={post}
+                key={postView.post.slug}
+                view={postView}
                 isAdmin={viewer.isAdmin}
-                initialSaved={savedIds?.has(post.id)}
+                initialSaved={savedIds?.has(postView.post.id)}
               />
             ))}
           </Grid>
         ) : (
           <div className="flex w-full flex-col gap-4">
-            {filtered.map(post => (
+            {filtered.map(postView => (
               <CommunityPostRow
-                key={post.slug}
-                post={post}
+                key={postView.post.slug}
+                view={postView}
                 isAdmin={viewer.isAdmin}
-                initialSaved={savedIds?.has(post.id)}
+                initialSaved={savedIds?.has(postView.post.id)}
               />
             ))}
           </div>

@@ -1,49 +1,72 @@
 "use client"
 
+import { LockKeyholeIcon } from "lucide-react"
 import Image from "next/image"
-import { useFormatter } from "next-intl"
+import { useFormatter, useTranslations } from "next-intl"
 import { Badge } from "~/components/common/badge"
+import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
 import { Author } from "~/components/web/ui/author"
-import type { CommunityPostMany } from "~/server/web/community/payloads"
+import type { CommunityPostView } from "~/server/web/community/post-gate"
 
 /**
  * CommunityPostRow — LIST density for the community feed (SESSION_0493). Mirrors the editorial
- * `PostRow` composition (same L1 primitives: `Card` surface, `Badge`, `H4`, `Link`, `Author`) —
- * thumbnail left; flair + title + one-line excerpt + byline/meta right. NOT a new card system.
+ * `PostRow` composition (same L1 primitives: `Card` surface, `Badge`, `H4`, `Link`, `Author`).
+ *
+ * FI-028b: branches on the gated `CommunityPostView`. A LOCKED premium post drops the thumbnail (its
+ * view carries no image), adds a lock badge + an "Unlock with Premium" CTA in place of the save/share
+ * actions; an UNLOCKED premium post gains a "Premium" badge.
  */
 type CommunityPostRowProps = {
-  post: CommunityPostMany
+  view: CommunityPostView
   isAdmin?: boolean
   /** Server-batched saved-state (D6). `undefined` → the Save button self-checks on mount. */
   initialSaved?: boolean
 }
 
+/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
+const UPGRADE_HREF = "/lineage/join"
+
 export const CommunityPostRow = ({
-  post,
+  view,
   isAdmin = false,
   initialSaved,
 }: CommunityPostRowProps) => {
   const format = useFormatter()
+  const t = useTranslations("community")
+  const post = view.post
+  const locked = view.locked
 
   return (
     <Card isRevealed className="flex-row items-stretch gap-4 overflow-clip p-4">
-      {post.imageUrl && (
+      {view.locked === false && view.post.imageUrl && (
         <Link
           href={`/posts/${post.slug}`}
           className="relative hidden aspect-video w-40 shrink-0 self-center overflow-clip rounded-md sm:block"
         >
-          <Image src={post.imageUrl} alt={post.title} fill className="object-cover" sizes="160px" />
+          <Image
+            src={view.post.imageUrl}
+            alt={post.title}
+            fill
+            className="object-cover"
+            sizes="160px"
+          />
         </Link>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <CommunityPostFlair type={post.type} />
+
+          {post.isPremium && (
+            <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+              {t("premium_badge")}
+            </Badge>
+          )}
 
           {post.style && (
             <Badge variant="outline" size="sm">
@@ -77,15 +100,26 @@ export const CommunityPostRow = ({
             className="min-w-0"
           />
 
-          <CommunityPostActions
-            postId={post.id}
-            slug={post.slug}
-            title={post.title}
-            text={post.excerpt}
-            isHidden={post.isHidden}
-            isAdmin={isAdmin}
-            initialSaved={initialSaved}
-          />
+          {locked ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              prefix={<LockKeyholeIcon />}
+              render={<Link href={UPGRADE_HREF} />}
+            >
+              {t("unlock_cta")}
+            </Button>
+          ) : (
+            <CommunityPostActions
+              postId={post.id}
+              slug={post.slug}
+              title={post.title}
+              text={post.excerpt}
+              isHidden={post.isHidden}
+              isAdmin={isAdmin}
+              initialSaved={initialSaved}
+            />
+          )}
         </div>
       </div>
     </Card>

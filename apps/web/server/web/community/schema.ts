@@ -36,6 +36,9 @@ export const createCommunityPostSchema = z.object({
   // verifies the URL points at OUR media bucket (see `isAllowedCommunityImageUrl`).
   imageUrl: z.union([z.literal(""), z.string().trim().url().max(500)]).optional(),
   styleId: z.union([z.literal(""), z.string().trim().max(64)]).optional(),
+  // @added SESSION_0537 (FI-028b) — the author self-serve premium toggle (default off). A premium post
+  // is visible-but-locked to free/anon readers (excerpt teaser only); the create action persists this.
+  isPremium: z.boolean().optional(),
 })
 
 export const setCommunityPostStatusSchema = z.object({

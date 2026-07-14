@@ -120,6 +120,9 @@ export const createCommunityPost = userActionClient
         imageUrl,
         styleId,
         brand,
+        // FI-028b: the author's self-serve premium toggle (default off) — a premium post is
+        // visible-but-locked to free/anon readers, gated on read by `isCommunityPostViewerEntitled`.
+        isPremium: parsedInput.isPremium ?? false,
         // The GAINER invariant: authorship comes from the SESSION, never client input.
         authorId: user.id,
       },

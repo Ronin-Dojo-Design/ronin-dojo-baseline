@@ -30,6 +30,7 @@ import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
+import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { COMMUNITY_POST_TYPES } from "~/components/web/community/post-type"
@@ -92,6 +93,7 @@ export const CreateCommunityPostDialog = ({
           videoUrl: "",
           imageUrl: "",
           styleId: "",
+          isPremium: false,
         },
       },
 
@@ -359,6 +361,35 @@ export const CreateCommunityPostDialog = ({
                   )}
 
                   <Hint>{t("image_hint")}</Hint>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* FI-028b: author self-serve premium toggle (default off). A premium post stays IN the
+                feed but shows free/anon readers a locked teaser (excerpt only) with an upgrade CTA;
+                only Premium members (and the author) read the full post. */}
+            <FormField
+              control={form.control}
+              name="isPremium"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-start gap-3 rounded-lg border p-3">
+                    <FormControl>
+                      <Switch
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                        className="mt-0.5"
+                      />
+                    </FormControl>
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <FormLabel className="flex items-center gap-1.5">
+                        <LockKeyholeIcon className="size-3.5 shrink-0" />
+                        {t("premium_toggle_label")}
+                      </FormLabel>
+                      <Hint>{t("premium_toggle_hint")}</Hint>
+                    </div>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
