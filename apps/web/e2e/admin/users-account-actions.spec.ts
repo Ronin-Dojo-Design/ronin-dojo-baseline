@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser, createTestUser } from "../helpers/auth"
 
 /**
@@ -19,9 +19,31 @@ import { cleanupTestUser, createAuthenticatedUser, createTestUser } from "../hel
 const createdUserIds: string[] = []
 
 test.describe("/app/users account row-actions — isAdmin gating", () => {
+  // `/app/users` is a heavy admin route that NO sibling spec warms, so on CI's cold, slower runner its
+  // first Turbopack compile can outlast the row-visibility wait — the intermittent red that bit
+  // SESSION_0534 (line-42/47 timeouts, different points across retries = a timing race, not a logic
+  // bug). Give the whole test a generous ceiling; the per-step budgets below do the real work.
+  test.setTimeout(180_000)
+
   test.afterAll(async () => {
     for (const id of createdUserIds) await cleanupTestUser(id)
   })
+
+  /**
+   * Open the Passport-keyed list filtered to a seeded row and return that row. `waitUntil: "commit"`
+   * resolves as soon as the document response starts, so a cold `/app/users` compile is absorbed by
+   * the goto's own 120s budget instead of racing the row wait; then poll for the seeded row (found by
+   * its unique name, never by position) with a generous deterministic timeout.
+   */
+  const openSeededRow = async (page: Page, name: string) => {
+    await page.goto(`/app/users?displayName=${encodeURIComponent(name)}`, {
+      waitUntil: "commit",
+      timeout: 120_000,
+    })
+    const row = page.getByRole("row").filter({ hasText: name }).first()
+    await expect(row).toBeVisible({ timeout: 90_000 })
+    return row
+  }
 
   test("non-admin target is bannable + deletable; admin target is neither", async ({ page }) => {
     // Acting admin — the repo-standard fixture sets the Better-Auth session cookie on this context.
@@ -37,22 +59,22 @@ test.describe("/app/users account row-actions — isAdmin gating", () => {
     createdUserIds.push(adminTarget.userId)
 
     // ---- non-admin target: kebab exposes Ban + Revoke; sibling Delete button present ----
-    await page.goto(`/app/users?displayName=${encodeURIComponent(nonAdmin.name)}`)
-    const nonAdminRow = page.getByRole("row").filter({ hasText: nonAdmin.name }).first()
-    await expect(nonAdminRow).toBeVisible({ timeout: 60_000 })
+    // Every visibility assertion carries an explicit generous timeout — the default expect budget is
+    // 5s (playwright.config sets no `expect.timeout`), which is what raced the Delete render on CI.
+    const nonAdminRow = await openSeededRow(page, nonAdmin.name)
     await nonAdminRow.getByRole("button", { name: "Open menu" }).click()
-    await expect(page.getByRole("menuitem", { name: "Ban" })).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible()
+    await expect(page.getByRole("menuitem", { name: "Ban" })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({ timeout: 30_000 })
     await page.keyboard.press("Escape")
-    await expect(nonAdminRow.getByRole("button", { name: "Delete" })).toBeVisible()
+    await expect(nonAdminRow.getByRole("button", { name: "Delete" })).toBeVisible({ timeout: 30_000 })
 
     // ---- admin target (non-self): Role + Revoke, but NO Ban and NO Delete ----
-    await page.goto(`/app/users?displayName=${encodeURIComponent(adminTarget.name)}`)
-    const adminRow = page.getByRole("row").filter({ hasText: adminTarget.name }).first()
-    await expect(adminRow).toBeVisible({ timeout: 60_000 })
+    const adminRow = await openSeededRow(page, adminTarget.name)
     await adminRow.getByRole("button", { name: "Open menu" }).click()
-    await expect(page.getByRole("menuitem", { name: "Role" })).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible()
+    // Confirm the menu actually rendered (Role visible) BEFORE asserting Ban's absence, so `toHaveCount(0)`
+    // can't pass merely because the menu hasn't painted yet.
+    await expect(page.getByRole("menuitem", { name: "Role" })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({ timeout: 30_000 })
     await expect(page.getByRole("menuitem", { name: "Ban" })).toHaveCount(0)
     await page.keyboard.press("Escape")
     await expect(adminRow.getByRole("button", { name: "Delete" })).toHaveCount(0)
