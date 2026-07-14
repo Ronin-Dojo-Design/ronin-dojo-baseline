@@ -227,6 +227,26 @@ not a fan-out. Verification fans out (Doug + Giddy + Desi) after the build.
   6.7%→0%, `proxy.ts` off the high-complexity list). All ships Report-Only → zero prod blast radius.
   Two Doug P3s (middleware `try/catch`, log query-scrub) were banked, not deferred.
 
+**SESSION_0536_REVIEW_02 — /code-quality score (code-quality-matrix)**
+
+Three units scored against `code-quality-matrix §2`, evidence from the fallow pass (MI 93.4, 0 dead
+exports, no high-complexity in the CSP files) + behavioral verification (browser audit, runtime probes,
+smoke e2e, sink POST). Gap-closing fixes applied: `cspEnforce` un-exported + nonce helper extracted (D3/D5,
+fallow) and all three primitives inventoried in `custom-component-inventory` (D7 Class-C cap cleared).
+
+| Unit | Class | D1 | D2 | D3 | D4 | D5 | D6 | D7 | Composite | Verdict |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `config/security-headers.ts` | B | 10 | 10 | 9 | 10 | 9 | 10 | 9 | **9.5** | Gold |
+| `proxy.ts` nonce middleware | B | 9 | 10 | 9 | 10 | 9 | 9 | 9 | **9.3** | Strong |
+| `app/api/csp-report/route.ts` | C | 10 | 9 | 9 | 10 | 9 | 9 | 9 | **9.3** | Strong |
+
+- **Caps:** none (verification is behavioral → no 9.4 cap; the sink's security proof is present + it exposes
+  nothing sensitive → no 8.9 cap; inventoried → no Class-C cap; no regression).
+- **Apple/Facebook verdict:** gold-to-strong. The two sub-9.5 units carry only named nits — the middleware
+  `try/catch` catch-path is not unit-tested (forcing a `crypto` throw is contrived), and the sink throttle is
+  best-effort per-instance (a distributed limiter on a Report-Only observation sink is YAGNI). No
+  behavior-preserving fix raises them materially; accepted-with-reason.
+
 ## Hostile close review
 
 ### Giddy + Doug hostile pass (authored by closing agent, personas applied)
