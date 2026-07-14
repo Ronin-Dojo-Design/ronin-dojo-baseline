@@ -24,6 +24,8 @@ type SampleRow = {
   videoUrl: string | null
   imageUrl: string | null
   status: string
+  isPremium: boolean
+  authorId: string
   createdAt: Date
   style: { id: string; name: string } | null
   author: {
@@ -42,6 +44,8 @@ const sampleRow: SampleRow = {
   videoUrl: null,
   imageUrl: null,
   status: "HIDDEN",
+  isPremium: false,
+  authorId: "user-1",
   createdAt: new Date("2026-07-01T00:00:00Z"),
   style: { id: "style-1", name: "Brazilian Jiu-Jitsu" },
   author: {
