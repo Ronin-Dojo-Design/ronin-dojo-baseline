@@ -1,41 +1,62 @@
 /**
  * Global security-header + CSP baseline for every product app (RISK #2, P0).
  *
- * Wired into `next.config.ts` `headers()` so it applies to every route. Kept as a
- * standalone, app-agnostic builder so each new product app (`apps/baseline`, …)
- * replicates the same baseline by calling `buildSecurityHeaders()` from its own
- * next config — the security posture lives per-app (ADR 0034), not in root
- * `vercel.json` (locked decision, SESSION_0465).
+ * Two emission sites (SESSION_0536):
+ *  - The **static hardening headers** (HSTS, frame, content-type, referrer,
+ *    permissions, COOP, DNS-prefetch, Reporting-Endpoints) are wired into
+ *    `next.config.ts` `headers()` via `buildSecurityHeadersConfig()` so they apply
+ *    to every route. Kept app-agnostic so each product app (`apps/baseline`, …)
+ *    replicates the same baseline from its own next config — the posture lives
+ *    per-app (ADR 0034), not in root `vercel.json` (locked, SESSION_0465).
+ *  - The **Content-Security-Policy** now emits from `proxy.ts` middleware
+ *    (`buildContentSecurityPolicy(env, nonce)` + `cspHeaderName()`) because it
+ *    carries a per-request nonce, which is inherently per-request and cannot be a
+ *    static header. Emitting it there (not here) keeps exactly one CSP header on
+ *    the document response.
  *
  * Posture (security-risk-register #2):
- *  - The hardening headers (HSTS, frame, content-type, referrer, permissions,
- *    COOP) are ENFORCED now — they have no app-breaking surface for this app.
- *  - The Content-Security-Policy ships in **Report-Only** first (the register's
- *    "Start report-only, observe, then enforce" + open question: which directives
- *    break Stripe/analytics/media). It does NOT block anything yet; browsers only
- *    report violations. Flip `CSP_ENFORCE` (or the env override) to promote the
- *    same policy to the enforcing `Content-Security-Policy` header once the
- *    report stream is clean.
+ *  - The hardening headers are ENFORCED now — no app-breaking surface.
+ *  - The Content-Security-Policy ships in **Report-Only** (the register's "Start
+ *    report-only, observe, then enforce"). It does NOT block anything yet; browsers
+ *    only report violations to `/api/csp-report`. Flip `CSP_ENFORCE` to promote the
+ *    same policy to the enforcing `Content-Security-Policy` header once the report
+ *    stream is clean — never enforce blind.
  *
- * Why `'unsafe-inline'` for script/style today (documented, intentional, to be
- * tightened): this app renders an inline `next-themes` bootstrap `<script>` and an
- * inline brand-settings `<style>` (`app/layout.tsx`), plus Next's own inline
- * bootstrap. A nonce-based strict CSP requires threading a per-request nonce
- * through a middleware rewrite — deferred. Report-Only with `'unsafe-inline'`
- * surfaces the real external-origin violations without a false wall of inline
- * hits, which is the right first observation step. The nonce migration is the
- * documented follow-up before enforcing.
+ * script-src / style-src posture (SESSION_0536 nonce migration):
+ *  - `script-src` drops `'unsafe-inline'` in favour of a per-request `'nonce-…'`
+ *    (dev keeps `'unsafe-eval'` for Turbopack/React-refresh). The nonce is threaded
+ *    through `proxy.ts` → `x-nonce` request header → `<ThemeProvider nonce>` and the
+ *    JSON-LD `<script>`; Next auto-nonces its own bootstrap by reading the CSP off
+ *    the forwarded request header.
+ *  - `style-src` KEEPS `'self' 'unsafe-inline'` (locked decision): a CSP nonce
+ *    covers `<style>` elements but NOT inline `style={{…}}` attributes, which are
+ *    pervasive (46 files) and generated at runtime by `motion/react` (20 files).
+ *    Dropping it would flood violations and break animations for a low-impact
+ *    residual (CSS injection ≪ script injection). So the brand `<style>`
+ *    (`app/layout.tsx`) and org `<style>` (`organizations/[slug]/layout.tsx`) need
+ *    no nonce — `'unsafe-inline'` already covers them.
  */
 
 export type HeaderEntry = { key: string; value: string }
+
+/** The CSP report sink route — where `report-uri` / `report-to` violations land. */
+const CSP_REPORT_PATH = "/api/csp-report"
 
 /**
  * Promote the CSP from Report-Only to enforcing. Defaults to Report-Only (false).
  * Set `CSP_ENFORCE=1` (or `true`) in the environment to enforce without a code
  * change once the report stream is verified clean. Never enforce blind.
  */
-const cspEnforce = (env: NodeJS.ProcessEnv = process.env): boolean =>
+export const cspEnforce = (env: NodeJS.ProcessEnv = process.env): boolean =>
   env.CSP_ENFORCE === "1" || env.CSP_ENFORCE === "true"
+
+/**
+ * The CSP response-header name for the current posture: enforcing when
+ * `CSP_ENFORCE` is set, Report-Only otherwise. Used by `proxy.ts` when it attaches
+ * the per-request CSP; kept here so the flip stays a single-flag change.
+ */
+export const cspHeaderName = (env: NodeJS.ProcessEnv = process.env): string =>
+  cspEnforce(env) ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only"
 
 const isProduction = (env: NodeJS.ProcessEnv = process.env): boolean =>
   env.NODE_ENV === "production" || env.VERCEL_ENV === "production"
@@ -57,10 +78,20 @@ const isProduction = (env: NodeJS.ProcessEnv = process.env): boolean =>
  *    future-proofs an embedded flow; `form-action` covers the redirect target.
  *  - frame-ancestors 'none' (clickjacking) · base-uri 'self' · object-src 'none'.
  */
-export const buildContentSecurityPolicy = (env: NodeJS.ProcessEnv = process.env): string => {
+export const buildContentSecurityPolicy = (
+  env: NodeJS.ProcessEnv = process.env,
+  nonce?: string,
+): string => {
   const prod = isProduction(env)
 
-  const scriptSrc = ["'self'", "'unsafe-inline'", ...(prod ? [] : ["'unsafe-eval'"])]
+  // Nonce migration (SESSION_0536): when a per-request nonce is supplied (the
+  // middleware path), `script-src` drops `'unsafe-inline'` for `'nonce-…'`. When it
+  // is absent (any static call), behaviour is unchanged so nothing regresses.
+  const scriptSrc = [
+    "'self'",
+    ...(nonce ? [`'nonce-${nonce}'`] : ["'unsafe-inline'"]),
+    ...(prod ? [] : ["'unsafe-eval'"]),
+  ]
   const connectSrc = ["'self'", ...(prod ? [] : ["ws:", "wss:"])]
 
   const directives: Record<string, string[]> = {
@@ -95,17 +126,24 @@ export const buildContentSecurityPolicy = (env: NodeJS.ProcessEnv = process.env)
   // Upgrade mixed content only in production (HTTPS); locally we serve over http.
   if (prod) parts.push("upgrade-insecure-requests")
 
+  // Report sink (SESSION_0536): `report-uri` for legacy browsers, `report-to` for the
+  // modern Reporting API (paired with the `Reporting-Endpoints: csp="…"` header). Both
+  // point at the same log-only endpoint so the Report-Only stream is observable in
+  // prod before the `CSP_ENFORCE` flip.
+  parts.push(`report-uri ${CSP_REPORT_PATH}`)
+  parts.push("report-to csp")
+
   return parts.join("; ")
 }
 
 /**
- * Build the full ordered security-header list for `next.config.ts` `headers()`.
- *
- * The CSP is emitted under `Content-Security-Policy-Report-Only` by default and
- * under the enforcing `Content-Security-Policy` once `CSP_ENFORCE` is set — the
- * same policy string either way, so promotion is a one-flag change.
+ * Build the ordered **static** hardening-header list for `next.config.ts`
+ * `headers()`. Deliberately excludes the CSP — that carries a per-request nonce and
+ * is emitted from `proxy.ts` middleware (SESSION_0536), so keeping it out here
+ * guarantees a single CSP header on the document response. `Reporting-Endpoints`
+ * stays here (it is static) and pairs with the CSP's `report-to csp` directive.
  */
-export const buildSecurityHeaders = (env: NodeJS.ProcessEnv = process.env): HeaderEntry[] => {
+export const buildHardeningHeaders = (env: NodeJS.ProcessEnv = process.env): HeaderEntry[] => {
   const prod = isProduction(env)
   const headers: HeaderEntry[] = [
     { key: "X-Content-Type-Options", value: "nosniff" },
@@ -121,6 +159,8 @@ export const buildSecurityHeaders = (env: NodeJS.ProcessEnv = process.env): Head
     // COOP isolates the browsing context group (Spectre-class hardening). `same-origin`
     // is safe — the app opens no cross-origin popups that need a window handle back.
     { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+    // Reporting API endpoint group referenced by the CSP `report-to csp` directive.
+    { key: "Reporting-Endpoints", value: `csp="${CSP_REPORT_PATH}"` },
   ]
 
   // HSTS only in production (real HTTPS). Browsers ignore it over http, but emitting
@@ -132,23 +172,18 @@ export const buildSecurityHeaders = (env: NodeJS.ProcessEnv = process.env): Head
     })
   }
 
-  const csp = buildContentSecurityPolicy(env)
-  headers.push({
-    key: cspEnforce(env) ? "Content-Security-Policy" : "Content-Security-Policy-Report-Only",
-    value: csp,
-  })
-
   return headers
 }
 
 /**
- * The single `headers()` entry for `next.config.ts` — applies the baseline to
- * every route (`source: "/:path*"`). Returned as the one-element array Next's
- * `headers()` expects so the config call site is a single spread.
+ * The single `headers()` entry for `next.config.ts` — applies the static hardening
+ * baseline to every route (`source: "/:path*"`). Returned as the one-element array
+ * Next's `headers()` expects so the config call site is a single spread. The CSP is
+ * NOT here (see `buildHardeningHeaders`) — it is emitted per-request from `proxy.ts`.
  */
 export const buildSecurityHeadersConfig = (env: NodeJS.ProcessEnv = process.env) => [
   {
     source: "/:path*",
-    headers: buildSecurityHeaders(env),
+    headers: buildHardeningHeaders(env),
   },
 ]
