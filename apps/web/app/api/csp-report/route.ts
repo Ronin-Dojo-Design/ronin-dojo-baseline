@@ -80,12 +80,21 @@ const parseReports = (raw: string, contentType: string): NormalizedViolation[] =
   return [normalizeLegacy(body)]
 }
 
+// Drop the query string + fragment before logging. Same-origin report URLs can carry
+// query params (tokens, ids) into the Vercel logs; the origin + path is enough to
+// diagnose which resource class is being blocked (log-hygiene, security-risk-register #7).
+const stripQuery = (url: string | undefined): string | null => {
+  if (!url) return null
+  const cut = url.search(/[?#]/)
+  return cut === -1 ? url : url.slice(0, cut)
+}
+
 const logViolation = (v: NormalizedViolation): void => {
   console.warn(
     `[csp-report] ${JSON.stringify({
-      blockedURI: v.blockedURI ?? null,
+      blockedURI: stripQuery(v.blockedURI),
       violatedDirective: v.violatedDirective ?? null,
-      documentURI: v.documentURI ?? null,
+      documentURI: stripQuery(v.documentURI),
       disposition: v.disposition ?? null,
     })}`,
   )
