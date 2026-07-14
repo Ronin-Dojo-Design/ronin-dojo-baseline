@@ -20,7 +20,7 @@ test.describe("Admin tournament list E2E", () => {
     await expect(page.locator("body")).toBeVisible({ timeout: 30_000 })
 
     // Should not get a 404 — admin role grants access
-    await expect(page.locator("body")).not.toContainText("404")
+    await expect(page.locator("body")).not.toContainText("404 Not Found")
     // Page should render (heading or table)
     await expect(page.locator("body")).toBeVisible()
   })

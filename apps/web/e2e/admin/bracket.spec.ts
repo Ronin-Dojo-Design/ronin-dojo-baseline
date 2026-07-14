@@ -42,6 +42,6 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
       timeout: 30_000,
     })
-    await expect(page.locator("body")).not.toContainText("404")
+    await expect(page.locator("body")).not.toContainText("404 Not Found")
   })
 })

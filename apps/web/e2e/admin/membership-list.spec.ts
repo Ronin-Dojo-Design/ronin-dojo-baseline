@@ -26,7 +26,7 @@ test.describe("Admin membership list E2E", () => {
     await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
 
     // Should not get 404 — admin role grants access
-    await expect(page.locator("body")).not.toContainText("404")
+    await expect(page.locator("body")).not.toContainText("404 Not Found")
     // Table or data-table skeleton should render
     await expect(page.locator("table").first()).toBeVisible()
   })

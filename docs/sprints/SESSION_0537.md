@@ -209,6 +209,7 @@ after the core. No fan-out (contiguous surfaces).
 | SESSION_0537_TASK_01 | landed | `CommunityPost.isPremium` additive migration (default false, no backfill) — Cody `4cf1ad43`. |
 | SESSION_0537_TASK_02 | landed | Viewer read-gate (`post-access.ts`) + TYPE-encoded locked payload (`post-gate.ts`) + negative-test-first — Cody `f1bc4cc1`. Doug GO 9.7 no-leak PROVEN (bypass hunt + key-absence test). |
 | SESSION_0537_TASK_03 | landed | Locked-post teaser (keep excerpt) + author premium toggle at create — Cody `ccb826a0`; verify-wave polish `4cc361d2`. Desi PASS-with-fixes (applied), Giddy PASS (no ADR). |
+| SESSION_0537_TASK_04 | landed | CI-surfaced flaky-e2e fix (UNRELATED to FI-028b): 6 admin/tournament specs did page-wide `not.toContainText("404")` → collided with `Date.now()` seed ids in the `178404…` epoch. Fixed to `not.toContainText("404 Not Found")` (the actual not-found page title, both admin + web). FS-0031 evidence: 22/22 chromium green (warm), during the live "404" epoch. |
 
 ## What landed
 
@@ -232,6 +233,14 @@ after the core. No fan-out (contiguous surfaces).
   short-circuit when no post is premium (perf, mirrors `hasPremiumTechniqueMedia`), `isAdmin` predicate
   reuse, flair-leads badge order, excerpt-is-public toggle-hint copy; deliberate CTA weight split +
   locked-detail Save/Share stance made explicit via comments.
+- **TASK_04 — flaky-e2e fix (CI-surfaced, UNRELATED to FI-028b):** PR #206 chromium went red on
+  `admin-collection-conformance.spec.ts` + `bracket.spec.ts` — a pre-existing page-wide
+  `expect(body).not.toContainText("404")` in 6 admin/tournament specs that collides with `Date.now()`
+  seed ids whenever the epoch prefix contains "404" (it does right now: `178404…`), so it fails
+  deterministically this window (firefox/webkit happened not to seed a "404" id). Fixed to
+  `not.toContainText("404 Not Found")` — the exact not-found page title (admin H2 + web i18n both render
+  it), robust to the seed collision. Verified 22/22 chromium green locally during the live "404" epoch;
+  FS-0031 evidence guard passes.
 
 ## Decisions resolved
 
@@ -275,6 +284,7 @@ after the core. No fan-out (contiguous surfaces).
 | `apps/web/components/web/community/community-post-row.tsx` | same branching for list density |
 | `apps/web/components/web/community/create-community-post-dialog.tsx` | default-off premium `Switch` toggle |
 | `apps/web/messages/en/community.json` | +6 keys (badge / unlock CTA / locked heading+desc / toggle label+hint) |
+| `apps/web/e2e/admin/{admin-collection-conformance,bracket,membership-list,tournament-list,membership-detail}.spec.ts` + `apps/web/e2e/tournaments/results.spec.ts` | TASK_04 — `not.toContainText("404")` → `not.toContainText("404 Not Found")` (epoch-collision flake, unrelated to FI-028b) |
 | `docs/sprints/SESSION_0537.md` · `docs/knowledge/wiki/goals-ledger.md` (G-009) · `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md` (FI-028b LANDED) · `docs/knowledge/wiki/custom-component-inventory.md` · `docs/architecture/ubiquitous-language.md` · `docs/knowledge/wiki/wiring-ledger.md` (WL-P2-63) · `docs/knowledge/wiki/index.md` | close docs |
 
 ## Verification
@@ -293,6 +303,7 @@ after the core. No fan-out (contiguous surfaces).
 | Giddy structure | **PASS** — no 5th authz, faithful mirror, clean layering; **ADR not required** |
 | Desi UX | **PASS-with-fixes** (applied) — funnel-first, brand parity (warning badge) |
 | Fallow delta (gate runner) | **0 introduced** |
+| TASK_04 e2e fix (chromium, warm, live "404" epoch) | **22/22 pass**; FS-0031 evidence guard PASS (covers all 6 touched specs); oxlint + format:check clean |
 
 ## Open decisions / blockers
 
@@ -389,6 +400,13 @@ None.
 - **The clean-tree gate-runner blind spot bit as documented.** `bow-out-gates.sh` read "0 touched /
   build skipped / docs-only" on a fully-committed multi-commit session (the `bow-out-gate-runner-diffs-working-tree`
   memory). Ran `next build` on `origin/main..HEAD` myself — green — before treating the push as app-code.
+- **CI caught a latent epoch-dependent test bug my local gates never could.** PR #206 chromium went red on
+  two specs UNRELATED to my diff: a page-wide `not.toContainText("404")` that only fails when `Date.now()`
+  seed ids contain "404" — true right now (`178404…`), false most other epochs. A re-run reproduced it
+  (deterministic this window), which is what distinguished a real latent bug from a flake. Fixing the
+  assertion to the full not-found title (`"404 Not Found"`) is the durable fix; verifying it *during* the
+  live "404" epoch was the honest proof. Lesson: a "flake" that reproduces on re-run isn't a flake — read
+  the failure before merging past it, even when it's not your code.
 
 ## Full close evidence
 
