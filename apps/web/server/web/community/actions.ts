@@ -7,6 +7,7 @@ import { isRateLimited } from "~/lib/rate-limiter"
 import { adminActionClient, userActionClient } from "~/lib/safe-actions"
 import { generateUniqueSlug } from "~/lib/slug"
 import { isAllowedCommunityImageUrl } from "~/server/web/community/media-url"
+import { canCreateCommunityPostForUser } from "~/server/web/community/permissions"
 import {
   communityPostImageSchema,
   createCommunityPostSchema,
@@ -25,6 +26,14 @@ import { getMediaConfig } from "~/services/s3"
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
 /**
+ * FI-028 CREATE-gate rejection (participation ladder: Free = READ · Premium = CREATE). Surfaced as
+ * the action's `serverError` — the composer already renders a dedicated upgrade CTA for free members,
+ * so this server throw is the defense-in-depth backstop for a direct action call.
+ */
+const POST_UPGRADE_REQUIRED =
+  "Community posting is a Premium feature — upgrade your membership to post."
+
+/**
  * Member-safe post-image upload — the session-gated sibling of the join funnel's guest evidence
  * upload (`uploadJoinLegacyEvidence`): actor-keyed rate limit, hard server-side byte ceiling,
  * magic-byte sniff (SVG rejected — stored-XSS guard), isolated `community-posts/` prefix. The
@@ -38,12 +47,17 @@ export const uploadCommunityPostImage = userActionClient
       throw new Error("Too many image uploads. Please try again in a bit.")
     }
 
+    const brand = resolveBrand()
+
+    // FI-028 CREATE-gate (defense in depth): a free member must not be able to upload post images
+    // either — this is a `userActionClient`, so a free client could call it directly to stage an
+    // image even though the composer never shows them the form.
+    if (!(await canCreateCommunityPostForUser(user, brand))) {
+      throw new Error(POST_UPGRADE_REQUIRED)
+    }
+
     const { buffer } = await sniffUploadBuffer(parsedInput.file, { maxBytes: MAX_IMAGE_BYTES })
-    const url = await uploadToS3Storage(
-      buffer,
-      `community-posts/${crypto.randomUUID()}`,
-      resolveBrand(),
-    )
+    const url = await uploadToS3Storage(buffer, `community-posts/${crypto.randomUUID()}`, brand)
 
     return { url }
   })
@@ -62,6 +76,14 @@ export const createCommunityPost = userActionClient
     }
 
     const brand = resolveBrand()
+
+    // FI-028 CREATE-gate — the whole point of this session: only Premium/Elite/Legend, staff, or
+    // RBAC/admin may create. Runs BEFORE any write (post-rate-limit) so a free member never writes a
+    // row. `authorId` stays session-derived; grandfather is forward-only (existing posts untouched).
+    if (!(await canCreateCommunityPostForUser(user, brand))) {
+      throw new Error(POST_UPGRADE_REQUIRED)
+    }
+
     const videoUrl = parsedInput.videoUrl?.trim() || null
     const imageUrl = parsedInput.imageUrl?.trim() || null
     const styleId = parsedInput.styleId?.trim() || null

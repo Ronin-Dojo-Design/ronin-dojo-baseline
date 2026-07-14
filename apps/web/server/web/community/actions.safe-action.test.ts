@@ -4,6 +4,8 @@
  * SESSION_0493 — community post write-surface gates (the adversarial GAINER tests):
  *   - create: requires auth; authorId comes from the SESSION (client-supplied authorId ignored);
  *     foreign imageUrl hosts rejected; unknown styles rejected; rate-limit trips before any write.
+ *   - FI-028 CREATE gate (SESSION_0535): a member who FAILS `canCreateCommunityPostForUser` is
+ *     rejected at the server layer on BOTH write actions (create + image upload) — no row, no upload.
  *   - hide/unhide: admin ONLY — a plain member (the would-be gainer, incl. the post's own author)
  *     is rejected; admin toggles PUBLISHED↔HIDDEN.
  *   - image upload: requires auth; stores under the isolated `community-posts/` prefix.
@@ -45,6 +47,15 @@ mock.module("~/lib/brand-context", () => ({
 mock.module("~/server/web/entitlements/queries", () => ({
   canUploadMedia: async () => false,
   hasEntitlement: async () => false,
+}))
+
+// FI-028 CREATE gate — mocked so the action's WIRING is the unit under test (does it CALL the gate,
+// and reject BEFORE any write when the gate returns false?); the gate's own LOGIC (tier-key breadth,
+// staff pair, RBAC) is proved hermetically in `permissions.test.ts`. Defaults to allow so the
+// pre-existing authorship/slug/image/style/rate-limit tests keep exercising the happy path.
+const gateState = { canCreate: true }
+mock.module("~/server/web/community/permissions", () => ({
+  canCreateCommunityPostForUser: async () => gateState.canCreate,
 }))
 
 const uploadCalls: { path: string }[] = []
@@ -113,6 +124,7 @@ beforeEach(() => {
   dbState.slugTaken = false
   dbState.styleExists = true
   uploadCalls.length = 0
+  gateState.canCreate = true
   setRateLimited(false)
   setTestSession(null)
 })
@@ -206,6 +218,54 @@ describe("createCommunityPost — auth + authorship", () => {
 
     expect(result?.serverError).toBe("You're posting too fast. Please try again in a minute.")
     expect(dbState.createCalls.length).toBe(0)
+  })
+})
+
+describe("FI-028 CREATE gate — free members are rejected at the SERVER layer (GAINER tests)", () => {
+  it("rejects createCommunityPost when the gate denies (free member) — NO row written", async () => {
+    const { createCommunityPost } = await import("~/server/web/community/actions")
+    setTestSession(MEMBER)
+    gateState.canCreate = false
+
+    const result = await createCommunityPost(validCreateInput)
+
+    // The server throw is the backstop even though the composer swaps to an upgrade CTA client-side.
+    expect(result?.serverError).toContain("Premium")
+    expect(dbState.createCalls.length).toBe(0)
+  })
+
+  it("rejects uploadCommunityPostImage when the gate denies (free member) — NO upload", async () => {
+    const { uploadCommunityPostImage } = await import("~/server/web/community/actions")
+    setTestSession(MEMBER)
+    gateState.canCreate = false
+
+    // A free client could call this `userActionClient` directly to stage an image — defense in depth.
+    const result = await uploadCommunityPostImage({ file: validImage() })
+
+    expect(result?.serverError).toContain("Premium")
+    expect(uploadCalls.length).toBe(0)
+  })
+
+  it("allows createCommunityPost when the gate permits (Premium/Elite/Legend/staff/RBAC)", async () => {
+    const { createCommunityPost } = await import("~/server/web/community/actions")
+    setTestSession(MEMBER)
+    gateState.canCreate = true
+
+    const result = await createCommunityPost(validCreateInput)
+
+    expect(result?.serverError).toBeUndefined()
+    expect(dbState.createCalls.length).toBe(1)
+  })
+
+  it("allows uploadCommunityPostImage when the gate permits", async () => {
+    const { uploadCommunityPostImage } = await import("~/server/web/community/actions")
+    setTestSession(MEMBER)
+    gateState.canCreate = true
+
+    const result = await uploadCommunityPostImage({ file: validImage() })
+
+    expect(result?.serverError).toBeUndefined()
+    expect(uploadCalls.length).toBe(1)
   })
 })
 
