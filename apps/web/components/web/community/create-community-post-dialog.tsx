@@ -29,7 +29,6 @@ import {
 import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Link } from "~/components/common/link"
-import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
@@ -166,13 +165,15 @@ export const CreateCommunityPostDialog = ({
             <DialogDescription>{t("upgrade_description")}</DialogDescription>
           </DialogHeader>
 
-          <Note>{t("upgrade_body")}</Note>
-
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
               {t("cancel_button")}
             </Button>
-            <Button prefix={<LockKeyholeIcon />} render={<Link href={UPGRADE_HREF} />}>
+            <Button
+              variant="primary"
+              prefix={<LockKeyholeIcon />}
+              render={<Link href={UPGRADE_HREF} />}
+            >
               {t("upgrade_cta")}
             </Button>
           </DialogFooter>
