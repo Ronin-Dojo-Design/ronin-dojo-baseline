@@ -4324,6 +4324,12 @@ model CommunityPost {
   imageUrl String?
   status   CommunityPostStatus @default(PUBLISHED)
 
+  // @added SESSION_0537 (FI-028b) — per-post READ freemium. Default false = grandfather (every
+  // existing + new post is free & PUBLIC, incl. logged-out visitors); a premium post stays IN the
+  // feed but a locked viewer gets a teaser (excerpt kept; content/videoUrl/imageUrl stripped
+  // server-side, the no-leak invariant). No new index — the feed `where` is unchanged.
+  isPremium Boolean @default(false)
+
   // createdAt is the feed sort key (no publishedAt — posts are live on create).
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
