@@ -27,6 +27,37 @@ export const config = {
 export const matchesRoute = (pathname: string, route: string) =>
   pathname === route || pathname.startsWith(`${route}/`)
 
+/**
+ * Attach the per-request CSP nonce to a page-render response (SESSION_0536, RISK #2).
+ *
+ * Mints a nonce and forwards it to the app via the `x-nonce` request header *and* the CSP
+ * on the request header — Next reads the nonce off that forwarded CSP header to auto-nonce
+ * its own bootstrap scripts, and it honours the Report-Only header name too (verified
+ * against next@16 app-render.parseRequestHeaders, which falls back from
+ * `content-security-policy` to `content-security-policy-report-only`). The browser only
+ * receives the CSP as a RESPONSE header.
+ *
+ * Wrapped so a throw in CSP assembly degrades to a plain render (CSP simply absent for that
+ * one request — harmless under Report-Only) instead of a 500 on this every-request hot path.
+ */
+const renderWithCspNonce = (req: NextRequest): NextResponse => {
+  try {
+    const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
+    const cspValue = buildContentSecurityPolicy(process.env, nonce)
+    const cspHeader = cspHeaderName(process.env)
+
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-nonce", nonce)
+    requestHeaders.set(cspHeader, cspValue)
+
+    const res = NextResponse.next({ request: { headers: requestHeaders } })
+    res.headers.set(cspHeader, cspValue)
+    return res
+  } catch {
+    return NextResponse.next()
+  }
+}
+
 export default async function (req: NextRequest) {
   const { pathname, search } = req.nextUrl
   const sessionCookie = getSessionCookie(req)
@@ -54,35 +85,8 @@ export default async function (req: NextRequest) {
     return NextResponse.redirect(new URL(`/auth/login?next=${pathname}${search}`, req.url))
   }
 
-  // Page-render path (SESSION_0536, RISK #2): mint a per-request nonce and thread it
-  // through so `script-src` can drop `'unsafe-inline'` for `'nonce-…'` (Report-Only).
-  // The redirect/auth-guard branches above return before here — they emit no HTML body,
-  // so they need no nonce/CSP.
-  //
-  // Wrapped so a throw in nonce/CSP assembly degrades to a plain page render (CSP simply
-  // absent for that one request — harmless under Report-Only) instead of a global 500.
-  // This runs on EVERY page request; the calls below are total today, but the guard
-  // protects the hot path against a later edit that introduces a throw.
-  try {
-    const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
-    const cspValue = buildContentSecurityPolicy(process.env, nonce)
-    const cspHeader = cspHeaderName(process.env)
-
-    // Forward BOTH `x-nonce` (read by `app/layout.tsx`) and the CSP itself on the REQUEST
-    // headers. Next reads the nonce off the forwarded CSP request header to auto-nonce its
-    // own bootstrap scripts — and it honours the Report-Only header name too (verified
-    // against next@16 app-render.parseRequestHeaders, which falls back from
-    // `content-security-policy` to `content-security-policy-report-only`).
-    const requestHeaders = new Headers(req.headers)
-    requestHeaders.set("x-nonce", nonce)
-    requestHeaders.set(cspHeader, cspValue)
-
-    const res = NextResponse.next({ request: { headers: requestHeaders } })
-    // The browser only receives (and reports/enforces against) the CSP as a RESPONSE header.
-    res.headers.set(cspHeader, cspValue)
-    return res
-  } catch {
-    // Never let CSP assembly take down the page — fall back to a normal render.
-    return NextResponse.next()
-  }
+  // Page-render path (SESSION_0536, RISK #2): the redirect/auth-guard branches above all
+  // return first (they emit no HTML body, so need no CSP). Everything reaching here is a
+  // page render that gets the per-request nonce'd Report-Only CSP.
+  return renderWithCspNonce(req)
 }
