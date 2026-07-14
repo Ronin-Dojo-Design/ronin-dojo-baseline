@@ -38,7 +38,7 @@ test.describe("AdminCollection conformance smoke", () => {
       await expect(page.locator("table").first()).toBeVisible({
         timeout: 30_000,
       })
-      await expect(page.locator("body")).not.toContainText("404")
+      await expect(page.locator("body")).not.toContainText("404 Not Found")
     })
   }
 

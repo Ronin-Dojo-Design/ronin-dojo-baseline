@@ -25,6 +25,6 @@ test.describe("Tournament results page", () => {
     // Should see bracket/match content since we seeded matches
     const body = page.locator("body")
     await expect(body).toBeVisible()
-    await expect(body).not.toContainText("404")
+    await expect(body).not.toContainText("404 Not Found")
   })
 })

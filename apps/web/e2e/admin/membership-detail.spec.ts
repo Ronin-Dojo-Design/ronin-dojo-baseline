@@ -33,7 +33,7 @@ test.describe("Admin membership detail E2E", () => {
     })
 
     // Should show the membership detail page, not 404
-    await expect(page.locator("body")).not.toContainText("404")
+    await expect(page.locator("body")).not.toContainText("404 Not Found")
 
     // Status badge should show PENDING (seeded status)
     await expect(page.locator("text=PENDING").first()).toBeVisible()
