@@ -64,9 +64,13 @@ test.describe("/app/users account row-actions — isAdmin gating", () => {
     const nonAdminRow = await openSeededRow(page, nonAdmin.name)
     await nonAdminRow.getByRole("button", { name: "Open menu" }).click()
     await expect(page.getByRole("menuitem", { name: "Ban" })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({
+      timeout: 30_000,
+    })
     await page.keyboard.press("Escape")
-    await expect(nonAdminRow.getByRole("button", { name: "Delete" })).toBeVisible({ timeout: 30_000 })
+    await expect(nonAdminRow.getByRole("button", { name: "Delete" })).toBeVisible({
+      timeout: 30_000,
+    })
 
     // ---- admin target (non-self): Role + Revoke, but NO Ban and NO Delete ----
     const adminRow = await openSeededRow(page, adminTarget.name)
@@ -74,7 +78,9 @@ test.describe("/app/users account row-actions — isAdmin gating", () => {
     // Confirm the menu actually rendered (Role visible) BEFORE asserting Ban's absence, so `toHaveCount(0)`
     // can't pass merely because the menu hasn't painted yet.
     await expect(page.getByRole("menuitem", { name: "Role" })).toBeVisible({ timeout: 30_000 })
-    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("menuitem", { name: "Revoke Sessions" })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByRole("menuitem", { name: "Ban" })).toHaveCount(0)
     await page.keyboard.press("Escape")
     await expect(adminRow.getByRole("button", { name: "Delete" })).toHaveCount(0)
