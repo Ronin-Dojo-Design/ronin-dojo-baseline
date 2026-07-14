@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-13
-last_agent: claude-session-0534
+updated: 2026-07-14
+last_agent: claude-session-0536
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -574,6 +574,20 @@ boundary is what keeps the family out of the god-component trap.
 | `selectColumn<TData>()` | `apps/web/components/data-table/select-column.tsx` | — (factory) | Parameterless `RowCheckbox` select `ColumnDef` (header indeterminate-ref + row). 5 surfaces legitimately do NOT consume it (certificates/courses/programs/tournaments use a different Base-UI `Checkbox`/shift-select; users has a per-row `disabled` account-gate). |
 | `postStatusBadgeProps` / `postStatusIcon` | `apps/web/components/common/post-status.tsx` | `Record<PostStatus, …>` | Post status badge/facet-glyph vocabulary, mirrors `tool-status.tsx`. Deliberately SEPARATE from `tool-status` (distinct enum) — not a generic god-map. Exhaustive `Record` ⇒ a future 4th status is a compile error. |
 | `AccountActionItems` (SESSION_0534) | `apps/web/app/app/users/_components/account-action-items.tsx` | `{ user: Pick<User,"id"\|"role"\|"banned"> }` | Route-local fragment (NOT a global component) of the shared account-action menu items — Role submenu (`updateUserRole`) + ban/unban + Revoke Sessions — as `RowActionsMenu` children. Consumed by both `person-actions` (list kebab, wraps it after a detail-link item) and `user-actions` (detail account panel, renders it unconditionally). **Invariant: extract the ITEMS, keep the GATING at each caller** — the `!isAdmin` ban predicate is a single copy inside, but the accountless/self guards + delete-per-caller stay outside. |
+
+## Security headers + CSP nonce (SESSION_0536, RISK #2)
+
+The per-app security-header / CSP layer (established SESSION_0465, extended 0536 with the script-src nonce
+migration + a violation report sink). App-agnostic builders in `config/security-headers.ts`; the CSP is
+emitted **per-request from the middleware** because it carries a nonce. **CSP ships Report-Only** —
+`CSP_ENFORCE=1` flips it to enforcing (one flag, no code change), a future operator-gated step after a clean
+prod report stream.
+
+| Component | File | Public API | Notable behavior |
+| --- | --- | --- | --- |
+| `buildContentSecurityPolicy` / `buildHardeningHeaders` / `cspHeaderName` | `apps/web/config/security-headers.ts` | `(env, nonce?)` builders | App-agnostic. `next.config.ts` emits the STATIC hardening headers only; the nonce'd CSP is emitted from middleware (single CSP header). `script-src 'nonce-…'` (NO `'unsafe-inline'`); `style-src` KEEPS `'unsafe-inline'` — a nonce covers `<style>` elements, not inline `style={{…}}` attrs (46 files + `motion/react`). `cspEnforce` is module-private; `cspHeaderName` is the flip API. |
+| `renderWithCspNonce` | `apps/web/proxy.ts` | `(req) => NextResponse` | Middleware helper on the page-render path only: mints a per-request nonce, forwards `x-nonce` + the CSP on the REQUEST headers (Next auto-nonces its own bootstrap by reading it — honours the Report-Only header name too), sets the CSP RESPONSE header. `try/catch` → plain render on any throw (runs every request). The redirect/auth-guard branches return before it, so redirects carry no CSP. JSON-LD `<script>` is deliberately NOT nonced (data block, not script-src-governed). |
+| CSP report sink | `apps/web/app/api/csp-report/route.ts` | `POST → 204` | Public-by-design log-only violation sink (browsers post uncredentialed). Accepts both `application/reports+json` + legacy `application/csp-report`; 64KB body cap + per-instance throttle; never throws (always 204); logs 4 non-sensitive CSP fields with query strings scrubbed. Paired with `report-uri`/`report-to`/`Reporting-Endpoints`. |
 
 ## How to update this file
 
