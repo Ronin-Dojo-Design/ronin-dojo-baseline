@@ -406,9 +406,103 @@ D5). Otherwise pick the top non-parked board card (`cd apps/web && bun scripts/b
 - **Follow-up:** cloud-cutover gate (ADR 0038 impl-status). `/fallow-fix-loop` + `/code-quality` +
   hostile-close + `/pr-review-fix` run post-PR (operator-requested).
 
+### SESSION_0538_REVIEW_02 — /fallow-fix-loop + /code-quality (code-quality-matrix)
+
+- **fallow-fix-loop:** pruned 3 introduced dead exports (`useSession`/`admin` in `auth-client.ts`,
+  `setLeadStatus` in `actions.ts`, the `Session` type in `auth.ts`) — behavior-preserving (typecheck confirms
+  no broken consumer). Delta: **dead exports 16.0%→0.0%, dead-code issues 5→1** (the 1 = inherited `pg` dep
+  from the 0463 scaffold), **MI 93.3→93.8**. 3 complexity findings (`createLead` 7-cyc, reconcile arrow 6-cyc,
+  `onSubmit` 5-cyc) **accepted-with-reason** (modest cyclomatic; CRAP is a 0-coverage estimate artifact).
+  Committed `bf896d06`.
+- **/code-quality (code-quality-matrix §2):** roll-up — `lib/actions.ts` **9.0**, `inquiry-form.tsx` **9.1**,
+  `seed.ts` **9.2**, `board-config`/`board-store-db` **9.4**, `lib/auth.ts` **9.4**. **Aggregate ≈ 9.2
+  (Strong)**, no cap. **Apple/Facebook verdict:** gold-adjacent; gap to 9.5 = durable committed tests + a
+  `createLead` rate-limit (cloud) — both correctly deferred. No new forced fix (fallow already cleaned the
+  diff; inventing churn would violate no-regression/YAGNI).
+
+### SESSION_0538_REVIEW_03 — /pr-review-fix (PR #207 CI triage)
+
+- **CI status:** green except **Playwright (chromium)**. Diagnosed as an **unrelated flake / pre-existing
+  apps/web env issue**, NOT a regression from this diff: chromium-only (firefox + webkit green); the diff
+  touches **zero `apps/web` files** (BBL e2e only ran on the additive `bun.lock` edge); failures were
+  `BJJ_DISCIPLINE_NOT_FOUND` (apps/web test-seed gap) + a chromium `Clipboard.writeText` permission error.
+  Typecheck / unit tests / Oxc / both Products-CI checks / **Vercel deploy** all passed. **No fix owed by
+  #207**; a re-run clears it. If chromium persistently fails it's a separate apps/web test-seed lane.
+
 ## Hostile close review
 
-<!-- filled after the post-PR quality gauntlet (hostile-close-review is one of the requested passes) -->
+### Giddy + Doug hostile pass (closing agent, personas applied)
+
+**Dirstarter docs check:** cached docs sufficient — the per-app Prisma + Better Auth extension mirrors the
+already-aligned Mammoth product (0459/0460/0464); the one novel bit (`disableSignUp`) was verified
+empirically against live `better-auth` 1.6.16 (public sign-up → `400 EMAIL_PASSWORD_SIGN_UP_DISABLED`).
+**Sources:** ADR 0038, the Mammoth recipe, live `:3100` render + DB probes. **Verdict:** aligned (extends).
+
+1. **Plan sanity — PASS.** The plan's highest-value move was catching that the 16-day-old memory understated
+   progress (Mammoth auth landed 0464; both products already scaffolded), so the operator's named forks were
+   partly stale — reframed to the ONE buildable-now slice (Baseline local Phase 2), mirroring a proven recipe
+   rather than inventing. The one real risk (compressing two Mammoth sessions into one) was flagged with a
+   split-if-destabilizes contingency; it did not destabilize.
+2. **Dirstarter compliance — ALIGNED (extends).** Per-app Prisma + Better Auth, kernel consumed via
+   `@ronin-dojo/ui-kit/kanban`. No `packages/ui-kit` edit, no cross-product FK, no shared identity
+   (Giddy confirmed). No baseline bypassed → **no 8.9 cap**.
+3. **Security — NET-SAFE, no exposed path.** The session added a public un-authenticated `createLead` —
+   hostile-checked: validated (name+email required, email regex, length caps, trim), server-sets
+   `status`/`source` (no mass-assignment), returns only `{ok,id}` (no admin leak). The admin board is
+   `requireAuth` + server-redirect gated. The verify wave's **F1** (open self-serve sign-up let a `member`
+   reach the single-tenant board — Doug reproduced it live) was **fixed in-session** (`disableSignUp`; PoC now
+   `400`). No sensitive-data path exposed without authz → **no 8.9 security cap**. Residual: `createLead`
+   rate-limit = cloud-cutover precondition (no prod exposure — Baseline still redirects to BBL).
+4. **Data integrity — ENFORCED.** `LeadStatus`/`BaselineRole` are DB enums (invalid → DB rejects); auth FKs
+   CASCADE; single-tenant → no `ownerId` invariant. Soft spot: `reconcileBoard` can mint an empty-email Lead
+   (deliberate "never fail the board create" fallback, commented) — a data-quality nicety, not an
+   only-documented business rule. **No 8.9 data-integrity cap.**
+5. **Lifecycle proof — PASS (scoped honestly).** The prospect→Lead→pipeline-board journey is proven
+   end-to-end by the live render (funnel submit → Casey Rivera Lead in `baseline_dev` → gated board after
+   owner sign-in). The ultimate journey (a real school in prod) is intentionally **not** realized — cloud
+   cutover deferred.
+6. **Verification honesty — STRONG but EPHEMERAL.** Behavioral, not "it compiles": Cody 16-check + Doug
+   19-check headless smoke (public/gated boundary, `disableSignUp` 400, owner sign-in, `$transaction`
+   rollback) + lead-driven live render (0 console errors) + empirically re-measured migration isolation. The
+   gap: smoke scripts were **deleted** — no committed test durably codifies the boundary. Credible
+   verification exists → **no 9.4 cap**; durable regression protection is a named follow-up.
+7. **Workflow honesty — PASS.** Lane G-002 (operator-pinned); worktree `ronin-0538`; task IDs
+   TASK_01–04; Petey plan + grill (2 forks) → Cody → Doug+Giddy verify → batched fix → live render → PR #207
+   → fallow + code-quality gauntlet. Held at the push gate for the operator's word. Caps applied honestly
+   (scored Strong, not inflated to Gold).
+8. **Merge readiness — READY (on green CI + operator word).** Gates green (typecheck/oxfmt/`next build`;
+   oxlint 1 pre-existing warn), wiki-lint 0 err, verify wave GO+PASS, fallow clean (dead exports 0%), live
+   render green, isolation proven, F1 fixed. Blast radius flagged: `bun.lock` change → BBL prod redeploy
+   (byte-identical `apps/web`).
+
+**Kaizen triage**
+
+1. _Safe & secure? Tests that prove it?_ Provably safe now: `createLead` validated/bounded/no-leak (Doug
+   PoC); board session-gated + `disableSignUp` (signup → 400); migration isolation empirical. **Not durably
+   proven:** no committed test codifies the public/gated boundary or the sign-up gate (smoke was ephemeral).
+   Closing tests: a bun integration spec asserting (a) `createLead` rejects invalid + inserts NEW, (b)
+   `listLeads`/`reconcileBoard` throw without a session, (c) sign-up returns 400 — deferred (Baseline has no
+   test harness + `clients-ci` runs no product tests; that wiring is its own small lane).
+2. _Preventable failed steps?_ ~1 real slip: the plan's forks were partly stale (16-day memory), **caught by
+   the Explore recon _before_ grilling** — no wasted build; keep the recon-before-grill step. Micro-slip: F1
+   was mirrored from Mammoth's posture rather than hardened at build — caught by the verify wave + fixed
+   same-session. Prevention: a "new public/unauthenticated surface → default-deny self-registration" item on
+   the per-product-auth checklist. No simplification cut warranted — the recon + verify-wave + fix-loop caught
+   everything pre-merge.
+3. _Confidence 100/1k/10k?_ **100: 10** (a school's dozens of leads — trivial). **1k: 9** (full-table
+   `listLeads` fine; indexed). **10k: 8** (a 10k-lead school would want board pagination + `createLead`
+   rate-limit — both named, both cloud-cutover-lane work; no single-tenant school hits 10k before that
+   remediation window). **Aggregate 9 → proceed as planned** (≥9 gate).
+
+**Score:** ~9.2/10 (Strong) — no cap triggered (Dirstarter aligned · data-integrity enforced · verification
+behavioral → no 9.4 cap · security proof present → no 8.9 cap). Gap to Gold (9.5) = durable committed tests +
+cloud-hardening (rate-limit), both correctly deferred and named, not hidden.
+
+### Findings (severity ≥ medium)
+
+None open. F1 (high, cloud-precondition) was **fixed in-session** and re-verified. All other items are
+low/banked follow-ups (durable tests, `createLead` rate-limit, empty-email board quick-add, the two cosmetic
+board nits) — recorded in `Open decisions / blockers` + ADR 0038 impl-status, not hidden.
 
 ## ADR / ubiquitous-language check
 
@@ -417,9 +511,31 @@ D5). Otherwise pick the top non-parked board card (`cd apps/web && bun scripts/b
   landed + the cloud-cutover gate) — a living-status update, not a decision change.
 - **Ubiquitous-language update NOT required** — no new domain term (Lead/LeadStatus/pipeline already exist).
 
-## Reflections
+## Reflections — kaizen
 
-<!-- filled at true close, after the quality gauntlet -->
+- **The highest-value move was NOT building — it was reframing stale forks.** The operator's bow-in named
+  four forks (which product first, CI wiring, provisioning, migration story) that a 16-day-old memory made
+  look open. A scope-recon _before_ grilling showed all four were already answered by shipped work
+  (both products scaffolded, `clients-ci` already discovers them) — so the lane collapsed to the one
+  buildable-now slice. Trusting the point-in-time memory would have re-litigated settled decisions. Recon
+  before grill, always, for an in-progress epic.
+- **A faithful recipe mirror can import a latent issue that's _worse_ in the new context.** F1 (open
+  self-serve sign-up) was a byte-faithful copy of Mammoth's auth posture — but Mammoth scopes reads by
+  `ownerId`, so a stray member sees only their own rows, whereas single-tenant Baseline let any self-
+  registrant read _every_ lead. "Mirror the proven recipe" is the right default, but each new
+  public/unauthenticated surface still needs its own security check — the verify wave caught it and the fix
+  (`disableSignUp` + a seed reworked to a direct credential insert) was one config line plus a small seed
+  change.
+- **Verification was thorough but ephemeral — that's the honest gap to Gold.** The funnel→Lead→board journey
+  was proven by two headless smokes + a live render, but the smoke scripts were deleted and Baseline has no
+  committed test (product CI runs typecheck/lint only). Credible verification exists, durable regression
+  protection does not — which is exactly why the code-quality score landed Strong (~9.2), not Gold, and why
+  the follow-up is named rather than hidden.
+- **The gauntlet's real payoff was the pr-review-fix triage.** fallow pruned 3 dead exports and code-quality
+  confirmed the shape; but the pr-review-fix pass was what correctly read the red chromium check as an
+  unrelated apps/web flake (`BJJ_DISCIPLINE_NOT_FOUND` seed gap + a chromium clipboard-permission error;
+  firefox/webkit green; zero apps/web files in the diff) rather than a regression — the difference between
+  "my change broke CI" and "a pre-existing flake fired on an unrelated e2e."
 
 ## Full close evidence
 
@@ -434,3 +550,10 @@ D5). Otherwise pick the top non-parked board card (`cd apps/web && bun scripts/b
 | Migration isolation | `ronindojo` + `mammoth_dev` byte-unchanged |
 | Finding routing | F1 fixed in-session; cloud residual → ADR 0038 impl-status (correct router dest = phased-work, not WL) |
 | ADR check | ADR 0038 confirmed valid; impl-status refreshed |
+| Fallow delta | dead exports 16%→0%, dead-code 5→1 (inherited `pg`), MI 93.3→93.8 (REVIEW_02) |
+| Code-quality | aggregate ≈9.2 Strong, no cap (REVIEW_02) |
+| Hostile close | ~9.2, Kaizen aggregate 9 → proceed, no caps, no open findings |
+| PR + CI | [#207](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/207) — green except a chromium flake (unrelated apps/web e2e; REVIEW_03); Vercel deployed |
+| wiki-lint | 0 err / 52 warn (all pre-existing) |
+| Memory sweep | updated `separation-separate-dbs-per-product` (local half done all products; 0538 Baseline) |
+| Graphify | refresh deferred to post-merge (canonical checkout; a worktree `graphify update` builds a throwaway graph) |
