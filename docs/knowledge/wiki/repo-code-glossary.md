@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-06-27
-last_agent: claude-session-0458
+updated: 2026-07-14
+last_agent: claude-session-0536
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -185,6 +185,77 @@ commit) so the term is concrete, not abstract.
   public raw URL) instead of from the deployed bundle, so the page reflects the latest commit even when
   no redeploy happened. The Loop Board uses this so docs-only ledger commits (which skip the prod build)
   still show. Example: `apps/web/lib/loop-board/fetch-ledgers.ts`.
+
+## Security & web headers (SESSION_0536)
+
+- **CSP (Content-Security-Policy)** — a browser rulebook, sent as an HTTP header, that lists which
+  sources the page is allowed to load each kind of thing from (scripts, styles, images, videos, fonts).
+  Anything not on the list is blocked. It's the main defense against a hacker sneaking a malicious script
+  onto the page. Example: `apps/web/config/security-headers.ts`.
+- **XSS (cross-site scripting)** — the attack CSP defends against: an attacker gets *their* JavaScript to
+  run on your page (e.g. through a comment box or a bad upload), where it can steal logins or data.
+- **Report-Only** — a "dry-run" mode for CSP: the browser *reports* what the rules would block but
+  blocks nothing. It lets you watch the live site for breakage before turning enforcement on. BBL runs
+  CSP Report-Only today; the switch to actually enforce is the env flag `CSP_ENFORCE=1`.
+- **nonce** — a one-time random password stamped on each `<script>` tag and in the CSP header, so the
+  browser only runs scripts carrying today's password. It lets the page drop the blanket "allow any
+  inline script" permission — the biggest XSS hole. Minted per request in `apps/web/proxy.ts`.
+- **report sink / `report-uri`** — the address the browser POSTs CSP violation reports to, plus the small
+  endpoint that collects them (`apps/web/app/api/csp-report/route.ts`). The rule of thumb: you can't
+  safely *enforce* what you can't *observe*, so the sink ships before the enforce flip.
+- **HSTS (Strict-Transport-Security)** — a header that tells the browser "always use secure HTTPS for
+  this site, never plain http," so no one can downgrade the connection. Production only.
+- **`'unsafe-inline'`** — a CSP permission that means "allow inline scripts/styles written directly in the
+  page." Convenient but it defeats most of CSP's script protection, so the goal is to remove it from
+  scripts (replaced by the nonce) — while keeping it for *styles*, because inline `style="…"` attributes
+  are everywhere and a nonce can't cover them.
+- **Security-header baseline** — the standard set of protective headers every page sends (CSP, HSTS,
+  X-Frame-Options, COOP, Referrer-Policy, Permissions-Policy). Analogy: the seatbelts and airbags every
+  car ships with by default. Built in `apps/web/config/security-headers.ts`.
+
+## Membership tiers & access gates (SESSION_0535)
+
+- **Membership tier** — the paid level a member is on: **Free** (account only), **Premium**, **Elite**,
+  **Legend**. Higher tiers unlock more actions.
+- **Participation ladder** — the rule that *each paid tier unlocks the next action*: Free members **read** the
+  community; **Premium** members can **create** community posts; **Elite** members can **author** techniques.
+  Upgrading is how you earn the next "verb." (SESSION_0535 tightened community posting to Premium-and-up, so
+  free members lost it.)
+- **Entitlement key** — the record that proves a member holds a tier: `LINEAGE_PREMIUM`, `LINEAGE_ELITE`,
+  `LINEAGE_LEGEND`. A member can hold more than one. Example: `apps/web/lib/entitlements/lineage-comp.ts`.
+- **Capability gate** — a small server-side function that answers "is this user allowed to do X?" by
+  *combining the checks we already have* (their role, their staff position, their paid tier) — never a new
+  bespoke system (the "no 5th authz" rule). Example: `canCreateCommunityPostForUser`
+  (`apps/web/server/web/community/permissions.ts`) decides who may post; its sibling `canCreateTechniqueForUser`
+  decides who may author a technique.
+- **Server-side gate (not a hidden button)** — the real access check lives *inside the server action* that
+  does the write, so a hidden "New post" button isn't the lock — the server refusing the write is. Example
+  this session: `createCommunityPost` rejects a free member before saving anything.
+- **"Gate on the tier, not one key"** — because which entitlement keys a paid plan grants is set in the
+  database (not in code), the post gate accepts *any* paid tier (Premium **or** Elite **or** Legend), so a
+  paying member of any level can always post. (The reasoning: Learning Record 0015.)
+
+## More terms that recur in sessions
+
+- **SSR (server-side rendering)** — the page's HTML is assembled on the server and sent ready-to-show, so
+  it appears fast and search engines can read it (versus a blank page that fills in later via JavaScript).
+- **HMR (hot module reload)** — while developing, saving a file updates the running page instantly with
+  no full reload.
+- **Turbopack** — the fast dev/build engine Next.js uses here (`next dev --turbo`).
+- **middleware** — code that runs on *every* request before the page does. Here it handles login
+  redirects and attaches the CSP nonce. File: `apps/web/proxy.ts`.
+- **R2** — Cloudflare's file storage (an S3-style bucket) where BBL keeps uploaded images and videos.
+- **oRPC** — the type-safe way the browser calls server functions in this repo (`server/orpc/*`); it's
+  replacing the older `next-safe-action`.
+- **Better Auth** — the login/session library the app uses (magic links, social sign-in, sessions).
+- **CRAP score** — a code-quality number ("Change Risk Anti-Patterns") from `fallow`: high means a
+  function that is both complicated *and* poorly tested — i.e. scary to change safely.
+- **AdminCollection** — the one standard admin list-page shape (a searchable, sortable data table) that
+  every admin screen conforms to instead of being hand-built each time (ADR 0045).
+- **RankEntry** — the single current model for "what belt/rank a member holds." It replaced the older
+  `RankAward`.
+- **MAB (mobile action button)** — the floating "＋" button on mobile that opens create-actions (new
+  post, new technique).
 
 ## Cross-references
 

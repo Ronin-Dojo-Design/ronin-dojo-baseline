@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-11
-last_agent: claude-session-0528
+updated: 2026-07-14
+last_agent: claude-session-0536
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -242,6 +242,17 @@ deprecated; Belt Journey media/story enrichment lives on `RankMilestone` plus `M
 Former name: `Progress`.
 
 Do not use `Progress` in new code.
+
+**Being retired:** read paths now resolve a member's rank from `RankEntry` (below); the `RankAward`
+table-drop is a tracked post-launch epic. Prefer `RankEntry` for new rank reads/writes.
+
+### RankEntry
+
+The current single model for a member's rank/belt standing. It supersedes `RankAward` — member-facing
+lineage-trust reads were collapsed onto `RankEntry` (SESSION_0519–0523), and it is the model new code
+should use for "what rank does this member hold." `RankEntryReview` carries its verification workflow.
+`RankAward` still exists in the schema during the transition; its removal is a tracked post-launch epic
+(`rankentry-unification-epic.md`), not new-code surface.
 
 ### Belt Journey
 
@@ -634,6 +645,47 @@ Brand is currently an enum/column, not a table.
 - **Community post** — a member-authored `CommunityPost` on the `/posts` feed. Post-moderated (`PUBLISHED | HIDDEN`), saveable (`Bookmark` `COMMUNITY_POST`), never editorial.
 - **Editorial post** — a staff-authored `Post` on `/blog`, managed at `/app/blog`. The two never share a table (kind-union rejected).
 - **Post-moderation** — publish-first, hide-on-review (`HIDDEN` by admin action) — as opposed to the pre-moderated editorial workflow.
+
+## Admin surfaces (ADR 0045)
+
+### AdminCollection
+
+The one ratified admin list-surface pattern: every admin index (`/app/*`) is a conformed, searchable,
+sortable data table built from a column definition + a query, never a hand-rolled list. Row → detail →
+one editor. Per ADR 0045, this pattern *is* the admin law — a new admin screen conforms to it rather than
+inventing its own shape. `/app/tools` is the reference implementation (not a required route).
+
+## Web security posture (SESSION_0536)
+
+The platform's security-header + CSP vocabulary. The posture lives **per-app** (each product app builds it
+from `apps/web/config/security-headers.ts`), not in root config. RISK #2 in the security risk register
+tracks it.
+
+### CSP (Content-Security-Policy)
+
+The browser-enforced allowlist, sent as an HTTP header, of which origins the page may load each resource
+type from (scripts, styles, images, frames, fonts, connections). Anything off the list is blocked. It is
+the platform's primary defense against XSS/injection. Built in `apps/web/config/security-headers.ts`.
+
+### Report-Only
+
+The observe-don't-block mode of a CSP: the browser reports what *would* be blocked without blocking it,
+via `Content-Security-Policy-Report-Only`. The platform doctrine is **observe, then enforce** — ship the
+policy Report-Only, watch the prod report stream, then flip. BBL's CSP is Report-Only today; the flip is
+the single env change `CSP_ENFORCE=1` (operator-gated — high blast radius).
+
+### CSP nonce
+
+A per-request random token stamped on each `<script>` and echoed in the CSP header, so the browser runs
+only scripts carrying that request's token. It lets `script-src` drop `'unsafe-inline'` (the main XSS
+weakness) without a host allowlist. Minted in `apps/web/proxy.ts`; Next auto-applies it to its own
+bootstrap scripts. Data-block scripts (`application/ld+json`) are intentionally *not* nonced.
+
+### Security-header baseline
+
+The enforced set of hardening headers every response carries — HSTS, X-Frame-Options, COOP,
+Referrer-Policy, Permissions-Policy, X-Content-Type-Options — plus the CSP. Built app-agnostically so each
+product app replicates the same posture from its own config.
 
 ## AI naming rules
 
