@@ -1,5 +1,8 @@
 import type { Brand } from "~/.generated/prisma/client"
-import { communityPostManyPayload, toCommunityPostMany } from "~/server/web/community/payloads"
+import {
+  communityPostManyPayload,
+  toCommunityPostRowForGate,
+} from "~/server/web/community/payloads"
 import { db } from "~/services/db"
 
 /**
@@ -27,7 +30,7 @@ export const findCommunityPosts = async (brand: Brand) => {
     take: FEED_TAKE,
   })
 
-  return rows.map(toCommunityPostMany)
+  return rows.map(toCommunityPostRowForGate)
 }
 
 /**
@@ -44,7 +47,7 @@ export const findCommunityPostBySlug = async (
     select: communityPostManyPayload,
   })
 
-  return row ? toCommunityPostMany(row) : null
+  return row ? toCommunityPostRowForGate(row) : null
 }
 
 /** Approved styles for the create dialog's optional style select. */
