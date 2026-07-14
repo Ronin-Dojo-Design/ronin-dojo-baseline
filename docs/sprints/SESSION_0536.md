@@ -8,10 +8,8 @@ updated: 2026-07-14
 last_agent: claude-session-0536
 sprint: S12
 pairs_with:
-
   - docs/sprints/SESSION_0534.md
 backlinks:
-
   - docs/knowledge/wiki/index.md
 ---
 
@@ -27,7 +25,7 @@ Brian + claude-session-0536
 
 ## Goal
 
-Advance RISK #2 (global security headers / CSP, P0) toward an *enforceable* CSP. The baseline — hardening
+Advance RISK #2 (global security headers / CSP, P0) toward an _enforceable_ CSP. The baseline — hardening
 headers ENFORCED + CSP shipped Report-Only — already landed at SESSION_0465 and is live on prod. This session
 takes the register's own follow-up, in two Report-Only (zero-blast-radius) stages: (1) add a CSP violation
 **report sink** so prod violations are finally observable, and (2) **nonce migration** to drop `'unsafe-inline'`
@@ -46,7 +44,7 @@ Single source of truth is the frontmatter `status:` field.
 - Carryover: 0534 drained the AdminCollection ecosystem (behavior-preserving). Its "Next session" block offered
   FI-028 (community freemium — being taken by a sibling in `../ronin-0535`) or the top board card
   (**RISK #2 P0** / G-002 P1). Operator pinned **RISK #2**. On reading the register row, RISK #2's baseline is
-  already MITIGATED (0465) — this session is scoped to the *enforcement follow-up*, not net-new headers.
+  already MITIGATED (0465) — this session is scoped to the _enforcement follow-up_, not net-new headers.
 
 ### Branch and worktree
 
@@ -57,12 +55,12 @@ Single source of truth is the frontmatter `status:` field.
 
 ### Dirstarter alignment
 
-| Field | Answer |
-| --- | --- |
+| Field                       | Answer                                                                                                                                                                                                                           |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Dirstarter baseline touched | Hosting/theming edges (next.config `headers()`, middleware `proxy.ts`, root `layout.tsx` inline theme/brand style) — but the security-header layer is a Ronin custom (`config/security-headers.ts`), not a Dirstarter primitive. |
-| Extension or replacement | Extension: extends the existing `config/security-headers.ts` builder (nonce param + report directives) and `proxy.ts` middleware (nonce generation) — no new subsystem. |
-| Why justified | The CSP must move to per-request nonce emission; a nonce is inherently per-request so it belongs in middleware, while static hardening headers stay in `next.config.ts`. |
-| Risk if bypassed | Enforcing a CSP with `'unsafe-inline'` in `script-src` gives ~no XSS protection; without a report sink the flip is blind. |
+| Extension or replacement    | Extension: extends the existing `config/security-headers.ts` builder (nonce param + report directives) and `proxy.ts` middleware (nonce generation) — no new subsystem.                                                          |
+| Why justified               | The CSP must move to per-request nonce emission; a nonce is inherently per-request so it belongs in middleware, while static hardening headers stay in `next.config.ts`.                                                         |
+| Risk if bypassed            | Enforcing a CSP with `'unsafe-inline'` in `script-src` gives ~no XSS protection; without a report sink the flip is blind.                                                                                                        |
 
 Live docs checked during planning: not applicable (security-header layer is Ronin custom, not a Dirstarter L1).
 
@@ -74,12 +72,12 @@ Petey reframe + operator scope-grill resolved before build:
   (`config/security-headers.ts` wired at `next.config.ts:83`, 9 unit tests). Lane reframed to the follow-up.
 - **Fork 2 — session scope (report sink only / nonce only / both / flip)?** Operator chose **sink + nonce, both
   Report-Only; HOLD the flip**. Rationale: only the `CSP_ENFORCE=1` flip carries blast radius; stages 1–2 ship
-  under Report-Only and cannot break the app, so they are the maximal *safe* advance.
+  under Report-Only and cannot break the app, so they are the maximal _safe_ advance.
 - **Fork 3 — report sink storage (log-only vs DB model)?** Recommend **log-only** (structured console →
   Vercel logs) for a temporary observation window; a `CspViolation` Prisma model is over-engineering. Endpoint
   caps body size + samples/rate-limits to blunt log-flooding.
 - **Fork 4 — `'strict-dynamic'` in the first nonce cut?** Recommend **no** — ship `script-src 'self'
-  'nonce-…'`, observe the Report-Only stream, revisit strict-dynamic in the flip session.
+'nonce-…'`, observe the Report-Only stream, revisit strict-dynamic in the flip session.
 - **Fork 5 — CSP emission site.** Move ONLY the CSP to `proxy.ts` (per-request nonce); keep static hardening
   headers in `next.config.ts`. `proxy.ts` matcher covers all document routes (excludes only `_next/*`,
   favicon/robots/sitemap, `api/auth/`) — none need a document CSP, so no coverage narrowing that matters.
@@ -119,8 +117,8 @@ key surfaces; leave `CSP_ENFORCE` unset (Report-Only) pending a future operator-
 - **What:** Thread a per-request nonce through `proxy.ts` into the inline **script** surfaces + Next bootstrap;
   drop `'unsafe-inline'` from `script-src`. **Keep `style-src 'unsafe-inline'`** (justified below). Ships
   Report-Only.
-- **Style-src decision (locked):** `style-src` keeps `'unsafe-inline'`. A CSP nonce covers `<style>` *elements*
-  but NOT inline `style={{…}}` *attributes*, which are pervasive (46 files) and generated at runtime by
+- **Style-src decision (locked):** `style-src` keeps `'unsafe-inline'`. A CSP nonce covers `<style>` _elements_
+  but NOT inline `style={{…}}` _attributes_, which are pervasive (46 files) and generated at runtime by
   `motion/react` (20 files). Dropping it would flood violations and break animations for a low-impact residual
   (CSS injection ≪ script injection). This refines the register follow-up (which aspired to drop both) with the
   React/motion reality. Consequence: the brand `<style>` (`layout.tsx:93`) and org `<style>`
@@ -151,11 +149,11 @@ not a fan-out. Verification fans out (Doug + Giddy + Desi) after the build.
 
 ### Agent assignments
 
-| Task | Agent | Rationale |
-| --- | --- | --- |
-| SESSION_0536_TASK_01 | Cody | Small, additive endpoint + directive wiring. |
-| SESSION_0536_TASK_02 | Cody | Middleware + layout nonce threading; same-file dependency on TASK_01. |
-| Verify | Doug + Giddy + Desi | Doug: browser violation audit + gates; Giddy: middleware/arch shape; Desi: no visual regression from nonce'd styles. |
+| Task                 | Agent               | Rationale                                                                                                            |
+| -------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| SESSION_0536_TASK_01 | Cody                | Small, additive endpoint + directive wiring.                                                                         |
+| SESSION_0536_TASK_02 | Cody                | Middleware + layout nonce threading; same-file dependency on TASK_01.                                                |
+| Verify               | Doug + Giddy + Desi | Doug: browser violation audit + gates; Giddy: middleware/arch shape; Desi: no visual regression from nonce'd styles. |
 
 ### Open decisions
 
@@ -234,11 +232,11 @@ exports, no high-complexity in the CSP files) + behavioral verification (browser
 smoke e2e, sink POST). Gap-closing fixes applied: `cspEnforce` un-exported + nonce helper extracted (D3/D5,
 fallow) and all three primitives inventoried in `custom-component-inventory` (D7 Class-C cap cleared).
 
-| Unit | Class | D1 | D2 | D3 | D4 | D5 | D6 | D7 | Composite | Verdict |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| `config/security-headers.ts` | B | 10 | 10 | 9 | 10 | 9 | 10 | 9 | **9.5** | Gold |
-| `proxy.ts` nonce middleware | B | 9 | 10 | 9 | 10 | 9 | 9 | 9 | **9.3** | Strong |
-| `app/api/csp-report/route.ts` | C | 10 | 9 | 9 | 10 | 9 | 9 | 9 | **9.3** | Strong |
+| Unit                          | Class |  D1 |  D2 |  D3 |  D4 |  D5 |  D6 |  D7 | Composite | Verdict |
+| ----------------------------- | ----- | --: | --: | --: | --: | --: | --: | --: | --------: | ------- |
+| `config/security-headers.ts`  | B     |  10 |  10 |   9 |  10 |   9 |  10 |   9 |   **9.5** | Gold    |
+| `proxy.ts` nonce middleware   | B     |   9 |  10 |   9 |  10 |   9 |   9 |   9 |   **9.3** | Strong  |
+| `app/api/csp-report/route.ts` | C     |  10 |   9 |   9 |  10 |   9 |   9 |   9 |   **9.3** | Strong  |
 
 - **Caps:** none (verification is behavioral → no 9.4 cap; the sink's security proof is present + it exposes
   nothing sensitive → no 8.9 cap; inventoried → no Class-C cap; no regression).
@@ -253,7 +251,7 @@ fallow) and all three primitives inventoried in `custom-component-inventory` (D7
 
 1. **Plan sanity — PASS.** The plan's value was catching that RISK #2 was already MITIGATED (0465) and
    reframing to the real remaining work (sink + nonce) instead of re-shipping headers. The one empirical
-   unknown (does Next auto-nonce under the *Report-Only* header?) was flagged as risk #1 and **proven
+   unknown (does Next auto-nonce under the _Report-Only_ header?) was flagged as risk #1 and **proven
    green at the DOM level** (71/71 scripts nonced, matching header nonce) — not assumed. The plan also
    self-corrected "drop `'unsafe-inline'` from script **and** style" → script-only after discovering the
    `motion/react` inline-style reality (46 files). No papered-over assumption.
@@ -261,7 +259,7 @@ fallow) and all three primitives inventoried in `custom-component-inventory` (D7
    middleware because a nonce is per-request. No baseline replaced. Minor: the replication contract is
    now two call sites (next.config hardening + middleware CSP) — inherent to nonce-per-request,
    documented in the `security-headers.ts` header block.
-3. **Security — NET IMPROVEMENT, no exposed path.** The change *removes* an XSS-permissive token
+3. **Security — NET IMPROVEMENT, no exposed path.** The change _removes_ an XSS-permissive token
    (`script-src 'unsafe-inline'`) and adds none. The new `/api/csp-report` is unauthenticated **by
    design** (browsers post reports without credentials) and abuse-hardened: 64KB cap, per-instance
    throttle, always-204/never-throws, logs only 4 non-sensitive CSP fields with query strings scrubbed.
@@ -269,7 +267,7 @@ fallow) and all three primitives inventoried in `custom-component-inventory` (D7
 4. **Data integrity — N/A.** No schema/migration/data change.
 5. **Lifecycle proof — PASS (scoped honestly).** Serves the register's "observe → enforce" journey: the
    sink is verified capturing both payload shapes; the nonce is verified across landing/directory/
-   techniques/technique-detail. The ultimate journey (an *enforced* CSP blocking XSS) is intentionally
+   techniques/technique-detail. The ultimate journey (an _enforced_ CSP blocking XSS) is intentionally
    **not** realized this session — the flip is held.
 6. **Verification honesty — STRONG.** 21 unit tests + runtime header probes on 6 surfaces + browser
    console audit (zero violations, incl. a live YouTube iframe) + end-to-end sink POST + smoke e2e 3/3 +
@@ -282,17 +280,17 @@ fallow) and all three primitives inventoried in `custom-component-inventory` (D7
 
 **Kaizen triage**
 
-1. *Safe & secure? Tests that prove it?* Provably safe now: Report-Only enforces nothing (pages render,
+1. _Safe & secure? Tests that prove it?_ Provably safe now: Report-Only enforces nothing (pages render,
    zero violations, verified); hardening headers unchanged from 0465 (live ~2 weeks); sink abuse-hardened;
-   nonce proven DOM-level. **Not yet behaviorally proven:** that the nonce'd policy holds under *enforcing*
+   nonce proven DOM-level. **Not yet behaviorally proven:** that the nonce'd policy holds under _enforcing_
    across all real prod traffic — closed only by observing the prod Report-Only stream (now possible via
    the new sink) for several days, then a canary flip.
-2. *Failed steps preventable?* ~2 minor slips, **both caught pre-merge** by layered verification:
+2. _Failed steps preventable?_ ~2 minor slips, **both caught pre-merge** by layered verification:
    (a) JSON-LD over-nonced (browser audit caught the hydration mismatch) — prevention: playbook note that
    data-block scripts (`application/ld+json`) don't need nonces (now in the code comment); (b) `cspEnforce`
    needlessly exported (fallow caught it) — prevention: fallow-fix-loop as a standing pre-PR step, which we
    ran. No protocol miss. Simplification for the flip session: a sink dashboard beats grepping Vercel logs.
-3. *Confidence at 100 / 1k / 10k?* **10 / 10 / 9.** The nonce middleware is O(1) crypto per request; the
+3. _Confidence at 100 / 1k / 10k?_ **10 / 10 / 9.** The nonce middleware is O(1) crypto per request; the
    layout was already dynamic (no new caching cost). The only 10k-scale caveat is the sink under a
    violation flood — throttled 50/10s/instance and not active under Report-Only. **Aggregate 9 → proceed
    as planned** (≥9 gate).
@@ -309,20 +307,20 @@ script-and-style → script-only at bow-out (done).
 
 - **The lane was mis-framed at bow-in — and catching that was the highest-value move.** The task read as
   "add a CSP + security headers," but the register's own row #2 said that baseline shipped at 0465 and was
-  live on prod. Reading the ledger row *first* (per the standing discovery rule) turned a re-build into the
+  live on prod. Reading the ledger row _first_ (per the standing discovery rule) turned a re-build into the
   correct, smaller follow-up (sink + nonce). The memory `risk2-csp-status-and-nonce-flip` now push-guards
   against the next re-framing.
 - **Report-Only is what made an aggressive change safe to ship autonomously.** Dropping `script-src
-  'unsafe-inline'` + moving CSP to middleware is high-blast-radius *if enforced* — but under Report-Only it
+'unsafe-inline'` + moving CSP to middleware is high-blast-radius _if enforced_ — but under Report-Only it
   blocks nothing, so the whole session (build + exhaustive verify + PR + merge-ready) could run without
   risking the app. The one genuinely dangerous act (the flip) is cleanly isolated behind one env flag, held
   for a future gated session. Isolating the risk to a single flip is the design win.
 - **The exhaustive browser audit paid for itself.** The JSON-LD hydration mismatch was invisible to
   typecheck, unit tests, and `next build` — only rendering every surface and reading the console caught it.
   "If you didn't render it, you didn't verify it" was literally true here.
-- **The refinement beat the spec.** The register aspired to drop `'unsafe-inline'` from *both* script and
+- **The refinement beat the spec.** The register aspired to drop `'unsafe-inline'` from _both_ script and
   style; the honest engineering call (script-only, because a nonce can't cover inline `style` attributes in
-  a `motion/react` app) was more correct than the plan. Recording *why* in the register + inventory keeps
+  a `motion/react` app) was more correct than the plan. Recording _why_ in the register + inventory keeps
   the next agent from "finishing" the style-src drop and breaking animations.
 
 ## ADR / ubiquitous-language check
@@ -352,20 +350,20 @@ policy. Otherwise pick the top non-parked board card (`cd apps/web && bun script
 
 ## Full close evidence
 
-| Step | Proof |
-| --- | --- |
-| Task log | 2 tasks (TASK_01 sink, TASK_02 nonce) — both landed, in `## What landed` |
-| Build | `next build` run on the final push state — ✓ compiled, middleware + `/api/csp-report` present (gate runner's "docs-only/skipped" is the clean-tree blind spot; real diff = 6 app+doc commits) |
-| Gates | typecheck ✓ · oxlint ✓ · oxfmt ✓ (1923 files) · 21 unit tests ✓ · smoke e2e 3/3 ✓ — **all green on CI (PR #204): typecheck, Oxc, unit tests, Playwright chromium/firefox/webkit, Vercel preview** |
-| Runtime verification | browser console audit: 0 CSP violations across landing (live YouTube iframe) / directory / techniques / technique-detail; 71/72 scripts nonced (JSON-LD un-nonced); report sink end-to-end (both shapes → 204 + logged, query-scrubbed) |
-| Hostile close review | SESSION_0536_REVIEW_01 — Doug GO 9.6 · Giddy PASS · Desi PASS; 8 Qs + 3 Kaizen (aggregate 9 → proceed); no caps |
-| Code-quality gate | SESSION_0536_REVIEW_02 — 3 units 9.3–9.5 (security-headers.ts Gold), no caps; primitives inventoried |
-| Fallow delta | introduced findings **0** (dead-exports 6.7%→0%, middleware off high-complexity list, MI 93.0→93.4) |
-| Custom-component inventory | +§"Security headers + CSP nonce" (3 primitives) |
-| ADR check | not required (ADR 0034 + register row #2 follow-up) |
-| Memory sweep | +`risk2-csp-status-and-nonce-flip` + MEMORY.md line; supersedes the 0465 CSP line |
-| Register annotation | row #2 + detail updated: sink+nonce done 0536, script-only scope correction, only the flip remains |
-| Graphify | refreshed by gate runner — nodes=13222 edges=29590 communities=1472 |
-| Wiki lint | 0 err / 52 warn (pre-existing) |
-| PR | [#204](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/204) OPEN · ALL CI GREEN · `mergeStateStatus: CLEAN` · **NOT merged (operator reviews in the morning)** |
-| Push | branch pushed (operator-authorized); CSP stays **Report-Only** (`CSP_ENFORCE` unset) — no prod enforce |
+| Step                       | Proof                                                                                                                                                                                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Task log                   | 2 tasks (TASK_01 sink, TASK_02 nonce) — both landed, in `## What landed`                                                                                                                                                                       |
+| Build                      | `next build` run on the final push state — ✓ compiled, middleware + `/api/csp-report` present (gate runner's "docs-only/skipped" is the clean-tree blind spot; real diff = 6 app+doc commits)                                                  |
+| Gates                      | typecheck ✓ · oxlint ✓ · oxfmt ✓ (1923 files) · 21 unit tests ✓ · smoke e2e 3/3 ✓ — **all green on CI (PR #204): typecheck, Oxc, unit tests, Playwright chromium/firefox/webkit, Vercel preview**                                              |
+| Runtime verification       | browser console audit: 0 CSP violations across landing (live YouTube iframe) / directory / techniques / technique-detail; 71/72 scripts nonced (JSON-LD un-nonced); report sink end-to-end (both shapes → 204 + logged, query-scrubbed)        |
+| Hostile close review       | SESSION_0536_REVIEW_01 — Doug GO 9.6 · Giddy PASS · Desi PASS; 8 Qs + 3 Kaizen (aggregate 9 → proceed); no caps                                                                                                                                |
+| Code-quality gate          | SESSION_0536_REVIEW_02 — 3 units 9.3–9.5 (security-headers.ts Gold), no caps; primitives inventoried                                                                                                                                           |
+| Fallow delta               | introduced findings **0** (dead-exports 6.7%→0%, middleware off high-complexity list, MI 93.0→93.4)                                                                                                                                            |
+| Custom-component inventory | +§"Security headers + CSP nonce" (3 primitives)                                                                                                                                                                                                |
+| ADR check                  | not required (ADR 0034 + register row #2 follow-up)                                                                                                                                                                                            |
+| Memory sweep               | +`risk2-csp-status-and-nonce-flip` + MEMORY.md line; supersedes the 0465 CSP line                                                                                                                                                              |
+| Register annotation        | row #2 + detail updated: sink+nonce done 0536, script-only scope correction, only the flip remains                                                                                                                                             |
+| Graphify                   | refreshed by gate runner — nodes=13222 edges=29590 communities=1472                                                                                                                                                                            |
+| Wiki lint                  | 0 err / 52 warn (pre-existing)                                                                                                                                                                                                                 |
+| PR                         | [#204](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/204) **MERGED to `main` 2026-07-14** (rebase; merge commit `eefe069d`) · ALL CI GREEN · branch deleted. CSP stays **Report-Only** (`CSP_ENFORCE` unset — no prod enforce) |
+| Push                       | branch pushed (operator-authorized); CSP stays **Report-Only** (`CSP_ENFORCE` unset) — no prod enforce                                                                                                                                         |
