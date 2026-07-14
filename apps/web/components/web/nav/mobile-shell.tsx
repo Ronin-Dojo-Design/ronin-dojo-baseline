@@ -55,10 +55,10 @@ export const MobileShell = async ({ userAvatarUrl }: { userAvatarUrl?: string | 
     technique,
   }
 
-  // THE shared mount predicate (SESSION_0529 review fix, Doug P2-3) — ≡ (admin ∨
-  // permissions.technique) by construction, and the community feed hides its own mobile FAB off
-  // the same helper, so the two create-affordances can never collide at the shared corner.
-  // `canCreateTechniqueForUser` is request-cached, so this re-check costs no extra lookup.
+  // THE shared mount predicate (SESSION_0529 Doug P2-3; widened FI-028) — ≡ (admin ∨
+  // permissions.technique ∨ permissions.post) by construction, and the community feed hides its own
+  // mobile FAB off the same helper, so the two create-affordances can never collide at the shared
+  // corner. Both capability gates are request-cached, so this re-check costs no extra lookup.
   const showMab = await shouldMountMab(user)
 
   const anyMabAction =
