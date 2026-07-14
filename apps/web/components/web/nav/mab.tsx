@@ -29,10 +29,12 @@ import { cx } from "~/lib/utils"
 /**
  * Mab — the B1 net-new movable radial Multi-Action Button (SESSION_0500).
  *
- * Reddit-style radial fan-out of up to 4 actions, thumb-right by default (`bottom-right`).
- * ADMIN-ONLY for now: the whole component is mounted only for admins (the shell gates it);
- * each fan action is additionally `can()`-gated upstream and the permitted set is threaded in
- * via `actions` (server-resolved booleans — keeps `can()`/`SessionUser` off the client).
+ * Reddit-style radial fan-out of up to 5 actions, thumb-right by default (`bottom-right`).
+ * Mounted for admins AND capability-holding members (`shouldMountMab` — SESSION_0529 technique,
+ * SESSION_0535 FI-028 post); each fan action is individually gated upstream and the permitted set
+ * is threaded in via `permissions` (server-resolved booleans — keeps `can()`/`SessionUser` off the
+ * client). The `post` + `technique` actions are member-capable; `claim`/`upload`/`promotion` stay
+ * admin-gated.
  *
  * Movable: drag to reposition (`motion` drag), 4-corner snap on release (nearest corner by
  * pointer position), position persisted per-device (`lib/mab-preferences`). User-toggle-able
@@ -43,8 +45,9 @@ import { cx } from "~/lib/utils"
  * spring, no rotate) under `prefers-reduced-motion`; drag still works (it's direct
  * manipulation, not decorative motion).
  *
- * ABSORBS the former community-feed create-post FAB — `community-feed.tsx` hides its mobile
- * FAB for admins (`!viewer.isAdmin`), and the MAB is admin-only, so there is never a second FAB.
+ * ABSORBS the former community-feed create-post FAB — `community-feed.tsx` hides its mobile FAB
+ * for any viewer the MAB mounts for (`!viewer.hasMab`, the shared `shouldMountMab` predicate), so
+ * a MAB-holder never sees a second create FAB; free members (no MAB) keep the feed's own FAB.
  */
 
 /** One fan action. `onSelect` fires when tapped; the shell decides navigate-vs-sheet. */
@@ -330,6 +333,7 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
         styles={postStyles}
         isOpen={isPostOpen}
         setIsOpen={setIsPostOpen}
+        canCreate={permissions.post}
       />
       <MabUploadSheet isOpen={isUploadOpen} setIsOpen={setIsUploadOpen} />
     </>

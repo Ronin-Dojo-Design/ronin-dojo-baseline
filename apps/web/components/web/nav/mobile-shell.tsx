@@ -5,6 +5,7 @@ import { isAdmin } from "~/lib/authz-predicates"
 import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { can } from "~/server/orpc/permissions"
+import { canCreateCommunityPostForUser } from "~/server/web/community/permissions"
 import { findApprovedStyleOptions } from "~/server/web/community/queries"
 import { canCreateTechniqueForUser } from "~/server/web/techniques/permissions"
 
@@ -37,12 +38,18 @@ export const MobileShell = async ({ userAvatarUrl }: { userAvatarUrl?: string | 
   // `can()` before any DB hit (admins pay nothing extra); members resolve staff-role/entitlement.
   const technique = user != null && (await canCreateTechniqueForUser(user, Brand.BBL))
 
+  // Community-post capability (FI-028): the post action is no longer admin-only — it opens to any
+  // member passing `canCreateCommunityPostForUser` (Premium / Elite / Legend / staff / RBAC). Free
+  // members lose it (the ONE intended behavior change). Request-cached, so this shares the same
+  // lookup `shouldMountMab` and the `/posts` page resolve.
+  const post = user != null && (await canCreateCommunityPostForUser(user, Brand.BBL))
+
   const permissions = {
-    // The four B1 actions stay admin-only (operator, B1) — each additionally can()-gated; under
-    // today's flat roles all four are admin-only, but the per-action gate keeps the widening path
-    // honest (promotion path documented in lib/mab-preferences.ts).
+    // The other three B1 actions stay admin-only (operator, B1) — each additionally can()-gated;
+    // under today's flat roles all three are admin-only, but the per-action gate keeps the widening
+    // path honest (promotion path documented in lib/mab-preferences.ts).
     claim: admin && can(user, "claims.manage"),
-    post: admin && can(user, "posts.manage"),
+    post,
     upload: admin && can(user, "media.manage"),
     promotion: admin && can(user, "tournaments.manage"),
     technique,

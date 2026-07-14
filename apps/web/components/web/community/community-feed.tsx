@@ -40,8 +40,12 @@ type CommunityFeedProps = {
    * `shouldMountMab` predicate. The mobile create-post FAB hides whenever the radial MAB mounts
    * for this viewer (admin OR technique-capable member) — the two dock at the same corner and
    * the MAB (z-50) buried this FAB (z-30) for Elite non-admins.
+   *
+   * @changed FI-028: `canCreate` = the server-resolved `canCreateCommunityPostForUser` gate,
+   * threaded to the composer dialog. A free member keeps the visible "New post" entry points but
+   * the dialog swaps to an upgrade CTA (the button/FAB is not hidden — funnel-first).
    */
-  viewer: { isAdmin: boolean; hasMab: boolean }
+  viewer: { isAdmin: boolean; hasMab: boolean; canCreate: boolean }
   /**
    * Server-batched saved-state (D6): the ids of the posts the viewer has saved, resolved in ONE
    * query on the page render and threaded to each card's `ListingSaveButton initialSaved`. `null` for
@@ -232,6 +236,7 @@ export const CommunityFeed = ({ posts, styles, viewer, savedPostIds }: Community
         styles={styles}
         isOpen={isCreateOpen}
         setIsOpen={setIsCreateOpen}
+        canCreate={viewer.canCreate}
       />
     </div>
   )
