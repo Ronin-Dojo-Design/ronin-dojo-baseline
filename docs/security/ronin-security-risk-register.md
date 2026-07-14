@@ -4,8 +4,8 @@ slug: ronin-security-risk-register
 type: file
 status: active
 created: 2026-05-31
-updated: 2026-06-28
-last_agent: claude-session-0465
+updated: 2026-07-14
+last_agent: claude-session-0536
 pairs_with:
   - docs/security/README.md
   - docs/security/brand-scope-hardening-plan.md
@@ -39,7 +39,7 @@ The most important theme is **documented controls must become enforced, tested, 
 | Priority | Risk | Severity | Current state | Target fix | Owner lane |
 | --- | --- | --- | --- | --- | --- |
 | 1 | ~~Missing runtime brand-scope DB enforcement~~ — **superseded (single-brand collapse, ADR 0034)** | ~~Critical~~ → N/A | Single brand (BBL); no second tenant for rows to leak into, so the multi-tenant data-isolation gap is moot. `db.ts` still wires only `uniqueSlugsExtension` (correct for single-brand). The host→brand **origin** gate in `brand-context.ts` stays KEEP-FOREVER. | None — shelved. Re-activate the brand-scope extension only if a second product tenant is introduced. | Security/platform |
-| 2 | ~~No global security headers / CSP gate~~ — **✅ MITIGATED (Report-Only CSP + enforced hardening headers shipped, SESSION_0465)** | ~~Critical~~ → Low (enforce-CSP follow-up) | `apps/web/config/security-headers.ts` (app-agnostic builder) wired into `next.config.ts` `headers()` for `/:path*`. ENFORCED now: X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, COOP same-origin, X-DNS-Prefetch-Control, + HSTS (prod-only). CSP ships **Report-Only** (`CSP_ENFORCE=1` promotes the same policy to enforcing). Verified live via `curl -I` (`/`, `/directory`, `/api` 404). 9 unit tests. | **Follow-up:** observe the Report-Only violation stream in prod, then (a) migrate inline `next-themes` + brand `<style>` + Next bootstrap to a per-request **nonce** (drop `'unsafe-inline'` from script/style) and (b) flip `CSP_ENFORCE=1`. | Web/platform |
+| 2 | ~~No global security headers / CSP gate~~ — **✅ MITIGATED (0465); nonce + report sink shipped 0536 — only the enforce flip remains** | ~~Critical~~ → Low (enforce-CSP flip only) | `apps/web/config/security-headers.ts` (app-agnostic builder). ENFORCED hardening: X-Content-Type-Options, X-Frame-Options DENY, Referrer-Policy, Permissions-Policy, COOP same-origin, X-DNS-Prefetch-Control, + HSTS (prod-only). CSP ships **Report-Only**. **SESSION_0536 (PR #204):** added a CSP violation **report sink** (`app/api/csp-report/route.ts` + `report-uri`/`report-to`/`Reporting-Endpoints`) so the stream is finally observable, and the **script-src nonce migration** (nonce minted in `proxy.ts`; `script-src` dropped `'unsafe-inline'` for `'nonce-…'`). `style-src` KEEPS `'unsafe-inline'` (script-only — see follow-up). Verified: 21 unit tests, browser console audit (0 violations), Report-Only confirmed on every surface. | **Follow-up (one step left):** observe the prod Report-Only stream (now collected by the sink), then flip `CSP_ENFORCE=1` in a canary. **Scope correction (0536):** the nonce drop is **script-src only** — `style-src` keeps `'unsafe-inline'` because a nonce covers `<style>` elements, not inline `style={{…}}` attributes (pervasive + `motion/react`). | Web/platform |
 | 3 | Admin route reliance risk — **triaged confirmed-managed (SESSION_0465)** | High → Low | `proxy.ts` is a UX **cookie-presence** redirect only (its header comment says "redirect", not "authorize") — `/admin`/`/dashboard`/`/me`. The SESSION_0452 review already verified **no unauthenticated/non-admin path reaches an admin action or admin data** (server-side enforcement via `assertOrgAdminAccess` + per-action guards holds); only the known #11 cross-org super-user + the LOW `updateUserRole` self-lockout footgun remain. No code change needed this session. | Keep the AuditLog gate (#11) green; treat `assertOrgAdminAccess` as the single write boundary for new org-mutating actions; periodic route/action coverage audit. | Admin/auth |
 | 4 | Optional production secrets — **triaged, deferred (SESSION_0465)** | High | Stripe, Redis, S3, Printful, Resend, Plausible, AI keys are all `.optional()` in `env.ts`; no `PAYMENTS_ENABLED`-style feature-gate exists today, so a missing prod secret fails at first runtime use, not at build/deploy. | **Deferred (larger cross-cutting change):** add feature flags (`PAYMENTS_ENABLED` → requires `STRIPE_*`, etc.) enforced in `env.ts` so an enabled feature with a missing secret fails the build. Tracked here. | Platform/devops |
 | 5 | ~~Rate limiter fail-open for sensitive actions~~ — **✅ FIXED (SESSION_0465)** | ~~High~~ → N/A | `isRateLimited()` now fails **closed** for the public/abuse-prone/auth-adjacent buckets (`claim`, `invite`, `evidence_upload`, `teaser_signup`, `email_notify`, `submission`, `report`) when Redis is configured but `.limit()` errors; authenticated actor-keyed write buckets stay fail-open. No-Redis path (dev/CI) unchanged. Pure `shouldFailClosed()` predicate + 3 unit tests (`lib/rate-limiter.test.ts`). | **Residual:** Better Auth magic-link/OTP send still has no explicit `rateLimit` block in `lib/auth.ts` (#5 SESSION_0452 note) — bounded only by Better Auth's in-memory default. Add an explicit fail-closed `rateLimit` config there. | Auth/platform |
@@ -130,6 +130,25 @@ The most important theme is **documented controls must become enforced, tested, 
 > **nonce** (threaded via a middleware rewrite) so `'unsafe-inline'` can be dropped from
 > `script-src`/`style-src`; then (3) set `CSP_ENFORCE=1`. Until then the Report-Only header is
 > defense-in-observability, not enforcement.
+
+> **2026-07-14, SESSION_0536 (PR #204) — steps (1)-prereq + (2) done; only the flip remains.**
+> Shipped both Report-Only (zero blast radius): a CSP violation **report sink**
+> (`apps/web/app/api/csp-report/route.ts`, public log-only, both payload shapes, throttled,
+> query-scrubbed) wired via `report-uri`/`report-to`/`Reporting-Endpoints` — so step (1)'s "observe the
+> stream" is now *possible* (nothing was collected before; no sink existed) — and the **nonce migration**
+> (nonce minted in `proxy.ts` `renderWithCspNonce`, threaded via `x-nonce` + the forwarded CSP request
+> header; Next auto-nonces its own bootstrap and honours the Report-Only header name).
+>
+> **Scope correction to step (2):** the nonce drop is **`script-src` only** — `style-src` KEEPS
+> `'unsafe-inline'`. A nonce covers `<style>` *elements* but NOT inline `style={{…}}` *attributes*, which
+> are pervasive (46 files) and runtime-generated by `motion/react` (20 files); dropping it would flood
+> violations and break animations for a low-impact residual (CSS injection ≪ script injection). The brand
+> `<style>` + org `<style>` therefore need no nonce. The JSON-LD `<script type="application/ld+json">` is
+> also *not* nonced (non-executable data block; `script-src` never governs it).
+>
+> **Remaining = step (3) only:** observe the prod Report-Only stream for a few days, then set
+> `CSP_ENFORCE=1` in a canary (operator-gated — high blast radius). Verified 0536: 21 unit tests, browser
+> console audit (0 violations incl. a live YouTube iframe), Report-Only on every surface, smoke e2e 3/3.
 
 *Original baseline (retained for history):* a production security header baseline should include
 `Content-Security-Policy` (Stripe-compatible), `Strict-Transport-Security`, `X-Frame-Options` /
