@@ -63,7 +63,7 @@ export const CommunityPostRow = ({
           <CommunityPostFlair type={post.type} />
 
           {post.isPremium && (
-            <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
               {t("premium_badge")}
             </Badge>
           )}
@@ -101,6 +101,8 @@ export const CommunityPostRow = ({
           />
 
           {locked ? (
+            // `secondary` weight here (the detail panel uses `primary`) — a deliberate funnel
+            // hierarchy: the detail is the conversion surface, cards/rows are the browse surface.
             <Button
               size="sm"
               variant="secondary"

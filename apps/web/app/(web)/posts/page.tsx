@@ -89,7 +89,9 @@ export default async function ({ searchParams }: Props) {
   // FI-028b READ gate: resolve the viewer's read context ONCE (admin/paid legs), then gate every row
   // BEFORE it crosses to the client `CommunityFeed`. A locked premium post's body + media are stripped
   // server-side here (type-encoded) — the raw content-bearing `posts` never reach a client component.
-  const viewerContext = await resolveCommunityViewerContext()
+  // `posts.some(isPremium)` short-circuits the paid-tier lookup on an all-free feed (the default-false
+  // MVP), mirroring the technique gate's `hasPremiumTechniqueMedia` guard.
+  const viewerContext = await resolveCommunityViewerContext(posts.some(post => post.isPremium))
   const views = posts.map(post =>
     gateCommunityPost(post, isCommunityPostViewerEntitled(post, viewerContext)),
   )

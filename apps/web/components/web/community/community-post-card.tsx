@@ -69,10 +69,10 @@ export const CommunityPostCard = ({
         name={post.title}
         headerBadges={
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
-            <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+            <CommunityPostFlair type={post.type} />
+            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
               {t("premium_badge")}
             </Badge>
-            <CommunityPostFlair type={post.type} />
           </div>
         }
         tagline={post.excerpt}
@@ -80,6 +80,8 @@ export const CommunityPostCard = ({
         footer={
           <>
             {authorFooter}
+            {/* Cards/rows use a `secondary` Unlock CTA (the detail panel uses `primary`) — a
+                deliberate funnel-weight hierarchy: the detail is the conversion surface. */}
             <Button
               size="sm"
               variant="secondary"
@@ -134,12 +136,12 @@ export const CommunityPostCard = ({
       mediaTop={mediaTop}
       headerBadges={
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
+          <CommunityPostFlair type={post.type} />
           {post.isPremium && (
-            <Badge variant="primary" size="sm" prefix={<LockKeyholeIcon />}>
+            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
               {t("premium_badge")}
             </Badge>
           )}
-          <CommunityPostFlair type={post.type} />
         </div>
       }
       tagline={post.excerpt}
