@@ -162,3 +162,18 @@ aggregator reads it with no new parser logic.
 - **Why:** the verified lineage graph is the moat; richer, switchable visualizations deepen it. The
   **scrollytelling timeline** is the operator's top visual, but it is a **pre-send Group-1 item
   (FI-023)**, not parked here — G-008 holds the non-gating expansion only.
+
+### G-009 — Creator payout model for premium community content
+
+- **Status:** open — P2
+- **Objective:** design + build a **creator-payout model** so a member who authors premium content
+  (FI-028b lets any create-capable author self-serve mark their own community post premium-to-read)
+  earns a share of the revenue their gated content drives — rev-share / payout rails, an author
+  earnings surface, and the tax/KYC plumbing a real payout needs.
+- **Lane:** payments / monetization. **Depends on:** FI-028b (per-post premium ships the *gate*;
+  this ships the *incentive*). **Enables:** turning premium posting from a platform merchandising
+  lever into genuine creator monetization.
+- **Why:** FI-028b (SESSION_0537) shipped the author-toggle **without** a payout model — premium
+  currently benefits the platform (drive upgrades), not the author. Logged at the operator's request
+  during the FI-028b grill (Q3) so the incentive gap is a tracked goal, not a silent asymmetry. Until
+  this lands, "mark premium" is an author-controlled *platform* lever, not creator monetization.
