@@ -46,8 +46,11 @@ const CSP_REPORT_PATH = "/api/csp-report"
  * Promote the CSP from Report-Only to enforcing. Defaults to Report-Only (false).
  * Set `CSP_ENFORCE=1` (or `true`) in the environment to enforce without a code
  * change once the report stream is verified clean. Never enforce blind.
+ *
+ * Module-private: the public flip API is `cspHeaderName()` (which consumes this) — the
+ * boolean itself has no external consumer, so it stays un-exported.
  */
-export const cspEnforce = (env: NodeJS.ProcessEnv = process.env): boolean =>
+const cspEnforce = (env: NodeJS.ProcessEnv = process.env): boolean =>
   env.CSP_ENFORCE === "1" || env.CSP_ENFORCE === "true"
 
 /**
