@@ -5,7 +5,7 @@ type: concept
 status: active
 created: 2026-04-25
 updated: 2026-07-14
-last_agent: claude-session-0536
+last_agent: claude-session-0537
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -546,7 +546,19 @@ Free = read; **Premium** = CREATE community posts; **Elite** = AUTHOR techniques
 everything. Upgrading a tier earns the next verb.
 
 Ratified SESSION_0529; the community-post CREATE gate shipped SESSION_0535 (FI-028), tightening posting to
-Premium-and-up (free members lost it). The read-side per-post freemium (locked posts) is deferred to FI-028b.
+Premium-and-up (free members lost it). The read-side per-post freemium (locked posts) shipped SESSION_0537
+(FI-028b) — see **Premium community post** below.
+
+### Premium community post
+
+A `CommunityPost` with `isPremium = true`: **visible-but-locked** to an unentitled reader — the title, type,
+author, and a short `excerpt` teaser stay public (funnel hook), but the full body, video, and image are
+stripped server-side and shown only to an entitled viewer (admin ∨ the post's own author ∨ a paid tier, via
+`isCommunityPostViewerEntitled` mirroring the technique read gate). Default `false` (posts are free & public to
+everyone including logged-out visitors); premium is **author-set, self-serve at create** (FI-028b, SESSION_0537).
+Distinct from a premium *technique*: a technique is staff-*promoted* to a paid curriculum, whereas a premium
+community post is author-flagged and **platform-monetized with no creator payout yet** — that payout model is a
+tracked future goal (**G-009**), not a shipped economics.
 
 ### Capability gate (`canDo<X>ForUser`)
 
