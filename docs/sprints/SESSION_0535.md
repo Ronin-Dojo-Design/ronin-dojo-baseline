@@ -175,5 +175,40 @@ chat / the AskUserQuestion presented to the operator.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0535_TASK_01 | pending | `canCreateCommunityPostForUser` + server-layer create gate + negative tests |
-| SESSION_0535_TASK_02 | pending | Composer upgrade-CTA + member "post" MAB action |
+| SESSION_0535_TASK_01 | landed | `canCreateCommunityPostForUser` (server core) + gate on BOTH `createCommunityPost` + `uploadCommunityPostImage` + negative tests (Cody `05bdbbef`). Doug GO 9.6 — free/anon rejected at payload layer PROVEN, any-tier-key breadth PROVEN, authorId session-derived PROVEN. |
+| SESSION_0535_TASK_02 | landed | Composer 3-way swap (login/upgrade/form) via `canCreate` prop + MAB `post` rewire (`shouldMountMab` + `mobile-shell.permissions.post` → gate) (Cody `b7db6aab`). Desi PASS-with-fixes, Giddy PASS-with-notes (no ADR). |
+| SESSION_0535_TASK_03 | landed | Review-wave batch-fix (`643b55d2`): Desi P1 (canCreate-aware empty state) + P2 (dialog dedup, i18n 4-type consistency, variant, "or higher") + Giddy docstring rewords. Delta re-verified green. |
+
+## What landed
+
+- **TASK_01 — server CREATE gate (`05bdbbef`):** `server/web/community/permissions.ts#canCreateCommunityPostForUser`
+  — mirrors `canCreateTechniqueForUser` (cache-wrapped, injectable db), gates on `can(posts.manage)` ∨
+  **any lineage-tier entitlement** (`LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS`, not single-PREMIUM) ∨
+  OWNER/INSTRUCTOR membership. Enforced in BOTH write actions after rate-limit, before any write/upload.
+  9 gate-logic tests + 18 action-wiring tests (free/anon rejected, no row/upload; Elite-only-key allowed).
+- **TASK_02 — UI/nav wiring (`b7db6aab`):** composer `canCreate` prop → 3-way swap (logged-out → LoginDialog,
+  free → upgrade CTA → `/lineage/join`, capable → form); `shouldMountMab` + `mobile-shell.permissions.post`
+  rewired to the gate so Premium-only members get the (pre-existing) MAB `post` action; feed FAB de-collides
+  off the one `shouldMountMab` predicate (no double-FAB). Free entry points stay visible (funnel-first).
+- **TASK_03 — review-wave polish (`643b55d2`):** empty feed is canCreate-aware; upgrade dialog deduped +
+  parity variant; i18n 4-type consistency; permissions docstring overclaims corrected.
+
+## Verification
+
+| Command / check | Result |
+| --- | --- |
+| `bun test server/web/community/permissions.test.ts` (single-file) | **9/9** — free denied, Elite-only-key allowed, COACH denied, all legs |
+| `bun test server/web/community/actions.safe-action.test.ts` (single-file) | **18/18** — free/anon rejected on both actions (no row/upload), authorId session-derived |
+| `next build` (final diff, pre-push gate) | **exit 0** — `/posts` + `/posts/[slug]` compiled, no `"use server"` warning |
+| `bunx tsc --noEmit` (touched files) | clean (only fresh-worktree `PageProps` noise, clears under build — Doug confirmed) |
+| `bun run format:check` (repo-wide, 1923 files) | clean |
+| `bunx oxlint` (touched files) | clean |
+| CI e2e blast radius | **ZERO** — the only e2e touching post-create (`mobile-shell.spec.ts`) self-skips in CI |
+| Doug adversarial verify | **GO 9.6/10** — non-bypass, breadth, grandfather/no-read-regression all PROVEN |
+| Giddy structure | PASS-with-notes — no 5th authz, no god-component, zero gate skew; **ADR not required** |
+| Desi UX | PASS-with-fixes — all P1/P2 applied; brand parity with profile upgrade CTA confirmed |
+
+**Manual boundary (route to registry at close):** live `mobile-shell.spec.ts` run (elite two-action fan +
+`/posts` single-FAB screenshots) — CI-skipped local aid; its FI-028 assertions statically verified against the
+real i18n labels + Doug-traced sound. Deferred to a live-browser session (worktree can't `preview_start`; sibling
+0536 may hold the browser MCP).
