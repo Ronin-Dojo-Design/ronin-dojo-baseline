@@ -1,10 +1,10 @@
 ---
 title: "SESSION 0536 — RISK #2 CSP enforcement follow-up: report sink + nonce migration (Report-Only)"
 slug: session-0536
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-13
-updated: 2026-07-13
+updated: 2026-07-14
 last_agent: claude-session-0536
 sprint: S12
 pairs_with:
@@ -302,5 +302,70 @@ security proof present for the new public path). No debt to carry beyond the nam
 
 **Findings:** none open. All in-flight findings (JSON-LD hydration, middleware guard, log scrub, dead
 export, complexity) were fixed and re-verified this session. Follow-up (not a finding, a gate): observe the
-prod Report-Only stream before the `CSP_ENFORCE=1` flip; amend register row #2 wording script-and-style →
-script-only at bow-out.
+prod Report-Only stream before the `CSP_ENFORCE=1` flip; register row #2 wording amended
+script-and-style → script-only at bow-out (done).
+
+## Reflections — kaizen
+
+- **The lane was mis-framed at bow-in — and catching that was the highest-value move.** The task read as
+  "add a CSP + security headers," but the register's own row #2 said that baseline shipped at 0465 and was
+  live on prod. Reading the ledger row *first* (per the standing discovery rule) turned a re-build into the
+  correct, smaller follow-up (sink + nonce). The memory `risk2-csp-status-and-nonce-flip` now push-guards
+  against the next re-framing.
+- **Report-Only is what made an aggressive change safe to ship autonomously.** Dropping `script-src
+  'unsafe-inline'` + moving CSP to middleware is high-blast-radius *if enforced* — but under Report-Only it
+  blocks nothing, so the whole session (build + exhaustive verify + PR + merge-ready) could run without
+  risking the app. The one genuinely dangerous act (the flip) is cleanly isolated behind one env flag, held
+  for a future gated session. Isolating the risk to a single flip is the design win.
+- **The exhaustive browser audit paid for itself.** The JSON-LD hydration mismatch was invisible to
+  typecheck, unit tests, and `next build` — only rendering every surface and reading the console caught it.
+  "If you didn't render it, you didn't verify it" was literally true here.
+- **The refinement beat the spec.** The register aspired to drop `'unsafe-inline'` from *both* script and
+  style; the honest engineering call (script-only, because a nonce can't cover inline `style` attributes in
+  a `motion/react` app) was more correct than the plan. Recording *why* in the register + inventory keeps
+  the next agent from "finishing" the style-src drop and breaking animations.
+
+## ADR / ubiquitous-language check
+
+- **ADR update NOT required.** Operates under the existing **ADR 0034** (per-app security posture) + the
+  0465 posture recorded in register row #2, which explicitly names the nonce migration + `CSP_ENFORCE` flip
+  as the documented follow-up. Executing that follow-up is not a new architectural decision. The one
+  deviation from the register's letter (keep `style-src 'unsafe-inline'`) is a scope refinement recorded in
+  the register row, not a decision reversal → register annotation suffices.
+- **Ubiquitous-language update NOT required** — no new domain term. New security primitives recorded in
+  `custom-component-inventory` (§"Security headers + CSP nonce").
+
+## Next session
+
+### Goal
+
+Operator's call. Top board candidates: **G-002 per-product DB separation (P1)**, or continue the RISK #2
+arc only when ready to **observe the prod Report-Only stream + flip `CSP_ENFORCE=1`** (a dedicated,
+operator-gated canary session — NOT before a few days of clean prod reports via the new sink). FI-001 stays
+PARKED.
+
+### First task
+
+If the CSP flip: pull the prod `/api/csp-report` log stream, classify violation classes, allowlist/fix any
+legit ones, then `CSP_ENFORCE=1` in a canary + re-run the SESSION_0536 browser audit against the enforcing
+policy. Otherwise pick the top non-parked board card (`cd apps/web && bun scripts/board-backlog.ts --top=10`).
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | 2 tasks (TASK_01 sink, TASK_02 nonce) — both landed, in `## What landed` |
+| Build | `next build` run on the final push state — ✓ compiled, middleware + `/api/csp-report` present (gate runner's "docs-only/skipped" is the clean-tree blind spot; real diff = 6 app+doc commits) |
+| Gates | typecheck ✓ · oxlint ✓ · oxfmt ✓ (1923 files) · 21 unit tests ✓ · smoke e2e 3/3 ✓ — **all green on CI (PR #204): typecheck, Oxc, unit tests, Playwright chromium/firefox/webkit, Vercel preview** |
+| Runtime verification | browser console audit: 0 CSP violations across landing (live YouTube iframe) / directory / techniques / technique-detail; 71/72 scripts nonced (JSON-LD un-nonced); report sink end-to-end (both shapes → 204 + logged, query-scrubbed) |
+| Hostile close review | SESSION_0536_REVIEW_01 — Doug GO 9.6 · Giddy PASS · Desi PASS; 8 Qs + 3 Kaizen (aggregate 9 → proceed); no caps |
+| Code-quality gate | SESSION_0536_REVIEW_02 — 3 units 9.3–9.5 (security-headers.ts Gold), no caps; primitives inventoried |
+| Fallow delta | introduced findings **0** (dead-exports 6.7%→0%, middleware off high-complexity list, MI 93.0→93.4) |
+| Custom-component inventory | +§"Security headers + CSP nonce" (3 primitives) |
+| ADR check | not required (ADR 0034 + register row #2 follow-up) |
+| Memory sweep | +`risk2-csp-status-and-nonce-flip` + MEMORY.md line; supersedes the 0465 CSP line |
+| Register annotation | row #2 + detail updated: sink+nonce done 0536, script-only scope correction, only the flip remains |
+| Graphify | refreshed by gate runner — nodes=13222 edges=29590 communities=1472 |
+| Wiki lint | 0 err / 52 warn (pre-existing) |
+| PR | [#204](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/204) OPEN · ALL CI GREEN · `mergeStateStatus: CLEAN` · **NOT merged (operator reviews in the morning)** |
+| Push | branch pushed (operator-authorized); CSP stays **Report-Only** (`CSP_ENFORCE` unset) — no prod enforce |
