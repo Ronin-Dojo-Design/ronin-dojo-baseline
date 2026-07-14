@@ -4,8 +4,8 @@ slug: adr-0038-per-product-database-separation
 type: decision
 status: accepted
 created: 2026-06-27
-updated: 2026-06-28
-last_agent: claude-session-0460
+updated: 2026-07-14
+last_agent: claude-session-0538
 pairs_with:
   - docs/architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
@@ -116,9 +116,18 @@ longer take down BBL.
   localStorage writes; `next build` green). Gotcha banked: a standalone-bun `file:` link of the in-repo
   `ui-kit` kernel breaks Turbopack — fixed with a `postinstall` whole-dir symlink (see the per-app-db +
   new-client runbooks).
-- **Phase 2 (cloud half) — deferred (operator-gated):** provision Mammoth's Neon DB at SHIP + wire its
-  Vercel project; then build **loop-board Phase B** on BBL's own DB. The Baseline data split + the ~130
-  `getRequestBrand`/`Brand` vestige prune remain a separate deferred sub-lane.
+- **Baseline (`apps/baseline`) — scaffolded SESSION_0463; local Phase 2 LANDED SESSION_0538.** Wired off
+  static tokens onto its own `baseline_dev`: the first migration (Lead/SchoolSettings + its own Better Auth
+  tables), its OWN Better Auth instance (D5; `disableSignUp` — owner seeded, staff owner-provisioned), a
+  PUBLIC inquiry funnel → `Lead`, and an auth-gated admin Leads board on the shared `AdminKanban` kernel via
+  a Baseline-local `BoardStore` adapter. Isolation re-proven (`ronindojo`/`mammoth_dev` byte-unchanged).
+  Mirrors the Mammoth 0460+0464 recipe, single-tenant (no `TeamMember`/`ownerId`).
+- **Phase 2 (cloud half) — deferred (operator-gated):** provision the per-product Neon DBs at SHIP + wire
+  each Vercel project; then build **loop-board Phase B** on BBL's own DB. **Baseline cloud-cutover gate**
+  (before `baselinemartialarts.com` detaches from BBL): rate-limit/captcha the public `createLead`, a real
+  `BETTER_AUTH_SECRET`/`URL`, decide `requireEmailVerification`, and **RISK #13 Neon-credential rotation
+  FIRST**. The Mammoth cloud half + the ~130 `getRequestBrand`/`Brand` vestige prune remain separate
+  deferred sub-lanes.
 
 ## Alternatives considered
 

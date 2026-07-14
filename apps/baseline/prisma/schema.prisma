@@ -23,6 +23,95 @@ datasource db {
   provider = "postgresql"
 }
 
+// ---------------------------------------------------------------------------
+// Authentication & identity (Better Auth — per-product, ADR 0038 D5)
+// ---------------------------------------------------------------------------
+//
+// Baseline owns its OWN auth tables (no shared User/session across products).
+// Shapes mirror the Better Auth core models in apps/web / Mammoth (the canonical
+// Dirstarter shape) minus BBL's lineage satellites. Auth strategy = email+password
+// + the admin() role plugin (Baseline has no transactional-email infra, so no
+// magic-link); see lib/auth.ts. These four models are exactly what the Prisma
+// adapter reads/writes — field names are load-bearing for the adapter.
+//
+// Single-tenant: there is NO owner-entity satellite (no TeamMember). One school,
+// so the login account's `User.role` (owner | member) IS the authorization gate —
+// no per-row ownership scoping is needed on the admin board.
+
+/// Who an authenticated user is inside Baseline. `owner` = full admin access (the
+/// admin() plugin's adminRole — manage leads); `member` = a scoped staff user.
+enum BaselineRole {
+  owner
+  member
+}
+
+/// A login account (Better Auth User). The auth identity for the school's staff.
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  emailVerified Boolean      @default(false)
+  image         String?
+  role          BaselineRole @default(member)
+  banned        Boolean?     @default(false)
+  banReason     String?
+  banExpires    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+
+  @@index([email])
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  token          String   @unique
+  expiresAt      DateTime
+  ipAddress      String?
+  userAgent      String?
+  impersonatedBy String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
 /// An inbound inquiry from the school landing page (the core funnel).
 /// A prospective student/parent asks about classes; the school follows up.
 /// This is the one model a white-label school site genuinely needs day one.
