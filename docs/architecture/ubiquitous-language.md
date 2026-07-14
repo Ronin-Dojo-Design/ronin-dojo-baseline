@@ -93,12 +93,12 @@ Architecture Decision Record. An ADR records an accepted, proposed, rejected, or
 ### IA (Information Architecture)
 
 How a product's content and features are **organized, labeled, and navigated** — the route structure, the
-nav/sidebar hierarchy, which surface *owns* a concept, and what each thing is *called*. IA is distinct from
+nav/sidebar hierarchy, which surface _owns_ a concept, and what each thing is _called_. IA is distinct from
 **visual design** (how it looks) and from **data modeling** (how it's stored): two records can live in
 separate tables yet be presented on one surface, and one surface can host two record types. Example
-(SESSION_0472): seminars (`Event`) and promotions (`PromotionEvent`) stay **distinct models**, but the IA
+(SESSION*0472): seminars (`Event`) and promotions (`PromotionEvent`) stay **distinct models**, but the IA
 decision routes seminars to `/app/events` and promotions to the lineage area, surfaced together in one
-"Events" view. When a change moves *where* a feature lives or *renames* a nav surface, that's an IA change —
+"Events" view. When a change moves \_where* a feature lives or _renames_ a nav surface, that's an IA change —
 call it out explicitly; don't fold it silently into a feature PR.
 
 ### Bounded parallelism (test runner)
@@ -271,16 +271,16 @@ or dispute a rank fact. Deleting the owning RankAward deletes the milestone.
 
 ### RankAwardSource
 
-How a RankAward was established (SESSION_0357, BBL-RANK-004): `STATED` (asserted — e.g. admin-added or
+How a RankAward was established (SESSION*0357, BBL-RANK-004): `STATED` (asserted — e.g. admin-added or
 self-claimed) or `EARNED` (recorded through a promotion the platform witnessed). Pairs with
 **RankAwardVerificationStatus** (`UNVERIFIED` | `VERIFIED` | `DISPUTED` | `IMPORTED`). A person's **current
-rank is derived** — the highest *verified* award — never a stored Passport/Membership field.
+rank is derived** — the highest \_verified* award — never a stored Passport/Membership field.
 
 ### PromotionEvent
 
 A belt ceremony that groups multiple RankAwards into one event (SESSION_0318).
 
-PromotionEvent holds a shared date, host venue (`hostOrganizationId`, distinct from each award's awarding school), description, and a shared media gallery (`MediaAttachment[]`). It is discipline-agnostic — one ceremony can group BJJ, FMA/WEKAF, and Muay Thai awards together — and global, displayed per-brand. It sits *above* RankAward as an optional grouping (`RankAward.promotionEventId`, nullable, `SET NULL`); it never owns promotion truth and carries **no verification signal** (verification stays role-gated on RankAward/LineageRelationship per ADR 0016). A per-tree LineageVisualGroup may point at the event via `promotionEventId` so a cohort box and its ceremony are one truth.
+PromotionEvent holds a shared date, host venue (`hostOrganizationId`, distinct from each award's awarding school), description, and a shared media gallery (`MediaAttachment[]`). It is discipline-agnostic — one ceremony can group BJJ, FMA/WEKAF, and Muay Thai awards together — and global, displayed per-brand. It sits _above_ RankAward as an optional grouping (`RankAward.promotionEventId`, nullable, `SET NULL`); it never owns promotion truth and carries **no verification signal** (verification stays role-gated on RankAward/LineageRelationship per ADR 0016). A per-tree LineageVisualGroup may point at the event via `promotionEventId` so a cohort box and its ceremony are one truth.
 
 ## Lineage
 
@@ -316,9 +316,9 @@ LineageTreeMember owns visual parent, display order, selected display RankAward,
 
 ### Branch head
 
-A LineageTreeMember placed directly beneath the tree root whose person-node anchors a *branch* — the instructor / school owner under whom that branch's students are filed.
+A LineageTreeMember placed directly beneath the tree root whose person-node anchors a _branch_ — the instructor / school owner under whom that branch's students are filed.
 
-A branch head is a **real person-node**, not an abstract container — though it also *acts* as the container its students' placements point to (via `primaryVisualParentMemberId`). It is typically a **placeholder** node an admin adds ahead of the person; the holder later **claims it or accepts an invite** to take ownership. Claiming/accepting a branch-head node grants **branch-scoped LineageTreeAccess**, letting the holder maintain (add, place, verify) the members beneath them. Decentralizing lineage maintenance this way — students filing under their own instructor's branch — is the reason placeholder nodes + claim exist. Visual placement under the root is independent of promotion provenance (a branch head need not be PROMOTED_BY the root).
+A branch head is a **real person-node**, not an abstract container — though it also _acts_ as the container its students' placements point to (via `primaryVisualParentMemberId`). It is typically a **placeholder** node an admin adds ahead of the person; the holder later **claims it or accepts an invite** to take ownership. Claiming/accepting a branch-head node grants **branch-scoped LineageTreeAccess**, letting the holder maintain (add, place, verify) the members beneath them. Decentralizing lineage maintenance this way — students filing under their own instructor's branch — is the reason placeholder nodes + claim exist. Visual placement under the root is independent of promotion provenance (a branch head need not be PROMOTED_BY the root).
 
 ### LineageVisualGroup
 
@@ -334,7 +334,7 @@ Organization owner and organization admin access may be derived by server author
 
 ### PassportClaimRequest
 
-The **unified person-claim record** (ADR 0036; live since SESSION_0438 P5). Both person-claim doors — lineage-node *and* directory-profile — resolve their subject to a `passportId` (identity SoT, ADR 0025) and write ONE `PassportClaimRequest`, so the claimable + duplicate guards key on identity, not door. Reviewed via `reviewPassportClaim` → `finalizePassportClaim` (approve / deny / needs-info; node branches run only when node context is present — this is what gives a directory-only person a real account→Passport attach). Org claims do NOT come here (see `ProfileClaimRequest`). Every decision is audited; node claims email the claimant.
+The **unified person-claim record** (ADR 0036; live since SESSION*0438 P5). Both person-claim doors — lineage-node \_and* directory-profile — resolve their subject to a `passportId` (identity SoT, ADR 0025) and write ONE `PassportClaimRequest`, so the claimable + duplicate guards key on identity, not door. Reviewed via `reviewPassportClaim` → `finalizePassportClaim` (approve / deny / needs-info; node branches run only when node context is present — this is what gives a directory-only person a real account→Passport attach). Org claims do NOT come here (see `ProfileClaimRequest`). Every decision is audited; node claims email the claimant.
 
 ### LineageClaimRequest
 
@@ -342,7 +342,7 @@ The **unified person-claim record** (ADR 0036; live since SESSION_0438 P5). Both
 
 ### LineagePendingClaim
 
-An **email-bound** pending lineage claim (ADR 0032, SESSION_0419). Created when a claim is initiated before the claimant has an account; **reconciled on every sign-in** — magic-link *and* social — via `lib/auth.ts` `hooks.after` → the shared `claimNodeForUser` core, so social sign-in no longer bypasses the magic-link-only claim. Verification emails store exact email casing.
+An **email-bound** pending lineage claim (ADR 0032, SESSION*0419). Created when a claim is initiated before the claimant has an account; **reconciled on every sign-in** — magic-link \_and* social — via `lib/auth.ts` `hooks.after` → the shared `claimNodeForUser` core, so social sign-in no longer bypasses the magic-link-only claim. Verification emails store exact email casing.
 
 ### LineageClaimEvidence
 
@@ -435,7 +435,7 @@ It may represent a lesson, technique, drill, requirement, video, note, or assess
 ### Technique
 
 A rich curriculum-library object (name, discipline, belt tag, position/category, cues, media). Distinct
-from a **CurriculumItem** (a unit *inside a Course*). A Technique's owner is two separate axes — its
+from a **CurriculumItem** (a unit _inside a Course_). A Technique's owner is two separate axes — its
 **school** and its **author** (ADR 0046):
 
 - **Canonical technique** — an org-seeded library technique with **`authorPassportId = null`**. The
@@ -446,7 +446,7 @@ from a **CurriculumItem** (a unit *inside a Course*). A Technique's owner is two
   from their `Affiliation`; `null` → profile-only, ungrouped). "All South Bay techniques" = one school's
   Techniques across many authors. Not to be confused with a **Course**'s CurriculumItems.
 - **Variant** — one of several independent `Technique` rows with the same `(organizationId, slug)` but
-  different `authorPassportId` (two instructors' rendition of the same move). A *display* grouping, not a
+  different `authorPassportId` (two instructors' rendition of the same move). A _display_ grouping, not a
   schema entity.
 - **Featured** (`isFeatured`) — a staff-promoted authored technique surfaced in the canonical browse;
   attribution (`authorPassportId`) is preserved.
@@ -538,6 +538,26 @@ PricingPlan is the right place to attach future Stripe Product/Price IDs and ent
 A durable access key granted by purchase, subscription, manual grant, membership, or promo.
 
 Feature code should check Entitlements rather than hard-coded plan IDs, product IDs, or scattered paid booleans.
+
+### Participation ladder
+
+The rule that each paid membership tier unlocks the next member _action_ (verb), not merely more content:
+Free = read; **Premium** = CREATE community posts; **Elite** = AUTHOR techniques (+post); staff/RBAC =
+everything. Upgrading a tier earns the next verb.
+
+Ratified SESSION_0529; the community-post CREATE gate shipped SESSION_0535 (FI-028), tightening posting to
+Premium-and-up (free members lost it). The read-side per-post freemium (locked posts) is deferred to FI-028b.
+
+### Capability gate (`canDo<X>ForUser`)
+
+A server-side predicate that answers "may this user perform action X?" by composing the three existing authz
+seams — `can()` RBAC ∨ active staff `Membership` ∨ paid-tier `Entitlement` — and **never a new (5th) authz
+system**. Members of the family: `canCreateTechniqueForUser` (ADR 0046), `canCreateCommunityPostForUser`
+(SESSION_0535, FI-028), `canUploadMediaForUser`.
+
+Enforced at the server action (the write), not the UI button. A gate checks the **tier-key set**
+(`LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS` = PREMIUM ∨ ELITE ∨ LEGEND), not a single key, because which keys a
+plan grants is `PricingPlan` config, not a code guarantee (Learning Record 0015).
 Entitlements are commercial access facts, not the source of truth for platform authority. If the desired
 toggle answers "may this account perform this action?", model it as a Permission/PermissionGrant instead.
 
@@ -652,7 +672,7 @@ Brand is currently an enum/column, not a table.
 
 The one ratified admin list-surface pattern: every admin index (`/app/*`) is a conformed, searchable,
 sortable data table built from a column definition + a query, never a hand-rolled list. Row → detail →
-one editor. Per ADR 0045, this pattern *is* the admin law — a new admin screen conforms to it rather than
+one editor. Per ADR 0045, this pattern _is_ the admin law — a new admin screen conforms to it rather than
 inventing its own shape. `/app/tools` is the reference implementation (not a required route).
 
 ## Web security posture (SESSION_0536)
@@ -669,7 +689,7 @@ the platform's primary defense against XSS/injection. Built in `apps/web/config/
 
 ### Report-Only
 
-The observe-don't-block mode of a CSP: the browser reports what *would* be blocked without blocking it,
+The observe-don't-block mode of a CSP: the browser reports what _would_ be blocked without blocking it,
 via `Content-Security-Policy-Report-Only`. The platform doctrine is **observe, then enforce** — ship the
 policy Report-Only, watch the prod report stream, then flip. BBL's CSP is Report-Only today; the flip is
 the single env change `CSP_ENFORCE=1` (operator-gated — high blast radius).
@@ -679,7 +699,7 @@ the single env change `CSP_ENFORCE=1` (operator-gated — high blast radius).
 A per-request random token stamped on each `<script>` and echoed in the CSP header, so the browser runs
 only scripts carrying that request's token. It lets `script-src` drop `'unsafe-inline'` (the main XSS
 weakness) without a host allowlist. Minted in `apps/web/proxy.ts`; Next auto-applies it to its own
-bootstrap scripts. Data-block scripts (`application/ld+json`) are intentionally *not* nonced.
+bootstrap scripts. Data-block scripts (`application/ld+json`) are intentionally _not_ nonced.
 
 ### Security-header baseline
 
