@@ -184,6 +184,7 @@ surfaces prove genuinely disjoint at pre-flight.
 | SESSION_0534_TASK_01 | landed | FS-0031 seed-shape hardening + recipe fix + flaky-spec stabilization (Cody `f101ac30`+`ceca34ca`+`f7ebdd66`; Doug GO 8.0 + 2 P2s; Cody batch-fix `66fa0763` → org-sort 5/5 isolation + 10/10 hermetic). Deferred: 10 leftover e2e-users + 9 pre-existing full-suite cold flakes → ledger |
 | SESSION_0534_TASK_02 | landed | AC-ECOSYSTEM-1: memberships + invites kebabs → `RowActionsMenu` (Cody `582da9c0`; Desi GO no-fixes; fallow dupes −12). HELD (correct): content-atom (already conformed), org-invite (inline buttons, not admin kebab), shift-select (behavior change — own verify). Follow-up: `float-right` convergence on the 2 migrated kebabs → ledger |
 | SESSION_0534_TASK_03 | landed | AC-ECOSYSTEM-2: `AccountActionItems` fragment extracted (Cody `4f6fb0d7`; Doug GO 9.6, authz parity 30/30 independently reproduced). Gate resolved (both surfaces live). Delete correctly kept per-caller (different dialog prop shapes). Follow-up: `/app/users` has zero committed e2e → WL-P2-62 (P2 build) |
+| SESSION_0534_TASK_04 | landed | WL-P2-62 authz e2e net (operator pulled forward before push): `e2e/admin/users-account-actions.spec.ts` — hermetic, mints admin + non-admin/admin targets, asserts the `!isAdmin` Ban/Delete gate on the `/app/users` list (rows found by seeded name, not position). **17/17 combined suite green, hermetic (0 seeded users left), evidence guard covers it.** Codified Doug's 30/30 probe as a durable spec. (Original Cody agent was stopped mid-task; lead finished + verified inline.) |
 
 ## What landed
 
@@ -211,8 +212,14 @@ surfaces prove genuinely disjoint at pre-flight.
   is now a single copy; delete correctly kept per-caller (`PeopleDeleteDialog` `userIds[]` vs `UsersDeleteDialog`
   `users[]`, and it's a `RowDeleteButton` sibling, not a menu item). Clone group eliminated.
 
-**Goal reached:** yes — both planned lanes landed and verified; the one deliberately-deferred item (a committed
-`/app/users` authz e2e) is ledgered as **WL-P2-62** (non-blocking P2 build).
+- **TASK_04 — WL-P2-62 authz e2e net (`e2e/admin/users-account-actions.spec.ts`):** operator pulled this
+  forward before push. Hermetic spec pinning the `!isAdmin` Ban/Delete gate on the `/app/users` list — codifies
+  Doug's 30/30 probe as a durable committed net for `AccountActionItems`. Combined touched-spec suite **17/17
+  green**, hermetic (0 seeded users left), evidence guard green. (The dispatched Cody was stopped mid-task after
+  writing the spec; the lead finished the run + verification inline.)
+
+**Goal reached:** yes — both planned lanes landed and verified, plus the WL-P2-62 e2e net folded in on operator
+request before push.
 
 ## Decisions resolved
 
@@ -255,7 +262,8 @@ surfaces prove genuinely disjoint at pre-flight.
 | fallow delta (repo-wide) | dupes DOWN (person↔user-actions clone group GONE; −178 lines net); introduced findings 0 |
 | typecheck · format:check · oxlint | clean (per task) |
 | `next build` (pre-push gate) | see git log / bow-out chat (run at close) |
-| §4c e2e-evidence guard | refreshed at close (3 touched specs re-run) |
+| §4c e2e-evidence guard | GREEN — combined suite (conformance + registration + ranks + `users-account-actions`) **17/17**, covers all touched specs |
+| WL-P2-62 authz e2e (`users-account-actions.spec.ts`) | **1/1** (non-admin → Ban+Delete present; admin target → neither); hermetic (0 seeded users after) |
 
 ## Open decisions / blockers
 
