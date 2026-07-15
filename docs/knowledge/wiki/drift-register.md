@@ -611,4 +611,23 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   stable system slug if one exists.
 - **Fix direction:** repo-wide correct the belt-color citation to **ADR 0026 / design-system doctrine** (not a
   split-brain partial fix); optionally re-key the backfill on a stable identifier.
-- **Status: OPEN** — batch into the next-session belt-tidy pass (SESSION_0539 hostile close F03/F05).
+- **Status: RESOLVED SESSION_0540** (`513d2e1f`) — 26 citations corrected across 25 files; backfill re-key deferred.
+
+### D-045 — Promoter-placeholder identity: doorless-"claimable" overstatement · fuzzy false-merge · mixed-spine trust debt
+
+- **Discovered:** SESSION_0540 (Giddy hostile close, PR #209). The backfill-verification model mints a bare
+  placeholder Passport for a free-typed promoter and calls it "claimable" — but it has **no ADR 0036 claim door**
+  (no node/tree/directoryProfile) and **no ADR 0032 email-reconcile hook**, so no claim path reaches it today; the
+  identity-graph pollution (ADR 0025) is live while the mitigation (coach claims + confirms) is entirely phase-2
+  (FINDING_01). Dedup uses `fuzzyMatchSchool` over the non-unique `Passport.displayName` → two distinct coaches can
+  **false-merge** onto one Passport, so a phase-2 claimant would inherit the wrong `awardedByPassportId` promoter
+  edges — identity-fragmentation-in-reverse (FINDING_03). And trust decisions write `RankAward.verificationStatus`
+  while reviews live on `RankEntry` → this session ADDS RankAward-keyed logic, deepening the RankAward-retire epic's
+  port surface (FINDING_06, [[rankaward-retire-to-rankentry-only]]).
+- **Fix direction:** (1) soften "claimable" → "recruited-coach placeholder (claim door = phase-2)" in
+  `promoter-placeholder.ts` + `SESSION_0540.md` + `ubiquitous-language.md`; (2) the **promoter-as-placeholder ADR**
+  (next session) must ratify the doorless-placeholder sub-shape, the bucket-org/`meta.passportId` link, the
+  fuzzy-dedup precision tradeoff + admin split/merge escape, and the identity+CRM-emit transactional boundary
+  (WL-P3-44); (3) log `decideBackfillTrust`/`applyBackfillTrustDecision` as RankAward-keyed logic the table-drop
+  must relocate to `RankEntry.status`.
+- **Status: OPEN** — ADR + "claimable" softening = next-session first-tasks (SESSION_0540 close).

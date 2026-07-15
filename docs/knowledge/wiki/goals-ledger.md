@@ -177,3 +177,18 @@ aggregator reads it with no new parser logic.
   currently benefits the platform (drive upgrades), not the author. Logged at the operator's request
   during the FI-028b grill (Q3) so the incentive gap is a tracked goal, not a silent asymmetry. Until
   this lands, "mark premium" is an author-controlled *platform* lever, not creator monetization.
+
+### G-010 — Instructor review queue for backfill promoter-changed reviews
+
+- **Status:** open — P1
+- **Objective:** build the admin surface that ACTIONS the `RankEntryReview{PROMOTER_CHANGED, status: PENDING}`
+  rows the SESSION_0540 backfill-verification model CREATES. Conform to the AdminCollection data-table pattern
+  (`/app/techniques` reference; `runAdminListTransaction`, inline-gated index): list member/belt/reason/note,
+  approve (→ `verifyRankEntry(rankEntryId)` + review `APPROVED`) / dismiss (→ `DENIED`). RBAC = reuse `belt.admin`.
+- **Lane:** belt / lineage / admin. **Depends on:** SESSION_0540 backfill-verification model (ships the
+  create-side; `verifyRankEntry` already exists). **Enables:** closing the trust loop — a member's
+  different-promoter backfill can actually be reviewed instead of sitting UNVERIFIED forever.
+- **Why:** SESSION_0540 ships reviews as CREATE-without-consumer (Doug/Giddy flagged the phase boundary): the
+  card shows "Pending review" but nothing actions it. Safe to ship (rows don't harm; badge is honest) but the
+  queue is the immediate follow-on. Also fold in the phase-2 register-later confirm loop (leaded coach claims →
+  binds → confirms → UNVERIFIED→VERIFIED).

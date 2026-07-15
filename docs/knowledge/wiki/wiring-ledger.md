@@ -160,7 +160,29 @@ follow-ups, not silent nulls.
   it — one idiom, so a future 5th belt field is a one-line change. (Giddy tidy, SESSION_0539.)
 - **WL-P3-43** — `apps/web/app/(web)/directory/[slug]/_components/directory-profile/organizations-section.tsx:21` —
   pre-existing duplicate React `key` console warning (`key={org.id}` repeats on multi-affiliation profiles, e.g.
-  Brian Scott's 7 rows). Non-belt; surfaced during the belt live-verify. (Doug LOW, SESSION_0539.)
+  Brian Scott's 7 rows). Non-belt; surfaced during the belt live-verify. (Doug LOW, SESSION_0539.) **Resolved SESSION_0540** (`513d2e1f`, composite key).
+
+### SESSION_0540 belt-verification follow-ups (Doug/Desi — deferred)
+
+- **WL-P3-44** — `apps/web/server/belt/router.ts` (~:460-497) — the freetext-promoter `ensurePromoterPlaceholder`
+  + `emitPromoterLead` run in `buildFactUpdateData` BEFORE the award-write `$transaction`. If the fill-once
+  `stillEmpty` guard fails-closed, the placeholder Passport + Lead are already committed but reference no award —
+  an orphan recruitment stub (invisible publicly, but untracked). Fold the placeholder/lead emit INSIDE the award
+  tx, or a compensating sweep. (Doug P3a, SESSION_0540.)
+- **WL-P3-45** — `apps/web/server/identity/promoter-placeholder.ts:47-60` — concurrent-dedup race: two members
+  free-typing the same coach before either award FK commits both miss the `rankAwardsPromoted: some` candidate
+  scope → duplicate placeholder Passports. Bounded/harmless (same soft-dedup as school-lead); cleanup-later.
+  (Doug P3b, SESSION_0540.)
+- **WL-P3-46** — `apps/web/app/(web)/lineage/join/join-legacy-wizard/lineage-step.tsx:103-114` — the join-wizard
+  rank picker still renders the `dot` BeltSwatch while the claim picker now renders the rich `variant="belt"
+  size="sm"`. Two rank pickers, two treatments — parity upgrade (out of the SESSION_0540 approved artifact scope).
+  (Desi LOW, SESSION_0540.)
+- **WL-P3-47** — `apps/web/server/belt/router.ts:178` — `buildFactUpdateData` is a side-effecting "builder": it
+  mints a placeholder Passport (`ensurePromoterPlaceholder`) + emits a recruitment Lead (`emitPromoterLead`), and
+  it's called on the ADMIN fact-edit path (`:535`) as well as the member path (`:462`). So an admin free-typing a
+  promoter on any member's award silently mints an identity + injects a CRM outreach lead — a hidden side-effect
+  behind a `build…Data` name. Gate the emission to the member funnel, or rename (`resolveFactUpdateWithCapture`) +
+  document the admin-path intent. (Giddy hostile-close FINDING_02, SESSION_0540.)
 
 ## localStorage / sessionStorage gaps
 

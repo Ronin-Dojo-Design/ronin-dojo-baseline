@@ -196,20 +196,160 @@ before touching a file a live lane owns; belt-swatch + belt surfaces are this se
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0540_TASK_01 | landed | PR #208 verdict: already merged; review folded into 02/04/05 |
-| SESSION_0540_TASK_02 | pending | fallow-fix-loop + code-quality on belt-swatch.tsx |
-| SESSION_0540_TASK_03 | pending | deferred hostile-close follow-ups (WL/D + F04 + badge) |
-| SESSION_0540_TASK_04 | in-progress | DESIGN-FIRST pass (Desi) across 4 surfaces → before/after Artifact → operator sign-off. geometry in play |
-| SESSION_0540_TASK_05 | pending | FI-006 REPOINTED: rich claim-picker belt render (lifecycle already shipped) — part of TASK_04 design |
-| SESSION_0540_TASK_06 | pending | Belt-verification model (backfill editing + auto-verify/UNVERIFIED/review + promoter-lead) — build after design sign-off |
-| SESSION_0540_TASK_07 | pending | Stepper de-truncation (B) + broader join/claim form UX — part of TASK_04 design |
+| SESSION_0540_TASK_01 | landed | PR #208 verdict: already merged; review folded into cleanup + design lanes |
+| SESSION_0540_TASK_02 | landed | belt-lane cleanup: WL-P3-41/43 · D-044 (ADR 0022→0026) · F04 note · BeltSwatch/BeltVariant extract (`513d2e1f`) |
+| SESSION_0540_TASK_03 | landed | deferred hostile-close follow-ups folded into TASK_02 (WL/D/F04); FI-006 board badge = genuinely in-progress |
+| SESSION_0540_TASK_04 | landed | DESIGN-FIRST pass (Desi) → published before/after Artifact → operator sign-off (2 mobile iterations) |
+| SESSION_0540_TASK_05 | landed | FI-006 (phantom lane — lifecycle already shipped) REPOINTED to rich claim-picker belt render (`ce615258`) |
+| SESSION_0540_TASK_06 | landed | Belt-verification model: loosened editing + auto-verify tree + placeholder-Passport promoter + linked Lead + mint-UNVERIFIED (`0d1bc025`→`79ec2b50`) |
+| SESSION_0540_TASK_07 | landed | Stepper vertical chips + 2-col wizard grid (`ce615258`) |
+| SESSION_0540_TASK_08 | landed | Verify wave: Doug GO 9.2 · Desi conform + fix · Giddy hostile-close · fix pass (`79ec2b50`); PR #209 opened, CI = e2e gate, merge HELD |
+
+## What landed
+
+- **Belt-lane cleanup** (behavior-preserving): WL-P3-41 (beltless fallback → explicit `BELTLESS_FILL`), WL-P3-43
+  (`organizations-section` composite key), D-044 (26 belt-color citations ADR 0022→0026 across 25 files), F04
+  (`BAR_NEUTRAL` retained + documented), `BeltSwatch` 142→53 lines via `BeltVariant` extract (render byte-identical).
+- **FI-006 caught as a PHANTOM lane** — claim→award lifecycle already shipped + SOT-resolved (sessions 0432/0492/0500).
+  Repointed to the **rich claim-picker belt render** (color dot → `BeltSwatch size="sm"`).
+- **Design pass** across the join/claim funnel + belt surfaces, operator-approved via a published before/after
+  Artifact (2 mobile iterations): stepper vertical chips (de-truncated), 2-col wizard grid, rich picker,
+  belt-card name-top + footer trust badge.
+- **Backfill-verification model:** loosened `isFactEditable` (own UNVERIFIED backfills editable); auto-verify
+  decision tree (same registered promoter → VERIFIED · fresh free-typed coach → claimable **placeholder Passport**
+  + linked recruitment **Lead** · existing person ≠ anchor → `RankEntryReview{PROMOTER_CHANGED}`); backfills mint
+  `UNVERIFIED` directly; `trustState` on the belt read-model; live promoter-picker feedback note.
+- **PR [#209](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/209)** opened (7 commits), CI = the
+  e2e gate, **merge HELD** for operator's prod-deploy go.
+
+## Files touched
+
+See `git diff 5f45da74..HEAD --stat` — ~24 files. New: `server/identity/promoter-placeholder.ts`,
+`server/web/promoter-lead/emit-promoter-lead.ts`. Belt-swatch geometry frozen (0 changes).
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `tsc --noEmit` | 0 errors |
+| `next build` | exit 0 (2.8min) |
+| `oxfmt --check .` / `oxlint .` | clean / 0 errors |
+| belt unit suites (belt-gate 31 · view-model 18 · promoter-placeholder 4 · emit-promoter-lead 3 · router.integration 35) | green |
+| full `bun run test` | 1440 pass / 5 fail (all cold-engine tx-timeout flakes OUTSIDE the diff; warm re-run 99/0) |
+| affected e2e | deferred to CI (worktree not e2e-provisioned; `belt-journey` is a manual-only `describe.skip` smoke); local run confirmed the failures were env (unseeded e2e DB), not code |
+| Doug data-integrity (adversarial) | ALL HELD — fact-lock, auto-verify, mint-UNVERIFIED, placeholder-leak |
+
+## Open decisions / blockers
+
+None blocking. Merge of #209 held for operator go (prod deploy). Follow-ups ledgered below.
 
 ## Next session
 
 ### Goal
 
-<Filled at bow-out.>
+Clean up + verify this session's belt-verification lane and keep the PR queue merge-ready.
 
 ### First task
 
-<Filled at bow-out.>
+In order (operator-set at bow-out):
+
+1. **`/fallow-fix-loop`** on this session's diff (belt-verification + funnel-redesign files) — prove CRAP/dupes/
+   dead-code/complexity down, behavior-preserving.
+2. **`/pr-fix-loop`** (pr-review-score-fix) on open PRs — #209 first if still open (triage → score → fix
+   mechanical blockers → verdict, pause-on-merge).
+3. **Hostile-close fixes** from this bow-out's `## Hostile close review` (Giddy `SESSION_0540_FINDING_*`).
+4. **`/code-quality`** on this session's Class-A modules (`promoter-placeholder.ts`, `belt-gate.ts`
+   `decideBackfillTrust`, `belt-edit-card.tsx`, the auto-verify tree in `router.ts`).
+5. **Queued follow-ups** (ledgered): the **promoter-as-placeholder ADR** (Giddy scoped it — ratify the doorless
+   placeholder sub-shape · bucket-org + `meta.passportId` link · fuzzy-dedup tradeoff + escape · the tx boundary;
+   constrain "not claimable until phase-2") + the **fast doc-fix: soften "claimable"** → "recruited-coach
+   placeholder (claim door = phase-2)" in `promoter-placeholder.ts` + `ubiquitous-language.md` (D-045, FINDING_01);
+   **WL-P3-47** (side-effecting builder on the admin path, FINDING_02); the **instructor review-QUEUE** admin
+   surface (**G-010** — add "min = operator-visible count"; Phase 5); **WL-P3-44/45** (orphan-stub tx / dedup race);
+   **WL-P3-46** (join-wizard picker parity); log the RankAward-keyed trust logic to the RankAward-retire epic
+   (FINDING_06); and fold the e2e-DB-vs-prodsnap note into `verification-and-testing.md`.
+
+## Review log
+
+### SESSION_0540_REVIEW_01 — Doug release gate + data-integrity
+
+- **Verdict:** **CONDITIONAL GO 9.2/10** — data-integrity core launch-safe; every adversarial case held (fact-lock
+  can't be bypassed on authority belts; auto-verify can't wrongly verify; mint-UNVERIFIED zero public/tree
+  regression, `mintAssertedRankAward` untouched; bare placeholder Passport can't leak). tsc/build/lint/format/
+  belt-unit green. Blockers resolved: oxfmt on `router.ts` (fixed `79ec2b50`); affected e2e → CI.
+
+### SESSION_0540_REVIEW_02 — Desi design conformance
+
+- **Verdict:** 4/5 surfaces conform to the approved artifact; no new god-component; no new BeltSwatch preset.
+  One MEDIUM (promoter-note reload flip) FIXED (`79ec2b50`); 2 LOW deferred (card belt `sm` applied; join-wizard
+  parity → follow-up).
+
+## Hostile close review
+
+### SESSION_0540_REVIEW_03 — Giddy hostile close (architecture / moat / merge-shape lens)
+
+- **Verdict:** **PROCEED to merge #209** — structurally sound + disciplined: additive-only (zero migration), no
+  god-component / `kind`-union, reuses `createPassport`/`Badge`/`BeltSwatch`, every RankAward write routes through
+  the one `syncRankEntryFromAward` seam. **WORKFLOW 5.0: 9.0** (Dirstarter PASSES; held off 9.4 by shipping a
+  moat-adjacent identity change *before* its ratifying ADR + the "claimable" overstatement). **Kaizen ~9.0 GO**
+  (Doug 9.2 · Desi 4/5+fix · Giddy 9.0). Conditions are ALL follow-up, none pre-merge.
+- **Doug:** GO 9.2 (REVIEW_01). **Desi:** conform + fix (REVIEW_02).
+
+### Findings (severity ≥ medium) — 7, all follow-up
+
+- **FINDING_01 (MED, →ADR+D):** the "claimable placeholder" Passport is claimable IN NAME ONLY — bare Passport
+  (no User/email/node/profile) has no ADR 0036 claim door + no ADR 0032 email-reconcile hook, so no claim path
+  reaches it today; pollution is live, mitigation is phase-2. Soften "claimable" → "recruited-coach placeholder
+  (claim door = phase-2)" in `promoter-placeholder.ts`, this file, `ubiquitous-language.md`. → **D-045**.
+- **FINDING_02 (MED, →WL):** `buildFactUpdateData` (`router.ts:178`) is a side-effecting "builder" (mints Passport
+  + emits Lead) called on the ADMIN path (`:535`) too — an admin free-typing a promoter silently recruits a coach.
+  Gate to the member funnel or rename+document. → **WL-P3-47**.
+- **FINDING_03 (MED, →ADR+D):** fuzzy name-match dedup (`fuzzyMatchSchool` over `Passport.displayName`, non-unique)
+  can FALSE-MERGE two coaches → a phase-2 claimant inherits the wrong promoter edges (moat provenance). ADR must
+  bound the tradeoff + escape hatch. → **D-045**.
+- **FINDING_04 (MED, accepted, already WL-P3-44):** orphan-leak (identity/CRM emit outside the award tx) — confirmed.
+- **FINDING_05 (MED, accepted, already WL-P3-45):** concurrent-first-type dedup race → duplicate placeholders.
+- **FINDING_06 (MED, →GL+D):** mixed-spine debt — trust writes on `RankAward.verificationStatus`, reviews on
+  `RankEntry`; this session ADDS RankAward-keyed decision logic → net-new port surface for the RankAward-retire
+  epic. Log `decideBackfillTrust`/`applyBackfillTrustDecision` as relocate-to-RankEntry.status. → **D-045** +
+  [[rankaward-retire-to-rankentry-only]].
+- **FINDING_07 (MED, accepted, already G-010):** `PROMOTER_CHANGED` reviews have a display-consumer (badge) but no
+  resolution-consumer (no queue) → unbounded invisible PENDING. G-010 scope: add "min = operator-visible count".
+- **Merge-shape note:** one PR fuses low-risk presentation + high-blast-radius moat identity; commits are
+  concern-tagged so revert is commit-level. **Future moat work: split presentation from identity at PR granularity.**
+
+## ADR / ubiquitous-language check
+
+- **ADR REQUIRED (new):** promoter-capture-as-placeholder-person — a free-typed promoter mints a claimable
+  placeholder Passport (mirrors/extends the ADR 0036 claim placeholder flow) + a linked recruitment Lead. Moat-
+  adjacent (ADR 0025 Passport-as-SoT). To author next session (Giddy hostile-close will scope what it must ratify).
+- **Ubiquitous-language:** new terms **backfill** (a member-added lower belt), **trust state**
+  (verified/unverified/pending-review on a belt), **anchor promoter** (the promoter of the member's authority rank),
+  **placeholder promoter** (a recruited-coach placeholder Passport). Add to `ubiquitous-language.md` at close.
+
+## Reflections
+
+- **Verify the lane before building it.** FI-006 was already shipped + SOT-resolved (0500) but propagated as
+  "next" by 0539 — the SESSION_0500 phantom-lane trap. Checking `main` first turned a from-scratch lifecycle build
+  into a small render swap. The grill's premise flipped from "how to build" to "it's built — what do you want."
+- **The operator reviews artifacts on MOBILE.** The first artifact rendered broken on the operator's phone
+  (stepper still truncated, a hardcoded 3-col that didn't collapse). Design + verify Artifacts at phone width first.
+- **The e2e DB is a hermetic fixture, not a mirror.** The worktree isn't e2e-provisioned; `setup-e2e-db.ts` does
+  migrate-only, and the BJJ ladder needs a separate `db:seed` that CI runs. Local e2e is a provisioning yak-shave;
+  CI is the authoritative gate. (→ `verification-and-testing.md`.)
+- **Operator design decisions ripple into the moat.** "Placeholder Passport for the promoter" + "keep the lead too"
+  turned a leaf lead-emit into an identity-graph pattern — surfaced + ADR'd rather than silently built.
+
+## Full close evidence
+
+<!-- Finalized after #209 merges (git hash, board cross-off, graphify). -->
+
+| Step | Proof |
+| --- | --- |
+| Task log | 8 tasks, all landed |
+| Review & Recommend | Next-session goal + 5 first-tasks written (operator-set) |
+| Hostile close review | Giddy SESSION_0540_REVIEW_03 (dispatched) |
+| ADR check | promoter-as-placeholder ADR required (next session) |
+| Memory sweep | mobile-artifact-review + e2e-provisioning lessons (below) |
+| Git hygiene | branch `session-0540-belt-fi006`, 7 commits, PR #209; **merge held for operator go** |
+| Ledger routing | pending (WL/D/GL rows below) |
