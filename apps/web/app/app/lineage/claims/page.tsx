@@ -12,7 +12,7 @@ import { ClaimRow } from "./_components/claim-row"
  *
  * Author: Cody / SESSION_0183 TASK_03. Slice V5 (SESSION_0491): RANK_PROMOTION
  * rows render a "Promotion" badge + the asserted belt (swatch from
- * `Rank.colorHex`, ADR 0022) instead of the tree/directory subtitle.
+ * `Rank.colorHex`, ADR 0026) instead of the tree/directory subtitle.
  */
 
 async function ClaimsContent() {

@@ -92,7 +92,7 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
 
         {/* Claimed Rank / Asserted Belt — one card; a promotion foregrounds the belt
             (this IS the claim), an identity claim shows it as supporting context. Both
-            use the L1 `BeltSwatch` off `Rank.colorHex` (ADR 0022) — never a hand-rolled dot. */}
+            use the L1 `BeltSwatch` off `Rank.colorHex` (ADR 0026) — never a hand-rolled dot. */}
         {claim.claimedRank && (
           <Card className="p-4">
             <Heading

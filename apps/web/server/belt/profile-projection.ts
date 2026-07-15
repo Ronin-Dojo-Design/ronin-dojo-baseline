@@ -1,6 +1,6 @@
 import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { BeltFamily } from "~/components/common/belt-swatch"
-import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
+import { type BeltRankViewModel, deriveTrustState } from "~/components/web/belt/belt-view-model"
 import { ceilingSortOrder, type GateAward } from "~/server/belt/belt-gate"
 import { type MemberAward, toBeltCard } from "~/server/belt/queries"
 
@@ -8,6 +8,12 @@ export type ProfileRankEntry = {
   rankId: string
   status: RankEntryStatus
   rankAward: MemberAward
+  /**
+   * Does this entry have an OPEN (PENDING) `RankEntryReview`? Drives the
+   * `pending_review` trust state (SESSION_0540). The loader resolves it from a
+   * scoped `reviews` join so the projection stays a pure mapping.
+   */
+  hasPendingReview: boolean
 }
 
 export type ProfileLadderRank = {
@@ -58,6 +64,14 @@ export function projectProfileBeltEntries({
       return {
         rank,
         card: entry ? toBeltCard(entry.rankAward, entry.status) : null,
+        // Trust state applies ONLY to an OWNED entry; absent → null (belt not started
+        // or above-ceiling, where the card shows the Locked/Request-promotion treatment).
+        trustState: entry
+          ? deriveTrustState({
+              verified: entry.status === "VERIFIED",
+              hasPendingReview: entry.hasPendingReview,
+            })
+          : null,
       }
     }),
   }

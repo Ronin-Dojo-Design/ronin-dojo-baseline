@@ -7,6 +7,7 @@ import {
   gateAwardSelect,
   getBjjDisciplineId,
   getMemberAwards,
+  resolveAnchorAward,
   toGateAward,
 } from "~/server/belt/queries"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
@@ -78,6 +79,13 @@ export type BeltTabData = {
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
   schoolOptions: CreatableOption[]
+  /**
+   * The member's anchor promoter Passport id (SESSION_0540) — the promoter of their
+   * highest authority-verified belt. `null` when they hold no such belt. Drives the
+   * live promoter-picker feedback note (a pick equal to this → "will be verified") and
+   * pre-sorts the anchor coach to the top of the picker.
+   */
+  anchorPromoterPassportId: string | null
 }
 
 /**
@@ -108,7 +116,14 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
         status: { not: "PENDING" },
         rank: { rankSystem: { disciplineId } },
       },
-      select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
+      select: {
+        rankId: true,
+        status: true,
+        rankAward: { select: gateAwardSelect },
+        // Any OPEN review → the `pending_review` trust state (SESSION_0540). Scoped +
+        // `take: 1` so this is an existence probe, not a full review load.
+        reviews: { where: { status: "PENDING" }, select: { id: true }, take: 1 },
+      },
       orderBy: { rank: { sortOrder: "desc" } },
     }),
     getMemberAwards(passport.id),
@@ -118,10 +133,22 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
 
   const { ceiling, ranks } = projectProfileBeltEntries({
     ladder,
-    entries,
+    // Flatten the scoped `reviews` existence-probe into the `hasPendingReview`
+    // flag the projection consumes (keeps the projection a pure mapping).
+    entries: entries.map(entry => ({
+      rankId: entry.rankId,
+      status: entry.status,
+      rankAward: entry.rankAward,
+      hasPendingReview: entry.reviews.length > 0,
+    })),
     awards: awards.map(toGateAward),
     disciplineId,
   })
+
+  // The anchor promoter (SESSION_0540) — resolved from the SAME awards the write path
+  // uses (`resolveAnchorAward`), so the picker feedback can never disagree with what the
+  // server will actually decide on save.
+  const anchor = resolveAnchorAward(awards, disciplineId)
 
   return {
     ranks,
@@ -129,5 +156,6 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
     passportId: passport.id,
     promoterOptions,
     schoolOptions: joinOptions.schools.map(o => ({ id: o.id, name: o.name })),
+    anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
   }
 }

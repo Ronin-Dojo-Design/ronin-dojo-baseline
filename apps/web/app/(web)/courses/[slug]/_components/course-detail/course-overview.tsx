@@ -14,7 +14,7 @@ type CourseOverviewProps = {
  * Above-the-fold overview: the discipline / rank / certification / enrollment-count
  * chips plus the "Offered by" org card. The rank chip now renders the data-driven
  * `<BeltSwatch>` (from `Rank.colorHex`, on-the-wire) next to the rank name instead of
- * a plain text badge — never a hardcoded belt-color map (ADR 0022). Heading-into-`h2`
+ * a plain text badge — never a hardcoded belt-color map (ADR 0026). Heading-into-`h2`
  * render override preserved verbatim so the document outline is unchanged.
  */
 export function CourseOverview({ course }: CourseOverviewProps) {

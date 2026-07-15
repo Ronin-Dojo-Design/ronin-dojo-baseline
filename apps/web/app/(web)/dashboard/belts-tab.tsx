@@ -48,6 +48,7 @@ export async function DashboardBeltsTab() {
         passportId={data.passportId}
         promoterOptions={data.promoterOptions}
         schoolOptions={data.schoolOptions}
+        anchorPromoterPassportId={data.anchorPromoterPassportId}
       />
     </Stack>
   )

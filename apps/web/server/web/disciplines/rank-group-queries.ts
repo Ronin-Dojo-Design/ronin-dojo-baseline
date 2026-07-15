@@ -3,7 +3,7 @@
 //          discipline. Mirrors getTopRankedMembersForDiscipline's brand scope (lineage tree OR
 //          org membership) so BBL lineage members (RankAward, no Membership) are counted — the
 //          same bug class fixed in SESSION_0357. RankAward is the canonical promotion fact
-//          (ADR 0016); belt tint is data-driven Rank.colorHex (ADR 0022).
+//          (ADR 0016); belt tint is data-driven Rank.colorHex (ADR 0026).
 // @wired   apps/web/app/(web)/disciplines/[slug]/ranks/page.tsx → m-card(kind=rank)
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"

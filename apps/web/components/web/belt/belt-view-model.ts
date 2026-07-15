@@ -27,7 +27,7 @@ export type BeltCardMedia = NonNullable<BeltCardOutput["milestone"]>["media"][nu
 export type BeltRankRef = {
   id: string
   name: string
-  /** `Rank.colorHex` — drives `--rank-color`; never hardcoded (ADR 0022). */
+  /** `Rank.colorHex` — drives `--rank-color`; never hardcoded (ADR 0026). */
   colorHex: string | null
   sortOrder: number
   /** @added SESSION_0539 — refined-belt render fields for the journey ladder swatch. */
@@ -47,6 +47,59 @@ export type BeltRankViewModel = {
   rank: BeltRankRef
   /** The member's enriched card for this rank, or `null` if not yet started. */
   card: BeltCardOutput | null
+  /**
+   * Trust state of the member's OWNED entry for this rank (SESSION_0540 —
+   * backfill-verification model). `null` when the member holds no entry for this
+   * rank (belt not yet started, or above the awarded ceiling → the card shows the
+   * "Locked"/"Request promotion" treatment, never a trust badge). Derived
+   * server-side by {@link deriveTrustState} from the `RankEntry.status` plus any
+   * open (PENDING) `RankEntryReview`, so verification is legible at a glance.
+   */
+  trustState: BeltTrustState | null
+}
+
+/**
+ * The trust state of a member's owned belt entry (SESSION_0540):
+ * - `verified`       — the `RankEntry` is VERIFIED (auto-verified same-promoter
+ *   backfill, or steward-verified);
+ * - `unverified`     — the entry stands UNVERIFIED, nothing in flight (editable);
+ * - `pending_review` — an open `RankEntryReview` exists (e.g. a changed promoter)
+ *   awaiting an instructor — nothing is wrong, it is in flight.
+ */
+export type BeltTrustState = "verified" | "unverified" | "pending_review"
+
+/**
+ * Derive a member entry's {@link BeltTrustState} — a PENDING review always wins
+ * (the belt is in flight regardless of its stored status), else the entry's
+ * verified flag decides. Pure so it is unit-testable and callable from the
+ * server projection without a DOM (mirrors {@link deriveBeltStatus}). Kept
+ * Prisma-free: callers pass a plain `verified` boolean (`status === "VERIFIED"`)
+ * so this module never imports the generated client into client chrome.
+ */
+export function deriveTrustState({
+  verified,
+  hasPendingReview,
+}: {
+  verified: boolean
+  hasPendingReview: boolean
+}): BeltTrustState {
+  if (hasPendingReview) return "pending_review"
+  return verified ? "verified" : "unverified"
+}
+
+/** The badge shape a trust state maps to — reuses existing `Badge` variants (no new component). */
+export type BeltTrustBadge = {
+  variant: "success" | "outline" | "info"
+  label: string
+  /** Icon KEY (resolved to a Lucide component at the card) — keeps this module icon-free. */
+  icon: "check" | "clock" | null
+}
+
+/** Presentation mapping for each trust state (SESSION_0540). */
+export const BELT_TRUST_BADGE: Record<BeltTrustState, BeltTrustBadge> = {
+  verified: { variant: "success", label: "Verified", icon: "check" },
+  unverified: { variant: "outline", label: "Unverified", icon: null },
+  pending_review: { variant: "info", label: "Pending review", icon: "clock" },
 }
 
 /** The three surfaced states of a belt card. */

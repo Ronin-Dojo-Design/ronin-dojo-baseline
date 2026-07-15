@@ -7,7 +7,7 @@ import type { MCardData } from "~/components/web/m-card/m-card"
  * DTO slice is `{ id; name; colorHex?; disciplineCode?; count?; items?: { id; label; done? }[] }`).
  *
  * **Presentation-only / redaction is upstream.** This mapper consumes an ALREADY-projected,
- * already-public belt-group shape — a `Rank` (name + data-driven `colorHex` tint, ADR 0022)
+ * already-public belt-group shape — a `Rank` (name + data-driven `colorHex` tint, ADR 0026)
  * with its grouped member `count` and optional curriculum `items` (techniques bounded by the
  * belt). It adds NO fetch and NO redaction, and reads ONLY the public presentation fields. No
  * member identity, no non-public field, ever reaches the card here — the count is an aggregate

@@ -32,7 +32,7 @@ const techniqueDisciplinePayload = {
 }
 
 // @added SESSION_0525 (Stream D1) — the tagged belt (`beltLevelMin` FK). `colorHex`
-// drives the on-card belt chip (ADR 0022 — never a hardcoded hex); `name`/`shortName`
+// drives the on-card belt chip (ADR 0026 — never a hardcoded hex); `name`/`shortName`
 // label it. Single-belt model: `beltLevelMax` is intentionally not selected this lane.
 const techniqueBeltPayload = {
   select: { id: true, name: true, shortName: true, colorHex: true, sortOrder: true },

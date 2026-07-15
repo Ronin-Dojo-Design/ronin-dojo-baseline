@@ -53,7 +53,7 @@ export function IdentityStep({
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={form.control}
           name="firstName"
@@ -86,7 +86,7 @@ export function IdentityStep({
           control={form.control}
           name="preferredName"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>Preferred display name</FormLabel>
               <FormControl>
                 <Input size="lg" placeholder="Coach Brian Scott, Mestre..., etc." {...field} />
@@ -101,7 +101,7 @@ export function IdentityStep({
           control={form.control}
           name="email"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel isRequired>Email</FormLabel>
               <FormControl>
                 <Input
@@ -189,7 +189,7 @@ export function IdentityStep({
           control={form.control}
           name="discoverySource"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="md:col-span-2">
               <FormLabel>How did you hear about BBL?</FormLabel>
               <Select onValueChange={field.onChange} value={field.value} items={discoveryLabels}>
                 <FormControl>
@@ -215,7 +215,7 @@ export function IdentityStep({
             control={form.control}
             name="discoverySourceOther"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
+              <FormItem>
                 <FormLabel>Tell us where you found us</FormLabel>
                 <FormControl>
                   <Input size="lg" placeholder="Podcast, seminar, teammate, etc." {...field} />

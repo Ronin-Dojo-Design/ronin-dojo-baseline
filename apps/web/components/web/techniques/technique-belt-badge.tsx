@@ -3,7 +3,7 @@ import { cx } from "~/lib/utils"
 /**
  * Belt presentation primitives for the technique surfaces (Stream D1). A technique is
  * tagged with a single belt via its `beltLevelMin` FK; both the on-card chip and the
- * belt-filter dropdown row render its `Rank.colorHex` (ADR 0022 — the belt color is the
+ * belt-filter dropdown row render its `Rank.colorHex` (ADR 0026 — the belt color is the
  * data, never a hardcoded hex). Mirrors the belt-tinted rank chip in the directory's
  * `facet-result-card.tsx` (kept inside the technique file set per the lane boundary).
  */

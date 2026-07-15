@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
@@ -19,6 +19,7 @@ import { Stack } from "~/components/common/stack"
 import { TextArea } from "~/components/common/textarea"
 import { siteConfig } from "~/config/site"
 import { client } from "~/lib/orpc-client"
+import { cx } from "~/lib/utils"
 import type { BeltCardOutput, MilestoneMediaPurpose } from "~/server/belt/schemas"
 import { BeltMediaGallery } from "./belt-media-gallery"
 import {
@@ -88,11 +89,74 @@ function LockedFactValue({ value }: { value: string }) {
   )
 }
 
+/**
+ * Live promoter-picker feedback (SESSION_0540) — tells the member what will happen on
+ * save BEFORE they commit, mirroring the server backfill-verification decision
+ * (`decideBackfillTrust`):
+ * - a registered pick equal to the anchor promoter → SUCCESS (auto-verify);
+ * - a DIFFERENT registered pick → INFO (we send it to that coach to confirm);
+ * - a freetext coach, OR a saved freetext coach reloaded as its recruited PLACEHOLDER
+ *   Passport (an id NOT in the registered options) → CAUTION (recruiting — mirrors the
+ *   server `keep_unverified` and the card's "Unverified" badge, so the two never disagree).
+ * Returns `null` for an empty picker (no note). Pure — the color is a token className.
+ */
+function promoterFeedbackNote(
+  promoter: CreatableValue,
+  anchorPromoterPassportId: string | null,
+  registeredPromoterIds: ReadonlySet<string>,
+): { className: string; message: ReactNode } | null {
+  const name = promoter.label.trim()
+  if (promoter.id) {
+    // Anchor match wins first — mirrors the server verify branch (even a placeholder anchor).
+    if (anchorPromoterPassportId && promoter.id === anchorPromoterPassportId) {
+      return {
+        className: "text-emerald-600 dark:text-emerald-500",
+        message: "Matches your verified promoter — this belt will be verified.",
+      }
+    }
+    // A registered (on-BBL) person the member picked → ask them to confirm.
+    if (registeredPromoterIds.has(promoter.id)) {
+      return {
+        className: "text-blue-600 dark:text-blue-400",
+        message: (
+          <>
+            We&rsquo;ll send this to <span className="font-medium">{name}</span> to confirm.
+          </>
+        ),
+      }
+    }
+    // An id absent from the registered options = a recruited placeholder coach (reload of a
+    // saved freetext promoter). Keep the amber recruiting copy so it matches the Unverified badge.
+    return {
+      className: "text-amber-600 dark:text-amber-500",
+      message: (
+        <>
+          We&rsquo;ve invited <span className="font-medium">{name}</span> &mdash; awaiting their
+          confirmation.
+        </>
+      ),
+    }
+  }
+  if (name.length > 0) {
+    return {
+      className: "text-amber-600 dark:text-amber-500",
+      message: (
+        <>
+          We&rsquo;ll invite <span className="font-medium">{name}</span> to Black Belt Legacy to
+          confirm this belt.
+        </>
+      ),
+    }
+  }
+  return null
+}
+
 export function BeltEditForm({
   vm,
   minSortOrder,
   promoterOptions,
   schoolOptions,
+  anchorPromoterPassportId,
   onUpload,
   onSaved,
   onClose,
@@ -104,6 +168,8 @@ export function BeltEditForm({
   promoterOptions: CreatableOption[]
   /** Registered school options (id = Organization id) for the creatable combobox. */
   schoolOptions: CreatableOption[]
+  /** The member's anchor promoter Passport id — drives the live promoter feedback note + picker sort. */
+  anchorPromoterPassportId: string | null
   /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
   onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /** Fired with the fresh card after any successful save. */
@@ -150,6 +216,33 @@ export function BeltEditForm({
     school.label !== initialSchool.label ||
     // Country rides the FREETEXT school entry, so picking one dirties the school.
     (country !== "" && !school.id)
+
+  // Live feedback on the current promoter pick (SESSION_0540) + the picker's own sort:
+  // the anchor coach and the member's already-named promoter float to the top.
+  // The registered-id set lets the note tell a picked on-BBL person (→ "confirm") apart
+  // from a recruited placeholder coach whose FK is absent here (→ "invited/recruiting").
+  const registeredPromoterIds = useMemo(
+    () =>
+      new Set(promoterOptions.map(option => option.id).filter((id): id is string => Boolean(id))),
+    [promoterOptions],
+  )
+  const promoterNote = promoterFeedbackNote(
+    promoter,
+    anchorPromoterPassportId,
+    registeredPromoterIds,
+  )
+  const sortedPromoterOptions = useMemo(() => {
+    const priority = new Set(
+      [anchorPromoterPassportId, card?.awardedByPassportId].filter((id): id is string =>
+        Boolean(id),
+      ),
+    )
+    if (priority.size === 0) return promoterOptions
+    // V8's sort is stable, so within-group order is preserved.
+    return [...promoterOptions].sort(
+      (a, b) => Number(priority.has(b.id)) - Number(priority.has(a.id)),
+    )
+  }, [promoterOptions, anchorPromoterPassportId, card?.awardedByPassportId])
 
   const mediaByPurpose = useMemo(() => {
     const map: Record<string, BeltCardMedia[]> = {}
@@ -278,13 +371,26 @@ export function BeltEditForm({
             <div className="w-full">
               <Label>Who promoted you?</Label>
               {facts.promoter ? (
-                <CreatableCombobox
-                  options={promoterOptions}
-                  value={promoter}
-                  onValueChange={setPromoter}
-                  placeholder="Select or type your promoter..."
-                  searchPlaceholder="Search instructors, or type a name..."
-                />
+                <>
+                  <CreatableCombobox
+                    options={sortedPromoterOptions}
+                    value={promoter}
+                    onValueChange={setPromoter}
+                    placeholder="Select or type your promoter..."
+                    searchPlaceholder="Search instructors, or type a name..."
+                    renderCreateLabel={text => (
+                      <span>
+                        Invite &ldquo;<span className="font-medium">{text}</span>&rdquo; — not on
+                        Black Belt Legacy yet
+                      </span>
+                    )}
+                  />
+                  {promoterNote && (
+                    <Note className={cx("mt-1.5 text-xs", promoterNote.className)}>
+                      {promoterNote.message}
+                    </Note>
+                  )}
+                </>
               ) : (
                 <LockedFactValue value={promoter.label} />
               )}

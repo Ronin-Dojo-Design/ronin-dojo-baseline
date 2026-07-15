@@ -58,30 +58,98 @@ export type FactEditableAward = {
 }
 
 /**
- * May the promotion FACT (date / promoter / school) be edited? (B1 — ADR 0035
- * Amendment 1.) Under B1 there are **no UNVERIFIED awards**: a self-added backfill
- * mints VERIFIED-by-implication, and an approved promotion mints VERIFIED via
- * `mintAssertedRankAward`. So "editable" can no longer key off `UNVERIFIED` — it
- * keys off **who authored the award**:
+ * May the promotion FACT (date / promoter / school) be fully edited by the OWNER?
+ * (B1 — ADR 0035 Amendment 1; loosened SESSION_0540.) The rule keys off **who
+ * authored the award** and **whether it is still unverified**:
  *
- * - **Self-added backfill** (`source === "STATED"` and NO approver actor —
- *   `awardedById === null`): the member's own enrichment; date/promoter/school are
- *   theirs to edit.
- * - **Promotion-minted** (`mintAssertedRankAward` stamps `awardedById =` the
- *   approving instructor/admin): authority-owned → read-only.
- * - **IMPORTED / DISPUTED**: authority/legacy records → read-only.
+ * - **Locked (authority-owned truth)** — an approver stamped it (`awardedById !==
+ *   null` → instructor-VERIFIED / promotion-minted), or it is **IMPORTED** legacy
+ *   truth, or **DISPUTED** and under review. Never member-editable.
+ * - **Fully editable by the owner** — a **self-added STATED backfill**, OR **any
+ *   award still standing UNVERIFIED** (SESSION_0540: the member may freely revise
+ *   their own un-verified belt, not just fill blanks). An auto-verified
+ *   same-promoter backfill (STATED, no approver stamp) stays editable; a
+ *   differently-authored / authority award does not.
  *
- * Deny-by-default: anything that is not a clean self-added STATED award is locked.
  * The member's own promoter edit writes `awardedByPassportId` / `notes`, never
  * `awardedById`, so editing a fact never flips an award out of the editable class.
  */
 export function isFactEditable(award: FactEditableAward): boolean {
-  return (
-    award.source === "STATED" &&
-    award.awardedById === null &&
-    award.verificationStatus !== "IMPORTED" &&
-    award.verificationStatus !== "DISPUTED"
-  )
+  if (award.awardedById !== null) return false
+  if (award.verificationStatus === "IMPORTED" || award.verificationStatus === "DISPUTED") {
+    return false
+  }
+  return award.source === "STATED" || award.verificationStatus === "UNVERIFIED"
+}
+
+/**
+ * The verification decision for a member-owned **backfill** after its promoter fact is saved
+ * (SESSION_0540; reworked for the placeholder-promoter representation). Pure so the router's
+ * side-effects (status write, review task) stay a thin, tested dispatch — mirrors
+ * `memberFactEditability`.
+ *
+ * Every promoter is now a Passport FK: a REGISTERED pick, or — for a free-typed coach — a
+ * find-or-create CLAIMABLE PLACEHOLDER Passport (the recruited-coach identity, see
+ * `ensurePromoterPlaceholder`). So the decision can no longer branch on "FK vs freetext"; it
+ * branches on WHO the promoter Passport is.
+ *
+ * The **anchor** is the member's current highest authority-verified award (IMPORTED, or VERIFIED
+ * with an approver `awardedById`); its `awardedByPassportId` is the promoter we already trust.
+ * Given the backfill's saved promoter:
+ * - **verify** — the promoter Passport EQUALS the anchor's promoter → auto-verify (same coach;
+ *   wins over every branch below, even a placeholder anchor promoter).
+ * - **keep_unverified (recruiting)** — a freshly free-typed / recruited placeholder coach
+ *   (`promoterIsClaimablePlaceholder`): stays unverified, NO review — there is no one on BBL to
+ *   adjudicate; we await the coach's own claim + confirm (phase 2). Also: a registered promoter
+ *   with no comparable anchor promoter, or a legacy freetext-only row (no FK yet).
+ * - **flag_promoter_changed** — an ESTABLISHED on-tree / registered person that DIFFERS from the
+ *   anchor's promoter (both known, promoter not a claimable placeholder) → keep unverified + open
+ *   an idempotent instructor review (`PROMOTER_CHANGED`).
+ * - **skip** — no promoter expressed, or the backfill IS the anchor (never auto-verify the
+ *   reference belt itself).
+ */
+export type BackfillTrustDecision = "verify" | "flag_promoter_changed" | "keep_unverified" | "skip"
+
+export function decideBackfillTrust({
+  backfillPromoterPassportId,
+  promoterIsClaimablePlaceholder,
+  backfillFreetextPromoter,
+  anchorPromoterPassportId,
+  isBackfillAnchor,
+}: {
+  backfillPromoterPassportId: string | null
+  /**
+   * The backfill's promoter Passport is an unclaimed (`userId` null), off-tree (no `LineageNode`)
+   * placeholder — a freshly free-typed / recruited coach, NOT an established on-tree person. The
+   * router resolves this from a stateless re-read of the FK (`isClaimablePlaceholderPromoter`).
+   */
+  promoterIsClaimablePlaceholder: boolean
+  /** Legacy freetext promoter — a name in `notes` with NO Passport FK (rows written before the
+   *  placeholder rework). New writes always carry an FK; kept for those legacy rows. */
+  backfillFreetextPromoter: string | null
+  anchorPromoterPassportId: string | null
+  isBackfillAnchor: boolean
+}): BackfillTrustDecision {
+  if (isBackfillAnchor) return "skip"
+
+  if (backfillPromoterPassportId) {
+    // Same coach as the anchor's verified promoter → auto-verify (wins over every branch below).
+    if (anchorPromoterPassportId && backfillPromoterPassportId === anchorPromoterPassportId) {
+      return "verify"
+    }
+    // A freshly free-typed / recruited placeholder coach → recruiting: unverified, NO review.
+    if (promoterIsClaimablePlaceholder) return "keep_unverified"
+    // An established on-tree / registered person that differs from the anchor's promoter → a real
+    // promoter change an instructor can adjudicate. With no anchor to compare, keep unverified.
+    if (!anchorPromoterPassportId) return "keep_unverified"
+    return "flag_promoter_changed"
+  }
+
+  // Legacy freetext-only row (no placeholder Passport yet) — treat as recruiting, no review.
+  if (backfillFreetextPromoter && backfillFreetextPromoter.trim().length > 0) {
+    return "keep_unverified"
+  }
+  return "skip"
 }
 
 /**

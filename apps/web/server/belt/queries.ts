@@ -125,6 +125,29 @@ export async function getActingPassportId(userId: string, dbClient: BeltDb = db)
 }
 
 /**
+ * The member's promoter-match ANCHOR — their highest-sortOrder **authority-verified**
+ * award in the discipline (`awards` are pre-ordered by `rank.sortOrder desc`). Authority
+ * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). A
+ * self-minted backfill (now minted UNVERIFIED, SESSION_0540) is deliberately NOT an anchor —
+ * its promoter is exactly what the backfill-verification decision validates.
+ * Shared by the write path (`router.applyBackfillTrustDecision`) and the read path
+ * (`belt-tab-loader` → the promoter-picker feedback note) so they never diverge.
+ */
+export function resolveAnchorAward(
+  awards: MemberAward[],
+  disciplineId: string,
+): MemberAward | null {
+  return (
+    awards.find(
+      award =>
+        award.rank.rankSystem?.disciplineId === disciplineId &&
+        (award.verificationStatus === "IMPORTED" ||
+          (award.verificationStatus === "VERIFIED" && award.awardedById !== null)),
+    ) ?? null
+  )
+}
+
+/**
  * The member's awards, pre-ordered by `rank.sortOrder desc` — the order
  * `pickTopAwardInDiscipline` / the gate rely on to read the ceiling as the
  * "first in discipline" row.

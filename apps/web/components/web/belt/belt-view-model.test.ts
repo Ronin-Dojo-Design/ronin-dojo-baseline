@@ -7,6 +7,7 @@ import {
   canRequestPromotion,
   cardFactEditability,
   deriveBeltStatus,
+  deriveTrustState,
   isRankLocked,
   isWhiteBelt,
 } from "./belt-view-model"
@@ -23,6 +24,7 @@ function rankVm(sortOrder: number, card: BeltCardOutput | null): BeltRankViewMod
       beltFamily: null,
     },
     card,
+    trustState: card ? "verified" : null,
   }
 }
 
@@ -109,6 +111,19 @@ describe("deriveBeltStatus", () => {
       }),
     )
     expect(deriveBeltStatus(vm, 3)).toBe("completed")
+  })
+})
+
+describe("deriveTrustState (backfill-verification model, SESSION_0540)", () => {
+  it("is `verified` for a VERIFIED entry with no open review", () => {
+    expect(deriveTrustState({ verified: true, hasPendingReview: false })).toBe("verified")
+  })
+  it("is `unverified` for a non-VERIFIED entry with no open review", () => {
+    expect(deriveTrustState({ verified: false, hasPendingReview: false })).toBe("unverified")
+  })
+  it("is `pending_review` whenever an open review exists — it wins over the stored status", () => {
+    expect(deriveTrustState({ verified: false, hasPendingReview: true })).toBe("pending_review")
+    expect(deriveTrustState({ verified: true, hasPendingReview: true })).toBe("pending_review")
   })
 })
 

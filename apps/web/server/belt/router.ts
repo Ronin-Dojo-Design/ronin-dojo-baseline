@@ -1,7 +1,8 @@
 import { ORPCError } from "@orpc/server"
-import { Brand } from "~/.generated/prisma/client"
+import { Brand, type RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import {
   ceilingSortOrder,
+  decideBackfillTrust,
   type FactKey,
   isFactEditable,
   isTopAward,
@@ -13,6 +14,7 @@ import {
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
+  resolveAnchorAward,
   toBeltCard,
   toGateAward,
 } from "~/server/belt/queries"
@@ -26,8 +28,10 @@ import {
   type UpdateRankAwardFactInput,
   upsertBeltMilestoneInput,
 } from "~/server/belt/schemas"
+import { ensurePromoterPlaceholder } from "~/server/identity/promoter-placeholder"
 import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { authedProcedure } from "~/server/orpc/procedure"
+import { emitPromoterLead } from "~/server/web/promoter-lead/emit-promoter-lead"
 import { emitSchoolLead } from "~/server/web/school-lead/emit-school-lead"
 import { db } from "~/services/db"
 
@@ -74,14 +78,15 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
  * `RankAward` for `rankId` exists, then upsert its 1:1 `RankMilestone`. Returns
  * the enriched card.
  *
- * B1 (ADR 0035 Amendment 1 — C-implied mint): the ensured award is **VERIFIED**
- * by implication, NOT `UNVERIFIED`. This path is hard-gated to `sortOrder <=`
- * the member's verified ceiling (below), so the member demonstrably already holds
- * an equal-or-higher awarded belt — a lower belt is implied-true, not a
- * self-declaration awaiting review. A belt ABOVE the ceiling cannot reach this
- * path (it throws FORBIDDEN below); the UI routes those to `promotion.submit`
- * (the V2 spine oRPC). No belt-journey path ever mints an `UNVERIFIED` award, so
- * there is no display axis and nothing can leak onto the tree (ADR 0035 §5).
+ * SESSION_0540 rework (supersedes the B1 VERIFIED-by-implication mint): the ensured
+ * award is minted **UNVERIFIED**. A self-added backfill starts unverified and is
+ * PROMOTED to VERIFIED only when its named promoter matches the member's anchor
+ * promoter (`applyBackfillTrustDecision`, reached via `updateRankAwardFact`) — this
+ * removes the transient mint-VERIFIED-then-downgrade. `awardedById` stays null → the
+ * award is self-added (fact-editable; see `isFactEditable`), and being at/below the
+ * ceiling it can never raise the member's shown belt above their awarded truth. A belt
+ * ABOVE the ceiling cannot reach this path (it throws FORBIDDEN below); the UI routes
+ * those to `promotion.submit` (the V2 spine oRPC).
  */
 const upsertBeltMilestone = beltProcedure
   .input(upsertBeltMilestoneInput)
@@ -114,10 +119,11 @@ const upsertBeltMilestone = beltProcedure
           passportId,
           rankId: input.rankId,
           source: "STATED",
-          // VERIFIED-by-implication: gated `<= ceiling`, so a higher/equal awarded
-          // belt already vouches for this one. `awardedById` stays null → this is a
-          // self-added backfill (fact-editable; see `isFactEditable`).
-          verificationStatus: "VERIFIED",
+          // Minted UNVERIFIED (SESSION_0540 rework): a self-added backfill starts unverified
+          // and is promoted to VERIFIED only by the same-anchor-promoter branch of
+          // `applyBackfillTrustDecision` (via `updateRankAwardFact`). `awardedById` stays null
+          // → self-added backfill (fact-editable; see `isFactEditable`).
+          verificationStatus: "UNVERIFIED",
         },
         update: {},
         select: { id: true, passportId: true, rankId: true, verificationStatus: true },
@@ -194,8 +200,28 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
       data.notes = null
     } else {
       const name = input.promoter?.name?.trim() || null
-      data.awardedByPassportId = null
-      data.notes = name
+      if (name) {
+        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model):
+        //  1. IDENTITY — find-or-create a claimable placeholder Passport (mirrors the claim/import
+        //     placeholder machinery) and point the award FK at it, so the promoter sits on the
+        //     identity graph and can later claim their Passport (phase-2 confirm loop). The typed
+        //     name also rides `notes` (the card + editor prefill read it).
+        //  2. PIPELINE — emit a deduped recruitment `Lead` (the PERSON mirror of the freetext-school
+        //     lead) so the coach enters the outreach / CRM funnel, LINKED to that placeholder via
+        //     `meta.passportId`. Never sends outreach; the invite is an operator click.
+        const placeholder = await ensurePromoterPlaceholder(name)
+        data.awardedByPassportId = placeholder?.passportId ?? null
+        data.notes = name
+        await emitPromoterLead({
+          promoterName: name,
+          source: "belt-journey",
+          passportId: placeholder?.passportId ?? null,
+        })
+      } else {
+        // Clearing the promoter.
+        data.awardedByPassportId = null
+        data.notes = null
+      }
     }
   }
 
@@ -249,6 +275,150 @@ const FACT_LABEL: Record<FactKey, string> = {
   awardedAt: "promotion date",
   promoter: "promoter",
   school: "school",
+}
+
+/**
+ * Set a member-owned backfill's verification status + sync its RankEntry, audited.
+ * Idempotent (no-op when already at `target`). Mirrors `verifyRankEntry` semantics; the
+ * caller gates on `isFactEditable`, so this never reaches an IMPORTED / instructor /
+ * disputed award.
+ */
+async function writeBackfillStatus(
+  rankAwardId: string,
+  target: "VERIFIED" | "UNVERIFIED",
+  current: RankAwardVerificationStatus,
+  actingUserId: string,
+): Promise<void> {
+  if (current === target) return
+  await db.$transaction(async tx => {
+    await tx.rankAward.update({
+      where: { id: rankAwardId },
+      data: { verificationStatus: target },
+    })
+    await syncRankEntryFromAward(tx, rankAwardId)
+    await tx.auditLog.create({
+      data: {
+        brand: Brand.BBL,
+        action: "belt.backfill.auto_trust",
+        entityType: "RankAward",
+        entityId: rankAwardId,
+        userId: actingUserId,
+        before: { verificationStatus: current },
+        after: { verificationStatus: target },
+      },
+    })
+  })
+}
+
+/** Open ONE idempotent PENDING `PROMOTER_CHANGED` review for a backfill's entry. */
+async function openPromoterChangedReview(rankAwardId: string): Promise<void> {
+  const entry = await db.rankEntry.findUnique({
+    where: { rankAwardId },
+    select: { id: true },
+  })
+  if (!entry) return
+  const existing = await db.rankEntryReview.findFirst({
+    where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+    select: { id: true },
+  })
+  if (existing) return
+  await db.rankEntryReview.create({
+    data: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+  })
+}
+
+/**
+ * A now-matching (verified) promoter supersedes any open PROMOTER_CHANGED review, so the
+ * Phase 2 trust badge (`deriveTrustState`: a PENDING review wins over the stored status)
+ * stays coherent — a verified belt must never still read "pending review".
+ */
+async function supersedePromoterChangedReviews(rankAwardId: string): Promise<void> {
+  const entry = await db.rankEntry.findUnique({
+    where: { rankAwardId },
+    select: { id: true },
+  })
+  if (!entry) return
+  await db.rankEntryReview.updateMany({
+    where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+    data: { status: "DENIED" },
+  })
+}
+
+/**
+ * Is the backfill's promoter Passport a CLAIMABLE PLACEHOLDER — unclaimed (`userId` null) AND
+ * off-tree (no `LineageNode`), i.e. a freshly free-typed / recruited coach rather than an
+ * established on-tree person (an on-tree placeholder like an imported founder HAS a node and so is
+ * NOT one)? Resolved STATELESSLY from the stored FK so the decision stays correct on a later
+ * date-only re-edit (not from a write-time "just created" flag). Null FK → false (no person to
+ * classify). This is the signal that distinguishes recruiting (no review) from a real
+ * promoter-change (instructor review).
+ */
+async function isClaimablePlaceholderPromoter(promoterPassportId: string | null): Promise<boolean> {
+  if (!promoterPassportId) return false
+  const promoter = await db.passport.findUnique({
+    where: { id: promoterPassportId },
+    select: { userId: true, lineageNode: { select: { id: true } } },
+  })
+  return !!promoter && promoter.userId === null && promoter.lineageNode === null
+}
+
+/**
+ * Apply the SESSION_0540 backfill-verification decision after a member's promoter fact is
+ * saved. Scoped strictly to member-owned, at/below-ceiling backfills — never the anchor,
+ * above-ceiling ranks, or IMPORTED / instructor-verified / disputed truth. The decision
+ * itself is the pure `decideBackfillTrust`; this only dispatches the side-effects.
+ */
+async function applyBackfillTrustDecision(
+  passportId: string,
+  rankAwardId: string,
+  actingUserId: string,
+): Promise<void> {
+  const disciplineId = await getBjjDisciplineId()
+  const awards = await getMemberAwards(passportId)
+  const backfill = awards.find(award => award.id === rankAwardId)
+  if (!backfill) return
+  // Only member-owned backfills participate (never IMPORTED / instructor / disputed).
+  if (!isFactEditable(backfill)) return
+  // Above-ceiling never auto-verifies (defence-in-depth; unreachable via the gated write).
+  const ceiling = ceilingSortOrder(awards.map(toGateAward), disciplineId)
+  if (!isWithinCeiling(backfill.rank.sortOrder, ceiling)) return
+
+  const anchor = resolveAnchorAward(awards, disciplineId)
+  const decision = decideBackfillTrust({
+    backfillPromoterPassportId: backfill.awardedByPassportId,
+    promoterIsClaimablePlaceholder: await isClaimablePlaceholderPromoter(
+      backfill.awardedByPassportId,
+    ),
+    backfillFreetextPromoter: backfill.notes,
+    anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
+    isBackfillAnchor: anchor?.id === backfill.id,
+  })
+
+  switch (decision) {
+    case "verify":
+      await writeBackfillStatus(rankAwardId, "VERIFIED", backfill.verificationStatus, actingUserId)
+      await supersedePromoterChangedReviews(rankAwardId)
+      break
+    case "flag_promoter_changed":
+      await writeBackfillStatus(
+        rankAwardId,
+        "UNVERIFIED",
+        backfill.verificationStatus,
+        actingUserId,
+      )
+      await openPromoterChangedReview(rankAwardId)
+      break
+    case "keep_unverified":
+      await writeBackfillStatus(
+        rankAwardId,
+        "UNVERIFIED",
+        backfill.verificationStatus,
+        actingUserId,
+      )
+      break
+    case "skip":
+      break
+  }
 }
 
 /**
@@ -327,6 +497,11 @@ const updateRankAwardFact = beltProcedure
         })
       }
     }
+
+    // Backfill-verification decision (SESSION_0540): auto-verify a same-promoter backfill,
+    // flag a changed promoter for instructor review, or keep a freetext/unmatched promoter
+    // unverified. Runs on the (now-persisted) fact; scoped to member-owned backfills.
+    await applyBackfillTrustDecision(passportId, award.id, context.user.id)
 
     context.revalidate({ paths: REVALIDATE_PATHS })
     return enrichedCard(passportId, award.id)

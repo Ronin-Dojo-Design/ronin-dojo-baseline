@@ -123,7 +123,7 @@ export function LineageStep({
       title="Lineage details"
       description="Share enough rank, school, evidence, and story context for reviewers to place your Passport and lineage profile correctly."
     >
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <CreatableField
           form={form}
           textName="currentRank"

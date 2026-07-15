@@ -13,6 +13,7 @@ import { describe, expect, it } from "bun:test"
 import type { RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import {
   ceilingSortOrder,
+  decideBackfillTrust,
   type FactValueAward,
   type GateAward,
   isFactEditable,
@@ -79,20 +80,26 @@ describe("isWithinCeiling — a member CANNOT create/edit a rank above their cei
   })
 })
 
-describe("isFactEditable (B1) — only a self-added STATED backfill is editable", () => {
+describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is editable", () => {
   it("ALLOWS editing a self-added backfill award (STATED, VERIFIED-by-implication, no approver)", () => {
     expect(
       isFactEditable({ source: "STATED", verificationStatus: "VERIFIED", awardedById: null }),
     ).toBe(true)
   })
 
-  it("ALLOWS editing a legacy UNVERIFIED self-report (STATED, no approver) for back-compat", () => {
+  it("ALLOWS editing a STATED UNVERIFIED self-report (no approver)", () => {
     expect(
       isFactEditable({ source: "STATED", verificationStatus: "UNVERIFIED", awardedById: null }),
     ).toBe(true)
   })
 
-  it("DENIES editing a promotion-minted award (STATED + VERIFIED but stamped with an approver)", () => {
+  it("ALLOWS editing ANY UNVERIFIED award the owner holds — even EARNED (SESSION_0540)", () => {
+    expect(
+      isFactEditable({ source: "EARNED", verificationStatus: "UNVERIFIED", awardedById: null }),
+    ).toBe(true)
+  })
+
+  it("DENIES editing a promotion-minted award (VERIFIED but stamped with an approver)", () => {
     expect(
       isFactEditable({
         source: "STATED",
@@ -111,10 +118,108 @@ describe("isFactEditable (B1) — only a self-added STATED backfill is editable"
     ).toBe(false)
   })
 
-  it("DENIES editing an EARNED award (not a self-added STATED backfill)", () => {
+  it("DENIES editing an EARNED award that is already VERIFIED without an approver (not a backfill)", () => {
     expect(
       isFactEditable({ source: "EARNED", verificationStatus: "VERIFIED", awardedById: null }),
     ).toBe(false)
+  })
+})
+
+describe("decideBackfillTrust (SESSION_0540 — placeholder-promoter decision tree)", () => {
+  it("VERIFIES a promoter Passport equal to the anchor's promoter (same coach)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("verify")
+  })
+
+  it("VERIFIES even when the matching anchor promoter is itself a placeholder (same-coach wins)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: true,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("verify")
+  })
+
+  it("RECRUITS a freshly free-typed placeholder coach — keep unverified, NO review (even with an anchor)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-new-coach",
+        promoterIsClaimablePlaceholder: true,
+        backfillFreetextPromoter: "Coach Dave Willis",
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("keep_unverified")
+  })
+
+  it("FLAGS an established (on-tree / registered) person that DIFFERS from the anchor's promoter", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-other",
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("flag_promoter_changed")
+  })
+
+  it("KEEPS a registered promoter unverified when the anchor has no comparable promoter", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-other",
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: null,
+        isBackfillAnchor: false,
+      }),
+    ).toBe("keep_unverified")
+  })
+
+  it("KEEPS a legacy freetext-only promoter unverified (no FK yet — pre-rework rows)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: null,
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: "Coach Dave Willis",
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("keep_unverified")
+  })
+
+  it("SKIPS when no promoter is expressed", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: null,
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: "   ",
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("skip")
+  })
+
+  it("SKIPS the anchor itself (never auto-verifies the reference belt)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: false,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: true,
+      }),
+    ).toBe("skip")
   })
 })
 

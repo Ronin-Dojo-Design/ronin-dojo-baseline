@@ -11,7 +11,7 @@ import { formatPromotionDate } from "./promotion-format"
 /**
  * The cinematic list-box card: belt-colored header (avatar / BBL-Poppins name /
  * belt-graphic) + inline leaf-child list. Belt color is `node.colorHex` DATA — the
- * `BeltSwatch` bar + the computed gradient/glow/border (ADR 0022, never a hardcoded
+ * `BeltSwatch` bar + the computed gradient/glow/border (ADR 0026, never a hardcoded
  * belt hex); the heading inherits `--font-bbl-heading` (the explorer's non-portaled
  * BBL font wrapper).
  */
