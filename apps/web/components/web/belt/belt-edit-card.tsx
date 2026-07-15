@@ -120,7 +120,13 @@ export function BeltEditCard({
 
       <div className="relative flex w-full items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5">
-          <BeltSwatch colorHex={colorHex} variant="bar" className="h-4 w-12" />
+          <BeltSwatch
+            variant="belt"
+            colorHex={colorHex}
+            secondaryColorHex={vm.rank.secondaryColorHex}
+            degree={vm.rank.degree}
+            beltFamily={vm.rank.beltFamily}
+          />
           <h3 className="truncate text-base font-bold leading-tight tracking-tight text-foreground">
             {vm.rank.name}
           </h3>

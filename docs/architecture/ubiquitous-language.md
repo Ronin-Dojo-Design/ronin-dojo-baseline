@@ -261,6 +261,26 @@ The member-facing experience for telling the story of a person's rank progressio
 Belt Journey is UX language. It does not create rank authority, verification, privacy, or promotion facts. Its data
 enrichment is stored in `RankMilestone`; rank truth remains `RankAward`.
 
+### Belt Family
+
+The BJJ bar-treatment axis on a `Rank`: `BeltFamily` enum — `COLORED` (white/blue/purple/brown), `BLACK`,
+`CORAL` (7th/8th degree), `RED` (9th/10th degree) (SESSION_0539). It drives the **rank bar**'s color + seam
+treatment in `BeltSwatch`, while the belt *body* color stays `Rank.colorHex` data (ADR 0026 / design-system
+doctrine — never a hardcoded belt-color map). `null` = a non-BJJ / unseeded rank → the belt renders bar-free.
+Render-layer only, like `degree`/`secondaryColorHex`; never rank authority.
+
+### Rank Bar
+
+The contrasting tab near the belt's tip that carries the degree marks (`BeltSwatch` `variant="belt"`,
+SESSION_0539). Black for colored belts, red for black/coral/red; coral & red add thin flush left/right white
+seams. Length varies — ¾ for white→6th-black, full for coral/red. A belt-color tip shows past it.
+
+### Degree Marks (stripes / degrees)
+
+The white "wrapped athletic-tape" marks on the **rank bar** = a belt's grade, rendered full-height and
+right-anchored from the tip (`Rank.degree`). Vocabulary differs by family: colored belts carry 0–4 **stripes**;
+black/coral/red carry 1–10 **degrees** — both render as the same white marks (SESSION_0539).
+
 ### RankMilestone
 
 A member-owned enrichment record attached 1:1 to a `RankAward`.

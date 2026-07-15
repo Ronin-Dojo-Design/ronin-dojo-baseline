@@ -1,3 +1,4 @@
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import type { BeltCardOutput } from "~/server/belt/schemas"
 
 /**
@@ -29,6 +30,10 @@ export type BeltRankRef = {
   /** `Rank.colorHex` — drives `--rank-color`; never hardcoded (ADR 0022). */
   colorHex: string | null
   sortOrder: number
+  /** @added SESSION_0539 — refined-belt render fields for the journey ladder swatch. */
+  secondaryColorHex: string | null
+  degree: number | null
+  beltFamily: BeltFamily | null
 }
 
 /**

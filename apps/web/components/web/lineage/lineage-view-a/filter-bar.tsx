@@ -78,8 +78,8 @@ function FilterDropdown({
               onCheckedChange={() => onToggle(key)}
             >
               <span className="flex min-w-0 items-center gap-2">
-                {facet.dimension === "belt" && (
-                  <BeltSwatch variant="bar" colorHex={facet.colorHex} />
+                {facet.dimension === "belt" && facet.belt && (
+                  <BeltSwatch variant="belt" size="sm" {...facet.belt} />
                 )}
                 <span className="max-w-[12rem] truncate">{facet.label}</span>
               </span>

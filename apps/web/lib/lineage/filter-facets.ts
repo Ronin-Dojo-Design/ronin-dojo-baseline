@@ -1,3 +1,4 @@
+import type { BeltRenderData } from "~/components/common/belt-swatch"
 import type { LineageVisualNode } from "~/lib/lineage/to-lineage-visual"
 
 /**
@@ -25,6 +26,8 @@ export type FilterFacet = {
   label: string
   /** Belt swatch color for belt facets (null otherwise). */
   colorHex: string | null
+  /** Full refined-belt render-model for belt facets (SESSION_0539); absent on non-belt facets. */
+  belt?: BeltRenderData | null
 }
 
 /** Stable key for a facet, used as the `activeFilters` Set member. */
@@ -70,6 +73,7 @@ export function deriveFacets(nodes: LineageVisualNode[]): FilterFacet[] {
         value: node.rankLabel,
         label: node.rankLabel,
         colorHex: node.colorHex,
+        belt: node.belt,
       })
     }
     if (node.schoolLabel && !schools.has(node.schoolLabel)) {

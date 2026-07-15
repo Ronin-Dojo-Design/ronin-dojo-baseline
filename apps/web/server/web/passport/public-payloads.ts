@@ -38,6 +38,10 @@ export const publicPassportPayload = {
           name: true,
           shortName: true,
           colorHex: true,
+          // @added SESSION_0539 — refined-belt render fields (marks + coral panels + family bar).
+          secondaryColorHex: true,
+          degree: true,
+          beltFamily: true,
           rankSystem: {
             select: {
               id: true,

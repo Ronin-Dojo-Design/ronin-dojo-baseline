@@ -71,6 +71,9 @@ function detailFixture(): DirectoryProfileDetail {
             name: "Black Belt",
             shortName: "BB",
             colorHex: "#000000",
+            secondaryColorHex: null,
+            degree: 1,
+            beltFamily: "BLACK",
             rankSystem: {
               id: "rank-system-1",
               name: "BJJ Belt System",
@@ -88,6 +91,9 @@ function detailFixture(): DirectoryProfileDetail {
             name: "Brown Belt",
             shortName: "BR",
             colorHex: "#8B4513",
+            secondaryColorHex: null,
+            degree: 0,
+            beltFamily: "COLORED",
             rankSystem: {
               id: "rank-system-1",
               name: "BJJ Belt System",

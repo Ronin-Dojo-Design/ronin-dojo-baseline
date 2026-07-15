@@ -50,6 +50,10 @@ const promotionEventRankAwardPayload = {
       shortName: true,
       colorHex: true,
       sortOrder: true,
+      // @added SESSION_0539 — refined-belt render fields for the award-card swatch.
+      secondaryColorHex: true,
+      degree: true,
+      beltFamily: true,
       rankSystem: {
         select: {
           id: true,

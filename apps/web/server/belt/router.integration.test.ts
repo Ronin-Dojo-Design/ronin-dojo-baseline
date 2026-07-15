@@ -228,7 +228,15 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
       }),
       db.rank.findMany({
         where: { id: { in: [fx.whiteRankId, fx.blueRankId] } },
-        select: { id: true, name: true, colorHex: true, sortOrder: true },
+        select: {
+          id: true,
+          name: true,
+          colorHex: true,
+          sortOrder: true,
+          secondaryColorHex: true,
+          degree: true,
+          beltFamily: true,
+        },
       }),
       getMemberAwards(fx.memberPassportId),
     ])
@@ -358,7 +366,15 @@ describe("profile belt read ceiling — RankAward-sourced, orphan-RankEntry regr
       }),
       db.rank.findMany({
         where: { id: { in: [fx.whiteRankId, fx.blueRankId, fx.purpleRankId] } },
-        select: { id: true, name: true, colorHex: true, sortOrder: true },
+        select: {
+          id: true,
+          name: true,
+          colorHex: true,
+          sortOrder: true,
+          secondaryColorHex: true,
+          degree: true,
+          beltFamily: true,
+        },
         orderBy: { sortOrder: "asc" },
       }),
       getMemberAwards(orphanPassportId),

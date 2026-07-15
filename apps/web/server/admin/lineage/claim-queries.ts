@@ -61,7 +61,18 @@ export async function findClaimById(id: string) {
       createdAt: true,
       updatedAt: true,
       // FI-006: rank the claimant asserted at claim time.
-      claimedRank: { select: { id: true, name: true, shortName: true, colorHex: true } },
+      // @added SESSION_0539 — refined-belt render fields for the claim-review swatch.
+      claimedRank: {
+        select: {
+          id: true,
+          name: true,
+          shortName: true,
+          colorHex: true,
+          secondaryColorHex: true,
+          degree: true,
+          beltFamily: true,
+        },
+      },
       // SESSION_0441: registered school/instructor/tree the claimant picked in the wizard —
       // resolved to names/links on the review surface. Null = the claimant typed a custom
       // value (the text label is in `claimantNote`).

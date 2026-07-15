@@ -596,3 +596,19 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   (`isAuthoredSlugConflict`, live-verified SESSION_0529) into the shared handler, keeping `meta.target` as the
   second recognized shape; add a test using the real captured adapter error shape.
 - **Status: OPEN** — scheduled in the WL-P2-49 shared-seams cleanup lane (SESSION_0529 grill Q6, operator-ratified).
+
+### D-044 — "data-driven belt colors" rule cited as ADR 0022 (Brand Chrome), belongs to ADR 0026 + doctrine
+
+- **Discovered:** SESSION_0539 (Giddy). The brand-safe "belt colors from `Rank.colorHex` data, never a hardcoded
+  belt-color map" rule is cited as **ADR 0022** across ~5+ code comments + `server/web/onboarding/ranks.ts` +
+  `belt-swatch.tsx` + this session's new comments — but `docs/architecture/decisions/0022-brand-chrome-resolution.md`
+  is *Brand Chrome Resolution* (unrelated). The rule actually lives in **ADR 0026** (Lineage View A engine, "belt
+  color stays `Rank.colorHex` data") + the design-system doctrine + `repo-code-glossary.md`. Pre-existing repo-wide
+  mis-citation (Cody faithfully mirrored it; not introduced this session).
+- **Also folds in (F03):** the SESSION_0539 migration backfill keys on `RankSystem.name = 'IBJJF Belt System'`
+  (a display string, not a stable slug) — a differently-named BJJ system on a product DB would silently no-op the
+  backfill → bar-less belts (graceful, but incomplete). Accepted-risk (seed is SoT for fresh DBs); revisit with a
+  stable system slug if one exists.
+- **Fix direction:** repo-wide correct the belt-color citation to **ADR 0026 / design-system doctrine** (not a
+  split-brain partial fix); optionally re-key the backfill on a stable identifier.
+- **Status: OPEN** — batch into the next-session belt-tidy pass (SESSION_0539 hostile close F03/F05).

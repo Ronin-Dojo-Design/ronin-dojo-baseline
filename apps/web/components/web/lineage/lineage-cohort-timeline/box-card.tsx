@@ -79,7 +79,7 @@ export function LineageBoxCard({
             {node.displayName}
           </div>
           <div className="mt-1.5 flex items-center gap-2">
-            <BeltSwatch variant="bar" shimmer={isFocal} colorHex={node.colorHex} />
+            <BeltSwatch variant="belt" size="lg" {...node.belt} />
             {node.schoolLabel && (
               <span className="min-w-0 truncate text-[0.7rem] font-medium text-white/50">
                 {node.schoolLabel}

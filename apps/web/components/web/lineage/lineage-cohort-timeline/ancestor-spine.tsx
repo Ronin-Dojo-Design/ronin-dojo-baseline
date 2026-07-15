@@ -54,7 +54,7 @@ export function AncestorSpine({
               <span className="max-w-44 truncate text-sm font-bold italic text-white/90 [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
                 {ancestor.displayName}
               </span>
-              <BeltSwatch variant="bar" colorHex={ancestor.colorHex} />
+              <BeltSwatch variant="belt" {...ancestor.belt} />
               {promotionYear(ancestor.promotionDate) && (
                 <span className="shrink-0 text-[0.6rem] font-semibold tabular-nums text-white/35">
                   {promotionYear(ancestor.promotionDate)}

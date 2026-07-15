@@ -104,9 +104,11 @@ export function ClaimReviewDetail({ claim, backHref }: { claim: ClaimDetail; bac
             </Heading>
             <div className="flex items-center gap-3">
               <BeltSwatch
+                variant="belt"
                 colorHex={claim.claimedRank.colorHex}
-                variant="bar"
-                className={isPromotion ? "h-4 w-14" : "h-4 w-12"}
+                secondaryColorHex={claim.claimedRank.secondaryColorHex}
+                degree={claim.claimedRank.degree}
+                beltFamily={claim.claimedRank.beltFamily}
               />
               <span className={isPromotion ? "font-semibold text-base" : "font-medium text-sm"}>
                 {claim.claimedRank.name}

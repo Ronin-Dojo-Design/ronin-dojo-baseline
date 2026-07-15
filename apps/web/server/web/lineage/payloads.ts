@@ -134,9 +134,11 @@ export const lineageNodeRowPayload = {
               colorHex: true,
               sortOrder: true,
               // @added SESSION_0493 — degree stripes + coral panels for the
-              // ancestry-timeline flat-bar swatch.
+              // ancestry-timeline `belt` swatch.
               degree: true,
               secondaryColorHex: true,
+              // @added SESSION_0539 — belt-family drives the rank-bar treatment.
+              beltFamily: true,
               rankSystem: {
                 select: {
                   id: true,
@@ -287,6 +289,11 @@ export const lineageNodeProfilePayload = {
               shortName: true,
               colorHex: true,
               sortOrder: true,
+              // @added SESSION_0539 — belt render-model fields (degree marks + coral
+              // panels + family-driven bar) for the drawer's refined belt swatch.
+              degree: true,
+              secondaryColorHex: true,
+              beltFamily: true,
               rankSystem: {
                 select: {
                   id: true,
