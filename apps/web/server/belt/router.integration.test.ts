@@ -242,7 +242,7 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
     ])
     const data = projectProfileBeltEntries({
       ladder,
-      entries,
+      entries: entries.map(entry => ({ ...entry, hasPendingReview: false })),
       awards: awards.map(toGateAward),
       disciplineId: entries[0]!.rankAward.rank.rankSystem.disciplineId!,
     })
@@ -384,7 +384,7 @@ describe("profile belt read ceiling — RankAward-sourced, orphan-RankEntry regr
 
     const data = projectProfileBeltEntries({
       ladder,
-      entries,
+      entries: entries.map(entry => ({ ...entry, hasPendingReview: false })),
       awards: awards.map(toGateAward),
       disciplineId: awards[0]!.rank.rankSystem!.disciplineId!,
     })

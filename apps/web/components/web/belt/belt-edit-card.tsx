@@ -1,18 +1,13 @@
 "use client"
 
-import { LockIcon, PencilIcon } from "lucide-react"
+import { CheckIcon, ClockIcon, LockIcon, PencilIcon } from "lucide-react"
 import type { CSSProperties } from "react"
 import { Badge } from "~/components/common/badge"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { cx } from "~/lib/utils"
-import {
-  BELT_STATUS_LABEL,
-  type BeltCardStatus,
-  type BeltRankViewModel,
-  deriveBeltStatus,
-} from "./belt-view-model"
+import { BELT_TRUST_BADGE, type BeltRankViewModel, deriveBeltStatus } from "./belt-view-model"
 
 /**
  * `BeltEditCard` — one belt-journey card (Slice 4 — Petey Plan 0477 Locked #6).
@@ -32,11 +27,8 @@ import {
  * open the edit surface. No mutation happens here.
  */
 
-const STATUS_BADGE_VARIANT: Record<BeltCardStatus, "soft" | "success" | "outline"> = {
-  add: "outline",
-  locked: "soft",
-  completed: "success",
-}
+/** Trust-badge icon keys (kept icon-free in `belt-view-model`) → their Lucide components. */
+const TRUST_ICON = { check: CheckIcon, clock: ClockIcon } as const
 
 /** Inline `--rank-color` — set only when a belt colour is present (never hardcoded). */
 function rankColorStyle(colorHex: string | null): CSSProperties | undefined {
@@ -69,6 +61,18 @@ export function BeltEditCard({
   const mediaCount = vm.card?.milestone?.media.length ?? 0
 
   const actionLabel = status === "completed" ? "Edit" : "Add your story"
+
+  // Trust badge — shown ONLY for an OWNED entry (`trustState` non-null); an above-ceiling
+  // (locked) card is not owned yet, so it carries no trust badge (SESSION_0540). Reuses the
+  // existing `Badge` variants — no new component. The badge lives in the FOOTER row so the
+  // belt name gets the full top line and never wraps against it (operator flag).
+  const trustMeta = !locked && vm.trustState ? BELT_TRUST_BADGE[vm.trustState] : null
+  const TrustIcon = trustMeta?.icon ? TRUST_ICON[trustMeta.icon] : null
+  const trustBadge = trustMeta ? (
+    <Badge size="sm" variant={trustMeta.variant} prefix={TrustIcon ? <TrustIcon /> : undefined}>
+      {trustMeta.label}
+    </Badge>
+  ) : null
 
   // Above-ceiling → an actionable "Request promotion" CTA (B1), not a disabled button.
   // Enrichable belts → the edit surface.
@@ -118,22 +122,19 @@ export function BeltEditCard({
         )}
       />
 
-      <div className="relative flex w-full items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <BeltSwatch
-            variant="belt"
-            colorHex={colorHex}
-            secondaryColorHex={vm.rank.secondaryColorHex}
-            degree={vm.rank.degree}
-            beltFamily={vm.rank.beltFamily}
-          />
-          <h3 className="truncate text-base font-bold leading-tight tracking-tight text-foreground">
-            {vm.rank.name}
-          </h3>
-        </div>
-        <Badge size="sm" variant={STATUS_BADGE_VARIANT[status]}>
-          {BELT_STATUS_LABEL[status]}
-        </Badge>
+      {/* Top row — belt + name at FULL width (no badge here); the trust badge lives in
+          the footer so a long belt name never wraps against it (SESSION_0540). */}
+      <div className="relative flex w-full min-w-0 items-center gap-2.5">
+        <BeltSwatch
+          variant="belt"
+          colorHex={colorHex}
+          secondaryColorHex={vm.rank.secondaryColorHex}
+          degree={vm.rank.degree}
+          beltFamily={vm.rank.beltFamily}
+        />
+        <h3 className="min-w-0 truncate text-base font-bold leading-tight tracking-tight text-foreground">
+          {vm.rank.name}
+        </h3>
       </div>
 
       {story ? (
@@ -154,8 +155,12 @@ export function BeltEditCard({
         </span>
       )}
 
-      {action && (
-        <div className="relative mt-auto flex w-full items-center justify-end border-t border-border/60 pt-3">
+      {/* Footer action row — trust badge (left) · action (right), on ONE line. When there is
+          no trust badge (below-ceiling not-yet-started, or a locked/above-ceiling card) an
+          empty left slot keeps the action right-aligned. */}
+      {(trustBadge || action) && (
+        <div className="relative mt-auto flex w-full items-center justify-between gap-3 border-t border-border/60 pt-3">
+          {trustBadge ?? <span aria-hidden />}
           {action}
         </div>
       )}

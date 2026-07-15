@@ -108,7 +108,14 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
         status: { not: "PENDING" },
         rank: { rankSystem: { disciplineId } },
       },
-      select: { rankId: true, status: true, rankAward: { select: gateAwardSelect } },
+      select: {
+        rankId: true,
+        status: true,
+        rankAward: { select: gateAwardSelect },
+        // Any OPEN review → the `pending_review` trust state (SESSION_0540). Scoped +
+        // `take: 1` so this is an existence probe, not a full review load.
+        reviews: { where: { status: "PENDING" }, select: { id: true }, take: 1 },
+      },
       orderBy: { rank: { sortOrder: "desc" } },
     }),
     getMemberAwards(passport.id),
@@ -118,7 +125,14 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
 
   const { ceiling, ranks } = projectProfileBeltEntries({
     ladder,
-    entries,
+    // Flatten the scoped `reviews` existence-probe into the `hasPendingReview`
+    // flag the projection consumes (keeps the projection a pure mapping).
+    entries: entries.map(entry => ({
+      rankId: entry.rankId,
+      status: entry.status,
+      rankAward: entry.rankAward,
+      hasPendingReview: entry.reviews.length > 0,
+    })),
     awards: awards.map(toGateAward),
     disciplineId,
   })
