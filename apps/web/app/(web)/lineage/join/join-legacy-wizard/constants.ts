@@ -62,7 +62,7 @@ export const pathCards: Array<{
 ]
 
 export const STEP_META = [
-  { id: "path", label: "Path", title: "Choose your path" },
-  { id: "identity", label: "Identity", title: "Tell us who you are" },
-  { id: "lineage", label: "Lineage", title: "Share your legacy" },
+  { id: "path", label: "Path" },
+  { id: "identity", label: "Identity" },
+  { id: "lineage", label: "Lineage" },
 ] as const

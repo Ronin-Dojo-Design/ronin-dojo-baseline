@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
 import { useFieldArray, useForm } from "react-hook-form"
 import { z } from "zod"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
 import { TextAreaField } from "~/components/common/fields"
 import {
@@ -204,18 +205,17 @@ export function LineageClaimForm({ treeId, members, ranks }: ClaimFormProps) {
                   <SelectContent>
                     <SelectItem value={NO_RANK_VALUE}>Not specified</SelectItem>
                     {ranks.map(r => (
-                      <SelectItem key={r.id} value={r.id}>
+                      <SelectItem key={r.id} value={r.id} className="min-h-10">
                         <span className="flex items-center gap-2">
-                          {r.colorHex && (
-                            <span
-                              className="inline-block h-3 w-3 rounded-full border"
-                              style={{ backgroundColor: r.colorHex }}
-                            />
-                          )}
+                          <BeltSwatch
+                            variant="belt"
+                            size="sm"
+                            colorHex={r.colorHex}
+                            secondaryColorHex={r.secondaryColorHex}
+                            degree={r.degree}
+                            beltFamily={r.beltFamily}
+                          />
                           {r.name}
-                          {r.shortName && (
-                            <span className="text-muted-foreground text-xs">({r.shortName})</span>
-                          )}
                         </span>
                       </SelectItem>
                     ))}
