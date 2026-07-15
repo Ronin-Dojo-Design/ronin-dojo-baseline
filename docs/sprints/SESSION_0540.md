@@ -94,6 +94,35 @@ design pass (TASK_04) into one design-driven lane.**
 Second decision: the operator-locked belt geometry is **back in play** for the design pass (the cleanup
 TASK_02/03 stays behavior-preserving; only the design pass may propose geometry changes, via artifact).
 
+**Belt-verification model (NEW lane — operator grill, locked).** The operator raised that members can't
+edit promotion facts on some belts/stripes (the ceiling gate + the authority fact-lock) and proposed a
+trust-then-flag-exceptions backfill model. Locked decisions:
+
+- **Anchor** = the member's current/highest rank + its promoter (human-verified via the existing claim/
+  promotion flow) — the trust root.
+- **Backfilling below the anchor is loosened** — members freely add/edit their belt history at/below the
+  ceiling. Above-ceiling stays "request promotion" (no self-award — ceiling gate unchanged).
+- **Verification state per backfill** (reuse `RankEntryStatus` — NOT a new state; operator caught the
+  redundancy): same **registered** promoter as anchor → `VERIFIED` (auto); same **freetext** promoter
+  (coach not on BBL) → `UNVERIFIED` (shown, editable, no review task); **different** promoter →
+  `UNVERIFIED` + `RankEntryReview{ status: PENDING, reason: PROMOTER_CHANGED }` (instructor review task).
+- **Auto-verified & unverified backfills stay member-EDITABLE** (don't lock like a formal promotion).
+- **Any freetext promoter not in the registry → emit a promoter-lead** (mirror `emitSchoolLead`) — the
+  recruitment engine. The promoter picker (`CreatableCombobox`) surfaces the member's prior-named
+  promoters + registry so "same promoter" is a reliable reused pick (+ one lead per distinct coach).
+- **Phase 2 (deferred goal):** register-later bind + "confirm these promotions?" loop (leaded promoter
+  registers → belts bind FK → promoter confirms → UNVERIFIED→VERIFIED). Needs claim-binding infra.
+
+Infra reuse (grounded): `RankEntryStatus.UNVERIFIED` + the `UNVERIFIED→VERIFIED` path (`verify-rank-entry.ts`)
++ `RankEntryReview`/`RankEntryReviewReason.PROMOTER_CHANGED` all EXIST. **But** `verify-rank-entry.ts:15`
+notes the `RankEntryReview` **workflow is UNWIRED** (nothing creates reviews; no instructor queue) → the
+different-promoter review path is a genuine build (create + queue UI), not just wiring. No live sibling
+lane owns belt/rank-entry (worktree/branch check clean).
+
+**Sequencing (operator: DESIGN-FIRST across all threads).** Desi design pass → before/after Artifact →
+operator sign-off → Cody build → Doug verify → push gate. Session scope = all four: belt-edit/verification
+model (C), rich picker (FI-006), stepper de-truncation (B), broader join/claim form UX.
+
 ## Petey plan
 
 ### Goal
@@ -170,8 +199,10 @@ before touching a file a live lane owns; belt-swatch + belt surfaces are this se
 | SESSION_0540_TASK_01 | landed | PR #208 verdict: already merged; review folded into 02/04/05 |
 | SESSION_0540_TASK_02 | pending | fallow-fix-loop + code-quality on belt-swatch.tsx |
 | SESSION_0540_TASK_03 | pending | deferred hostile-close follow-ups (WL/D + F04 + badge) |
-| SESSION_0540_TASK_04 | pending | design pass across belt surfaces (before/after artifact) — geometry in play |
-| SESSION_0540_TASK_05 | pending | FI-006 REPOINTED: rich claim-picker belt render (lifecycle already shipped) — merges w/ TASK_04 |
+| SESSION_0540_TASK_04 | in-progress | DESIGN-FIRST pass (Desi) across 4 surfaces → before/after Artifact → operator sign-off. geometry in play |
+| SESSION_0540_TASK_05 | pending | FI-006 REPOINTED: rich claim-picker belt render (lifecycle already shipped) — part of TASK_04 design |
+| SESSION_0540_TASK_06 | pending | Belt-verification model (backfill editing + auto-verify/UNVERIFIED/review + promoter-lead) — build after design sign-off |
+| SESSION_0540_TASK_07 | pending | Stepper de-truncation (B) + broader join/claim form UX — part of TASK_04 design |
 
 ## Next session
 
