@@ -19,7 +19,7 @@ function beltTint(hex: string | null) {
  * FacetResultCard — a thin adapter over the ONE catalog card `ListingCard` (doctrine §5, person-tuned
  * per the operator's §5-table ruling; SESSION_0470). Renders the normalized `DirectoryFacetResult`
  * (people / organizations / lineage trees) with a large leading avatar (gi-default fallback for
- * people, no bare initials), a belt-tinted rank chip (`Rank.colorHex`, ADR 0022) + trust/claim badges
+ * people, no bare initials), a belt-tinted rank chip (`Rank.colorHex`, ADR 0026) + trust/claim badges
  * in the status slot, a location tagline, and the standard View + Save footer (`ListingSaveButton`).
  */
 export function FacetResultCard({

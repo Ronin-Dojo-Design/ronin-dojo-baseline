@@ -12,7 +12,7 @@ export type BeltRankOption = {
  * Belt ranks for the profile-enhancement wizard's Step 2 picker.
  *
  * Data-driven from `Rank` (never a hardcoded belt-color map — the brand-safe
- * rule, ADR 0022). Scoped to the BJJ discipline's belt ladder (the single IBJJF
+ * rule, ADR 0026). Scoped to the BJJ discipline's belt ladder (the single IBJJF
  * system) — BBL is a BJJ lineage product, so the picker shows ONE ordered ladder.
  *
  * Without the discipline scope this pulled EVERY system-wide BELT system across

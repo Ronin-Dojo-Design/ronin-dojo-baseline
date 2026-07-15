@@ -156,7 +156,7 @@ function DrawerHeaderActions({
  * The drawer's identity header — a thin layout over small extracted pieces
  * (DrawerHeaderRankBar / Avatar / Badges / Actions). The rank line pairs the
  * data-driven `BeltSwatch` belt-bar with the rank label (the legacy BBL drawer's
- * belt-bar-plus-label heading idiom, here brand-neutral via `colorHex`, ADR 0022).
+ * belt-bar-plus-label heading idiom, here brand-neutral via `colorHex`, ADR 0026).
  */
 export function DrawerIdentityHeader({
   view,

@@ -12,7 +12,7 @@ type SchoolInstructorsProps = Pick<SchoolDetailView, "instructors" | "instructor
  * instructor role title(s), discipline, and rank. The orchestrator guards on a
  * non-empty list, so this always has cards to render. The rank badge carries a
  * data-driven `BeltSwatch` (`Rank.colorHex` on the wire) — never a hardcoded belt
- * palette (ADR 0022).
+ * palette (ADR 0026).
  */
 export function SchoolInstructors({ instructors, instructorRoleCodes }: SchoolInstructorsProps) {
   return (

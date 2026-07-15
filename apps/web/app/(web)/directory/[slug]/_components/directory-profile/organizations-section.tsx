@@ -17,8 +17,10 @@ export function OrganizationsSection({ profile }: { profile: DirectoryProfile })
     <Section>
       <H4>Schools &amp; Organizations</H4>
       <Stack size="sm">
-        {user.organizations.map(org => (
-          <div key={org.id} className="flex items-center gap-2">
+        {user.organizations.map((org, index) => (
+          // WL-P3-43: composite key — one member can hold several rows for the same org
+          // (multi-affiliation), so `org.id` alone repeats and warns; the index disambiguates.
+          <div key={`${org.id}-${index}`} className="flex items-center gap-2">
             <Link href={`/schools/${org.slug}`} className="font-medium">
               {org.name}
             </Link>

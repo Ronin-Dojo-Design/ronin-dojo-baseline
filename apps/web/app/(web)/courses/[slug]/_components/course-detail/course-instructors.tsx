@@ -14,7 +14,7 @@ type CourseInstructorsProps = Pick<CourseDetailView, "instructors">
  * `next/dynamic` (SSR kept) so its chunk only loads once reached. The orchestrator
  * guards on a non-empty list, so this always has instructors to render. The rank chip
  * carries the data-driven `<BeltSwatch>` (`Rank.colorHex`) — same belt-color seam as
- * the overview, never a hardcoded palette (ADR 0022).
+ * the overview, never a hardcoded palette (ADR 0026).
  */
 export function CourseInstructors({ instructors }: CourseInstructorsProps) {
   return (

@@ -27,7 +27,7 @@ export type BeltCardMedia = NonNullable<BeltCardOutput["milestone"]>["media"][nu
 export type BeltRankRef = {
   id: string
   name: string
-  /** `Rank.colorHex` — drives `--rank-color`; never hardcoded (ADR 0022). */
+  /** `Rank.colorHex` — drives `--rank-color`; never hardcoded (ADR 0026). */
   colorHex: string | null
   sortOrder: number
   /** @added SESSION_0539 — refined-belt render fields for the journey ladder swatch. */

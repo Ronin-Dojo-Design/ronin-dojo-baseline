@@ -6,7 +6,7 @@ import type { LineageVisualNode } from "~/lib/lineage/to-lineage-visual"
 /**
  * The cinematic timeline's avatar: the ONE shared `Avatar` primitive (SSR image +
  * initials fallback, SESSION_0475) wrapped in a belt-colored ring + glow. The belt color
- * is `node.colorHex` DATA (ADR 0022); `BBL.slate` is the sanctioned neutral fallback when a
+ * is `node.colorHex` DATA (ADR 0026); `BBL.slate` is the sanctioned neutral fallback when a
  * member has no belt color. The ring gradient + glow are computed from the hex in JS (an
  * rgba interpolation a static CSS class can't express) — the established lineage idiom, not
  * a hardcoded belt palette. The image/initials rendering itself is no longer bespoke here:

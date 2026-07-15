@@ -19,7 +19,7 @@ import { cx } from "~/lib/utils"
  * callers pass only already-public display values, so it can never leak a
  * HIDDEN profile. A later session wires it to the directory/lineage read model.
  *
- * Brand-neutral (ADR 0022 / SOT-ADR §2.4): the belt color is the passed
+ * Brand-neutral (ADR 0026 / SOT-ADR §2.4): the belt color is the passed
  * `rank.colorHex` data, applied via `BeltSwatch` (SVG `fill`) and a data-driven
  * `--rank-color` CSS variable (the established lineage idiom) — never a
  * hardcoded belt palette. The gradient/glow falls back to the brand `primary`

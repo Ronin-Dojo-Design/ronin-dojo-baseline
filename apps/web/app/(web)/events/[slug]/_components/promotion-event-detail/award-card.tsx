@@ -16,7 +16,7 @@ type AwardRow = PromotionEventDetail["rankAwards"][number]
  * + avatar), the discipline, the rank with its belt color, and the
  * "{date} · Promoted by {X} · {org}" provenance line that the lineage timeline and
  * promotion marquee drill down to. The belt color stays data-driven via
- * `Rank.colorHex` through `<BeltSwatch>` — never a hardcoded belt-color map (ADR 0022).
+ * `Rank.colorHex` through `<BeltSwatch>` — never a hardcoded belt-color map (ADR 0026).
  */
 export function AwardCard({ award }: { award: AwardRow }) {
   // Phase 3c / issue #134 surface-D: use the canonical projector for promotee identity.

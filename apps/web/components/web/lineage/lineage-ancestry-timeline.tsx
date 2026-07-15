@@ -17,7 +17,7 @@ import { AncestryAvatar, RankByline } from "./lineage-ancestry-entry"
  *
  * Entries come pre-ordered [founder … member] from `getLineageAncestryForPassport`;
  * the profile owner is the LAST entry by contract and gets the highlight treatment.
- * Belt color is `Rank.colorHex` DATA (ADR 0022/0035) — never a hardcoded palette;
+ * Belt color is `Rank.colorHex` DATA (ADR 0026/0035) — never a hardcoded palette;
  * the name red is the `text-primary` brand token (BBL red via BrandSettings), and the
  * BBL type seam is carried per-component via the `--font-bbl-heading` fallback idiom
  * (this is a multi-brand surface — no `BrandTypography` wrapper, see the directory

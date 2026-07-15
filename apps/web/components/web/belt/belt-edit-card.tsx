@@ -20,7 +20,7 @@ import {
  * A DEDICATED card wrapping the Dirstarter L1 `Card` (`components/common/card.tsx`)
  * — NOT a new `m-card` kind (ADR 0040 forbids growing the record-card union). The
  * belt colour comes from `Rank.colorHex` via the `--rank-color` custom property
- * (the established lineage idiom, ADR 0022) — never a hardcoded hex.
+ * (the established lineage idiom, ADR 0026) — never a hardcoded hex.
  *
  * State (derived by `deriveBeltStatus`):
  * - `locked`    — above the member's awarded ceiling; the action is DISABLED, the

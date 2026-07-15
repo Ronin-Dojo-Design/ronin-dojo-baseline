@@ -14,7 +14,7 @@ import { cx } from "~/lib/utils"
  * A single, content- and brand-agnostic card template for an IDENTITY record: glyph/avatar +
  * title + meta + one focal value + badges. `kind` is `roster` (person) | `rank` (belt group /
  * curriculum); brand skinning is **token-only** (`--color-primary`, with a data-driven belt tint
- * via `--rank-color` from `Rank.colorHex`, ADR 0022). It is built ON TOP of the Dirstarter L1 base
+ * via `--rank-color` from `Rank.colorHex`, ADR 0026). It is built ON TOP of the Dirstarter L1 base
  * primitive `components/common/card.tsx` — never a rebuilt primitive — and is **presentation-only**:
  * all redaction stays upstream in the projection (see `docs/knowledge/wiki/files/public-passport-
  * dto.md`). Mappers feed it already-projected, already-gated DTOs.

@@ -17,10 +17,13 @@ describe("BeltSwatch (SESSION_0355 / SESSION_0539)", () => {
     expect(html).not.toContain("style=")
   })
 
-  it("falls back to a neutral muted dot when a rank has no colorHex", () => {
+  it("falls back to an explicit neutral fill (BELTLESS_FILL) when a rank has no colorHex", () => {
     const html = renderToStaticMarkup(<BeltSwatch colorHex={null} />)
-    expect(html).toContain('fill="currentColor"')
-    expect(html).toContain("text-muted")
+    // WL-P3-41: an empty belt gets an explicit fixed neutral, never theme-following
+    // `currentColor`/`text-muted` (which reads near-white in light mode).
+    expect(html).toContain('fill="#6B7280"')
+    expect(html).not.toContain('fill="currentColor"')
+    expect(html).not.toContain("text-muted")
     expect(html).not.toContain("style=")
   })
 })
@@ -48,7 +51,7 @@ describe("BeltSwatch belt variant (SESSION_0539 operator-locked rank-bar)", () =
     const html = renderToStaticMarkup(
       <BeltSwatch variant="belt" colorHex="#0000FF" beltFamily="COLORED" degree={3} />,
     )
-    expect(html).toContain('fill="#0000FF"') // body colour = data (ADR 0022)
+    expect(html).toContain('fill="#0000FF"') // body colour = data (ADR 0026)
     expect(html).toContain('fill="#111111"') // black bar
     expect(html).toContain('width="46.5"') // short (3/4) bar
     expect(html).not.toContain('width="62"') // not the full-length bar
@@ -124,10 +127,12 @@ describe("BeltSwatch belt variant (SESSION_0539 operator-locked rank-bar)", () =
     expect(html).not.toContain("style=")
   })
 
-  it("null colorHex on the belt variant still degrades to currentColor + text-muted", () => {
+  it("null colorHex on the belt variant degrades to the explicit BELTLESS_FILL neutral", () => {
     const html = renderToStaticMarkup(<BeltSwatch variant="belt" colorHex={null} />)
-    expect(html).toContain('fill="currentColor"')
-    expect(html).toContain("text-muted")
+    // WL-P3-41: explicit fixed neutral fill, never theme-following currentColor/text-muted.
+    expect(html).toContain('fill="#6B7280"')
+    expect(html).not.toContain('fill="currentColor"')
+    expect(html).not.toContain("text-muted")
     expect(html).not.toContain("style=")
   })
 

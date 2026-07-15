@@ -37,7 +37,7 @@ export function AncestryAvatar({
 
 /**
  * Rank/belt + discipline byline — the timeline-node vocabulary. Belt color is
- * `Rank.colorHex` DATA (ADR 0022/0035), never a hardcoded palette. `mutedClass`
+ * `Rank.colorHex` DATA (ADR 0026/0035), never a hardcoded palette. `mutedClass`
  * carries the surface's muted-text token: `text-muted-foreground` on the
  * timeline, the scene palette's `tokens.muted` in the story scenes.
  */
