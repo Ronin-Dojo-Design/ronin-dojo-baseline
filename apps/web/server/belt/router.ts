@@ -14,7 +14,7 @@ import {
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
-  type MemberAward,
+  resolveAnchorAward,
   toBeltCard,
   toGateAward,
 } from "~/server/belt/queries"
@@ -258,24 +258,6 @@ const FACT_LABEL: Record<FactKey, string> = {
   awardedAt: "promotion date",
   promoter: "promoter",
   school: "school",
-}
-
-/**
- * The member's promoter-match ANCHOR — their highest-sortOrder **authority-verified**
- * award in the discipline (`awards` are pre-ordered by `rank.sortOrder desc`). Authority
- * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). A
- * self-minted VERIFIED-by-implication backfill is deliberately NOT an anchor — its
- * promoter is exactly what we are trying to validate.
- */
-function resolveAnchorAward(awards: MemberAward[], disciplineId: string): MemberAward | null {
-  return (
-    awards.find(
-      award =>
-        award.rank.rankSystem?.disciplineId === disciplineId &&
-        (award.verificationStatus === "IMPORTED" ||
-          (award.verificationStatus === "VERIFIED" && award.awardedById !== null)),
-    ) ?? null
-  )
 }
 
 /**

@@ -32,6 +32,7 @@ export function BeltJourneyGrid({
   passportId,
   promoterOptions,
   schoolOptions,
+  anchorPromoterPassportId,
   onUpload,
   onUploadPassport,
 }: {
@@ -43,6 +44,8 @@ export function BeltJourneyGrid({
   passportId: string
   promoterOptions: CreatableOption[]
   schoolOptions: CreatableOption[]
+  /** The member's anchor promoter Passport id — drives the promoter-picker feedback note. */
+  anchorPromoterPassportId: string | null
   /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
   onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /**
@@ -109,6 +112,7 @@ export function BeltJourneyGrid({
               minSortOrder={minSortOrder}
               promoterOptions={promoterOptions}
               schoolOptions={schoolOptions}
+              anchorPromoterPassportId={anchorPromoterPassportId}
               onUpload={onUpload}
               onSaved={card => handleSaved(openVm.rank.id, card)}
               onClose={() => setOpenRankId(null)}
