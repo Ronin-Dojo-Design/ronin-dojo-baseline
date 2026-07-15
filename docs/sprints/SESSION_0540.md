@@ -75,9 +75,24 @@ Live docs checked during planning: Theming (ADR 0026 + design-system doctrine), 
 
 ### Grill outcome
 
-<!-- FI-006 forks resolved here after the operator grill, before any FI-006 build. -->
+**FI-006 was a PHANTOM LANE — the claim→award lifecycle is already shipped + SOT-resolved** (the
+SESSION_0500 phantom-lane trap; 0539 propagated a stale "FI-006 next" framing without re-verifying
+`main`). Proof: `PassportClaimRequest.claimedRankId` (schema:3039 "@added SESSION_0432 FI-006") +
+`claim-finalize.ts:221` `mintAssertedRankAward` (VERIFIED RankAward + `syncRankEntryFromAward`) +
+`POST_LAUNCH_SOT.md:75` "resolved (SESSION_0500 — verified already-done)… No work needed." The board's
+`in-progress` badge is stale (0500 called `markCardDone`; it didn't stick).
 
-Pending — FI-006 grill to be brought to the operator before build (Task 06).
+**Operator repoint (grill answer):** FI-006 slot → **make the member-facing claim/registration rank
+picker render the rich 0539 `BeltSwatch variant="belt"` (bars/degrees) instead of the plain color dot.**
+Scope confirmed = the claim funnel picker, NOT the admin editor. This is a small, contained RENDER SWAP:
+the query already carries the belt-render fields (`getBjjRanksForClaimPicker` selects
+`beltFamily`/`degree`/`secondaryColorHex`, 0539); only `claim-form.tsx:209-214` (the `h-3 w-3` color
+chip) needs to become `<BeltSwatch variant="belt" {...belt} size="sm" />`. Touches the moat's claim
+loop → before/after `/preview-artifacts` + Desi + operator sign-off before ship. **Merges with the
+design pass (TASK_04) into one design-driven lane.**
+
+Second decision: the operator-locked belt geometry is **back in play** for the design pass (the cleanup
+TASK_02/03 stays behavior-preserving; only the design pass may propose geometry changes, via artifact).
 
 ## Petey plan
 
@@ -120,14 +135,16 @@ Behavior-preserving belt-lane cleanup + a proven design pass, then a plan-first 
 - **Done means:** published before/after artifact link; operator sign-off on the visual delta.
 - **Depends on:** TASK_02/03 (clean base)
 
-#### SESSION_0540_TASK_05 — FI-006 claim→award rank lifecycle (PLAN-FIRST)
+#### SESSION_0540_TASK_05 — FI-006 rich claim-picker belt render (REPOINTED — lifecycle already shipped)
 
-- **Agent:** Petey (grill + plan) → Cody (build) → Doug/Giddy verify
-- **What:** registration/claim rank picker → pending claim (`rankId` on the claim record) → award on approval,
-  on the 0539 rank data (`getBeltRanks`, `RankEntry`, `BeltFamily`/`degree`). Multi-part w/ open forks (claim
-  model, RankEntry-vs-RankAward given the in-flight table-drop, picker home) → **grill the operator first**.
-- **Done means:** grill resolved + plan signed off BEFORE build; then the lifecycle wired + verified.
-- **Depends on:** operator grill sign-off
+- **Agent:** Desi (mock review) → Cody (wire) → Doug verify
+- **What:** the claim→award lifecycle is DONE (grill outcome above). Repointed slot = swap the claim/
+  registration rank picker's plain color chip (`claim-form.tsx:209-214`) for `<BeltSwatch variant="belt"
+  {...belt} size="sm" />`. Query already carries the belt-render fields (0539). Merges with TASK_04 as one
+  design-driven lane, reviewed via before/after `/preview-artifacts` + operator sign-off before wire.
+- **Done means:** before/after artifact signed off; picker renders rich belts; claim flow behavior unchanged
+  (still writes `claimedRankId`); Doug-verified live.
+- **Depends on:** TASK_02/03 (WL-P3-42 grouped `BeltRenderData`) + operator artifact sign-off
 
 ### Parallelism
 
@@ -153,8 +170,8 @@ before touching a file a live lane owns; belt-swatch + belt surfaces are this se
 | SESSION_0540_TASK_01 | landed | PR #208 verdict: already merged; review folded into 02/04/05 |
 | SESSION_0540_TASK_02 | pending | fallow-fix-loop + code-quality on belt-swatch.tsx |
 | SESSION_0540_TASK_03 | pending | deferred hostile-close follow-ups (WL/D + F04 + badge) |
-| SESSION_0540_TASK_04 | pending | design pass across belt surfaces (before/after artifact) |
-| SESSION_0540_TASK_05 | pending | FI-006 claim→award lifecycle (plan-first grill) |
+| SESSION_0540_TASK_04 | pending | design pass across belt surfaces (before/after artifact) — geometry in play |
+| SESSION_0540_TASK_05 | pending | FI-006 REPOINTED: rich claim-picker belt render (lifecycle already shipped) — merges w/ TASK_04 |
 
 ## Next session
 
