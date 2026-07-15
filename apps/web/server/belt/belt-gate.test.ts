@@ -125,11 +125,12 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
   })
 })
 
-describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () => {
-  it("VERIFIES a registered promoter equal to the anchor's promoter", () => {
+describe("decideBackfillTrust (SESSION_0540 — placeholder-promoter decision tree)", () => {
+  it("VERIFIES a promoter Passport equal to the anchor's promoter (same coach)", () => {
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: null,
         anchorPromoterPassportId: "pp-anchor",
         isBackfillAnchor: false,
@@ -137,10 +138,35 @@ describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () 
     ).toBe("verify")
   })
 
-  it("FLAGS a DIFFERENT registered promoter for instructor review", () => {
+  it("VERIFIES even when the matching anchor promoter is itself a placeholder (same-coach wins)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: true,
+        backfillFreetextPromoter: null,
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("verify")
+  })
+
+  it("RECRUITS a freshly free-typed placeholder coach — keep unverified, NO review (even with an anchor)", () => {
+    expect(
+      decideBackfillTrust({
+        backfillPromoterPassportId: "pp-new-coach",
+        promoterIsClaimablePlaceholder: true,
+        backfillFreetextPromoter: "Coach Dave Willis",
+        anchorPromoterPassportId: "pp-anchor",
+        isBackfillAnchor: false,
+      }),
+    ).toBe("keep_unverified")
+  })
+
+  it("FLAGS an established (on-tree / registered) person that DIFFERS from the anchor's promoter", () => {
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: "pp-other",
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: null,
         anchorPromoterPassportId: "pp-anchor",
         isBackfillAnchor: false,
@@ -152,6 +178,7 @@ describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () 
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: "pp-other",
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: null,
         anchorPromoterPassportId: null,
         isBackfillAnchor: false,
@@ -159,10 +186,11 @@ describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () 
     ).toBe("keep_unverified")
   })
 
-  it("KEEPS a freetext promoter unverified (no review — a lead is emitted instead)", () => {
+  it("KEEPS a legacy freetext-only promoter unverified (no FK yet — pre-rework rows)", () => {
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: null,
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: "Coach Dave Willis",
         anchorPromoterPassportId: "pp-anchor",
         isBackfillAnchor: false,
@@ -174,6 +202,7 @@ describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () 
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: null,
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: "   ",
         anchorPromoterPassportId: "pp-anchor",
         isBackfillAnchor: false,
@@ -185,6 +214,7 @@ describe("decideBackfillTrust (SESSION_0540 — auto-verify decision tree)", () 
     expect(
       decideBackfillTrust({
         backfillPromoterPassportId: "pp-anchor",
+        promoterIsClaimablePlaceholder: false,
         backfillFreetextPromoter: null,
         anchorPromoterPassportId: "pp-anchor",
         isBackfillAnchor: true,

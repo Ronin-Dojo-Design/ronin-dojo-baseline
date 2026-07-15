@@ -78,14 +78,15 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
  * `RankAward` for `rankId` exists, then upsert its 1:1 `RankMilestone`. Returns
  * the enriched card.
  *
- * B1 (ADR 0035 Amendment 1 — C-implied mint): the ensured award is **VERIFIED**
- * by implication, NOT `UNVERIFIED`. This path is hard-gated to `sortOrder <=`
- * the member's verified ceiling (below), so the member demonstrably already holds
- * an equal-or-higher awarded belt — a lower belt is implied-true, not a
- * self-declaration awaiting review. A belt ABOVE the ceiling cannot reach this
- * path (it throws FORBIDDEN below); the UI routes those to `promotion.submit`
- * (the V2 spine oRPC). No belt-journey path ever mints an `UNVERIFIED` award, so
- * there is no display axis and nothing can leak onto the tree (ADR 0035 §5).
+ * SESSION_0540 rework (supersedes the B1 VERIFIED-by-implication mint): the ensured
+ * award is minted **UNVERIFIED**. A self-added backfill starts unverified and is
+ * PROMOTED to VERIFIED only when its named promoter matches the member's anchor
+ * promoter (`applyBackfillTrustDecision`, reached via `updateRankAwardFact`) — this
+ * removes the transient mint-VERIFIED-then-downgrade. `awardedById` stays null → the
+ * award is self-added (fact-editable; see `isFactEditable`), and being at/below the
+ * ceiling it can never raise the member's shown belt above their awarded truth. A belt
+ * ABOVE the ceiling cannot reach this path (it throws FORBIDDEN below); the UI routes
+ * those to `promotion.submit` (the V2 spine oRPC).
  */
 const upsertBeltMilestone = beltProcedure
   .input(upsertBeltMilestoneInput)
@@ -118,10 +119,11 @@ const upsertBeltMilestone = beltProcedure
           passportId,
           rankId: input.rankId,
           source: "STATED",
-          // VERIFIED-by-implication: gated `<= ceiling`, so a higher/equal awarded
-          // belt already vouches for this one. `awardedById` stays null → this is a
-          // self-added backfill (fact-editable; see `isFactEditable`).
-          verificationStatus: "VERIFIED",
+          // Minted UNVERIFIED (SESSION_0540 rework): a self-added backfill starts unverified
+          // and is promoted to VERIFIED only by the same-anchor-promoter branch of
+          // `applyBackfillTrustDecision` (via `updateRankAwardFact`). `awardedById` stays null
+          // → self-added backfill (fact-editable; see `isFactEditable`).
+          verificationStatus: "UNVERIFIED",
         },
         update: {},
         select: { id: true, passportId: true, rankId: true, verificationStatus: true },
@@ -343,6 +345,24 @@ async function supersedePromoterChangedReviews(rankAwardId: string): Promise<voi
 }
 
 /**
+ * Is the backfill's promoter Passport a CLAIMABLE PLACEHOLDER — unclaimed (`userId` null) AND
+ * off-tree (no `LineageNode`), i.e. a freshly free-typed / recruited coach rather than an
+ * established on-tree person (an on-tree placeholder like an imported founder HAS a node and so is
+ * NOT one)? Resolved STATELESSLY from the stored FK so the decision stays correct on a later
+ * date-only re-edit (not from a write-time "just created" flag). Null FK → false (no person to
+ * classify). This is the signal that distinguishes recruiting (no review) from a real
+ * promoter-change (instructor review).
+ */
+async function isClaimablePlaceholderPromoter(promoterPassportId: string | null): Promise<boolean> {
+  if (!promoterPassportId) return false
+  const promoter = await db.passport.findUnique({
+    where: { id: promoterPassportId },
+    select: { userId: true, lineageNode: { select: { id: true } } },
+  })
+  return !!promoter && promoter.userId === null && promoter.lineageNode === null
+}
+
+/**
  * Apply the SESSION_0540 backfill-verification decision after a member's promoter fact is
  * saved. Scoped strictly to member-owned, at/below-ceiling backfills — never the anchor,
  * above-ceiling ranks, or IMPORTED / instructor-verified / disputed truth. The decision
@@ -366,6 +386,7 @@ async function applyBackfillTrustDecision(
   const anchor = resolveAnchorAward(awards, disciplineId)
   const decision = decideBackfillTrust({
     backfillPromoterPassportId: backfill.awardedByPassportId,
+    promoterIsClaimablePlaceholder: await isClaimablePlaceholderPromoter(backfill.awardedByPassportId),
     backfillFreetextPromoter: backfill.notes,
     anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
     isBackfillAnchor: anchor?.id === backfill.id,

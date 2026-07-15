@@ -585,6 +585,151 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
   })
 })
 
+describe("belt backfill trust rework (SESSION_0540) — mint UNVERIFIED + promoter decision tree", () => {
+  // A member with an IMPORTED anchor whose promoter IS set (`anchorCoach`), so the anchor promoter
+  // is comparable. white is NOT pre-created → it is MINTED via upsertBeltMilestone (proving the
+  // UNVERIFIED mint) and then re-pointed at different promoters to exercise every branch.
+  let trustUserId: string
+  let trustPassportId: string
+  let anchorCoachPassportId: string // registered person (has a User) = the anchor's promoter
+  let otherCoachPassportId: string // a DIFFERENT registered person ≠ anchor
+  let anchorCoachUserId: string
+  let otherCoachUserId: string
+  let whiteAwardId: string
+
+  const trust = () => asMember({ id: trustUserId, role: "user" })
+
+  beforeAll(async () => {
+    const trustUser = await db.user.create({
+      data: { name: tag("trust"), email: `${tag("trust")}@test.local` },
+    })
+    const trustPassport = await db.passport.create({
+      data: { displayName: tag("trust-pp"), userId: trustUser.id },
+      select: { id: true },
+    })
+    const anchorCoachUser = await db.user.create({
+      data: { name: tag("anchor-coach"), email: `${tag("anchor-coach")}@test.local` },
+    })
+    const anchorCoach = await db.passport.create({
+      data: { displayName: tag("anchor-coach-pp"), userId: anchorCoachUser.id },
+      select: { id: true },
+    })
+    const otherCoachUser = await db.user.create({
+      data: { name: tag("other-coach"), email: `${tag("other-coach")}@test.local` },
+    })
+    const otherCoach = await db.passport.create({
+      data: { displayName: tag("other-coach-pp"), userId: otherCoachUser.id },
+      select: { id: true },
+    })
+
+    // Anchor: an IMPORTED blue whose promoter is the anchor coach. This makes blue the ceiling
+    // (6) and the resolved anchor, so a white(1) backfill is at/below the ceiling and comparable.
+    await db.rankAward.create({
+      data: {
+        passportId: trustPassport.id,
+        rankId: fx.blueRankId,
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedByPassportId: anchorCoach.id,
+      },
+    })
+
+    trustUserId = trustUser.id
+    trustPassportId = trustPassport.id
+    anchorCoachPassportId = anchorCoach.id
+    otherCoachPassportId = otherCoach.id
+    anchorCoachUserId = anchorCoachUser.id
+    otherCoachUserId = otherCoachUser.id
+  })
+
+  afterAll(async () => {
+    await db.rankEntryReview.deleteMany({ where: { rankEntry: { passportId: trustPassportId } } })
+    await db.rankAward.deleteMany({ where: { passportId: trustPassportId } })
+    await db.auditLog.deleteMany({ where: { userId: trustUserId } })
+    // The freetext-recruit placeholder (accountless, tag-named).
+    await db.passport.deleteMany({
+      where: { userId: null, displayName: { startsWith: TAG_PREFIX } },
+    })
+    await db.passport.deleteMany({
+      where: { id: { in: [trustPassportId, anchorCoachPassportId, otherCoachPassportId] } },
+    })
+    await db.user.deleteMany({
+      where: { id: { in: [trustUserId, anchorCoachUserId, otherCoachUserId] } },
+    })
+  })
+
+  it("MINTS a self-added backfill UNVERIFIED (no more VERIFIED-by-implication), fact editable", async () => {
+    const card = await trust().upsertBeltMilestone({ rankId: fx.whiteRankId, story: "day one" })
+    expect(card.rankId).toBe(fx.whiteRankId)
+    expect(card.verificationStatus).toBe("UNVERIFIED")
+    expect(card.isFactEditable).toBe(true) // self-added STATED, no approver → still editable
+    whiteAwardId = card.rankAwardId
+    const row = await db.rankAward.findUniqueOrThrow({
+      where: { id: whiteAwardId },
+      select: { verificationStatus: true, awardedById: true },
+    })
+    expect(row.verificationStatus).toBe("UNVERIFIED")
+    expect(row.awardedById).toBeNull()
+  })
+
+  it("PROMOTES the backfill to VERIFIED when its promoter equals the anchor's promoter (same coach)", async () => {
+    const card = await trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { awardedByPassportId: anchorCoachPassportId },
+    })
+    expect(card.awardedByPassportId).toBe(anchorCoachPassportId)
+    expect(card.verificationStatus).toBe("VERIFIED")
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: whiteAwardId },
+        select: { verificationStatus: true },
+      }),
+    ).toEqual({ verificationStatus: "VERIFIED" })
+  })
+
+  it("RECRUITS a fresh free-typed coach — placeholder FK, stays UNVERIFIED, NO instructor review", async () => {
+    const card = await trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { name: tag("Fresh Recruit Coach") },
+    })
+    // Downgraded from the prior VERIFIED (the coach changed) but NO review — recruiting.
+    expect(card.verificationStatus).toBe("UNVERIFIED")
+    const promoter = await db.passport.findUniqueOrThrow({
+      where: { id: card.awardedByPassportId! },
+      select: { userId: true, lineageNode: { select: { id: true } } },
+    })
+    expect(promoter.userId).toBeNull() // a claimable placeholder → recruiting, not a promoter-change
+    expect(promoter.lineageNode).toBeNull()
+
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: whiteAwardId },
+      select: { id: true },
+    })
+    const review = await db.rankEntryReview.findFirst({
+      where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+    })
+    expect(review).toBeNull()
+  })
+
+  it("FLAGS an established different coach — UNVERIFIED + one idempotent PENDING PROMOTER_CHANGED review", async () => {
+    const card = await trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { awardedByPassportId: otherCoachPassportId },
+    })
+    expect(card.awardedByPassportId).toBe(otherCoachPassportId)
+    expect(card.verificationStatus).toBe("UNVERIFIED")
+
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: whiteAwardId },
+      select: { id: true },
+    })
+    const reviews = await db.rankEntryReview.findMany({
+      where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+    })
+    expect(reviews).toHaveLength(1) // one review, and re-saving would not duplicate it
+  })
+})
+
 describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", () => {
   // Dedicated fixtures: a member whose IMPORTED award has FILLED date + freetext
   // promoter (school left EMPTY — per-fact granularity target), plus an admin user
