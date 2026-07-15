@@ -26,16 +26,18 @@ function metaRecord(meta: unknown): Record<string, unknown> {
     : {}
 }
 
-it("emitPromoterLead creates one lead + unsent follow-up on the shared bucket org on a miss", async () => {
+it("emitPromoterLead creates one lead + unsent follow-up on the shared bucket org on a miss, LINKED to the placeholder Passport", async () => {
   const promoterName = tag("Professor Atlantis")
+  const passportId = tag("pp-atlantis") // stand-in id — the link is stored verbatim in meta
 
-  const result = await emitPromoterLead({ promoterName, source: "belt-journey" })
+  const result = await emitPromoterLead({ promoterName, source: "belt-journey", passportId })
   expect(result).not.toBeNull()
   const created = result!
 
   expect(created.createdLead).toBe(true)
   expect(created.matchedBy).toBe("none")
   expect(created.demandCount).toBe(1)
+  expect(created.passportId).toBe(passportId)
 
   const [organization, lead] = await Promise.all([
     db.organization.findUnique({ where: { id: created.organizationId } }),
@@ -47,24 +49,30 @@ it("emitPromoterLead creates one lead + unsent follow-up on the shared bucket or
   const meta = metaRecord(lead!.meta)
   expect(meta.kind).toBe(PROMOTER_OUTREACH_KIND)
   expect(meta.promoterName).toBe(promoterName)
+  expect(meta.passportId).toBe(passportId) // identity ↔ pipeline join
   expect(meta.demandCount).toBe(1)
   expect(lead!.followUps[0]?.notes).toBe(PROMOTER_OUTREACH_FOLLOW_UP_NOTE)
 })
 
-it("dedups the same coach into one demand-counted lead (idempotent upsert)", async () => {
+it("dedups the same coach into one demand-counted lead (idempotent) and keeps the passport link", async () => {
   const promoterName = tag("Master Deduplicated")
+  const passportId = tag("pp-dedup")
 
-  const first = await emitPromoterLead({ promoterName, source: "belt-journey" })
+  const first = await emitPromoterLead({ promoterName, source: "belt-journey", passportId })
+  // A later demand bump without a re-resolved placeholder must KEEP the prior link.
   const second = await emitPromoterLead({ promoterName, source: "join-the-legacy" })
 
   expect(first?.leadId).toBe(second?.leadId)
   expect(second?.createdLead).toBe(false)
   expect(second?.matchedBy).toBe("lead")
   expect(second?.demandCount).toBe(2)
+  expect(second?.passportId).toBe(passportId)
 
   const lead = await db.lead.findUnique({ where: { id: second!.leadId } })
-  const sources = metaRecord(lead!.meta).sources
+  const meta = metaRecord(lead!.meta)
+  const sources = meta.sources
   expect(Array.isArray(sources) ? sources : []).toContain("join-the-legacy")
+  expect(meta.passportId).toBe(passportId)
 })
 
 it("returns null for a blank promoter name (nothing to capture)", async () => {

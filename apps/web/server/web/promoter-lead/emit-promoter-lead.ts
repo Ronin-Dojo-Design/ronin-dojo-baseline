@@ -5,24 +5,26 @@ import { db } from "~/services/db"
 /**
  * Promoter-outreach lead capture (SESSION_0540) — the PERSON mirror of
  * `emit-school-lead.ts`. When a member backfills a belt and free-types the coach who
- * promoted them (no registered Passport FK), we quietly capture that coach as a
- * recruitment lead so every backfilled belt grows the roster. Idempotent + deduped by
- * the normalized coach name (demand-counted), matching the school-lead shape.
+ * promoted them, we capture that coach BOTH as an identity (a claimable placeholder
+ * `Passport` — `ensurePromoterPlaceholder`, set as the award's `awardedByPassportId`)
+ * AND, here, as a recruitment `Lead` so the coach enters the outreach / CRM pipeline to
+ * be invited. Idempotent + deduped by the normalized coach name (demand-counted),
+ * matching the school-lead shape.
  *
- * ANCHOR DECISION (flagged for ratification): `Lead.organizationId` is a REQUIRED FK,
- * but a promoter is a PERSON, not a school — creating one placeholder Organization per
- * coach would pollute the org/directory space with person-named schools. So every
- * promoter lead hangs off ONE shared, hidden placeholder org ("BBL Coach Outreach",
- * type AFFILIATION, ownerId null) and dedups purely on the coach name in `meta`. The
- * eventual "invite this coach" action is an operator click; this never sends outreach.
- * A future model may anchor promoter leads to a placeholder Passport/LineageNode
- * instead — that is a schema-shaped decision left to Petey/an ADR.
+ * IDENTITY vs PIPELINE (operator decision, SESSION_0540): the coach's IDENTITY lives on
+ * the placeholder Passport, NOT on the org. The `Lead.organizationId` required FK is now
+ * purely the CRM *bucket* — every promoter lead anchors to ONE shared, hidden placeholder
+ * org ("BBL Coach Outreach", type AFFILIATION, ownerId null); the earlier objection was
+ * only that this org was standing in for the coach's identity, which it no longer does.
+ * The lead is LINKED back to the placeholder Passport via `meta.passportId` (no schema
+ * change — a nullable FK on Lead was deemed unnecessary churn). This never sends outreach;
+ * the "invite this coach" action is an operator click.
  */
 
 export const PROMOTER_OUTREACH_KIND = "promoter_outreach"
 export const PROMOTER_OUTREACH_FOLLOW_UP_NOTE = "auto — pending promoter invite"
 
-/** The single shared bucket org every promoter lead anchors to (see ANCHOR DECISION). */
+/** The single shared bucket org every promoter lead anchors to (see IDENTITY vs PIPELINE). */
 const COACH_OUTREACH_ORG_SLUG = "bbl-coach-outreach"
 const COACH_OUTREACH_ORG_NAME = "BBL Coach Outreach"
 
@@ -46,12 +48,16 @@ type PromoterLeadTransaction = Pick<typeof db, "lead" | "organization" | "leadFo
 type PromoterLeadMetaOptions = {
   promoterName: string
   source: string
+  /** The placeholder Passport this coach's identity lives on — the link, stored in `meta.passportId`. */
+  passportId: string | null
   now: Date
 }
 
 type EmitPromoterLeadInput = {
   promoterName: string
   source: string
+  /** The claimable placeholder Passport minted for this coach (`ensurePromoterPlaceholder`). */
+  passportId?: string | null
 }
 
 export type EmitPromoterLeadResult = {
@@ -60,6 +66,8 @@ export type EmitPromoterLeadResult = {
   demandCount: number
   createdLead: boolean
   matchedBy: "lead" | "none"
+  /** The linked placeholder Passport id echoed back (the identity ↔ pipeline join). */
+  passportId: string | null
 }
 
 const openLeadWhere = {
@@ -89,6 +97,11 @@ function demandCountFromMeta(meta: Prisma.JsonValue | null | undefined): number 
   return typeof count === "number" && Number.isFinite(count) && count > 0 ? count : 0
 }
 
+function passportIdFromMeta(meta: Prisma.JsonValue | null | undefined): string | null {
+  const value = jsonRecord(meta).passportId
+  return typeof value === "string" && value.length > 0 ? value : null
+}
+
 function buildPromoterLeadMeta(
   currentMeta: Prisma.JsonValue | null | undefined,
   options: PromoterLeadMetaOptions,
@@ -97,12 +110,16 @@ function buildPromoterLeadMeta(
   const nowIso = options.now.toISOString()
   const nextDemandCount = demandCountFromMeta(currentMeta) + 1
   const sources = uniqueWithLatestFirst([options.source, ...stringArray(record.sources)])
+  // Link to the placeholder Passport — the coach's identity. Keep a prior link if this
+  // demand bump carried none (a re-type without a re-resolved placeholder).
+  const passportId = options.passportId ?? passportIdFromMeta(currentMeta)
 
   return {
     ...record,
     kind: PROMOTER_OUTREACH_KIND,
     promoterName: options.promoterName,
     promoterNameNormalized: normalizeSchoolName(options.promoterName),
+    passportId,
     demandCount: nextDemandCount,
     firstDemandAt: typeof record.firstDemandAt === "string" ? record.firstDemandAt : nowIso,
     lastDemandAt: nowIso,
@@ -123,6 +140,7 @@ function resultFromLead(
     organizationId: lead.organizationId,
     leadId: lead.id,
     demandCount: demandCountFromMeta(lead.meta),
+    passportId: passportIdFromMeta(lead.meta),
     ...flags,
   }
 }
@@ -145,7 +163,7 @@ async function findMatchedOpenLead(
 }
 
 /** Find-or-create the single shared coach-outreach bucket org. Upsert on the fixed
- *  compound-unique slug so concurrent first writes never collide (see ANCHOR DECISION). */
+ *  compound-unique slug so concurrent first writes never collide (CRM bucket, not identity). */
 async function getCoachOutreachOrgId(tx: PromoterLeadTransaction): Promise<string> {
   const org = await tx.organization.upsert({
     where: { brand_slug: { brand: Brand.BBL, slug: COACH_OUTREACH_ORG_SLUG } },
@@ -205,6 +223,11 @@ async function createPromoterLead(
   return resultFromLead(createdLead, { createdLead: true, matchedBy: "none" })
 }
 
+/**
+ * Emit / bump the recruitment lead for a free-typed coach, linked to their placeholder
+ * Passport via `meta.passportId`. Runs in its OWN transaction (matching the school-lead
+ * pattern), fired from the belt fact-save path alongside `ensurePromoterPlaceholder`.
+ */
 export async function emitPromoterLead(
   input: EmitPromoterLeadInput,
 ): Promise<EmitPromoterLeadResult | null> {
@@ -214,14 +237,21 @@ export async function emitPromoterLead(
   const options = {
     promoterName,
     source: input.source.trim() || "unknown",
+    passportId: input.passportId ?? null,
     now: new Date(),
   } satisfies PromoterLeadMetaOptions
 
-  return db.$transaction(async tx => {
-    const matchedOpenLead = await findMatchedOpenLead(tx, promoterName)
-    if (matchedOpenLead) return bumpPromoterLead(tx, matchedOpenLead, options)
+  return db.$transaction(
+    async tx => {
+      const matchedOpenLead = await findMatchedOpenLead(tx, promoterName)
+      if (matchedOpenLead) return bumpPromoterLead(tx, matchedOpenLead, options)
 
-    const organizationId = await getCoachOutreachOrgId(tx)
-    return createPromoterLead(tx, organizationId, options)
-  })
+      const organizationId = await getCoachOutreachOrgId(tx)
+      return createPromoterLead(tx, organizationId, options)
+    },
+    // The find-or-create spans a few sequential queries; a generous ceiling keeps it off the
+    // default 5s interactive-tx limit on a cold Prisma engine (the app server is always warm, so
+    // this ceiling never triggers in prod — it only saves a cold-start standalone unit test).
+    { maxWait: 10000, timeout: 20000 },
+  )
 }

@@ -28,6 +28,7 @@ import {
   type UpdateRankAwardFactInput,
   upsertBeltMilestoneInput,
 } from "~/server/belt/schemas"
+import { ensurePromoterPlaceholder } from "~/server/identity/promoter-placeholder"
 import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { authedProcedure } from "~/server/orpc/procedure"
 import { emitPromoterLead } from "~/server/web/promoter-lead/emit-promoter-lead"
@@ -197,13 +198,27 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
       data.notes = null
     } else {
       const name = input.promoter?.name?.trim() || null
-      data.awardedByPassportId = null
-      data.notes = name
-      // Freetext promoter → capture the coach as a deduped recruitment lead (SESSION_0540
-      // — the PERSON mirror of the freetext-school lead above). Never sends outreach; the
-      // invite is an operator click. Every backfilled belt quietly grows the roster.
       if (name) {
-        await emitPromoterLead({ promoterName: name, source: "belt-journey" })
+        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model):
+        //  1. IDENTITY — find-or-create a claimable placeholder Passport (mirrors the claim/import
+        //     placeholder machinery) and point the award FK at it, so the promoter sits on the
+        //     identity graph and can later claim their Passport (phase-2 confirm loop). The typed
+        //     name also rides `notes` (the card + editor prefill read it).
+        //  2. PIPELINE — emit a deduped recruitment `Lead` (the PERSON mirror of the freetext-school
+        //     lead) so the coach enters the outreach / CRM funnel, LINKED to that placeholder via
+        //     `meta.passportId`. Never sends outreach; the invite is an operator click.
+        const placeholder = await ensurePromoterPlaceholder(name)
+        data.awardedByPassportId = placeholder?.passportId ?? null
+        data.notes = name
+        await emitPromoterLead({
+          promoterName: name,
+          source: "belt-journey",
+          passportId: placeholder?.passportId ?? null,
+        })
+      } else {
+        // Clearing the promoter.
+        data.awardedByPassportId = null
+        data.notes = null
       }
     }
   }

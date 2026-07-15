@@ -193,6 +193,14 @@ afterAll(async () => {
   await db.mediaAttachment.deleteMany({ where: { rankAward: { passportId: { in: passportIds } } } })
   await db.rankAward.deleteMany({ where: { passportId: { in: passportIds } } })
   await db.passport.deleteMany({ where: { id: { in: passportIds } } })
+  // Freetext-promoter placeholder Passports minted by the belt path (SESSION_0540): accountless,
+  // tag-named. Swept after the member awards (their promoter FK) are gone.
+  await db.passport.deleteMany({
+    where: { userId: null, displayName: { startsWith: TAG_PREFIX } },
+  })
+  // The backfill-verification decision (`applyBackfillTrustDecision`) audits status changes with
+  // the acting member's userId → drop those before the User RESTRICT-FK delete.
+  await db.auditLog.deleteMany({ where: { userId: { in: [fx.memberUserId, fx.otherUserId] } } })
   await db.user.deleteMany({ where: { id: { in: [fx.memberUserId, fx.otherUserId] } } })
 
   // Sweep the school-outreach lead/org the freetext-school test emits (tag-scoped).
@@ -201,6 +209,14 @@ afterAll(async () => {
   })
   await db.lead.deleteMany({ where: { organization: { name: { startsWith: TAG_PREFIX } } } })
   await db.organization.deleteMany({ where: { name: { startsWith: TAG_PREFIX } } })
+
+  // Sweep the promoter-outreach leads the freetext-promoter tests emit (coach = tag-named
+  // firstName), then remove the SHARED coach-outreach bucket org only if this run left it empty.
+  await db.leadFollowUp.deleteMany({ where: { lead: { firstName: { startsWith: TAG_PREFIX } } } })
+  await db.lead.deleteMany({ where: { firstName: { startsWith: TAG_PREFIX } } })
+  await db.organization.deleteMany({
+    where: { slug: "bbl-coach-outreach", leads: { none: {} } },
+  })
 })
 
 const member = () => asMember({ id: fx.memberUserId, role: "user" })
@@ -407,20 +423,42 @@ describe("profile belt read ceiling — RankAward-sourced, orphan-RankEntry regr
 })
 
 describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId + ownership", () => {
-  it("ALLOWS a fact edit on a self-added backfill (white) and NEVER changes rankId", async () => {
+  it("a freetext promoter mints a placeholder Passport FK + a linked recruitment Lead, keeps the backfill UNVERIFIED (recruiting), NEVER changing rankId", async () => {
     const before = await db.rankAward.findUniqueOrThrow({
       where: { id: fx.whiteAwardId },
       select: { rankId: true },
     })
+    const promoterName = tag("Prof Freetext")
     const card = await member().updateRankAwardFact({
       rankAwardId: fx.whiteAwardId,
       awardedAt: new Date("2022-06-01"),
-      promoter: { name: "Prof. Freetext" },
+      promoter: { name: promoterName },
       school: { name: tag("Freetext BJJ Academy") },
     })
     expect(card.rankId).toBe(before.rankId) // rankId untouched in the read model
-    expect(card.promoterName).toBe("Prof. Freetext")
+    expect(card.promoterName).toBe(promoterName)
     expect(card.schoolName).toBe(tag("Freetext BJJ Academy"))
+
+    // SESSION_0540 rework: the free-typed coach is now a PERSON, not a name in `notes` — the
+    // FK points at a fresh, accountless, off-tree (hidden) placeholder Passport the coach can
+    // later claim. The typed label rides `notes` too (card + editor prefill).
+    expect(card.awardedByPassportId).not.toBeNull()
+    const promoterPassport = await db.passport.findUniqueOrThrow({
+      where: { id: card.awardedByPassportId! },
+      select: { userId: true, displayName: true, lineageNode: { select: { id: true } } },
+    })
+    expect(promoterPassport.userId).toBeNull() // claimable placeholder (no account)
+    expect(promoterPassport.lineageNode).toBeNull() // off-tree → surfaced nowhere public
+    expect(promoterPassport.displayName).toBe(promoterName)
+
+    // The SECOND artifact (operator model): a recruitment Lead on the shared coach-outreach
+    // bucket org, LINKED to the placeholder Passport via `meta.passportId`.
+    const lead = await db.lead.findFirst({
+      where: { firstName: promoterName, organization: { slug: "bbl-coach-outreach" } },
+      select: { meta: true },
+    })
+    expect(lead).not.toBeNull()
+    expect((lead!.meta as Record<string, unknown>).passportId).toBe(card.awardedByPassportId)
 
     const after = await db.rankAward.findUniqueOrThrow({
       where: { id: fx.whiteAwardId },
@@ -431,6 +469,8 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     // SESSION_0518: the existing profile editor is the first RankEntry write
     // seam. Its compatibility mirror must move in the same transaction as the
     // legacy fact so the new aggregate is ready for the next read-model slice.
+    // SESSION_0540: a fresh free-typed coach is a recruited placeholder awaiting their own
+    // claim + confirm (phase 2) → the backfill stays UNVERIFIED, with NO instructor review.
     const rankEntry = await db.rankEntry.findUniqueOrThrow({
       where: { rankAwardId: fx.whiteAwardId },
       select: { passportId: true, rankId: true, status: true },
@@ -438,7 +478,7 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     expect(rankEntry).toEqual({
       passportId: fx.memberPassportId,
       rankId: before.rankId,
-      status: "VERIFIED",
+      status: "UNVERIFIED",
     })
   })
 
