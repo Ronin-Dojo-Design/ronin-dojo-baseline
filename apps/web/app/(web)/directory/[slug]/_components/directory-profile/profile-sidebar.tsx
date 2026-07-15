@@ -32,7 +32,15 @@ export function ProfilePassportCard({
 }) {
   const { user } = profile
   const topRank = user.ranks[0] ?? null
-  const passportRank = topRank ? { name: topRank.name, colorHex: topRank.colorHex } : null
+  const passportRank = topRank
+    ? {
+        name: topRank.name,
+        colorHex: topRank.colorHex,
+        secondaryColorHex: topRank.secondaryColorHex,
+        degree: topRank.degree,
+        beltFamily: topRank.beltFamily,
+      }
+    : null
   const lineageChain = ancestry.length >= 2 ? ancestry.map(entry => entry.displayName) : []
 
   return (

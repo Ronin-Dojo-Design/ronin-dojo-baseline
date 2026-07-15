@@ -221,7 +221,13 @@ export function BeltEditForm({
             data-driven `Rank.colorHex`, same `bar` variant/size as `BeltEditCard`.
             The swatch is aria-hidden, so the accessible title stays the rank name. */}
         <DialogTitle className="flex items-center gap-2.5">
-          <BeltSwatch colorHex={vm.rank.colorHex} variant="bar" className="h-4 w-12" />
+          <BeltSwatch
+            variant="belt"
+            colorHex={vm.rank.colorHex}
+            secondaryColorHex={vm.rank.secondaryColorHex}
+            degree={vm.rank.degree}
+            beltFamily={vm.rank.beltFamily}
+          />
           {vm.rank.name}
         </DialogTitle>
       </DialogHeader>

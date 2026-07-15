@@ -709,6 +709,9 @@ async function main() {
       shortName?: string
       colorHex?: string
       secondaryColorHex?: string
+      // @added SESSION_0539 — render-layer belt data (BeltSwatch rank-bar).
+      degree?: number
+      beltFamily?: "COLORED" | "BLACK" | "CORAL" | "RED"
     }>,
   ) {
     const rs = await db.rankSystem.create({
@@ -721,6 +724,8 @@ async function main() {
         shortName: r.shortName ?? null,
         colorHex: r.colorHex ?? null,
         secondaryColorHex: r.secondaryColorHex ?? null,
+        degree: r.degree ?? null,
+        beltFamily: r.beltFamily ?? null,
         isSystem,
         brand,
         rankSystemId: rs.id,
@@ -735,6 +740,8 @@ async function main() {
     shortName: string
     colorHex: string
     secondaryColorHex?: string
+    degree?: number
+    beltFamily?: "COLORED" | "BLACK" | "CORAL" | "RED"
   }> = []
   const bjjBelts = [
     { belt: "White Belt", prefix: "W", hex: "#FFFFFF" },
@@ -743,37 +750,97 @@ async function main() {
     { belt: "Brown Belt", prefix: "BR", hex: "#8B4513" },
   ]
   for (const { belt, prefix, hex } of bjjBelts) {
-    bjjRanks.push({ name: belt, shortName: `${prefix}0`, colorHex: hex })
+    bjjRanks.push({
+      name: belt,
+      shortName: `${prefix}0`,
+      colorHex: hex,
+      degree: 0,
+      beltFamily: "COLORED",
+    })
     for (let s = 1; s <= 4; s++) {
       bjjRanks.push({
         name: `${belt} - ${s} Stripe${s > 1 ? "s" : ""}`,
         shortName: `${prefix}${s}`,
         colorHex: hex,
+        degree: s,
+        beltFamily: "COLORED",
       })
     }
   }
   bjjRanks.push(
-    { name: "Black Belt", shortName: "BK0", colorHex: "#000000" },
-    { name: "Black Belt - 1st Degree", shortName: "BK1", colorHex: "#000000" },
-    { name: "Black Belt - 2nd Degree", shortName: "BK2", colorHex: "#000000" },
-    { name: "Black Belt - 3rd Degree", shortName: "BK3", colorHex: "#000000" },
-    { name: "Black Belt - 4th Degree", shortName: "BK4", colorHex: "#000000" },
-    { name: "Black Belt - 5th Degree", shortName: "BK5", colorHex: "#000000" },
-    { name: "Black Belt - 6th Degree", shortName: "BK6", colorHex: "#000000" },
+    { name: "Black Belt", shortName: "BK0", colorHex: "#000000", degree: 0, beltFamily: "BLACK" },
+    {
+      name: "Black Belt - 1st Degree",
+      shortName: "BK1",
+      colorHex: "#000000",
+      degree: 1,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 2nd Degree",
+      shortName: "BK2",
+      colorHex: "#000000",
+      degree: 2,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 3rd Degree",
+      shortName: "BK3",
+      colorHex: "#000000",
+      degree: 3,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 4th Degree",
+      shortName: "BK4",
+      colorHex: "#000000",
+      degree: 4,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 5th Degree",
+      shortName: "BK5",
+      colorHex: "#000000",
+      degree: 5,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 6th Degree",
+      shortName: "BK6",
+      colorHex: "#000000",
+      degree: 6,
+      beltFamily: "BLACK",
+    },
     {
       name: "Coral Belt (Red/Black) - 7th Degree",
       shortName: "CB7",
       colorHex: "#FF0000",
       secondaryColorHex: "#000000",
+      degree: 7,
+      beltFamily: "CORAL",
     },
     {
       name: "Coral Belt (Red/White) - 8th Degree",
       shortName: "CB8",
       colorHex: "#FF0000",
       secondaryColorHex: "#FFFFFF",
+      degree: 8,
+      beltFamily: "CORAL",
     },
-    { name: "Red Belt - 9th Degree", shortName: "R9", colorHex: "#FF0000" },
-    { name: "Red Belt - 10th Degree (Grand Master)", shortName: "R10", colorHex: "#FF0000" },
+    {
+      name: "Red Belt - 9th Degree",
+      shortName: "R9",
+      colorHex: "#FF0000",
+      degree: 9,
+      beltFamily: "RED",
+    },
+    {
+      name: "Red Belt - 10th Degree (Grand Master)",
+      shortName: "R10",
+      colorHex: "#FF0000",
+      degree: 10,
+      beltFamily: "RED",
+    },
   )
   await seedRankSystem(bjj.id, "IBJJF Belt System", "BELT", true, null, bjjRanks)
   console.log("Created BJJ rank system (31 ranks)")

@@ -1,3 +1,4 @@
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { PublicPassportRow } from "~/server/web/passport/public-payloads"
 
@@ -14,6 +15,10 @@ export type PublicPassportRank = {
   shortName: string | null
   /** Belt color — never hardcoded; always Rank.colorHex. */
   colorHex: string | null
+  /** @added SESSION_0539 — refined-belt render fields (coral panels + degree marks + family bar). */
+  secondaryColorHex: string | null
+  degree: number | null
+  beltFamily: BeltFamily | null
   awardedAt: Date | null
   disciplineName: string | null
   disciplineSlug: string | null
@@ -42,6 +47,9 @@ const toRank = (award: PublicPassportRow["rankAwardsEarned"][number]): PublicPas
   name: award.rank?.name ?? "",
   shortName: award.rank?.shortName ?? null,
   colorHex: award.rank?.colorHex ?? null,
+  secondaryColorHex: award.rank?.secondaryColorHex ?? null,
+  degree: award.rank?.degree ?? null,
+  beltFamily: award.rank?.beltFamily ?? null,
   awardedAt: award.awardedAt,
   disciplineName: award.rank?.rankSystem?.discipline?.name ?? null,
   disciplineSlug: award.rank?.rankSystem?.discipline?.slug ?? null,

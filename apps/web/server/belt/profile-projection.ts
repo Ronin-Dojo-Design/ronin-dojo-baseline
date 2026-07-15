@@ -1,4 +1,5 @@
 import type { RankEntryStatus } from "~/.generated/prisma/client"
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
 import { ceilingSortOrder, type GateAward } from "~/server/belt/belt-gate"
 import { type MemberAward, toBeltCard } from "~/server/belt/queries"
@@ -14,6 +15,10 @@ export type ProfileLadderRank = {
   name: string
   colorHex: string | null
   sortOrder: number
+  /** @added SESSION_0539 — refined-belt render fields for the journey ladder swatch. */
+  secondaryColorHex: string | null
+  degree: number | null
+  beltFamily: BeltFamily | null
 }
 
 /**

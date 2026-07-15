@@ -53,10 +53,12 @@ export function RankByline({
       {entry.rank && (
         <Stack size="sm" direction="row" wrap={false} className="items-center">
           <BeltSwatch
-            variant="flat-bar"
+            variant="belt"
+            size="lg"
             colorHex={entry.rank.colorHex}
             secondaryColorHex={entry.rank.secondaryColorHex}
             degree={entry.rank.degree}
+            beltFamily={entry.rank.beltFamily}
           />
           <span className={cx("truncate text-xs", mutedClass)}>{entry.rank.name}</span>
         </Stack>

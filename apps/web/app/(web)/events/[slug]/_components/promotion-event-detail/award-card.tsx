@@ -49,7 +49,15 @@ export function AwardCard({ award }: { award: AwardRow }) {
           </Stack>
 
           <Stack size="sm" wrap>
-            {award.rank.colorHex && <BeltSwatch colorHex={award.rank.colorHex} variant="bar" />}
+            {award.rank.colorHex && (
+              <BeltSwatch
+                variant="belt"
+                colorHex={award.rank.colorHex}
+                secondaryColorHex={award.rank.secondaryColorHex}
+                degree={award.rank.degree}
+                beltFamily={award.rank.beltFamily}
+              />
+            )}
             <span className="font-medium text-sm">{award.rank.name}</span>
             {award.rank.shortName && (
               <Badge variant="soft" size="sm">

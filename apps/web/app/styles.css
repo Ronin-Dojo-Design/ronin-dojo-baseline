@@ -371,32 +371,3 @@
   );
   background-size: 0.25rem 0.25rem;
 }
-
-/* Belt-graphic shimmer — a single brand specular sweep across the belt swatch.
-   Used by the React <BeltSwatch variant="bar" shimmer /> (lineage focus header
-   + cards). Self-disables under reduced motion. Moved here from the retired
-   family-chart.css (SESSION_0395, ADR 0027 cutover) so it survives the engine cut. */
-@keyframes bblBeltShimmer {
-  0% {
-    transform: translateX(-14px) skewX(-18deg);
-  }
-  60% {
-    transform: translateX(50px) skewX(-18deg);
-  }
-  100% {
-    transform: translateX(50px) skewX(-18deg);
-  }
-}
-.belt-shimmer {
-  transform-box: fill-box;
-  transform-origin: center;
-  transform: translateX(-14px) skewX(-18deg);
-  animation: bblBeltShimmer 4s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .belt-shimmer {
-    animation: none;
-    transform: translateX(20px) skewX(-18deg);
-    opacity: 0.22;
-  }
-}

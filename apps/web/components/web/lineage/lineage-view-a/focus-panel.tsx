@@ -45,12 +45,10 @@ export function FocusPanel({
               {focusNode?.displayName ?? "Select a practitioner"}
             </div>
 
-            <div className="mt-1.5 flex items-center gap-2">
-              <BeltSwatch variant="bar" shimmer colorHex={focusNode?.colorHex} />
-              <span className="min-w-0 truncate text-xs text-white/55">
-                {focusNode?.rankLabel ?? "Unranked"}
-              </span>
+            <div className="mt-1 truncate text-xs text-white/55">
+              {focusNode?.rankLabel ?? "Unranked"}
             </div>
+            <BeltSwatch variant="belt" size="full" className="mt-1.5" {...focusNode?.belt} />
 
             {focusNode?.schoolLabel && (
               <div className="mt-1 truncate text-xs text-white/42">{focusNode.schoolLabel}</div>

@@ -1,3 +1,4 @@
+import type { BeltRenderData } from "~/components/common/belt-swatch"
 import type {
   LineageRelationshipRow,
   LineageTreeMemberRow,
@@ -18,6 +19,9 @@ export type LineageVisualNode = {
   slug: string | null
   avatar: string | null
   colorHex: string | null
+  /** The refined-belt render-model (SESSION_0539) — spread into `BeltSwatch variant="belt"`.
+   * `colorHex` stays flat above for the card gradient/glow math. */
+  belt: BeltRenderData
   rankLabel: string | null
   schoolLabel: string | null
   trustStatus: LineageTrustStatus
@@ -73,6 +77,7 @@ export function toLineageVisual(
       slug: node.slug,
       avatar: view.avatarSrc,
       colorHex: view.beltColor,
+      belt: view.belt,
       rankLabel: view.rankLabel,
       schoolLabel: view.schoolLabel,
       trustStatus: view.trustStatus,

@@ -16,6 +16,7 @@ function node(partial: Partial<LineageVisualNode> & { id: string }): LineageVisu
     slug: null,
     avatar: null,
     colorHex: null,
+    belt: { colorHex: null, secondaryColorHex: null, degree: null, beltFamily: null },
     rankLabel: null,
     schoolLabel: null,
     trustStatus: "unverified",

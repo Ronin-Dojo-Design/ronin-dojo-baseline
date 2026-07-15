@@ -13,7 +13,15 @@ import {
 
 function rankVm(sortOrder: number, card: BeltCardOutput | null): BeltRankViewModel {
   return {
-    rank: { id: `rank_${sortOrder}`, name: `Belt ${sortOrder}`, colorHex: null, sortOrder },
+    rank: {
+      id: `rank_${sortOrder}`,
+      name: `Belt ${sortOrder}`,
+      colorHex: null,
+      sortOrder,
+      secondaryColorHex: null,
+      degree: null,
+      beltFamily: null,
+    },
     card,
   }
 }

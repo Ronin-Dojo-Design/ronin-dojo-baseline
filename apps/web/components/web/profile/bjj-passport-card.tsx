@@ -1,6 +1,6 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/common/avatar"
-import { BeltSwatch } from "~/components/common/belt-swatch"
+import { type BeltFamily, type BeltRenderData, BeltSwatch } from "~/components/common/belt-swatch"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
@@ -42,6 +42,10 @@ export type PassportBeltRank = {
   name: string
   /** `Rank.colorHex` — drives the belt graphic + credential accent. */
   colorHex?: string | null
+  /** @added SESSION_0539 — refined-belt render fields (coral panels + degree marks + family bar). */
+  secondaryColorHex?: string | null
+  degree?: number | null
+  beltFamily?: BeltFamily | null
 }
 
 export type BjjPassportCardProps = {
@@ -118,11 +122,13 @@ function PassportIdentity({
   name,
   avatarUrl,
   colorHex,
+  belt,
   rankName,
 }: {
   name: string
   avatarUrl?: string | null
   colorHex: string | null
+  belt: BeltRenderData
   rankName?: string
 }) {
   return (
@@ -145,7 +151,7 @@ function PassportIdentity({
           {name}
         </H4>
         <Stack direction="row" className="mt-1 items-center gap-2">
-          <BeltSwatch variant="bar" colorHex={colorHex} shimmer />
+          <BeltSwatch variant="belt" size="lg" {...belt} />
           {rankName && (
             <span className="truncate font-medium text-muted-foreground text-sm">{rankName}</span>
           )}
@@ -210,6 +216,12 @@ export function BjjPassportCard({
 }: BjjPassportCardProps) {
   const colorHex = rank?.colorHex ?? null
   const rankName = rank?.name
+  const belt: BeltRenderData = {
+    colorHex,
+    secondaryColorHex: rank?.secondaryColorHex ?? null,
+    degree: rank?.degree ?? null,
+    beltFamily: rank?.beltFamily ?? null,
+  }
   // Data-driven belt tint — the established lineage `--rank-color` idiom
   // (lineage-rank-history-tab / lineage-node-card). Absent → brand `primary`.
   const rankStyle = colorHex ? ({ "--rank-color": colorHex } as CSSProperties) : undefined
@@ -225,7 +237,13 @@ export function BjjPassportCard({
     >
       <PassportBeltAccents colorHex={colorHex} />
       <PassportHeader disciplineLabel={disciplineLabel} />
-      <PassportIdentity name={name} avatarUrl={avatarUrl} colorHex={colorHex} rankName={rankName} />
+      <PassportIdentity
+        name={name}
+        avatarUrl={avatarUrl}
+        colorHex={colorHex}
+        belt={belt}
+        rankName={rankName}
+      />
       <PassportSchool school={school} />
       <PassportLineageChain lineageChain={lineageChain} />
     </Card>

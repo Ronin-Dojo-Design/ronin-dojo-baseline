@@ -1,4 +1,5 @@
 import type { RankEntryStatus } from "~/.generated/prisma/client"
+import type { BeltRenderData } from "~/components/common/belt-swatch"
 import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
 import {
   type LineageClaimBadgeStatus,
@@ -112,6 +113,25 @@ export function memberBeltColor(node: LineageNodeRow, disciplineId?: string | nu
 }
 
 /**
+ * The full belt render-model for the member's shown rank — the `{ colorHex,
+ * secondaryColorHex, degree, beltFamily }` the refined `BeltSwatch` `belt` variant
+ * needs (SESSION_0539). Always returns a shape (all-null when no rank) so surfaces can
+ * spread it unconditionally; `BeltSwatch` degrades gracefully on null fields.
+ */
+export function memberBeltRender(
+  node: LineageNodeRow,
+  disciplineId?: string | null,
+): BeltRenderData {
+  const rank = memberTopRank(node, disciplineId)
+  return {
+    colorHex: rank?.colorHex ?? null,
+    secondaryColorHex: rank?.secondaryColorHex ?? null,
+    degree: rank?.degree ?? null,
+    beltFamily: rank?.beltFamily ?? null,
+  }
+}
+
+/**
  * Rank label ("Black Belt · Brazilian Jiu-Jitsu") for the member's shown rank.
  * Null → no rank. See `memberTopRank` (ADR 0035 awarded-truth, discipline-scoped).
  */
@@ -165,6 +185,9 @@ export type LineageMemberView = {
   displayName: string
   avatarSrc: string | null
   beltColor: string | null
+  /** The refined-belt render-model (SESSION_0539) — `beltColor` is `belt.colorHex`
+   * kept flat for the gradient/glow math consumers. */
+  belt: BeltRenderData
   rankLabel: string | null
   schoolLabel: string | null
   /** The ONE trust axis: the top non-PENDING `RankEntry.status` (`memberTrustStatus`, LR 0008). */
@@ -194,6 +217,7 @@ export function resolveLineageMemberView(
     displayName: nodeDisplayName(node),
     avatarSrc: memberAvatarSrc(node),
     beltColor: memberBeltColor(node, opts.disciplineId),
+    belt: memberBeltRender(node, opts.disciplineId),
     rankLabel: memberRankLabel(node, opts.disciplineId),
     schoolLabel: memberSchoolLabel(node),
     trustStatus: resolveLineageTrustStatus({

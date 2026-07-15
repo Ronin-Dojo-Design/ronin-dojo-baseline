@@ -11,8 +11,8 @@ import { AncestryAvatar, RankByline } from "./lineage-ancestry-entry"
 /**
  * Vertical ancestry timeline — founder at the top, the profile owner at the bottom
  * (SESSION_0493 TASK_05, the hand-coded BBLApp design Tony Hua asked for twice):
- * circular headshots on a connecting vertical line, brand-red italic name, flat
- * belt-rank bar (`BeltSwatch flat-bar` + degree stripes), discipline subtitle, and
+ * circular headshots on a connecting vertical line, brand-red italic name, the
+ * belt-rank bar (`BeltSwatch belt` + degree marks), discipline subtitle, and
  * an optional narrative caption between nodes (`LineageRelationship.description`).
  *
  * Entries come pre-ordered [founder … member] from `getLineageAncestryForPassport`;

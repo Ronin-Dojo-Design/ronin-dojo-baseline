@@ -17,6 +17,10 @@ export async function getBjjRanksForClaimPicker() {
       shortName: true,
       colorHex: true,
       sortOrder: true,
+      // @added SESSION_0539 — refined-belt render fields for the journey ladder swatch.
+      secondaryColorHex: true,
+      degree: true,
+      beltFamily: true,
     },
     orderBy: { sortOrder: "asc" },
   })

@@ -223,7 +223,14 @@ export function DrawerIdentityHeader({
             <DrawerTitle>{displayName}</DrawerTitle>
             {headerRankName && (
               <Stack size="xs" className="min-w-0 items-center">
-                <BeltSwatch variant="bar" colorHex={panelRankColor} />
+                <BeltSwatch
+                  variant="belt"
+                  size="lg"
+                  colorHex={panelRankColor}
+                  secondaryColorHex={panelAward?.rank.secondaryColorHex ?? null}
+                  degree={panelAward?.rank.degree ?? null}
+                  beltFamily={panelAward?.rank.beltFamily ?? null}
+                />
                 <Note className="truncate">
                   {headerRankName}
                   {headerDisciplineName && <> · {headerDisciplineName}</>}

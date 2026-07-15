@@ -463,6 +463,20 @@ enum RankSystemKind {
   OTHER
 }
 
+// @added SESSION_0539 — belt-family signal driving the BJJ rank-bar treatment
+// (bar color + outline) in BeltSwatch. Render-layer design signal, never rank
+// authority. Null for non-BJJ / unseeded ranks (component degrades gracefully).
+//   COLORED = white/blue/purple/brown (black bar, no outline, 0–4 stripe marks)
+//   BLACK   = 1st–6th degree (red bar, no outline, 1–6 degree marks)
+//   CORAL   = 7th/8th degree (red bar + white outline, alternating panel body)
+//   RED     = 9th/10th degree (red bar + white outline, solid red body)
+enum BeltFamily {
+  COLORED
+  BLACK
+  CORAL
+  RED
+}
+
 enum TournamentStatus {
   DRAFT
   PUBLISHED
@@ -1332,6 +1346,10 @@ model Rank {
   // red/black 7th = #000000, red/white 8th = #FFFFFF; Kodokan red-white Dan belts).
   // Null = solid belt. Render-layer only, like degree — never rank authority.
   secondaryColorHex String?
+  // @added SESSION_0539 — belt-family design signal driving the BeltSwatch rank-bar
+  // treatment (bar color + outline). Render-layer only, never rank authority. Null for
+  // non-BJJ / unseeded ranks (BeltSwatch degrades gracefully to a neutral bar).
+  beltFamily        BeltFamily?
   isSystem          Boolean  @default(false)
   brand             Brand?
   createdAt         DateTime @default(now())

@@ -162,7 +162,16 @@ const DISCIPLINES = [
 // Data: Rank Systems + Ranks
 // =========================================================================
 
-type RankDef = { name: string; shortName?: string; colorHex?: string }
+type RankDef = {
+  name: string
+  shortName?: string
+  colorHex?: string
+  // @added SESSION_0539 — render-layer belt data (BeltSwatch rank-bar). Null for
+  // non-BJJ systems (component degrades gracefully).
+  degree?: number
+  beltFamily?: "COLORED" | "BLACK" | "CORAL" | "RED"
+  secondaryColorHex?: string
+}
 
 interface RankSystemDef {
   /** code of the parent discipline */
@@ -184,26 +193,96 @@ function buildBjjRanks(): RankDef[] {
     { belt: "Brown Belt", prefix: "BR", hex: "#8B4513" },
   ]
   for (const { belt, prefix, hex } of belts) {
-    ranks.push({ name: belt, shortName: `${prefix}0`, colorHex: hex })
+    ranks.push({
+      name: belt,
+      shortName: `${prefix}0`,
+      colorHex: hex,
+      degree: 0,
+      beltFamily: "COLORED",
+    })
     for (let s = 1; s <= 4; s++) {
       ranks.push({
         name: `${belt} - ${s} Stripe${s > 1 ? "s" : ""}`,
         shortName: `${prefix}${s}`,
         colorHex: hex,
+        degree: s,
+        beltFamily: "COLORED",
       })
     }
   }
   ranks.push(
-    { name: "Black Belt - 1st Degree", shortName: "BK1", colorHex: "#000000" },
-    { name: "Black Belt - 2nd Degree", shortName: "BK2", colorHex: "#000000" },
-    { name: "Black Belt - 3rd Degree", shortName: "BK3", colorHex: "#000000" },
-    { name: "Black Belt - 4th Degree", shortName: "BK4", colorHex: "#000000" },
-    { name: "Black Belt - 5th Degree", shortName: "BK5", colorHex: "#000000" },
-    { name: "Black Belt - 6th Degree", shortName: "BK6", colorHex: "#000000" },
-    { name: "Coral Belt (Red/Black) - 7th Degree", shortName: "CB7", colorHex: "#FF0000" },
-    { name: "Coral Belt (Red/White) - 8th Degree", shortName: "CB8", colorHex: "#FF0000" },
-    { name: "Red Belt - 9th Degree", shortName: "R9", colorHex: "#FF0000" },
-    { name: "Red Belt - 10th Degree (Grand Master)", shortName: "R10", colorHex: "#FF0000" },
+    {
+      name: "Black Belt - 1st Degree",
+      shortName: "BK1",
+      colorHex: "#000000",
+      degree: 1,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 2nd Degree",
+      shortName: "BK2",
+      colorHex: "#000000",
+      degree: 2,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 3rd Degree",
+      shortName: "BK3",
+      colorHex: "#000000",
+      degree: 3,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 4th Degree",
+      shortName: "BK4",
+      colorHex: "#000000",
+      degree: 4,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 5th Degree",
+      shortName: "BK5",
+      colorHex: "#000000",
+      degree: 5,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Black Belt - 6th Degree",
+      shortName: "BK6",
+      colorHex: "#000000",
+      degree: 6,
+      beltFamily: "BLACK",
+    },
+    {
+      name: "Coral Belt (Red/Black) - 7th Degree",
+      shortName: "CB7",
+      colorHex: "#FF0000",
+      secondaryColorHex: "#000000",
+      degree: 7,
+      beltFamily: "CORAL",
+    },
+    {
+      name: "Coral Belt (Red/White) - 8th Degree",
+      shortName: "CB8",
+      colorHex: "#FF0000",
+      secondaryColorHex: "#FFFFFF",
+      degree: 8,
+      beltFamily: "CORAL",
+    },
+    {
+      name: "Red Belt - 9th Degree",
+      shortName: "R9",
+      colorHex: "#FF0000",
+      degree: 9,
+      beltFamily: "RED",
+    },
+    {
+      name: "Red Belt - 10th Degree (Grand Master)",
+      shortName: "R10",
+      colorHex: "#FF0000",
+      degree: 10,
+      beltFamily: "RED",
+    },
   )
   return ranks
 }
@@ -657,6 +736,9 @@ async function main() {
             name: rankDef.name,
             shortName: rankDef.shortName ?? null,
             colorHex: rankDef.colorHex ?? null,
+            secondaryColorHex: rankDef.secondaryColorHex ?? null,
+            degree: rankDef.degree ?? null,
+            beltFamily: rankDef.beltFamily ?? null,
             isSystem: rsDef.isSystem,
             brand: rsDef.brand,
             rankSystemId,

@@ -39,7 +39,7 @@ import type { LineageTreeMemberRow } from "~/server/web/lineage/payloads"
  * Same belt-group Accordion + BeltSwatch header as V1 (grouping shared via V1's
  * exported `groupByBelt`, ADR 0035 awarded truth); the inner row is the L1 Embla
  * `Carousel` of 168px player cards — dominant square avatar (verified corner check,
- * `memberTrustStatus` — top non-PENDING RankEntry), 2-line name, `BeltSwatch flat-bar` + rank, country flag
+ * `memberTrustStatus` — top non-PENDING RankEntry), 2-line name, `BeltSwatch belt` + rank, country flag
  * (`countryFlagEmoji`) + school logo + name (paired via `memberSchool` so the logo
  * always matches the label's org). NO premium ring/gold.
  *
@@ -241,13 +241,19 @@ function StudentCard({
 
       <span className="line-clamp-2 min-h-10 text-sm font-medium">{name}</span>
 
-      <span className="flex min-w-0 items-center gap-1.5">
-        <BeltSwatch variant="flat-bar" colorHex={rank?.colorHex ?? null} className="h-2 w-10" />
-        {/* title carries the full rank name — long ranks truncate at the 168px card width. */}
-        <span title={rank?.name ?? "Unranked"} className="truncate text-xs text-muted-foreground">
-          {rank?.name ?? "Unranked"}
-        </span>
+      {/* Rank label on its own line, then a full-width belt below — degrees stay countable at
+          the card width and the rank name never fights the belt for horizontal room. */}
+      <span title={rank?.name ?? "Unranked"} className="truncate text-xs text-muted-foreground">
+        {rank?.name ?? "Unranked"}
       </span>
+      <BeltSwatch
+        variant="belt"
+        size="full"
+        colorHex={rank?.colorHex ?? null}
+        secondaryColorHex={rank?.secondaryColorHex ?? null}
+        degree={rank?.degree ?? null}
+        beltFamily={rank?.beltFamily ?? null}
+      />
 
       {(flag || school) && (
         <span className="flex min-w-0 items-center gap-1.5">

@@ -1,5 +1,6 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Prisma } from "~/.generated/prisma/client"
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import { memberTopRankAward } from "~/lib/lineage/canvas-model"
 import { type LineageNodeRow, lineageNodeRowPayload } from "~/server/web/lineage/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
@@ -40,10 +41,12 @@ export type LineageAncestryRank = {
   secondaryColorHex: string | null
   sortOrder: number
   /**
-   * Black-belt degree for the flat-bar stripe rendering — `Rank.degree` (additive
+   * Black-belt degree for the `belt`-swatch degree-mark rendering — `Rank.degree` (additive
    * `Int?`, landed SESSION_0493 TASK_01). Null = no degree stripes.
    */
   degree: number | null
+  /** Belt family driving the rank-bar treatment (SESSION_0539); null = neutral bar. */
+  beltFamily: BeltFamily | null
 }
 
 /**
@@ -190,6 +193,7 @@ export const assembleAncestryEntries = (
             secondaryColorHex: award.rank.secondaryColorHex ?? null,
             sortOrder: award.rank.sortOrder,
             degree: award.rank.degree ?? null,
+            beltFamily: award.rank.beltFamily ?? null,
           }
         : null,
       disciplineLabel: award?.rank.rankSystem?.discipline?.name ?? null,

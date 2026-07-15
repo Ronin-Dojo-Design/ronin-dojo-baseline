@@ -38,8 +38,15 @@ export function RanksSection({ profile }: { profile: DirectoryProfile }) {
             .filter(Boolean)
             .join(" · ")
           return (
-            <div key={rankAward.awardId} className="flex items-center gap-2.5">
-              <BeltSwatch colorHex={rankAward.colorHex} variant="bar" className="h-4 w-12" />
+            <div key={rankAward.awardId} className="flex items-start gap-2.5">
+              <BeltSwatch
+                variant="belt"
+                size="sm"
+                colorHex={rankAward.colorHex}
+                secondaryColorHex={rankAward.secondaryColorHex}
+                degree={rankAward.degree}
+                beltFamily={rankAward.beltFamily}
+              />
               <div className="flex min-w-0 flex-col">
                 <span className="font-medium text-foreground">{rankAward.name || "Rank"}</span>
                 {meta && <span className="text-sm text-muted-foreground">{meta}</span>}
