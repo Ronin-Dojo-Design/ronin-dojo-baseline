@@ -58,30 +58,69 @@ export type FactEditableAward = {
 }
 
 /**
- * May the promotion FACT (date / promoter / school) be edited? (B1 — ADR 0035
- * Amendment 1.) Under B1 there are **no UNVERIFIED awards**: a self-added backfill
- * mints VERIFIED-by-implication, and an approved promotion mints VERIFIED via
- * `mintAssertedRankAward`. So "editable" can no longer key off `UNVERIFIED` — it
- * keys off **who authored the award**:
+ * May the promotion FACT (date / promoter / school) be fully edited by the OWNER?
+ * (B1 — ADR 0035 Amendment 1; loosened SESSION_0540.) The rule keys off **who
+ * authored the award** and **whether it is still unverified**:
  *
- * - **Self-added backfill** (`source === "STATED"` and NO approver actor —
- *   `awardedById === null`): the member's own enrichment; date/promoter/school are
- *   theirs to edit.
- * - **Promotion-minted** (`mintAssertedRankAward` stamps `awardedById =` the
- *   approving instructor/admin): authority-owned → read-only.
- * - **IMPORTED / DISPUTED**: authority/legacy records → read-only.
+ * - **Locked (authority-owned truth)** — an approver stamped it (`awardedById !==
+ *   null` → instructor-VERIFIED / promotion-minted), or it is **IMPORTED** legacy
+ *   truth, or **DISPUTED** and under review. Never member-editable.
+ * - **Fully editable by the owner** — a **self-added STATED backfill**, OR **any
+ *   award still standing UNVERIFIED** (SESSION_0540: the member may freely revise
+ *   their own un-verified belt, not just fill blanks). An auto-verified
+ *   same-promoter backfill (STATED, no approver stamp) stays editable; a
+ *   differently-authored / authority award does not.
  *
- * Deny-by-default: anything that is not a clean self-added STATED award is locked.
  * The member's own promoter edit writes `awardedByPassportId` / `notes`, never
  * `awardedById`, so editing a fact never flips an award out of the editable class.
  */
 export function isFactEditable(award: FactEditableAward): boolean {
-  return (
-    award.source === "STATED" &&
-    award.awardedById === null &&
-    award.verificationStatus !== "IMPORTED" &&
-    award.verificationStatus !== "DISPUTED"
-  )
+  if (award.awardedById !== null) return false
+  if (award.verificationStatus === "IMPORTED" || award.verificationStatus === "DISPUTED") {
+    return false
+  }
+  return award.source === "STATED" || award.verificationStatus === "UNVERIFIED"
+}
+
+/**
+ * The verification decision for a member-owned **backfill** after its promoter fact
+ * is saved (SESSION_0540). Pure so the router's side-effects (status write, review
+ * task, promoter lead) stay a thin, tested dispatch — mirrors `memberFactEditability`.
+ *
+ * The **anchor** is the member's current highest VERIFIED/IMPORTED award; its
+ * `awardedByPassportId` is the promoter we trust. Given the backfill's saved promoter:
+ * - **verify** — a REGISTERED promoter equal to the anchor's promoter → auto-verify.
+ * - **flag_promoter_changed** — a REGISTERED promoter that DIFFERS from the anchor's
+ *   (both known) → keep unverified + open an instructor review (`PROMOTER_CHANGED`).
+ * - **keep_unverified** — a freetext promoter, OR a registered promoter with no
+ *   comparable anchor promoter → stays unverified, no review.
+ * - **skip** — no promoter expressed, or the backfill IS the anchor (never
+ *   auto-verify the anchor itself).
+ */
+export type BackfillTrustDecision = "verify" | "flag_promoter_changed" | "keep_unverified" | "skip"
+
+export function decideBackfillTrust({
+  backfillPromoterPassportId,
+  backfillFreetextPromoter,
+  anchorPromoterPassportId,
+  isBackfillAnchor,
+}: {
+  backfillPromoterPassportId: string | null
+  backfillFreetextPromoter: string | null
+  anchorPromoterPassportId: string | null
+  isBackfillAnchor: boolean
+}): BackfillTrustDecision {
+  if (isBackfillAnchor) return "skip"
+  if (backfillPromoterPassportId) {
+    if (!anchorPromoterPassportId) return "keep_unverified"
+    return backfillPromoterPassportId === anchorPromoterPassportId
+      ? "verify"
+      : "flag_promoter_changed"
+  }
+  if (backfillFreetextPromoter && backfillFreetextPromoter.trim().length > 0) {
+    return "keep_unverified"
+  }
+  return "skip"
 }
 
 /**
