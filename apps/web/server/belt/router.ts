@@ -386,7 +386,9 @@ async function applyBackfillTrustDecision(
   const anchor = resolveAnchorAward(awards, disciplineId)
   const decision = decideBackfillTrust({
     backfillPromoterPassportId: backfill.awardedByPassportId,
-    promoterIsClaimablePlaceholder: await isClaimablePlaceholderPromoter(backfill.awardedByPassportId),
+    promoterIsClaimablePlaceholder: await isClaimablePlaceholderPromoter(
+      backfill.awardedByPassportId,
+    ),
     backfillFreetextPromoter: backfill.notes,
     anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
     isBackfillAnchor: anchor?.id === backfill.id,

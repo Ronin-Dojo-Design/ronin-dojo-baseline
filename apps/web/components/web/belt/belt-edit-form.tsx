@@ -95,26 +95,44 @@ function LockedFactValue({ value }: { value: string }) {
  * (`decideBackfillTrust`):
  * - a registered pick equal to the anchor promoter → SUCCESS (auto-verify);
  * - a DIFFERENT registered pick → INFO (we send it to that coach to confirm);
- * - a freetext coach → CAUTION (we invite them to BBL to confirm).
+ * - a freetext coach, OR a saved freetext coach reloaded as its recruited PLACEHOLDER
+ *   Passport (an id NOT in the registered options) → CAUTION (recruiting — mirrors the
+ *   server `keep_unverified` and the card's "Unverified" badge, so the two never disagree).
  * Returns `null` for an empty picker (no note). Pure — the color is a token className.
  */
 function promoterFeedbackNote(
   promoter: CreatableValue,
   anchorPromoterPassportId: string | null,
+  registeredPromoterIds: ReadonlySet<string>,
 ): { className: string; message: ReactNode } | null {
   const name = promoter.label.trim()
   if (promoter.id) {
+    // Anchor match wins first — mirrors the server verify branch (even a placeholder anchor).
     if (anchorPromoterPassportId && promoter.id === anchorPromoterPassportId) {
       return {
         className: "text-emerald-600 dark:text-emerald-500",
         message: "Matches your verified promoter — this belt will be verified.",
       }
     }
+    // A registered (on-BBL) person the member picked → ask them to confirm.
+    if (registeredPromoterIds.has(promoter.id)) {
+      return {
+        className: "text-blue-600 dark:text-blue-400",
+        message: (
+          <>
+            We&rsquo;ll send this to <span className="font-medium">{name}</span> to confirm.
+          </>
+        ),
+      }
+    }
+    // An id absent from the registered options = a recruited placeholder coach (reload of a
+    // saved freetext promoter). Keep the amber recruiting copy so it matches the Unverified badge.
     return {
-      className: "text-blue-600 dark:text-blue-400",
+      className: "text-amber-600 dark:text-amber-500",
       message: (
         <>
-          We&rsquo;ll send this to <span className="font-medium">{name}</span> to confirm.
+          We&rsquo;ve invited <span className="font-medium">{name}</span> &mdash; awaiting their
+          confirmation.
         </>
       ),
     }
@@ -201,7 +219,18 @@ export function BeltEditForm({
 
   // Live feedback on the current promoter pick (SESSION_0540) + the picker's own sort:
   // the anchor coach and the member's already-named promoter float to the top.
-  const promoterNote = promoterFeedbackNote(promoter, anchorPromoterPassportId)
+  // The registered-id set lets the note tell a picked on-BBL person (→ "confirm") apart
+  // from a recruited placeholder coach whose FK is absent here (→ "invited/recruiting").
+  const registeredPromoterIds = useMemo(
+    () =>
+      new Set(promoterOptions.map(option => option.id).filter((id): id is string => Boolean(id))),
+    [promoterOptions],
+  )
+  const promoterNote = promoterFeedbackNote(
+    promoter,
+    anchorPromoterPassportId,
+    registeredPromoterIds,
+  )
   const sortedPromoterOptions = useMemo(() => {
     const priority = new Set(
       [anchorPromoterPassportId, card?.awardedByPassportId].filter((id): id is string =>

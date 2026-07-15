@@ -127,6 +127,7 @@ export function BeltEditCard({
       <div className="relative flex w-full min-w-0 items-center gap-2.5">
         <BeltSwatch
           variant="belt"
+          size="sm"
           colorHex={colorHex}
           secondaryColorHex={vm.rank.secondaryColorHex}
           degree={vm.rank.degree}
