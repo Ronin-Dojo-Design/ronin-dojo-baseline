@@ -83,73 +83,44 @@ export function isFactEditable(award: FactEditableAward): boolean {
 }
 
 /**
- * The verification decision for a member-owned **backfill** after its promoter fact is saved
- * (SESSION_0540; reworked for the placeholder-promoter representation). Pure so the router's
- * side-effects (status write, review task) stay a thin, tested dispatch — mirrors
- * `memberFactEditability`.
+ * The atomic transition for a member-owned **backfill** when its promoter fact is edited
+ * (SESSION_0540, narrowed by D-046). Pure so the server-only proposal core can keep the fact,
+ * trust, review, sync, and audit writes in one transaction.
  *
  * Every promoter is now a Passport FK: a REGISTERED pick, or — for a free-typed coach — a
- * find-or-create CLAIMABLE PLACEHOLDER Passport (the recruited-coach identity, see
+ * find-or-create RECRUITED-COACH PLACEHOLDER Passport (the recruited-coach identity, see
  * `ensurePromoterPlaceholder`). So the decision can no longer branch on "FK vs freetext"; it
  * branches on WHO the promoter Passport is.
  *
- * The **anchor** is the member's current highest authority-verified award (IMPORTED, or VERIFIED
- * with an approver `awardedById`); its `awardedByPassportId` is the promoter we already trust.
- * Given the backfill's saved promoter:
- * - **verify** — the promoter Passport EQUALS the anchor's promoter → auto-verify (same coach;
- *   wins over every branch below, even a placeholder anchor promoter).
- * - **keep_unverified (recruiting)** — a freshly free-typed / recruited placeholder coach
- *   (`promoterIsClaimablePlaceholder`): stays unverified, NO review — there is no one on BBL to
- *   adjudicate; we await the coach's own claim + confirm (phase 2). Also: a registered promoter
- *   with no comparable anchor promoter, or a legacy freetext-only row (no FK yet).
- * - **flag_promoter_changed** — an ESTABLISHED on-tree / registered person that DIFFERS from the
- *   anchor's promoter (both known, promoter not a claimable placeholder) → keep unverified + open
- *   an idempotent instructor review (`PROMOTER_CHANGED`).
- * - **skip** — no promoter expressed, or the backfill IS the anchor (never auto-verify the
- *   reference belt itself).
+ * D-046 is deliberately narrower than the old candidate-vs-anchor rule:
+ * - same active Passport → **no_change** (post-approval B→B stays idempotent even if anchor A remains);
+ * - established active A → different established B → **propose** (B never overwrites A directly);
+ * - a free-typed recruited-coach candidate → **keep_unverified** immediately (ADR 0047 exception);
+ * - null/recruited-placeholder active provenance is not established A, so an established candidate
+ *   is an initial/unaccepted fact: it auto-verifies only when it matches the authority anchor,
+ *   otherwise it stays unverified without inventing an A→B proposal;
+ * - member clear is rejected by the authenticated adapter before reaching this decision.
  */
-export type BackfillTrustDecision = "verify" | "flag_promoter_changed" | "keep_unverified" | "skip"
+export type BackfillPromoterTransition = "no_change" | "verify" | "propose" | "keep_unverified"
 
-export function decideBackfillTrust({
-  backfillPromoterPassportId,
-  promoterIsClaimablePlaceholder,
-  backfillFreetextPromoter,
+export function decideBackfillPromoterTransition({
+  currentPromoterPassportId,
+  currentPromoterIsRecruitedCoachPlaceholder,
+  candidatePromoterPassportId,
+  candidatePromoterIsRecruitedCoachPlaceholder,
   anchorPromoterPassportId,
-  isBackfillAnchor,
 }: {
-  backfillPromoterPassportId: string | null
-  /**
-   * The backfill's promoter Passport is an unclaimed (`userId` null), off-tree (no `LineageNode`)
-   * placeholder — a freshly free-typed / recruited coach, NOT an established on-tree person. The
-   * router resolves this from a stateless re-read of the FK (`isClaimablePlaceholderPromoter`).
-   */
-  promoterIsClaimablePlaceholder: boolean
-  /** Legacy freetext promoter — a name in `notes` with NO Passport FK (rows written before the
-   *  placeholder rework). New writes always carry an FK; kept for those legacy rows. */
-  backfillFreetextPromoter: string | null
+  currentPromoterPassportId: string | null
+  currentPromoterIsRecruitedCoachPlaceholder: boolean
+  candidatePromoterPassportId: string
+  candidatePromoterIsRecruitedCoachPlaceholder: boolean
   anchorPromoterPassportId: string | null
-  isBackfillAnchor: boolean
-}): BackfillTrustDecision {
-  if (isBackfillAnchor) return "skip"
-
-  if (backfillPromoterPassportId) {
-    // Same coach as the anchor's verified promoter → auto-verify (wins over every branch below).
-    if (anchorPromoterPassportId && backfillPromoterPassportId === anchorPromoterPassportId) {
-      return "verify"
-    }
-    // A freshly free-typed / recruited placeholder coach → recruiting: unverified, NO review.
-    if (promoterIsClaimablePlaceholder) return "keep_unverified"
-    // An established on-tree / registered person that differs from the anchor's promoter → a real
-    // promoter change an instructor can adjudicate. With no anchor to compare, keep unverified.
-    if (!anchorPromoterPassportId) return "keep_unverified"
-    return "flag_promoter_changed"
-  }
-
-  // Legacy freetext-only row (no placeholder Passport yet) — treat as recruiting, no review.
-  if (backfillFreetextPromoter && backfillFreetextPromoter.trim().length > 0) {
-    return "keep_unverified"
-  }
-  return "skip"
+}): BackfillPromoterTransition {
+  if (currentPromoterPassportId === candidatePromoterPassportId) return "no_change"
+  if (candidatePromoterIsRecruitedCoachPlaceholder) return "keep_unverified"
+  if (currentPromoterPassportId && !currentPromoterIsRecruitedCoachPlaceholder) return "propose"
+  if (anchorPromoterPassportId === candidatePromoterPassportId) return "verify"
+  return "keep_unverified"
 }
 
 /**

@@ -28,18 +28,20 @@ export const upsertBeltMilestoneInput = z.object({
  * Both keys are optional/nullish so a partial fact edit (e.g. only the date)
  * leaves the others untouched; passing `null` explicitly clears a value.
  */
+const promoterFactInput = z
+  .object({
+    // A **Passport id** (the belt promoter picker is keyed by passport to match the
+    // `awardedByPassportId` FK — SESSION_0497). The handler verifies it exists before
+    // writing the FK. Freetext instead → `name`.
+    awardedByPassportId: cuid.nullish(),
+    name: z.string().max(200).nullish(),
+  })
+  .nullable()
+
 export const updateRankAwardFactInput = z.object({
   rankAwardId: cuid,
   awardedAt: z.coerce.date().nullish(),
-  promoter: z
-    .object({
-      // A **Passport id** (the belt promoter picker is keyed by passport to match the
-      // `awardedByPassportId` FK — SESSION_0497). The handler verifies it exists before
-      // writing the FK. Freetext instead → `name`.
-      awardedByPassportId: cuid.nullish(),
-      name: z.string().max(200).nullish(),
-    })
-    .nullish(),
+  promoter: promoterFactInput.optional(),
   school: z
     .object({
       organizationId: cuid.nullish(),
@@ -56,6 +58,16 @@ export const updateRankAwardFactInput = z.object({
 })
 
 export type UpdateRankAwardFactInput = z.infer<typeof updateRankAwardFactInput>
+
+/**
+ * A distinct admin command, not a flag hidden in the ordinary fact editor. The promoter
+ * key is required (and may explicitly be null to clear) because invoking the command must
+ * both resolve a pending proposal and apply an intentional correction.
+ */
+export const overrideRankAwardPromoterAsAdminInput = z.object({
+  rankAwardId: cuid,
+  promoter: promoterFactInput,
+})
 
 export const attachMilestoneMediaInput = z.object({
   rankMilestoneId: cuid,
@@ -85,6 +97,12 @@ const beltCardOutput = z.object({
   colorHex: z.string().nullable(),
   verificationStatus: z.string(),
   /**
+   * Present on mutation responses so the client overlay immediately reflects the
+   * RankEntry + pending-review authority instead of preserving a stale pre-save badge.
+   * Server-loaded cards receive the same value through their surrounding view-model.
+   */
+  trustState: z.enum(["verified", "unverified", "pending_review"]).optional(),
+  /**
    * B1 (ADR 0035 Amendment 1): may the member edit this award's promotion facts?
    * True only for self-added STATED backfills; false for promotion-minted /
    * imported / disputed awards (authority-owned). The card renders read-only when false.
@@ -106,6 +124,8 @@ const beltCardOutput = z.object({
   awardedAt: z.coerce.date().nullable(),
   promoterName: z.string().nullable(),
   awardedByPassportId: z.string().nullable(),
+  /** Server-authoritative identity classification for same-session client reconciliation. */
+  promoterIsRecruited: z.boolean(),
   schoolName: z.string().nullable(),
   organizationId: z.string().nullable(),
   milestone: z

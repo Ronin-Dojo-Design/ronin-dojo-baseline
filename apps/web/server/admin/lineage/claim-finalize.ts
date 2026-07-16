@@ -10,6 +10,7 @@ import { CLAIM_REVIEW_ERROR } from "~/server/admin/lineage/claim-review-errors"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { grantComp } from "~/server/entitlements/comp-grants"
 import { attachAccount } from "~/server/identity/person-service"
+import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 
 /**
  * Shared APPROVED-branch side-effects for person claims — `finalizePassportClaim`
@@ -606,6 +607,9 @@ export const finalizePassportClaim = async (
       select: { id: true },
     })
     if (claimantPassport && claimantPassport.id !== claim.passportId) {
+      // The signup shell and claimed Passport are now known to be the same person. Preserve active
+      // promotion provenance and immutable review snapshots under the canonical lock order.
+      await repointPromoterIdentityForMerge(tx, claimantPassport.id, claim.passportId)
       await tx.passport.delete({ where: { id: claimantPassport.id } })
     }
 

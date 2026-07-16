@@ -1,7 +1,12 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 
-import { fuzzyMatchSchool, normalizeSchoolName, schoolNameSimilarity } from "./dedup"
+import {
+  exactNormalizedNameMatch,
+  fuzzyMatchSchool,
+  normalizeSchoolName,
+  schoolNameSimilarity,
+} from "./dedup"
 
 describe("normalizeSchoolName", () => {
   it("normalizes case, punctuation, diacritics, and whitespace", () => {
@@ -36,5 +41,22 @@ describe("fuzzyMatchSchool", () => {
 
   it("returns null when no candidate is close enough", () => {
     expect(fuzzyMatchSchool("Completely Different Martial Arts", candidates)).toBeNull()
+  })
+})
+
+describe("exactNormalizedNameMatch", () => {
+  const candidates = [{ id: "john", name: "Prof. José Smith" }]
+
+  it("matches only normalization-equivalent case, punctuation, whitespace, and diacritics", () => {
+    expect(exactNormalizedNameMatch("  PROF jose smith  ", candidates)?.id).toBe("john")
+  })
+
+  it("keeps a near-miss spelling as a distinct identity", () => {
+    expect(exactNormalizedNameMatch("Prof Jon Smith", candidates)).toBeNull()
+  })
+
+  it("keeps reordered or repeated tokens as distinct identities", () => {
+    expect(exactNormalizedNameMatch("Smith Prof Jose", candidates)).toBeNull()
+    expect(exactNormalizedNameMatch("Prof Jose Jose Smith", candidates)).toBeNull()
   })
 })

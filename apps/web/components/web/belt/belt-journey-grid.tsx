@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from "~/components/common/dialog"
 import type { BeltCardOutput } from "~/server/belt/schemas"
 import { BeltEditCard } from "./belt-edit-card"
 import { BeltEditForm } from "./belt-edit-form"
+import { reconcileRecruitedPromoterPassportIds } from "./belt-promoter-feedback"
 import { BeltPromotionRequest } from "./belt-promotion-request"
 import type { BeltRankViewModel } from "./belt-view-model"
 
@@ -33,6 +34,7 @@ export function BeltJourneyGrid({
   promoterOptions,
   schoolOptions,
   anchorPromoterPassportId,
+  recruitedPromoterPassportIds,
   onUpload,
   onUploadPassport,
 }: {
@@ -46,6 +48,8 @@ export function BeltJourneyGrid({
   schoolOptions: CreatableOption[]
   /** The member's anchor promoter Passport id — drives the promoter-picker feedback note. */
   anchorPromoterPassportId: string | null
+  /** Active promoter ids classified by the server as accountless + without public identity satellites. */
+  recruitedPromoterPassportIds: string[]
   /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
   onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /**
@@ -65,6 +69,12 @@ export function BeltJourneyGrid({
   // The card now carries render-ready `milestone.media` (url/type), so the overlay is
   // just the returned card — no separate media reconciliation (SESSION_0492 cleanup).
   const [saved, setSaved] = useState<Record<string, { card: BeltCardOutput }>>({})
+  // The server-load list is a snapshot. A free-typed coach can mint a recruited
+  // placeholder while this grid remains mounted, so retain classifications returned
+  // by successful mutation cards for later edits in the same session.
+  const [recruitedPromoterIdsFromSaves, setRecruitedPromoterIdsFromSaves] = useState<
+    ReadonlySet<string>
+  >(() => new Set())
   const [openRankId, setOpenRankId] = useState<string | null>(null)
   // The above-ceiling belt whose promotion-request modal is open (B1), or null.
   const [promotionRankId, setPromotionRankId] = useState<string | null>(null)
@@ -73,7 +83,13 @@ export function BeltJourneyGrid({
     () =>
       sorted.map(vm => {
         const override = saved[vm.rank.id]
-        return override ? { ...vm, card: override.card } : vm
+        return override
+          ? {
+              ...vm,
+              card: override.card,
+              trustState: override.card.trustState ?? vm.trustState,
+            }
+          : vm
       }),
     [sorted, saved],
   )
@@ -83,10 +99,18 @@ export function BeltJourneyGrid({
     ? (resolved.find(vm => vm.rank.id === promotionRankId) ?? null)
     : null
 
+  const effectiveRecruitedPromoterPassportIds = useMemo(
+    () => [...new Set([...recruitedPromoterPassportIds, ...recruitedPromoterIdsFromSaves])],
+    [recruitedPromoterPassportIds, recruitedPromoterIdsFromSaves],
+  )
+
   const handleSaved = (rankId: string, card: BeltCardOutput) => {
     // The returned card already carries render-ready `milestone.media` (url/type),
     // so the overlay is the card as-is — no URL reconciliation (SESSION_0492 cleanup).
     setSaved(current => ({ ...current, [rankId]: { card } }))
+    setRecruitedPromoterIdsFromSaves(current =>
+      reconcileRecruitedPromoterPassportIds(current, card),
+    )
   }
 
   return (
@@ -113,6 +137,7 @@ export function BeltJourneyGrid({
               promoterOptions={promoterOptions}
               schoolOptions={schoolOptions}
               anchorPromoterPassportId={anchorPromoterPassportId}
+              recruitedPromoterPassportIds={effectiveRecruitedPromoterPassportIds}
               onUpload={onUpload}
               onSaved={card => handleSaved(openVm.rank.id, card)}
               onClose={() => setOpenRankId(null)}

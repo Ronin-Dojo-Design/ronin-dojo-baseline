@@ -53,7 +53,7 @@ export type BeltRankViewModel = {
    * rank (belt not yet started, or above the awarded ceiling → the card shows the
    * "Locked"/"Request promotion" treatment, never a trust badge). Derived
    * server-side by {@link deriveTrustState} from the `RankEntry.status` plus any
-   * open (PENDING) `RankEntryReview`, so verification is legible at a glance.
+   * open (`PENDING` legacy or `PROPOSAL_PENDING`) `RankEntryReview`, so verification is legible at a glance.
    */
   trustState: BeltTrustState | null
 }
@@ -69,7 +69,7 @@ export type BeltRankViewModel = {
 export type BeltTrustState = "verified" | "unverified" | "pending_review"
 
 /**
- * Derive a member entry's {@link BeltTrustState} — a PENDING review always wins
+ * Derive a member entry's {@link BeltTrustState} — an open review always wins
  * (the belt is in flight regardless of its stored status), else the entry's
  * verified flag decides. Pure so it is unit-testable and callable from the
  * server projection without a DOM (mirrors {@link deriveBeltStatus}). Kept

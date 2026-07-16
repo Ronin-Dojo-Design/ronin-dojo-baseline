@@ -305,7 +305,9 @@ afterAll(async () => {
     await db.account.deleteMany({ where: { userId: uid } })
     await db.session.deleteMany({ where: { userId: uid } })
   }
-  await db.user.deleteMany({ where: { id: { in: [ownerId, instructorUserId] } } })
+  await db.user.deleteMany({
+    where: { id: { in: [ownerId, instructorUserId, instructor2UserId] } },
+  })
 })
 
 // --- Tests ---

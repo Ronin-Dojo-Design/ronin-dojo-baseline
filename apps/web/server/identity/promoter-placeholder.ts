@@ -1,4 +1,4 @@
-import { fuzzyMatchSchool } from "~/lib/dedup"
+import { exactNormalizedNameMatch } from "~/lib/dedup"
 import { createPassport } from "~/server/identity/person-service"
 import { db } from "~/services/db"
 
@@ -25,7 +25,7 @@ type PromoterPlaceholderClient = Pick<typeof db, "passport">
  * Until then this is a recruitment/identity artifact, not a claimable identity.
  *
  * DEDUP — EXACT-NORMALIZED (bias to duplicates, D-045/FINDING_03): re-typing the SAME coach reuses
- * the same placeholder, but matching is exact on the NORMALIZED name (`threshold: 1`), not fuzzy.
+ * the same placeholder, but matching is exact on the NORMALIZED name, not fuzzy.
  * The moat's promotion provenance is the asset, and there a **duplicate is the safe error (a phase-2
  * admin MERGE repoints its edges) while a false-merge is the dangerous one (two distinct coaches
  * collapsed onto one Passport → a claimant inherits the wrong students; splitting is far harder).**
@@ -34,14 +34,15 @@ type PromoterPlaceholderClient = Pick<typeof db, "passport">
  * normalize identically are indistinguishable by name and still merge — inherent to name-only dedup,
  * and the phase-2 admin MERGE/split tool is the escape (see the promoter-as-placeholder ADR).
  *
- * The candidate set is scoped tight on purpose — accountless (`userId: null`), off-tree
- * (`lineageNode: is null`) Passports already referenced as a promoter (`rankAwardsPromoted: some`).
- * That scope guarantees a match can NEVER attach a typed name onto a real on-tree person or an
- * unrelated import placeholder (either would wrongly link them as someone's promoter).
+ * The candidate set is scoped tight on purpose — accountless (`userId: null`) Passports with no
+ * `LineageNode` or `DirectoryProfile`, already referenced as a promoter (`rankAwardsPromoted: some`).
+ * That scope guarantees a match can NEVER attach a typed name onto a real listed/on-tree person or
+ * an unrelated import placeholder (either would wrongly link them as someone's promoter).
  *
  * `createdPlaceholder` reports whether a FRESH coach was minted vs an existing one reused (useful
  * telemetry); the trust decision itself keys off a STATELESS re-read of the promoter Passport (see
- * `router.applyBackfillTrustDecision`), not this flag, so it stays correct on later re-edits.
+ * `promoter-proposal-core.applyMemberPromoterTransition`), not this flag, so it stays correct on
+ * later re-edits.
  */
 export type EnsurePromoterPlaceholderResult = {
   passportId: string
@@ -55,21 +56,21 @@ export async function ensurePromoterPlaceholder(
   const name = promoterName.trim()
   if (!name) return null
 
-  // Prior coach placeholders only (see DEDUP): accountless + off-tree + already a promoter.
+  // Prior coach placeholders only (see DEDUP): accountless + doorless + already a promoter.
   const candidates = await client.passport.findMany({
     where: {
       userId: null,
       lineageNode: { is: null },
+      directoryProfile: { is: null },
       rankAwardsPromoted: { some: {} },
     },
     select: { id: true, displayName: true },
   })
 
-  // Exact-normalized match (threshold 1) — bias to duplicates over false-merges (see DEDUP).
-  const match = fuzzyMatchSchool(
+  // Exact-normalized match — bias to duplicates over false-merges (see DEDUP).
+  const match = exactNormalizedNameMatch(
     name,
     candidates.map(candidate => ({ name: candidate.displayName ?? "", passportId: candidate.id })),
-    1,
   )
   if (match) return { passportId: match.passportId, createdPlaceholder: false }
 

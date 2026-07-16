@@ -1,5 +1,5 @@
 import { Brand, LeadSource, LeadStatus, type Prisma } from "~/.generated/prisma/client"
-import { fuzzyMatchSchool, normalizeSchoolName } from "~/lib/dedup"
+import { exactNormalizedNameMatch, normalizeSchoolName } from "~/lib/dedup"
 import {
   demandCountFromMeta,
   jsonRecord,
@@ -145,7 +145,7 @@ async function findMatchedOpenLead(
   })
 
   return (
-    fuzzyMatchSchool(
+    exactNormalizedNameMatch(
       promoterName,
       openLeads.map(lead => ({ name: promoterLeadName(lead), lead })),
     )?.lead ?? null

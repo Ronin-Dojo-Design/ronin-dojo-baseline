@@ -33,6 +33,15 @@ const uid = (name: string) => `cf-${TS}-${seq++}-${name}`
 
 // biome-ignore lint/suspicious/noExplicitAny: tx client surface.
 type Tx = any
+type PromoterReviewHistoryRow = {
+  id: string
+  status: string
+  proposalCapturedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+  expectedPromoterPassportId: string | null
+  proposedPromoterPassportId: string | null
+}
 
 class Rollback extends Error {}
 
@@ -350,6 +359,119 @@ describe("finalizePassportClaim — asserted RankAward (FI-006, ADR 0035)", () =
         rankId,
         status: "VERIFIED",
       })
+    })
+  })
+})
+
+describe("finalizePassportClaim — signup Passport merge", () => {
+  it("repoints pending and terminal promoter-review history before deleting the signup Passport", async () => {
+    await inRolledBackTx(async tx => {
+      const treeId = await makeTree(tx)
+      const claimedPerson = await makePerson(tx, "claimed-person", { treeId })
+      const claimantUserId = await makeClaimant(tx)
+      const signupPassport = await tx.passport.create({
+        data: { displayName: uid("signup-passport"), userId: claimantUserId },
+        select: { id: true },
+      })
+      const reviewSubject = await tx.passport.create({
+        data: { displayName: uid("review-subject") },
+        select: { id: true },
+      })
+      const rankId = await anyRankId(tx)
+      const award = await tx.rankAward.create({
+        data: {
+          passportId: reviewSubject.id,
+          rankId,
+          source: "STATED",
+          verificationStatus: "VERIFIED",
+          awardedByPassportId: signupPassport.id,
+        },
+        select: { id: true },
+      })
+      const entry = await tx.rankEntry.create({
+        data: {
+          passportId: reviewSubject.id,
+          rankId,
+          rankAwardId: award.id,
+          status: "VERIFIED",
+        },
+        select: { id: true },
+      })
+      const pending = await tx.rankEntryReview.create({
+        data: {
+          rankEntryId: entry.id,
+          status: "PROPOSAL_PENDING",
+          reason: "PROMOTER_CHANGED",
+          proposalCapturedAt: new Date(),
+          expectedPromoterPassportId: signupPassport.id,
+          proposedPromoterPassportId: claimedPerson.passportId,
+        },
+        select: { id: true },
+      })
+      const terminal = await tx.rankEntryReview.create({
+        data: {
+          rankEntryId: entry.id,
+          status: "DENIED",
+          reason: "PROMOTER_CHANGED",
+          proposalCapturedAt: new Date(),
+          expectedPromoterPassportId: claimedPerson.passportId,
+          proposedPromoterPassportId: signupPassport.id,
+        },
+        select: { id: true },
+      })
+      const historyBefore: PromoterReviewHistoryRow[] = await tx.rankEntryReview.findMany({
+        where: { id: { in: [pending.id, terminal.id] } },
+        orderBy: { id: "asc" },
+        select: {
+          id: true,
+          status: true,
+          proposalCapturedAt: true,
+          createdAt: true,
+          updatedAt: true,
+          expectedPromoterPassportId: true,
+          proposedPromoterPassportId: true,
+        },
+      })
+
+      await finalizePassportClaim(tx, {
+        claim: claimInput({
+          studentPassportId: claimedPerson.passportId,
+          studentNodeId: claimedPerson.nodeId,
+          treeId,
+          claimantUserId,
+        }),
+        brand: BRAND,
+        actorUserId: claimantUserId,
+      })
+
+      expect(await tx.passport.findUnique({ where: { id: signupPassport.id } })).toBeNull()
+      expect(
+        await tx.rankAward.findUnique({
+          where: { id: award.id },
+          select: { awardedByPassportId: true },
+        }),
+      ).toEqual({ awardedByPassportId: claimedPerson.passportId })
+      expect(
+        await tx.rankEntryReview.findMany({
+          where: { id: { in: [pending.id, terminal.id] } },
+          orderBy: { id: "asc" },
+          select: {
+            id: true,
+            status: true,
+            proposalCapturedAt: true,
+            createdAt: true,
+            updatedAt: true,
+            expectedPromoterPassportId: true,
+            proposedPromoterPassportId: true,
+          },
+        }),
+      ).toEqual(
+        historyBefore.map(review => ({
+          ...review,
+          expectedPromoterPassportId: claimedPerson.passportId,
+          proposedPromoterPassportId: claimedPerson.passportId,
+        })),
+      )
     })
   })
 })

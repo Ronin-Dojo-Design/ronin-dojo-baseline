@@ -1,6 +1,7 @@
 import "dotenv/config"
 
 import { writeFileSync } from "node:fs"
+import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 import { db } from "~/services/db"
 
 /**
@@ -68,7 +69,7 @@ async function main() {
     select: {
       id: true,
       slug: true,
-      passport: { select: { rankAwardsEarned: { select: { id: true } } } },
+      passport: { select: { id: true, rankAwardsEarned: { select: { id: true } } } },
       relationshipsFrom: { select: { id: true } }, // OUT edges = students anchored
       treeMembers: { select: { tree: { select: { slug: true, isPublished: true } } } },
     },
@@ -168,6 +169,8 @@ async function main() {
       })
     }
     if (dup) {
+      if (!keeper.passport) throw new Error("GUARD: Renato keeper has no Passport — aborting")
+      await repointPromoterIdentityForMerge(tx, RENATO_DUP_PASSPORT_ID, keeper.passport.id)
       // Passport delete cascades node + members + edges + directoryProfile (all onDelete: Cascade).
       await tx.passport.delete({ where: { id: RENATO_DUP_PASSPORT_ID } })
     }

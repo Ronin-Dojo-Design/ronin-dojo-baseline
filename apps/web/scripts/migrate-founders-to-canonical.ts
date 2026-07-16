@@ -2,6 +2,7 @@ import "dotenv/config"
 
 import { readFileSync, writeFileSync } from "node:fs"
 import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
+import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 import { db } from "~/services/db"
 
 /**
@@ -606,6 +607,12 @@ async function dryRunOrApply(apply: boolean) {
       const countNow = await tx.lineageTreeMember.count({ where: { treeId: canonical.id } })
       if (countNow !== preCount) {
         throw new Error(`ABORT: member count moved under us (${preCount} → ${countNow}).`)
+      }
+
+      // Acquire the shared identity graph lock tiers before any mutation in this transaction. The
+      // later Erik swap can then delete the stale Passport without losing active/review provenance.
+      if (erikSwap && erikPlaceholder) {
+        await repointPromoterIdentityForMerge(tx, erikPlaceholder.passportId, erikRich.passportId)
       }
 
       // 1. Carlos Sr (root) + Carlos Jr.

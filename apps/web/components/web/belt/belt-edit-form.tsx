@@ -22,6 +22,7 @@ import { client } from "~/lib/orpc-client"
 import { cx } from "~/lib/utils"
 import type { BeltCardOutput, MilestoneMediaPurpose } from "~/server/belt/schemas"
 import { BeltMediaGallery } from "./belt-media-gallery"
+import { resolvePromoterFeedbackIntent } from "./belt-promoter-feedback"
 import {
   beltDateLabel,
   type BeltCardMedia,
@@ -91,64 +92,73 @@ function LockedFactValue({ value }: { value: string }) {
 
 /**
  * Live promoter-picker feedback (SESSION_0540) — tells the member what will happen on
- * save BEFORE they commit, mirroring the server backfill-verification decision
- * (`decideBackfillTrust`):
- * - a registered pick equal to the anchor promoter → SUCCESS (auto-verify);
- * - a DIFFERENT registered pick → INFO (we send it to that coach to confirm);
- * - a freetext coach, OR a saved freetext coach reloaded as its recruited PLACEHOLDER
- *   Passport (an id NOT in the registered options) → CAUTION (recruiting — mirrors the
+ * save BEFORE they commit, mirroring the server promoter-transition decision
+ * (`decideBackfillPromoterTransition`):
+ * - the already-active promoter → no note (no transition);
+ * - an established active promoter changed to another registered coach → INFO proposal,
+ *   even when the selected coach is the authority anchor;
+ * - an initial registered pick equal to the anchor promoter → SUCCESS (auto-verify);
+ * - another established pick → INFO (saved unverified; no confirmation workflow yet);
+ * - a freetext coach, OR a saved freetext coach reloaded as its server-classified recruited
+ *   PLACEHOLDER Passport → CAUTION (recruiting — mirrors the
  *   server `keep_unverified` and the card's "Unverified" badge, so the two never disagree).
  * Returns `null` for an empty picker (no note). Pure — the color is a token className.
  */
 function promoterFeedbackNote(
   promoter: CreatableValue,
+  activePromoterPassportId: string | null,
   anchorPromoterPassportId: string | null,
-  registeredPromoterIds: ReadonlySet<string>,
+  recruitedPromoterPassportIds: ReadonlySet<string>,
 ): { className: string; message: ReactNode } | null {
   const name = promoter.label.trim()
-  if (promoter.id) {
-    // Anchor match wins first — mirrors the server verify branch (even a placeholder anchor).
-    if (anchorPromoterPassportId && promoter.id === anchorPromoterPassportId) {
+  const intent = resolvePromoterFeedbackIntent({
+    selectedPromoterPassportId: promoter.id,
+    activePromoterPassportId,
+    anchorPromoterPassportId,
+    recruitedPromoterPassportIds,
+    hasTypedName: name.length > 0,
+  })
+
+  switch (intent) {
+    case "none":
+      return null
+    case "verify":
       return {
         className: "text-emerald-600 dark:text-emerald-500",
         message: "Matches your verified promoter — this belt will be verified.",
       }
-    }
-    // A registered (on-BBL) person the member picked → ask them to confirm.
-    if (registeredPromoterIds.has(promoter.id)) {
+    case "proposal":
       return {
         className: "text-blue-600 dark:text-blue-400",
         message: (
           <>
-            We&rsquo;ll send this to <span className="font-medium">{name}</span> to confirm.
+            Changing the accepted promoter will submit a proposal for{" "}
+            <span className="font-medium">{name}</span> for review. Your current promoter stays in
+            place until the proposal is decided.
           </>
         ),
       }
-    }
-    // An id absent from the registered options = a recruited placeholder coach (reload of a
-    // saved freetext promoter). Keep the amber recruiting copy so it matches the Unverified badge.
-    return {
-      className: "text-amber-600 dark:text-amber-500",
-      message: (
-        <>
-          We&rsquo;ve invited <span className="font-medium">{name}</span> &mdash; awaiting their
-          confirmation.
-        </>
-      ),
-    }
+    case "unverified":
+      return {
+        className: "text-blue-600 dark:text-blue-400",
+        message: (
+          <>
+            <span className="font-medium">{name}</span> will be saved as the promoter, but this belt
+            will remain unverified.
+          </>
+        ),
+      }
+    case "recruit":
+      return {
+        className: "text-amber-600 dark:text-amber-500",
+        message: (
+          <>
+            <span className="font-medium">{name}</span> will be added to the outreach pipeline. This
+            belt will stay unverified.
+          </>
+        ),
+      }
   }
-  if (name.length > 0) {
-    return {
-      className: "text-amber-600 dark:text-amber-500",
-      message: (
-        <>
-          We&rsquo;ll invite <span className="font-medium">{name}</span> to Black Belt Legacy to
-          confirm this belt.
-        </>
-      ),
-    }
-  }
-  return null
 }
 
 export function BeltEditForm({
@@ -157,6 +167,7 @@ export function BeltEditForm({
   promoterOptions,
   schoolOptions,
   anchorPromoterPassportId,
+  recruitedPromoterPassportIds,
   onUpload,
   onSaved,
   onClose,
@@ -170,6 +181,8 @@ export function BeltEditForm({
   schoolOptions: CreatableOption[]
   /** The member's anchor promoter Passport id — drives the live promoter feedback note + picker sort. */
   anchorPromoterPassportId: string | null
+  /** Accountless + off-tree promoter Passport ids, classified by the server. */
+  recruitedPromoterPassportIds: string[]
   /** Per-file R2 upload against the `rankMilestone` target (mints a mediaId); omit → read-only galleries. */
   onUpload?: (file: File, rankMilestoneId: string) => Promise<{ mediaId: string } | null>
   /** Fired with the fresh card after any successful save. */
@@ -185,8 +198,9 @@ export function BeltEditForm({
   // awards) — drives the "Request a correction" affordance (Desi P1-7).
   const hasLockedFact = card != null && !(facts.awardedAt && facts.promoter && facts.school)
 
-  // Initial values recompute from the card prop each render, so after a save the
-  // dirty flags settle back to false (the grid re-hands the fresh card down).
+  // Initial values describe the card at mount. The local fields intentionally own edits while the
+  // dialog is open; a submitted promoter proposal closes the dialog so its retained B selection
+  // cannot be mistaken for the still-active A returned by the server.
   const initialAwardedAt = toDateInputValue(card?.awardedAt ?? null)
   const initialPromoter: CreatableValue = card?.awardedByPassportId
     ? { id: card.awardedByPassportId, label: card.promoterName ?? "" }
@@ -219,17 +233,17 @@ export function BeltEditForm({
 
   // Live feedback on the current promoter pick (SESSION_0540) + the picker's own sort:
   // the anchor coach and the member's already-named promoter float to the top.
-  // The registered-id set lets the note tell a picked on-BBL person (→ "confirm") apart
-  // from a recruited placeholder coach whose FK is absent here (→ "invited/recruiting").
-  const registeredPromoterIds = useMemo(
-    () =>
-      new Set(promoterOptions.map(option => option.id).filter((id): id is string => Boolean(id))),
-    [promoterOptions],
+  // Classification comes from the same accountless+off-tree rule as the server transition.
+  // It cannot drift when the 300-option picker omits an established active coach.
+  const recruitedPromoterIds = useMemo(
+    () => new Set(recruitedPromoterPassportIds),
+    [recruitedPromoterPassportIds],
   )
   const promoterNote = promoterFeedbackNote(
     promoter,
+    card?.awardedByPassportId ?? null,
     anchorPromoterPassportId,
-    registeredPromoterIds,
+    recruitedPromoterIds,
   )
   const sortedPromoterOptions = useMemo(() => {
     const priority = new Set(
@@ -293,8 +307,14 @@ export function BeltEditForm({
         })
       }
 
+      const proposalSubmitted = sendPromoter && next.trustState === "pending_review"
       onSaved?.(next)
-      toast.success("Belt saved.")
+      if (proposalSubmitted) {
+        toast.success("Promoter change submitted — pending review.")
+        onClose?.()
+      } else {
+        toast.success("Belt saved.")
+      }
     } catch (error) {
       // Surface the real oRPC message (BAD_REQUEST / FORBIDDEN carry user-safe copy);
       // fall back only for opaque failures. A bare `catch {}` masked a live P2003 as
@@ -369,10 +389,12 @@ export function BeltEditForm({
         {!white && (
           <>
             <div className="w-full">
-              <Label>Who promoted you?</Label>
+              <Label htmlFor="belt-promoter">Who promoted you?</Label>
               {facts.promoter ? (
                 <>
                   <CreatableCombobox
+                    id="belt-promoter"
+                    ariaDescribedBy={promoterNote ? "belt-promoter-feedback" : undefined}
                     options={sortedPromoterOptions}
                     value={promoter}
                     onValueChange={setPromoter}
@@ -380,13 +402,18 @@ export function BeltEditForm({
                     searchPlaceholder="Search instructors, or type a name..."
                     renderCreateLabel={text => (
                       <span>
-                        Invite &ldquo;<span className="font-medium">{text}</span>&rdquo; — not on
-                        Black Belt Legacy yet
+                        Add &ldquo;<span className="font-medium">{text}</span>&rdquo; to outreach —
+                        not on Black Belt Legacy yet
                       </span>
                     )}
                   />
                   {promoterNote && (
-                    <Note className={cx("mt-1.5 text-xs", promoterNote.className)}>
+                    <Note
+                      id="belt-promoter-feedback"
+                      role="status"
+                      aria-live="polite"
+                      className={cx("mt-1.5 text-xs", promoterNote.className)}
+                    >
                       {promoterNote.message}
                     </Note>
                   )}

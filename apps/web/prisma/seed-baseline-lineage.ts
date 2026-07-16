@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
 import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
+import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 
 /**
  * seed-baseline-lineage.ts
@@ -1466,41 +1467,47 @@ async function main() {
   // passports. Brian's canonical Passport is user-linked (userId=owner.id).
   // No-op if already cleaned up or on a fresh DB.
   {
-    const stalePassport = await db.passport.findFirst({
-      where: { displayName: "Brian Scott", userId: null },
-      select: { id: true },
-    })
-    if (stalePassport) {
-      const staleNode = await db.lineageNode.findFirst({
+    const cleaned = await db.$transaction(async tx => {
+      const stalePassport = await tx.passport.findFirst({
+        where: { displayName: "Brian Scott", userId: null },
+        select: { id: true },
+      })
+      if (!stalePassport) return false
+
+      await repointPromoterIdentityForMerge(tx, stalePassport.id, ownerPassport.id)
+      const staleNode = await tx.lineageNode.findFirst({
         where: { passportId: stalePassport.id },
         select: { id: true },
       })
       if (staleNode) {
-        const staleMembers = await db.lineageTreeMember.findMany({
+        const staleMembers = await tx.lineageTreeMember.findMany({
           where: { nodeId: staleNode.id },
           select: { id: true, treeId: true },
         })
         for (const sm of staleMembers) {
-          const canonical = await db.lineageTreeMember.findUnique({
+          const canonical = await tx.lineageTreeMember.findUnique({
             where: { treeId_nodeId: { treeId: sm.treeId, nodeId: brianNode.id } },
             select: { id: true },
           })
           if (canonical) {
-            await db.lineageTreeMember.delete({ where: { id: sm.id } })
+            await tx.lineageTreeMember.delete({ where: { id: sm.id } })
           } else {
-            await db.lineageTreeMember.update({
+            await tx.lineageTreeMember.update({
               where: { id: sm.id },
               data: { nodeId: brianNode.id },
             })
           }
         }
-        await db.lineageRelationship.deleteMany({
+        await tx.lineageRelationship.deleteMany({
           where: { OR: [{ fromNodeId: staleNode.id }, { toNodeId: staleNode.id }] },
         })
-        await db.lineageNode.delete({ where: { id: staleNode.id } })
+        await tx.lineageNode.delete({ where: { id: staleNode.id } })
       }
-      await db.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
-      await db.passport.delete({ where: { id: stalePassport.id } })
+      await tx.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
+      await tx.passport.delete({ where: { id: stalePassport.id } })
+      return true
+    })
+    if (cleaned) {
       console.log("   C1: Deleted stale accountless 'Brian Scott' Passport + node")
     }
   }
@@ -1510,44 +1517,53 @@ async function main() {
   // Tree memberships that referenced chris-posnik are re-pointed to poznik or
   // dropped if poznik already occupies that tree slot. No-op if cleaned up.
   {
-    const stalePassport = await db.passport.findFirst({
-      where: { displayName: "Chris Posnik", userId: null },
-      select: { id: true },
-    })
-    if (stalePassport) {
-      const staleNode = await db.lineageNode.findFirst({
+    const poznikPassportId = passportIdByKey.get("poznik")
+    if (!poznikPassportId) throw new Error("No canonical Passport for seed key=poznik")
+
+    const cleaned = await db.$transaction(async tx => {
+      const stalePassport = await tx.passport.findFirst({
+        where: { displayName: "Chris Posnik", userId: null },
+        select: { id: true },
+      })
+      if (!stalePassport) return false
+
+      await repointPromoterIdentityForMerge(tx, stalePassport.id, poznikPassportId)
+      const staleNode = await tx.lineageNode.findFirst({
         where: { passportId: stalePassport.id },
         select: { id: true },
       })
       const poznikNodeId = nodeIdByKey.get("poznik")
       if (staleNode) {
-        const staleMembers = await db.lineageTreeMember.findMany({
+        const staleMembers = await tx.lineageTreeMember.findMany({
           where: { nodeId: staleNode.id },
           select: { id: true, treeId: true },
         })
         for (const sm of staleMembers) {
           const canonical = poznikNodeId
-            ? await db.lineageTreeMember.findUnique({
+            ? await tx.lineageTreeMember.findUnique({
                 where: { treeId_nodeId: { treeId: sm.treeId, nodeId: poznikNodeId } },
                 select: { id: true },
               })
             : null
           if (canonical || !poznikNodeId) {
-            await db.lineageTreeMember.delete({ where: { id: sm.id } })
+            await tx.lineageTreeMember.delete({ where: { id: sm.id } })
           } else {
-            await db.lineageTreeMember.update({
+            await tx.lineageTreeMember.update({
               where: { id: sm.id },
               data: { nodeId: poznikNodeId },
             })
           }
         }
-        await db.lineageRelationship.deleteMany({
+        await tx.lineageRelationship.deleteMany({
           where: { OR: [{ fromNodeId: staleNode.id }, { toNodeId: staleNode.id }] },
         })
-        await db.lineageNode.delete({ where: { id: staleNode.id } })
+        await tx.lineageNode.delete({ where: { id: staleNode.id } })
       }
-      await db.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
-      await db.passport.delete({ where: { id: stalePassport.id } })
+      await tx.rankAward.deleteMany({ where: { passportId: stalePassport.id } })
+      await tx.passport.delete({ where: { id: stalePassport.id } })
+      return true
+    })
+    if (cleaned) {
       console.log("   C2: Deleted stale 'Chris Posnik' Passport + node; merged into poznik")
     }
   }

@@ -62,14 +62,72 @@ export const updateUser = adminActionClient
 export const deleteUsers = adminActionClient
   .inputSchema(idsSchema)
   .action(async ({ parsedInput: { ids }, ctx: { db, revalidate, brand } }) => {
-    await db.user.deleteMany({
-      where: { id: { in: ids }, role: { not: "admin" } },
+    const deletedUserIds = await db.$transaction(async tx => {
+      const requestedUserIds = [...new Set(ids)].sort()
+      const initialEligibleUsers = await tx.user.findMany({
+        where: { id: { in: requestedUserIds }, role: { not: "admin" } },
+        select: { id: true, passport: { select: { id: true } } },
+        orderBy: { id: "asc" },
+      })
+      const passportIds = initialEligibleUsers.flatMap(user =>
+        user.passport ? [user.passport.id] : [],
+      )
+
+      // Global identity lock law: Passport before User. Claim merge holds the Passport tier before
+      // attachAccount touches User; taking these in reverse would create a delete-vs-claim cycle.
+      for (const passportId of [...passportIds].sort()) {
+        await tx.$queryRaw`SELECT "id" FROM "Passport" WHERE "id" = ${passportId} FOR UPDATE`
+      }
+      for (const userId of requestedUserIds) {
+        await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${userId} FOR UPDATE`
+      }
+
+      // Re-read under both lock tiers. A role or User↔Passport change that won before our locks
+      // fails closed: never detach/delete a newly promoted admin or an identity root we did not lock.
+      const eligibleUsers = await tx.user.findMany({
+        where: { id: { in: requestedUserIds }, role: { not: "admin" } },
+        select: { id: true, passport: { select: { id: true } } },
+        orderBy: { id: "asc" },
+      })
+      const identitySignature = (users: typeof eligibleUsers) =>
+        users.map(user => `${user.id}:${user.passport?.id ?? ""}`)
+      if (
+        JSON.stringify(identitySignature(eligibleUsers)) !==
+        JSON.stringify(identitySignature(initialEligibleUsers))
+      ) {
+        throw new Error("Account identity changed during deletion. Retry the operation.")
+      }
+
+      // FK writers need a key-share lock on the Passport tier held above, so no active/review
+      // reference can appear after this preflight and be cascaded or SetNull'd by the User delete.
+      const referencedPromoter = await tx.passport.findFirst({
+        where: {
+          id: { in: passportIds },
+          OR: [
+            { rankAwardsPromoted: { some: {} } },
+            { expectedPromoterReviews: { some: {} } },
+            { proposedPromoterReviews: { some: {} } },
+          ],
+        },
+        select: { id: true },
+      })
+      if (referencedPromoter) {
+        throw new Error(
+          "This account cannot be deleted because its person identity is referenced by belt promotion history.",
+        )
+      }
+
+      const eligibleUserIds = eligibleUsers.map(user => user.id)
+      await tx.user.deleteMany({
+        where: { id: { in: eligibleUserIds }, role: { not: "admin" } },
+      })
+      return eligibleUserIds
     })
 
     // Remove the user images from S3 asynchronously
     after(async () => {
       await removeS3Directories(
-        ids.map(id => `users/${id}`),
+        deletedUserIds.map(id => `users/${id}`),
         brand,
       )
     })

@@ -75,6 +75,7 @@ type ClaimFixture = {
 
 let adminUserId: string | null = null
 const createdEntitlementIds: string[] = []
+const createdPassportIds: string[] = []
 
 async function ensureEntitlement(key: string, name: string) {
   const existing = await db.entitlement.findUnique({
@@ -151,6 +152,7 @@ const createClaimFixture = async ({
     data: placeholderOwner ? { displayName: name } : { userId: placeholder.id, displayName: name },
     select: { id: true },
   })
+  createdPassportIds.push(nodePassport.id)
 
   const node = await db.lineageNode.create({
     data: {
@@ -242,6 +244,11 @@ afterAll(async () => {
   await db.membership.deleteMany({ where: { userId: { startsWith: PREFIX } } })
   await db.organization.deleteMany({ where: { id: { startsWith: PREFIX } } })
   await db.discipline.deleteMany({ where: { id: { startsWith: PREFIX } } })
+  await db.passport.deleteMany({
+    where: {
+      OR: [{ id: { in: createdPassportIds } }, { userId: { startsWith: PREFIX } }],
+    },
+  })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
 
   for (const entitlementId of createdEntitlementIds) {

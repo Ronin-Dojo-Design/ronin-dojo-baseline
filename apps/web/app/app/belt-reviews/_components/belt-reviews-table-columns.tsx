@@ -2,64 +2,71 @@
 
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
-import { Badge } from "~/components/common/badge"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Note } from "~/components/common/note"
 import { DataTableColumnHeader } from "~/components/data-table/data-table-column-header"
+import { DataTableLink } from "~/components/data-table/data-table-link"
+import { passportDisplayName } from "~/lib/identity/passport-display"
 import type { RankReviewAdminRow } from "~/server/admin/rank-reviews/queries"
-import { BeltReviewActions } from "./belt-review-actions"
 
 /**
- * Columns for the belt-review queue (G-010). Read-only context a reviewing instructor needs —
- * member, belt, and the CHANGED promoter the member now claims (FK'd promoter name, else the
- * freetext note) — plus the Approve / Dismiss row actions (this queue is a moderation surface,
- * not a row→detail→editor flow). Every cell is resolved off the linked entry inside the
- * `belt.admin`-gated route, so a placeholder promoter's name never leaks to a public surface.
+ * Columns for the belt-review queue (G-010, ADR 0045): the member link opens the addressable
+ * review detail, while the list stays a scan-only summary. Proposed promoter comes exclusively
+ * from the immutable proposal relation — never from the mutable active RankAward.
  */
 export const getColumns = (): ColumnDef<RankReviewAdminRow>[] => {
   return [
     {
       id: "member",
       enableSorting: false,
+      enableHiding: false,
+      size: 200,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Member" />,
-      cell: ({ row }) => (
-        <span className="font-medium">
-          {row.original.rankEntry.passport.displayName ?? "Unnamed member"}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const name = passportDisplayName(row.original.rankEntry.passport) ?? "Unnamed member"
+        return <DataTableLink href={`/app/belt-reviews/${row.original.id}`} title={name} />
+      },
     },
     {
       id: "belt",
       enableSorting: false,
+      size: 180,
       header: ({ column }) => <DataTableColumnHeader column={column} title="Belt" />,
-      cell: ({ row }) => <Note>{row.original.rankEntry.rank.name}</Note>,
-    },
-    {
-      id: "promoter",
-      enableSorting: false,
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Changed promoter" />,
       cell: ({ row }) => {
-        const award = row.original.rankEntry.rankAward
-        const promoter = award.awardedByPassport?.displayName ?? award.notes
-        return <Note>{promoter ?? "—"}</Note>
+        const rank = row.original.rankEntry.rank
+        return (
+          <div className="flex min-w-36 items-center gap-2">
+            <BeltSwatch
+              variant="belt"
+              size="sm"
+              colorHex={rank.colorHex}
+              secondaryColorHex={rank.secondaryColorHex}
+              degree={rank.degree}
+              beltFamily={rank.beltFamily}
+            />
+            <Note className="min-w-0 truncate">{rank.name}</Note>
+          </div>
+        )
       },
     },
     {
-      id: "reason",
+      id: "proposedPromoter",
       enableSorting: false,
-      header: ({ column }) => <DataTableColumnHeader column={column} title="Reason" />,
-      cell: () => <Badge variant="warning">Promoter changed</Badge>,
+      size: 200,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Proposed promoter" />,
+      cell: ({ row }) => {
+        const { proposalCapturedAt, proposedPromoterPassportId, proposedPromoter } = row.original
+        const label =
+          proposalCapturedAt && proposedPromoterPassportId && proposedPromoter
+            ? (passportDisplayName(proposedPromoter) ?? "Unnamed promoter")
+            : "Proposal unavailable"
+        return <Note>{label}</Note>
+      },
     },
     {
       accessorKey: "createdAt",
       header: ({ column }) => <DataTableColumnHeader column={column} title="Requested" />,
       cell: ({ row }) => <Note>{formatDate(row.original.createdAt)}</Note>,
-    },
-    {
-      id: "actions",
-      enableHiding: false,
-      enableSorting: false,
-      header: () => null,
-      cell: ({ row }) => <BeltReviewActions reviewId={row.original.id} />,
     },
   ]
 }
