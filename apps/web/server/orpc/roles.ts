@@ -119,6 +119,11 @@ export const LINEAGE_RESOURCE_GRANTS: Record<LineageTreeAccessRole, ReadonlyArra
  */
 export const APP_AREA_PERMISSIONS = {
   ageGroups: "age-groups.manage",
+  // The belt-review queue (`/app/belt-reviews`, G-010) REUSES the existing `belt.admin`
+  // permission key (the one `updateRankAwardFactAsAdmin` already gates on) — a new authz NEED
+  // maps to the existing KEY, never a new system (repo rule: 4 authz systems, never a 5th).
+  // admin `"*"` covers it; no grant plumbing.
+  beltReviews: "belt.admin",
   beta: "beta.view",
   billing: "billing.manage",
   brandSettings: "brand-settings.manage",

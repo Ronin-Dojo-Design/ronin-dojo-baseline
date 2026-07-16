@@ -13,9 +13,9 @@ const asUser = (role: string) => ({ role }) as SessionUser
 const allItems = ADMIN_SECTION_GROUPS.flatMap(group => group.items)
 
 describe("admin sections config shape", () => {
-  it("covers all 36 managed areas with unique hrefs", () => {
-    expect(allItems.length).toBe(36)
-    expect(new Set(allItems.map(item => item.href)).size).toBe(36)
+  it("covers all 37 managed areas with unique hrefs", () => {
+    expect(allItems.length).toBe(37)
+    expect(new Set(allItems.map(item => item.href)).size).toBe(37)
   })
 
   it("gives every item a DISTINCT icon (the FI-021 dedupe)", () => {
@@ -41,13 +41,16 @@ describe("admin sections config shape", () => {
     // staff-only; authors reach their `[id]`/`new` editors via the profile flow, not this nav).
     expect(byTitle.get("Techniques")?.permission).toBe(APP_AREA_PERMISSIONS.techniques)
 
+    // Belt Reviews (G-010) is gated on `belt.admin` — the moderation queue is staff-only.
+    expect(byTitle.get("Belt Reviews")?.permission).toBe(APP_AREA_PERMISSIONS.beltReviews)
+
     // Lineage keeps its grantee flag + gate.
     expect(byTitle.get("Lineage")?.permission).toBe(APP_AREA_PERMISSIONS.lineage)
     expect(byTitle.get("Lineage")?.lineage).toBe(true)
 
     // Every other item is permission-gated.
     const gated = allItems.filter(item => item.permission != null)
-    expect(gated.length).toBe(35)
+    expect(gated.length).toBe(36)
   })
 })
 
@@ -55,7 +58,7 @@ describe("filterAdminSectionGroups", () => {
   it("admin sees every group and item", () => {
     const groups = filterAdminSectionGroups(asUser("admin"), false)
     expect(groups.length).toBe(ADMIN_SECTION_GROUPS.length)
-    expect(groups.flatMap(group => group.items).length).toBe(36)
+    expect(groups.flatMap(group => group.items).length).toBe(37)
   })
 
   it("guest (null user) sees only the ungated items, empty groups dropped", () => {

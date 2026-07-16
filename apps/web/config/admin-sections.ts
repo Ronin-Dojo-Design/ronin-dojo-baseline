@@ -9,6 +9,7 @@ import {
   DatabaseIcon,
   FileTextIcon,
   FolderTreeIcon,
+  GavelIcon,
   GitBranchIcon,
   GraduationCapIcon,
   IdCardIcon,
@@ -144,6 +145,12 @@ export const ADMIN_SECTION_GROUPS: AdminSectionGroup[] = [
         href: "/app/techniques",
         icon: SwordsIcon,
         permission: APP_AREA_PERMISSIONS.techniques,
+      },
+      {
+        title: "Belt Reviews",
+        href: "/app/belt-reviews",
+        icon: GavelIcon,
+        permission: APP_AREA_PERMISSIONS.beltReviews,
       },
       {
         title: "Skill Levels",

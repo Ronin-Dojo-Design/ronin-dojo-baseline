@@ -35,7 +35,7 @@ import { APP_AREA_PERMISSIONS, type Permission } from "~/server/orpc/roles"
 // without a `permission` are shown to every signed-in user; admin (`*`) sees
 // everything. `lineage: true` marks the item as ALSO visible to active
 // LineageTreeAccess grantees (Ronin delta, SOT-ADR D4 — mirrors
-// `requireLineageAccess`). The full management nav's 36 areas live in
+// `requireLineageAccess`). The full management nav's 37 areas live in
 // `config/admin-sections.ts` (SESSION_0501) — ONE grouped model shared with
 // `/app/sections` and the beta Command Deck.
 type NavItem = NavLink & {
@@ -108,7 +108,7 @@ export const Sidebar = ({ user, hasLineageGrant }: SidebarProps) => {
     })
   }
 
-  // Ungrouped chrome concerns stay at the top; the 36 managed areas render as
+  // Ungrouped chrome concerns stay at the top; the 37 managed areas render as
   // grouped runs from the shared config (SESSION_0501 admin nav regroup).
   const topLinks: Array<NavEntry> = [
     {
