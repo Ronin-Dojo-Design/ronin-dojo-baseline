@@ -4,16 +4,19 @@ slug: bbl-rank-entry-unified-data-flow
 type: architecture-spec
 status: proposed
 created: 2026-07-09
-updated: 2026-07-09
-last_agent: codex-session-0517
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
+  - docs/product/black-belt-legacy/rankentry-unification-epic.md
   - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
   - docs/architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md
+  - docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md
   - docs/petey-plan-0477-belt-journey-crm-epic.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0517.md
+  - docs/sprints/SESSION_0542.md
 tags:
   - bbl
   - rank-entry
@@ -63,21 +66,37 @@ VERIFIED    Rank details approved by the steward.
 DISPUTED    Active conflict marked by a steward.
 ```
 
-`RankEntryReviewStatus` is internal and intentionally minimal: `PENDING | APPROVED | DENIED`.
+`RankEntryReviewStatus` is internal and intentionally small:
+`PENDING | PROPOSAL_PENDING | APPROVED | DENIED`. `PROPOSAL_PENDING` identifies an immutable captured
+promoter-change proposal; legacy and other review writers retain `PENDING` during the expand/contract rollout.
 
 Review reasons are `NEW_RANK`, `PROMOTER_CHANGED`, `SCHOOL_CHANGED`, and `DISPUTE`. A reviewer note can request more
 information while a review remains pending; no additional lifecycle enum is needed.
 
 ```text
-Existing promoter/school edit -> active RankEntry + pending proposed revision
+Established promoter A -> B   -> active RankEntry keeps A + immutable PROMOTER_CHANGED proposal
+Same B while PENDING          -> idempotent; return the existing proposal
+Different target while open  -> conflict; never mutate or supersede the proposal
+Free-typed recruited coach    -> active UNVERIFIED no-review path (ADR 0047 D1/D5)
 Higher-rank request           -> pending RankEntry + NEW_RANK review
 Member dispute flag           -> DISPUTE review; no automatic status change
-Steward approval              -> apply proposal or activate higher entry
-Steward denial                -> retain prior active value/status; preserve history
+Steward approval              -> atomically apply exact B + verify, or activate higher entry
+Steward denial                -> retain prior accepted value/status; preserve history
 ```
 
-Promotion dates, stories, photos, and uploaded certificate evidence remain freely editable. Promoter or school changes
-enter review automatically. A pending edit must not lower the member's active-rank ceiling.
+Promotion dates, stories, photos, and uploaded certificate evidence remain freely editable. An established-promoter
+replacement enters review automatically; ADR 0047's free-typed recruited-coach path remains unreviewed. The proposal
+stores immutable expected-prior and proposed-promoter identities separately from active provenance. A pending edit
+must not lower the member's active-rank ceiling. `SCHOOL_CHANGED` remains part of the target model, but ADR 0047 D7
+does not silently expand this implementation slice to school edits.
+
+Only one `PROPOSAL_PENDING` promoter proposal may exist per entry. Approval conditionally claims that exact
+`PROMOTER_CHANGED` review, verifies the expected prior promoter is still active, applies the proposed promoter,
+verifies the entry, audits, and marks APPROVED in one transaction. Denial marks DENIED and audits without changing
+the accepted promoter or prior entry status. An ordinary admin edit is blocked while the proposal is pending; an
+explicit override atomically denies it, applies the override under admin authority, and audits the override.
+Legacy `PENDING/PROMOTER_CHANGED` rows remain visible for operator inventory but fail closed because they have no
+captured proposal; the preceding release's PENDING-only reviewer cannot action a new `PROPOSAL_PENDING` row.
 
 The current rank is the highest non-pending entry in the discipline's ordering. `UNVERIFIED`, `VERIFIED`, and
 `DISPUTED` count; `PENDING` does not. One standard entry exists per member/rank. Multiple custom entries are allowed,
@@ -96,8 +115,9 @@ with a label and placement relative to the default IBJJF ladder.
   public read-only profile using the shared RankEntry projection
 ```
 
-There is one rank-entry write surface and one shared read model. Public views may show status labels and pending
-proposals according to privacy rules, but never reviewer identity, reporter identity, or private evidence.
+There is one rank-entry write surface and one shared read model. Member/reviewer views may show an established-coach
+proposal as **Pending review**. Public views continue to show the accepted promoter and may show only the permitted
+trust label; they never expose the proposed promoter, reviewer identity, reporter identity, or private evidence.
 
 ## Certificate flow
 
@@ -130,4 +150,3 @@ No destructive deletion belongs in the first read/write cutover.
 - No mandatory stripe entries.
 - No automatic dispute status from member reports.
 - No Brian Truelson email until ledgers and the complete member workflow are cleared.
-

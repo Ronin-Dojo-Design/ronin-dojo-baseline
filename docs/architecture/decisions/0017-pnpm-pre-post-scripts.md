@@ -4,12 +4,12 @@ slug: adr-0017
 type: adr
 status: accepted
 created: 2026-05-17
-updated: 2026-05-17
-last_agent: codex-session-0351
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/protocols/failed-steps-log.md
   - docs/sprints/SESSION_0188.md
-  - docs/runbooks/schema-migration.md
+  - docs/runbooks/database/schema-migration.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -32,6 +32,10 @@ We considered three alternatives, then chose the smallest change.
 ## Decision
 
 ### Add `.npmrc` at the repo root containing `enable-pre-post-scripts=true`. Keep the `prebuild` script in `apps/web/package.json` as the authoritative spot for "what runs before `next build`."
+
+SESSION_0542 narrowed the package command to the exact `db:migrate:deploy` alias and made `prebuild` call that
+alias. The generic migrate/reset/push aliases were removed from the non-disposable prodsnap-backed web package;
+this preserves the lifecycle decision while making an accidental destructive subcommand unavailable by default.
 
 ## Alternatives considered
 

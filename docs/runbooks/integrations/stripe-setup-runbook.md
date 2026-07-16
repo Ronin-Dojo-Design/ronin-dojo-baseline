@@ -4,18 +4,18 @@ slug: stripe-setup-runbook
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-06-12
-last_agent: claude-session-0369
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/sprints/SESSION_0098.md
+  - docs/sprints/_archive/SESSION_0098.md
   - docs/sprints/SESSION_0344.md
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
   - docs/sprints/SESSION_0344.md
 tags:
   - stripe
@@ -180,7 +180,9 @@ SESSION_0344 added an explicit local-only Stripe service mock for browser e2e pr
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
-E2E_STRIPE_MOCK=1 bunx playwright test e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium
+E2E_STRIPE_MOCK=1 bun run dev:e2e  # terminal 1: the server must see the mock flag
+E2E_STRIPE_MOCK=1 bun run test:e2e:local -- \
+  e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium  # terminal 2
 ```
 
 This mock is only enabled when `E2E_STRIPE_MOCK=1` and the app is not production. It returns a Checkout

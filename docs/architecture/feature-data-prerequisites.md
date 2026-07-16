@@ -4,16 +4,16 @@ slug: feature-data-prerequisites
 type: architecture
 status: active
 created: 2026-04-27
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/sop-e2e-user-lifecycle.md
-  - docs/runbooks/sop-data-and-wiring-flows.md
+  - docs/runbooks/sops/sop-e2e-user-lifecycle.md
+  - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/knowledge/wiki/files/seed-ts.md
-  - docs/runbooks/course-curriculum-runbook.md
+  - docs/runbooks/domain-features/course-curriculum-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0157.md
+  - docs/sprints/_archive/SESSION_0157.md
 ---
 
 # Feature data prerequisites
@@ -94,7 +94,7 @@ Organization → Course (orgId, disciplineId)
 ```
 
 - **Minimum:** 1 Course with ≥2 CurriculumItems, 1 enrolled user, 1 completion
-- **Seed covers:** ✅ SESSION_0156 seed creates 218 Courses, 654 CurriculumItems, 1 CourseEnrollment, and 1 CurriculumItemCompletion. See `docs/runbooks/course-curriculum-runbook.md`.
+- **Seed covers:** ✅ SESSION_0156 seed creates 218 Courses, 654 CurriculumItems, 1 CourseEnrollment, and 1 CurriculumItemCompletion. See `docs/runbooks/domain-features/course-curriculum-runbook.md`.
 
 ## Progress + Gamification (S7 — upcoming)
 

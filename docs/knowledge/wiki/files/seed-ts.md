@@ -4,18 +4,18 @@ slug: seed-ts
 type: file
 status: active
 created: 2026-04-26
-updated: 2026-04-29
+updated: 2026-07-16
 author: Brian + Copilot
-last_agent: codex-session-0028
+last_agent: codex-session-0542
 pairs_with:
-  - knowledge/wiki/files/schema-prisma
-  - architecture/data-model
-parent: architecture/program-plan
+  - docs/knowledge/wiki/files/schema-prisma.md
+  - docs/architecture/data-model.md
+parent: docs/architecture/program-plan.md
 backlinks:
-  - sprints/SESSION_0005
-  - sprints/SESSION_0015
-  - architecture/data-model
-  - architecture/feature-data-prerequisites
+  - docs/sprints/_archive/SESSION_0005.md
+  - docs/sprints/_archive/SESSION_0015.md
+  - docs/architecture/data-model.md
+  - docs/architecture/feature-data-prerequisites.md
 needs_fix:
   - "Kajukenbo TuffBuffs-specific rank system (#14) deferred — need to confirm from monorepo"
   - "GamificationEventType point values are placeholder — needs design pass"
@@ -35,7 +35,10 @@ Prisma seed file that populates the database with all system defaults for the Ro
 
 ## Intent
 
-Provide a reproducible baseline dataset for local development. Any developer (or agent) can `dropdb && createdb && prisma db push && bun run prisma/seed.ts` and have a fully working dev environment with real-world martial arts data.
+Provide a reproducible baseline dataset for an explicitly named disposable local database. The canonical
+`ronindojo_prodsnap` mirror is non-disposable and must never be reset, db-pushed, or seeded. The executable
+`assertSafeSeedTarget` guard refuses prodsnap/Neon before constructing a Prisma client and accepts only the
+named test/E2E/dev fixtures or a `ronindojo_*scratch*` database.
 
 ## Architecture
 
@@ -69,10 +72,28 @@ Creates its own PrismaClient directly (bypasses `env.ts` validation which requir
 
 ## Current Notes
 
-- Runs against an empty dev database; it is not idempotent.
+- Runs against an empty, explicitly named disposable database; it is not idempotent.
 - Program CRUD smoke coverage lives in `apps/web/scripts/smoke-program.ts`.
 - GamificationEventType point values are still placeholders and need a design pass.
 
 ## Teachable explanation
 
-Run this file after `prisma db push` to populate the database. It creates demo users first (Dirstarter pattern), then seeds all the martial arts reference data. The helper function `seedRankSystem()` handles creating a RankSystem and its ordered Ranks in one call. Brand-specific data uses `isSystem: false, brand: "BASELINE_MARTIAL_ARTS"` or `brand: "BBL"`.
+Provision a literal scratch target from committed migrations, then run the seed with both URLs pinned:
+
+```bash
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_seed_scratch
+/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_seed_scratch
+cd apps/web
+
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_seed_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_seed_scratch \
+  bun run db:migrate:deploy
+
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_seed_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_seed_scratch \
+  bun run prisma/seed.ts
+```
+
+The file creates demo users first (Dirstarter pattern), then seeds the martial-arts reference data. The helper
+`seedRankSystem()` creates a `RankSystem` and its ordered `Rank` rows. Brand-specific data uses
+`isSystem: false, brand: "BASELINE_MARTIAL_ARTS"` or `brand: "BBL"`.

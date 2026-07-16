@@ -4,8 +4,8 @@ slug: sop-data-and-wiring-flows
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-09
-last_agent: codex-session-0517
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/sops/sop-e2e-user-lifecycle.md
   - docs/runbooks/dev-environment/local-dev-auth-storage.md
@@ -452,7 +452,8 @@ Publication log / next iteration
 
 ## 11. Local dev auth + storage flow (SESSION_0131)
 
-See full runbook: [`docs/runbooks/local-dev-auth-storage.md`](../dev-environment/local-dev-auth-storage.md)
+See full runbook:
+[`docs/runbooks/dev-environment/local-dev-auth-storage.md`](../dev-environment/local-dev-auth-storage.md)
 
 ```text
 GET /api/auth/dev-login

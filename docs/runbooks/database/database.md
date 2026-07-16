@@ -4,33 +4,33 @@ slug: database
 type: runbook
 status: active
 created: 2026-04-25
-updated: 2026-06-01
-last_agent: codex-session-0317
+updated: 2026-07-16
+last_agent: codex-session-0542
 use_count: 0
 pairs_with:
-  - docs/runbooks/mcp-usage-runbook.md
-  - docs/runbooks/neon-advisory-lock-recovery.md
-  - docs/runbooks/vercel-deploy.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
+  - docs/runbooks/database/neon-advisory-lock-recovery.md
+  - docs/runbooks/deploy/vercel-deploy.md
+  - docs/runbooks/dev-environment/verification-and-testing.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
 ---
 
 # Database — local dev (Postgres.app) + production (Neon)
 
-## Two-environment plan
+## Database roles
 
-| | Dev | Production |
-|---|---|---|
-| Where | Postgres.app on your Mac | Neon (managed Postgres) |
-| Postgres version | 16 | 16 (Neon default) |
-| Connection string | `postgresql://brianscott@localhost:5432/ronindojo_dev` | `postgres://...neon.tech/...?sslmode=require` |
-| Lives in | `/Applications/Postgres.app` | Neon dashboard |
-| Reset frequency | as often as needed (`bun db:reset`) | never blindly — backups first |
+| Role | Database | Purpose | Destructive policy |
+| --- | --- | --- | --- |
+| Local app + DB-backed Bun verification | `ronindojo_prodsnap` (Postgres.app) | Realistic, manually maintained prod mirror; may carry a reviewed staged migration before prod deploy | **Never reset/db-push.** Back up + inventory before migration work. |
+| Local Playwright/browser fixture | `ronindojo_e2e` (Postgres.app) | Disposable migrate-from-zero fixture; optional explicit seed for a manual smoke | Recreate only by literal name + `bun run e2e:db:setup`. |
+| Optional legacy scratch | `ronindojo_dev` (Postgres.app or Docker) | Named throwaway experiments that do not need realistic data | Destructive commands are allowed only after both URLs are explicitly pinned here. |
+| Production | Neon `neondb` | Live BBL data | Never reset; Vercel prebuild applies committed migrations. |
 
 ## Local dev — Postgres.app
 
-We initially scaffolded a `docker-compose.yml` for Docker Postgres, but Docker Desktop on this machine was an old broken install. We pivoted to Postgres.app (native macOS Postgres) — no daemon, no VM, just a menu-bar app. The `docker-compose.yml` and [`infra/postgres/init.sql`](../../infra/postgres/init.sql) are kept in the repo for anyone with working Docker (or for a future move back).
+We initially scaffolded a `docker-compose.yml` for Docker Postgres, but Docker Desktop on this machine was an old broken install. We pivoted to Postgres.app (native macOS Postgres) — no daemon, no VM, just a menu-bar app. The `docker-compose.yml` and [`infra/postgres/init.sql`](../../../infra/postgres/init.sql) are kept in the repo for anyone with working Docker (or for a future move back).
 
 ### Setup (one-time)
 
@@ -39,11 +39,14 @@ We initially scaffolded a `docker-compose.yml` for Docker Postgres, but Docker D
 3. Click the elephant → **Initialize** to create a default cluster on port 5432.
 4. Postgres.app runs as your macOS user (`brianscott`) with no password — that's normal for local dev.
 
-### Create the dev database
+### Create an optional scratch database
 
 ```bash
 /Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
 ```
+
+This does **not** change the standard app target. The canonical gitignored `.env` points at
+`ronindojo_prodsnap`; the guarded E2E setup owns `ronindojo_e2e`.
 
 **Don't** pre-install extensions. Prisma manages `citext` itself via the schema's `extensions = [citext]` declaration — pre-installing trips its drift detector and forces a reset. Add Postgres.app's bin to your PATH per the [Postgres.app docs](https://postgresapp.com/documentation/cli-tools.html) if you want plain `createdb`/`psql` everywhere.
 
@@ -52,13 +55,14 @@ We initially scaffolded a `docker-compose.yml` for Docker Postgres, but Docker D
 In `apps/web/.env` (you create this; it's gitignored — never commit it):
 
 ```env
-DATABASE_URL="postgresql://brianscott@localhost:5432/ronindojo_dev"
+DATABASE_URL="postgresql://brianscott@localhost:5432/ronindojo_prodsnap"
+DIRECT_URL="postgresql://brianscott@localhost:5432/ronindojo_prodsnap"
 ```
 
 Sanity check:
 
 ```bash
-psql ronindojo_dev -c '\dx'
+psql ronindojo_prodsnap -c '\dx'
 # Expect: citext in the extension list. Current schema declares only `extensions = [citext]`.
 ```
 
@@ -66,16 +70,17 @@ psql ronindojo_dev -c '\dx'
 
 Postgres.app is just a Mac app — quit it from the menu bar to stop, launch it to start. By default it auto-starts on login (toggleable in Postgres.app preferences).
 
-### Reset
+### Reset policy
 
 ```bash
-dropdb ronindojo_dev && createdb ronindojo_dev
-# Then re-run migrations
-bun db:migrate dev
+# Disposable Playwright DB only:
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_e2e
+cd apps/web && bun run e2e:db:setup
 ```
 
-Do not manually create `pg_trgm` during reset unless the schema is updated to declare it. As of
-SESSION_0317, `apps/web/prisma/schema.prisma` declares only `citext`, and the local DB matches that.
+Never substitute `ronindojo_prodsnap` in that recipe. For an adversarial migration proof, use a separately
+named scratch restore/clone and set **both** URLs explicitly. Do not manually add undeclared extensions;
+Prisma's checked-in migration history owns the database extension contract.
 
 ## Local dev — Docker (alternative path, not active)
 
@@ -88,12 +93,15 @@ docker compose down       # stop, keep data
 docker compose down -v    # stop AND wipe data (destroys volume)
 ```
 
-Connection string for the Docker path:
+Connection strings for the Docker path:
 ```
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema=public"
 ```
 
-(Note: different user (`postgres` vs `brianscott`) and password (`postgres` vs none) than the Postgres.app path. Switch the `DATABASE_URL` in your `.env` accordingly.)
+(Note: different user (`postgres` vs `brianscott`) and password (`postgres` vs none) than the Postgres.app
+path. Switch **both** URLs together; never leave `DIRECT_URL` pointing at prodsnap while runtime uses the
+Docker scratch database.)
 
 ## Production — Neon
 
@@ -105,7 +113,9 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema
 
    - **Pooled** (`...?sslmode=require&pgbouncer=true`) for runtime queries — set as `DATABASE_URL` on Vercel.
    - **Direct** (no `-pooler`) for migrations — set as `DIRECT_URL` on Vercel.
-4. Enable extensions on Neon: in the SQL editor, run `CREATE EXTENSION IF NOT EXISTS citext;` and `CREATE EXTENSION IF NOT EXISTS pg_trgm;`.
+4. Let the checked-in Prisma migrations create every declared extension. Do not pre-install extensions in
+   the Neon SQL editor: the current schema/migration history declares `citext` only, and an extra extension
+   creates drift.
 
 ### Prisma 7 URL routing
 
@@ -115,7 +125,12 @@ This repo uses Prisma 7 config routing instead of a `directUrl` field in `schema
 - Prisma CLI migration commands use `apps/web/prisma.config.ts`.
 - On Vercel Preview/Production, `prisma.config.ts` selects a direct Neon URL for `prisma migrate deploy`.
 - If a pooler URL is accidentally supplied as `DIRECT_URL`, the Prisma CLI config defensively strips Neon's `-pooler` host suffix. Treat that as a deploy-safety guard, not as permission to leave the Vercel dashboard value wrong.
-- Locally, `DIRECT_URL` is optional; when absent, Prisma CLI falls back to `DATABASE_URL`.
+- Locally, Prisma CLI falls back to `DATABASE_URL` when `DIRECT_URL` is absent, but relying on that is an
+  operational footgun. Keep both URLs pointed at the same intended local DB. Printing their parent-process
+  database names is only the first check: for a raw command against the canonical `.env`, require Prisma's
+  datasource banner to name `ronindojo_prodsnap` too. A Bun `x`/`bunx` child can discard a named
+  `--env-file` overlay, so E2E work must use the guarded launcher and scratch commands must pin both URLs on
+  the actual child command.
 
 Do not add `directUrl` to `schema.prisma` for this repo. See [Neon Prisma Advisory-Lock Recovery](neon-advisory-lock-recovery.md) for the production incident history and Prisma 7 reasoning.
 
@@ -135,24 +150,19 @@ bun scripts/check-vercel-env-parity.ts
 
 ## Migrations workflow
 
-### First-time bootstrap (local)
+### Local migration workflow
 
-```bash
-cd apps/web
-docker compose -f ../../docker-compose.yml up -d   # ensure DB is running
-bun install                                         # install deps + runs `db:generate`
-bun db:migrate dev --name init_ronin_dojo           # creates a new migration capturing the Ronin Dojo models
-```
+The executable source of truth is [Schema Migration Runbook](schema-migration.md). In brief:
 
-(Dirstarter ships with 12 prior migrations. They'll all apply first; the `init_ronin_dojo` migration adds the new tables on top.)
+1. Print/verify the parent `DATABASE_URL` and `DIRECT_URL` database names, then confirm the Prisma child
+   datasource banner or use a guarded/inline-pinned launcher; the parent values alone are not effective-target
+   proof across a Bun child boundary.
+2. Author and adversarially prove the migration on a named scratch DB when needed.
+3. Back up prodsnap and inventory migration-specific preconditions.
+4. Apply the reviewed file with `bun run db:migrate:deploy` to prodsnap.
+5. Run DB-backed Bun tests on prodsnap, then typecheck/build.
 
-### Day-to-day
-
-```bash
-# After editing schema.prisma:
-bun db:migrate dev --name <descriptive_name>   # creates + applies migration locally
-bun db:generate                                 # regenerate Prisma Client (also runs as postinstall)
-```
+Never use raw `db push --accept-data-loss` or `prisma migrate reset` as a shortcut on the canonical `.env`.
 
 ### Production deploy
 
@@ -160,11 +170,11 @@ bun db:generate                                 # regenerate Prisma Client (also
 
 For destructive changes: review the generated SQL in `prisma/migrations/<name>/migration.sql` before merging the PR.
 
-### Reset (local only — never prod)
+### Disposable E2E rebuild
 
 ```bash
-bun db:reset                          # drops + recreates DB, reapplies all migrations
-bun db:seed                           # if seed.ts is present
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_e2e
+cd apps/web && bun run e2e:db:setup   # guarded create + migrate; intentionally no seed
 ```
 
 ## Connecting to Neon from your laptop (when needed)
@@ -181,13 +191,14 @@ Don't run migrations against prod manually — that's what the Vercel deploy doe
 ## Backups
 
 - **Neon** — automatic point-in-time recovery on paid tiers. Free tier has manual export only. **Schedule a manual export weekly** from the Neon dashboard until paid plan kicks in.
-- **Docker dev** — no backups needed; treat the dev DB as disposable. If you have seed data you care about, it lives in `apps/web/prisma/seed.ts`.
+- **`ronindojo_prodsnap`** — back up before schema/data mutation. It is locally recoverable, not disposable.
+- **`ronindojo_e2e` / named scratch DBs** — disposable; durable fixtures belong in code.
 
 ## Troubleshooting
 
 - **`relation "..." does not exist`** after a migration — run `bun db:generate` to regenerate the client.
 - **Port 5432 already in use** — another Postgres is running. `lsof -i :5432`, kill it, or change the port mapping in `docker-compose.yml` to `5433:5432`.
 - **`pgbouncer=true` errors on Neon migrations** — you used the pooled URL for migrations. Use `DIRECT_URL` instead.
-- **`citext` not found** — the schema extension did not apply. Run the Prisma migration/push workflow
-  for the local dev DB; only create the extension manually as a temporary local unblocker if Prisma
-  cannot reach the database.
+- **`citext` not found** — stop and verify both effective target names plus migration status. Apply reviewed
+  migrations through the target-safe schema-migration runbook. Never db-push or manually add the extension on
+  prodsnap; use a separately named, fully pinned scratch database for experiments.

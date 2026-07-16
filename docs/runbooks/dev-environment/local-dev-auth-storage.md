@@ -4,13 +4,13 @@ slug: local-dev-auth-storage
 type: runbook
 status: active
 created: 2026-05-11
-updated: 2026-06-15
-last_agent: claude-session-0392
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/dev-environment.md
-  - docs/runbooks/aws-s3-operator-runbook.md
-  - docs/runbooks/sop-data-and-wiring-flows.md
-  - docs/sprints/SESSION_0131.md
+  - docs/runbooks/dev-environment/dev-environment.md
+  - docs/runbooks/integrations/aws-s3-operator-runbook.md
+  - docs/runbooks/sops/sop-data-and-wiring-flows.md
+  - docs/sprints/_archive/SESSION_0131.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -29,17 +29,21 @@ tags:
 
 Covers two systems that caused friction in SESSION_0131: **Better-Auth session management** and **S3-compatible local storage via MinIO**. This runbook documents the setup, the pitfalls found during debugging, and the fixes.
 
+The standard database is Postgres.app's non-disposable `ronindojo_prodsnap`. Docker Compose still defines
+an optional legacy `ronindojo_dev` Postgres service, but the normal storage-only command starts just
+`minio minio-init`; it does not replace the standard database.
+
 ## Architecture Overview
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │                    Local Dev Stack                        │
 │                                                          │
-│  ┌──────────┐   ┌──────────────┐   ┌──────────────────┐ │
-│  │ Next.js  │   │ Postgres.app │   │ MinIO (Docker)   │ │
-│  │ :3000    │──▶│ :5432        │   │ :9000 API        │ │
-│  │ Turbopack│   │ ronindojo_dev│   │ :9001 Console    │ │
-│  └────┬─────┘   └──────────────┘   └────────┬─────────┘ │
+│  ┌──────────┐   ┌────────────────────┐   ┌──────────────────┐ │
+│  │ Next.js  │   │ Postgres.app       │   │ MinIO (Docker)   │ │
+│  │ :3000    │──▶│ :5432              │   │ :9000 API        │ │
+│  │ Turbopack│   │ ronindojo_prodsnap │   │ :9001 Console    │ │
+│  └────┬─────┘   └────────────────────┘   └────────┬─────────┘ │
 │       │                                      │           │
 │       │  Better-Auth                         │ S3 API    │
 │       │  (magic link + session cookies)      │ (uploads) │
@@ -241,16 +245,20 @@ Symptom: User appears authenticated (get-session returns 200)
 
 **Seed user fix** (admin user created before sign-up hook):
 
+> This is a historical repair recipe, not a blind prodsnap seed. Back up the local mirror, confirm both
+> database URLs name `ronindojo_prodsnap`, and replace the placeholder user id after a read-only lookup.
+> Prefer proving the SQL on a named throwaway clone before changing the mirror.
+
 > ⚠️ **Phase 3c (SESSION_0392) update:** identity satellites are now **Passport-rooted** — `DirectoryProfile`
 > (and `LineageNode`/`RankAward`/`Affiliation`/`FightRecord`) no longer have a `userId` column; they hang
 > off `passportId`. So the DirectoryProfile insert must reference the Passport, not the User. `Passport`
 > still has `userId` (the account link; nullable = accountless placeholder).
 
 ```sql
--- Run against ronindojo_dev. Phase 3c: DirectoryProfile is Passport-rooted (passportId, NOT userId).
+-- After backup + target/user verification only. Phase 3c is Passport-rooted (passportId, NOT userId).
 WITH p AS (
   INSERT INTO "Passport" ("id", "userId", "displayName", "createdAt", "updatedAt")
-  VALUES (gen_random_uuid()::text, 'cmp1gwfcq0000owdskqo2vlqp', 'Admin User', NOW(), NOW())
+  VALUES (gen_random_uuid()::text, '<verified-user-id>', 'Admin User', NOW(), NOW())
   ON CONFLICT ("userId") DO UPDATE SET "updatedAt" = NOW()
   RETURNING "id"
 )
@@ -369,7 +377,7 @@ Run after any environment change:
 
 ```bash
 # 1. Database
-psql postgresql://brianscott@localhost:5432/ronindojo_dev \
+psql postgresql://brianscott@localhost:5432/ronindojo_prodsnap \
   -c 'SELECT count(*) FROM "User";'                         # → should be > 0
 
 # 2. MinIO (if Docker running)

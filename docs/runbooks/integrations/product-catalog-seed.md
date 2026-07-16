@@ -4,18 +4,18 @@ slug: product-catalog-seed
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-05-09
-last_agent: copilot-session-0111
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/schema-migration.md
-  - docs/runbooks/stripe-setup-runbook.md
+  - docs/runbooks/database/schema-migration.md
+  - docs/runbooks/integrations/stripe-setup-runbook.md
   - docs/architecture/decisions/0014-stripe-product-policy.md
   - apps/web/prisma/seed-tuffbuffs-affiliate.ts
   - apps/web/prisma/seed-tuffbuffs-merch.ts
   - apps/web/prisma/seed-pricing-plans.ts
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0105.md
+  - docs/sprints/_archive/SESSION_0105.md
 tags:
   - seed
   - products
@@ -37,7 +37,7 @@ Add, update, or remove products from the PricingPlan table. This covers both ope
 - Adding new affiliate products (e.g., new TuffBuffs gear)
 - Updating prices, descriptions, affiliate URLs, or images for existing products
 - Adding a new product vertical (e.g., apparel, supplements)
-- Re-seeding after a `prisma migrate reset`
+- Re-seeding an explicitly named disposable catalog scratch database
 - Onboarding a new brand's product catalog
 
 ## Architecture context
@@ -60,7 +60,9 @@ metadata: {
 
 ## Prerequisites
 
-- [ ] Local Postgres running (`ronindojo_dev` database exists)
+- [ ] Local Postgres running
+- [ ] The target database is named explicitly; `ronindojo_prodsnap` is non-disposable and is never reset
+- [ ] `DATABASE_URL` and `DIRECT_URL` name the same intended database
 - [ ] Migrations are current (`bunx prisma migrate status` shows no pending)
 - [ ] Prisma client is generated (`bunx prisma generate`)
 - [ ] At least one Organization exists for the target brand (run main seed first if needed)
@@ -80,24 +82,24 @@ metadata: {
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
 
-# Verify DB is reachable
-/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_dev -c "SELECT 1;"
+# Print the parent-shell targets without exposing credentials; the names must agree.
+bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
 
-# Verify migrations are current
+# Read-only child proof: Prisma's datasource banner must name that same database.
+# Do not substitute a raw --env-file E2E overlay; use the guarded E2E launcher.
 bunx prisma migrate status
 
-# Verify an org exists
-/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_dev -c \
+# Read-only canonical-mirror example, only after both names above equal ronindojo_prodsnap.
+# For any other target, substitute the exact database name you just confirmed.
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_prodsnap -c \
   "SELECT id, name FROM \"Organization\" WHERE brand = 'BASELINE_MARTIAL_ARTS' LIMIT 1;"
 ```
 
-### 2. Run main seed (if DB was reset)
+### 2. Establish reference data on a disposable target
 
-```bash
-bun run db:seed
-```
-
-This creates users, categories, disciplines, ranks, roles, orgs, programs, and class schedules.
+The main seed is not a routine `ronindojo_prodsnap` operation. If the target is empty, use the fully pinned
+`ronindojo_catalog_scratch` rebuild below. If required organization or reference data is missing from a
+non-disposable target, stop and decide the recovery source explicitly; do not reset or run the main seed by reflex.
 
 ### 3. Seed operational pricing plans
 
@@ -177,35 +179,49 @@ Navigate to `/merch` and confirm:
 4. Create a server query filtered by the new `source` value.
 5. Wire the public page to the new query.
 
-## After a DB reset
+## Rebuild a disposable catalog scratch database
 
-The full re-seed sequence is:
+Never reset `ronindojo_prodsnap`. A full from-zero catalog proof uses the literal
+`ronindojo_catalog_scratch` target below. The destructive database commands name that database directly, and
+every Prisma/seed child receives both URLs explicitly so `.env` cannot redirect it to prodsnap.
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
 
-# 1. Reset and re-apply migrations
-bunx prisma migrate reset --force
+# 1. Recreate only the literal disposable scratch database.
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_catalog_scratch
+/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_catalog_scratch
 
-# 2. Main seed (orgs, users, disciplines, etc.)
-bun run db:seed
+# 2. Apply reviewed migrations with BOTH URLs pinned to that scratch database.
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  bun run db:migrate:deploy
 
-# 3. Operational pricing plans
-bun run prisma/seed-pricing-plans.ts
+# 3. Main seed (orgs, users, disciplines, etc.).
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  bun run db:seed
 
-# 4. Affiliate products
-bun run prisma/seed-tuffbuffs-affiliate.ts
+# 4. Product seeds. Keep both URLs pinned for every child.
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  bun run prisma/seed-pricing-plans.ts
 
-# 5. Merch products
-bun run prisma/seed-tuffbuffs-merch.ts
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  bun run prisma/seed-tuffbuffs-affiliate.ts
+
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_catalog_scratch \
+  bun run prisma/seed-tuffbuffs-merch.ts
 ```
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| "No BASELINE_MARTIAL_ARTS organization found" | Run `bun run db:seed` first |
-| Drift detected on `prisma migrate dev` | Run `bunx prisma migrate reset --force` then re-seed |
+| "No BASELINE_MARTIAL_ARTS organization found" | Stop and inspect the effective target. For a from-zero proof, recreate only `ronindojo_catalog_scratch` and run the fully pinned scratch seed sequence above; do not run the main seed against prodsnap as a shortcut. |
+| Drift detected | Stop and verify both effective target names. Recreate only `ronindojo_catalog_scratch` with the pinned recipe above; never reset or db-push prodsnap. |
 | Products don't appear on gear page | Check `metadata.source` equals `"tuffbuffs-affiliate"` exactly |
 | Type errors in seed script after schema change | Run `bunx prisma generate` to regenerate client |
 
@@ -219,5 +235,7 @@ bun run prisma/seed-tuffbuffs-merch.ts
 
 - **Three-phase extraction pattern:** Proven twice (affiliate-gear SESSION_0107→0110, merch SESSION_0111). The playbook: Phase 1 (seed from hardcoded source → DB), Phase 2 (build public page reading from DB), Phase 4 (inline data into seed script, delete hardcoded source). This is the standard approach for any new product catalog.
 - **`as const satisfies` friction:** When a product array uses `as const satisfies readonly Type[]`, optional fields become absent on items that omit them, creating a discriminated union. This requires type casts in consumers. For seed data, prefer explicit `readonly Type[]` annotation instead.
-- **Seed script self-containment:** After Phase 4, seed scripts carry their own product data inline. This makes them independently runnable after a DB reset without depending on any library module. Trade-off: larger files (~500 lines), but seed data changes rarely.
+- **Seed script self-containment:** After Phase 4, seed scripts carry their own product data inline. This makes
+  them independently runnable after recreating the explicitly named disposable target, without depending on
+  any library module. Trade-off: larger files (~500 lines), but seed data changes rarely.
 - **Metadata JSON pattern:** Both affiliate and merch products use `PricingPlan.metadata` with a `source` discriminator (`"tuffbuffs-affiliate"`, `"tuffbuffs-merch"`). Query functions filter by `metadata.path.source`. If metadata gets unwieldy, consider a dedicated model — but for <50 products per vertical, JSON is fine.

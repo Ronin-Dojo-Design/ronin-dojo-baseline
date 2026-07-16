@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-14
-last_agent: claude-session-0537
+updated: 2026-07-16
+last_agent: codex-session-0542
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -15,14 +15,17 @@ pairs_with:
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
+  - docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0025.md
-  - docs/sprints/SESSION_0029.md
-  - docs/sprints/SESSION_0033.md
-  - docs/sprints/SESSION_0178.md
+  - docs/sprints/_archive/SESSION_0025.md
+  - docs/sprints/_archive/SESSION_0029.md
+  - docs/sprints/_archive/SESSION_0033.md
+  - docs/sprints/_archive/SESSION_0178.md
   - docs/sprints/SESSION_0479.md
   - docs/sprints/SESSION_0509.md
+  - docs/sprints/SESSION_0541.md
+  - docs/sprints/SESSION_0542.md
   - docs/knowledge/wiki/concepts/passport-and-shells.md
 ---
 
@@ -233,11 +236,13 @@ Use Rank because not all martial arts or certifications use belts.
 
 ### RankAward
 
-A rank promotion fact awarded to a Passport.
+A compatibility-era rank-promotion provenance record attached to a Passport.
 
 RankAward records who earned the rank, which Rank it was, who awarded it, when and where. It links to
-`GamificationEvent` for point tracking and is the canonical promotion fact for lineage. Legacy `mediaUrls` are
-deprecated; Belt Journey media/story enrichment lives on `RankMilestone` plus `MediaAttachment`.
+`GamificationEvent` for point tracking and currently stores the promotion fact while the RankEntry fold is in
+progress. It does not independently decide the member-facing current rank or trust state; `RankEntry` owns those
+reads. Legacy `mediaUrls` are deprecated; Belt Journey media/story enrichment lives on `RankMilestone` plus
+`MediaAttachment` during compatibility.
 
 Former name: `Progress`.
 
@@ -258,8 +263,10 @@ should use for "what rank does this member hold." `RankEntryReview` carries its 
 
 The member-facing experience for telling the story of a person's rank progression belt by belt.
 
-Belt Journey is UX language. It does not create rank authority, verification, privacy, or promotion facts. Its data
-enrichment is stored in `RankMilestone`; rank truth remains `RankAward`.
+Belt Journey is UX language. It does not create rank authority, verification, privacy, or promotion facts. Its
+enrichment is stored in `RankMilestone` during compatibility, while the related promotion provenance remains on
+`RankAward`. The member-facing current rank and trust state come from `RankEntry`; the retirement epic folds the
+remaining compatibility facts and enrichment into that one model.
 
 ### Backfill
 
@@ -271,15 +278,36 @@ is not a backfill — it routes to a `RANK_PROMOTION` claim (`promotion.submit`)
 ### Trust State
 
 The legibility state of a member's owned belt entry (`BeltTrustState`: `verified` | `unverified` | `pending_review`,
-SESSION_0540). Derived (`deriveTrustState`): a PENDING `RankEntryReview` wins (in flight), else the entry's verified
-flag decides. Presentation only — the authority is `RankEntry.status` + any open review, never a stored belt field.
+SESSION_0540). Derived (`deriveTrustState`): an open review (`PENDING` legacy or captured `PROPOSAL_PENDING`) wins
+(in flight), else the entry's verified flag decides. Presentation only — the authority is `RankEntry.status` + any
+open review, never a stored belt field.
+`pending_review` is a workflow overlay: it does not mean the proposed promoter is active, and it is distinct from
+`RankEntry.status=PENDING` for a new higher-rank request.
+
+### Accepted Promoter
+
+The promoter currently carried by the active rank fact. For an established-coach change, promoter A remains the
+accepted promoter while B is under review. Public lineage and provenance use the accepted promoter, never the
+pending proposal.
+
+### Promoter-change proposal
+
+The immutable expected-prior/proposed-target snapshot on one `PROPOSAL_PENDING` / `PROMOTER_CHANGED` review
+(ADR 0047 D7). `PROPOSAL_PENDING` is deliberately distinct from legacy `PENDING`: the previous release's reviewer
+only accepts `PENDING`, so it cannot approve a captured proposal without applying its proposed coach.
+The proposal is not active provenance. Re-submitting the same target is idempotent; a different target conflicts
+until the review resolves. **Approve** atomically applies the exact proposal and verifies the entry; **Deny** leaves
+the accepted promoter and prior status unchanged. Use **pending review**, not “pending verification,” for this
+workflow, and use **Deny**, not “Dismiss,” for its negative decision.
 
 ### Anchor Promoter
 
 The promoter of a member's **anchor** award — their highest authority-verified rank (`IMPORTED`, or `VERIFIED` with an
-approver `awardedById`); its `awardedByPassportId` is the promoter we already trust (SESSION_0540). A backfill whose
-promoter equals the anchor promoter auto-verifies (same coach); a different established promoter opens a
-`PROMOTER_CHANGED` review; a fresh recruited coach stays unverified with no review.
+approver `awardedById`); its `awardedByPassportId` is the promoter we already trust (SESSION_0540). For an
+initial/unaccepted backfill fact, an established promoter equal to the anchor promoter auto-verifies (same coach),
+while an anchor-different established promoter stays unverified. Once the backfill has an established **accepted
+promoter A**, replacing A with a different established B opens a `PROMOTER_CHANGED` proposal regardless of which
+coach is on the anchor; A stays active. A fresh recruited coach follows the separate unverified/no-review path.
 
 ### Recruited-coach placeholder
 
@@ -320,10 +348,12 @@ or dispute a rank fact. Deleting the owning RankAward deletes the milestone.
 
 ### RankAwardSource
 
-How a RankAward was established (SESSION*0357, BBL-RANK-004): `STATED` (asserted — e.g. admin-added or
+How a compatibility-era RankAward was established (SESSION*0357, BBL-RANK-004): `STATED` (asserted — e.g. admin-added or
 self-claimed) or `EARNED` (recorded through a promotion the platform witnessed). Pairs with
-**RankAwardVerificationStatus** (`UNVERIFIED` | `VERIFIED` | `DISPUTED` | `IMPORTED`). A person's **current
-rank is derived** — the highest \_verified* award — never a stored Passport/Membership field.
+**RankAwardVerificationStatus** (`UNVERIFIED` | `VERIFIED` | `DISPUTED` | `IMPORTED`). Those fields preserve
+provenance and compatibility gates until RankAward retires. A person's member-facing **current rank** is the highest
+non-`PENDING` `RankEntry` in the discipline ordering: `UNVERIFIED`, `VERIFIED`, and `DISPUTED` all count. It is never
+a stored Passport/Membership field and is not derived from “highest verified RankAward.”
 
 ### PromotionEvent
 

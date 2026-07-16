@@ -4,8 +4,8 @@ slug: claude-mobile-runbook
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-06
-last_agent: claude-session-0350
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/dev-environment/codex-mobile-runbook.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
@@ -136,7 +136,7 @@ supply:
 
 | Need | Local (today) | Cloud container | Operator action |
 | --- | --- | --- | --- |
-| **Database** | Postgres.app | none | Point `DATABASE_URL` (+ `DIRECT_URL`/`DATABASE_PUBLIC_URL`) at a hosted **Neon** branch; see [neon-advisory-lock-recovery](../database/neon-advisory-lock-recovery.md). |
+| **Database** | Postgres.app | none | Point both `DATABASE_URL` and `DIRECT_URL` at the same dedicated **non-production Neon** branch; never use production. If configured, `DATABASE_PUBLIC_URL` must resolve to that branch too. See [neon-advisory-lock-recovery](../database/neon-advisory-lock-recovery.md). |
 | **Required secrets** | `apps/web/.env` | none | Provide `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL` (the `min(1)` vars in `apps/web/env.ts`) to the cloud agent's secret store. |
 | **Optional integrations** | `.env` | none | Add only if the task touches them: `STRIPE_*`, `RESEND_*`, `S3_*`, `PRINTFUL_*`, `AI_GATEWAY_API_KEY`, `REDIS_REST_*`, `DEV_LOGIN_USER_ID` (dev-login smoke). |
 | **Docker / MinIO (local S3)** | Docker Desktop | usually unavailable | Skip media/S3 smokes, **or** set `S3_*` to a real bucket. Not needed for directory/lineage/UI work. |
@@ -146,7 +146,8 @@ supply:
 
 ### What we are missing for a clean cloud session
 
-1. **A dedicated cloud Postgres (Neon) branch + URL** wired into the cloud agent's secrets (the single
+1. **A dedicated non-production cloud Postgres (Neon) branch** wired into the cloud agent's secrets.
+   Both `DATABASE_URL` and `DIRECT_URL` must resolve to that same branch, never production (the single
    biggest blocker — most gates need a DB).
 2. **A secret bundle** for the cloud agent (the 4 required vars minimum).
 3. **A graphify decision:** cloud sessions skip `graphify update`; the next *local* session refreshes the
@@ -155,7 +156,8 @@ supply:
    (SESSION_0349/0350) means a fresh-Chromium fallback script is the reliable path — local only today.
 
 **Recommendation:** for *full-ritual* sessions, prefer **Transport A (SSH+tmux)** — zero new infra, full
-parity. Use the cloud transport for lighter PR-style tasks once a Neon branch + secret bundle exist.
+parity. Use the cloud transport for lighter PR-style tasks once a dedicated non-production Neon branch
+and a secret bundle exist.
 
 ## Cross-references
 

@@ -4,18 +4,19 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-07-01
-last_agent: claude-session-0475
+updated: 2026-07-16
+last_agent: codex-session-0542
 use_count: 3
 pairs_with:
-  - docs/runbooks/database.md
-  - docs/runbooks/prisma-workflow.md
+  - docs/runbooks/database/database.md
+  - docs/runbooks/database/prisma-workflow.md
+  - docs/runbooks/dev-environment/verification-and-testing.md
   - docs/architecture/s2-schema-additions.md
   - docs/architecture/PETEY_PLAN_S2_SCHEMA_PASS4.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0022.md
-  - docs/sprints/SESSION_0023.md
+  - docs/sprints/_archive/SESSION_0022.md
+  - docs/sprints/_archive/SESSION_0023.md
 ---
 
 # Schema Migration Runbook
@@ -28,7 +29,10 @@ When adding new models, enums, fields, or relations to `apps/web/prisma/schema.p
 
 - [ ] Schema spec is signed off (s2-schema-additions.md checkboxes checked)
 - [ ] Local Postgres running (Postgres.app, elephant in menu bar)
-- [ ] `ronindojo_dev` database exists
+- [ ] Parent `DATABASE_URL` **and** `DIRECT_URL` names are printed and agree; the Prisma child datasource
+      banner (or guarded/inline-pinned child launcher) confirms the same target
+- [ ] `ronindojo_prodsnap` is reachable and backed up before any mutation
+- [ ] A named disposable scratch DB is available for destructive/adversarial proof
 - [ ] On correct git branch (`main` or feature branch per session plan)
 - [ ] Working tree clean (`git status --short` empty)
 
@@ -38,8 +42,15 @@ When adding new models, enums, fields, or relations to `apps/web/prisma/schema.p
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
-# Verify DB is reachable
-/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_dev -c "SELECT 1;"
+# Verify parent-shell targets without printing credentials
+bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
+
+# Read-only child-process proof: require Prisma's datasource line to say ronindojo_prodsnap.
+# Never adapt this raw bunx probe with --env-file=.env.e2e; use the guarded E2E helper instead.
+bunx prisma migrate status
+
+# Verify the non-disposable local mirror is reachable
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_prodsnap -c "SELECT 1;"
 # Verify current schema state
 bunx prisma validate
 ```
@@ -59,9 +70,13 @@ Add models/enums/fields per the wave spec. Work in dependency order:
 
 Three Prisma commands, three jobs. Pick by what the change needs downstream.
 
-- **`prisma migrate dev`** — creates a versioned migration file in `prisma/migrations/` and applies it to the local dev DB in one step. Use this whenever the change must ship to production: Neon prod is migrated via `prisma migrate deploy` during Vercel prebuild (`package.json` `prebuild: bun run db:migrate deploy`), and `deploy` only runs migration files that already exist in the repo. No migration file in the repo means nothing to deploy. **⚠ Exception: for column TYPE changes (e.g. `String`→`enum`) use `--create-only` + hand-edit — a bare `migrate dev` will DROP the column and reset every row to the default. See "Type-changing a column" below.**
-- **`prisma db push`** — pushes the current `schema.prisma` to the dev DB without creating a migration file. Use for rapid local iteration only — destructive wave rewrites, throwaway schema experiments, or large model bursts where you're going to `dropdb/createdb` and reseed anyway. Do **not** use `db push` for changes that need to ship.
-- **`prisma migrate deploy`** — applies committed migration files against the target DB. This is what Vercel runs in `prebuild` against Neon prod. Never invoke it by hand in dev; it's the production half of the pair with `migrate dev`.
+- **`prisma migrate dev`** — authors a versioned migration and applies it. Use only with both URLs pinned
+  to an explicit scratch authoring DB; never let it infer the canonical prodsnap target. For data-sensitive
+  SQL (type changes, preflights, partial indexes), hand-author/review the migration instead.
+- **`prisma db push`** — throwaway prototyping only, with both URLs explicitly naming a disposable scratch
+  DB. It is forbidden on prodsnap and never substitutes for a migration file.
+- **`prisma migrate deploy`** — applies reviewed migration files. Vercel uses it for Neon prod, and local
+  schema lanes use it deliberately on backed-up prodsnap after preflight. It is not a reset command.
 
 Per FS-0021 corrective action #2: SESSION_0152 confirmed `migrate dev` is the correct path when a migration file must ship; the shadow-DB hang from SESSION_0004 did not reproduce on the current Prisma version.
 
@@ -69,33 +84,40 @@ Per FS-0021 corrective action #2: SESSION_0152 confirmed `migrate dev` is the co
 
 Two valid workflows — choose based on change type:
 
-#### Option A: Reset + `db push` (wave migrations / destructive changes)
+#### Option A: Disposable scratch + `db push` (non-shipping prototype only)
 
 Best for large wave migrations with many new models, or changes that drop columns/enums.
 
 ```bash
-# Reset dev database (clean slate — fastest path)
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
+# Name the scratch target literally; never substitute prodsnap.
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_schema_scratch
+/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_schema_scratch
 
-# Push schema
+# Pin BOTH Prisma URLs for the command.
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
-bunx prisma db push --accept-data-loss
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  bunx prisma db push --accept-data-loss
 
 # Generate client
 bunx prisma generate
 ```
 
-#### Option B: `migrate dev` (additive changes needing migration files)
+#### Option B: versioned migration (shipping change)
 
 Best for adding columns/models to an existing schema where you want a versioned migration file. Production uses `prisma migrate deploy` (see `package.json` `prebuild`), so migration files are needed for production deploys.
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
-bunx prisma migrate dev --name <descriptive-name>
+# Either author against an explicitly pinned scratch DB, or create/hand-author the migration directory.
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  bunx prisma migrate dev --name <descriptive-name>
 ```
 
-This creates a migration in `prisma/migrations/`, applies it, and regenerates the client in one step.
+Review the resulting SQL. Prove success on a fresh disposable DB and failure/rollback on an adversarial
+scratch fixture when the migration has a preflight. Then back up + inventory prodsnap and apply the reviewed
+file there with `bun run db:migrate:deploy`.
 
 > **Note:** The shadow DB hang reported in SESSION_0004 does not reproduce with Prisma 7.x.
 
@@ -111,9 +133,9 @@ NOT accept the SQL `migrate dev` generates for a type change.** Hand-author an i
 
 **The fix:**
 
-1. **Scaffold without applying.** Run
-   `bunx prisma migrate dev --create-only --name <name>` to write the migration dir + a generated
-   `migration.sql` WITHOUT touching any DB. *(`--create-only` is blocked non-interactively when a
+1. **Scaffold without applying.** Run `migrate dev --create-only` with both URLs pinned to the named
+   scratch authoring DB (as in Option B) to write the migration dir + a generated `migration.sql`
+   WITHOUT touching prodsnap. *(`--create-only` is blocked non-interactively when a
    data-loss warning fires — so you may need to create the migration directory and write
    `migration.sql` fully by hand.)*
 2. **Replace the generated DROP/ADD with an in-place cast.** Drop and re-set the column default
@@ -146,11 +168,13 @@ bunx prisma db pull --print | grep "^model " | wc -l
 # Wave A: ~60 models, Wave B: ~74, Wave C: ~86, Wave D: ~86 (field changes only)
 ```
 
-### 5. Seed
+### 5. Seed (disposable DB only)
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app/apps/web
-bunx prisma db seed
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
+  bunx prisma db seed
 ```
 
 If seed fails: check which model is missing. Likely a relation target doesn't exist yet — fix dependency order.
@@ -180,9 +204,14 @@ overlay. Treat webpack as the fallback, not the default, unless a specific smoke
 
 ```bash
 cd /Users/brianscott/dev/ronin-dojo-app
-git add apps/web/prisma/schema.prisma apps/web/.generated/
+git add apps/web/prisma/schema.prisma apps/web/prisma/migrations/<migration-directory>/
+git diff --cached -- apps/web/prisma/schema.prisma apps/web/prisma/migrations/
 git commit -m "schema: Wave X — <description>"
 ```
+
+Generated Prisma clients are gitignored build artifacts; do not stage `.generated/`. The exact migration
+directory is required because production `migrate deploy` can apply only migration files present in the
+operator-authorized push.
 
 ### 8. Post-migration
 
@@ -201,19 +230,11 @@ git commit -m "schema: Wave X — <description>"
 
 ## Rollback
 
-If a wave fails mid-push:
-
-```bash
-# Reset to clean state
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
-
-# Revert schema changes
-git checkout -- apps/web/prisma/schema.prisma
-
-# Re-push the previous good state
-cd apps/web && bunx prisma db push --accept-data-loss && bunx prisma generate && bunx prisma db seed
-```
+- If scratch proof fails, drop only the literally named scratch DB, fix the SQL, and rerun from zero.
+- If prodsnap deploy fails, stop. Preserve the backup and inspect `_prisma_migrations`; do not reset/db-push
+  the mirror. Transaction-wrapped SQL should leave DDL/data unchanged, but prove that before recovery.
+- Restore prodsnap from the verified dump only when the operator chooses recovery; never improvise a schema
+  rewrite as rollback.
 
 ## Known issues
 
@@ -223,19 +244,21 @@ cd apps/web && bunx prisma db push --accept-data-loss && bunx prisma generate &&
 ## Production migration (Neon)
 
 **Prod migrations auto-apply on deploy — you do NOT run them by hand.** The `apps/web`
-`package.json` `prebuild` hook (`bun run db:migrate deploy` → `prisma migrate deploy`) runs against
+`package.json` `prebuild` hook (`bun run db:migrate:deploy` → `prisma migrate deploy`) runs against
 Neon prod during the Vercel build, applying every committed migration file that hasn't run yet
 (see §"When to use `migrate dev` vs …" above, and [`deployment.md`](../deploy/deployment.md) §"prebuild").
 
 Consequences:
 
-- **The migration FILE must be committed and pushed** or prod applies nothing — `migrate deploy` only
-  runs files already in `prisma/migrations/`. Author it locally with `prisma migrate dev` first.
+- **The migration file must be committed and included in an operator-authorized push** or prod applies
+  nothing — `migrate deploy` only runs files already in `prisma/migrations/`. Author or hand-write it
+  locally, then complete the repository's explicit push gate.
 - **If the migration errors, the Vercel BUILD fails** (and the deploy is skipped) — so a bad migration
   can't silently corrupt prod, but it will block the deploy. Verify it applies on `ronindojo_prodsnap`
-  before pushing.
+  before requesting push authorization.
 - The code is forward-safe if a *drop-column* migration hasn't run yet: Prisma only reads/writes the
   columns in the schema, so an extra prod column is ignored until `migrate deploy` removes it.
 - **Never** run `prisma migrate reset`, `db push`, or `--accept-data-loss` against production. For an
-  out-of-band manual apply (rare), use `DATABASE_URL="<neon>" bunx prisma migrate deploy`
+  out-of-band manual apply (rare), set both `DATABASE_URL="<neon-direct>"` and
+  `DIRECT_URL="<neon-direct>"` for `bunx prisma migrate deploy`
   (see [`deployment.md`](../deploy/deployment.md) §"Production database operations").

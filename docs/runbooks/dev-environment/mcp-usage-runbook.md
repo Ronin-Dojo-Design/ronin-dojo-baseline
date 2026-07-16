@@ -4,19 +4,19 @@ slug: mcp-usage-runbook
 type: runbook
 status: active
 created: 2026-05-14
-updated: 2026-06-11
-last_agent: claude-session-0360
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/dev-environment.md
+  - docs/runbooks/dev-environment/dev-environment.md
   - docs/runbooks/dev-environment/session-ops-cookbook.md
-  - docs/runbooks/vercel-domain-setup-runbook.md
-  - docs/runbooks/database.md
-  - docs/runbooks/stripe-setup-runbook.md
-  - docs/runbooks/graphify-repo-memory.md
-  - docs/sprints/SESSION_0166.md
+  - docs/runbooks/deploy/vercel-domain-setup-runbook.md
+  - docs/runbooks/database/database.md
+  - docs/runbooks/integrations/stripe-setup-runbook.md
+  - docs/runbooks/dev-environment/graphify-repo-memory.md
+  - docs/sprints/_archive/SESSION_0166.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0166.md
+  - docs/sprints/_archive/SESSION_0166.md
 tags:
   - mcp
   - vercel
@@ -40,7 +40,7 @@ This runbook covers:
 - when to use MCP versus CLI
 - which MCPs are useful now
 - how browser QA is split between Playwright MCP and Chrome DevTools MCP
-- how to decide between Neon MCP and Supabase MCP
+- how database MCP access is isolated from Ronin's production Neon database
 - safety gates for cloud, payment, and database tools
 - the first install/use order for the next production smoke and provider-debug sessions
 
@@ -88,14 +88,20 @@ Checked 2026-05-14.
 | Vercel | Add Vercel MCP before the next production smoke/debug session. Use it for deployment inspection, logs, project state, and env visibility. | Scripted deploys, repeatable env commands, CI, and runbook proof. |
 | Browser QA | Use Playwright MCP for repeatable smoke flow interaction. Add Chrome DevTools MCP for console, network, trace, memory, Lighthouse, and performance debugging. | Versioned Playwright test files and CLI smoke commands. |
 | Stripe | Use Stripe MCP in test mode first for docs/API inspection and product/price/payment work. Prefer OAuth where available; otherwise restricted keys. | Webhook forwarding, fixtures, scripted setup, and CI-safe checks. |
-| Database | Decide Neon versus Supabase before installing both. Current Ronin lean: Neon first. | Prisma migrations, migration review, schema diff proof, backups, and scripted DB checks. |
+| Database | Production is already Neon. If database MCP access is needed, use Neon MCP only against a dedicated non-production branch; Supabase remains a separate future platform decision. | Prisma migrations, migration review, schema diff proof, backups, and scripted DB checks. |
 | Graphify | Keep Graphify CLI as the repo-memory default. MCPs complement provider state; Graphify remains local source navigation. | All repo graph updates and query history. |
 
 ## Ronin database call
 
-For this repo today, Neon is the cleaner default because Ronin already uses Prisma, Better Auth, Vercel, Resend, Stripe, and S3-style storage. Neon is "just Postgres" plus project, branch, query, and migration tooling, which fits the current architecture with less drift.
+Ronin production Postgres is already hosted on Neon. That production choice does **not** authorize
+agent or MCP access to production. Database MCP and cloud-development work may use only a dedicated
+non-production Neon branch. `DATABASE_URL` and `DIRECT_URL` are both required and must resolve to
+that same non-production branch.
 
-Supabase can handle the Postgres database for a future iOS app. It becomes more attractive if Ronin intentionally adopts Supabase Auth, Row Level Security, Realtime, Storage, Edge Functions, and direct mobile SDK usage. That would be a platform decision, not a drop-in database host change.
+Supabase remains relevant only as a possible future platform choice. It becomes more attractive if
+Ronin intentionally adopts Supabase Auth, Row Level Security, Realtime, Storage, Edge Functions, and
+direct mobile SDK usage. That would require its own ADR; it is not an alternative target for routine
+agent database access and is not a drop-in database-host change.
 
 Default iOS posture:
 
@@ -278,28 +284,34 @@ Rules:
 ## Database MCP decision tree
 
 ```text
-Do we want only managed Postgres for Prisma/Better Auth?
+Need database MCP access for an agent or cloud-development task?
   |
-  +-- yes --> Neon first.
+  +-- yes --> Use a dedicated non-production Neon branch only.
+  |           Require DATABASE_URL and DIRECT_URL to resolve to that branch.
   |
-  +-- no --> Do we want Supabase platform features?
-        |
-        +-- yes --> Supabase ADR before adoption.
-        |
-        +-- no --> Keep local Postgres.app + future Neon production path.
+  +-- no --> Keep Prisma CLI/runbook workflows.
+              |
+              +-- Considering Supabase platform features?
+                    |
+                    +-- yes --> Write a Supabase platform ADR before adoption.
+                    |
+                    +-- no --> Keep the ratified Postgres architecture.
 ```
 
 ```mermaid
 flowchart TD
-    A{Only managed Postgres\nfor Prisma and Better Auth?} -->|Yes| B[Neon first]
-    A -->|No| C{Adopt Supabase platform?}
-    C -->|Yes| D[Write ADR\nAuth/RLS/Realtime/Storage/iOS SDK]
-    C -->|No| E[Keep Postgres.app dev\nand Neon production path]
+    A{Need database MCP access?} -->|Yes| B[Dedicated non-production\nNeon branch only]
+    B --> C[DATABASE_URL and DIRECT_URL\nmust resolve to the same branch]
+    A -->|No| D[Keep Prisma CLI and runbook workflows]
+    D --> E{Adopt Supabase platform features?}
+    E -->|Yes| F[Write ADR\nAuth/RLS/Realtime/Storage/iOS SDK]
+    E -->|No| G[Keep ratified Postgres architecture]
 ```
 
 ### Neon MCP use
 
-Use Neon MCP only after Ronin commits to Neon for staging or production Postgres.
+Use Neon MCP only against a dedicated non-production Neon branch. Production is already on Neon,
+but production MCP access is forbidden.
 
 Good fit:
 
@@ -312,13 +324,16 @@ Guardrails:
 
 - Development and testing only.
 - Never connect MCP agents to production databases.
+- Require `DATABASE_URL` and `DIRECT_URL` to resolve to the same dedicated non-production branch.
 - Use anonymized data.
 - Human-review every requested action.
 - Keep Prisma migrations as the source of durable schema change.
 
 ### Supabase MCP use
 
-Use Supabase MCP only if Ronin chooses Supabase as more than a Postgres host.
+Supabase MCP is not enabled under the current ratified architecture. Use it only if a future ADR
+chooses Supabase as more than a Postgres host, and then only against a dedicated non-production
+project—never Ronin production.
 
 Good fit:
 
@@ -340,7 +355,7 @@ Guardrails:
 | Gate | Rule |
 | --- | --- |
 | Human confirmation | Required for every MCP that can mutate Vercel, Stripe, Neon, Supabase, or browser state tied to real accounts. |
-| Production data | DB MCPs are dev/staging or read-only only. Production DB mutation through MCP is forbidden. |
+| Production data | DB MCPs may connect only to dedicated non-production branches. Any production DB connection through MCP is forbidden, including read-only access. |
 | Secrets | No secrets in repo docs, SESSION files, project log, prompts, screenshots, or MCP transcripts. |
 | Least privilege | Prefer OAuth with scoped access. If keys are needed, use restricted keys and rotate after risky use. |
 | CI | MCP is not CI. Any release-critical proof needs CLI/test artifacts that can be repeated. |
@@ -352,15 +367,16 @@ Guardrails:
 2. Use Playwright MCP for local smoke interaction if available; keep Playwright CLI as the durable proof path.
 3. Add Chrome DevTools MCP when browser failures require console, network, trace, Lighthouse, or memory evidence.
 4. **Stripe MCP — INSTALLED (SESSION_0360):** hosted `https://mcp.stripe.com`, OAuth, user scope. Run `/mcp` to authenticate, then use for test-mode product/pricing/payment inspection. Pairs with the Stripe CLI `dahlia` verification recipe in [session-ops-cookbook](session-ops-cookbook.md).
-5. Choose Neon versus Supabase before adding a database MCP.
-6. If Neon is chosen, use Neon MCP against dev/staging branches only.
-7. If Supabase is chosen, write an ADR that covers Auth, RLS, Realtime, Storage, Edge Functions, and iOS SDK posture before enabling broad MCP access.
+5. If database MCP access is needed, create or select a dedicated non-production Neon branch.
+6. Verify `DATABASE_URL` and `DIRECT_URL` resolve to that same branch before enabling Neon MCP; never connect the MCP to production.
+7. Treat Supabase as a separate platform proposal. Write an ADR covering Auth, RLS, Realtime, Storage, Edge Functions, and iOS SDK posture before any adoption.
 
 ## Acceptance checklist
 
 - [ ] Provider endpoint is official and documented.
 - [ ] Access scope is least-privilege or OAuth-scoped.
 - [ ] Human confirmation is enabled for mutating tools.
+- [ ] Database MCP credentials target one dedicated non-production Neon branch; `DATABASE_URL` and `DIRECT_URL` resolve to that same branch, never production.
 - [ ] Real data is read-only, anonymized, or not connected.
 - [ ] CLI equivalent exists for any repeatable release proof.
 - [ ] Session evidence names whether proof came from MCP, CLI, browser, or provider dashboard.
@@ -368,7 +384,6 @@ Guardrails:
 
 ## Open decisions
 
-- Whether Ronin production Postgres is definitively Neon.
 - Whether the future iOS app should remain API-first or adopt a Supabase direct-client architecture.
 - Whether Chrome DevTools MCP should be project-local or user-global on this machine.
 - Whether Vercel MCP should be installed globally or scoped to the Ronin project.

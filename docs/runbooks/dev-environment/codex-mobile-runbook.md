@@ -4,8 +4,8 @@ slug: codex-mobile-runbook
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-06-13
-last_agent: codex-session-0375
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/dev-environment/claude-mobile-runbook.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
@@ -114,19 +114,22 @@ secrets / optional integrations / Docker-MinIO / graphify / dev-server / env-par
 [Claude Mobile Runbook → Cloud container prerequisites](claude-mobile-runbook.md#cloud-container-prerequisites-agent-agnostic).
 Codex-specific essentials:
 
-- **Database:** set `DATABASE_URL` (+ `DIRECT_URL`/`DATABASE_PUBLIC_URL`) to a hosted **Neon** branch in the
-  Codex environment — Postgres.app is local-only.
+- **Database:** set both `DATABASE_URL` and `DIRECT_URL` to the same dedicated **non-production Neon**
+  branch in the Codex environment — Postgres.app is local-only, and production must never be used.
+  If `DATABASE_PUBLIC_URL` is also configured, it must resolve to that same non-production branch.
 - **Required secrets** (`apps/web/env.ts` `min(1)`): `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
   `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_SITE_EMAIL`. Add `STRIPE_*` / `RESEND_*` / `S3_*` only if the task needs them.
 - **Codex setup script:** in the Codex Cloud env config, install deps (`bun install` / `pnpm install`),
-  `bunx prisma generate`, and apply migrations against the Neon branch so tests/build can run.
+  `bunx prisma generate`, and apply migrations against that dedicated non-production Neon branch so
+  tests/build can run.
 - **graphify:** not present in the cloud container → **defer `graphify update` to the next local session**
   and note it in the SESSION file (autonomous-sessions already encodes this).
 - **Browser/device smoke:** flagged and skipped in cloud, never faked.
 
 ### What the operator still needs to do (checklist)
 
-- [ ] Create/choose a **Neon branch** for cloud runs; capture `DATABASE_URL` / `DIRECT_URL`.
+- [ ] Create/choose a dedicated **non-production Neon branch** for cloud runs; set both `DATABASE_URL`
+      and `DIRECT_URL` to that same branch and verify neither resolves to production.
 - [ ] Put the 4 required secrets (+ any task-specific ones) into the **Codex Cloud environment** secret store.
 - [ ] Add a Codex env **setup script** (install → prisma generate → migrate → seed if needed).
 - [ ] Connect `Ronin-Dojo-Design/ronin-dojo-baseline` to Codex Cloud (GitHub app authorization).

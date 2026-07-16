@@ -4,12 +4,12 @@ slug: vercel-deploy
 type: runbook
 status: active
 created: 2026-05-20
-updated: 2026-06-27
-last_agent: claude-session-0454
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/vercel-domain-setup-runbook.md
-  - docs/runbooks/neon-advisory-lock-recovery.md
-  - docs/runbooks/dev-environment.md
+  - docs/runbooks/deploy/vercel-domain-setup-runbook.md
+  - docs/runbooks/database/neon-advisory-lock-recovery.md
+  - docs/runbooks/dev-environment/dev-environment.md
   - docs/architecture/uplift/L1-env-deploy-diff-report.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -97,7 +97,19 @@ bun scripts/check-vercel-env-parity.ts
 vercel ls
 ```
 
-Playwright specs live under `apps/web/e2e/` and should run with `bunx playwright test`, not raw `bun test`.
+Playwright specs live under `apps/web/e2e/`. Locally, provision `ronindojo_e2e`, start the guarded server,
+and use the guarded test launcher:
+
+```bash
+cd apps/web
+bun run e2e:db:setup
+bun run dev:e2e                                      # terminal 1
+bun run test:e2e:local -- <spec> --project=chromium # terminal 2
+```
+
+Do not use raw local `bunx playwright test`: its Bun child can reload the default prodsnap `.env`, and the
+suite's fixtures write/delete database rows. CI is the exception because `playwright.yml` pins both database
+URLs to its disposable Postgres service before invoking raw Playwright.
 
 `vercel ls` must show the relevant Preview and Production deployments as `Ready`. If the latest Preview deployment is `Error`, inspect it before changing runtime env/deploy behavior:
 

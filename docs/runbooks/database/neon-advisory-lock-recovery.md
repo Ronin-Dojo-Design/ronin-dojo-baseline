@@ -4,20 +4,20 @@ slug: neon-advisory-lock-recovery
 type: runbook
 status: active
 created: 2026-05-17
-updated: 2026-05-20
-last_agent: codex-session-0205
+updated: 2026-07-16
+last_agent: codex-session-0542
 use_count: 3
 pairs_with:
   - docs/protocols/failed-steps-log.md
-  - docs/runbooks/prisma-workflow.md
+  - docs/runbooks/database/prisma-workflow.md
   - docs/architecture/decisions/0017-pnpm-pre-post-scripts.md
-  - docs/runbooks/vercel-deploy.md
+  - docs/runbooks/deploy/vercel-deploy.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0189.md
-  - docs/sprints/SESSION_0199.md
-  - docs/sprints/SESSION_0200.md
-  - docs/sprints/SESSION_0201.md
+  - docs/sprints/_archive/SESSION_0189.md
+  - docs/sprints/_archive/SESSION_0199.md
+  - docs/sprints/_archive/SESSION_0200.md
+  - docs/sprints/_archive/SESSION_0201.md
 tags:
   - prisma
   - neon
@@ -97,7 +97,7 @@ Note: `72707369` is Prisma's internal lock ID for `_prisma_migrations`. It is st
 
 | Result | Meaning | Next action |
 | --- | --- | --- |
-| Zero rows | Lock already cleared (Neon's idle-connection timeout closed the dead session), or the diagnostic missed the build-time lock window. | Retrigger the deploy: push an empty commit, or hit Vercel's "Redeploy" with build cache disabled. If this repeats after SESSION_0201's `DIRECT_URL` fix, capture Vercel logs before retriggering. |
+| Zero rows | Lock already cleared (Neon's idle-connection timeout closed the dead session), or the diagnostic missed the build-time lock window. | Prefer Vercel's **Redeploy** with build cache disabled. An empty commit/push is allowed only after the operator explicitly authorizes that exact push and the FS-0024 guard passes. If this repeats after SESSION_0201's `DIRECT_URL` fix, capture Vercel logs before retriggering. |
 | One row, `state = 'idle'` | Lock is leaked — session is alive but doing nothing. | Run the surgical fix below. |
 | One row, `state` is NULL | Lock is leaked — backend gone but lock metadata still associated. | Run the surgical fix below. |
 | One row, `state = 'active'` with a recent `query_start` | A migration is actually running right now. | Wait. Do not kill it. Re-run the query in 1–2 minutes; if it is still active and not progressing, escalate. |
@@ -110,7 +110,9 @@ If a leaked lock is confirmed, release it by terminating the holding session. Yo
 SELECT pg_terminate_backend(<pid from the diagnostic query>);
 ```
 
-Then retrigger the Vercel deploy. The next `prisma migrate deploy` will acquire the lock cleanly and the build will succeed.
+Then retrigger the Vercel deploy from Vercel. If the operator instead explicitly authorizes an exact git
+push as the retrigger, run the FS-0024 guard immediately before it; no standing or prior authorization
+carries over. The next `prisma migrate deploy` should acquire the lock cleanly.
 
 ## What not to do
 
