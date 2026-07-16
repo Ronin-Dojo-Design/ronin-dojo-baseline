@@ -1,15 +1,16 @@
 ---
 title: "SESSION 0541 — belt-verification lane cleanup + hardening + promoter-as-placeholder ADR (plan-first)"
 slug: session-0541
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-15
 updated: 2026-07-15
-last_agent: claude-session-0541
+last_agent: codex-session-0542
 sprint: S12
 pairs_with:
 
   - docs/sprints/SESSION_0540.md
+  - docs/sprints/SESSION_0542.md
 backlinks:
 
   - docs/knowledge/wiki/index.md
@@ -37,6 +38,10 @@ operator's standing rule.
 ## Status
 
 Single source of truth is the frontmatter `status:` field.
+
+**Close notes:** unclean recovery — Claude hit its session limit after all five implementation commits landed
+and while Doug/Giddy/Desi were reviewing the clean committed tree. SESSION_0542 preserved those commits,
+backfilled the partial verdicts honestly, routed the open findings forward, and opened the remediation session.
 
 ## Bow-in
 
@@ -85,7 +90,8 @@ ADR 0025 (Passport-as-SoT), ADR 0036 (Passport claim), ADR 0034/0040 (platform/k
    pure FK-resolver (`resolvePromoterFk`: freetext → find-or-create placeholder → `passportId`) from the side-effect;
    keep the recruitment Lead firing on both the member AND admin belt-fact paths (operator's recruit-broadly intent);
    rename `buildFactUpdateData` → `resolveFactUpdateWithCapture` so the capture is intentional + named, not silent.
-   Recruit fires **only on freetext** (a picked registered promoter never emits a Lead). **Ledger follow-up:**
+   Recruit fires **only on freetext** (a picked registered promoter never emits a Lead). **Ledger follow-up
+   WL-P3-48:**
    "add person / add user" admin flow → promoter-lead is a SEPARATE recruitment-flywheel surface, out of scope this
    session (→ new ledger row).
 3. **Dedup precision (D-045/FINDING_03)** → **tighten matcher now (bias to duplicates) + ADR documents the tradeoff
@@ -243,26 +249,184 @@ Grill the operator BEFORE building TASK_03–08 (plan-first per standing rule). 
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0541_TASK_01 | landed | fallow cleanup: shared lead-meta-helpers (kills 53-line clone), findOwnMilestone (self-dup), dead BELT_STATUS_LABEL removed (`f0c83c48`); non-identity complexity assessed in TASK_02 |
-| SESSION_0541_TASK_02 | in-progress | `/code-quality` on 4 Class-A modules — belt-edit-card CRAP is presentational (no churn); router/promoter-placeholder/belt-gate assessed |
+| SESSION_0541_TASK_02 | blocked | Four Class-A modules were assessed, but the scored close-the-gap pass did not finish before the session limit; remediation/re-verification moves to SESSION_0542 |
 | SESSION_0541_TASK_03 | landed | ADR 0047 authored + accepted (`promoter-as-placeholder-recruited-coach-identity`) + ubiquitous-language terms |
 | SESSION_0541_TASK_04 | landed | "claimable" softened in promoter-placeholder.ts + emit-promoter-lead.ts + ubiquitous-language.md (`f0c83c48`) |
 | SESSION_0541_TASK_05 | landed | WL-P3-47: rename `resolveFactUpdateWithCapture` + resolver split + recruit-on-both intentional (`f0c83c48`) |
 | SESSION_0541_TASK_06 | landed | WL-P3-44: fold placeholder+lead emit inside the award tx, fail-closed throws inside tx (`f0c83c48`) |
-| SESSION_0541_TASK_07 | landed | WL-P3-45: accepted (ADR 0047 D3 — duplicates are the safe error, phase-2 MERGE escape) + exact-normalized dedup |
-| SESSION_0541_TASK_08 | pending | G-010 instructor review queue (full min-viable) |
-| SESSION_0541_TASK_09 | pending | WL-P3-46 join-wizard rich-belt parity |
+| SESSION_0541_TASK_07 | landed | WL-P3-45 race accepted (ADR 0047 D3 — duplicates are the safe error, phase-2 MERGE escape); matcher tightened to threshold 1, but verify found that is not strict normalized equality and the paired Lead matcher still differs (WL-P3-49) |
+| SESSION_0541_TASK_08 | landed | G-010 full min-viable `/app/belt-reviews` queue, guarded approve/dismiss actions, audit writes, sidebar registration (`031b73fa`) |
+| SESSION_0541_TASK_09 | landed | WL-P3-46 join-wizard rich-belt parity (`e6ef5ff1`) |
 | SESSION_0541_TASK_10 | landed | FINDING_06 → RankAward-retire epic task G; e2e-DB-vs-prodsnap → verification-and-testing.md; ledger rows resolved |
 
 ## What landed
 
-<!-- Filled at bow-out. -->
+- Five clean commits on `session-0541-belt-followups`, all preserved by SESSION_0542:
+  `4f1b47b2`, `f0c83c48`, `ad459a5a`, `e6ef5ff1`, and `031b73fa`.
+- Consolidated duplicated lead metadata helpers, removed dead belt status labeling, and extracted
+  `findOwnMilestone` without changing the belt-rendering contract.
+- Folded recruited-coach placeholder and Lead capture into the award transaction, made the resolver's
+  side effects explicit in its name, and applied recruitment capture to both intentional free-text paths.
+- Ratified the recruited-coach placeholder identity model in ADR 0047, updated ubiquitous language, and
+  routed the RankAward-retirement and verification-environment notes to their canonical docs.
+- Tightened placeholder dedup toward the ADR's duplicate-biased policy, added the join-wizard rich-belt picker,
+  and added the first `/app/belt-reviews` operator queue. The verify wave caught that threshold `1` is not
+  strict normalized equality; WL-P3-49 owns that incomplete implementation.
+- The full goal was not reached: the final verify/fix wave and visual proof were interrupted by the session
+  limit. Confirmed findings are carried to SESSION_0542 rather than represented as passed.
+
+## Decisions resolved
+
+- Identity, CRM capture, and award writes share one transaction; fail-closed award failure rolls back all three.
+- Free-text recruited-coach capture is intentional on member and admin paths; selecting an existing Passport
+  does not emit a recruitment Lead.
+- Provenance dedup biases toward duplicates rather than false merges; phase-2 MERGE is the documented escape.
+- G-010 was scoped as a full minimum viable review queue, not a count-only placeholder.
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `apps/web/server/belt/router.ts` | Transaction-folded fact resolution/capture and shared milestone lookup |
+| `apps/web/server/identity/promoter-placeholder.ts` | Recruited-coach placeholder matching and transaction-client support |
+| `apps/web/server/web/{lead,promoter-lead,school-lead}/**` | Shared Lead metadata helpers and intentional promoter/school capture |
+| `apps/web/server/belt/verify-rank-entry.ts` | Extracted transaction-aware verification seam for G-010 |
+| `apps/web/server/admin/rank-reviews/**` | Pending-review query, schemas, and approve/dismiss actions |
+| `apps/web/app/app/belt-reviews/**` | AdminCollection queue UI and row actions |
+| `apps/web/{components/app/sidebar.tsx,config/admin-sections*,server/orpc/roles.ts}` | Queue navigation, registration, and permission plumbing |
+| `apps/web/app/(web)/lineage/join/join-legacy-wizard/lineage-step.tsx` | Rich belt picker parity |
+| `apps/web/server/web/lineage/join-options.ts` | Belt-family/degree data for join options |
+| `docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md` | Ratified identity/capture/dedup decisions |
+| `docs/architecture/ubiquitous-language.md` | Added recruited-coach placeholder vocabulary |
+| `docs/knowledge/wiki/{drift-register,wiring-ledger}.md` | Routed and crossed off 0540 follow-ups |
+| `docs/product/black-belt-legacy/rankentry-unification-epic.md` | Added RankAward-keyed trust relocation work |
+| `docs/runbooks/dev-environment/verification-and-testing.md` | Clarified hermetic e2e DB versus prod snapshot |
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| TypeScript checks during implementation | exit 0 for the cleanup, G-010, and join-picker commits |
+| Belt + Lead focused units | 45/45 green after the transaction fold |
+| G-010 focused units | 52/52 green |
+| Giddy architecture/ADR/hostile review | PROCEED, 9.0/10; all seven SESSION_0540 findings closed; two medium implementation findings and governance notes carried forward |
+| Desi UI/design review | CONFORM-WITH-FIXES; rich-belt parity exact and AdminCollection primitives reused; three medium queue-polish findings carried forward |
+| Doug release/data-integrity verdict | Not returned before the session limit; no GO is claimed |
+
+## Open decisions / blockers
+
+- **Data coherence:** placeholder dedup and paired Lead dedup use different semantics; the shared strict-normalized
+  identity rule and adversarial tests must be completed before release.
+- **Server boundary:** `verifyRankEntryInTransaction` is exported from a `"use server"` module; move the
+  transaction helper to an `import "server-only"` core module.
+- **Review semantics:** existing lineage documentation says a promoter change is a proposal that leaves the
+  prior promoter active until approval, while the landed implementation mutates immediately and verifies later.
+  SESSION_0542 must grill and ratify one model before changing schema/actions/UI.
+- **Queue conformance:** align G-010 with ADR 0045's row → detail → canonical action/editor law; link the member,
+  remove the constant reason column, and require confirmation for irreversible approval.
+- **Release proof:** add fail-closed rollback, stale/concurrent review-action, and reason-guard tests; then run the
+  full gates and publish mobile-width visual proof. No push authorization has been given.
 
 ## Next session
 
 ### Goal
 
-<!-- Filled at bow-out. -->
+Recover the interrupted close, resolve the promoter-change review semantics, remediate the verified
+data-integrity/server-boundary/AdminCollection findings, and produce full code + visual evidence while holding
+at the explicit push gate.
+
+### Inputs to read
+
+- `docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md`
+- `docs/architecture/decisions/0045-admin-collection-one-surface-law.md`
+- `docs/product/black-belt-legacy/lineage-data-wiring-flow.md`
+- `apps/web/server/{identity/promoter-placeholder.ts,web/promoter-lead/emit-promoter-lead.ts}`
+- `apps/web/server/admin/rank-reviews/**` and `apps/web/app/app/belt-reviews/**`
 
 ### First task
 
-<!-- Filled at bow-out. -->
+Run `/grill-with-docs` on the concrete A→B promoter-change scenario and lock whether B is an immutable pending
+proposal or an immediately active unverified assertion. Only then plan the minimum schema/action/UI delta and
+write regression tests first.
+
+## Review log
+
+### SESSION_0541_REVIEW_01 — interrupted verify wave
+
+- **Reviewed tasks:** SESSION_0541_TASK_01–10
+- **Dirstarter docs check:** cached Prisma/Auth/AdminCollection docs sufficient for the committed diff
+- **Verdict:** Giddy PROCEED 9.0 and Desi CONFORM-WITH-FIXES; Doug did not return before interruption. The
+  branch is coherent enough to preserve, but not release-ready until the carried medium findings are fixed.
+- **Score:** incomplete — no aggregate score without Doug
+- **Follow-up:** SESSION_0542 owns WL-P3-49–52, D-046, full gates, and visual proof.
+
+## Hostile close review
+
+- **Giddy:** proceed 9.0/10; confirmed 0540 closure, found matcher asymmetry and an exposed server helper.
+- **Doug:** incomplete — reviewer did not return before session limit.
+- **Desi:** conform-with-fixes; member inspection, irreversible-action confirmation, and column economy required.
+- **Kaizen aggregate:** not scored — the verification wave was incomplete.
+
+### Findings (severity ≥ medium)
+
+#### SESSION_0541_FINDING_01 — paired placeholder and Lead matching disagree
+
+- **Severity:** medium
+- **Task:** SESSION_0541_TASK_07
+- **Evidence:** `apps/web/server/identity/promoter-placeholder.ts`; `apps/web/server/web/promoter-lead/emit-promoter-lead.ts`
+- **Impact:** near-miss coach names can mint separate Passports while collapsing into one Lead whose
+  `meta.passportId` changes.
+- **Required follow-up:** WL-P3-49 — use one strict normalized identity rule and add adversarial tests.
+- **Status:** open
+
+#### SESSION_0541_FINDING_02 — transaction helper crosses the Server Action boundary
+
+- **Severity:** medium
+- **Task:** SESSION_0541_TASK_08
+- **Evidence:** `apps/web/server/belt/verify-rank-entry.ts`
+- **Impact:** a transaction-only helper is exported from a `"use server"` module and is client-callable by shape.
+- **Required follow-up:** WL-P3-50 — move it to a server-only core module and retain only authenticated action
+  exports.
+- **Status:** open
+
+#### SESSION_0541_FINDING_03 — queue lacks canonical inspect-before-decide flow
+
+- **Severity:** medium
+- **Task:** SESSION_0541_TASK_08
+- **Evidence:** `apps/web/app/app/belt-reviews/**`; ADR 0045
+- **Impact:** reviewers can irreversibly approve a credential from an inline row without inspecting the member
+  or confirming the decision.
+- **Required follow-up:** WL-P3-52 — align to row → detail → canonical action/editor and simplify list columns.
+- **Status:** open
+
+## ADR / ubiquitous-language check
+
+- ADR update required: ADR 0047 must clarify transaction-coupling/unbounded-scan tradeoffs and the admin/member
+  trust-path distinction; promoter-change proposal semantics require ratification after the 0542 grill.
+- Ubiquitous-language update required: remove residual `claimable` terminology and keep
+  **recruited-coach placeholder** canonical.
+
+## Reflections
+
+The implementation commits were cleanly split, which made the interrupted session recoverable without guessing
+or scraping an uncommitted tree. The session record itself lagged the commits, so commit evidence—not task-table
+status—was the reliable recovery source.
+
+The verify wave did its job: the first-order 0540 issues closed, then second-order coherence and review-safety
+issues surfaced. Closing honestly here means preserving that progress while refusing to convert partial review
+into a release verdict.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0541 status/metadata repaired by codex-session-0542 |
+| Backlinks/index sweep | SESSION_0540/0541/0542 entries repaired/added in `wiki/index.md` |
+| Wiki lint | exit 0; 53 pre-existing formatting warnings, none introduced by recovery |
+| Kaizen reflection | two recovery reflections above |
+| Hostile close review | partial Giddy + Desi verdicts recorded; Doug explicitly incomplete |
+| Review & Recommend | SESSION_0542 goal, inputs, and first task written |
+| Memory sweep | no operator-memory change; durable findings live in this handoff and 0542 |
+| Next session unblock check | one operator domain decision is the first task; no code starts before it |
+| Git hygiene | five clean commits preserved on `session-0542-belt-review-remediation`; recovery docs committed separately; no push |
+| Graphify update | canonical graph available at recovery: 17,308 nodes / 33,940 edges / 2,277 communities |

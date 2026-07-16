@@ -4,13 +4,14 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-12
-last_agent: claude-session-0529
+updated: 2026-07-16
+last_agent: codex-session-0542
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/SESSION_0017.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0542.md
 ---
 
 # Drift Register
@@ -635,5 +636,21 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   exact-normalized dedup + phase-2 admin MERGE escape (D3), the identity+CRM transactional boundary (D4/WL-P3-44),
   and the honest-rename admin-path policy (D5/WL-P3-47). "Claimable" softened → "recruited-coach placeholder (claim
   door = phase-2)" in `promoter-placeholder.ts` + `emit-promoter-lead.ts` + `ubiquitous-language.md` (FINDING_01).
-  Dedup tightened to exact-normalized (FINDING_03, `f0c83c48`). RankAward-keyed trust logic logged to the
-  RankAward-retire epic task G (FINDING_06, D6). Remaining: G-010 review queue + the phase-2 confirm/merge loop.
+  The matcher was tightened to token-Dice threshold `1` under the exact-normalized intent, but SESSION_0542
+  confirmed that token reorder/repetition can still score `1` and the paired Lead matcher remains at `0.9`;
+  WL-P3-49 owns the implementation correction without reopening ADR 0047 D3. RankAward-keyed trust logic was
+  logged to the RankAward-retire epic task G (FINDING_06, D6). Remaining: the phase-2 confirm/merge loop.
+
+### D-046 — Promoter-change review semantics disagree between domain flow and implementation
+
+- **Source A:** `docs/product/black-belt-legacy/lineage-data-wiring-flow.md` says a promoter/school edit creates
+  a pending proposal while preserving the current active RankEntry; APPROVED applies the proposal and DENIED
+  retains the prior value.
+- **Source B:** the SESSION_0540/0541 implementation writes the changed promoter onto the award/entry immediately
+  as UNVERIFIED; approval verifies that mutable current value, while denial leaves it active but unverified.
+- **Risk:** a member can replace provenance before review, and a reviewer can approve a different promoter from
+  the one inspected. UI language and action atomicity cannot be made honest while both models remain plausible.
+- **Decision needed:** operator grill in SESSION_0542. Recommendation: preserve the prior promoter while an
+  immutable proposed promoter is pending, then apply only on approval; this matches the existing domain flow and
+  keeps unreviewed provenance out of the active graph.
+- **Status: OPEN — BLOCKED ON USER** (SESSION_0542 first decision; implement through WL-P3-51 after ratification).

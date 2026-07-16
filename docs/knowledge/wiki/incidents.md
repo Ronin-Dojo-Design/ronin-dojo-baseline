@@ -4,7 +4,8 @@ slug: incidents
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-05-04
+updated: 2026-07-16
+last_agent: codex-session-0542
 ---
 
 # Incidents Log
@@ -27,3 +28,6 @@ See [closing ritual — unclean close recovery](../../rituals/closing.md#unclean
 | 2026-05-04 | SESSION_0067 | unclean-close | Body marked `closed-quick` but frontmatter never matched | Set frontmatter + body status to `closed-unclean` in SESSION_0073 | SESSION_0073 |
 | 2026-05-04 | SESSION_0068 | unclean-close | Body marked `closed-quick` but frontmatter never matched | Set frontmatter + body status to `closed-unclean` in SESSION_0073 | SESSION_0073 |
 | 2026-05-04 | Pattern: 0061-0072 | governance-debt | Five sessions in 12-session window had frontmatter status drift from body intent. Root cause: bow-out steps written manually, frontmatter field treated as separate from body Status | Established habit: SESSION close must update frontmatter + body Status atomically. Add to closing.md step 2. | SESSION_0073 |
+| 2026-07-15 | SESSION_0538 | unclean-close | Implementation, verification, PR #207, and full close evidence were complete, but frontmatter remained `in-progress` after the session ended | Set status to `closed`, added an explicit recovery note, confirmed the existing closed wiki-index entry, and preserved the shipped record | SESSION_0542 |
+| 2026-07-15 | SESSION_0540 | unclean-close | Implementation and hostile close were complete and PR #209 later merged, but frontmatter remained `in-progress` | Set status to `closed`, updated merged/ledger evidence, added a recovery note, and restored wiki discoverability | SESSION_0542 |
+| 2026-07-15 | SESSION_0541 | unclean-close | Claude hit its session limit after five clean commits landed and while the Doug/Giddy/Desi verify wave was running | Proved no source edits were lost, preserved the five-commit branch, backfilled partial verdicts/findings, closed the session honestly, and opened SESSION_0542 for remediation | SESSION_0542 |

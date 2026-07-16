@@ -2,14 +2,15 @@
 title: "SESSION 0540 — belt-lane cleanup + design pass, then FI-006 claim→award rank lifecycle (plan-first)"
 slug: session-0540
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-15
 updated: 2026-07-15
-last_agent: claude-session-0540
+last_agent: codex-session-0542
 sprint: S12
 pairs_with:
 
   - docs/sprints/SESSION_0539.md
+  - docs/sprints/SESSION_0542.md
 backlinks:
 
   - docs/knowledge/wiki/index.md
@@ -37,6 +38,10 @@ shipped, plan-first with an operator grill on the open forks.
 ## Status
 
 Single source of truth is the frontmatter `status:` field.
+
+**Close notes:** unclean recovery — the implementation and hostile-close record were complete, and PR #209
+subsequently merged, but the frontmatter status remained `in-progress`. SESSION_0542 repaired the status,
+recorded the merged state, and logged the incident.
 
 ## Bow-in
 
@@ -351,5 +356,5 @@ In order (operator-set at bow-out):
 | Hostile close review | Giddy SESSION_0540_REVIEW_03 (dispatched) |
 | ADR check | promoter-as-placeholder ADR required (next session) |
 | Memory sweep | mobile-artifact-review + e2e-provisioning lessons (below) |
-| Git hygiene | branch `session-0540-belt-fi006`, 7 commits, PR #209; **merge held for operator go** |
-| Ledger routing | pending (WL/D/GL rows below) |
+| Git hygiene | branch `session-0540-belt-fi006`, 7 commits; PR #209 merged before SESSION_0541 bow-in |
+| Ledger routing | completed by SESSION_0541 (`ad459a5a`): WL/D/epic rows updated |

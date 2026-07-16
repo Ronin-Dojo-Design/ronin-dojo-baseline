@@ -4,8 +4,8 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-07-14
-last_agent: claude-session-0537
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0347.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/knowledge/wiki/custom-component-inventory.md
   - docs/sprints/SESSION_0509.md
   - docs/sprints/SESSION_0519.md
+  - docs/sprints/SESSION_0542.md
 ---
 
 # Wiring Ledger — not-done, gaps, and handroll slips
@@ -200,6 +201,28 @@ follow-ups, not silent nulls.
   belt path) is the flywheel-consistency follow-up the operator raised in the SESSION_0541 grill (ADR 0047
   Consequences). Scope: on admin add-person / add-user with a free-typed (non-registry) name, optionally emit a
   deduped promoter/person lead. P3, out of the SESSION_0541 identity lane. (Operator, SESSION_0541.)
+- **WL-P3-49** — recruited-coach Passport matching and paired promoter-Lead matching disagree:
+  `promoter-placeholder.ts` passes threshold `1` to token-Dice `fuzzyMatchSchool`, while
+  `emit-promoter-lead.ts` uses the default `0.9`. Near-miss names can therefore mint two Passports but collapse
+  into one Lead whose `meta.passportId` changes. Threshold `1` is also not strict normalized equality because
+  token reorder/repetition can score `1`. Replace both with one strict `normalizeSchoolName(a) ===
+  normalizeSchoolName(b)` identity rule and pin typo, reorder/repetition, punctuation/case, and diacritic tests.
+  (SESSION_0541_FINDING_01; confirmed SESSION_0542.)
+- **WL-P3-50** — `verifyRankEntryInTransaction` is exported from
+  `apps/web/server/belt/verify-rank-entry.ts`, a `"use server"` module. It is transaction-only core logic, not
+  an authenticated Server Action, and should not be in the client-callable action export set. Move the helper and
+  its transaction type to an `import "server-only"` core module; keep only safe/authenticated action exports in
+  the action module. (SESSION_0541_FINDING_02; confirmed SESSION_0542.)
+- **WL-P3-51** — G-010 review decisions use read-then-update rather than an atomic claim. Concurrent approve/deny
+  can both act on one PENDING row, and the action does not constrain `reason: PROMOTER_CHANGED`. The current row
+  also carries no immutable expected proposal, so approval can verify a promoter value changed after the reviewer
+  loaded it. Add a PENDING+reason+expected-proposal conditional transition, require exactly one claimed row before
+  applying the credential change, and test concurrent/stale/wrong-reason cases. (SESSION_0542 integrity audit.)
+- **WL-P3-52** — `/app/belt-reviews` permits inline irreversible approve/dismiss without the ADR 0045
+  row→detail→canonical action/editor flow. The member cell is not inspectable, the constant reason column consumes
+  mobile space, and approval has no confirmation. Link the row to a review detail, link the member there, remove
+  the constant reason column, use canonical **Deny**, and require an explicit irreversible approval confirmation.
+  (SESSION_0541_FINDING_03; Desi + SESSION_0542 conformance audit.)
 
 ## localStorage / sessionStorage gaps
 
