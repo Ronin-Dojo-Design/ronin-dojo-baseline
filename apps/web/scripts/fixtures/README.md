@@ -26,7 +26,7 @@ Dates exercise both formats the parser must handle: ISO `2009-07-08` and long-fo
 ```bash
 # 1. local Postgres + migrations applied (includes the Phase 1 currentResidence migration)
 export DATABASE_URL="postgresql://brianscott@localhost:5432/ronindojo_dev"
-bun run db:migrate deploy
+bun run db:migrate:deploy
 
 # 2. seed the roster (creates the bbl-lineage tree + accountless Passports the enricher matches)
 SKIP_ENV_VALIDATION=1 bun run scripts/import-bbl-members-full.ts        # uses /tmp/bbl-export/reconciled.json

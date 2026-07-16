@@ -1,5 +1,5 @@
 /**
- * FS-0031 (SESSION_0534) — launch the LOCAL e2e dev server against the seeded `ronindojo_e2e` DB.
+ * FS-0031 (SESSION_0534) — launch the LOCAL e2e dev server against the CI-minimal `ronindojo_e2e` DB.
  *
  * WHY this exists instead of `bun --env-file=.env.e2e next dev --turbo`: that form runs `next` under
  * the BUN runtime, which injects a bun loader into child processes' `NODE_OPTIONS`. Turbopack's
@@ -36,10 +36,20 @@ delete process.env.DIRECT_URL
 // Load the e2e env into THIS process's env WITHOUT a bun `--env-file` hop (no NODE_OPTIONS injection).
 process.loadEnvFile(envPath)
 
-if (!/ronindojo_e2e/.test(process.env.DATABASE_URL ?? "")) {
+const localE2eDatabaseName = "ronindojo_e2e"
+const databaseName = raw => {
+  try {
+    return decodeURIComponent(new URL(raw).pathname.replace(/^\//, ""))
+  } catch {
+    return null
+  }
+}
+const databaseTarget = databaseName(process.env.DATABASE_URL)
+const directTarget = databaseName(process.env.DIRECT_URL)
+if (databaseTarget !== localE2eDatabaseName || directTarget !== localE2eDatabaseName) {
   console.error(
-    `✗ Refusing to start: DATABASE_URL is not the e2e DB (got ${process.env.DATABASE_URL ?? "<unset>"}). ` +
-      "Point .env.e2e at ronindojo_e2e.",
+    `✗ Refusing to start: both .env.e2e URLs must name the literal ${localE2eDatabaseName} database ` +
+      `(got DATABASE_URL=${databaseTarget ?? "<invalid>"}, DIRECT_URL=${directTarget ?? "<invalid>"}).`,
   )
   process.exit(1)
 }

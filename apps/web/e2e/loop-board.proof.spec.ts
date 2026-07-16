@@ -1,13 +1,14 @@
 /**
  * SESSION_0461 (G-003) — loop-board Phase B proof: the board is now EDITABLE + DB-backed, and the
  * retired localStorage AdminTaskBoard migrates into it. Local-only (hits live GitHub `main` for the
- * ledger sync + writes `KanbanCard` rows to the local prodsnap); not a deterministic CI gate.
- * Run on demand: `PW_BASE_URL=http://localhost:PORT bunx playwright test e2e/loop-board.proof.spec.ts`.
+ * ledger sync + writes `KanbanCard` rows to disposable `ronindojo_e2e`); not a deterministic CI gate.
+ * Run `bun run dev:e2e` in terminal 1, then in terminal 2:
+ * `bun run test:e2e:local -- e2e/loop-board.proof.spec.ts --project=chromium`.
  */
 import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser } from "./helpers/auth"
 
-test.skip(!!process.env.CI, "proof hits live GitHub main + writes the local DB — local-only")
+test.skip(!!process.env.CI, "proof hits live GitHub main + writes the E2E DB — local-only")
 
 // Run serially (shared board / configId) so the two specs don't race on the same rows.
 test.describe.configure({ mode: "serial" })

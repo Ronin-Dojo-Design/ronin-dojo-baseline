@@ -13,8 +13,9 @@
  *   - Member-B: showRanks=false  → case under test (rank text must NOT render)
  *
  * Run independently:
- *   cd apps/web && bunx playwright test \
- *     e2e/lineage/public-rank-redaction.spec.ts --project=chromium
+ *   cd apps/web
+ *   bun run dev:e2e
+ *   bun run test:e2e:local -- e2e/lineage/public-rank-redaction.spec.ts --project=chromium
  */
 import { expect, test } from "@playwright/test"
 import { createAuthenticatedSession } from "../helpers/auth"

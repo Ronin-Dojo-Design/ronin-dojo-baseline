@@ -2,8 +2,8 @@
  * FS-0031 guard — block shipping an `apps/web/e2e/**`-touching diff without evidence the affected
  * spec was actually RUN locally. FS-0031 was three consecutive red-`main` pushes because new
  * Playwright assertions were shipped "verified by inspection" — the suite couldn't be run locally
- * as-configured. The corrective fix is a small seeded e2e DB (`scripts/setup-e2e-db.ts`) PLUS this
- * evidence gate.
+ * as-configured. The corrective fix is a small CI-minimal e2e DB (`scripts/setup-e2e-db.ts`) PLUS
+ * this evidence gate.
  *
  * NOT a git hook. Run it at bow-out / pre-push (see docs/rituals/closing.md). You MAY wire a local
  * pre-push hook yourself that calls it, but this repo does not install one (supply-chain caution).
@@ -29,7 +29,7 @@ FS-0031 — never land a new/changed e2e assertion without running the affected 
 Recipe (sidesteps the FS-0002-banned \`bun dev\` + the heavy prodsnap tx-timeout):
 
   cd apps/web
-  bun run e2e:db:setup                                  # small seeded ronindojo_e2e (idempotent)
+  bun run e2e:db:setup                                  # CI-minimal ronindojo_e2e (idempotent)
   bun run dev:e2e &                                     # loadEnvFile launcher — NOT \`bun --env-file next dev\` (poisons Turbopack's PostCSS worker; FS-0031)
   bun run test:e2e:local -- <spec> --project=chromium   # runs + writes .e2e-run-evidence.json
 
