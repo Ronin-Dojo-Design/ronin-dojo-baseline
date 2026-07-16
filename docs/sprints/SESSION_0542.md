@@ -395,10 +395,22 @@ None. The proposal, one-pending, and explicit-admin-override rules are locked.
 
 ## Next session
 
+### Post-close publication update
+
+- Brian authorized one explicit push on 2026-07-16. The nine SESSION_0541/0542 commits were pushed to
+  `session-0542-belt-review-remediation`, and draft PR
+  [#210](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/210) is open against `main`.
+- At the first post-push snapshot, typecheck, Oxc lint/format, Bun units, CodeRabbit, and Vercel were green; the
+  three Playwright browser jobs were still running. SESSION_0543 must read the live PR state rather than rely on
+  this snapshot.
+- That authorization is spent. No merge, deploy, or additional push is authorized; each new push still requires
+  Brian's separate explicit go.
+
 ### Goal
 
-Publish and observe the verified SESSION_0542 expand release, then schedule the WL-P1-9 contract only after old
-writers have drained.
+Make PR #210 merge-ready through the ordered review, hostile-close, fallow, and code-quality passes; hold at the
+merge and new-push gates; then select and route the architecture findings below. After the expand release is
+actually deployed and old writers drain, schedule WL-P1-9 as a separate contract deploy.
 
 ### Inputs to read
 
@@ -408,12 +420,83 @@ writers have drained.
 - `docs/runbooks/database/schema-migration.md`
 - `docs/runbooks/dev-environment/verification-and-testing.md`
 - `docs/knowledge/wiki/drift-register.md` (D-047)
+- `.claude/skills/pr-fix-loop/SKILL.md` + `docs/protocols/pr-review-score-fix-loop.md`
+- `docs/protocols/hostile-close-review.md`
+- `.claude/skills/fallow-fix-loop/SKILL.md`
+- `.claude/skills/code-quality/SKILL.md` + `docs/protocols/code-quality-matrix.md`
+- `/tmp/architecture-review-20260716-113052.html` (visual architecture report; durable findings are copied below)
+
+### Preloaded task order for SESSION_0543
+
+This is a handoff only. SESSION_0542 did **not** bow in or begin SESSION_0543; the fresh local session must perform
+the normal opening ritual, create its own session record, and copy these tasks forward in this order.
+
+#### SESSION_0543_TASK_01 — PR review → score → fix loop on PR #210
+
+- **Workflow:** use the repository's canonical `/pr-fix-loop` plus
+  `docs/protocols/pr-review-score-fix-loop.md` (the operator's “/pr-review-fix” wording refers to this one
+  workflow, not a second loop).
+- **What:** refresh every check, review, and comment on PR #210; read every red check; run the Cody/Doug/Giddy
+  lenses (+ Desi for the UI); score the result; and apply only confirmed fixes on the PR branch.
+- **Done means:** `READY (pending operator go)` or `KEEP_AS_IS — <named blocker>` is recorded. Never merge, and
+  never push a new fix commit without a fresh explicit authorization.
+
+#### SESSION_0543_TASK_02 — Hostile-close residual audit
+
+- **What:** rerun the hostile-close questions on the live PR head and reconcile every SESSION_0542 residual.
+- **Required routing:** WL-P1-9 stays blocked until the expand deploy is live and old writers drain; D-047 stays a
+  backup-first, scratch-proven local-data operation; WL-P2-51 remains the pre-existing hydration fix; the 61
+  Graphify ghost nodes remain tool-index debt until a supported prune exists. Do not convert any of these into an
+  unreviewed code or data mutation.
+- **Done means:** every newly confirmed finding is fixed, explicitly accepted, or routed to its existing owner;
+  no hostile-close debt is silently buried.
+
+#### SESSION_0543_TASK_03 — `/fallow-fix-loop` on the PR diff
+
+- **What:** baseline `origin/main...HEAD`, classify introduced versus inherited findings, run the multi-angle
+  review, fix confirmed PR-owned debt, reverify behavior, and remeasure.
+- **Done means:** no introduced dead code or duplication remains without an accepted reason; CRAP/complexity is
+  no worse; touched behavior is rendered and proven; the before→after fallow delta is recorded.
+
+#### SESSION_0543_TASK_04 — `/code-quality` matrix on the PR diff
+
+- **What:** score the promoter workflow, belt-review queue, and database-safety work as separate units against
+  `code-quality-matrix` D1–D7; apply its caps; fix the smallest confirmed gaps without behavior regression; then
+  reverify and rescore.
+- **Done means:** each unit has an evidence-backed composite and Apple/Facebook verdict; every sub-9.5 gap is
+  fixed or routed, and the headless/runtime proof is current.
+
+#### SESSION_0543_TASK_05 — Select and route the architecture deepening candidate
+
+- **What:** use the completed `$improve-codebase-architecture` report; do not rerun the scan unless the PR head
+  materially changes. Grill the selected direction before proposing an Interface or changing the Goals Ledger.
+- **Done means:** Brian selects a direction, and the fresh session either writes the correctly scoped ledger row
+  or records why no goals-ledger change is warranted.
+
+Architecture shortlist from the SESSION_0542 read-only scan:
+
+1. **Deep RankEntry Module — STRONG, goals projection.** Add a Goals Ledger projection that points to the existing
+   `rankentry-unification-epic.md` rather than duplicating its plan. It is explicitly post-G-001/FI-001. The
+   deletion test is decisive: RankAward remains named in 44 non-test/non-script TS/TSX files, and the epic owns
+   the compatibility writers and destructive sequence.
+2. **Count-neutral DB verification Module — STRONG, genuinely new goal candidate.** Seventy-one DB-backed tests
+   own asynchronous teardown, 36 use tag/prefix cleanup, and six copy the same rollback Implementation. The
+   SESSION_0542 leaks and D-047 prove the missing Locality; transaction rollback and tagged cleanup are real
+   Adapters. Keep historical D-047 cleanup separate from this recurring verification goal.
+3. **Canonical promoter lock-law Module — STRONG, fold under item 1 or the quality lanes.**
+   `promoter-proposal-core.ts:54-189` and `repoint-promoter-identity.ts:54-129` separately implement the one
+   ADR 0047 Passport→Award→Review law. This passes the deletion test but is not a separate goal.
+4. **Effective database-target policy Module — MODERATE–STRONG, attach to G-002 or a wiring row.**
+   `e2e-db-env.ts`, `seed-target-guard.ts`, and `run-e2e-dev.mjs` repeat target parsing/policy, while ten Node↔Bun
+   E2E bridge pairs repeat the execution Seam. It has real Leverage but a new goal would overlap G-002.
+5. **Promoter-review state Module — MEDIUM, `/code-quality` or `/fallow-fix-loop`.** Open/captured/actionable/
+   legacy meanings repeat across write, query, list, and detail Implementations. It passes the deletion test but
+   is too small for the Goals Ledger.
 
 ### First task
 
-After Brian gives the separate explicit push authorization, push the local concern-split commits, monitor CI and
-the Vercel expand migration/application activation, and record the deployed writer version before beginning the
-old-writer drain window. Do not run WL-P1-9 in the same deployment.
+Run `gh pr view 210` and begin `SESSION_0543_TASK_01` on the live PR state. Do not merge, deploy, execute WL-P1-9,
+clean D-047 rows, or push another commit without the applicable gate and Brian's explicit authorization.
 
 ## Review log
 
