@@ -74,6 +74,22 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
 }
 
 /**
+ * Find a milestone the acting member OWNS (its award's `passportId` === the ownership root), or
+ * throw NOT_FOUND. The shared ownership gate for the attach / detach media handlers — a caller can
+ * never reach another member's milestone.
+ */
+async function findOwnMilestone(passportId: string, rankMilestoneId: string) {
+  const milestone = await db.rankMilestone.findUnique({
+    where: { id: rankMilestoneId },
+    select: { id: true, rankAward: { select: { id: true, passportId: true } } },
+  })
+  if (!milestone || milestone.rankAward.passportId !== passportId) {
+    throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
+  }
+  return milestone
+}
+
+/**
  * `upsertBeltMilestone(rankId, { story })` — ensure the member's backfill
  * `RankAward` for `rankId` exists, then upsert its 1:1 `RankMilestone`. Returns
  * the enriched card.
@@ -168,14 +184,27 @@ type FactUpdateData = {
   organizationId?: string | null
 }
 
+/** Prisma surface the capture needs — the award `$transaction` client threads through here. */
+type FactCaptureTx = Pick<typeof db, "passport" | "organization" | "lead" | "leadFollowUp">
+
 /**
- * Resolve a fact-edit input into a partial `RankAward` update — undefined keys
- * leave the column untouched; `rankId` is deliberately never in this object. The
- * ONE persistence seam for BOTH the member and the admin fact paths (SESSION_0501
- * — the ref semantics must never fork): promoter/school each accept a typed FK OR
- * freetext; a freetext school additionally emits a deduped school-outreach lead.
+ * Resolve a fact-edit input into a partial `RankAward` update AND capture the recruitment
+ * side-effects (SESSION_0541 rename — was the misleadingly-named `buildFactUpdateData`; the
+ * "capture" is now explicit in the name, FINDING_02). Undefined keys leave the column untouched;
+ * `rankId` is deliberately never in this object. The ONE persistence seam for BOTH the member and
+ * the admin fact paths (SESSION_0501 — the ref semantics must never fork).
+ *
+ * Runs on the caller's award `tx` (WL-P3-44): a freetext promoter/school mints its placeholder +
+ * emits its deduped recruitment `Lead` INSIDE the award transaction, so a fill-once fail-closed
+ * rolls the capture back with the award (no orphan stub). Identity resolution
+ * (`ensurePromoterPlaceholder`) is split from the CRM emit (`emitPromoterLead`); both fire on the
+ * member AND admin paths on FREETEXT only — a picked, registered promoter/school never recruits
+ * (operator decision SESSION_0541: recruit broadly, but only on a genuinely new free-typed name).
  */
-async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateData> {
+async function resolveFactUpdateWithCapture(
+  tx: FactCaptureTx,
+  input: FactUpdateInput,
+): Promise<FactUpdateData> {
   const data: FactUpdateData = {}
 
   if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
@@ -186,7 +215,7 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
       // by passport). Verify it still exists — the option list is cached, so a stale or
       // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
       // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
-      const promoterPassport = await db.passport.findUnique({
+      const promoterPassport = await tx.passport.findUnique({
         where: { id: input.promoter.awardedByPassportId },
         select: { id: true },
       })
@@ -201,22 +230,25 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
     } else {
       const name = input.promoter?.name?.trim() || null
       if (name) {
-        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model):
-        //  1. IDENTITY — find-or-create a claimable placeholder Passport (mirrors the claim/import
-        //     placeholder machinery) and point the award FK at it, so the promoter sits on the
-        //     identity graph and can later claim their Passport (phase-2 confirm loop). The typed
-        //     name also rides `notes` (the card + editor prefill read it).
+        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model),
+        // both inside the award tx (WL-P3-44):
+        //  1. IDENTITY — find-or-create a recruited-coach placeholder Passport (claim door = phase-2,
+        //     D-045) and point the award FK at it, so the promoter sits on the identity graph. The
+        //     typed name also rides `notes` (the card + editor prefill read it).
         //  2. PIPELINE — emit a deduped recruitment `Lead` (the PERSON mirror of the freetext-school
         //     lead) so the coach enters the outreach / CRM funnel, LINKED to that placeholder via
         //     `meta.passportId`. Never sends outreach; the invite is an operator click.
-        const placeholder = await ensurePromoterPlaceholder(name)
+        const placeholder = await ensurePromoterPlaceholder(name, tx)
         data.awardedByPassportId = placeholder?.passportId ?? null
         data.notes = name
-        await emitPromoterLead({
-          promoterName: name,
-          source: "belt-journey",
-          passportId: placeholder?.passportId ?? null,
-        })
+        await emitPromoterLead(
+          {
+            promoterName: name,
+            source: "belt-journey",
+            passportId: placeholder?.passportId ?? null,
+          },
+          tx,
+        )
       } else {
         // Clearing the promoter.
         data.awardedByPassportId = null
@@ -229,7 +261,7 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
     if (input.school?.organizationId) {
       // Same guard as the promoter: the school option list is cached too, so a school
       // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
-      const org = await db.organization.findUnique({
+      const org = await tx.organization.findUnique({
         where: { id: input.school.organizationId },
         select: { id: true },
       })
@@ -250,11 +282,10 @@ async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateDa
       // country (Locked #7) belongs to the school, so it rides here → sets the
       // placeholder Organization.country (ignored on a registered-org pick).
       if (schoolName) {
-        await emitSchoolLead({
-          schoolName,
-          source: "belt-journey",
-          country: input.school?.country ?? null,
-        })
+        await emitSchoolLead(
+          { schoolName, source: "belt-journey", country: input.school?.country ?? null },
+          tx,
+        )
       }
     }
   }
@@ -459,44 +490,50 @@ const updateRankAwardFact = beltProcedure
       })
     }
 
-    const data = await buildFactUpdateData(input)
-    if (reason === "SELF_BACKFILL") {
-      // Self-added backfill: full overwrite is the ratified semantics — the owner
-      // racing themselves is harmless, so the unconditional write stands.
-      await db.$transaction(async tx => {
-        await tx.rankAward.update({ where: { id: award.id }, data })
-        await syncRankEntryFromAward(tx, award.id)
-      })
-    } else {
-      // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
-      // read-checked emptiness, but a concurrent fill (or an admin write landing in the
-      // read→write window) could otherwise be overwritten. The write itself re-asserts
-      // per-fact emptiness atomically — a raced fill matches 0 rows and fails CLOSED.
-      // (Prisma can't express the gate's trim() blank-check, so whitespace-only
-      // freetext also fails closed here — the safe direction, and unreachable via our
-      // own writers, which always trim-or-null.)
-      const stillEmpty = requestedFactKeys(input).map(key =>
-        key === "awardedAt"
-          ? { awardedAt: null }
-          : key === "promoter"
-            ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
-            : { organizationId: null, OR: [{ location: null }, { location: "" }] },
-      )
-      const written = await db.$transaction(async tx => {
+    await db.$transaction(
+      async tx => {
+        // Resolve the fact-update + capture any freetext promoter/school (placeholder + lead)
+        // INSIDE this tx (WL-P3-44): a fill-once fail-closed below rolls the capture back too.
+        const data = await resolveFactUpdateWithCapture(tx, input)
+
+        if (reason === "SELF_BACKFILL") {
+          // Self-added backfill: full overwrite is the ratified semantics — the owner
+          // racing themselves is harmless, so the unconditional write stands.
+          await tx.rankAward.update({ where: { id: award.id }, data })
+          await syncRankEntryFromAward(tx, award.id)
+          return
+        }
+
+        // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
+        // read-checked emptiness, but a concurrent fill (or an admin write landing in the
+        // read→write window) could otherwise be overwritten. The write itself re-asserts
+        // per-fact emptiness atomically — a raced fill matches 0 rows and fails CLOSED.
+        // (Prisma can't express the gate's trim() blank-check, so whitespace-only
+        // freetext also fails closed here — the safe direction, and unreachable via our
+        // own writers, which always trim-or-null.)
+        const stillEmpty = requestedFactKeys(input).map(key =>
+          key === "awardedAt"
+            ? { awardedAt: null }
+            : key === "promoter"
+              ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
+              : { organizationId: null, OR: [{ location: null }, { location: "" }] },
+        )
         const result = await tx.rankAward.updateMany({
           where: { id: award.id, passportId, AND: stillEmpty },
           data,
         })
-        if (result.count === 1) await syncRankEntryFromAward(tx, award.id)
-        return result
-      })
-      if (written.count !== 1) {
-        throw new ORPCError("FORBIDDEN", {
-          message:
-            "This belt's details were just updated elsewhere — refresh to see the latest record.",
-        })
-      }
-    }
+        // Fail CLOSED and ROLL BACK the capture: throwing inside the tx aborts it, so the
+        // placeholder + lead resolved above are discarded with the award write (no orphan stub).
+        if (result.count !== 1) {
+          throw new ORPCError("FORBIDDEN", {
+            message:
+              "This belt's details were just updated elsewhere — refresh to see the latest record.",
+          })
+        }
+        await syncRankEntryFromAward(tx, award.id)
+      },
+      { maxWait: 10000, timeout: 20000 },
+    )
 
     // Backfill-verification decision (SESSION_0540): auto-verify a same-promoter backfill,
     // flag a changed promoter for instructor review, or keep a freetext/unmatched promoter
@@ -532,7 +569,6 @@ const updateRankAwardFactAsAdmin = authedProcedure
       throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
     }
 
-    const data = await buildFactUpdateData(input)
     const factSnapshot = (row: {
       awardedAt: Date | null
       awardedByPassportId: string | null
@@ -547,31 +583,38 @@ const updateRankAwardFactAsAdmin = authedProcedure
       location: row.location,
     })
 
-    await db.$transaction(async tx => {
-      // Race-proof before-image (Doug SESSION_0501 P3): re-read inside the tx — the
-      // outer read is only the NOT_FOUND guard and could be ms-stale by write time.
-      const before = await tx.rankAward.findUniqueOrThrow({
-        where: { id: award.id },
-        select: factEditSelect,
-      })
-      const updated = await tx.rankAward.update({
-        where: { id: award.id },
-        data,
-        select: factEditSelect,
-      })
-      await syncRankEntryFromAward(tx, award.id)
-      await tx.auditLog.create({
-        data: {
-          brand: Brand.BBL,
-          action: "belt.fact.updated",
-          entityType: "RankAward",
-          entityId: award.id,
-          userId: context.user.id,
-          before: factSnapshot(before),
-          after: factSnapshot(updated),
-        },
-      })
-    })
+    await db.$transaction(
+      async tx => {
+        // Race-proof before-image (Doug SESSION_0501 P3): re-read inside the tx — the
+        // outer read is only the NOT_FOUND guard and could be ms-stale by write time.
+        const before = await tx.rankAward.findUniqueOrThrow({
+          where: { id: award.id },
+          select: factEditSelect,
+        })
+        // Resolve + capture inside the tx (WL-P3-44): an admin free-typing a promoter/school
+        // mints its placeholder + recruitment lead atomically with the fact write. Recruit fires
+        // on freetext only — a picked registered promoter/school never recruits (SESSION_0541).
+        const data = await resolveFactUpdateWithCapture(tx, input)
+        const updated = await tx.rankAward.update({
+          where: { id: award.id },
+          data,
+          select: factEditSelect,
+        })
+        await syncRankEntryFromAward(tx, award.id)
+        await tx.auditLog.create({
+          data: {
+            brand: Brand.BBL,
+            action: "belt.fact.updated",
+            entityType: "RankAward",
+            entityId: award.id,
+            userId: context.user.id,
+            before: factSnapshot(before),
+            after: factSnapshot(updated),
+          },
+        })
+      },
+      { maxWait: 10000, timeout: 20000 },
+    )
 
     context.revalidate({ paths: REVALIDATE_PATHS })
     return enrichedCard(award.passportId, award.id)
@@ -586,13 +629,7 @@ const attachMilestoneMedia = beltProcedure
   .handler(async ({ input, context }) => {
     const passportId = await getActingPassportId(context.user.id)
 
-    const milestone = await db.rankMilestone.findUnique({
-      where: { id: input.rankMilestoneId },
-      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
-    })
-    if (!milestone || milestone.rankAward.passportId !== passportId) {
-      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
-    }
+    const milestone = await findOwnMilestone(passportId, input.rankMilestoneId)
 
     // FIX 2 (HIGH): the caller-supplied `mediaId` must be a photo THIS user uploaded
     // (`Media.uploadedById === user.id`). Without it, a member could attach a foreign /
@@ -635,13 +672,7 @@ const detachMilestoneMedia = beltProcedure
   .handler(async ({ input, context }) => {
     const passportId = await getActingPassportId(context.user.id)
 
-    const milestone = await db.rankMilestone.findUnique({
-      where: { id: input.rankMilestoneId },
-      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
-    })
-    if (!milestone || milestone.rankAward.passportId !== passportId) {
-      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
-    }
+    const milestone = await findOwnMilestone(passportId, input.rankMilestoneId)
 
     await db.mediaAttachment.deleteMany({
       where: { rankMilestoneId: milestone.id, mediaId: input.mediaId },

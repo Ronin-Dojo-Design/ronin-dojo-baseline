@@ -147,13 +147,6 @@ export function deriveBeltStatus(vm: BeltRankViewModel, ceiling: number | null):
   return hasStory || hasMedia ? "completed" : "add"
 }
 
-/** Presentation copy for each status badge. */
-export const BELT_STATUS_LABEL: Record<BeltCardStatus, string> = {
-  add: "Add",
-  locked: "Locked",
-  completed: "Completed",
-}
-
 /** The card's server-computed per-fact editability matrix (SESSION_0501). */
 export type CardFactEditability = BeltCardOutput["factEditability"]
 

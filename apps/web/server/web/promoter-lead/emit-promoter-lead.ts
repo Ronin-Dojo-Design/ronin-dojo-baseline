@@ -1,11 +1,17 @@
 import { Brand, LeadSource, LeadStatus, type Prisma } from "~/.generated/prisma/client"
 import { fuzzyMatchSchool, normalizeSchoolName } from "~/lib/dedup"
+import {
+  demandCountFromMeta,
+  jsonRecord,
+  stringArray,
+  uniqueWithLatestFirst,
+} from "~/server/web/lead/lead-meta-helpers"
 import { db } from "~/services/db"
 
 /**
  * Promoter-outreach lead capture (SESSION_0540) — the PERSON mirror of
  * `emit-school-lead.ts`. When a member backfills a belt and free-types the coach who
- * promoted them, we capture that coach BOTH as an identity (a claimable placeholder
+ * promoted them, we capture that coach BOTH as an identity (a recruited-coach placeholder
  * `Passport` — `ensurePromoterPlaceholder`, set as the award's `awardedByPassportId`)
  * AND, here, as a recruitment `Lead` so the coach enters the outreach / CRM pipeline to
  * be invited. Idempotent + deduped by the normalized coach name (demand-counted),
@@ -19,6 +25,11 @@ import { db } from "~/services/db"
  * The lead is LINKED back to the placeholder Passport via `meta.passportId` (no schema
  * change — a nullable FK on Lead was deemed unnecessary churn). This never sends outreach;
  * the "invite this coach" action is an operator click.
+ *
+ * TX (SESSION_0541, WL-P3-44): accepts an optional `tx` so the belt fact-save path folds
+ * this emit INSIDE the award `$transaction` alongside `ensurePromoterPlaceholder` — a
+ * fill-once fail-closed then rolls the placeholder + lead back together (no orphan stub).
+ * Called without `tx` it opens its own transaction (the standalone / school-lead shape).
  */
 
 export const PROMOTER_OUTREACH_KIND = "promoter_outreach"
@@ -56,7 +67,7 @@ type PromoterLeadMetaOptions = {
 type EmitPromoterLeadInput = {
   promoterName: string
   source: string
-  /** The claimable placeholder Passport minted for this coach (`ensurePromoterPlaceholder`). */
+  /** The recruited-coach placeholder Passport minted for this coach (`ensurePromoterPlaceholder`). */
   passportId?: string | null
 }
 
@@ -75,27 +86,6 @@ const openLeadWhere = {
   status: { in: [...OPEN_LEAD_STATUSES] },
   meta: { path: ["kind"], equals: PROMOTER_OUTREACH_KIND },
 } satisfies Prisma.LeadWhereInput
-
-function jsonRecord(meta: Prisma.JsonValue | null | undefined): Record<string, unknown> {
-  return meta && typeof meta === "object" && !Array.isArray(meta)
-    ? (meta as Record<string, unknown>)
-    : {}
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-    : []
-}
-
-function uniqueWithLatestFirst(values: string[]): string[] {
-  return Array.from(new Set(values.map(value => value.trim()).filter(Boolean)))
-}
-
-function demandCountFromMeta(meta: Prisma.JsonValue | null | undefined): number {
-  const count = jsonRecord(meta).demandCount
-  return typeof count === "number" && Number.isFinite(count) && count > 0 ? count : 0
-}
 
 function passportIdFromMeta(meta: Prisma.JsonValue | null | undefined): string | null {
   const value = jsonRecord(meta).passportId
@@ -223,13 +213,27 @@ async function createPromoterLead(
   return resultFromLead(createdLead, { createdLead: true, matchedBy: "none" })
 }
 
+/** The find-or-bump sequence, on a caller-supplied tx (the award tx, or our own below). */
+async function emitPromoterLeadOnTx(
+  tx: PromoterLeadTransaction,
+  options: PromoterLeadMetaOptions,
+): Promise<EmitPromoterLeadResult> {
+  const matchedOpenLead = await findMatchedOpenLead(tx, options.promoterName)
+  if (matchedOpenLead) return bumpPromoterLead(tx, matchedOpenLead, options)
+
+  const organizationId = await getCoachOutreachOrgId(tx)
+  return createPromoterLead(tx, organizationId, options)
+}
+
 /**
  * Emit / bump the recruitment lead for a free-typed coach, linked to their placeholder
- * Passport via `meta.passportId`. Runs in its OWN transaction (matching the school-lead
- * pattern), fired from the belt fact-save path alongside `ensurePromoterPlaceholder`.
+ * Passport via `meta.passportId`. Pass `tx` to fold this into the caller's award transaction
+ * (WL-P3-44 — no orphan stub on a failed award write); omit it to run in its own transaction
+ * (matching the school-lead pattern). Never sends outreach.
  */
 export async function emitPromoterLead(
   input: EmitPromoterLeadInput,
+  tx?: PromoterLeadTransaction,
 ): Promise<EmitPromoterLeadResult | null> {
   const promoterName = input.promoterName.trim()
   if (!promoterName) return null
@@ -241,14 +245,10 @@ export async function emitPromoterLead(
     now: new Date(),
   } satisfies PromoterLeadMetaOptions
 
-  return db.$transaction(
-    async tx => {
-      const matchedOpenLead = await findMatchedOpenLead(tx, promoterName)
-      if (matchedOpenLead) return bumpPromoterLead(tx, matchedOpenLead, options)
+  if (tx) return emitPromoterLeadOnTx(tx, options)
 
-      const organizationId = await getCoachOutreachOrgId(tx)
-      return createPromoterLead(tx, organizationId, options)
-    },
+  return db.$transaction(
+    tx => emitPromoterLeadOnTx(tx, options),
     // The find-or-create spans a few sequential queries; a generous ceiling keeps it off the
     // default 5s interactive-tx limit on a cold Prisma engine (the app server is always warm, so
     // this ceiling never triggers in prod — it only saves a cold-start standalone unit test).
