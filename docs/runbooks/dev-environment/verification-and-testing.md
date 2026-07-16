@@ -88,6 +88,22 @@ no reachable database those fail with `db.<model>.<op> is undefined`. Locally th
 This is why **CI (Playwright + Postgres) is the authoritative verifier for DB-backed behavior**, and
 local pure-unit + Vercel build cover the rest.
 
+### The e2e DB is a hermetic fixture, not a prodsnap mirror
+
+Two different DBs back the two test layers — don't conflate them (SESSION_0540/0541):
+
+- **`ronindojo_e2e`** is a **hermetic mint-and-assert fixture** (FS-0031): disposable, seeded from scratch. In a
+  fresh worktree it is **not provisioned** — `setup-e2e-db.ts` runs **migrate-only**, and the BJJ belt ladder
+  the belt journeys assert needs a separate **`db:seed`** that **CI runs** (the local `setup-e2e-db` does not).
+  So a local e2e run in an unseeded worktree fails on missing seed data — that is an **environment gap, not a
+  code regression**. Provisioning it locally is a yak-shave; **CI (which migrates + seeds) is the authoritative
+  e2e gate**. (`belt-journey` is a manual-only `describe.skip` smoke gated behind `RUN_BELT_E2E=1`.)
+- **`ronindojo_prodsnap`** is a **realistic, manually-maintained mirror** of prod that the **DB-dependent unit
+  tests** (above) point at locally. It is not disposable and not what e2e uses.
+
+The practical rule when your worktree can't run affected e2e: don't fake a green — **push and watch CI**, which is
+the authoritative e2e verifier (see [[e2e-db-hermetic-not-prodsnap]]).
+
 ## Guard registry (executable invariants)
 
 Unit tests that exist specifically to **freeze an invariant** so it can't silently regress. When you

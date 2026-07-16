@@ -630,4 +630,10 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   fuzzy-dedup precision tradeoff + admin split/merge escape, and the identity+CRM-emit transactional boundary
   (WL-P3-44); (3) log `decideBackfillTrust`/`applyBackfillTrustDecision` as RankAward-keyed logic the table-drop
   must relocate to `RankEntry.status`.
-- **Status: OPEN** — ADR + "claimable" softening = next-session first-tasks (SESSION_0540 close).
+- **Status: RESOLVED SESSION_0541** — **ADR 0047** (`promoter-as-placeholder-recruited-coach-identity`) authored +
+  accepted, ratifying the doorless-placeholder sub-shape (D1), the bucket-org / `meta.passportId` link (D2), the
+  exact-normalized dedup + phase-2 admin MERGE escape (D3), the identity+CRM transactional boundary (D4/WL-P3-44),
+  and the honest-rename admin-path policy (D5/WL-P3-47). "Claimable" softened → "recruited-coach placeholder (claim
+  door = phase-2)" in `promoter-placeholder.ts` + `emit-promoter-lead.ts` + `ubiquitous-language.md` (FINDING_01).
+  Dedup tightened to exact-normalized (FINDING_03, `f0c83c48`). RankAward-keyed trust logic logged to the
+  RankAward-retire epic task G (FINDING_06, D6). Remaining: G-010 review queue + the phase-2 confirm/merge loop.

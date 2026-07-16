@@ -73,6 +73,12 @@ gap IS migration steps 6-7.
 - **G — writers RankEntry-native:** place-lead/claim-finalize/add-person/router/node-profile-actions/verify
   write RankEntry directly; delete `syncRankEntryFromAward` + `rankEntryStatusForAward` (10 call-sites). ⚠ the
   seed/import/enrich scripts create RankAward *without* the sync seam — audit for orphan awards first.
+  ⚠ **Belt backfill-trust writers (SESSION_0540/0541, FINDING_06 → ADR 0047 D6):** `decideBackfillTrust` /
+  `applyBackfillTrustDecision` / `writeBackfillStatus` (`server/belt/belt-gate.ts` + `router.ts`) write
+  `RankAward.verificationStatus` and re-read the promoter FK off `RankAward` — net-new RankAward-keyed decision
+  logic added mid-migration. Relocate the trust decision + status write onto `RankEntry.status` when this task
+  lands; the `PROMOTER_CHANGED` review side already lives on `RankEntry`, so only the write + the anchor/promoter
+  re-read move.
 - **H — contract (destructive, LAST):** drop old `rankAwardId` cols + `RankEntry.rankAwardId`; `DROP TABLE RankAward`;
   drop the two RankAward enums if unused.
 

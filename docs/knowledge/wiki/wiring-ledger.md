@@ -168,11 +168,15 @@ follow-ups, not silent nulls.
   + `emitPromoterLead` run in `buildFactUpdateData` BEFORE the award-write `$transaction`. If the fill-once
   `stillEmpty` guard fails-closed, the placeholder Passport + Lead are already committed but reference no award —
   an orphan recruitment stub (invisible publicly, but untracked). Fold the placeholder/lead emit INSIDE the award
-  tx, or a compensating sweep. (Doug P3a, SESSION_0540.)
+  tx, or a compensating sweep. (Doug P3a, SESSION_0540.) **Resolved SESSION_0541** (`f0c83c48`, ADR 0047 D4):
+  `resolveFactUpdateWithCapture` threads the award tx; both emit fns take an optional tx and run inside it; the
+  fill-once fail-closed now throws INSIDE the tx → placeholder + lead roll back with the award (no orphan).
 - **WL-P3-45** — `apps/web/server/identity/promoter-placeholder.ts:47-60` — concurrent-dedup race: two members
   free-typing the same coach before either award FK commits both miss the `rankAwardsPromoted: some` candidate
   scope → duplicate placeholder Passports. Bounded/harmless (same soft-dedup as school-lead); cleanup-later.
-  (Doug P3b, SESSION_0540.)
+  (Doug P3b, SESSION_0540.) **Accepted SESSION_0541** (ADR 0047 D3): for a provenance graph a duplicate is the
+  SAFE error (a phase-2 admin MERGE repoints its edges), unlike a false-merge; accepted with the phase-2 merge
+  tool as the escape. No code guard added.
 - **WL-P3-46** — `apps/web/app/(web)/lineage/join/join-legacy-wizard/lineage-step.tsx:103-114` — the join-wizard
   rank picker still renders the `dot` BeltSwatch while the claim picker now renders the rich `variant="belt"
   size="sm"`. Two rank pickers, two treatments — parity upgrade (out of the SESSION_0540 approved artifact scope).
@@ -182,7 +186,20 @@ follow-ups, not silent nulls.
   it's called on the ADMIN fact-edit path (`:535`) as well as the member path (`:462`). So an admin free-typing a
   promoter on any member's award silently mints an identity + injects a CRM outreach lead — a hidden side-effect
   behind a `build…Data` name. Gate the emission to the member funnel, or rename (`resolveFactUpdateWithCapture`) +
-  document the admin-path intent. (Giddy hostile-close FINDING_02, SESSION_0540.)
+  document the admin-path intent. (Giddy hostile-close FINDING_02, SESSION_0540.) **Resolved SESSION_0541**
+  (`f0c83c48`, ADR 0047 D5): renamed `resolveFactUpdateWithCapture` (capture now named, not silent); the identity
+  resolver is split from the CRM emit; recruit fires on FREETEXT only, on BOTH member + admin paths intentionally
+  (operator: recruit broadly — an admin correcting a promoter should recruit the coach too). "Add person / add
+  user" recruitment-flywheel consistency is a separate ledgered follow-up (WL-P3-48 below).
+
+### SESSION_0541 belt-verification follow-ups
+
+- **WL-P3-48** — recruitment-flywheel consistency: the belt fact path recruits a free-typed promoter (mints a
+  recruited-coach placeholder + a `Lead`), but the **`add person` / `add user` admin surfaces do NOT** emit a
+  promoter lead for a free-typed person. Capturing free-typed persons there as recruitment leads (mirroring the
+  belt path) is the flywheel-consistency follow-up the operator raised in the SESSION_0541 grill (ADR 0047
+  Consequences). Scope: on admin add-person / add-user with a free-typed (non-registry) name, optionally emit a
+  deduped promoter/person lead. P3, out of the SESSION_0541 identity lane. (Operator, SESSION_0541.)
 
 ## localStorage / sessionStorage gaps
 

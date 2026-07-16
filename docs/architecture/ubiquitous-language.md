@@ -261,6 +261,35 @@ The member-facing experience for telling the story of a person's rank progressio
 Belt Journey is UX language. It does not create rank authority, verification, privacy, or promotion facts. Its data
 enrichment is stored in `RankMilestone`; rank truth remains `RankAward`.
 
+### Backfill
+
+A belt a member adds themselves at or below their awarded ceiling — their own lower-belt history (SESSION_0540). A
+backfill is self-added (`source: STATED`, no approver `awardedById`), fully fact-editable by the owner, and minted
+`UNVERIFIED`; it can never raise the shown belt above the member's awarded truth (the ceiling gate). Above the ceiling
+is not a backfill — it routes to a `RANK_PROMOTION` claim (`promotion.submit`).
+
+### Trust State
+
+The legibility state of a member's owned belt entry (`BeltTrustState`: `verified` | `unverified` | `pending_review`,
+SESSION_0540). Derived (`deriveTrustState`): a PENDING `RankEntryReview` wins (in flight), else the entry's verified
+flag decides. Presentation only — the authority is `RankEntry.status` + any open review, never a stored belt field.
+
+### Anchor Promoter
+
+The promoter of a member's **anchor** award — their highest authority-verified rank (`IMPORTED`, or `VERIFIED` with an
+approver `awardedById`); its `awardedByPassportId` is the promoter we already trust (SESSION_0540). A backfill whose
+promoter equals the anchor promoter auto-verifies (same coach); a different established promoter opens a
+`PROMOTER_CHANGED` review; a fresh recruited coach stays unverified with no review.
+
+### Recruited-coach placeholder
+
+The accountless (`userId` null), off-tree (no `LineageNode` / `DirectoryProfile`) `Passport` minted for a free-typed
+promoter (`ensurePromoterPlaceholder`), set as the award's `awardedByPassportId` (ADR 0047). It is a recruitment /
+identity **artifact**, **not a claimable identity** — a bare Passport has no ADR 0036 claim door and no ADR 0032
+email-reconcile hook, so the claim path is **phase-2**. Never call it "claimable"; hidden from every public surface
+(no-leak). Dedup is exact-normalized (bias to duplicates over false-merge); its paired CRM `Lead` links back via
+`meta.passportId`.
+
 ### Belt Family
 
 The BJJ bar-treatment axis on a `Rank`: `BeltFamily` enum — `COLORED` (white/blue/purple/brown), `BLACK`,

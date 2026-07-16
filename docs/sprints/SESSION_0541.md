@@ -242,16 +242,16 @@ Grill the operator BEFORE building TASK_03–08 (plan-first per standing rule). 
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0541_TASK_01 | pending | `/fallow-fix-loop` on belt-verification + funnel diff |
-| SESSION_0541_TASK_02 | pending | `/code-quality` on 4 Class-A modules |
-| SESSION_0541_TASK_03 | pending | promoter-as-placeholder ADR (plan-first) |
-| SESSION_0541_TASK_04 | pending | doc-fix: soften "claimable" (FINDING_01) |
-| SESSION_0541_TASK_05 | pending | WL-P3-47 gate side-effecting builder (FINDING_02) |
-| SESSION_0541_TASK_06 | pending | WL-P3-44 fold emit inside award tx (FINDING_04) |
-| SESSION_0541_TASK_07 | pending | WL-P3-45 concurrent-dedup race (FINDING_05) |
-| SESSION_0541_TASK_08 | pending | G-010 instructor review queue (plan-first) |
+| SESSION_0541_TASK_01 | landed | fallow cleanup: shared lead-meta-helpers (kills 53-line clone), findOwnMilestone (self-dup), dead BELT_STATUS_LABEL removed (`f0c83c48`); non-identity complexity assessed in TASK_02 |
+| SESSION_0541_TASK_02 | in-progress | `/code-quality` on 4 Class-A modules — belt-edit-card CRAP is presentational (no churn); router/promoter-placeholder/belt-gate assessed |
+| SESSION_0541_TASK_03 | landed | ADR 0047 authored + accepted (`promoter-as-placeholder-recruited-coach-identity`) + ubiquitous-language terms |
+| SESSION_0541_TASK_04 | landed | "claimable" softened in promoter-placeholder.ts + emit-promoter-lead.ts + ubiquitous-language.md (`f0c83c48`) |
+| SESSION_0541_TASK_05 | landed | WL-P3-47: rename `resolveFactUpdateWithCapture` + resolver split + recruit-on-both intentional (`f0c83c48`) |
+| SESSION_0541_TASK_06 | landed | WL-P3-44: fold placeholder+lead emit inside the award tx, fail-closed throws inside tx (`f0c83c48`) |
+| SESSION_0541_TASK_07 | landed | WL-P3-45: accepted (ADR 0047 D3 — duplicates are the safe error, phase-2 MERGE escape) + exact-normalized dedup |
+| SESSION_0541_TASK_08 | pending | G-010 instructor review queue (full min-viable) |
 | SESSION_0541_TASK_09 | pending | WL-P3-46 join-wizard rich-belt parity |
-| SESSION_0541_TASK_10 | pending | FINDING_06 + e2e-DB ledger/doc notes |
+| SESSION_0541_TASK_10 | landed | FINDING_06 → RankAward-retire epic task G; e2e-DB-vs-prodsnap → verification-and-testing.md; ledger rows resolved |
 
 ## What landed
 
