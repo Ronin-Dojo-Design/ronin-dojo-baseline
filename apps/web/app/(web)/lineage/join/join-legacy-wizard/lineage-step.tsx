@@ -99,7 +99,8 @@ export function LineageStep({
   options: JoinWizardOptions
 }) {
   // Belt colors stay data-driven (Rank.colorHex) — the swatch renders ONLY in the
-  // dropdown row; the collapsed trigger shows the plain rank name.
+  // dropdown row; the collapsed trigger shows the plain rank name. Rich belt render
+  // (bars/degrees) for parity with the claim picker (WL-P3-46, SESSION_0541).
   const rankOptions = useMemo<CreatableOption[]>(
     () =>
       options.ranks.map(rank => ({
@@ -107,7 +108,14 @@ export function LineageStep({
         name: rank.name,
         content: (
           <span className="flex items-center gap-2">
-            <BeltSwatch colorHex={rank.colorHex} />
+            <BeltSwatch
+              variant="belt"
+              size="sm"
+              colorHex={rank.colorHex}
+              secondaryColorHex={rank.secondaryColorHex}
+              degree={rank.degree}
+              beltFamily={rank.beltFamily}
+            />
             {rank.name}
           </span>
         ),
