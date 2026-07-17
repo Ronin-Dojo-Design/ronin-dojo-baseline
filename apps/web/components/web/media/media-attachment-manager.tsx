@@ -68,8 +68,22 @@ const attachmentIds = (attachments: DashboardMediaAttachment[]) =>
  * SESSION_0529 (Slice 3B) adds three default-off/default-on knobs for the member
  * authored-technique sheet — URL-paste video attach, dnd ordering, and hiding the
  * R2 uploader — all riding the same server pipeline (no parallel media seam).
+ *
+ * WL-P2-52: the Card chrome is now COMPOSITIONAL, not a knob (the Giddy split-trigger — a 4th
+ * boolean would have forced the manager split). `MediaAttachmentManager` = Card +
+ * `MediaAttachmentPanel`; a host that already provides chrome (the authored-create Drawer) renders
+ * the bare `MediaAttachmentPanel` instead of stacking a Card inside its sheet.
  */
-export function MediaAttachmentManager({
+export function MediaAttachmentManager(props: MediaAttachmentManagerProps) {
+  return (
+    <Card hover={false}>
+      <MediaAttachmentPanel {...props} />
+    </Card>
+  )
+}
+
+/** The manager's header + controls + grid WITHOUT the Card chrome (see the split note above). */
+export function MediaAttachmentPanel({
   target,
   initialAttachments,
   title = "Media",
@@ -275,7 +289,7 @@ export function MediaAttachmentManager({
   })
 
   return (
-    <Card hover={false}>
+    <>
       <CardHeader direction="column" size="xs">
         <H6 render={props => <h2 {...props}>{props.children}</h2>}>{title}</H6>
         <CardDescription>{description}</CardDescription>
@@ -371,7 +385,7 @@ export function MediaAttachmentManager({
           />
         )}
       </Stack>
-    </Card>
+    </>
   )
 }
 

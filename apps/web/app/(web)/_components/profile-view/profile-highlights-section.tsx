@@ -67,9 +67,11 @@ export function ProfileHighlightsSection({ media }: { media: ProfileMedia }) {
           kind="video"
           items={media.featuredMatches}
         />
+        {/* WL-P2-52 rail-copy fix: this rail is passport-attachment REELS, not the authored
+            curriculum below — its subtitle no longer borrows the "Curriculum" rail's word. */}
         <HighlightRail
           title="Technique Videos"
-          subtitle="Reels from their curriculum"
+          subtitle="Video reels they've shared"
           kind="video"
           items={media.techniqueVideos}
         />

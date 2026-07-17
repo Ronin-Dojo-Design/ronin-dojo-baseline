@@ -57,7 +57,7 @@ export async function DashboardTechniquesTab() {
       {canCreate && formOptions && (
         <AuthoredTechniqueCreate disciplines={formOptions.disciplines} belts={formOptions.belts} />
       )}
-      <TechniquesTable techniques={rows} showOrgCreate={Boolean(orgStaff)} />
+      <TechniquesTable techniques={rows} showOrgCreate={Boolean(orgStaff)} canCreate={canCreate} />
     </Stack>
   )
 }

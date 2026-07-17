@@ -117,6 +117,11 @@ type TechniqueFormProps = {
   onSuccess?: (technique: { id: string; name: string; slug: string }) => void
   /** Overrides the default Cancel behavior (`router.back()`) — the sheet closes itself. */
   onCancel?: () => void
+  /**
+   * Reports `form.formState.isDirty` transitions (WL-P2-52 P3) so the hosting sheet can
+   * dirty-guard its dismiss. Optional — page-mode callers ignore it.
+   */
+  onDirtyChange?: (isDirty: boolean) => void
   disciplines: Discipline[]
   belts: Belt[]
   technique?: {
@@ -147,6 +152,7 @@ export function TechniqueForm({
   authored,
   onSuccess,
   onCancel,
+  onDirtyChange,
   disciplines,
   belts,
   technique,
@@ -190,6 +196,12 @@ export function TechniqueForm({
     if (!authored || isEdit) return
     form.setValue("slug", slugify(nameValue))
   }, [authored, isEdit, nameValue, form])
+
+  // Surface dirty-state transitions to the hosting sheet (WL-P2-52 P3 dirty-guard).
+  const isDirty = form.formState.isDirty
+  useEffect(() => {
+    onDirtyChange?.(isDirty)
+  }, [isDirty, onDirtyChange])
 
   // Surface server errors (e.g. the friendly authored duplicate-slug P2002 message,
   // SESSION_0529 Slice 3B) — previously failures were silent.
@@ -449,42 +461,50 @@ export function TechniqueForm({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="isFoundational"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel>Foundational</FormLabel>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="requiresPartner"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel>Requires partner</FormLabel>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="requiresEquipment"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-2">
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                    <FormLabel>Requires equipment</FormLabel>
-                  </FormItem>
-                )}
-              />
+              {/* Authored field-set trim (WL-P2-52 P3): the org curriculum-planning switches
+                  (foundational / partner / equipment) stay off the member sheet — the schema
+                  keeps them optional (default false), so the payload is unchanged. Org/admin
+                  mode keeps the full set. */}
+              {!authored && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="isFoundational"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel>Foundational</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requiresPartner"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel>Requires partner</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="requiresEquipment"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center gap-2">
+                        <FormControl>
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
+                        </FormControl>
+                        <FormLabel>Requires equipment</FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </Stack>
 
             <FormField
