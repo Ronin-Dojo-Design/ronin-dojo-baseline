@@ -82,6 +82,14 @@ client** and run **inside** it. A fill-once fail-closed (the TOCTOU race guard) 
 the placeholder + lead roll back with the award — **no orphan recruitment stub** (FINDING_04/WL-P3-44). The
 capture is correct-by-construction: resolve → award write → fail-closed throw all share one tx.
 
+**Coupling tradeoff (SESSION_0541 F4):** the tx-fold means the award transaction now includes the
+`findMany` scan in `findMatchedOpenLead` (all open BBL leads of `PROMOTER_OUTREACH_KIND`) before it
+commits. This scan is bounded in practice — the coach-outreach pipeline is a small, operator-managed
+queue, not an unbounded member table — but if the pipeline grows large a targeted index on
+`(brand, status, meta.kind)` should precede the table-drop epic. The scan runs inside the interactive
+`$transaction`; on a warm Prisma engine (always true in prod) it adds negligible latency. If that assumption
+changes, the capture can be moved to a `then`-chained post-commit step with a compensating tombstone.
+
 ### D5 — Recruit on freetext, on both paths; resolver split from side-effect, honestly named
 
 The identity **resolver** (`ensurePromoterPlaceholder`) is separate from the CRM **side-effect**
@@ -90,6 +98,13 @@ so the capture is intentional and named, not silent (FINDING_02/WL-P3-47). Recru
 free-typed name** (a picked, registered promoter/school never recruits) and fires on **both the member and
 the admin** belt-fact paths — an admin correcting a member's promoter should also recruit that coach
 (operator: recruit broadly). The member/admin ref semantics stay unforked (SESSION_0501).
+
+**Admin does NOT re-run `decideBackfillTrust` (SESSION_0541 F5 — intentional):** `resolveFactUpdateWithCapture`
+on the admin path resolves the identity + emits the lead but does **not** re-evaluate the backfill-trust
+heuristic (`decideBackfillTrust` / `applyBackfillTrustDecision`). Admin edits are explicit, authority-level
+writes — the `belt.admin` gate supersedes the member-submitted trust heuristic. An admin setting a promoter
+is a deliberate fact correction, not a self-reported claim requiring trust evaluation. This is intentional,
+not a gap.
 
 ### D6 — Trust logic on `RankAward.verificationStatus` is net-new RankAward-retire port surface
 
@@ -109,6 +124,15 @@ new trust logic must not deepen the RankAward spine beyond this.
   flywheel-consistency follow-up (ledgered SESSION_0541), out of this ADR's scope.
 - **No-leak invariant holds:** bare placeholder Passports surface nowhere public; any future surface that
   renders promoters must exclude accountless off-tree placeholders or gate them.
+- **G-010 inline binary-moderation is a sanctioned sub-pattern (SESSION_0541 F3):** The `PROMOTER_CHANGED`
+  review queue (`/app/belt-reviews`) exposes inline Approve/Dismiss buttons directly in the table row,
+  bypassing the `row → detail → editor` model in ADR 0045 D2. This is **ratified** — ADR 0045 D2 governs
+  multi-field CRUD editors; a binary-state work queue (the only action is accept/reject a single status
+  field) is a distinct interaction shape. Making the operator navigate to a detail page to confirm what is
+  already legible in the list row is pure friction for a decision that carries no editor state. **Rule:**
+  inline binary-moderation (approve/dismiss/accept/reject) is exempt from D2's row→detail requirement when:
+  (a) the only mutable field is a single status enum, (b) the decision is reversible at the list level, and
+  (c) the action is RBAC-gated at the same level as any D2 editor. All three hold for G-010.
 
 ## Alternatives considered
 

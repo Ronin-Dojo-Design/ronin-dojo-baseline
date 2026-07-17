@@ -79,6 +79,11 @@ gap IS migration steps 6-7.
   logic added mid-migration. Relocate the trust decision + status write onto `RankEntry.status` when this task
   lands; the `PROMOTER_CHANGED` review side already lives on `RankEntry`, so only the write + the anchor/promoter
   re-read move.
+  ⚠ **`verifyRankEntryInTransaction` (SESSION_0541 F6 → `server/belt/verify-rank-entry-core.ts`):** the shared
+  verify seam writes `RankAward.verificationStatus → "VERIFIED"` (via `tx.rankAward.update`) and re-reads the
+  award to check `IMPORTED` provenance. When the table-drop lands this must write `RankEntry.status` directly
+  (provenance check becomes `RankEntry.provenance`; `IMPORTED` guard stays, see §critical schema). Callers:
+  `verifyRankEntry` safe-action + `approveRankEntryReview` (G-010) — both already operate on `rankEntryId`.
 - **H — contract (destructive, LAST):** drop old `rankAwardId` cols + `RankEntry.rankAwardId`; `DROP TABLE RankAward`;
   drop the two RankAward enums if unused.
 

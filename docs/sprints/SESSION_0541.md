@@ -249,8 +249,12 @@ Grill the operator BEFORE building TASK_03–08 (plan-first per standing rule). 
 | SESSION_0541_TASK_05 | landed | WL-P3-47: rename `resolveFactUpdateWithCapture` + resolver split + recruit-on-both intentional (`f0c83c48`) |
 | SESSION_0541_TASK_06 | landed | WL-P3-44: fold placeholder+lead emit inside the award tx, fail-closed throws inside tx (`f0c83c48`) |
 | SESSION_0541_TASK_07 | landed | WL-P3-45: accepted (ADR 0047 D3 — duplicates are the safe error, phase-2 MERGE escape) + exact-normalized dedup |
-| SESSION_0541_TASK_08 | pending | G-010 instructor review queue (full min-viable) |
-| SESSION_0541_TASK_09 | pending | WL-P3-46 join-wizard rich-belt parity |
+| SESSION_0541_TASK_08 | landed | G-010 instructor review queue: AdminCollection belt-reviews page + inline approve/dismiss actions (`031b73fa`) |
+| SESSION_0541_TASK_09 | landed | WL-P3-46 join-wizard rich-belt parity: `variant="belt" size="sm"` BeltSwatch (`e6ef5ff1`) |
+| SESSION_0541_TASK_11 | landed | F1: threshold=1 in `findMatchedOpenLead` + John/Jon coherence test (Cody, `cc42aa03`) |
+| SESSION_0541_TASK_12 | landed | F2: `verifyRankEntryInTransaction` → `verify-rank-entry-core.ts` (server-only, Cody, `cc42aa03`) |
+| SESSION_0541_TASK_13 | landed | F3: inline binary-moderation ratified in ADR 0047 Consequences (Petey) |
+| SESSION_0541_TASK_14 | landed | F4/F5/F6: ADR 0047 D4 tx-coupling note + D5 admin-skips-trust note + epic G relocate entry (Petey) |
 | SESSION_0541_TASK_10 | landed | FINDING_06 → RankAward-retire epic task G; e2e-DB-vs-prodsnap → verification-and-testing.md; ledger rows resolved |
 
 ## What landed
