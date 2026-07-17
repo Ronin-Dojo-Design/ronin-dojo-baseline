@@ -23,7 +23,7 @@ export const EmailAdminSubmissionPremium = ({ tool, ...props }: EmailProps) => {
         of {tool.name}. You should review and approve it as soon as possible.
       </Text>
 
-      <BblEmailButton href={`${siteConfig.url}/admin/tools/${tool.slug}`}>
+      <BblEmailButton href={`${siteConfig.url}/app/tools/${tool.slug}`}>
         Review {tool.name}
       </BblEmailButton>
     </EmailWrapper>

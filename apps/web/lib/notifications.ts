@@ -767,7 +767,7 @@ export const notifyAdminOfBblJoinLegacy = async (params: BblJoinLegacyNotificati
       rankSummary: params.rankSummary,
       trainedUnder: params.trainedUnder,
       represent: params.represent,
-      adminLeadUrl: `${params.appUrl ?? siteConfig.url}/admin/leads/${params.leadId}`,
+      adminLeadUrl: `${params.appUrl ?? siteConfig.url}/app/leads/${params.leadId}`,
       checkoutUrl: params.checkoutUrl,
       claimCreated: params.claimCreated,
     }),

@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 import { getServerSession, type Session } from "~/lib/auth"
+import { can } from "~/server/orpc/permissions"
+import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 
 type WithAuthHandler = (req: NextRequest, session: Session) => Promise<Response>
 
@@ -28,7 +30,7 @@ export const withAuth = (handler: WithAuthHandler) => {
  */
 export const withAdminAuth = (handler: WithAuthHandler) => {
   return withAuth(async (req, session) => {
-    if (session.user.role !== "admin") {
+    if (!can(session.user, APP_AREA_PERMISSIONS.content)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

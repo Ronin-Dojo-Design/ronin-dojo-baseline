@@ -59,7 +59,7 @@ export const getColumns = (): ColumnDef<Report>[] => {
         const tool = row.getValue<Pick<Tool, "slug" | "name">>("tool")
 
         return (
-          <DataTableLink href={`/admin/tools/${tool?.slug}`} title={tool?.name} isOverlay={false} />
+          <DataTableLink href={`/app/tools/${tool?.slug}`} title={tool?.name} isOverlay={false} />
         )
       },
     },

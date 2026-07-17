@@ -314,7 +314,7 @@ export const LIFECYCLE_CATALOG: LifecycleCatalogEntry[] = [
       intro: "Two accounts are contesting the same lineage node. Review and resolve in admin.",
       details: [{ label: "Node", value: "chris-haueter" }],
       ctaLabel: "Open admin review",
-      ctaUrl: "https://blackbeltlegacy.com/admin/claims",
+      ctaUrl: "https://blackbeltlegacy.com/app/claims",
     },
   },
 ]

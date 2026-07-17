@@ -49,7 +49,7 @@ const CalendarDay = ({ className, day, tools, month, ...props }: CalendarDayProp
           renderItem={({ slug, name, status }) => (
             <Link
               key={slug}
-              href={`/admin/tools/${slug}`}
+              href={`/app/tools/${slug}`}
               className={cx(
                 "max-w-full font-medium truncate hover:text-primary",
                 status === ToolStatus.Published && "text-muted-foreground/50 line-through",
