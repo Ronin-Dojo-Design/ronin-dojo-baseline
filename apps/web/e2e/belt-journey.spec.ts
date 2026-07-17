@@ -21,7 +21,9 @@ import {
  * browser/device smoke step (Petey Plan 0477: "Operator-only browser/device smoke
  * is flagged + skipped, never faked"). Run it deliberately with:
  *
- *     RUN_BELT_E2E=1 bunx playwright test e2e/belt-journey.spec.ts
+ *     bun --env-file=.env.e2e prisma/seed.ts  # this manual smoke needs the BJJ ladder
+ *     bun run dev:e2e  # terminal 1
+ *     RUN_BELT_E2E=1 bun run test:e2e:local -- e2e/belt-journey.spec.ts --project=chromium  # terminal 2
  *
  * Left `describe.skip` by default so it never runs (or blocks) in CI/agent runs.
  */

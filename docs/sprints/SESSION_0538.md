@@ -2,13 +2,14 @@
 title: "SESSION 0538 — G-002: Baseline Phase 2 (local) — own-DB wiring, per-product auth, public Lead funnel + gated admin board"
 slug: session-0538
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-14
-updated: 2026-07-14
-last_agent: claude-session-0538
+updated: 2026-07-15
+last_agent: codex-session-0542
 sprint: S12
 pairs_with:
   - docs/sprints/SESSION_0536.md
+  - docs/sprints/SESSION_0542.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -40,6 +41,10 @@ recipe, compressed into one coherent lane.
 ## Status
 
 Single source of truth is the frontmatter `status:` field.
+
+**Close notes:** unclean recovery — the implementation, verification, PR, and close evidence were complete,
+but the frontmatter status was never flipped before the session ended. SESSION_0542 repaired the status and
+logged the incident without changing the shipped work.
 
 ## Bow-in
 

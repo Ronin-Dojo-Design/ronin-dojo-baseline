@@ -23,6 +23,7 @@ export function BeltJourneyTab({
   promoterOptions,
   schoolOptions,
   anchorPromoterPassportId,
+  recruitedPromoterPassportIds,
 }: {
   ranks: BeltRankViewModel[]
   ceiling: number | null
@@ -31,6 +32,8 @@ export function BeltJourneyTab({
   schoolOptions: CreatableOption[]
   /** The member's anchor promoter Passport id — drives the promoter-picker feedback note. */
   anchorPromoterPassportId: string | null
+  /** Active promoter ids classified by the server as accountless + without public identity satellites. */
+  recruitedPromoterPassportIds: string[]
 }) {
   const onUpload = useCallback(async (file: File, rankMilestoneId: string) => {
     const result = await uploadWebMedia({
@@ -62,6 +65,7 @@ export function BeltJourneyTab({
       promoterOptions={promoterOptions}
       schoolOptions={schoolOptions}
       anchorPromoterPassportId={anchorPromoterPassportId}
+      recruitedPromoterPassportIds={recruitedPromoterPassportIds}
       onUpload={onUpload}
       onUploadPassport={onUploadPassport}
     />

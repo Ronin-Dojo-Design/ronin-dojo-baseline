@@ -4,18 +4,18 @@ slug: course-curriculum-runbook
 type: runbook
 status: active
 created: 2026-05-13
-updated: 2026-06-04
-last_agent: codex-session-0344
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/sop-data-and-wiring-flows.md
-  - docs/runbooks/sop-e2e-user-lifecycle.md
-  - docs/runbooks/stripe-setup-runbook.md
-  - docs/runbooks/invites.md
+  - docs/runbooks/sops/sop-data-and-wiring-flows.md
+  - docs/runbooks/sops/sop-e2e-user-lifecycle.md
+  - docs/runbooks/integrations/stripe-setup-runbook.md
+  - docs/runbooks/domain-features/invites.md
   - docs/architecture/feature-data-prerequisites.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0156.md
-  - docs/sprints/SESSION_0157.md
+  - docs/sprints/_archive/SESSION_0156.md
+  - docs/sprints/_archive/SESSION_0157.md
   - docs/sprints/SESSION_0344.md
 tags:
   - course
@@ -119,18 +119,24 @@ Eskrima has 2 rank systems (PIMA Denver + PIMA Jersey) — fundamentals courses 
 
 ### Running the seed
 
-```bash
-# Full reset (destructive — local dev only)
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
-cd apps/web
-bunx prisma migrate dev        # applies all migrations + runs seed
-```
+The course seed is not idempotent. Run a from-zero proof only on the literal disposable
+`ronindojo_course_scratch` database. Both Prisma URLs are pinned at every child-process boundary; never substitute
+`ronindojo_prodsnap`.
 
 ```bash
-# Seed only (after migrations are current)
+# Recreate only the literal disposable scratch target.
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_course_scratch
+/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_course_scratch
 cd apps/web
-bunx prisma db seed
+
+# Apply reviewed migrations and seed, with BOTH URLs fixed to the scratch database.
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_course_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_course_scratch \
+  bun run db:migrate:deploy
+
+env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_course_scratch \
+  DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_course_scratch \
+  bun run db:seed
 ```
 
 ### Expected output
@@ -363,13 +369,9 @@ Unique constraint failed on the fields: (`brand`, `"organizationId"`, `slug`)
 
 **Cause:** Running seed on a database that already has course data. The seed is not idempotent for courses.
 
-**Fix:** Full reset:
-
-```bash
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
-cd apps/web && bunx prisma migrate dev
-```
+**Fix:** Do not reset the canonical local environment. Recreate the literal `ronindojo_course_scratch` database
+with the fully pinned recipe in §2, then rerun the seed there. A unique failure on prodsnap is a stop-and-inspect
+condition, not authorization to reset or db-push it.
 
 ### Enrollment fails: "User must have an active membership"
 
@@ -399,7 +401,9 @@ The action checks `isPublished = true`. Unpublished courses are invisible to enr
 
 ## Rollback
 
-Courses and enrollments are soft-deletable via admin UI (future). For seed data, use the full DB reset procedure above. Deleting a Course cascades to CurriculumItems, CourseEnrollments, and CurriculumItemCompletions.
+Courses and enrollments are soft-deletable via admin UI (future). For seed data, recreate only the literal
+`ronindojo_course_scratch` target with the fully pinned procedure above. Deleting a Course cascades to
+CurriculumItems, CourseEnrollments, and CurriculumItemCompletions.
 
 ## Last verified
 

@@ -42,6 +42,7 @@ function card(over: Partial<BeltCardOutput> = {}): BeltCardOutput {
     awardedAt: null,
     promoterName: null,
     awardedByPassportId: null,
+    promoterIsRecruited: false,
     schoolName: null,
     organizationId: null,
     milestone: null,

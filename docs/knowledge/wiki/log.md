@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-06-13
-last_agent: claude-session-0374
+updated: 2026-07-16
+last_agent: codex-session-0543
 ---
 
 # Wiki Change Log
@@ -24,6 +24,13 @@ Current source of truth:
 - `docs/knowledge/wiki/manual-boundary-registry.md` for owner-gated manual setup and launch blockers.
 
 Use this file only as historical context for early wiki adoption.
+
+## 2026-07-16 — SESSION_0543
+
+- Updated D-047 with the exact +7 Users / +4 Organizations / +4 Passports left by an interrupted local prodsnap
+  verification attempt. Cleanup remains a separate, explicitly authorized, backup-first and scratch-proven data
+  operation; recurring count-neutral verification is not conflated with historical residue removal.
+- Added SESSION_0543 to the wiki index and linked the active drift entry back to its evidence record.
 
 ## 2026-05-30 — SESSION_0311
 

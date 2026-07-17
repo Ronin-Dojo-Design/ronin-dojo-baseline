@@ -351,6 +351,7 @@ afterAll(async () => {
   await db.lineageTreeMember.deleteMany({ where: { treeId: fx.treeId } })
   await db.lineageTree.deleteMany({ where: { id: fx.treeId } })
   await db.lineageNode.deleteMany({ where: { id: { in: fx.nodeIds } } })
+  await db.passport.deleteMany({ where: { userId: { in: fx.userIds } } })
   await db.user.deleteMany({ where: { id: { in: fx.userIds } } })
 })
 
@@ -986,6 +987,7 @@ describe("lineage promoter relationship ranked-regression guard", () => {
     await db.rank.deleteMany({ where: { id: regressionFx.rankId } })
     await db.rankSystem.deleteMany({ where: { id: regressionFx.rankSystemId } })
     await db.discipline.deleteMany({ where: { id: regressionFx.disciplineId } })
+    await db.passport.deleteMany({ where: { userId: { in: regressionFx.userIds } } })
     await db.user.deleteMany({ where: { id: { in: regressionFx.userIds } } })
   })
 

@@ -4,17 +4,17 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-13
-last_agent: claude-session-0533
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
   - docs/protocols/cody-preflight.md
   - docs/agents/cody.md
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0025.md
-  - docs/sprints/SESSION_0139.md
-  - docs/sprints/SESSION_0158.md
+  - docs/sprints/_archive/SESSION_0025.md
+  - docs/sprints/_archive/SESSION_0139.md
+  - docs/sprints/_archive/SESSION_0158.md
 ---
 
 # FAILED_STEPS Log
@@ -703,9 +703,46 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   pruned emptied imports). **Residual:** the `check-e2e-run-evidence.ts` guard's own printed recipe still shows
   the poisoning `bun --env-file … next dev` form — fixed to `bun run dev:e2e` at SESSION_0534 close.
 
+### FS-0032 — Raw E2E Prisma reset targeted the non-disposable local production snapshot
+
+- **Session:** SESSION_0542
+- **Agent:** Codex
+- **Step failed:** The database-target guard in the closing ritual's local E2E verification step was bypassed
+  by running `bun --env-file=.env.e2e x prisma migrate reset --force` directly. The command was intended for
+  disposable `ronindojo_e2e`, but the effective Prisma child-process target was not guarded and re-verified before
+  the destructive command. The real `.env.e2e` already named `ronindojo_e2e` in both URLs; that file content did
+  not survive as the effective target across the raw `bun x` child boundary.
+- **SOP source:** `docs/rituals/closing.md` §4c; `docs/runbooks/dev-environment/verification-and-testing.md`
+  (database roles and effective-target guard).
+- **Root cause:** Bun's raw `x`/`bunx` hop re-resolved the default `.env` and selected its `DIRECT_URL`, allowing
+  the intended E2E command to resolve to local, non-disposable `ronindojo_prodsnap`. This was reproduced with the
+  read-only `migrate status`: the parent named `.env.e2e` and that file contained both correct E2E URLs, while
+  Prisma still reported prodsnap. Stale local-development and database runbooks also presented raw reset/`db push`
+  or Playwright recipes without consistently distinguishing a guarded child environment from a named env file.
+- **Impact:** The local `ronindojo_prodsnap` schema and data were dropped. Remote production and its durable live
+  data were never targeted or changed, and that live state was restored locally. There was no pre-incident local
+  backup, so any prodsnap-only drift that existed before the reset is unknown and unrecoverable; the retained empty
+  casualty database and recovery dumps document the incident but cannot reconstruct that prior local-only state.
+- **Corrective action:** Restored `ronindojo_prodsnap` from a new read-only custom dump of live production;
+  made `DATABASE_URL` and `DIRECT_URL` explicit in both `.env` and `.env.e2e`; added a guarded E2E environment
+  helper with tests; reconciled the verification, local-development, database, seed, catalog, and curriculum
+  runbooks; and forbade raw reset/`db push` commands from inheriting `ronindojo_prodsnap`. Disposable rebuilds now
+  use the guarded E2E setup or a literally named scratch database with both URLs pinned at the child boundary.
+  The web package no longer exposes generic reset/push/migrate aliases; its deploy alias is exact, and its default
+  E2E alias routes through the validated local launcher. CI retains its raw command only under workflow-pinned URLs.
+- **Verification:** The restored snapshot matched the dump's core counts: 12 users, 15 organizations,
+  96 passports, 100 rank entries, and 77 applied migrations. After the reviewed migration preflight,
+  migration 78 was deliberately deployed to `ronindojo_prodsnap`, then realigned to the reviewed expand-only
+  rollout; migration 79 then added only the rollout-safe `PROPOSAL_PENDING` enum value. The restored mirror and
+  E2E fixture each have 79 applied migrations, four nullable proposal columns, zero pending rank reviews, and no
+  proposal-integrity contract constraint yet. WL-P1-9 owns the post-rollout preflight and contract migration. The
+  guarded E2E helper tests passed. The retained empty casualty database plus both dumps preserve recovery evidence,
+  not a byte-for-byte record of the unknowable pre-reset local-only state.
+- **Status:** resolved — SESSION_0542.
+
 <!-- SESSION_0074_TASK_02: pattern clustering for quick bow-in scan -->
 
-Read this section at bow-in instead of skimming all 16 entries.
+Read this section at bow-in instead of skimming every individual entry.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

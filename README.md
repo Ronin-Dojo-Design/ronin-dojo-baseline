@@ -135,8 +135,10 @@ From `apps/web`:
 ```bash
 bun run lint
 bun run typecheck
-bun test --parallel=1 --path-ignore-patterns='e2e/**'
-bunx playwright test
+bun run test
+bun run e2e:db:setup                              # provision disposable ronindojo_e2e
+bun run dev:e2e                                   # terminal 1: guarded E2E-backed server
+bun run test:e2e:local -- --project=chromium      # terminal 2: guarded Playwright launcher
 ```
 
 ## Explore the build

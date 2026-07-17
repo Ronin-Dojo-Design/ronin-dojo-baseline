@@ -13,29 +13,22 @@
  * bridges in `e2e/helpers/auth.ts`), so they are seed-independent and green on the minimal DB.
  *
  * Run:  cd apps/web && bun run e2e:db:setup
- *   (package.json wraps it: `bun --env-file=.env.e2e scripts/setup-e2e-db.ts`, so DATABASE_URL/
- *    DIRECT_URL already point at ronindojo_e2e when this executes.)
+ *   (package.json loads `.env.e2e`; the script validates DATABASE_URL and forces the Prisma child's
+ *    DATABASE_URL + DIRECT_URL to that same e2e target.)
  *
  * Idempotent — safe to re-run.
  */
 import { execFileSync } from "node:child_process"
 import { existsSync } from "node:fs"
+import { assertLiteralLocalE2eUrls, e2ePrismaChildEnv, LOCAL_E2E_DATABASE_NAME } from "./e2e-db-env"
 
-const DATABASE_URL = process.env.DATABASE_URL
-if (!DATABASE_URL) {
-  throw new Error("DATABASE_URL unset — run via `bun --env-file=.env.e2e scripts/setup-e2e-db.ts`")
-}
+const configuredDatabaseUrl = process.env.DATABASE_URL
+assertLiteralLocalE2eUrls(configuredDatabaseUrl, process.env.DIRECT_URL)
 
-const dbUrl = new URL(DATABASE_URL)
-const dbName = dbUrl.pathname.replace(/^\//, "")
-
-// Safety rail: this script CREATES the target DB. Refuse to touch anything that isn't an explicit
-// e2e database (never prodsnap/dev). The `.env.e2e` DB name must contain "e2e".
-if (!/e2e/.test(dbName)) {
-  throw new Error(
-    `Refusing to provision non-e2e database "${dbName}". Point DATABASE_URL at ronindojo_e2e (.env.e2e).`,
-  )
-}
+// Give the validated value a stable `string` type before it is captured by migrateDeploy().
+const e2eDatabaseUrl: string = configuredDatabaseUrl
+const dbUrl = new URL(e2eDatabaseUrl)
+const dbName = LOCAL_E2E_DATABASE_NAME
 
 // createdb is off the sandbox PATH; Postgres.app ships it at an absolute path (works locally).
 const CREATEDB_ABS = "/Applications/Postgres.app/Contents/Versions/latest/bin/createdb"
@@ -66,9 +59,13 @@ function ensureDatabase() {
 
 function migrateDeploy() {
   console.log("→ prisma migrate deploy…")
-  // Inherits process.env (DATABASE_URL/DIRECT_URL from --env-file=.env.e2e), so the CLI's
-  // prisma.config.ts (`DIRECT_URL ?? DATABASE_URL` locally) targets ronindojo_e2e.
-  execFileSync("bunx", ["prisma", "migrate", "deploy"], { stdio: "inherit", env: process.env })
+  // Prisma config prefers DIRECT_URL and imports dotenv/config, which can fill a missing value from
+  // the default `.env`. Force BOTH child URLs to the e2e URL validated above; never let a stale
+  // prodsnap DIRECT_URL override the safety rail.
+  execFileSync("bunx", ["prisma", "migrate", "deploy"], {
+    stdio: "inherit",
+    env: e2ePrismaChildEnv(process.env, e2eDatabaseUrl),
+  })
 }
 
 function main() {

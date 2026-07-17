@@ -11,8 +11,10 @@
  *    across reload (localStorage). The Upload action opens the bottom-sheet.
  *  - Desktop viewport hides both the bottom nav and the MAB.
  *
- * Local/manual aid (skipped in CI). Run against the Epic B dev server on :3502:
- *   cd apps/web && PW_BASE_URL=http://localhost:3502 bunx playwright test mobile-shell.spec.ts --project=chromium
+ * Local/manual aid (skipped in CI). Run against the guarded E2E server on :3502:
+ *   cd apps/web
+ *   PORT=3502 bun run dev:e2e  # terminal 1
+ *   PW_BASE_URL=http://localhost:3502 bun run test:e2e:local -- e2e/mobile-shell.spec.ts --project=chromium  # terminal 2
  */
 import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser, grantTestEntitlement } from "./helpers/auth"

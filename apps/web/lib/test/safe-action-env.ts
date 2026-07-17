@@ -46,6 +46,7 @@ type TestSessionUser = {
   id: string
   role?: string | null
   lastActiveBrandId?: string | null
+  extraGrants?: string[]
 }
 
 type SafeActionMockOptions = {
@@ -116,6 +117,7 @@ export const installSafeActionMocks = (options: SafeActionMockOptions = {}): Saf
           id: user.id,
           role: user.role ?? null,
           lastActiveBrandId: user.lastActiveBrandId ?? null,
+          extraGrants: user.extraGrants ?? [],
         },
         session: { id: "safe-action-test-session" },
       }

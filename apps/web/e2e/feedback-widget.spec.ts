@@ -8,8 +8,10 @@
  * fills + submits real feedback and asserts the success toast, at BOTH a 390px mobile
  * viewport and a desktop viewport. Screenshots are written to test-results/.
  *
- * Run against a running app (local dev, or a deployed URL via PLAYWRIGHT_BASE_URL):
- *   cd apps/web && bunx playwright test feedback-widget.spec.ts --project=chromium
+ * Run against the guarded local E2E server (or set PW_BASE_URL to a non-production deployment):
+ *   cd apps/web
+ *   bun run dev:e2e  # terminal 1
+ *   bun run test:e2e:local -- e2e/feedback-widget.spec.ts --project=chromium  # terminal 2
  *
  * NOTE: a real submit writes a Report row (type=Feedback) and, in an env with
  * RESEND configured, sends the operator notification. Point baseURL at a NON-prod

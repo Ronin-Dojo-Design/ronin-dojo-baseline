@@ -4,13 +4,15 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-12
-last_agent: claude-session-0529
+updated: 2026-07-16
+last_agent: codex-session-0543
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
-  - docs/sprints/SESSION_0017.md
+  - docs/sprints/_archive/SESSION_0017.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0542.md
+  - docs/sprints/SESSION_0543.md
 ---
 
 # Drift Register
@@ -628,6 +630,66 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   `promoter-placeholder.ts` + `SESSION_0540.md` + `ubiquitous-language.md`; (2) the **promoter-as-placeholder ADR**
   (next session) must ratify the doorless-placeholder sub-shape, the bucket-org/`meta.passportId` link, the
   fuzzy-dedup precision tradeoff + admin split/merge escape, and the identity+CRM-emit transactional boundary
-  (WL-P3-44); (3) log `decideBackfillTrust`/`applyBackfillTrustDecision` as RankAward-keyed logic the table-drop
-  must relocate to `RankEntry.status`.
-- **Status: OPEN** — ADR + "claimable" softening = next-session first-tasks (SESSION_0540 close).
+  (WL-P3-44); (3) log the belt trust/proposal compatibility writers as RankAward-keyed logic the table-drop must
+  relocate to `RankEntry.status`.
+- **Status: RESOLVED SESSION_0541** — **ADR 0047** (`promoter-as-placeholder-recruited-coach-identity`) authored +
+  accepted, ratifying the doorless-placeholder sub-shape (D1), the bucket-org / `meta.passportId` link (D2), the
+  exact-normalized dedup + phase-2 admin MERGE escape (D3), the identity+CRM transactional boundary (D4/WL-P3-44),
+  and the honest-rename admin-path policy (D5/WL-P3-47). "Claimable" softened → "recruited-coach placeholder (claim
+  door = phase-2)" in `promoter-placeholder.ts` + `emit-promoter-lead.ts` + `ubiquitous-language.md` (FINDING_01).
+  SESSION_0542 then replaced both Passport and Lead matching with the shared strict
+  `exactNormalizedNameMatch` equality and pinned typo/reorder/repetition/normalization regressions (WL-P3-49),
+  without reopening ADR 0047 D3. RankAward-keyed trust/proposal logic is named in the RankAward-retire epic task G,
+  including the shared verification core's compatibility write (FINDING_06, D6). The distinct phase-2
+  recruited-coach claim/confirm/MERGE loop is now explicitly owned by that epic's task H; it is not silently included
+  in this resolved decision/integrity finding.
+
+### D-046 — Promoter-change review semantics disagree between domain flow and implementation
+
+- **Source A:** `docs/product/black-belt-legacy/lineage-data-wiring-flow.md` says a promoter/school edit creates
+  a pending proposal while preserving the current active RankEntry; APPROVED applies the proposal and DENIED
+  retains the prior value.
+- **Source B:** the SESSION_0540/0541 implementation writes the changed promoter onto the award/entry immediately
+  as UNVERIFIED; approval verifies that mutable current value, while denial leaves it active but unverified.
+- **Risk:** a member can replace provenance before review, and a reviewer can approve a different promoter from
+  the one inspected. UI language and action atomicity cannot be made honest while both models remain plausible.
+- **Decision (operator, SESSION_0542):** preserve the prior promoter while an immutable proposed promoter is
+  pending. APPROVED atomically applies + verifies the proposed promoter; DENIED leaves the prior promoter
+  untouched. This governs the established-coach `PROMOTER_CHANGED` review lane; ADR 0047's distinct free-typed
+  recruited-coach path remains UNVERIFIED/no-review.
+- **Second-edit rule (operator, SESSION_0542):** at most one `PROPOSAL_PENDING` promoter proposal per RankEntry. A retry of
+  the exact same target is idempotent; a different target is rejected until the pending proposal is approved or
+  denied. Do not overload DENIED to mean superseded and do not accumulate approvable proposals.
+- **Admin override rule (operator, SESSION_0542):** ordinary admin promoter edits are blocked while a member
+  proposal is pending. A separate explicit override may atomically mark the pending proposal DENIED, apply the
+  admin correction, and audit both consequences; silent overwrite is forbidden.
+- **Status: RESOLVED SESSION_0542** — `decideBackfillPromoterTransition` is active-promoter-first;
+  `applyMemberPromoterTransition` preserves established A and creates the captured B proposal; the server-only
+  proposal core conditionally claims decisions and applies approval/denial/explicit-override consequences inside
+  one transaction. ADR 0047 D7, the ubiquitous language, and both rank-entry flow documents now encode the same
+  accepted-promoter/proposal model. WL-P3-51 records the integrity-hardening and regression evidence; the semantic
+  fork is closed.
+
+### D-047 — Local prodsnap retains historical tagged integration-test fixtures
+
+- **Discovered:** SESSION_0542's post-suite read-only inventory found `ronindojo_prodsnap` at 34 Users, 18
+  Organizations, and 134 Passports, including clearly tagged rows from earlier/interrupted integration runs.
+  This is local-only data drift; live production was not involved.
+- **Current leak closed:** three repeatable teardown gaps were corrected in
+  `claim-review-actions.test.ts`, `editor-actions.test.ts`, and `queries.integration.test.ts`. Their 39 focused
+  tests passed and held the inventory exactly at 34/18/134 with zero `RankEntryReview` rows before and after.
+- **SESSION_0543 update:** one overloaded, aborted prodsnap verification attempt ran alongside reviewer workloads
+  and left the local mirror at 41 Users, 22 Organizations, 138 Passports, and zero `RankEntryReview` rows: a
+  +7/+4/+4 delta from the verified SESSION_0542 baseline. Read-only inventory attributes the new rows to interrupted
+  onboarding fixtures (`1784228078417`, `1784228265795`), `session-0097-checkout-1784228042288`, and
+  `s0440-rvcs-1784228106630`. The onboarding discriminator bug that made interrupted runs collide was fixed, but
+  that does not authorize deleting this existing residue.
+- **Residual risk:** historical fixture rows reduce the restored mirror's fidelity and may distort future
+  integration queries, but deleting by a name prefix without dependency inventory could remove data that a later
+  test or local investigation still references.
+- **Fix direction:** create a read-only dependency inventory and reviewed backup-first, prefix-scoped cleanup for
+  the confirmed fixture families; prove count and FK deltas on a scratch clone before applying it to prodsnap. Keep
+  cleanup separate from the proposed count-neutral verification goal: the goal prevents recurring residue, while
+  D-047 removes already-existing local data only through an explicitly authorized operation.
+- **Status: OPEN (local data hygiene, non-blocking for the PR #210 application release).** No cleanup was performed
+  in SESSION_0543.

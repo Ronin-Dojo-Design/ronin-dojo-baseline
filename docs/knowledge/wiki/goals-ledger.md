@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-14
-last_agent: claude-session-0537
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -180,15 +180,16 @@ aggregator reads it with no new parser logic.
 
 ### G-010 — Instructor review queue for backfill promoter-changed reviews
 
-- **Status:** open — P1
-- **Objective:** build the admin surface that ACTIONS the `RankEntryReview{PROMOTER_CHANGED, status: PENDING}`
-  rows the SESSION_0540 backfill-verification model CREATES. Conform to the AdminCollection data-table pattern
-  (`/app/techniques` reference; `runAdminListTransaction`, inline-gated index): list member/belt/reason/note,
-  approve (→ `verifyRankEntry(rankEntryId)` + review `APPROVED`) / dismiss (→ `DENIED`). RBAC = reuse `belt.admin`.
+- **Status:** done — P1 (SESSION_0541 + SESSION_0542)
+- **Objective:** the `belt.admin` AdminCollection queue now actions captured
+  `RankEntryReview{PROMOTER_CHANGED, status: PROPOSAL_PENDING}` proposals through an inspect-before-decide detail route.
+  Approval atomically applies the immutable proposed promoter and verifies the belt; denial preserves the
+  accepted promoter; an explicit admin override closes and corrects the proposal atomically. The list links
+  member/belt/proposed-promoter context to canonical confirmed actions.
 - **Lane:** belt / lineage / admin. **Depends on:** SESSION_0540 backfill-verification model (ships the
   create-side; `verifyRankEntry` already exists). **Enables:** closing the trust loop — a member's
   different-promoter backfill can actually be reviewed instead of sitting UNVERIFIED forever.
-- **Why:** SESSION_0540 ships reviews as CREATE-without-consumer (Doug/Giddy flagged the phase boundary): the
-  card shows "Pending review" but nothing actions it. Safe to ship (rows don't harm; badge is honest) but the
-  queue is the immediate follow-on. Also fold in the phase-2 register-later confirm loop (leaded coach claims →
-  binds → confirms → UNVERIFIED→VERIFIED).
+- **Why:** SESSION_0540 shipped reviews as CREATE-without-consumer. SESSION_0541 added the queue; SESSION_0542
+  closed the second-order integrity and AdminCollection findings with an immutable proposal snapshot,
+  transaction-serialized decisions, addressable detail, and confirmation UX. The separate register-later
+  confirmation/MERGE loop is explicitly owned by RankEntry-retirement epic task H rather than this completed queue.

@@ -2,7 +2,11 @@
 
 import { z } from "zod"
 import { adminActionClient } from "~/lib/safe-actions"
-import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
+import {
+  findAndLockPendingPromoterReview,
+  lockPromoterWorkflowScope,
+} from "~/server/belt/promoter-proposal-core"
+import { verifyRankEntryInTransaction } from "~/server/belt/verify-rank-entry-core"
 
 const verifyRankEntrySchema = z.object({
   rankEntryId: z.string().min(1),
@@ -10,9 +14,9 @@ const verifyRankEntrySchema = z.object({
 
 /**
  * Steward "Verify" affordance (SESSION_0522) — flip a member's RankEntry
- * UNVERIFIED → VERIFIED. This is the ONLY reachable path to verify a self-submit belt:
- * a join-signup's declared belt lands UNVERIFIED (see `place-lead-core.ts`), and the
- * `RankEntryReview` workflow is unwired.
+ * UNVERIFIED → VERIFIED. This is the standalone path for an unreviewed self-submit belt:
+ * a join-signup's declared belt lands UNVERIFIED (see `place-lead-core.ts`). An open
+ * promoter-change review must instead reach a terminal decision through its review workflow.
  *
  * Authorization: `adminActionClient`. A platform admin holds `belt.admin` via the `*`
  * grant (repo rule: reuse the existing role system, never a 5th authz — the admin
@@ -30,41 +34,21 @@ export const verifyRankEntry = adminActionClient
     const result = await db.$transaction(async tx => {
       const entry = await tx.rankEntry.findUnique({
         where: { id: rankEntryId },
-        select: { id: true, status: true, rankAwardId: true, passportId: true, rankId: true },
+        select: { rankAwardId: true },
       })
       if (!entry) throw new Error("Rank entry not found.")
 
-      const award = await tx.rankAward.findUnique({
-        where: { id: entry.rankAwardId },
-        select: { id: true, verificationStatus: true },
+      await lockPromoterWorkflowScope({
+        tx,
+        rankAwardId: entry.rankAwardId,
+        lockMemberAuthorityAwards: false,
       })
-      if (!award) throw new Error("Underlying rank award not found.")
-
-      // Promote a non-IMPORTED award so its VERIFIED status is durable; IMPORTED keeps
-      // its provenance (the mapping already derives it to a VERIFIED entry).
-      if (award.verificationStatus !== "IMPORTED" && award.verificationStatus !== "VERIFIED") {
-        await tx.rankAward.update({
-          where: { id: award.id },
-          data: { verificationStatus: "VERIFIED" },
-        })
+      const pendingReview = await findAndLockPendingPromoterReview(tx, entry.rankAwardId)
+      if (pendingReview) {
+        throw new Error("Resolve the open promoter-change review before verifying this rank.")
       }
 
-      // Derive the canonical entry from the (now durable) award → VERIFIED.
-      await syncRankEntryFromAward(tx, entry.rankAwardId)
-
-      await tx.auditLog.create({
-        data: {
-          brand,
-          action: "belt.entry.verified",
-          entityType: "RankEntry",
-          entityId: entry.id,
-          userId: user.id,
-          before: { status: entry.status, awardVerificationStatus: award.verificationStatus },
-          after: { status: "VERIFIED" },
-        },
-      })
-
-      return { rankEntryId: entry.id, passportId: entry.passportId, rankId: entry.rankId }
+      return verifyRankEntryInTransaction(tx, rankEntryId, { brand, userId: user.id })
     })
 
     revalidate({ paths: ["/lineage", "/app/profile"], tags: ["lineage"] })

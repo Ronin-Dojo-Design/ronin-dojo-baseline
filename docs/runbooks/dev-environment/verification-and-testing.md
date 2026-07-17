@@ -4,8 +4,8 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-06-28
-last_agent: claude-session-0462
+updated: 2026-07-16
+last_agent: codex-session-0542
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
@@ -43,8 +43,8 @@ surface here is narrower than it looks.
 | --- | --- | --- | --- |
 | Typecheck | `bun run typecheck` (`next typegen && tsc --noEmit`) | Types compile | **GitHub Actions** (`ci.yml` → `typecheck`) + Vercel build |
 | Lint/format | `bun run lint:check` + `bun run format:check` (drop `:check` to fix locally) | oxlint correctness/best-practice + oxfmt formatting | **GitHub Actions** (`ci.yml` → `oxc`) |
-| Unit tests | `bun test` (ignores `e2e/**`) | Pure logic + the guards below | **GitHub Actions** (`ci.yml` → `unit`, Postgres 16 service) |
-| E2E | `bunx playwright test` | Real browser flows against a real DB | **GitHub Actions** (`playwright.yml`): chromium full + firefox/webkit lineage subset, 3 parallel jobs, Postgres 16 service |
+| Unit tests | `bun run test` (package script ignores `e2e/**`) | Pure logic + the guards below | **GitHub Actions** (`ci.yml` → `unit`, Postgres 16 service) |
+| E2E | Local: `bun run dev:e2e`, then `bun run test:e2e:local -- …`; CI: workflow-pinned `bunx playwright test` | Real browser flows against a real DB | **GitHub Actions** (`playwright.yml`): chromium full + firefox/webkit lineage subset, 3 parallel jobs, Postgres 16 service |
 | Wiki lint | `bun run wiki:lint` (repo root) | Doc links/backlinks/frontmatter (see [wiki-lint](../../protocols/wiki-lint.md)) | Local only (close gate) |
 
 ### The CI map
@@ -72,21 +72,69 @@ surface here is narrower than it looks.
 > clearing 8 pre-existing `biome ci` errors (formatting + imports + one a11y rule taught about the
 > `Checkbox` primitive via `biome.json` `inputComponents`).
 
-## Why DB-dependent unit tests fail locally
+## DB-dependent Bun tests locally
 
-Many `bun test` files hit a real Prisma client (`db.user.create`, `db.tournament.findMany`, …). With
-no reachable database those fail with `db.<model>.<op> is undefined`. Locally the dev DB is
-**Postgres.app**, which re-gates the `node` binary under "trust" auth for agent-spawned processes (see
-[[turbopack-prisma-dev-server-broken]] memory). So:
+Many `bun test` files hit a real Prisma client (`db.user.create`, `db.tournament.findMany`, …). On this
+laptop they run against Postgres.app + `ronindojo_prodsnap`; fixture-owning tests must clean up their own
+rows. Pure unit tests remain DB-free and can run in any shell.
 
-- **Pure unit tests** (logic over fixtures — the guards, `rank-progression`, `search`, visibility
-  payload tests) run clean locally and are the ones to rely on in a session.
-- **DB-dependent unit tests** are expected to fail in a DB-less shell. Do **not** treat their failures
-  as regressions — characterize them (`grep` for `db\.` undefined) and confirm none are in your
-  touched files. Their real coverage comes through **e2e in CI**, which has a Postgres service.
+A genuinely DB-less or Postgres.app-denied shell is **environment-blocked, not green**. Record the exact
+connection error and run the pure subset, but do not relabel unrun DB-backed behavior as verified. The
+automated equivalent is the **CI unit job's Postgres service** (migrate + full seed + `bun run test`), not
+Playwright by proxy. Playwright has its own fixture contract below.
 
-This is why **CI (Playwright + Postgres) is the authoritative verifier for DB-backed behavior**, and
-local pure-unit + Vercel build cover the rest.
+### The e2e DB is a hermetic fixture, not a prodsnap mirror
+
+Two different DBs back the two test layers — don't conflate them (SESSION_0540/0541):
+
+- **`ronindojo_e2e`** is a **hermetic mint-and-assert fixture** (FS-0031): disposable and migrated from
+  scratch for Playwright/browser work. `setup-e2e-db.ts` is deliberately **migrate-only**, matching the
+  Playwright workflow's empty base; Playwright `globalSetup` adds only its tournament fixture. If a manual
+  smoke explicitly needs reference data such as the BJJ ladder, seed it as a separate, visible step with
+  `bun --env-file=.env.e2e prisma/seed.ts`. (`belt-journey` is a manual-only `describe.skip` smoke gated
+  behind `RUN_BELT_E2E=1`.)
+- **`ronindojo_prodsnap`** is the **realistic, manually-maintained prod mirror** that local **DB-dependent Bun
+  unit/integration tests** point at. A schema lane may advance it with a reviewed additive migration before
+  prod deploy; back it up and inventory preflight conditions first. It is not disposable: never reset it, and
+  run destructive/adversarial migration proofs against a throwaway clone or scratch restore instead.
+
+DB-backed fixture suites must also be **count-neutral** on prodsnap. SESSION_0542's post-suite inventory found and
+fixed three legacy teardown leaks (claim-review Passports, lineage-editor Passports, and a second course instructor
+User); their 39 focused tests then held the same before/after counts. Historical tagged rows from earlier or
+interrupted runs remain local drift D-047. Do not delete them ad hoc: inventory dependencies and use a reviewed,
+prefix-scoped cleanup with a backup. When changing a DB-backed fixture, record a relevant before/after count or use
+a rollback-owned transaction so a passing assertion cannot hide teardown residue.
+
+#### Effective-target guard (FS-0032)
+
+For every command that can invoke Prisma, validate the **effective CLI target**, not only `DATABASE_URL`.
+Locally, `prisma.config.ts` prefers `DIRECT_URL` and imports `dotenv/config`. More importantly, a raw Bun `x` /
+`bunx` child can re-resolve the default `.env` and discard the parent command's `--env-file=.env.e2e` overlay.
+That observed hop selected `ronindojo_prodsnap` even when the real `.env.e2e` set **both** URLs to
+`ronindojo_e2e`. A named env file, or even inspecting its contents, is therefore not proof of a raw Prisma or
+Playwright child's effective datasource.
+
+- Use `bun run e2e:db:setup`; its guard validates the E2E database name and forces **both** child URLs to the
+  same `ronindojo_e2e` URL.
+- Use `bun run dev:e2e` plus `bun run test:e2e:local -- …` for local browser work. The launchers validate and
+  explicitly inherit the E2E target across their child-process boundaries. Never replace the test launcher with
+  raw `bunx playwright test` locally: its DB helpers can otherwise write/delete fixture rows in prodsnap.
+- Do not run raw `prisma migrate reset`, `db push`, or `migrate deploy` as an E2E provisioning shortcut.
+- Keep both `DATABASE_URL` and `DIRECT_URL` pointed at `ronindojo_e2e` in the real gitignored `.env.e2e`.
+- `bun run build` executes `prebuild` → `prisma migrate deploy`. On a normal local `.env`, that intentionally
+  targets prodsnap; finish the migration backup/preflight first rather than using build to discover the target.
+
+`e2e:db:setup` is idempotent but does not empty an existing database. For a fresh migration-from-zero proof,
+name the disposable target literally, then run only the guarded setup:
+
+```bash
+/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_e2e
+bun run e2e:db:setup
+```
+
+The practical rule when your worktree can't run affected e2e: don't fake a green. Record the local blocker and,
+after the operator separately authorizes the push, watch CI as the authoritative e2e verifier (see
+[[e2e-db-hermetic-not-prodsnap]]).
 
 ## Guard registry (executable invariants)
 
@@ -107,9 +155,11 @@ enforcement.)
 bun run typecheck                 # next typegen + tsc --noEmit
 bun run lint:check                # oxlint (drop :check to auto-fix)
 bun run format:check              # oxfmt --check (drop :check to write)
-bun test                          # all unit tests (expect DB-dependent failures locally)
+bun run test                      # all unit tests; DB-backed files use local prodsnap
 bun test lib/lineage              # scope to a dir/file
-bunx playwright test --project=chromium   # e2e (needs a DB + dev server)
+bun run e2e:db:setup              # provision the literal disposable ronindojo_e2e target
+bun run dev:e2e                   # terminal 1: guarded E2E-backed Next dev server
+bun run test:e2e:local -- <spec> --project=chromium  # terminal 2: guarded local browser test
 bun run wiki:lint                 # from repo root — doc lint
 ```
 

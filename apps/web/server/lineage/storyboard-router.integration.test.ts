@@ -25,6 +25,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, mock } from "bun:test"
 import { createRouterClient, ORPCError } from "@orpc/server"
 
+// The root app router now joins the belt proposal core, whose transaction-only modules are marked
+// `server-only`. Bun does not provide Next's poison-package shim in its test runtime.
+mock.module("server-only", () => ({}))
+
 // Recording seams: `server/orpc/revalidate.ts` maps `tags` → `revalidateTag(tag, { expire: 0 })`
 // (NOT `updateTag` — Server-Actions-only, E872 in the `/api/rpc` Route Handler; see the seam's
 // docblock) and `paths` → `revalidatePath`. Capturing these proves the mutation's cache contract.
@@ -55,8 +59,9 @@ mock.module("~/lib/auth", () => ({
 }))
 
 import { Brand } from "~/.generated/prisma/client"
-import { appRouter } from "~/server/router"
 import { db } from "~/services/db"
+
+const { appRouter } = await import("~/server/router")
 
 const TS = Date.now()
 const TAG_PREFIX = "storyboard-router-test-"

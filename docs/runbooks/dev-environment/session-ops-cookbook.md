@@ -4,8 +4,8 @@ slug: session-ops-cookbook
 type: reference
 status: active
 created: 2026-06-10
-updated: 2026-06-11
-last_agent: claude-session-0360
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/dev-environment/verification-and-testing.md
   - docs/runbooks/dev-environment/dev-environment.md
@@ -147,5 +147,8 @@ GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .       # index the working tree B
 bun run wiki:lint                                      # docs gate (run from repo root)
 git add -A && git status                               # review; no secrets/.env/node_modules
 git commit -m "build(toolchain): …"                   # conventional; hash reported in chat, not chased
-git push origin main                                  # standing authorization; run FS-0024 guard first
 ```
+
+**HOLD after the commit.** Report the exact branch/remote action and request the operator's explicit authorization
+for that one push. No standing authorization carries across pushes or sessions. Only after the operator says “go”
+for the exact action may the agent run the FS-0024 guard and push.

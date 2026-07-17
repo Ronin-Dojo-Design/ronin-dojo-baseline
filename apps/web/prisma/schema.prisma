@@ -1114,13 +1114,15 @@ model Passport {
   // nullable back-relations alongside the existing User links. The satellite FKs flip to NOT NULL and
   // the old userId columns drop in Phase 3b. FightRecord was promoted to a 5th satellite (operator,
   // SESSION_0390 grill). `userId` is now nullable: an accountless Passport = the placeholder.
-  directoryProfile   DirectoryProfile?
-  lineageNode        LineageNode?
-  affiliations       Affiliation[]
-  rankAwardsEarned   RankAward[]
-  rankAwardsPromoted RankAward[]       @relation("PromotedByPassport")
-  rankEntries        RankEntry[]
-  fightRecords       FightRecord[]
+  directoryProfile        DirectoryProfile?
+  lineageNode             LineageNode?
+  affiliations            Affiliation[]
+  rankAwardsEarned        RankAward[]
+  rankAwardsPromoted      RankAward[]       @relation("PromotedByPassport")
+  rankEntries             RankEntry[]
+  expectedPromoterReviews RankEntryReview[] @relation("RankEntryReviewExpectedPromoter")
+  proposedPromoterReviews RankEntryReview[] @relation("RankEntryReviewProposedPromoter")
+  fightRecords            FightRecord[]
 
   // @added SESSION_0437 (ADR 0036) — unified person claim keyed on identity.
   claimRequests PassportClaimRequest[]
@@ -1334,7 +1336,7 @@ model RankSystem {
 }
 
 model Rank {
-  id                String   @id @default(cuid(2))
+  id                String      @id @default(cuid(2))
   sortOrder         Int
   name              String
   shortName         String?
@@ -1350,9 +1352,9 @@ model Rank {
   // treatment (bar color + outline). Render-layer only, never rank authority. Null for
   // non-BJJ / unseeded ranks (BeltSwatch degrades gracefully to a neutral bar).
   beltFamily        BeltFamily?
-  isSystem          Boolean  @default(false)
+  isSystem          Boolean     @default(false)
   brand             Brand?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime    @default(now())
 
   rankSystem   RankSystem @relation(fields: [rankSystemId], references: [id])
   rankSystemId String
@@ -2189,6 +2191,12 @@ enum RankEntryReviewStatus {
   PENDING
   APPROVED
   DENIED
+  // @added   SESSION_0542 (2026-07-16)
+  // @why     Prevent rolling legacy decision writers from consuming immutable promoter proposals
+  // @wired   server/belt/promoter-proposal-core.ts, server/admin/rank-reviews/actions.ts
+  /// Captured active-first promoter proposal. Kept distinct from legacy PENDING so a rolling old
+  /// decision writer cannot approve the row without applying its immutable proposed promoter.
+  PROPOSAL_PENDING
 }
 
 enum RankEntryReviewReason {
@@ -2286,18 +2294,32 @@ model RankEntry {
 
 /// Steward workflow contract for higher-rank and proposed promoter/school changes.
 model RankEntryReview {
-  id        String                @id @default(cuid(2))
-  status    RankEntryReviewStatus @default(PENDING)
-  reason    RankEntryReviewReason
-  note      String?
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @updatedAt
+  id                         String                @id @default(cuid(2))
+  status                     RankEntryReviewStatus @default(PENDING)
+  reason                     RankEntryReviewReason
+  note                       String?
+  // @added   SESSION_0542 (2026-07-16)
+  // @why     Preserve the accepted and proposed promoter identities as an immutable decision snapshot
+  // @wired   server/belt/promoter-proposal-core.ts, server/admin/rank-reviews/queries.ts
+  /// Captures the immutable proposal snapshot boundary. Null means a legacy review without payload.
+  proposalCapturedAt         DateTime?
+  /// Active promoter identity/name observed when the proposal was captured.
+  expectedPromoterPassportId String?
+  expectedPromoterName       String?
+  /// Proposed established-coach identity. Nullable only for additive rollout / legacy rows.
+  proposedPromoterPassportId String?
+  createdAt                  DateTime              @default(now())
+  updatedAt                  DateTime              @updatedAt
 
-  rankEntry   RankEntry @relation(fields: [rankEntryId], references: [id], onDelete: Cascade)
-  rankEntryId String
+  rankEntry        RankEntry @relation(fields: [rankEntryId], references: [id], onDelete: Cascade)
+  rankEntryId      String
+  expectedPromoter Passport? @relation("RankEntryReviewExpectedPromoter", fields: [expectedPromoterPassportId], references: [id], onDelete: Restrict)
+  proposedPromoter Passport? @relation("RankEntryReviewProposedPromoter", fields: [proposedPromoterPassportId], references: [id], onDelete: Restrict)
 
   @@index([rankEntryId, status])
   @@index([status, reason])
+  @@index([expectedPromoterPassportId])
+  @@index([proposedPromoterPassportId])
 }
 
 // @added SESSION_0479 (2026-07-01) — member-owned belt journey enrichment.

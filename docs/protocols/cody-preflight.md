@@ -4,8 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-26
-last_agent: claude-session-0452
+updated: 2026-07-16
+last_agent: codex-session-0542
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -123,9 +123,10 @@ For any task that adds or modifies Prisma models (3+ models = mandatory Petey fi
   a free-form `String`, NOT an enum — use catalog constants from `errors.ts`.
 
 ### 4. Runbook consulted
-- [ ] `docs/runbooks/schema-migration.md` read
-- [ ] `docs/runbooks/prisma-workflow.md` read
-- Migration strategy: {db push for dev / migrate dev for staging}
+- [ ] `docs/runbooks/database/schema-migration.md` read
+- [ ] `docs/runbooks/database/prisma-workflow.md` read
+- Migration strategy: {throwaway scratch prototype / shipping migration authoring / reviewed deploy}; effective
+  `DATABASE_URL` and `DIRECT_URL` target: {same explicit database name}
 
 ### 5. Data flow reference
 - [ ] `docs/runbooks/sops/sop-data-and-wiring-flows.md` — relevant flow identified: {which}

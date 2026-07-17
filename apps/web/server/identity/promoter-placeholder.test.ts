@@ -5,7 +5,7 @@ import { ensurePromoterPlaceholder } from "~/server/identity/promoter-placeholde
 import { db } from "~/services/db"
 
 /**
- * `ensurePromoterPlaceholder` — the freetext-coach → claimable placeholder Passport primitive
+ * `ensurePromoterPlaceholder` — freetext coach → recruited-coach placeholder Passport
  * (SESSION_0540 rework). Real Postgres: proves find-or-create, dedup, and the tight candidate scope.
  *
  * Run: cd apps/web && bun run test server/identity/promoter-placeholder.test.ts
@@ -39,7 +39,7 @@ describe("ensurePromoterPlaceholder", () => {
       where: { id: result!.passportId },
       select: { userId: true, displayName: true },
     })
-    // Hidden + claimable: no account attached, and it is the recruitment artifact only
+    // Hidden recruitment artifact: no account attached
     // (no LineageNode / DirectoryProfile minted here — phase-2 boundary).
     expect(passport?.userId).toBeNull()
     expect(passport?.displayName).toBe(name)
@@ -71,6 +71,39 @@ describe("ensurePromoterPlaceholder", () => {
     const second = await ensurePromoterPlaceholder(name)
     expect(second!.createdPlaceholder).toBe(false)
     expect(second!.passportId).toBe(first!.passportId)
+  })
+
+  it("does not dedup a typed coach onto an accountless directory identity", async () => {
+    const name = tag("Coach With Directory")
+    const directoryCoach = await db.passport.create({
+      data: {
+        displayName: name,
+        directoryProfile: { create: { slug: tag("coach-with-directory") } },
+      },
+      select: { id: true },
+    })
+    const promotee = await db.passport.create({
+      data: { displayName: tag("directory-coach-promotee") },
+      select: { id: true },
+    })
+    const rank = await db.rank.findFirstOrThrow({
+      where: { rankSystem: { discipline: { code: "bjj" } } },
+      select: { id: true },
+    })
+    await db.rankAward.create({
+      data: {
+        passportId: promotee.id,
+        rankId: rank.id,
+        source: "STATED",
+        verificationStatus: "UNVERIFIED",
+        awardedByPassportId: directoryCoach.id,
+      },
+    })
+
+    const result = await ensurePromoterPlaceholder(name)
+
+    expect(result).toMatchObject({ createdPlaceholder: true })
+    expect(result!.passportId).not.toBe(directoryCoach.id)
   })
 
   it("NEVER fuzzy-matches a typed name onto a real on-tree person (tight scope)", async () => {

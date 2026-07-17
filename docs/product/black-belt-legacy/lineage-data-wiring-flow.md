@@ -4,18 +4,20 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-07-09
-last_agent: codex-session-0517
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
   - docs/product/black-belt-legacy/rank-entry-unified-data-flow.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
+  - docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0350.md
   - docs/sprints/SESSION_0517.md
+  - docs/sprints/SESSION_0542.md
 tags:
   - lineage
   - directory
@@ -84,8 +86,11 @@ but it does not own rank truth.
   count; `PENDING` does not.
 - One standard entry exists per member/rank. Multiple custom entries are allowed and carry a label plus placement
   relative to the default ladder.
-- Promotion date edits are always immediate. Promoter or school changes create a pending review while preserving the
-  existing active entry and current-rank ceiling.
+- Promotion date edits are always immediate. Replacing an established promoter creates one immutable pending
+  proposal while preserving the accepted promoter, entry status, and current-rank ceiling. A free-typed
+  recruited-coach promoter follows ADR 0047's separate no-review path and stays `UNVERIFIED`.
+- `SCHOOL_CHANGED` remains a target review reason, but ADR 0047 D7 does not expand the established-promoter slice
+  to school edits by analogy.
 - Story, photos, and uploaded certificate evidence are member-owned enrichment and do not change rank status.
 
 ## 2. Rank entry and steward review flow
@@ -97,10 +102,15 @@ Member dashboard: /app/profile
   |      |
   |      +--> date change ------------------------------> save immediately
   |      +--> story/media/certificate evidence ---------> save immediately
-  |      +--> promoter/school change -------------------> RankEntryReview(PENDING)
-  |                                                        |
-  |                                                        +--> APPROVED: apply proposal
-  |                                                        +--> DENIED: retain prior value
+  |      +--> established-promoter A -> B change --------> RankEntryReview(PROPOSAL_PENDING)
+  |      |                                                   immutable expected A + proposed B
+  |      |                                                   accepted promoter remains A
+  |      |                                                   |
+  |      |                                                   +--> same B again: idempotent
+  |      |                                                   +--> different target: conflict
+  |      |                                                   +--> APPROVED: atomically apply B + verify
+  |      |                                                   +--> DENIED: retain A + prior status
+  |      +--> free-typed recruited coach ----------------> save UNVERIFIED; no review (ADR 0047)
   |
   +--> request higher rank
   |      |
@@ -116,11 +126,22 @@ Member dashboard: /app/profile
          +--> steward may mark the entry DISPUTED
 ```
 
-`RankEntryReviewStatus` is only `PENDING | APPROVED | DENIED`. Review reasons are `NEW_RANK`, `PROMOTER_CHANGED`,
-`SCHOOL_CHANGED`, and `DISPUTE`. A reviewer note can request more information while a review remains pending.
+`RankEntryReviewStatus` is `PENDING | PROPOSAL_PENDING | APPROVED | DENIED`. Captured promoter changes use
+`PROPOSAL_PENDING`; legacy and other review writers retain `PENDING` during the expand/contract rollout. Review
+reasons are `NEW_RANK`, `PROMOTER_CHANGED`, `SCHOOL_CHANGED`, and `DISPUTE`. A reviewer note can request more
+information while a review remains pending.
+
+An ordinary admin edit cannot overwrite the accepted promoter while a proposal is pending. The explicit override
+command is the sole bypass: in one transaction it denies the pending proposal, applies the override under admin
+authority, and audits both facts. Approval likewise conditionally claims the exact
+`PROPOSAL_PENDING/PROMOTER_CHANGED` snapshot, verifies that its expected promoter is still active, applies its proposed promoter, verifies the entry,
+and audits the decision. Stale, wrong-reason, and already-decided reviews are no-ops/errors, never provenance writes.
+Legacy `PENDING/PROMOTER_CHANGED` rows remain visible but cannot be actioned without a captured immutable proposal;
+the previous release's PENDING-only action cannot recognize the new proposal status.
 
 `DISPUTED` is reserved for an active conflict. A denied review does not automatically make an entry disputed. A
-disputed entry remains in current-rank calculation; the member may edit it, but cannot clear the disputed status.
+disputed entry remains in current-rank calculation but is fully locked for member edits; an admin or steward must
+resolve the conflict.
 
 ## 3. Public visibility and trust presentation
 
@@ -150,9 +171,11 @@ RankEntry.status = PENDING    -> Pending verification
 RankEntry.status = DISPUTED   -> Disputed
 ```
 
-Pending edits to an existing entry show the proposed promoter or school with `Pending verification` while the active
-entry remains part of the current-rank calculation. The previous verified value is retained in history. A dispute is
-visible as a status, but its report and private evidence are not public.
+Pending established-promoter edits show the proposed promoter with **Pending review** only on member and reviewer
+surfaces. Public lineage and provenance continue to show the accepted promoter; a pending proposal—especially a
+doorless identity—never leaks publicly. The active entry remains part of the current-rank calculation, and the prior
+accepted value/status are unchanged until approval. A dispute is visible as a status, but its report and private
+evidence are not public.
 
 ## 4. Authenticated and public profile surfaces
 

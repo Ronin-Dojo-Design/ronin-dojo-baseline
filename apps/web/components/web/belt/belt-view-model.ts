@@ -1,5 +1,8 @@
 import type { BeltFamily } from "~/components/common/belt-swatch"
+import type { BeltTrustState } from "~/lib/belt/review-state"
 import type { BeltCardOutput } from "~/server/belt/schemas"
+
+export { type BeltTrustState, deriveTrustState } from "~/lib/belt/review-state"
 
 /**
  * One render-ready milestone media item, projected off {@link BeltCardOutput}.
@@ -53,7 +56,7 @@ export type BeltRankViewModel = {
    * rank (belt not yet started, or above the awarded ceiling → the card shows the
    * "Locked"/"Request promotion" treatment, never a trust badge). Derived
    * server-side by {@link deriveTrustState} from the `RankEntry.status` plus any
-   * open (PENDING) `RankEntryReview`, so verification is legible at a glance.
+   * open (`PENDING` legacy or `PROPOSAL_PENDING`) `RankEntryReview`, so verification is legible at a glance.
    */
   trustState: BeltTrustState | null
 }
@@ -66,27 +69,6 @@ export type BeltRankViewModel = {
  * - `pending_review` — an open `RankEntryReview` exists (e.g. a changed promoter)
  *   awaiting an instructor — nothing is wrong, it is in flight.
  */
-export type BeltTrustState = "verified" | "unverified" | "pending_review"
-
-/**
- * Derive a member entry's {@link BeltTrustState} — a PENDING review always wins
- * (the belt is in flight regardless of its stored status), else the entry's
- * verified flag decides. Pure so it is unit-testable and callable from the
- * server projection without a DOM (mirrors {@link deriveBeltStatus}). Kept
- * Prisma-free: callers pass a plain `verified` boolean (`status === "VERIFIED"`)
- * so this module never imports the generated client into client chrome.
- */
-export function deriveTrustState({
-  verified,
-  hasPendingReview,
-}: {
-  verified: boolean
-  hasPendingReview: boolean
-}): BeltTrustState {
-  if (hasPendingReview) return "pending_review"
-  return verified ? "verified" : "unverified"
-}
-
 /** The badge shape a trust state maps to — reuses existing `Badge` variants (no new component). */
 export type BeltTrustBadge = {
   variant: "success" | "outline" | "info"
@@ -145,13 +127,6 @@ export function deriveBeltStatus(vm: BeltRankViewModel, ceiling: number | null):
   const hasStory = Boolean(milestone?.story && milestone.story.trim().length > 0)
   const hasMedia = (milestone?.media.length ?? 0) > 0
   return hasStory || hasMedia ? "completed" : "add"
-}
-
-/** Presentation copy for each status badge. */
-export const BELT_STATUS_LABEL: Record<BeltCardStatus, string> = {
-  add: "Add",
-  locked: "Locked",
-  completed: "Completed",
 }
 
 /** The card's server-computed per-fact editability matrix (SESSION_0501). */

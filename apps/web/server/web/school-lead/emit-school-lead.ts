@@ -1,6 +1,12 @@
 import { Brand, LeadSource, LeadStatus, type Prisma } from "~/.generated/prisma/client"
 import { fuzzyMatchSchool, normalizeSchoolName } from "~/lib/dedup"
 import { generateUniqueSlug } from "~/lib/slug"
+import {
+  demandCountFromMeta,
+  jsonRecord,
+  stringArray,
+  uniqueWithLatestFirst,
+} from "~/server/web/lead/lead-meta-helpers"
 import { db } from "~/services/db"
 
 export const SCHOOL_OUTREACH_KIND = "school_outreach"
@@ -61,27 +67,6 @@ const openLeadWhere = {
   status: { in: [...OPEN_LEAD_STATUSES] },
   meta: { path: ["kind"], equals: SCHOOL_OUTREACH_KIND },
 } satisfies Prisma.LeadWhereInput
-
-function jsonRecord(meta: Prisma.JsonValue | null | undefined): Record<string, unknown> {
-  return meta && typeof meta === "object" && !Array.isArray(meta)
-    ? (meta as Record<string, unknown>)
-    : {}
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-    : []
-}
-
-function uniqueWithLatestFirst(values: string[]): string[] {
-  return Array.from(new Set(values.map(value => value.trim()).filter(Boolean)))
-}
-
-function demandCountFromMeta(meta: Prisma.JsonValue | null | undefined): number {
-  const count = jsonRecord(meta).demandCount
-  return typeof count === "number" && Number.isFinite(count) && count > 0 ? count : 0
-}
 
 function buildSchoolLeadMeta(
   currentMeta: Prisma.JsonValue | null | undefined,
@@ -260,7 +245,32 @@ async function createSchoolLead(
   })
 }
 
-export async function emitSchoolLead(input: EmitSchoolLeadInput): Promise<EmitSchoolLeadResult> {
+/** The find-or-bump sequence, on a caller-supplied tx (the award tx, or our own below). */
+async function emitSchoolLeadOnTx(
+  tx: SchoolLeadTransaction,
+  schoolName: string,
+  country: string | null,
+  options: SchoolLeadMetaOptions,
+): Promise<EmitSchoolLeadResult> {
+  const matchedOpenLead = await findMatchedOpenLead(tx, schoolName)
+  if (matchedOpenLead) return bumpSchoolLead(tx, matchedOpenLead, options, "lead")
+
+  const { organization, createdOrganization } = await resolveOrganization(tx, schoolName, country)
+  const existingLead = await findExistingLeadForOrganization(tx, organization.id)
+  if (existingLead) return bumpSchoolLead(tx, existingLead, options, "organization")
+
+  return createSchoolLead(tx, organization, options, createdOrganization)
+}
+
+/**
+ * Emit / bump the school-outreach lead for a free-typed school. Pass `tx` to fold this into the
+ * caller's award transaction (WL-P3-44 — no orphan placeholder org / lead on a failed award write);
+ * omit it to run in its own transaction. Never sends outreach.
+ */
+export async function emitSchoolLead(
+  input: EmitSchoolLeadInput,
+  tx?: SchoolLeadTransaction,
+): Promise<EmitSchoolLeadResult> {
   const schoolName = input.schoolName.trim()
   if (!schoolName) {
     throw new Error("School name is required")
@@ -275,14 +285,10 @@ export async function emitSchoolLead(input: EmitSchoolLeadInput): Promise<EmitSc
     now: new Date(),
   } satisfies SchoolLeadMetaOptions
 
-  return db.$transaction(async tx => {
-    const matchedOpenLead = await findMatchedOpenLead(tx, schoolName)
-    if (matchedOpenLead) return bumpSchoolLead(tx, matchedOpenLead, options, "lead")
+  if (tx) return emitSchoolLeadOnTx(tx, schoolName, country, options)
 
-    const { organization, createdOrganization } = await resolveOrganization(tx, schoolName, country)
-    const existingLead = await findExistingLeadForOrganization(tx, organization.id)
-    if (existingLead) return bumpSchoolLead(tx, existingLead, options, "organization")
-
-    return createSchoolLead(tx, organization, options, createdOrganization)
+  return db.$transaction(tx => emitSchoolLeadOnTx(tx, schoolName, country, options), {
+    maxWait: 10000,
+    timeout: 20000,
   })
 }

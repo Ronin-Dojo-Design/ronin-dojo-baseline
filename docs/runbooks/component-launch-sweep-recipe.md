@@ -4,10 +4,12 @@ slug: component-launch-sweep-recipe
 type: runbook
 status: active
 created: 2026-06-17
-updated: 2026-06-18
-last_agent: claude-techniques-sweep
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
+  - docs/runbooks/database/database.md
+  - docs/runbooks/database/schema-migration.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -97,8 +99,10 @@ environment (e.g. a fresh cloud session), use the repo-root `docker-compose.yml`
 ```bash
 docker compose up -d postgres        # Postgres 16 on :5432, db ronindojo_dev (see docs/runbooks/database/database.md)
 export DATABASE_URL='postgresql://postgres:postgres@localhost:5432/ronindojo_dev?schema=public'
+export DIRECT_URL="$DATABASE_URL"   # Prisma CLI prefers DIRECT_URL; both must name the Docker scratch
 cd apps/web
-bun run db:migrate deploy            # apply ALL migrations (incl. currentResidence + logoUrl)
+bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) console.log(k, new URL(process.env[k]).pathname.slice(1))'
+bun run db:migrate:deploy            # apply ALL migrations (incl. currentResidence + logoUrl)
 bun run db:seed                      # base data + rank systems
 SKIP_ENV_VALIDATION=1 bun prisma/seed-baseline-lineage.ts   # the lineage TREE + members — REQUIRED for any lineage surface
 RESEND_API_KEY= npx next dev --turbo # RESEND empty = no live emails (BBL sender-rep guard)
@@ -211,7 +215,7 @@ Surfaced by the **directory** sweep (facet tabs / filters / filter sheet, the `d
   can need *zero* font edits — confirm with a grep for hardcoded hex/`font-family`/arbitrary values rather
   than assuming every sweep swaps tokens.)
 - **§5a's local-verify `migrate deploy` conflicts with a brief that says "Run ZERO migrations."** A sweep
-  that forbids all migrations cannot stand up the §5a DB (it needs `bun run db:migrate deploy` to create
+  that forbids all migrations cannot stand up the §5a DB (it needs `bun run db:migrate:deploy` to create
   tables; `next build`'s `prebuild` runs it too). Honor the brief literally and fall to §5b — but invoke
   `npx next build` **directly** so the `prebuild` lifecycle migration is skipped. The build still proves
   `✓ Compiled successfully` + `Finished TypeScript` before failing at *Collecting page data*; on an

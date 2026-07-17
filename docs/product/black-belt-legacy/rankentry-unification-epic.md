@@ -4,16 +4,19 @@ slug: rankentry-unification-epic
 type: epic-plan
 status: proposed
 created: 2026-07-10
-last_agent: claude-session-0523
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/product/black-belt-legacy/rank-entry-unified-data-flow.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/decisions/0035-lineage-rank-display-from-awarded-truth.md
   - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
+  - docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md
   - docs/learning/ddd/learning-records/0008-one-source-read-everywhere-and-the-display-dead-field.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0523.md
+  - docs/sprints/SESSION_0542.md
 ---
 
 # BBL Epic — Retire `RankAward`, unify on `RankEntry`
@@ -64,6 +67,8 @@ gap IS migration steps 6-7.
   `provenance`, `awardedById`, `awardedByPassportId`, `notes`, `location`, `organizationId`, `promotionEventId`)
   + backfill from RankAward (1:1 via `rankAwardId`). Add nullable `rankEntryId` to the 4 FK-holders
   (`LineageRelationship`, `RankMilestone`, `MediaAttachment`, `GamificationEvent`) + backfill.
+  Preserve the immutable expected-prior/proposed-promoter snapshot and decision history on `RankEntryReview`
+  (ADR 0047 D7); proposal data is not an active RankEntry fact.
 - **E — belt-gate rewire:** `ceilingSortOrder`/`isWithinCeiling`/`isTopAward` port cleanly (rank.sortOrder only);
   `isFactEditable`/`memberFactEditability` need `source` + `awardedById` + the IMPORTED distinction on RankEntry
   (§ critical schema). Without it, imported founder awards become member-editable = authority regression.
@@ -73,10 +78,27 @@ gap IS migration steps 6-7.
 - **G — writers RankEntry-native:** place-lead/claim-finalize/add-person/router/node-profile-actions/verify
   write RankEntry directly; delete `syncRankEntryFromAward` + `rankEntryStatusForAward` (10 call-sites). ⚠ the
   seed/import/enrich scripts create RankAward *without* the sync seam — audit for orphan awards first.
-- **H — contract (destructive, LAST):** drop old `rankAwardId` cols + `RankEntry.rankAwardId`; `DROP TABLE RankAward`;
+  ⚠ **Belt trust/proposal compatibility writers (SESSION_0540–0542, FINDING_06 → ADR 0047 D6):**
+  `decideBackfillPromoterTransition` / `applyMemberPromoterTransition`
+  (`server/belt/{belt-gate,promoter-proposal-core}.ts`) write `RankAward.verificationStatus` and re-read promoter
+  provenance from `RankAward`. The shared `verifyRankEntryInTransaction`
+  (`server/belt/verify-rank-entry-core.ts`) also promotes non-imported `RankAward.verificationStatus` before syncing
+  the entry; promoter-proposal approval calls that core. This is net-new RankAward-keyed decision logic added
+  mid-migration. Relocate the trust decision, verify status write, proposal apply/override, expected-prior stale
+  guard, and anchor/promoter re-read together onto RankEntry-native facts/status so the immutable proposal remains
+  separate from active provenance after `RankAward` retires. Preserve one-pending semantics (same target
+  idempotent; different target conflict) and the explicit admin override's deny+apply+audit transaction.
+- **H — recruited-coach claim/confirm + MERGE loop (phase 2):** give an invited coach an explicit claim door to
+  the doorless recruited-coach placeholder; bind the registered identity only after adjudication; let the coach
+  confirm or dispute the exact promotion edges attributed to them; and make the admin MERGE tool repoint duplicate
+  placeholder edges plus the linked Lead metadata with a durable audit trail. Registration or identity binding must
+  never auto-verify a promotion. Preserve the no-public-leak rule and implement the fact/status transitions on the
+  RankEntry-native spine after G, before the destructive contract.
+- **I — contract (destructive, LAST):** drop old `rankAwardId` cols + `RankEntry.rankAwardId`; `DROP TABLE RankAward`;
   drop the two RankAward enums if unused.
 
-Migration discipline: hand-authored SQL (never `prisma migrate dev` — shared local DB); additive-first;
+Migration discipline: use hand-authored SQL for data-sensitive changes; never run `prisma migrate dev` against
+`ronindojo_prodsnap` (an explicitly named disposable scratch database is the only local generation target); additive-first;
 `ALTER TYPE ... ADD VALUE` can't be consumed in the same tx; `migrate deploy` auto-applies on prod via prebuild.
 
 ## Open decisions
@@ -98,4 +120,5 @@ is the existing RankAward row" → "RankEntry is standalone; RankAward retired")
 durable rank record — member status + promotion fact + provenance. Invariants preserved: display = highest
 non-PENDING entry by sortOrder (ADR 0035); provenance locks imported/authority facts read-only (belt-gate); the
 PROMOTED_BY mirror keys off `rankEntryId` (ADR 0016 repeated-promotion semantics); `@@unique([passportId, rankId])`
-= one standard entry per rank.
+= one standard entry per rank; an established-coach proposal never mutates active provenance before approval, and
+its immutable expected-prior/proposed-target snapshot survives the fold (ADR 0047 D7).

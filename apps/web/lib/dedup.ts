@@ -103,6 +103,23 @@ export function schoolNameSimilarity(a: string, b: string): number {
   )
 }
 
+/**
+ * Identity-safe name matching: normalization equivalence only, never fuzzy similarity.
+ * Use where a false merge would transfer identity/provenance; school discovery keeps
+ * using `fuzzyMatchSchool` because its error trade-off is intentionally different.
+ */
+export function exactNormalizedNameMatch<T extends SchoolMatchCandidate>(
+  name: string,
+  candidates: T[],
+): T | null {
+  const normalizedName = normalizeSchoolName(name)
+  if (!normalizedName) return null
+
+  return (
+    candidates.find(candidate => normalizeSchoolName(candidate.name) === normalizedName) ?? null
+  )
+}
+
 export function fuzzyMatchSchool<T extends SchoolMatchCandidate>(
   name: string,
   candidates: T[],

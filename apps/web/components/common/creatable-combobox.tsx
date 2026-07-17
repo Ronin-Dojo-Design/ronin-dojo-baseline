@@ -111,6 +111,8 @@ type CreatableComboboxProps = {
   disabled?: boolean
   /** Optional id forwarded to the trigger for label association. */
   id?: string
+  /** Optional description id forwarded to the trigger for accessible live feedback. */
+  ariaDescribedBy?: string
 }
 
 /**
@@ -134,6 +136,7 @@ export function CreatableCombobox({
   size = "lg",
   disabled = false,
   id,
+  ariaDescribedBy,
 }: CreatableComboboxProps) {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState("")
@@ -161,6 +164,7 @@ export function CreatableCombobox({
               size={size}
               role="combobox"
               aria-expanded={open}
+              aria-describedby={ariaDescribedBy}
               disabled={disabled}
               className={cx(
                 "w-full justify-between font-normal",

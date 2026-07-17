@@ -7,11 +7,12 @@
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { Brand, PostStatus, PrismaClient, type UserRole } from "../../.generated/prisma/client"
+import { assertLiteralLocalE2eUrls } from "../../scripts/e2e-db-env"
 
-const adapter = new PrismaPg({
-  connectionString:
-    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+assertLiteralLocalE2eUrls(process.env.DATABASE_URL, process.env.DIRECT_URL, {
+  isCi: process.env.CI === "true",
 })
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
 type AuthUserOptions = {

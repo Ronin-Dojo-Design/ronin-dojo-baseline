@@ -4,8 +4,8 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-07-14
-last_agent: claude-session-0537
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0347.md
@@ -16,6 +16,7 @@ backlinks:
   - docs/knowledge/wiki/custom-component-inventory.md
   - docs/sprints/SESSION_0509.md
   - docs/sprints/SESSION_0519.md
+  - docs/sprints/SESSION_0542.md
 ---
 
 # Wiring Ledger — not-done, gaps, and handroll slips
@@ -168,11 +169,15 @@ follow-ups, not silent nulls.
   + `emitPromoterLead` run in `buildFactUpdateData` BEFORE the award-write `$transaction`. If the fill-once
   `stillEmpty` guard fails-closed, the placeholder Passport + Lead are already committed but reference no award —
   an orphan recruitment stub (invisible publicly, but untracked). Fold the placeholder/lead emit INSIDE the award
-  tx, or a compensating sweep. (Doug P3a, SESSION_0540.)
+  tx, or a compensating sweep. (Doug P3a, SESSION_0540.) **Resolved SESSION_0541** (`f0c83c48`, ADR 0047 D4):
+  `resolveFactUpdateWithCapture` threads the award tx; both emit fns take an optional tx and run inside it; the
+  fill-once fail-closed now throws INSIDE the tx → placeholder + lead roll back with the award (no orphan).
 - **WL-P3-45** — `apps/web/server/identity/promoter-placeholder.ts:47-60` — concurrent-dedup race: two members
   free-typing the same coach before either award FK commits both miss the `rankAwardsPromoted: some` candidate
   scope → duplicate placeholder Passports. Bounded/harmless (same soft-dedup as school-lead); cleanup-later.
-  (Doug P3b, SESSION_0540.)
+  (Doug P3b, SESSION_0540.) **Accepted SESSION_0541** (ADR 0047 D3): for a provenance graph a duplicate is the
+  SAFE error (a phase-2 admin MERGE repoints its edges), unlike a false-merge; accepted with the phase-2 merge
+  tool as the escape. No code guard added.
 - **WL-P3-46** — `apps/web/app/(web)/lineage/join/join-legacy-wizard/lineage-step.tsx:103-114` — the join-wizard
   rank picker still renders the `dot` BeltSwatch while the claim picker now renders the rich `variant="belt"
   size="sm"`. Two rank pickers, two treatments — parity upgrade (out of the SESSION_0540 approved artifact scope).
@@ -182,7 +187,73 @@ follow-ups, not silent nulls.
   it's called on the ADMIN fact-edit path (`:535`) as well as the member path (`:462`). So an admin free-typing a
   promoter on any member's award silently mints an identity + injects a CRM outreach lead — a hidden side-effect
   behind a `build…Data` name. Gate the emission to the member funnel, or rename (`resolveFactUpdateWithCapture`) +
-  document the admin-path intent. (Giddy hostile-close FINDING_02, SESSION_0540.)
+  document the admin-path intent. (Giddy hostile-close FINDING_02, SESSION_0540.) **Resolved SESSION_0541**
+  (`f0c83c48`, ADR 0047 D5): renamed `resolveFactUpdateWithCapture` (capture now named, not silent); the identity
+  resolver is split from the CRM emit; recruit fires on FREETEXT only, on BOTH member + admin paths intentionally
+  (operator: recruit broadly — an admin correcting a promoter should recruit the coach too). "Add person / add
+  user" recruitment-flywheel consistency is a separate ledgered follow-up (WL-P3-48 below).
+
+### SESSION_0541 belt-verification follow-ups
+
+- **WL-P3-48** — recruitment-flywheel consistency: the belt fact path recruits a free-typed promoter (mints a
+  recruited-coach placeholder + a `Lead`), but the **`add person` / `add user` admin surfaces do NOT** emit a
+  promoter lead for a free-typed person. Capturing free-typed persons there as recruitment leads (mirroring the
+  belt path) is the flywheel-consistency follow-up the operator raised in the SESSION_0541 grill (ADR 0047
+  Consequences). Scope: on admin add-person / add-user with a free-typed (non-registry) name, optionally emit a
+  deduped promoter/person lead. P3, out of the SESSION_0541 identity lane. (Operator, SESSION_0541.)
+- **WL-P3-49** — recruited-coach Passport matching and paired promoter-Lead matching disagree:
+  `promoter-placeholder.ts` passes threshold `1` to token-Dice `fuzzyMatchSchool`, while
+  `emit-promoter-lead.ts` uses the default `0.9`. Near-miss names can therefore mint two Passports but collapse
+  into one Lead whose `meta.passportId` changes. Threshold `1` is also not strict normalized equality because
+  token reorder/repetition can score `1`. Replace both with one strict `normalizeSchoolName(a) ===
+  normalizeSchoolName(b)` identity rule and pin typo, reorder/repetition, punctuation/case, and diacritic tests.
+  (SESSION_0541_FINDING_01; confirmed SESSION_0542.) **Resolved SESSION_0542:** both Passport and Lead paths now
+  call the shared `exactNormalizedNameMatch`; dedup unit coverage pins case/punctuation/whitespace/diacritics plus
+  typo and token reorder/repetition, and the Lead regression proves near-miss names no longer collapse.
+- **WL-P3-50** — `verifyRankEntryInTransaction` is exported from
+  `apps/web/server/belt/verify-rank-entry.ts`, a `"use server"` module. It is transaction-only core logic, not
+  an authenticated Server Action, and should not be in the client-callable action export set. Move the helper and
+  its transaction type to an `import "server-only"` core module; keep only safe/authenticated action exports in
+  the action module. (SESSION_0541_FINDING_02; confirmed SESSION_0542.) **Resolved SESSION_0542:** transaction-only
+  `verifyRankEntryInTransaction` now lives in `server/belt/verify-rank-entry-core.ts` behind `import "server-only"`;
+  `verify-rank-entry.ts` exports only the authenticated safe action.
+- **WL-P3-51** — G-010 review decisions use read-then-update rather than an atomic claim. Concurrent approve/deny
+  can both act on one PENDING row, and the action does not constrain `reason: PROMOTER_CHANGED`. The current row
+  also carries no immutable expected proposal, so approval can verify a promoter value changed after the reviewer
+  loaded it. Add an immutable proposed-promoter FK, a one-PENDING-promoter-proposal partial unique index, and a
+  PENDING+reason+expected-active conditional transition; require exactly one claimed row before applying the
+  credential change. Exact-target retries are idempotent; different member targets conflict until resolution.
+  Ordinary admin edits conflict while pending; an explicit override must deny+apply+audit atomically. Test
+  concurrent/stale/wrong-reason/override cases. (SESSION_0542 integrity audit + operator grill.) **Resolved at the
+  application/integrity layer in SESSION_0542:** the captured A/B snapshot has nullable FKs; captured rows use
+  `PROPOSAL_PENDING`, which the immediately previous PENDING-only reviewer cannot action. The server-only core uses
+  sorted referenced-Passports→relevant-Awards→open-Reviews locking, fail-closed graph rereads, and a conditional
+  claim. Member authority edits lock every earned Award; award-local admin/reviewer paths lock the target.
+  Same-target retry,
+  different-target conflict, stale/wrong-reason/concurrent decision, old-reviewer compatibility, explicit override,
+  terminal-history delete protection, and forced post-mutation rollback are regression-covered. The database
+  contract is deliberately separated into WL-P1-9 so the pre-activation migrations remain compatible with the old
+  writer.
+- **WL-P3-52** — `/app/belt-reviews` permits inline irreversible approve/dismiss without the ADR 0045
+  row→detail→canonical action/editor flow. The member cell is not inspectable, the constant reason column consumes
+  mobile space, and approval has no confirmation. Link the row to a review detail, link the member there, remove
+  the constant reason column, use canonical **Deny**, and require an explicit irreversible approval confirmation.
+  (SESSION_0541_FINDING_03; Desi + SESSION_0542 conformance audit.) **Resolved SESSION_0542:** the queue now links
+  to an addressable review detail with inspectable member/proposal/active context; the list drops the constant
+  reason column, and the detail uses canonical Deny plus an explicit approval confirmation dialog.
+- **WL-P1-9** — contract the promoter-proposal database invariant **after** the SESSION_0542 expand deploy is live
+  and every old writer has drained. Before that authorized deploy: inventory legacy `PENDING/PROMOTER_CHANGED` rows,
+  then inventory `PROPOSAL_PENDING` rows with a null required identity field (`proposalCapturedAt`, expected A FK,
+  or proposed B FK) and duplicate proposal rows. `expectedPromoterName` remains optional because an FK-backed active
+  promoter can have no award-note fallback. Operator-resolve malformed rows without guessing provenance. Then add
+  one hand-authored transaction whose preflight runs before DDL, creates the one-`PROPOSAL_PENDING` partial unique
+  index, and adds the captured-proposal required-field `CHECK`. `A <> B` remains a creation-time application
+  invariant, not a durable FK `CHECK`: a later canonical Passport merge may correctly collapse two identity ids to
+  one while leaving the steward decision pending. Acceptance: adversarial legacy/duplicate fixtures abort before
+  DDL and remain intact; after resolution the contract applies; captured pending succeeds; malformed/second pending
+  fails; terminal legacy history and canonical identity collapse remain allowed. This is an **expand/contract
+  deploy-order gate**, not optional cleanup and not safe to fold into the first Vercel prebuild migration. (Doug
+  hostile close + identity-merge hostile follow-up, SESSION_0542.)
 
 ## localStorage / sessionStorage gaps
 

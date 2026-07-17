@@ -4,22 +4,22 @@ slug: graphify-repo-memory
 type: runbook
 status: active
 created: 2026-05-06
-updated: 2026-06-04
+updated: 2026-07-16
 author: Brian + Codex
-last_agent: claude-session-0342
+last_agent: codex-session-0542
 pairs_with:
   - docs/knowledge/wiki/content-engine/graphify-token-efficiency-pipeline.md
   - docs/knowledge/wiki/component-porting/graphify-component-port-map.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
-  - docs/sprints/SESSION_0158.md
-  - docs/sprints/SESSION_0159.md
-  - docs/sprints/SESSION_0160.md
-  - docs/runbooks/vercel-domain-setup-runbook.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/sprints/_archive/SESSION_0158.md
+  - docs/sprints/_archive/SESSION_0159.md
+  - docs/sprints/_archive/SESSION_0160.md
+  - docs/runbooks/deploy/vercel-domain-setup-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
 tags:
   - graphify
   - repo-memory
@@ -68,8 +68,8 @@ graphify --version  # should print 0.2.1+
 ## Basic commands
 
 ```bash
-graphify run .                          # Full rebuild from scratch
-graphify update .                       # Incremental AST-only rebuild (fast, no API cost)
+graphify run .                          # Full extraction pass (not a deletion-prune guarantee)
+graphify update .                       # Incremental AST-only refresh (fast, no API cost)
 graphify query "brand context admin" --budget 2000  # BFS/DFS graph traversal
 graphify path "Registration" "Entitlement"          # Shortest path between nodes
 graphify explain "getRequestBrand"                  # Explain a node + connections
@@ -81,6 +81,14 @@ graphify export --format html           # Export to HTML (also: json, graphml)
 Use `GRAPHIFY_VIZ_NODE_LIMIT=10000` env var if the graph exceeds the default 5000-node HTML viz limit.
 
 **`update` refreshes data, not the dashboard viz.** `graphify update .` rebuilds the graph data in `.graphify/` (used by `query` / `explain` / `stats`). The admin dashboard's `/graphify.html` link is a *separate* artifact produced by `graphify export --format html` — `update` never touches it. Refresh it with `bun run graphify:viz` (= `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify export --format html --out apps/web/public/graphify.html`). That file is gitignored (a ~5MB map of the whole codebase — kept off the public web) and the dashboard link is gated to dev, so it is a local-only navigation aid. SESSION_0342 found it a month stale precisely because `update` ≠ `export`.
+
+**Moved/deleted-file limitation (verified SESSION_0542):** with the current Graphify version, both `run` and
+`update` can leave orphan nodes for files that no longer exist, even though `.graphify`'s file manifest tracks
+only the live nested path. A query can therefore return stale root-level runbooks and their retired reset/
+`db push` recipes. Treat `source_file` as a lead, not filesystem proof: confirm it with `test -e <path>` or
+`rg --files` before reading or acting. If the path is absent, query/search for the live moved file and do not
+recreate a redirect merely to satisfy the ghost node. A routine full extraction pass does not currently prune
+this residue; record it as Graphify index debt until the tool provides a supported prune/rebuild operation.
 
 ## Runbook
 

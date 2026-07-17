@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-30
-last_agent: claude-session-0476
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -185,10 +185,11 @@ assertion must have been **run locally** before it ships — FS-0031 was three c
 pushes from assertions "verified by inspection" because the suite couldn't be run locally. Before the
 pre-push gate:
 
-1. **Provision + seed the small e2e DB once** (idempotent — the heavy `ronindojo_prodsnap` times out
+1. **Provision + migrate the small e2e DB once** (idempotent — the heavy `ronindojo_prodsnap` times out
    on cold admin-list pages, so use the dedicated `ronindojo_e2e`): `cd apps/web && bun run e2e:db:setup`.
    Requires `apps/web/.env.e2e` (gitignored; shape in `.env.e2e.example` — copy `.env`, override
-   `DATABASE_URL`/`DIRECT_URL` to `ronindojo_e2e`).
+   **both** `DATABASE_URL` and `DIRECT_URL` to `ronindojo_e2e`). The setup is migrate-only; seed separately
+   only when the affected manual smoke needs reference data.
 2. **Run the affected spec** against it (sidesteps the FS-0002-banned `bun dev`): start the e2e-bound
    dev server with `cd apps/web && bun run dev:e2e` (= `node scripts/run-e2e-dev.mjs` — a Node
    launcher that `process.loadEnvFile(".env.e2e")`s the DB URLs then spawns `next dev --turbo`). Do

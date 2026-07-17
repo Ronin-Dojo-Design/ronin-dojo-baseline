@@ -13,7 +13,7 @@ import { describe, expect, it } from "bun:test"
 import type { RankAwardVerificationStatus } from "~/.generated/prisma/client"
 import {
   ceilingSortOrder,
-  decideBackfillTrust,
+  decideBackfillPromoterTransition,
   type FactValueAward,
   type GateAward,
   isFactEditable,
@@ -125,101 +125,64 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
   })
 })
 
-describe("decideBackfillTrust (SESSION_0540 — placeholder-promoter decision tree)", () => {
-  it("VERIFIES a promoter Passport equal to the anchor's promoter (same coach)", () => {
-    expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-anchor",
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: null,
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
-      }),
-    ).toBe("verify")
+describe("decideBackfillPromoterTransition (D-046 — active provenance first)", () => {
+  const decide = (
+    overrides: Partial<Parameters<typeof decideBackfillPromoterTransition>[0]> = {},
+  ) =>
+    decideBackfillPromoterTransition({
+      currentPromoterPassportId: null,
+      currentPromoterIsRecruitedCoachPlaceholder: false,
+      candidatePromoterPassportId: "pp-candidate",
+      candidatePromoterIsRecruitedCoachPlaceholder: false,
+      anchorPromoterPassportId: "pp-anchor",
+      ...overrides,
+    })
+
+  it("VERIFIES an initial established promoter equal to the anchor's promoter", () => {
+    expect(decide({ candidatePromoterPassportId: "pp-anchor" })).toBe("verify")
   })
 
-  it("VERIFIES even when the matching anchor promoter is itself a placeholder (same-coach wins)", () => {
+  it("NO-OPS when the candidate is already active, even while a different anchor remains", () => {
     expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-anchor",
-        promoterIsClaimablePlaceholder: true,
-        backfillFreetextPromoter: null,
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
+      decide({
+        currentPromoterPassportId: "pp-approved-b",
+        candidatePromoterPassportId: "pp-approved-b",
       }),
-    ).toBe("verify")
+    ).toBe("no_change")
   })
 
-  it("RECRUITS a freshly free-typed placeholder coach — keep unverified, NO review (even with an anchor)", () => {
+  it("RECRUITS a free-typed placeholder immediately and keeps it unverified", () => {
     expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-new-coach",
-        promoterIsClaimablePlaceholder: true,
-        backfillFreetextPromoter: "Coach Dave Willis",
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
+      decide({
+        currentPromoterPassportId: "pp-established-a",
+        candidatePromoterPassportId: "pp-recruited",
+        candidatePromoterIsRecruitedCoachPlaceholder: true,
       }),
     ).toBe("keep_unverified")
   })
 
-  it("FLAGS an established (on-tree / registered) person that DIFFERS from the anchor's promoter", () => {
+  it("PROPOSES established A→established B regardless of the authority anchor", () => {
     expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-other",
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: null,
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
+      decide({
+        currentPromoterPassportId: "pp-established-a",
+        candidatePromoterPassportId: "pp-established-b",
+        anchorPromoterPassportId: "pp-established-b",
       }),
-    ).toBe("flag_promoter_changed")
+    ).toBe("propose")
   })
 
-  it("KEEPS a registered promoter unverified when the anchor has no comparable promoter", () => {
+  it("KEEPS an initial established promoter unverified when it differs from the anchor", () => {
+    expect(decide({ candidatePromoterPassportId: "pp-other" })).toBe("keep_unverified")
+  })
+
+  it("treats a recruited-placeholder active promoter as unaccepted for an established replacement", () => {
     expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-other",
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: null,
-        anchorPromoterPassportId: null,
-        isBackfillAnchor: false,
+      decide({
+        currentPromoterPassportId: "pp-recruited",
+        currentPromoterIsRecruitedCoachPlaceholder: true,
+        candidatePromoterPassportId: "pp-established-b",
       }),
     ).toBe("keep_unverified")
-  })
-
-  it("KEEPS a legacy freetext-only promoter unverified (no FK yet — pre-rework rows)", () => {
-    expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: null,
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: "Coach Dave Willis",
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
-      }),
-    ).toBe("keep_unverified")
-  })
-
-  it("SKIPS when no promoter is expressed", () => {
-    expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: null,
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: "   ",
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: false,
-      }),
-    ).toBe("skip")
-  })
-
-  it("SKIPS the anchor itself (never auto-verifies the reference belt)", () => {
-    expect(
-      decideBackfillTrust({
-        backfillPromoterPassportId: "pp-anchor",
-        promoterIsClaimablePlaceholder: false,
-        backfillFreetextPromoter: null,
-        anchorPromoterPassportId: "pp-anchor",
-        isBackfillAnchor: true,
-      }),
-    ).toBe("skip")
   })
 })
 

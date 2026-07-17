@@ -1,12 +1,14 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { addDays } from "date-fns"
 import { PrismaClient, ToolStatus, ToolTier, type UserRole } from "~/.generated/prisma/client"
+import { assertSafeSeedTarget } from "~/scripts/seed-target-guard"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
+const seedDatabaseUrl = process.env.DATABASE_URL
+assertSafeSeedTarget(seedDatabaseUrl)
 const adapter = new PrismaPg({
-  connectionString:
-    process.env.DATABASE_URL ?? "postgresql://brianscott@localhost:5432/ronindojo_dev",
+  connectionString: seedDatabaseUrl,
 })
 const db = new PrismaClient({ adapter })
 

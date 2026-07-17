@@ -1,5 +1,7 @@
 import "server-only"
 
+import { OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
+
 import { Brand } from "~/.generated/prisma/client"
 import type { CreatableOption } from "~/components/common/creatable-combobox"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
@@ -13,6 +15,7 @@ import {
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
+import { isRecruitedCoachIdentity } from "~/server/identity/promoter-classification"
 import { db } from "~/services/db"
 
 const PROMOTER_CAP = 300
@@ -86,6 +89,8 @@ export type BeltTabData = {
    * pre-sorts the anchor coach to the top of the picker.
    */
   anchorPromoterPassportId: string | null
+  /** Active promoter ids classified by the server as accountless + without public identity satellites. */
+  recruitedPromoterPassportIds: string[]
 }
 
 /**
@@ -120,9 +125,14 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
         rankId: true,
         status: true,
         rankAward: { select: gateAwardSelect },
-        // Any OPEN review → the `pending_review` trust state (SESSION_0540). Scoped +
-        // `take: 1` so this is an existence probe, not a full review load.
-        reviews: { where: { status: "PENDING" }, select: { id: true }, take: 1 },
+        // Any OPEN review → the `pending_review` trust state (SESSION_0540). Legacy payload-less
+        // PENDING rows remain open during rollout; captured proposals use PROPOSAL_PENDING so the
+        // previous release cannot decide them without applying B.
+        reviews: {
+          where: { status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] } },
+          select: { id: true },
+          take: 1,
+        },
       },
       orderBy: { rank: { sortOrder: "desc" } },
     }),
@@ -149,6 +159,12 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
   // uses (`resolveAnchorAward`), so the picker feedback can never disagree with what the
   // server will actually decide on save.
   const anchor = resolveAnchorAward(awards, disciplineId)
+  const recruitedPromoterPassportIds = awards.flatMap(award => {
+    const promoter = award.awardedByPassport
+    return award.awardedByPassportId && isRecruitedCoachIdentity(promoter)
+      ? [award.awardedByPassportId]
+      : []
+  })
 
   return {
     ranks,
@@ -157,5 +173,6 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
     promoterOptions,
     schoolOptions: joinOptions.schools.map(o => ({ id: o.id, name: o.name })),
     anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
+    recruitedPromoterPassportIds: [...new Set(recruitedPromoterPassportIds)],
   }
 }

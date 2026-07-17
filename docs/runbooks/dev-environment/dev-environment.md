@@ -4,19 +4,19 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-29
-last_agent: claude-session-0470
+updated: 2026-07-16
+last_agent: codex-session-0542
 use_count: 0
 pairs_with:
-  - docs/runbooks/mcp-usage-runbook.md
-  - docs/runbooks/vercel-deploy.md
-  - docs/runbooks/neon-advisory-lock-recovery.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
+  - docs/runbooks/deploy/vercel-deploy.md
+  - docs/runbooks/database/neon-advisory-lock-recovery.md
   - docs/runbooks/dev-environment/session-ops-cookbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md
   - docs/protocols/failed-steps-log.md
-  - docs/runbooks/mcp-usage-runbook.md
+  - docs/runbooks/dev-environment/mcp-usage-runbook.md
 tags:
   - dev
   - environment
@@ -73,8 +73,11 @@ bun test ./server/web/schedule/
 
 If the canonical `.env` is unavailable, the worktree needs at minimum:
 
-- `DATABASE_URL` — Postgres connection string (see "Database" below).
-- `DIRECT_URL` — optional locally, but required in Vercel Preview and Production so Prisma CLI migration commands use Neon's direct endpoint.
+- `DATABASE_URL` — Postgres connection string (the canonical local `.env` points at
+  `ronindojo_prodsnap`; see "Database" below).
+- `DIRECT_URL` — Prisma CLI target. Locally it must name the same intended database as
+  `DATABASE_URL`; Prisma config prefers it when both exist. It is also required in Vercel Preview and
+  Production so migrations use Neon's direct endpoint.
 - `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` — Better Auth keys.
 - `REDIS_REST_URL`, `REDIS_REST_TOKEN` — optional Upstash REST rate-limit backend.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` — only if Stripe surfaces are exercised; otherwise stub values are acceptable in dev.
@@ -85,22 +88,22 @@ If the canonical `.env` is unavailable, the worktree needs at minimum:
 
 ### Step 6 detail — pending Prisma migrations (dev only)
 
-If `bun test ./server/web/...` fails with table-missing errors (e.g.,
-`relation "ClassSchedule" does not exist`), the dev DB is behind the schema.
-Run:
+If `bun test ./server/web/...` fails with table-missing errors, first print the parent-shell URL names,
+then inspect Prisma's own datasource banner without exposing credentials:
 
 ```bash
-bunx prisma db push --accept-data-loss
+bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
+bunx prisma migrate status
 ```
 
-This applies the current `schema.prisma` to the **dev** database directly,
-without writing a migration. **Dev only** — production uses
-`bunx prisma migrate deploy` against versioned migration files. Never run
-`db push --accept-data-loss` against a production or shared staging DB.
+For checked-in versioned migrations, use `bun run db:migrate:deploy` only after the prodsnap
+backup/preflight in the schema-migration runbook. Never use `db push --accept-data-loss` or
+`prisma migrate reset` on `ronindojo_prodsnap`. For Playwright, provision the disposable DB through
+`bun run e2e:db:setup`; do not repoint a raw Prisma reset by hand.
 
-This step was the actual friction hit during SESSION_0031.5 TASK_02 — fresh
-worktrees inherit the schema but not the applied migrations, so `bun test`
-will fail until the dev DB is brought current.
+The status probe above is intentionally the canonical `.env`/prodsnap check: require Prisma's own datasource
+line to name `ronindojo_prodsnap` too. Do not adapt it to E2E with `--env-file=.env.e2e`; a raw `bunx` hop can
+discard that overlay. The guarded E2E setup owns the separate target.
 
 ## Dev server
 
@@ -158,9 +161,11 @@ servers.
 
 ## Database
 
-```
-postgresql://brianscott@localhost:5432/ronindojo_dev
-```
+The canonical `apps/web/.env` currently points at **`ronindojo_prodsnap`**: a realistic,
+manually-maintained production mirror used for local app work and DB-backed Bun tests. It is
+non-disposable. `ronindojo_e2e` is the separate disposable Playwright DB; see
+[Verification & Testing](verification-and-testing.md#the-e2e-db-is-a-hermetic-fixture-not-a-prodsnap-mirror).
+`ronindojo_dev` is a legacy/optional scratch database, not the active app target.
 
 **Provider:** Postgres.app on macOS
 
@@ -169,15 +174,15 @@ postgresql://brianscott@localhost:5432/ronindojo_dev
 **Quick connect:**
 
 ```bash
-/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_dev
+/Applications/Postgres.app/Contents/Versions/latest/bin/psql ronindojo_prodsnap
 ```
 
-### Reset database
+### Never reset prodsnap
 
-```bash
-dropdb ronindojo_dev && createdb ronindojo_dev
-cd apps/web && bun db:migrate dev
-```
+Do not run `dropdb`, `prisma migrate reset`, `db push --accept-data-loss`, or destructive seed
+experiments against `ronindojo_prodsnap`. Use `ronindojo_e2e` for browser fixtures and a named
+throwaway clone/scratch restore for adversarial migration tests. Refreshing prodsnap from live Neon is
+an explicit backup/restore operation, not a routine reset.
 
 ## Brand → Host mapping
 
@@ -205,8 +210,11 @@ cd apps/web
 # Generate client after schema changes
 bun db:generate
 
-# Create and apply migration
-bun db:migrate dev
+# Apply reviewed, checked-in migrations to the local prodsnap after backup/preflight
+bun run db:migrate:deploy
+
+# Author a new migration
+# Follow docs/runbooks/database/schema-migration.md; do not improvise with reset/db push.
 
 # Open Prisma Studio
 bun db:studio
@@ -223,11 +231,11 @@ All commands run from `apps/web/` unless noted otherwise.
 | **Format** | `bun run format` (write) / `bun run format:check` (CI) | **oxfmt** — `oxfmt .` / `oxfmt --check .`. Config `.oxfmtrc.json` (migrated from the old `biome.json`, same style). |
 | **Test (all)** | `bun run test` | = `bun test --parallel=1 --path-ignore-patterns='e2e/**'`. **Deterministic gate** (~67s). Do NOT drop `--parallel` (mock-leak ~63 fails) or raise the worker count (Postgres over-subscription → flake). See `sop-test-writing.md` §2 + `test-fail-fix-ledger.md`. |
 | **Test (file)** | `bun test ./path/to/file` | Single file or directory (isolation not needed). |
-| **Test (e2e)** | `bun run test:e2e` | Playwright — requires dev server running. |
+| **Test (e2e)** | `bun run dev:e2e`, then `bun run test:e2e:local -- <spec> --project=chromium` | Uses disposable `ronindojo_e2e`; provision with `bun run e2e:db:setup`. |
 | **DB generate** | `bun run db:generate` | Regenerate Prisma client after schema changes. |
-| **DB migrate** | `bun run db:migrate dev` | Create + apply migration (dev only). |
-| **DB push** | `bun run db:push` | Apply schema to dev DB without migration file. Dev only. |
-| **DB seed** | `bun run db:seed` | Run seed script. |
+| **DB migrate** | `bun run db:migrate:deploy` | Apply reviewed migration files to prodsnap after backup/preflight. |
+| **DB push/reset** | Do not use on prodsnap | Use a named throwaway DB and follow the schema-migration runbook. |
+| **DB seed** | Not routine on prodsnap | Seed only an explicitly named disposable E2E/scratch DB; e.g. `bun --env-file=.env.e2e prisma/seed.ts`. |
 | **DB studio** | `bun run db:studio` | Open Prisma Studio GUI. |
 | **Wiki lint** | `bun run wiki:lint` | From **repo root**. Checks docs links, frontmatter, structure. |
 | **Docs navigator** | `bun run docs:nav` | From **repo root**. Regenerates `docs/index.html`. |
@@ -269,4 +277,7 @@ If the dev server won't start:
 
 ## Last verified
 
-SESSION_0319 — 2026-06-01: local DB-page 500s root-caused to the **Postgres.app 18 access gate** (see Dev server section) and resolved by approving the `node` client / toggling the gate off; Turbopack now renders DB-backed pages, so the `next dev --webpack` workaround is **no longer required**. All scripts, paths, the `psql Versions/latest → 18.3` symlink, and the `/events/[slug]` route reference in this runbook were re-verified against the repo this session.
+SESSION_0542 — 2026-07-16: reconciled the active local roles (`ronindojo_prodsnap` for app +
+DB-backed Bun verification; `ronindojo_e2e` for Playwright), removed reset/db-push guidance for the
+non-disposable prodsnap, and recorded the effective `DIRECT_URL` target guard. The Postgres.app access-gate
+diagnosis and Turbopack guidance above remain current.

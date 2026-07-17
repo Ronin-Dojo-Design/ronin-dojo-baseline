@@ -4,11 +4,11 @@ slug: docs-navigator
 type: runbook
 status: active
 created: 2026-05-29
-updated: 2026-05-29
-last_agent: claude-session-0298
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
   - docs/knowledge/wiki/index.md
-  - docs/runbooks/graphify-repo-memory.md
+  - docs/runbooks/dev-environment/graphify-repo-memory.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

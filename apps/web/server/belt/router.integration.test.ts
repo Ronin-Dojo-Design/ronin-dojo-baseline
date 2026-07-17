@@ -27,19 +27,25 @@
 import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 import { createRouterClient, ORPCError } from "@orpc/server"
 
+const revalidatedPaths: string[] = []
+const revalidatedTags: string[] = []
+
 mock.module("next/cache", () => ({
-  revalidatePath: () => {},
+  revalidatePath: (path: string) => revalidatedPaths.push(path),
   updateTag: () => {},
-  revalidateTag: () => {},
+  revalidateTag: (tag: string) => revalidatedTags.push(tag),
   cacheLife: () => {},
   cacheTag: () => {},
 }))
+mock.module("server-only", () => ({}))
 
 import { Brand } from "~/.generated/prisma/client"
-import { appRouter } from "~/server/router"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { gateAwardSelect, getMemberAwards, toGateAward } from "~/server/belt/queries"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { db } from "~/services/db"
+
+const { appRouter } = await import("~/server/router")
 
 const TS = Date.now()
 const TAG_PREFIX = "belt-router-test-"
@@ -198,7 +204,7 @@ afterAll(async () => {
   await db.passport.deleteMany({
     where: { userId: null, displayName: { startsWith: TAG_PREFIX } },
   })
-  // The backfill-verification decision (`applyBackfillTrustDecision`) audits status changes with
+  // The backfill promoter transition audits status changes with
   // the acting member's userId → drop those before the User RESTRICT-FK delete.
   await db.auditLog.deleteMany({ where: { userId: { in: [fx.memberUserId, fx.otherUserId] } } })
   await db.user.deleteMany({ where: { id: { in: [fx.memberUserId, fx.otherUserId] } } })
@@ -224,7 +230,7 @@ const other = () => asMember({ id: fx.otherUserId, role: "user" })
 
 const expectCode = async (
   promise: Promise<unknown>,
-  code: "FORBIDDEN" | "NOT_FOUND" | "BAD_REQUEST",
+  code: "FORBIDDEN" | "NOT_FOUND" | "BAD_REQUEST" | "CONFLICT",
 ) => {
   try {
     await promise
@@ -447,7 +453,7 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
       where: { id: card.awardedByPassportId! },
       select: { userId: true, displayName: true, lineageNode: { select: { id: true } } },
     })
-    expect(promoterPassport.userId).toBeNull() // claimable placeholder (no account)
+    expect(promoterPassport.userId).toBeNull() // recruited-coach placeholder (no account)
     expect(promoterPassport.lineageNode).toBeNull() // off-tree → surfaced nowhere public
     expect(promoterPassport.displayName).toBe(promoterName)
 
@@ -679,6 +685,7 @@ describe("belt backfill trust rework (SESSION_0540) — mint UNVERIFIED + promot
     })
     expect(card.awardedByPassportId).toBe(anchorCoachPassportId)
     expect(card.verificationStatus).toBe("VERIFIED")
+    expect(card.trustState).toBe("verified")
     expect(
       await db.rankAward.findUniqueOrThrow({
         where: { id: whiteAwardId },
@@ -686,6 +693,188 @@ describe("belt backfill trust rework (SESSION_0540) — mint UNVERIFIED + promot
       }),
     ).toEqual({ verificationStatus: "VERIFIED" })
   })
+
+  it("holds the member authority scope until a same-coach promoter decision commits", async () => {
+    const anchor = await db.rankAward.findUniqueOrThrow({
+      where: {
+        passportId_rankId: { passportId: trustPassportId, rankId: fx.blueRankId },
+      },
+      select: { id: true },
+    })
+
+    let announceBlocker!: (pid: number) => void
+    const blockerReady = new Promise<number>(resolve => {
+      announceBlocker = resolve
+    })
+    let releaseBlocker!: () => void
+    const blockerRelease = new Promise<void>(resolve => {
+      releaseBlocker = resolve
+    })
+
+    const blocker = db.$transaction(
+      async tx => {
+        const [backend] = await tx.$queryRaw<Array<{ pid: number }>>`
+          SELECT pg_backend_pid() AS "pid"
+        `
+        await tx.$queryRaw`SELECT "id" FROM "RankAward" WHERE "id" = ${anchor.id} FOR UPDATE`
+        if (!backend) throw new Error("Could not resolve the blocker backend")
+        announceBlocker(backend.pid)
+        await blockerRelease
+      },
+      { timeout: 10000 },
+    )
+
+    const blockerPid = await blockerReady
+    let memberEdit: ReturnType<ReturnType<typeof trust>["updateRankAwardFact"]> | undefined
+
+    try {
+      memberEdit = trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: anchorCoachPassportId },
+      })
+
+      // Wait until the member transaction is blocked behind the anchor row. At that point the
+      // authority-scope contract requires it to already hold the parent Passport lock.
+      let memberIsWaiting = false
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const [state] = await db.$queryRaw<Array<{ waiting: boolean }>>`
+          SELECT EXISTS (
+            SELECT 1
+            FROM pg_stat_activity activity
+            WHERE ${blockerPid} = ANY(pg_blocking_pids(activity.pid))
+          ) AS "waiting"
+        `
+        if (state?.waiting) {
+          memberIsWaiting = true
+          break
+        }
+        await new Promise(resolve => setTimeout(resolve, 20))
+      }
+      expect(memberIsWaiting).toBe(true)
+
+      // A new higher award needs a KEY SHARE lock on the parent Passport for its FK check. It must
+      // time out rather than commit ahead of the in-flight promoter decision.
+      await expect(
+        db.$transaction(async tx => {
+          await tx.$executeRawUnsafe("SET LOCAL lock_timeout = '300ms'")
+          return tx.rankAward.create({
+            data: {
+              passportId: trustPassportId,
+              rankId: fx.purpleRankId,
+              source: "STATED",
+              verificationStatus: "IMPORTED",
+              awardedByPassportId: otherCoachPassportId,
+            },
+          })
+        }),
+      ).rejects.toThrow()
+    } finally {
+      releaseBlocker()
+      await Promise.allSettled([blocker, ...(memberEdit ? [memberEdit] : [])])
+    }
+
+    expect(
+      await db.rankAward.findUnique({
+        where: {
+          passportId_rankId: { passportId: trustPassportId, rankId: fx.purpleRankId },
+        },
+      }),
+    ).toBeNull()
+  })
+
+  it("waits for a merge-owned proposed Passport before locking member Awards", async () => {
+    // Keep this concurrency regression independently targetable even though the surrounding legacy
+    // scenario builds its white backfill in earlier ordered tests.
+    if (!whiteAwardId) {
+      const minted = await trust().upsertBeltMilestone({ rankId: fx.whiteRankId, story: "day one" })
+      whiteAwardId = minted.rankAwardId
+      await trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: anchorCoachPassportId },
+      })
+    }
+    const anchor = await db.rankAward.findUniqueOrThrow({
+      where: {
+        passportId_rankId: { passportId: trustPassportId, rankId: fx.blueRankId },
+      },
+      select: { id: true },
+    })
+    let announceBlocker!: (pid: number) => void
+    const blockerReady = new Promise<number>(resolve => {
+      announceBlocker = resolve
+    })
+    let releaseBlocker!: () => void
+    const blockerRelease = new Promise<void>(resolve => {
+      releaseBlocker = resolve
+    })
+    const mergePassportTier = db.$transaction(
+      async tx => {
+        const [backend] = await tx.$queryRaw<Array<{ pid: number }>>`
+          SELECT pg_backend_pid() AS "pid"
+        `
+        await tx.$queryRaw`SELECT "id" FROM "Passport" WHERE "id" = ${otherCoachPassportId} FOR UPDATE`
+        if (!backend) throw new Error("Could not resolve the merge blocker backend")
+        announceBlocker(backend.pid)
+        await blockerRelease
+      },
+      { timeout: 10000 },
+    )
+
+    const blockerPid = await blockerReady
+    const memberEdit = trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { awardedByPassportId: otherCoachPassportId },
+    })
+    let memberIsWaiting = false
+    let outcomes: PromiseSettledResult<unknown>[] = []
+
+    try {
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        const [state] = await db.$queryRaw<Array<{ waiting: boolean }>>`
+          SELECT EXISTS (
+            SELECT 1
+            FROM pg_stat_activity activity
+            WHERE ${blockerPid} = ANY(pg_blocking_pids(activity.pid))
+          ) AS "waiting"
+        `
+        if (state?.waiting) {
+          memberIsWaiting = true
+          break
+        }
+        await new Promise(resolve => setTimeout(resolve, 20))
+      }
+      expect(memberIsWaiting).toBe(true)
+
+      // The old inversion already owned these Awards here and waited for the proposed coach FK.
+      // The global law must still be in its Passport tier, leaving every Award lockable by a peer.
+      await expect(
+        db.$transaction(async tx => {
+          await tx.$executeRawUnsafe("SET LOCAL lock_timeout = '300ms'")
+          return tx.$queryRaw`SELECT "id" FROM "RankAward" WHERE "id" IN (${whiteAwardId}, ${anchor.id}) ORDER BY "id" FOR UPDATE`
+        }),
+      ).resolves.toBeDefined()
+    } finally {
+      releaseBlocker()
+      outcomes = await Promise.allSettled([mergePassportTier, memberEdit])
+    }
+
+    expect(outcomes.map(outcome => outcome.status)).toEqual(["fulfilled", "fulfilled"])
+    expect(
+      await db.rankEntryReview.count({
+        where: {
+          rankEntry: { rankAwardId: whiteAwardId },
+          status: "PROPOSAL_PENDING",
+          proposedPromoterPassportId: otherCoachPassportId,
+        },
+      }),
+    ).toBe(1)
+    await db.rankEntryReview.deleteMany({
+      where: {
+        rankEntry: { rankAwardId: whiteAwardId },
+        status: "PROPOSAL_PENDING",
+      },
+    })
+  }, 30_000)
 
   it("RECRUITS a fresh free-typed coach — placeholder FK, stays UNVERIFIED, NO instructor review", async () => {
     const card = await trust().updateRankAwardFact({
@@ -698,7 +887,7 @@ describe("belt backfill trust rework (SESSION_0540) — mint UNVERIFIED + promot
       where: { id: card.awardedByPassportId! },
       select: { userId: true, lineageNode: { select: { id: true } } },
     })
-    expect(promoter.userId).toBeNull() // a claimable placeholder → recruiting, not a promoter-change
+    expect(promoter.userId).toBeNull() // recruited-coach placeholder → recruiting, not a review
     expect(promoter.lineageNode).toBeNull()
 
     const entry = await db.rankEntry.findUniqueOrThrow({
@@ -706,27 +895,244 @@ describe("belt backfill trust rework (SESSION_0540) — mint UNVERIFIED + promot
       select: { id: true },
     })
     const review = await db.rankEntryReview.findFirst({
-      where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+      where: { rankEntryId: entry.id, status: "PROPOSAL_PENDING", reason: "PROMOTER_CHANGED" },
     })
     expect(review).toBeNull()
   })
 
-  it("FLAGS an established different coach — UNVERIFIED + one idempotent PENDING PROMOTER_CHANGED review", async () => {
+  it("REJECTS a member clearing accepted promoter provenance", async () => {
+    const before = await db.rankAward.findUniqueOrThrow({
+      where: { id: whiteAwardId },
+      select: { awardedByPassportId: true, notes: true, verificationStatus: true },
+    })
+
+    await expectCode(
+      trust().updateRankAwardFact({ rankAwardId: whiteAwardId, promoter: null }),
+      "BAD_REQUEST",
+    )
+
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: whiteAwardId },
+        select: { awardedByPassportId: true, notes: true, verificationStatus: true },
+      }),
+    ).toEqual(before)
+  })
+
+  it("PROPOSES an established different coach without replacing the accepted promoter", async () => {
+    const accepted = await trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { awardedByPassportId: anchorCoachPassportId },
+    })
+    expect(accepted.awardedByPassportId).toBe(anchorCoachPassportId)
+    expect(accepted.verificationStatus).toBe("VERIFIED")
+
     const card = await trust().updateRankAwardFact({
       rankAwardId: whiteAwardId,
       promoter: { awardedByPassportId: otherCoachPassportId },
     })
-    expect(card.awardedByPassportId).toBe(otherCoachPassportId)
-    expect(card.verificationStatus).toBe("UNVERIFIED")
+    expect(card.awardedByPassportId).toBe(anchorCoachPassportId)
+    expect(card.verificationStatus).toBe("VERIFIED")
+    expect(card.trustState).toBe("pending_review")
 
     const entry = await db.rankEntry.findUniqueOrThrow({
       where: { rankAwardId: whiteAwardId },
       select: { id: true },
     })
     const reviews = await db.rankEntryReview.findMany({
-      where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
+      where: { rankEntryId: entry.id, status: "PROPOSAL_PENDING", reason: "PROMOTER_CHANGED" },
+      select: {
+        id: true,
+        proposalCapturedAt: true,
+        expectedPromoterPassportId: true,
+        proposedPromoterPassportId: true,
+      },
     })
-    expect(reviews).toHaveLength(1) // one review, and re-saving would not duplicate it
+    expect(reviews).toHaveLength(1)
+    expect(reviews[0]?.proposalCapturedAt).toBeInstanceOf(Date)
+    expect(reviews[0]).toMatchObject({
+      expectedPromoterPassportId: anchorCoachPassportId,
+      proposedPromoterPassportId: otherCoachPassportId,
+    })
+    expect(
+      await db.auditLog.findFirst({
+        where: {
+          action: "belt.review.proposed",
+          entityType: "RankEntryReview",
+          entityId: reviews[0]!.id,
+          userId: trustUserId,
+        },
+      }),
+    ).not.toBeNull()
+  })
+
+  it("treats an exact-target retry as idempotent without mutating the proposal or active promoter", async () => {
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: whiteAwardId },
+      select: { id: true },
+    })
+    const before = await db.rankEntryReview.findFirstOrThrow({
+      where: { rankEntryId: entry.id, status: "PROPOSAL_PENDING", reason: "PROMOTER_CHANGED" },
+      select: { id: true, proposalCapturedAt: true },
+    })
+
+    const card = await trust().updateRankAwardFact({
+      rankAwardId: whiteAwardId,
+      promoter: { awardedByPassportId: otherCoachPassportId },
+    })
+
+    expect(card.awardedByPassportId).toBe(anchorCoachPassportId)
+    expect(card.verificationStatus).toBe("VERIFIED")
+    expect(
+      await db.rankEntryReview.findMany({
+        where: { rankEntryId: entry.id, status: "PROPOSAL_PENDING", reason: "PROMOTER_CHANGED" },
+        select: { id: true, proposalCapturedAt: true },
+      }),
+    ).toEqual([before])
+  })
+
+  it("rejects a different target while the immutable proposal is pending", async () => {
+    await expectCode(
+      trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: anchorCoachPassportId },
+      }),
+      "CONFLICT",
+    )
+
+    const active = await db.rankAward.findUniqueOrThrow({
+      where: { id: whiteAwardId },
+      select: { awardedByPassportId: true, verificationStatus: true },
+    })
+    expect(active).toEqual({
+      awardedByPassportId: anchorCoachPassportId,
+      verificationStatus: "VERIFIED",
+    })
+    expect(
+      await db.rankEntryReview.count({
+        where: {
+          rankEntry: { rankAwardId: whiteAwardId },
+          status: "PROPOSAL_PENDING",
+          reason: "PROMOTER_CHANGED",
+          proposedPromoterPassportId: otherCoachPassportId,
+        },
+      }),
+    ).toBe(1)
+  })
+
+  it("serializes concurrent exact-target submissions into one successful proposal", async () => {
+    await db.rankEntryReview.deleteMany({
+      where: {
+        rankEntry: { rankAwardId: whiteAwardId },
+        status: "PROPOSAL_PENDING",
+        reason: "PROMOTER_CHANGED",
+      },
+    })
+
+    const submissions = await Promise.allSettled([
+      trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: otherCoachPassportId },
+      }),
+      trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: otherCoachPassportId },
+      }),
+    ])
+
+    expect(submissions.map(result => result.status)).toEqual(["fulfilled", "fulfilled"])
+    expect(
+      await db.rankEntryReview.count({
+        where: {
+          rankEntry: { rankAwardId: whiteAwardId },
+          status: "PROPOSAL_PENDING",
+          reason: "PROMOTER_CHANGED",
+          proposedPromoterPassportId: otherCoachPassportId,
+        },
+      }),
+    ).toBe(1)
+  })
+
+  it("treats the approved active promoter B as idempotent even while the authority anchor remains A", async () => {
+    await db.rankEntryReview.deleteMany({
+      where: { rankEntry: { rankAwardId: whiteAwardId }, status: "PROPOSAL_PENDING" },
+    })
+    await db.rankAward.update({
+      where: { id: whiteAwardId },
+      data: {
+        awardedByPassportId: otherCoachPassportId,
+        notes: null,
+        verificationStatus: "VERIFIED",
+      },
+    })
+    await syncRankEntryFromAward(db, whiteAwardId)
+
+    try {
+      const card = await trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: otherCoachPassportId },
+      })
+
+      expect(card.awardedByPassportId).toBe(otherCoachPassportId)
+      expect(card.verificationStatus).toBe("VERIFIED")
+      expect(
+        await db.rankEntryReview.count({
+          where: {
+            rankEntry: { rankAwardId: whiteAwardId },
+            status: "PROPOSAL_PENDING",
+            reason: "PROMOTER_CHANGED",
+          },
+        }),
+      ).toBe(0)
+    } finally {
+      await db.rankEntryReview.deleteMany({
+        where: { rankEntry: { rankAwardId: whiteAwardId }, status: "PROPOSAL_PENDING" },
+      })
+    }
+  })
+
+  it("turns B→A into an immutable proposal after B was approved instead of overwriting B", async () => {
+    await db.rankEntryReview.deleteMany({
+      where: { rankEntry: { rankAwardId: whiteAwardId }, status: "PROPOSAL_PENDING" },
+    })
+    await db.rankAward.update({
+      where: { id: whiteAwardId },
+      data: {
+        awardedByPassportId: otherCoachPassportId,
+        notes: null,
+        verificationStatus: "VERIFIED",
+      },
+    })
+    await syncRankEntryFromAward(db, whiteAwardId)
+
+    try {
+      const card = await trust().updateRankAwardFact({
+        rankAwardId: whiteAwardId,
+        promoter: { awardedByPassportId: anchorCoachPassportId },
+      })
+      const review = await db.rankEntryReview.findFirstOrThrow({
+        where: {
+          rankEntry: { rankAwardId: whiteAwardId },
+          status: "PROPOSAL_PENDING",
+          reason: "PROMOTER_CHANGED",
+        },
+        select: {
+          expectedPromoterPassportId: true,
+          proposedPromoterPassportId: true,
+        },
+      })
+
+      expect(card.awardedByPassportId).toBe(otherCoachPassportId)
+      expect(card.verificationStatus).toBe("VERIFIED")
+      expect(review).toEqual({
+        expectedPromoterPassportId: otherCoachPassportId,
+        proposedPromoterPassportId: anchorCoachPassportId,
+      })
+    } finally {
+      await db.rankEntryReview.deleteMany({
+        where: { rankEntry: { rankAwardId: whiteAwardId }, status: "PROPOSAL_PENDING" },
+      })
+    }
   })
 })
 
@@ -738,6 +1144,7 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
   let filledPassportId: string
   let filledAwardId: string
   let adminUserId: string
+  let pendingAdminReviewId: string
 
   const FILLED_DATE = "2018-04-04"
 
@@ -805,7 +1212,7 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
     expect(row.awardedAt?.toISOString().slice(0, 10)).toBe(FILLED_DATE)
   })
 
-  it("(a) DENIES the owner OVERWRITING or CLEARING the FILLED promoter (→ FORBIDDEN, value intact)", async () => {
+  it("(a) DENIES owner overwrite and rejects member-side promoter clearing, value intact", async () => {
     await expectCode(
       filledOwner().updateRankAwardFact({
         rankAwardId: filledAwardId,
@@ -813,10 +1220,11 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
       }),
       "FORBIDDEN",
     )
-    // Clearing (explicit null) is a modification too.
+    // D-046 makes member-side removal an explicit invalid command for every award; an admin
+    // correction is required instead of treating clear as an ordinary fill-once overwrite.
     await expectCode(
       filledOwner().updateRankAwardFact({ rankAwardId: filledAwardId, promoter: null }),
-      "FORBIDDEN",
+      "BAD_REQUEST",
     )
     const row = await db.rankAward.findUniqueOrThrow({
       where: { id: filledAwardId },
@@ -919,6 +1327,124 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
     )
   })
 
+  it("blocks an ordinary admin promoter edit while an immutable proposal is pending", async () => {
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: filledAwardId },
+      select: { id: true },
+    })
+    const review = await db.rankEntryReview.create({
+      data: {
+        rankEntryId: entry.id,
+        status: "PROPOSAL_PENDING",
+        reason: "PROMOTER_CHANGED",
+        proposalCapturedAt: new Date(),
+        expectedPromoterPassportId: fx.otherPassportId,
+        proposedPromoterPassportId: fx.memberPassportId,
+      },
+      select: { id: true },
+    })
+    pendingAdminReviewId = review.id
+
+    await expectCode(
+      admin().updateRankAwardFactAsAdmin({
+        rankAwardId: filledAwardId,
+        promoter: { awardedByPassportId: fx.memberPassportId },
+      }),
+      "CONFLICT",
+    )
+
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: filledAwardId },
+        select: { awardedByPassportId: true },
+      }),
+    ).toEqual({ awardedByPassportId: fx.otherPassportId })
+    expect(
+      await db.rankEntryReview.findUniqueOrThrow({
+        where: { id: pendingAdminReviewId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "PROPOSAL_PENDING" })
+  })
+
+  it("rejects a non-admin invoking the explicit promoter override", async () => {
+    await expectCode(
+      filledOwner().overrideRankAwardPromoterAsAdmin({
+        rankAwardId: filledAwardId,
+        promoter: { awardedByPassportId: fx.memberPassportId },
+      }),
+      "FORBIDDEN",
+    )
+    expect(
+      await db.rankEntryReview.findUniqueOrThrow({
+        where: { id: pendingAdminReviewId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "PROPOSAL_PENDING" })
+  })
+
+  it("uses a distinct admin override command to deny the proposal, apply the correction, and audit both", async () => {
+    revalidatedPaths.length = 0
+    revalidatedTags.length = 0
+    const card = await admin().overrideRankAwardPromoterAsAdmin({
+      rankAwardId: filledAwardId,
+      promoter: { awardedByPassportId: fx.memberPassportId },
+    })
+
+    expect(card.awardedByPassportId).toBe(fx.memberPassportId)
+    expect(
+      await db.rankEntryReview.findUniqueOrThrow({
+        where: { id: pendingAdminReviewId },
+        select: { status: true },
+      }),
+    ).toEqual({ status: "DENIED" })
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: filledAwardId },
+        select: { awardedByPassportId: true, notes: true, verificationStatus: true },
+      }),
+    ).toEqual({
+      awardedByPassportId: fx.memberPassportId,
+      notes: null,
+      verificationStatus: "IMPORTED",
+    })
+
+    const audits = await db.auditLog.findMany({
+      where: {
+        userId: adminUserId,
+        OR: [
+          { entityType: "RankEntryReview", entityId: pendingAdminReviewId },
+          { entityType: "RankAward", entityId: filledAwardId },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+      select: { action: true },
+      take: 2,
+    })
+    expect(audits.map(audit => audit.action).sort()).toEqual([
+      "belt.fact.promoter_overridden",
+      "belt.review.denied_by_override",
+    ])
+    expect(revalidatedPaths).toContain("/lineage")
+    expect(revalidatedTags).toContain("lineage")
+  })
+
+  it("fails closed when the explicit override has no pending captured proposal", async () => {
+    await expectCode(
+      admin().overrideRankAwardPromoterAsAdmin({
+        rankAwardId: filledAwardId,
+        promoter: { awardedByPassportId: fx.otherPassportId },
+      }),
+      "CONFLICT",
+    )
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: filledAwardId },
+        select: { awardedByPassportId: true },
+      }),
+    ).toEqual({ awardedByPassportId: fx.memberPassportId })
+  })
+
   it("admin path on a NONEXISTENT award → NOT_FOUND (no raw 500)", async () => {
     await expectCode(
       admin().updateRankAwardFactAsAdmin({
@@ -941,6 +1467,126 @@ describe("belt.deleteRankAward — top-award protection + ownership", () => {
     await expectCode(member().deleteRankAward({ rankAwardId: fx.otherAwardId }), "NOT_FOUND")
     const still = await db.rankAward.findUnique({ where: { id: fx.otherAwardId } })
     expect(still).not.toBeNull()
+  })
+
+  it("DENIES deleting a non-top award while its immutable promoter proposal is pending", async () => {
+    const user = await db.user.create({
+      data: { name: tag("delete-pending"), email: `${tag("delete-pending")}@test.local` },
+    })
+    const passport = await db.passport.create({
+      data: { displayName: tag("delete-pending-pp"), userId: user.id },
+      select: { id: true },
+    })
+    const top = await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.blueRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+      select: { id: true },
+    })
+    const lower = await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.whiteRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedByPassportId: fx.otherPassportId,
+      },
+      select: { id: true },
+    })
+    await syncRankEntryFromAward(db, lower.id)
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: lower.id },
+      select: { id: true },
+    })
+    await db.rankEntryReview.create({
+      data: {
+        rankEntryId: entry.id,
+        status: "PROPOSAL_PENDING",
+        reason: "PROMOTER_CHANGED",
+        proposalCapturedAt: new Date(),
+        expectedPromoterPassportId: fx.otherPassportId,
+        proposedPromoterPassportId: fx.memberPassportId,
+      },
+    })
+
+    try {
+      await expectCode(
+        asMember({ id: user.id, role: "user" }).deleteRankAward({ rankAwardId: lower.id }),
+        "CONFLICT",
+      )
+      expect(await db.rankAward.findUnique({ where: { id: lower.id } })).not.toBeNull()
+    } finally {
+      await db.rankEntryReview.deleteMany({ where: { rankEntryId: entry.id } })
+      await db.rankAward.deleteMany({ where: { id: { in: [lower.id, top.id] } } })
+      await db.passport.delete({ where: { id: passport.id } })
+      await db.user.delete({ where: { id: user.id } })
+    }
+  })
+
+  it("DENIES deleting a non-top award after either terminal proposal decision", async () => {
+    const user = await db.user.create({
+      data: { name: tag("delete-history"), email: `${tag("delete-history")}@test.local` },
+    })
+    const passport = await db.passport.create({
+      data: { displayName: tag("delete-history-pp"), userId: user.id },
+      select: { id: true },
+    })
+    const top = await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.blueRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+      },
+      select: { id: true },
+    })
+    const lower = await db.rankAward.create({
+      data: {
+        passportId: passport.id,
+        rankId: fx.whiteRankId,
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedByPassportId: fx.otherPassportId,
+      },
+      select: { id: true },
+    })
+    await syncRankEntryFromAward(db, lower.id)
+    const entry = await db.rankEntry.findUniqueOrThrow({
+      where: { rankAwardId: lower.id },
+      select: { id: true },
+    })
+    const review = await db.rankEntryReview.create({
+      data: {
+        rankEntryId: entry.id,
+        status: "DENIED",
+        reason: "PROMOTER_CHANGED",
+        proposalCapturedAt: new Date(),
+        expectedPromoterPassportId: fx.otherPassportId,
+        proposedPromoterPassportId: fx.memberPassportId,
+      },
+      select: { id: true },
+    })
+    const actor = asMember({ id: user.id, role: "user" })
+
+    try {
+      await expectCode(actor.deleteRankAward({ rankAwardId: lower.id }), "CONFLICT")
+      expect(await db.rankAward.findUnique({ where: { id: lower.id } })).not.toBeNull()
+
+      await db.rankEntryReview.update({
+        where: { id: review.id },
+        data: { status: "APPROVED" },
+      })
+      await expectCode(actor.deleteRankAward({ rankAwardId: lower.id }), "CONFLICT")
+      expect(await db.rankAward.findUnique({ where: { id: lower.id } })).not.toBeNull()
+    } finally {
+      await db.rankEntryReview.deleteMany({ where: { rankEntryId: entry.id } })
+      await db.rankAward.deleteMany({ where: { id: { in: [lower.id, top.id] } } })
+      await db.passport.delete({ where: { id: passport.id } })
+      await db.user.delete({ where: { id: user.id } })
+    }
   })
 
   it("ALLOWS deleting a NON-top award (white, below ceiling) and CASCADES its milestone", async () => {

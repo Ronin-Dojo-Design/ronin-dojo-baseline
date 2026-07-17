@@ -1,6 +1,7 @@
 import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { BeltFamily } from "~/components/common/belt-swatch"
-import { type BeltRankViewModel, deriveTrustState } from "~/components/web/belt/belt-view-model"
+import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
+import { deriveTrustState } from "~/lib/belt/review-state"
 import { ceilingSortOrder, type GateAward } from "~/server/belt/belt-gate"
 import { type MemberAward, toBeltCard } from "~/server/belt/queries"
 

@@ -4,106 +4,70 @@ slug: prisma-workflow
 type: runbook
 status: active
 created: 2026-04-26
-updated: 2026-05-19
-last_agent: claude-session-0200
+updated: 2026-07-16
+last_agent: codex-session-0542
 use_count: 0
+pairs_with:
+  - docs/runbooks/database/database.md
+  - docs/runbooks/database/schema-migration.md
+  - docs/runbooks/dev-environment/verification-and-testing.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
-# Prisma Schema Workflow — local dev
+# Prisma workflow — target-safe decision guide
 
-The recurring pattern for schema changes during local development.
+This page is intentionally a thin router. The executable schema workflow lives in
+[Schema Migration Runbook](schema-migration.md); database roles and connection setup live in
+[Database Runbook](database.md). Keeping raw reset/db-push recipes here created a second, stale source of
+truth and contributed to FS-0032.
 
 ## When to use
 
-Any time you modify `apps/web/prisma/schema.prisma` — adding models, changing fields, updating enums, adding relations.
+Any time you modify `apps/web/prisma/schema.prisma` or invoke a Prisma command locally.
 
-## Steps
+## First gate: effective target
 
-### 1. Edit the schema
-
-```bash
-# File: apps/web/prisma/schema.prisma
-# Make your changes, then save.
-```
-
-### 2. Choose your workflow
-
-Two valid approaches — pick based on the change type:
-
-#### Option A: `db push` (rapid prototyping / destructive changes)
-
-Best for: large schema rewrites, wave migrations, dropping columns/tables, or when you don't need migration files.
-
-```bash
-# Reset dev database (clean slate)
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev
-
-# Push schema
-cd apps/web
-bunx prisma db push --accept-data-loss
-
-# Generate client
-bunx prisma generate
-
-# Run seed
-bun run prisma/seed.ts
-```
-
-##### One-liner (copy-paste)
-
-```bash
-cd apps/web && \
-/Applications/Postgres.app/Contents/Versions/latest/bin/dropdb ronindojo_dev && \
-/Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_dev && \
-bunx prisma db push --accept-data-loss && \
-bunx prisma generate && \
-bun run prisma/seed.ts
-```
-
-#### Option B: `migrate dev` (additive changes that need migration files)
-
-Best for: adding columns, adding models, or any change where you want a versioned migration file committed to `prisma/migrations/`. This is the correct workflow when production uses `prisma migrate deploy` (which it does — see `package.json` `prebuild` script).
+`prisma.config.ts` prefers `DIRECT_URL`. First print the database names visible to the parent shell; they
+must agree. Then, for the canonical local target, run the read-only status probe and require Prisma's own
+datasource banner to name `ronindojo_prodsnap`:
 
 ```bash
 cd apps/web
-bunx prisma migrate dev --name <descriptive-name>
+bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
+bunx prisma migrate status
 ```
 
-This creates a migration file in `prisma/migrations/`, applies it, and regenerates the client. No need to run `prisma generate` separately.
+The first line is **not** child-process proof. A raw `bun --env-file=.env.e2e x prisma …` hop has been
+observed discarding an E2E overlay and reloading the default prodsnap `.env`, even when the E2E file set both
+URLs correctly. Use `bun run e2e:db:setup` for E2E. For scratch work, put both URL assignments directly on
+the same `env … bunx prisma …` child command and verify its datasource banner before trusting the result.
 
-> **Note:** The shadow DB hang reported in SESSION_0004 does not reproduce with Prisma 7.x. `migrate dev` works correctly with Postgres.app.
+## Decision table
 
-#### When to use which
-
-| Scenario | Use |
+| Need | Correct path |
 | --- | --- |
-| New model wave (many models at once) | `db push` + reset |
-| Adding a column to an existing model | `migrate dev` |
-| Changing an enum (add/remove values) | `db push` + reset |
-| Adding an optional field | Either works |
-| Need migration file for production deploy | `migrate dev` |
+| Apply reviewed, checked-in migration locally | Back up + preflight `ronindojo_prodsnap`, then `bun run db:migrate:deploy`; run DB-backed Bun tests there. |
+| Author a shipping migration | Follow `schema-migration.md`; use an explicitly pinned scratch authoring DB or hand-author data-sensitive SQL. |
+| Prototype destructive schema ideas | Named disposable scratch DB with **both** URLs pinned; `db push` is allowed only there. |
+| Rebuild Playwright fixture | Literal `dropdb ... ronindojo_e2e`, then guarded `bun run e2e:db:setup`. |
+| Deploy production | Commit the migration file; Vercel prebuild runs `migrate deploy` against Neon. Manual apply is exceptional and operator-controlled. |
 
-### 3. Verify
+## Never on prodsnap
 
-```bash
-bunx tsc --noEmit 2>&1 | head -30
-```
+- `prisma migrate reset`
+- `db push` / `--accept-data-loss`
+- destructive seed experiments
+- a raw Prisma command after checking only `DATABASE_URL`
 
-Check for new type errors. Pre-existing Dirstarter template errors (PageProps, content-collections) are expected and can be ignored.
-
-## When NOT to reset
-
-- If you only added new optional fields or new models (no breaking changes), you can skip the dropdb/createdb and just run `prisma db push` + `prisma generate`.
-- If you want to preserve existing test data, use `prisma db push` without `--accept-data-loss` and fix any errors manually.
-- If you used `migrate dev`, no reset is needed — the migration is applied incrementally.
+For adversarial migration failure proof, restore/clone prodsnap into a separately named scratch DB and leave the
+real mirror untouched until the migration is reviewed and the backup/preflight is complete.
 
 ## Known issues
 
 - **Postgres.app CLI not on PATH** — use full path `/Applications/Postgres.app/Contents/Versions/latest/bin/` or add to PATH per [Postgres.app docs](https://postgresapp.com/documentation/cli-tools.html).
-- **Shadow DB hang on `prisma migrate dev` (SESSION_0004)** — did NOT reproduce in SESSION_0152 against the Neon dev DB. A formal Prisma 7.x retest is queued as a future follow-up but is not blocking; treat `migrate dev` as the default path for migrations that must ship.
+- **Shadow DB hang on `prisma migrate dev` (SESSION_0004)** — did not reproduce in SESSION_0152. This does
+  not relax target isolation: run it only against an explicitly pinned scratch authoring DB.
 
 ## Related
 
@@ -113,4 +77,5 @@ Check for new type errors. Pre-existing Dirstarter template errors (PageProps, c
 
 ## Last verified
 
-2026-04-26 — SESSION_0005 (Copilot)
+2026-07-16 — SESSION_0542 (Codex): removed duplicate destructive recipes and aligned all targets with the
+prodsnap/E2E/scratch role split.

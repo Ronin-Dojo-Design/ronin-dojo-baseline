@@ -1,8 +1,8 @@
 import { ORPCError } from "@orpc/server"
-import { Brand, type RankAwardVerificationStatus } from "~/.generated/prisma/client"
+import { Brand } from "~/.generated/prisma/client"
+import { deriveTrustState, OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
 import {
   ceilingSortOrder,
-  decideBackfillTrust,
   type FactKey,
   isFactEditable,
   isTopAward,
@@ -14,16 +14,24 @@ import {
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
-  resolveAnchorAward,
   toBeltCard,
   toGateAward,
 } from "~/server/belt/queries"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import {
+  applyMemberPromoterTransition,
+  findAndLockPendingPromoterReview,
+  hasLockedRankEntryReviewHistory,
+  lockPromoterWorkflowScope,
+  lockRankAward,
+  overrideCapturedPromoterReview,
+} from "~/server/belt/promoter-proposal-core"
+import {
   attachMilestoneMediaInput,
   type BeltCardOutput,
   deleteRankAwardInput,
   detachMilestoneMediaInput,
+  overrideRankAwardPromoterAsAdminInput,
   updateRankAwardFactInput,
   type UpdateRankAwardFactInput,
   upsertBeltMilestoneInput,
@@ -65,12 +73,49 @@ const REVALIDATE_PATHS = ["/app/profile"]
  * with `gateAwardSelect`, not the whole award list (we only need this one).
  */
 async function enrichedCard(passportId: string, rankAwardId: string): Promise<BeltCardOutput> {
+  // PrismaPg currently warns when one adapter client overlaps query calls. These two reads are
+  // cheap and ordering-independent, so keep them sequential until the adapter supports overlap.
   const award = await db.rankAward.findFirst({
     where: { id: rankAwardId, passportId },
     select: gateAwardSelect,
   })
+  const entry = await db.rankEntry.findUnique({
+    where: { rankAwardId },
+    select: {
+      status: true,
+      reviews: {
+        where: { status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] } },
+        select: { id: true },
+        take: 1,
+      },
+    },
+  })
   if (!award) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
-  return toBeltCard(award)
+  return {
+    ...toBeltCard(award, entry?.status),
+    trustState: entry
+      ? deriveTrustState({
+          verified: entry.status === "VERIFIED",
+          hasPendingReview: entry.reviews.length > 0,
+        })
+      : undefined,
+  }
+}
+
+/**
+ * Find a milestone the acting member OWNS (its award's `passportId` === the ownership root), or
+ * throw NOT_FOUND. The shared ownership gate for the attach / detach media handlers — a caller can
+ * never reach another member's milestone.
+ */
+async function findOwnMilestone(passportId: string, rankMilestoneId: string) {
+  const milestone = await db.rankMilestone.findUnique({
+    where: { id: rankMilestoneId },
+    select: { id: true, rankAward: { select: { id: true, passportId: true } } },
+  })
+  if (!milestone || milestone.rankAward.passportId !== passportId) {
+    throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
+  }
+  return milestone
 }
 
 /**
@@ -81,7 +126,7 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
  * SESSION_0540 rework (supersedes the B1 VERIFIED-by-implication mint): the ensured
  * award is minted **UNVERIFIED**. A self-added backfill starts unverified and is
  * PROMOTED to VERIFIED only when its named promoter matches the member's anchor
- * promoter (`applyBackfillTrustDecision`, reached via `updateRankAwardFact`) — this
+ * promoter (`applyMemberPromoterTransition`, reached via `updateRankAwardFact`) — this
  * removes the transient mint-VERIFIED-then-downgrade. `awardedById` stays null → the
  * award is self-added (fact-editable; see `isFactEditable`), and being at/below the
  * ceiling it can never raise the member's shown belt above their awarded truth. A belt
@@ -121,7 +166,7 @@ const upsertBeltMilestone = beltProcedure
           source: "STATED",
           // Minted UNVERIFIED (SESSION_0540 rework): a self-added backfill starts unverified
           // and is promoted to VERIFIED only by the same-anchor-promoter branch of
-          // `applyBackfillTrustDecision` (via `updateRankAwardFact`). `awardedById` stays null
+          // `applyMemberPromoterTransition` (via `updateRankAwardFact`). `awardedById` stays null
           // → self-added backfill (fact-editable; see `isFactEditable`).
           verificationStatus: "UNVERIFIED",
         },
@@ -140,7 +185,7 @@ const upsertBeltMilestone = beltProcedure
       return award.id
     })
 
-    context.revalidate({ paths: REVALIDATE_PATHS })
+    context.revalidate({ paths: [...REVALIDATE_PATHS, "/lineage"], tags: ["lineage"] })
     return enrichedCard(passportId, rankAwardId)
   })
 
@@ -168,96 +213,128 @@ type FactUpdateData = {
   organizationId?: string | null
 }
 
+function factSnapshot(row: {
+  awardedAt: Date | null
+  awardedByPassportId: string | null
+  notes: string | null
+  organizationId: string | null
+  location: string | null
+}) {
+  return {
+    awardedAt: row.awardedAt?.toISOString() ?? null,
+    awardedByPassportId: row.awardedByPassportId,
+    notes: row.notes,
+    organizationId: row.organizationId,
+    location: row.location,
+  }
+}
+
+/** Prisma surface the capture needs — the award `$transaction` client threads through here. */
+type FactCaptureTx = Pick<typeof db, "passport" | "organization" | "lead" | "leadFollowUp">
+
+async function resolveRegisteredPromoterFact(
+  tx: FactCaptureTx,
+  promoterPassportId: string,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  const promoterPassport = await tx.passport.findUnique({
+    where: { id: promoterPassportId },
+    select: { id: true },
+  })
+  if (!promoterPassport) {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "That instructor can't be linked — pick another from the list or type their name.",
+    })
+  }
+  return { awardedByPassportId: promoterPassport.id, notes: null }
+}
+
+async function resolveNamedPromoterFact(
+  tx: FactCaptureTx,
+  name: string | null,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  if (!name) return { awardedByPassportId: null, notes: null }
+
+  const placeholder = await ensurePromoterPlaceholder(name, tx)
+  await emitPromoterLead(
+    {
+      promoterName: name,
+      source: "belt-journey",
+      passportId: placeholder?.passportId ?? null,
+    },
+    tx,
+  )
+  return { awardedByPassportId: placeholder?.passportId ?? null, notes: name }
+}
+
+async function resolvePromoterFactWithCapture(
+  tx: FactCaptureTx,
+  promoter: Exclude<FactUpdateInput["promoter"], undefined>,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  if (promoter?.awardedByPassportId) {
+    // The picker options are cached. Revalidate the Passport so a stale id becomes a useful
+    // BAD_REQUEST instead of a swallowed P2003.
+    return resolveRegisteredPromoterFact(tx, promoter.awardedByPassportId)
+  }
+
+  const name = promoter?.name?.trim() || null
+  // Freetext promoter capture is identity + pipeline, kept inside the award transaction so later
+  // validation failures roll both artifacts back with the fact write.
+  return resolveNamedPromoterFact(tx, name)
+}
+
+async function resolveSchoolFactWithCapture(
+  tx: FactCaptureTx,
+  school: Exclude<FactUpdateInput["school"], undefined>,
+): Promise<Pick<FactUpdateData, "organizationId" | "location">> {
+  if (school?.organizationId) {
+    const organization = await tx.organization.findUnique({
+      where: { id: school.organizationId },
+      select: { id: true },
+    })
+    if (!organization) {
+      throw new ORPCError("BAD_REQUEST", {
+        message:
+          "That school is no longer available — pick another from the list or type its name.",
+      })
+    }
+    return { organizationId: organization.id, location: null }
+  }
+
+  const schoolName = school?.name?.trim() || null
+  if (schoolName) {
+    await emitSchoolLead(
+      { schoolName, source: "belt-journey", country: school?.country ?? null },
+      tx,
+    )
+  }
+  return { organizationId: null, location: schoolName }
+}
+
 /**
- * Resolve a fact-edit input into a partial `RankAward` update — undefined keys
- * leave the column untouched; `rankId` is deliberately never in this object. The
- * ONE persistence seam for BOTH the member and the admin fact paths (SESSION_0501
- * — the ref semantics must never fork): promoter/school each accept a typed FK OR
- * freetext; a freetext school additionally emits a deduped school-outreach lead.
+ * Resolve a fact-edit input into a partial `RankAward` update AND capture the recruitment
+ * side-effects (SESSION_0541 rename — was the misleadingly-named `buildFactUpdateData`; the
+ * "capture" is now explicit in the name, FINDING_02). Undefined keys leave the column untouched;
+ * `rankId` is deliberately never in this object. The ONE persistence seam for BOTH the member and
+ * the admin fact paths (SESSION_0501 — the ref semantics must never fork).
+ *
+ * Runs on the caller's award `tx` (WL-P3-44): a freetext promoter/school mints its placeholder +
+ * emits its deduped recruitment `Lead` INSIDE the award transaction, so a fill-once fail-closed
+ * rolls the capture back with the award (no orphan stub). Identity resolution
+ * (`ensurePromoterPlaceholder`) is split from the CRM emit (`emitPromoterLead`); both fire on the
+ * member AND admin paths on FREETEXT only — a picked, registered promoter/school never recruits
+ * (operator decision SESSION_0541: recruit broadly, but only on a genuinely new free-typed name).
  */
-async function buildFactUpdateData(input: FactUpdateInput): Promise<FactUpdateData> {
+async function resolveFactUpdateWithCapture(
+  tx: FactCaptureTx,
+  input: FactUpdateInput,
+): Promise<FactUpdateData> {
   const data: FactUpdateData = {}
 
   if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
-
-  if (input.promoter !== undefined) {
-    if (input.promoter?.awardedByPassportId) {
-      // The picker sends a Passport id (belt-tab-loader.getBeltPromoterOptions is keyed
-      // by passport). Verify it still exists — the option list is cached, so a stale or
-      // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
-      // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
-      const promoterPassport = await db.passport.findUnique({
-        where: { id: input.promoter.awardedByPassportId },
-        select: { id: true },
-      })
-      if (!promoterPassport) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "That instructor can't be linked — pick another from the list or type their name.",
-        })
-      }
-      data.awardedByPassportId = promoterPassport.id
-      data.notes = null
-    } else {
-      const name = input.promoter?.name?.trim() || null
-      if (name) {
-        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model):
-        //  1. IDENTITY — find-or-create a claimable placeholder Passport (mirrors the claim/import
-        //     placeholder machinery) and point the award FK at it, so the promoter sits on the
-        //     identity graph and can later claim their Passport (phase-2 confirm loop). The typed
-        //     name also rides `notes` (the card + editor prefill read it).
-        //  2. PIPELINE — emit a deduped recruitment `Lead` (the PERSON mirror of the freetext-school
-        //     lead) so the coach enters the outreach / CRM funnel, LINKED to that placeholder via
-        //     `meta.passportId`. Never sends outreach; the invite is an operator click.
-        const placeholder = await ensurePromoterPlaceholder(name)
-        data.awardedByPassportId = placeholder?.passportId ?? null
-        data.notes = name
-        await emitPromoterLead({
-          promoterName: name,
-          source: "belt-journey",
-          passportId: placeholder?.passportId ?? null,
-        })
-      } else {
-        // Clearing the promoter.
-        data.awardedByPassportId = null
-        data.notes = null
-      }
-    }
-  }
-
-  if (input.school !== undefined) {
-    if (input.school?.organizationId) {
-      // Same guard as the promoter: the school option list is cached too, so a school
-      // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
-      const org = await db.organization.findUnique({
-        where: { id: input.school.organizationId },
-        select: { id: true },
-      })
-      if (!org) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "That school is no longer available — pick another from the list or type its name.",
-        })
-      }
-      data.organizationId = org.id
-      data.location = null
-    } else {
-      const schoolName = input.school?.name?.trim() || null
-      data.organizationId = null
-      data.location = schoolName
-      // Freetext school → capture the demand as a deduped school-outreach lead
-      // (Slice 1). Never sends outreach — the invite is an operator click. The
-      // country (Locked #7) belongs to the school, so it rides here → sets the
-      // placeholder Organization.country (ignored on a registered-org pick).
-      if (schoolName) {
-        await emitSchoolLead({
-          schoolName,
-          source: "belt-journey",
-          country: input.school?.country ?? null,
-        })
-      }
-    }
-  }
+  if (input.promoter !== undefined)
+    Object.assign(data, await resolvePromoterFactWithCapture(tx, input.promoter))
+  if (input.school !== undefined)
+    Object.assign(data, await resolveSchoolFactWithCapture(tx, input.school))
 
   return data
 }
@@ -271,154 +348,18 @@ function requestedFactKeys(input: FactUpdateInput): FactKey[] {
   return keys
 }
 
+/** Leave the accepted promoter columns untouched while applying any sibling fact edits. */
+function withoutPromoterFact(data: FactUpdateData): FactUpdateData {
+  const siblingFacts = { ...data }
+  delete siblingFacts.awardedByPassportId
+  delete siblingFacts.notes
+  return siblingFacts
+}
+
 const FACT_LABEL: Record<FactKey, string> = {
   awardedAt: "promotion date",
   promoter: "promoter",
   school: "school",
-}
-
-/**
- * Set a member-owned backfill's verification status + sync its RankEntry, audited.
- * Idempotent (no-op when already at `target`). Mirrors `verifyRankEntry` semantics; the
- * caller gates on `isFactEditable`, so this never reaches an IMPORTED / instructor /
- * disputed award.
- */
-async function writeBackfillStatus(
-  rankAwardId: string,
-  target: "VERIFIED" | "UNVERIFIED",
-  current: RankAwardVerificationStatus,
-  actingUserId: string,
-): Promise<void> {
-  if (current === target) return
-  await db.$transaction(async tx => {
-    await tx.rankAward.update({
-      where: { id: rankAwardId },
-      data: { verificationStatus: target },
-    })
-    await syncRankEntryFromAward(tx, rankAwardId)
-    await tx.auditLog.create({
-      data: {
-        brand: Brand.BBL,
-        action: "belt.backfill.auto_trust",
-        entityType: "RankAward",
-        entityId: rankAwardId,
-        userId: actingUserId,
-        before: { verificationStatus: current },
-        after: { verificationStatus: target },
-      },
-    })
-  })
-}
-
-/** Open ONE idempotent PENDING `PROMOTER_CHANGED` review for a backfill's entry. */
-async function openPromoterChangedReview(rankAwardId: string): Promise<void> {
-  const entry = await db.rankEntry.findUnique({
-    where: { rankAwardId },
-    select: { id: true },
-  })
-  if (!entry) return
-  const existing = await db.rankEntryReview.findFirst({
-    where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
-    select: { id: true },
-  })
-  if (existing) return
-  await db.rankEntryReview.create({
-    data: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
-  })
-}
-
-/**
- * A now-matching (verified) promoter supersedes any open PROMOTER_CHANGED review, so the
- * Phase 2 trust badge (`deriveTrustState`: a PENDING review wins over the stored status)
- * stays coherent — a verified belt must never still read "pending review".
- */
-async function supersedePromoterChangedReviews(rankAwardId: string): Promise<void> {
-  const entry = await db.rankEntry.findUnique({
-    where: { rankAwardId },
-    select: { id: true },
-  })
-  if (!entry) return
-  await db.rankEntryReview.updateMany({
-    where: { rankEntryId: entry.id, status: "PENDING", reason: "PROMOTER_CHANGED" },
-    data: { status: "DENIED" },
-  })
-}
-
-/**
- * Is the backfill's promoter Passport a CLAIMABLE PLACEHOLDER — unclaimed (`userId` null) AND
- * off-tree (no `LineageNode`), i.e. a freshly free-typed / recruited coach rather than an
- * established on-tree person (an on-tree placeholder like an imported founder HAS a node and so is
- * NOT one)? Resolved STATELESSLY from the stored FK so the decision stays correct on a later
- * date-only re-edit (not from a write-time "just created" flag). Null FK → false (no person to
- * classify). This is the signal that distinguishes recruiting (no review) from a real
- * promoter-change (instructor review).
- */
-async function isClaimablePlaceholderPromoter(promoterPassportId: string | null): Promise<boolean> {
-  if (!promoterPassportId) return false
-  const promoter = await db.passport.findUnique({
-    where: { id: promoterPassportId },
-    select: { userId: true, lineageNode: { select: { id: true } } },
-  })
-  return !!promoter && promoter.userId === null && promoter.lineageNode === null
-}
-
-/**
- * Apply the SESSION_0540 backfill-verification decision after a member's promoter fact is
- * saved. Scoped strictly to member-owned, at/below-ceiling backfills — never the anchor,
- * above-ceiling ranks, or IMPORTED / instructor-verified / disputed truth. The decision
- * itself is the pure `decideBackfillTrust`; this only dispatches the side-effects.
- */
-async function applyBackfillTrustDecision(
-  passportId: string,
-  rankAwardId: string,
-  actingUserId: string,
-): Promise<void> {
-  const disciplineId = await getBjjDisciplineId()
-  const awards = await getMemberAwards(passportId)
-  const backfill = awards.find(award => award.id === rankAwardId)
-  if (!backfill) return
-  // Only member-owned backfills participate (never IMPORTED / instructor / disputed).
-  if (!isFactEditable(backfill)) return
-  // Above-ceiling never auto-verifies (defence-in-depth; unreachable via the gated write).
-  const ceiling = ceilingSortOrder(awards.map(toGateAward), disciplineId)
-  if (!isWithinCeiling(backfill.rank.sortOrder, ceiling)) return
-
-  const anchor = resolveAnchorAward(awards, disciplineId)
-  const decision = decideBackfillTrust({
-    backfillPromoterPassportId: backfill.awardedByPassportId,
-    promoterIsClaimablePlaceholder: await isClaimablePlaceholderPromoter(
-      backfill.awardedByPassportId,
-    ),
-    backfillFreetextPromoter: backfill.notes,
-    anchorPromoterPassportId: anchor?.awardedByPassportId ?? null,
-    isBackfillAnchor: anchor?.id === backfill.id,
-  })
-
-  switch (decision) {
-    case "verify":
-      await writeBackfillStatus(rankAwardId, "VERIFIED", backfill.verificationStatus, actingUserId)
-      await supersedePromoterChangedReviews(rankAwardId)
-      break
-    case "flag_promoter_changed":
-      await writeBackfillStatus(
-        rankAwardId,
-        "UNVERIFIED",
-        backfill.verificationStatus,
-        actingUserId,
-      )
-      await openPromoterChangedReview(rankAwardId)
-      break
-    case "keep_unverified":
-      await writeBackfillStatus(
-        rankAwardId,
-        "UNVERIFIED",
-        backfill.verificationStatus,
-        actingUserId,
-      )
-      break
-    case "skip":
-      break
-  }
 }
 
 /**
@@ -432,7 +373,7 @@ async function applyBackfillTrustDecision(
  *   naming the locked fact(s);
  * - DISPUTED → fully locked for the owner.
  *
- * Promoter/school ref semantics live in `buildFactUpdateData` (shared with the
+ * Promoter/school ref semantics live in `resolveFactUpdateWithCapture` (shared with the
  * admin path): typed FK OR freetext; freetext school → `emitSchoolLead` + `location`;
  * freetext promoter → `notes`.
  */
@@ -449,68 +390,123 @@ const updateRankAwardFact = beltProcedure
       throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
     }
 
-    // Per-fact gate: every fact the input tries to write must be editable for the
-    // OWNER. Surface the REAL reason naming the locked fact(s), never a blanket error.
-    const { facts, reason } = memberFactEditability(award)
-    const locked = requestedFactKeys(input).filter(key => !facts[key])
-    if (locked.length > 0) {
-      throw new ORPCError("FORBIDDEN", {
-        message: `The ${locked.map(key => FACT_LABEL[key]).join(", ")} on this belt was recorded by an instructor or admin and can't be changed`,
+    // D-046 did not ratify member-side removal. Reject it before capture so a VERIFIED award can
+    // never become promoter-less while retaining its trust state; admins retain explicit correction.
+    if (
+      input.promoter !== undefined &&
+      !input.promoter?.awardedByPassportId &&
+      !input.promoter?.name?.trim()
+    ) {
+      throw new ORPCError("BAD_REQUEST", {
+        message:
+          "Choose or enter a promoter. Removing accepted promoter provenance requires admin correction.",
       })
     }
 
-    const data = await buildFactUpdateData(input)
-    if (reason === "SELF_BACKFILL") {
-      // Self-added backfill: full overwrite is the ratified semantics — the owner
-      // racing themselves is harmless, so the unconditional write stands.
-      await db.$transaction(async tx => {
-        await tx.rankAward.update({ where: { id: award.id }, data })
-        await syncRankEntryFromAward(tx, award.id)
-      })
-    } else {
-      // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
-      // read-checked emptiness, but a concurrent fill (or an admin write landing in the
-      // read→write window) could otherwise be overwritten. The write itself re-asserts
-      // per-fact emptiness atomically — a raced fill matches 0 rows and fails CLOSED.
-      // (Prisma can't express the gate's trim() blank-check, so whitespace-only
-      // freetext also fails closed here — the safe direction, and unreachable via our
-      // own writers, which always trim-or-null.)
-      const stillEmpty = requestedFactKeys(input).map(key =>
-        key === "awardedAt"
-          ? { awardedAt: null }
-          : key === "promoter"
-            ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
-            : { organizationId: null, OR: [{ location: null }, { location: "" }] },
-      )
-      const written = await db.$transaction(async tx => {
+    const disciplineId = await getBjjDisciplineId()
+    await db.$transaction(
+      async tx => {
+        // Resolve capture first so a picked/reused promoter Passport can join the global sorted
+        // Passport tier before any Award lock. A freshly-created placeholder is transaction-private
+        // until commit and cannot participate in a competing merge. Any later gate failure rolls all
+        // capture side effects back with this transaction.
+        const capturedPromoterData =
+          input.promoter !== undefined ? await resolveFactUpdateWithCapture(tx, input) : null
+
+        // Promoter decisions depend on the member-wide authority anchor and every promoter FK, so
+        // freeze Passport union→all member Awards→open Reviews before the target re-read. Other fact
+        // edits remain award-local.
+        if (input.promoter !== undefined) {
+          await lockPromoterWorkflowScope({
+            tx,
+            rankAwardId: award.id,
+            candidatePromoterPassportId: capturedPromoterData?.awardedByPassportId,
+            lockMemberAuthorityAwards: true,
+          })
+        } else {
+          await lockRankAward(tx, award.id)
+        }
+        const currentAward = await tx.rankAward.findUniqueOrThrow({
+          where: { id: award.id },
+          select: factEditSelect,
+        })
+        if (currentAward.passportId !== passportId) {
+          throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+        }
+        const { facts, reason } = memberFactEditability(currentAward)
+        const locked = requestedFactKeys(input).filter(key => !facts[key])
+        if (locked.length > 0) {
+          throw new ORPCError("FORBIDDEN", {
+            message: `The ${locked.map(key => FACT_LABEL[key]).join(", ")} on this belt was recorded by an instructor or admin and can't be changed`,
+          })
+        }
+
+        // Non-promoter edits resolve after their award-local lock. Promoter edits reuse the capture
+        // resolved before the global lock tiers above.
+        const data = capturedPromoterData ?? (await resolveFactUpdateWithCapture(tx, input))
+
+        if (reason === "SELF_BACKFILL") {
+          if (input.promoter !== undefined) {
+            await applyMemberPromoterTransition({
+              tx,
+              currentAward,
+              disciplineId,
+              promoterData: {
+                awardedByPassportId: data.awardedByPassportId,
+                notes: data.notes,
+              },
+              siblingFacts: withoutPromoterFact(data),
+              actingUserId: context.user.id,
+            })
+            return
+          }
+
+          // Self-added backfill: full overwrite is the ratified semantics — the owner
+          // racing themselves is harmless, so the unconditional write stands.
+          await tx.rankAward.update({ where: { id: award.id }, data })
+          await syncRankEntryFromAward(tx, award.id)
+          return
+        }
+
+        // Fill-once must be race-proof (Doug SESSION_0501 MED — TOCTOU): the gate above
+        // read-checked emptiness, but a concurrent fill (or an admin write landing in the
+        // read→write window) could otherwise be overwritten. The write itself re-asserts
+        // per-fact emptiness atomically — a raced fill matches 0 rows and fails CLOSED.
+        // (Prisma can't express the gate's trim() blank-check, so whitespace-only
+        // freetext also fails closed here — the safe direction, and unreachable via our
+        // own writers, which always trim-or-null.)
+        const stillEmpty = requestedFactKeys(input).map(key =>
+          key === "awardedAt"
+            ? { awardedAt: null }
+            : key === "promoter"
+              ? { awardedByPassportId: null, OR: [{ notes: null }, { notes: "" }] }
+              : { organizationId: null, OR: [{ location: null }, { location: "" }] },
+        )
         const result = await tx.rankAward.updateMany({
           where: { id: award.id, passportId, AND: stillEmpty },
           data,
         })
-        if (result.count === 1) await syncRankEntryFromAward(tx, award.id)
-        return result
-      })
-      if (written.count !== 1) {
-        throw new ORPCError("FORBIDDEN", {
-          message:
-            "This belt's details were just updated elsewhere — refresh to see the latest record.",
-        })
-      }
-    }
+        // Fail CLOSED and ROLL BACK the capture: throwing inside the tx aborts it, so the
+        // placeholder + lead resolved above are discarded with the award write (no orphan stub).
+        if (result.count !== 1) {
+          throw new ORPCError("FORBIDDEN", {
+            message:
+              "This belt's details were just updated elsewhere — refresh to see the latest record.",
+          })
+        }
+        await syncRankEntryFromAward(tx, award.id)
+      },
+      { maxWait: 10000, timeout: 20000 },
+    )
 
-    // Backfill-verification decision (SESSION_0540): auto-verify a same-promoter backfill,
-    // flag a changed promoter for instructor review, or keep a freetext/unmatched promoter
-    // unverified. Runs on the (now-persisted) fact; scoped to member-owned backfills.
-    await applyBackfillTrustDecision(passportId, award.id, context.user.id)
-
-    context.revalidate({ paths: REVALIDATE_PATHS })
+    context.revalidate({ paths: [...REVALIDATE_PATHS, "/lineage"], tags: ["lineage"] })
     return enrichedCard(passportId, award.id)
   })
 
 /**
  * `updateRankAwardFactAsAdmin(rankAwardId, { awardedAt, promoter, school })` —
  * admin CRUD on ANY member's award facts, any source (SESSION_0501 ratified
- * policy). Same input + persistence seam as the member path (`buildFactUpdateData`
+ * policy). Same input + persistence seam as the member path (`resolveFactUpdateWithCapture`
  * — the ref semantics never fork); no ownership root and no per-fact gate.
  *
  * Authorization reuses the existing role system (repo rule: 4 authz systems, never
@@ -532,49 +528,107 @@ const updateRankAwardFactAsAdmin = authedProcedure
       throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
     }
 
-    const data = await buildFactUpdateData(input)
-    const factSnapshot = (row: {
-      awardedAt: Date | null
-      awardedByPassportId: string | null
-      notes: string | null
-      organizationId: string | null
-      location: string | null
-    }) => ({
-      awardedAt: row.awardedAt?.toISOString() ?? null,
-      awardedByPassportId: row.awardedByPassportId,
-      notes: row.notes,
-      organizationId: row.organizationId,
-      location: row.location,
-    })
+    await db.$transaction(
+      async tx => {
+        // Resolve a promoter candidate before locks so its Passport joins the global first tier.
+        // A rollback still removes any freetext placeholder/lead capture atomically.
+        const capturedPromoterData =
+          input.promoter !== undefined ? await resolveFactUpdateWithCapture(tx, input) : null
 
-    await db.$transaction(async tx => {
-      // Race-proof before-image (Doug SESSION_0501 P3): re-read inside the tx — the
-      // outer read is only the NOT_FOUND guard and could be ms-stale by write time.
-      const before = await tx.rankAward.findUniqueOrThrow({
-        where: { id: award.id },
-        select: factEditSelect,
-      })
-      const updated = await tx.rankAward.update({
-        where: { id: award.id },
-        data,
-        select: factEditSelect,
-      })
-      await syncRankEntryFromAward(tx, award.id)
-      await tx.auditLog.create({
-        data: {
-          brand: Brand.BBL,
-          action: "belt.fact.updated",
-          entityType: "RankAward",
-          entityId: award.id,
-          userId: context.user.id,
-          before: factSnapshot(before),
-          after: factSnapshot(updated),
-        },
-      })
-    })
+        // Promoter writes share Passport→Award→Review with member proposals, decisions, override,
+        // and identity merge. Non-promoter fact updates stay award-local.
+        if (input.promoter !== undefined) {
+          await lockPromoterWorkflowScope({
+            tx,
+            rankAwardId: award.id,
+            candidatePromoterPassportId: capturedPromoterData?.awardedByPassportId,
+            lockMemberAuthorityAwards: false,
+          })
+        } else {
+          await lockRankAward(tx, award.id)
+        }
 
-    context.revalidate({ paths: REVALIDATE_PATHS })
+        // Race-proof before-image (Doug SESSION_0501 P3): re-read inside the tx — the
+        // outer read is only the NOT_FOUND guard and could be ms-stale by write time.
+        const before = await tx.rankAward.findUniqueOrThrow({
+          where: { id: award.id },
+          select: factEditSelect,
+        })
+        if (input.promoter !== undefined) {
+          const pendingProposal = await findAndLockPendingPromoterReview(tx, award.id)
+          if (pendingProposal) {
+            throw new ORPCError("CONFLICT", {
+              message:
+                "This belt has a promoter change awaiting review. Use the explicit admin override to correct it.",
+            })
+          }
+        }
+        // Reuse the pre-lock promoter capture or resolve a non-promoter edit now. Freetext capture
+        // remains atomic with this write and rolls back on every conflict above.
+        const data = capturedPromoterData ?? (await resolveFactUpdateWithCapture(tx, input))
+        const updated = await tx.rankAward.update({
+          where: { id: award.id },
+          data,
+          select: factEditSelect,
+        })
+        await syncRankEntryFromAward(tx, award.id)
+        await tx.auditLog.create({
+          data: {
+            brand: Brand.BBL,
+            action: "belt.fact.updated",
+            entityType: "RankAward",
+            entityId: award.id,
+            userId: context.user.id,
+            before: factSnapshot(before),
+            after: factSnapshot(updated),
+          },
+        })
+      },
+      { maxWait: 10000, timeout: 20000 },
+    )
+
+    context.revalidate({ paths: [...REVALIDATE_PATHS, "/lineage"], tags: ["lineage"] })
     return enrichedCard(award.passportId, award.id)
+  })
+
+/**
+ * Explicit workflow override for a promoter proposal. Unlike the ordinary admin fact
+ * editor, this command acknowledges and closes the pending proposal in the same
+ * transaction that applies the correction, with a separate audit record for each fact.
+ */
+const overrideRankAwardPromoterAsAdmin = authedProcedure
+  .meta({ permission: "belt.admin", rateLimit: { points: 120, duration: 60 * 60 } })
+  .input(overrideRankAwardPromoterAsAdminInput)
+  .handler(async ({ input, context }) => {
+    const award = await db.rankAward.findUnique({
+      where: { id: input.rankAwardId },
+      select: factEditSelect,
+    })
+    if (!award) {
+      throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+    }
+
+    const result = await db.$transaction(
+      tx =>
+        overrideCapturedPromoterReview({
+          tx,
+          rankAwardId: award.id,
+          actingUserId: context.user.id,
+          resolvePromoterData: () => resolveFactUpdateWithCapture(tx, { promoter: input.promoter }),
+        }),
+      { maxWait: 10000, timeout: 20000 },
+    )
+
+    context.revalidate({
+      paths: [
+        "/app/belt-reviews",
+        `/app/belt-reviews/${result.reviewId}`,
+        ...REVALIDATE_PATHS,
+        "/lineage",
+      ],
+      tags: ["lineage"],
+    })
+    return enrichedCard(result.passportId, award.id)
   })
 
 /**
@@ -586,13 +640,7 @@ const attachMilestoneMedia = beltProcedure
   .handler(async ({ input, context }) => {
     const passportId = await getActingPassportId(context.user.id)
 
-    const milestone = await db.rankMilestone.findUnique({
-      where: { id: input.rankMilestoneId },
-      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
-    })
-    if (!milestone || milestone.rankAward.passportId !== passportId) {
-      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
-    }
+    const milestone = await findOwnMilestone(passportId, input.rankMilestoneId)
 
     // FIX 2 (HIGH): the caller-supplied `mediaId` must be a photo THIS user uploaded
     // (`Media.uploadedById === user.id`). Without it, a member could attach a foreign /
@@ -635,13 +683,7 @@ const detachMilestoneMedia = beltProcedure
   .handler(async ({ input, context }) => {
     const passportId = await getActingPassportId(context.user.id)
 
-    const milestone = await db.rankMilestone.findUnique({
-      where: { id: input.rankMilestoneId },
-      select: { id: true, rankAward: { select: { id: true, passportId: true } } },
-    })
-    if (!milestone || milestone.rankAward.passportId !== passportId) {
-      throw new ORPCError("NOT_FOUND", { message: "Belt milestone not found" })
-    }
+    const milestone = await findOwnMilestone(passportId, input.rankMilestoneId)
 
     await db.mediaAttachment.deleteMany({
       where: { rankMilestoneId: milestone.id, mediaId: input.mediaId },
@@ -662,28 +704,30 @@ const deleteRankAward = beltProcedure
     const passportId = await getActingPassportId(context.user.id)
     const disciplineId = await getBjjDisciplineId()
 
-    const awards = await getMemberAwards(passportId)
-    const target = awards.find(a => a.id === input.rankAwardId)
-    if (!target) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
+    await db.$transaction(async tx => {
+      await lockRankAward(tx, input.rankAwardId)
+      const awards = await getMemberAwards(passportId, tx)
+      const target = awards.find(a => a.id === input.rankAwardId)
+      if (!target) throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
 
-    // FIX 3 (MED): delete must not exceed edit. Only a self-added, fact-editable award
-    // (STATED, no approver stamp, not IMPORTED/DISPUTED) may be removed — a
-    // promotion-minted / IMPORTED / DISPUTED award is authority-owned truth, so
-    // erasing it would let a member drop an instructor-verified belt (reuses the SAME
-    // `isFactEditable` predicate the fact-edit path uses).
-    if (!isFactEditable(target)) {
-      throw new ORPCError("FORBIDDEN", {
-        message: "This belt was verified by an instructor and cannot be deleted",
-      })
-    }
+      // Delete must not exceed edit. Re-evaluate under the same award lock used by approve,
+      // override, and member proposals so no pending review can be cascade-erased in a race.
+      if (!isFactEditable(target)) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "This belt was verified by an instructor and cannot be deleted",
+        })
+      }
+      if (isTopAward(input.rankAwardId, awards.map(toGateAward), disciplineId)) {
+        throw new ORPCError("FORBIDDEN", { message: "You cannot delete your current top belt" })
+      }
+      if (await hasLockedRankEntryReviewHistory(tx, input.rankAwardId)) {
+        throw new ORPCError("CONFLICT", {
+          message: "This belt has promoter review history and cannot be deleted.",
+        })
+      }
 
-    if (isTopAward(input.rankAwardId, awards.map(toGateAward), disciplineId)) {
-      throw new ORPCError("FORBIDDEN", {
-        message: "You cannot delete your current top belt",
-      })
-    }
-
-    await db.rankAward.delete({ where: { id: input.rankAwardId } })
+      await tx.rankAward.delete({ where: { id: input.rankAwardId } })
+    })
 
     context.revalidate({ paths: REVALIDATE_PATHS })
     return { deleted: true as const, rankAwardId: input.rankAwardId }
@@ -693,6 +737,7 @@ export const belt = {
   upsertBeltMilestone,
   updateRankAwardFact,
   updateRankAwardFactAsAdmin,
+  overrideRankAwardPromoterAsAdmin,
   attachMilestoneMedia,
   detachMilestoneMedia,
   deleteRankAward,

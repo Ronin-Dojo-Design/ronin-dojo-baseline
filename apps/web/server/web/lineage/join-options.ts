@@ -2,6 +2,7 @@ import "server-only"
 
 import { unstable_cache } from "next/cache"
 import { Brand } from "~/.generated/prisma/client"
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import { db } from "~/services/db"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 
@@ -23,7 +24,15 @@ const INSTRUCTOR_CAP = 300
 const SCHOOL_CAP = 300
 const TREE_CAP = 100
 
-export type JoinRankOption = { id: string; name: string; colorHex: string | null }
+export type JoinRankOption = {
+  id: string
+  name: string
+  colorHex: string | null
+  /** Refined-belt render fields (SESSION_0539) — parity with the claim picker (WL-P3-46). */
+  secondaryColorHex: string | null
+  degree: number | null
+  beltFamily: BeltFamily | null
+}
 export type JoinNamedOption = { id: string; name: string }
 
 export type JoinWizardOptions = {
@@ -36,7 +45,14 @@ export type JoinWizardOptions = {
 /** BBL rank ladder → `currentRank` picker (feeds `claimedRankId`, ADR 0035). */
 async function getRankOptions(): Promise<JoinRankOption[]> {
   const ranks = await getBjjRanksForClaimPicker()
-  return ranks.map(rank => ({ id: rank.id, name: rank.name, colorHex: rank.colorHex }))
+  return ranks.map(rank => ({
+    id: rank.id,
+    name: rank.name,
+    colorHex: rank.colorHex,
+    secondaryColorHex: rank.secondaryColorHex,
+    degree: rank.degree,
+    beltFamily: rank.beltFamily,
+  }))
 }
 
 /** BBL organizations → `schoolName` picker (links the org on a registered match). */

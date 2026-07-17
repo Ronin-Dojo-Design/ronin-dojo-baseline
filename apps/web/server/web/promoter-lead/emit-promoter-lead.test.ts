@@ -75,6 +75,21 @@ it("dedups the same coach into one demand-counted lead (idempotent) and keeps th
   expect(meta.passportId).toBe(passportId)
 })
 
+it("keeps near-miss coach names as separate leads so identity and pipeline dedup cannot diverge", async () => {
+  const john = await emitPromoterLead({
+    promoterName: tag("John Smith"),
+    source: "belt-journey",
+  })
+  const jon = await emitPromoterLead({
+    promoterName: tag("Jon Smith"),
+    source: "belt-journey",
+  })
+
+  expect(john?.createdLead).toBe(true)
+  expect(jon?.createdLead).toBe(true)
+  expect(jon?.leadId).not.toBe(john?.leadId)
+})
+
 it("returns null for a blank promoter name (nothing to capture)", async () => {
   expect(await emitPromoterLead({ promoterName: "   ", source: "belt-journey" })).toBeNull()
 })

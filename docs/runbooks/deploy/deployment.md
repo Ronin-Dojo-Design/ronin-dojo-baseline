@@ -4,12 +4,12 @@ slug: deployment
 type: runbook
 status: active
 created: 2026-05-05
-updated: 2026-05-08
-last_agent: codex-session-0099
+updated: 2026-07-16
+last_agent: codex-session-0542
 pairs_with:
-  - docs/runbooks/dev-environment.md
-  - docs/runbooks/schema-migration.md
-  - docs/runbooks/aws-s3-operator-runbook.md
+  - docs/runbooks/dev-environment/dev-environment.md
+  - docs/runbooks/database/schema-migration.md
+  - docs/runbooks/integrations/aws-s3-operator-runbook.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -41,7 +41,8 @@ Set these in **Vercel → Settings → Environment Variables** for Production (a
 
 | Variable | Example value | Notes |
 | --- | --- | --- |
-| `DATABASE_URL` | `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require` | From Neon dashboard |
+| `DATABASE_URL` | `postgresql://user:pass@ep-xxx-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require` | Pooled Neon runtime URL |
+| `DIRECT_URL` | `postgresql://user:pass@ep-xxx.us-east-2.aws.neon.tech/neondb?sslmode=require` | Direct Neon migration URL for the same database; required in Production and Preview |
 | `BETTER_AUTH_SECRET` | _(generate with `openssl rand -base64 32`)_ | Unique per environment |
 | `BETTER_AUTH_URL` | `https://baselinemartialarts.com` | Must match your production domain |
 | `NEXT_PUBLIC_SITE_URL` | `https://baselinemartialarts.com` | Public-facing URL |
@@ -141,24 +142,20 @@ Just push to `main`. Vercel handles everything:
 
 ## Database Operations
 
-```bash
-# Run migrations manually (if needed outside of deploy)
-DATABASE_URL="<neon-connection-string>" bunx prisma migrate deploy
+Routine production migrations belong to the Vercel prebuild above; do not copy a one-variable manual
+command from this page. `prisma.config.ts` prefers `DIRECT_URL`, so setting only `DATABASE_URL` can target a
+different database than the operator intended.
 
-# Open Prisma Studio against production (read-only recommended)
-DATABASE_URL="<neon-connection-string>" bunx prisma studio
-
-# Seed production (first time only — be careful)
-DATABASE_URL="<neon-connection-string>" bunx prisma db seed
-```
-
-> ⚠️ **Never** run `prisma migrate dev`, `db push`, or `migrate reset` against production.
+An exceptional manual production apply requires separate operator authorization and the target-printing,
+**both-direct-URLs-pinned** procedure in the [Schema Migration Runbook](../database/schema-migration.md).
+Production Studio access and data seeds are separate supervised operations; never use generic `db seed` as a
+first-deploy shortcut. Never run `prisma migrate dev`, `db push`, or `migrate reset` against production.
 
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Build fails at `prisma migrate deploy` | Missing `DATABASE_URL` env var | Add Neon connection string to Vercel |
+| Build fails at `prisma migrate deploy` | Missing/wrong migration URL | Verify Vercel `DIRECT_URL` is the direct Neon endpoint for the same database as pooled `DATABASE_URL`; run the env-parity guard above. |
 | Google sign-in redirects to error | Wrong redirect URI in Google Console | Must be `https://baselinemartialarts.com/api/auth/callback/google` |
 | `BETTER_AUTH_URL` mismatch | Auth callbacks point to wrong domain | Ensure `BETTER_AUTH_URL` matches production domain exactly |
 | 500 on all pages | DB connection failed | Check Neon dashboard — is the project awake? Check connection string |

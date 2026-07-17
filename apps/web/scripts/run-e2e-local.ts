@@ -1,5 +1,5 @@
 /**
- * FS-0031 — launcher for the local e2e suite against the seeded `ronindojo_e2e` DB.
+ * FS-0031 — launcher for the local e2e suite against the CI-minimal `ronindojo_e2e` DB.
  *
  * MUST be invoked as a DIRECT child of `bun --env-file=.env.e2e` (see the `test:e2e:local`
  * package script) so DATABASE_URL/DIRECT_URL land in THIS process's env as REAL exported vars.
@@ -17,11 +17,14 @@
  * --project=chromium`).
  */
 import { execFileSync } from "node:child_process"
+import { assertLiteralLocalE2eUrls } from "./e2e-db-env"
 
-if (!/ronindojo_e2e/.test(process.env.DATABASE_URL ?? "")) {
+try {
+  assertLiteralLocalE2eUrls(process.env.DATABASE_URL, process.env.DIRECT_URL)
+} catch (error) {
   console.error(
-    "✗ Refusing to run: DATABASE_URL is not the e2e DB. Invoke via `bun run test:e2e:local` " +
-      `(which loads .env.e2e). Got: ${process.env.DATABASE_URL ?? "<unset>"}`,
+    `✗ Refusing to run: ${(error as Error).message}. Invoke via \`bun run test:e2e:local\` ` +
+      "with both .env.e2e URLs set to the literal ronindojo_e2e database.",
   )
   process.exit(1)
 }

@@ -5,6 +5,7 @@ import type {
 } from "~/.generated/prisma/client"
 import { type GateAward, memberFactEditability } from "~/server/belt/belt-gate"
 import type { BeltCardOutput } from "~/server/belt/schemas"
+import { isRecruitedCoachIdentity } from "~/server/identity/promoter-classification"
 import { db } from "~/services/db"
 
 /**
@@ -33,7 +34,13 @@ export const gateAwardSelect = {
   // back with `promoterName: null` — invisible on the card AND the editor prefill,
   // which is why the registered path looked broken (SESSION_0497).
   awardedByPassport: {
-    select: { displayName: true, user: { select: { name: true } } },
+    select: {
+      displayName: true,
+      userId: true,
+      user: { select: { name: true } },
+      lineageNode: { select: { id: true } },
+      directoryProfile: { select: { id: true } },
+    },
   },
   organizationId: true,
   rankId: true,
@@ -130,7 +137,7 @@ export async function getActingPassportId(userId: string, dbClient: BeltDb = db)
  * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). A
  * self-minted backfill (now minted UNVERIFIED, SESSION_0540) is deliberately NOT an anchor —
  * its promoter is exactly what the backfill-verification decision validates.
- * Shared by the write path (`router.applyBackfillTrustDecision`) and the read path
+ * Shared by the write path (`promoter-proposal-core.applyMemberPromoterTransition`) and read path
  * (`belt-tab-loader` → the promoter-picker feedback note) so they never diverge.
  */
 export function resolveAnchorAward(
@@ -206,6 +213,11 @@ export function toBeltCard(
       award.awardedByPassport?.user?.name ??
       null,
     awardedByPassportId: award.awardedByPassportId,
+    // A free-typed coach resolves to an accountless Passport with no public identity satellite. Return this
+    // authoritative classification with every mutation card so a still-mounted client
+    // does not keep treating the new placeholder as an established coach.
+    promoterIsRecruited:
+      award.awardedByPassportId !== null && isRecruitedCoachIdentity(award.awardedByPassport),
     schoolName: award.location,
     organizationId: award.organizationId,
     milestone: award.milestone
