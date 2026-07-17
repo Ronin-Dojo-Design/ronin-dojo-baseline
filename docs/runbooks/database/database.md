@@ -5,11 +5,12 @@ type: runbook
 status: active
 created: 2026-04-25
 updated: 2026-07-16
-last_agent: codex-session-0542
+last_agent: codex-session-0548
 use_count: 0
 pairs_with:
   - docs/runbooks/dev-environment/mcp-usage-runbook.md
   - docs/runbooks/database/neon-advisory-lock-recovery.md
+  - docs/runbooks/database/neon-credential-rotation.md
   - docs/runbooks/deploy/vercel-deploy.md
   - docs/runbooks/dev-environment/verification-and-testing.md
 backlinks:
@@ -132,7 +133,7 @@ This repo uses Prisma 7 config routing instead of a `directUrl` field in `schema
   `--env-file` overlay, so E2E work must use the guarded launcher and scratch commands must pin both URLs on
   the actual child command.
 
-Do not add `directUrl` to `schema.prisma` for this repo. See [Neon Prisma Advisory-Lock Recovery](neon-advisory-lock-recovery.md) for the production incident history and Prisma 7 reasoning.
+Do not add `directUrl` to `schema.prisma` for this repo. See [Neon Prisma Advisory-Lock Recovery](neon-advisory-lock-recovery.md) for the production incident history and Prisma 7 reasoning. For credential rotation, use [Neon Credential Rotation](neon-credential-rotation.md); never paste a full production connection string into a shell command or transcript.
 
 ### Vercel env vars
 

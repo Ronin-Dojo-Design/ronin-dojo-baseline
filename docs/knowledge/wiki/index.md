@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-17
 author: Brian + Copilot
-last_agent: codex-session-0546
+last_agent: codex-session-0548
 ---
 
 # LLM Wiki Index
@@ -751,6 +751,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [New Client Runbook](../../runbooks/onboarding/new-client-runbook.md)                                             | runbook           | active — repeatable new-client-in-monorepo recipe (own DB; ADR 0034 + 0038); invokable as `/new-client-recipe`                                                                                    |
 | [Prisma Workflow](../../runbooks/database/prisma-workflow.md)                                                     | runbook           | active                                                                                                                                                                                            |
 | [Neon Prisma Advisory-Lock Recovery](../../runbooks/database/neon-advisory-lock-recovery.md)                      | runbook           | active                                                                                                                                                                                            |
+| [Neon Credential Rotation](../../runbooks/database/neon-credential-rotation.md)                                   | runbook           | active — operator-only production Neon credential rotation procedure                                                                                                                               |
 | [Manual Boundary Registry](manual-boundary-registry.md)                                                           | runbook           | active                                                                                                                                                                                            |
 | [SOP — Data and Wiring Flows](../../runbooks/sops/sop-data-and-wiring-flows.md)                                   | runbook           | active                                                                                                                                                                                            |
 | [BBL Lineage Data + Wiring Flows](../../product/black-belt-legacy/lineage-data-wiring-flow.md)                    | runbook           | active — SESSION_0517 canonical RankEntry, trust, claims, profile, certificate, and faceted `/directory` flow map                                                                                 |
