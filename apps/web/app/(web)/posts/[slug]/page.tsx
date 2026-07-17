@@ -5,8 +5,6 @@ import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
 import { cache } from "react"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
@@ -16,6 +14,7 @@ import { Author } from "~/components/web/ui/author"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroTitle } from "~/components/web/ui/intro"
 import { Section } from "~/components/web/ui/section"
+import { UpgradePanel } from "~/components/web/ui/upgrade-panel"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
@@ -154,23 +153,14 @@ export default async function (props: Props) {
           <Section.Content>
             <p className="text-lg text-secondary-foreground text-pretty">{post.excerpt}</p>
 
-            <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center">
-              <span className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
-                <LockKeyholeIcon className="size-7" />
-              </span>
-              <div className="flex flex-col gap-1">
-                <p className="font-medium text-foreground">{t("locked_heading")}</p>
-                <p className="max-w-md text-sm text-muted-foreground">{t("locked_description")}</p>
-              </div>
-              <Button
-                variant="primary"
-                size="md"
-                prefix={<LockKeyholeIcon />}
-                render={<Link href={UPGRADE_HREF} />}
-              >
-                {t("unlock_cta")}
-              </Button>
-            </div>
+            {/* Shared "all-locked upgrade panel" primitive (WL-P2-63) — strings only; the gated
+                body/media fields don't exist on the locked view, so nothing here can leak. */}
+            <UpgradePanel
+              heading={t("locked_heading")}
+              description={t("locked_description")}
+              ctaLabel={t("unlock_cta")}
+              href={UPGRADE_HREF}
+            />
           </Section.Content>
 
           {sidebar}
