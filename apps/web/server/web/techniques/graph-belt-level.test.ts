@@ -1,3 +1,4 @@
+// @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, test } from "bun:test"
 import { deriveGraphBeltLevel } from "./graph-belt-level"
 
