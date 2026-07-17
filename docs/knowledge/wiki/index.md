@@ -710,6 +710,9 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0552](../../sprints/SESSION_0552.md) | session--implement | closed — FI-002 lifecycle-email copy audit. |
 | [SESSION_0554](../../sprints/SESSION_0554.md) | session--plan | closed — FI-003 claim-funnel plan. |
 | [SESSION_0555](../../sprints/SESSION_0555.md) | session--open | closed — Claudex fan-out execution, PR #211 closure, and merge-wave plan. |
+| [SESSION_0559](../../sprints/SESSION_0559.md) | session--plan | closed — G-009 creator-payout Petey plan (plan-only lane; salvaged to main SESSION_0589). |
+| [SESSION_0560](../../sprints/SESSION_0560.md) | session--implement | closed — Baseline typecheck fix (prisma generate before tsc, FINDING_02); salvaged to main SESSION_0589. |
+| [SESSION_0561](../../sprints/SESSION_0561.md) | session--implement | closed — Authored the `/preview-artifacts` skill (Artifact-published visual-review channel; worktree dev-server, qlmanage, browser-MCP-lock, mobile-first lessons). |
 | [SESSION_0564](../../sprints/SESSION_0564.md) | session--plan | closed — Obsidian Dashboard Epic plan-first grill. |
 | [SESSION_0565](../../sprints/SESSION_0565.md) | session--implement | closed — Merge wave execution: land B/C/D/F lanes onto main. |
 | [SESSION_0566](../../sprints/SESSION_0566.md) | session--open | closed — Obsidian dashboard build: skills vendored, Worn Gi/Mat Room/Mammoth skins and demo vault shipped, wayfinder map captured. |
