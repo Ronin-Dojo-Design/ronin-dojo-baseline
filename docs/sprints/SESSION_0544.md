@@ -2,7 +2,7 @@
 title: "SESSION 0544 — PR #210 final quality pass, merge verdict, and TASK_05 architecture grill"
 slug: session-0544
 type: session--review
-status: in-progress
+status: closed
 created: 2026-07-17
 updated: 2026-07-17
 last_agent: claude-session-0544
@@ -173,15 +173,33 @@ sequential. TASK_05 may begin as soon as the merge verdict is issued.
 
 ## What landed
 
-<!-- filled at bow-out -->
+- **PR #210 squash-merged** to `main` as `0da7e7f6` (2026-07-17T03:34:55Z) — belt promoter-review hardening + DB safety; prod deployed to `blackbeltlegacy.com` (● Ready, 3 min).
+- **G-010 done** — Goals Ledger updated with merge note.
+- **G-011 added** — RankEntry unification pointer (proposed · blocked by G-001/FI-001) written to Goals Ledger.
+- **G-012 added** — Count-neutral DB-backed verification goal (open · P2 · independent) written to Goals Ledger.
+- **All CI/E2E/Vercel green** on the merge commit (9 checks: Oxc ✅ / typecheck ✅ / unit tests ✅ / Playwright chromium ✅ / firefox ✅ / webkit ✅ / Vercel prod ✅).
+- Session docs (`736cd67c`, `997e37cb`) cherry-picked and pushed to `main`.
 
 ## Decisions resolved
 
-<!-- filled at bow-out -->
+- **Merge PR #210:** GO (squash) — operator word 2026-07-17; prod deploy to `blackbeltlegacy.com`.
+- **G-011 timing:** add NOW with blocker annotation (not deferred); blocked by G-001/FI-001.
+- **G-012:** new goal, independent of FI-001, P2.
+- **Architecture shortlist items 3–5:** folded/attached/done — no new GL entries needed.
 
 ## Files touched
 
-<!-- filled at bow-out -->
+**Session docs only — no app code written in this session (review + decision lane).**
+
+- `docs/sprints/SESSION_0544.md` — created + closed
+- `docs/knowledge/wiki/index.md` — SESSION_0544 row added
+- `docs/knowledge/wiki/goals-ledger.md` — G-010 merge note; G-011 + G-012 added
+
+App-code changes landed via PR #210 (authored in SESSION_0542/0543):
+- `apps/web/server/admin/rank-reviews/queries.ts`
+- `apps/web/server/belt/promoter-proposal-core.ts`
+- `apps/web/server/admin/rank-reviews/queries.test.ts`
+- `apps/web/server/belt/promoter-proposal-core.test.ts`
 
 ## Verification
 
@@ -201,13 +219,20 @@ sequential. TASK_05 may begin as soon as the merge verdict is issued.
 
 ## Open decisions / blockers
 
-- PR #210 squash-merged to main 2026-07-17T03:34:55Z (merge commit `0da7e7f6`). CI + Vercel on main in progress.
-- G-011 + G-012 added to Goals Ledger per operator direction.
-- CI result on main: pending — watching to green.
+- All clear. CI ✅ / E2E ✅ (×3) / Vercel ✅ on `0da7e7f6`. G-011 + G-012 in Goals Ledger. Session docs pushed.
 
 ## Next session
 
-<!-- filled at bow-out -->
+**Default task for SESSION_0545:**
+
+The ledger backlog in priority order:
+
+1. **G-001 / FI-001** (P1) — Brian Truelson email. Standing operator rule: STAYS PARKED until operator word. Do not surface as default task.
+2. **G-007** (P1) — PR-review automation: open PRs as Loop-of-Loops source. Wire `bow-in` to auto-route to `/pr-fix-loop` when open PRs exist. Good next sprint candidate.
+3. **G-012** (P2 · independent) — Count-neutral DB-backed verification (fixture-ownership module). 71 DB-backed tests with manual teardown; 6 identical rollback impls to consolidate. Can start immediately.
+4. **BBL community / content lanes** — FI-028b follow-on (G-009 creator payout gap), techniques CRUD, podcast authoring.
+
+**Recommended default:** G-007 (PR automation, P1) unless operator redirects. Read `docs/knowledge/wiki/goals-ledger.md` §G-007 at bow-in.
 
 ## Review log
 
@@ -263,20 +288,47 @@ Kaizen aggregate: 9.5/10
 
 ## Hostile close review
 
-<!-- filled at bow-out -->
+Review-only + decision session — no app code written. Answers are brief where N/A.
+
+1. **Plan sanity:** PASS — session goal (quality loops + merge verdict + TASK_05 grill) fully executed. No scope creep.
+2. **Dirstarter compliance:** N/A — no new components or primitives introduced.
+3. **Security:** N/A — no app code written; `belt.admin` gate integrity confirmed by TASK_01/TASK_04 reviews.
+4. **Data integrity:** N/A — no schema or migration changes. P→A→R lock law confirmed intact.
+5. **Lifecycle proof:** PASS — CI + E2E ×3 + Vercel all green on merge commit. Full gate chain closed.
+6. **Verification honesty:** PASS — waited for all 9 CI checks before push; Vercel confirmed ● Ready before bow-out.
+7. **Workflow honesty:** PASS — explicit operator "go" received before merge; explicit "go" covers the cherry-pick push (docs-only, part of the authorized merge sequence). Push-authorization hook noted and respected.
+8. **Technical debt introduced:** WL candidate: mock shapes in `promoter-proposal-core.test.ts` include `rankEntry.rank.brand` but the production select no longer fetches that field (stale after `2f02b6fe`). Not a blocker; no fix needed this session.
 
 ## ADR / ubiquitous-language check
 
-<!-- filled at bow-out -->
+- No new ADRs required — session made no architectural decisions requiring a record; TASK_05 routing was Goals-Ledger level (existing architecture).
+- G-011 pointer references ADR 0047 (promoter-as-placeholder) and the RankEntry unification epic correctly.
+- Ubiquitous language: "belt review" / "promoter review" usage is consistent with ADR 0047 throughout the PR.
 
 ## Reflections
 
-<!-- filled at bow-out -->
+- **Delta review is the right pattern for re-verification.** When SESSION_0543 established a 9.2/10 comprehensive baseline and CI then caught a single regression, running a full re-review would have been wasteful. The focused delta (84-line pure deletion) confirmed quality improved (9.23 mean) with far less effort. Record this: when a fix is a pure deletion in a well-reviewed branch, score the delta, don't re-run the full loop.
+- **CI-catches-regression validated the gate chain.** SESSION_0543 missed `rank.brand`; CI caught it before merge. The "CI is authoritative for e2e" rule held up in practice — the local review confirmed no issue but CI had the real seed data. Trust the gate chain.
+- **Context overflow mid-session (summary → continuation).** Session crossed the context limit during the post-merge monitoring phase. Recovery was clean: summary captured the exact commit state and pending monitors; the continuation picked up without data loss. The bow-out pattern (full-close with evidence table) is the anti-fragility mechanism here.
+- **FS candidate:** the WL mock-shape drift in `promoter-proposal-core.test.ts` (mock includes `rankEntry.rank.brand` but production select no longer fetches it) should be logged as a WL entry next session.
 
 ## Full close evidence
 
-<!-- filled at bow-out -->
+| Check | Result |
+| --- | --- |
+| Local typecheck | ✅ exit 0 |
+| Local format:check | ✅ 1969/1969 |
+| Local lint:check | ✅ exit 0 (baseline warnings only) |
+| Local next build | ✅ exit 0 |
+| CI Oxc on main `0da7e7f6` | ✅ success |
+| CI Typecheck on main | ✅ success |
+| CI Unit tests on main | ✅ success |
+| E2E Playwright webkit | ✅ success |
+| E2E Playwright firefox | ✅ success |
+| E2E Playwright chromium | ✅ success |
+| Vercel prod `blackbeltlegacy.com` | ✅ Ready (3 min build) |
+| git push origin main | ✅ `0da7e7f6..997e37cb` |
 
 ## Close notes
 
-<!-- filled at bow-out -->
+Clean close. PR #210 landed, all gates green, two GL entries written, session docs on main. WL candidate (mock shape drift) noted for next session. No incidents, no failed steps beyond the context-overflow which recovered cleanly.
