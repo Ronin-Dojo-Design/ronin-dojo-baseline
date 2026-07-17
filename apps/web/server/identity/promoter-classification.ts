@@ -1,3 +1,9 @@
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Give every belt workflow one definition of a recruited coach identity
+ * @wired   server/belt/router.ts, server/belt/profile-projection.ts,
+ *          server/belt/promoter-proposal-core.ts
+ */
 type PromoterIdentityShape = {
   userId: string | null
   lineageNode: unknown | null

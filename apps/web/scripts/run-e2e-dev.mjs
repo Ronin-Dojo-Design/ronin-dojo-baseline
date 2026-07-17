@@ -37,19 +37,55 @@ delete process.env.DIRECT_URL
 process.loadEnvFile(envPath)
 
 const localE2eDatabaseName = "ronindojo_e2e"
-const databaseName = raw => {
+const postgresProtocols = new Set(["postgres:", "postgresql:"])
+const loopbackHosts = new Set(["localhost", "127.0.0.1", "::1"])
+
+const localE2eTarget = (raw, label) => {
+  if (!raw) throw new Error(`${label} is required`)
+
+  let parsed
   try {
-    return decodeURIComponent(new URL(raw).pathname.replace(/^\//, ""))
+    parsed = new URL(raw)
   } catch {
-    return null
+    throw new Error(`${label} is invalid`)
   }
+
+  if (!postgresProtocols.has(parsed.protocol)) {
+    throw new Error(`${label} must use postgres: or postgresql:`)
+  }
+  if (parsed.searchParams.has("host") || parsed.searchParams.has("port")) {
+    throw new Error(`${label} must not override its endpoint in query parameters`)
+  }
+
+  const host = parsed.hostname.replace(/^\[|\]$/g, "").toLowerCase()
+  if (!loopbackHosts.has(host)) throw new Error(`${label} must use a loopback host`)
+
+  let database
+  try {
+    database = decodeURIComponent(parsed.pathname.replace(/^\//, ""))
+  } catch {
+    throw new Error(`${label} has an invalid database name`)
+  }
+  if (database !== localE2eDatabaseName) {
+    throw new Error(`${label} must name the literal ${localE2eDatabaseName} database`)
+  }
+
+  return { host, port: parsed.port || "5432", database }
 }
-const databaseTarget = databaseName(process.env.DATABASE_URL)
-const directTarget = databaseName(process.env.DIRECT_URL)
-if (databaseTarget !== localE2eDatabaseName || directTarget !== localE2eDatabaseName) {
+
+try {
+  const databaseTarget = localE2eTarget(process.env.DATABASE_URL, "DATABASE_URL")
+  const directTarget = localE2eTarget(process.env.DIRECT_URL, "DIRECT_URL")
+  if (
+    databaseTarget.host !== directTarget.host ||
+    databaseTarget.port !== directTarget.port ||
+    databaseTarget.database !== directTarget.database
+  ) {
+    throw new Error("DATABASE_URL and DIRECT_URL must resolve to the same host, port, and database")
+  }
+} catch (error) {
   console.error(
-    `✗ Refusing to start: both .env.e2e URLs must name the literal ${localE2eDatabaseName} database ` +
-      `(got DATABASE_URL=${databaseTarget ?? "<invalid>"}, DIRECT_URL=${directTarget ?? "<invalid>"}).`,
+    `✗ Refusing to start: ${error instanceof Error ? error.message : "invalid e2e database target"}.`,
   )
   process.exit(1)
 }

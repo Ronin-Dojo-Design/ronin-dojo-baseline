@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Share the transaction-folded RankEntry verification consequences across trusted callers
+ * @wired   server/belt/verify-rank-entry.ts, server/belt/promoter-proposal-core.ts
+ */
 import "server-only"
 
 import type { Brand } from "~/.generated/prisma/client"

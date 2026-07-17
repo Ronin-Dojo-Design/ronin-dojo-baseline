@@ -1,9 +1,14 @@
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dependency.
 import { describe, expect, it } from "bun:test"
-import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
+import {
+  assertPromoterIdentityMergeManifestMatches,
+  repointPromoterIdentityForMerge,
+  restorePromoterIdentityFromMergeManifest,
+  type PromoterIdentityMergeManifest,
+} from "~/server/identity/repoint-promoter-identity"
 
-describe("repointPromoterIdentityForMerge", () => {
-  it("locks deterministic Passport → Award → Review tiers before repointing", async () => {
+describe("promoter identity merge recovery", () => {
+  it("locks deterministic tiers and records independent review-field before-images", async () => {
     const events: string[] = []
     const awards = [
       { id: "award-z", passportId: "member-z" },
@@ -12,20 +17,22 @@ describe("repointPromoterIdentityForMerge", () => {
     const reviews = [
       {
         id: "review-z",
+        expectedPromoterPassportId: "coach-other",
+        proposedPromoterPassportId: "coach-old",
         rankEntry: { rankAwardId: "award-r", passportId: "member-r" },
       },
       {
         id: "review-a",
+        expectedPromoterPassportId: "coach-old",
+        proposedPromoterPassportId: "coach-new",
         rankEntry: { rankAwardId: "award-a", passportId: "member-a" },
       },
     ]
     const raw = async (strings: TemplateStringsArray, ...values: unknown[]) => {
       const sql = strings.join("?")
-      const table = sql.includes('FROM "Passport"')
-        ? "Passport"
-        : sql.includes('FROM "RankAward"')
-          ? "Award"
-          : "Review"
+      let table = "Review"
+      if (sql.includes('FROM "Passport"')) table = "Passport"
+      else if (sql.includes('FROM "RankAward"')) table = "Award"
       events.push(`lock:${table}:${String(values[0])}`)
       return []
     }
@@ -48,8 +55,25 @@ describe("repointPromoterIdentityForMerge", () => {
       rankEntryReview: { findMany: async () => reviews },
     }
 
-    await repointPromoterIdentityForMerge(tx as never, "coach-old", "coach-new")
+    const manifest = await repointPromoterIdentityForMerge(tx as never, "coach-old", "coach-new")
 
+    expect(manifest).toEqual({
+      fromPassportId: "coach-old",
+      toPassportId: "coach-new",
+      awardIds: ["award-a", "award-z"],
+      reviews: [
+        {
+          id: "review-a",
+          expectedPromoterReferencedFrom: true,
+          proposedPromoterReferencedFrom: false,
+        },
+        {
+          id: "review-z",
+          expectedPromoterReferencedFrom: false,
+          proposedPromoterReferencedFrom: true,
+        },
+      ],
+    })
     expect(events).toEqual([
       "lock:Passport:coach-new",
       "lock:Passport:coach-old",
@@ -63,9 +87,107 @@ describe("repointPromoterIdentityForMerge", () => {
       "lock:Review:review-z",
       "repoint:awards",
       "repoint:expected:review-a",
-      "repoint:proposed:review-a",
-      "repoint:expected:review-z",
       "repoint:proposed:review-z",
+    ])
+  })
+
+  it("compares manifests by exact ids and flags, independent of serialized order", () => {
+    const manifest: PromoterIdentityMergeManifest = {
+      fromPassportId: "old",
+      toPassportId: "new",
+      awardIds: ["award-b", "award-a"],
+      reviews: [
+        {
+          id: "review-b",
+          expectedPromoterReferencedFrom: false,
+          proposedPromoterReferencedFrom: true,
+        },
+        {
+          id: "review-a",
+          expectedPromoterReferencedFrom: true,
+          proposedPromoterReferencedFrom: false,
+        },
+      ],
+    }
+
+    expect(() =>
+      assertPromoterIdentityMergeManifestMatches(manifest, {
+        ...manifest,
+        awardIds: [...manifest.awardIds].reverse(),
+        reviews: [...manifest.reviews].reverse(),
+      }),
+    ).not.toThrow()
+    expect(() =>
+      assertPromoterIdentityMergeManifestMatches(manifest, {
+        ...manifest,
+        reviews: [
+          {
+            ...manifest.reviews[0],
+            expectedPromoterReferencedFrom: true,
+          },
+          manifest.reviews[1],
+        ],
+      }),
+    ).toThrow("no longer matches locked database state")
+  })
+
+  it("restores only artifact ids and captured review fields", async () => {
+    const updates: Array<{ kind: string; ids?: string[]; reviewId?: string }> = []
+    const awards = [
+      { id: "captured-award", passportId: "member-a" },
+      { id: "newer-award", passportId: "member-b" },
+    ]
+    const reviews = [
+      {
+        id: "captured-review",
+        expectedPromoterPassportId: "canonical",
+        proposedPromoterPassportId: "different",
+        rankEntry: { rankAwardId: "captured-award", passportId: "member-a" },
+      },
+      {
+        id: "newer-review",
+        expectedPromoterPassportId: "canonical",
+        proposedPromoterPassportId: "canonical",
+        rankEntry: { rankAwardId: "newer-award", passportId: "member-b" },
+      },
+    ]
+    const tx = {
+      $queryRaw: async () => [],
+      $executeRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        updates.push({
+          kind: strings.join("?").includes('SET "expectedPromoterPassportId"')
+            ? "expected"
+            : "proposed",
+          reviewId: String(values[1]),
+        })
+        return 1
+      },
+      rankAward: {
+        findMany: async () => awards,
+        updateMany: async (args: { where: { id: { in: string[] } } }) => {
+          updates.push({ kind: "awards", ids: args.where.id.in })
+          return { count: args.where.id.in.length }
+        },
+      },
+      rankEntryReview: { findMany: async () => reviews },
+    }
+
+    await restorePromoterIdentityFromMergeManifest(tx as never, {
+      fromPassportId: "superseded",
+      toPassportId: "canonical",
+      awardIds: ["captured-award"],
+      reviews: [
+        {
+          id: "captured-review",
+          expectedPromoterReferencedFrom: true,
+          proposedPromoterReferencedFrom: false,
+        },
+      ],
+    })
+
+    expect(updates).toEqual([
+      { kind: "awards", ids: ["captured-award"] },
+      { kind: "expected", reviewId: "captured-review" },
     ])
   })
 })

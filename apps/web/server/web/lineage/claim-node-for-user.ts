@@ -3,6 +3,10 @@ import {
   cancelSiblingPassportClaims,
   finalizePassportClaim,
 } from "~/server/admin/lineage/claim-finalize"
+import {
+  lockPromoterIdentityMergeScope,
+  type PromoterIdentityMergeTx,
+} from "~/server/identity/repoint-promoter-identity"
 import { CLAIM_ACCEPT_ERROR } from "./claim-accept-errors"
 
 /**
@@ -47,6 +51,51 @@ export type ClaimNodeResult = {
   claimId: string
 }
 
+type ClaimIdentityNode = {
+  id: string
+  passportId: string
+}
+
+type ClaimIdentityPreflightTx = PromoterIdentityMergeTx & {
+  passport: {
+    findUnique(args: {
+      where: { id?: string; userId?: string }
+      select: { id: true; userId?: true }
+    }): Promise<{ id: string; userId?: string | null } | null>
+  }
+}
+
+/** Lock Passport graph before claim writes acquire User FK locks. */
+async function preflightClaimIdentityMerge(
+  tx: ClaimIdentityPreflightTx,
+  { userId, node }: { userId: string; node: ClaimIdentityNode },
+): Promise<"continue" | "already-claimed"> {
+  const claimantPassport = await tx.passport.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  if (!claimantPassport || claimantPassport.id === node.passportId) return "continue"
+
+  await lockPromoterIdentityMergeScope(tx, claimantPassport.id, node.passportId)
+
+  // Reads before lock wait can stale. Revalidate both identity roots while full scope stays held.
+  const currentClaimantPassport = await tx.passport.findUnique({
+    where: { userId },
+    select: { id: true },
+  })
+  const currentClaimedPassport = await tx.passport.findUnique({
+    where: { id: node.passportId },
+    select: { id: true, userId: true },
+  })
+  if (!currentClaimedPassport) throw new Error(CLAIM_ACCEPT_ERROR.NODE_NOT_CLAIMABLE)
+  if (currentClaimedPassport.userId === userId) return "already-claimed"
+  if (currentClaimedPassport.userId) throw new Error(CLAIM_ACCEPT_ERROR.ALREADY_OWNED_BY_OTHER)
+  if (currentClaimantPassport?.id !== claimantPassport.id) {
+    throw new Error("Account identity changed during claim acceptance. Retry the operation.")
+  }
+  return "continue"
+}
+
 export async function claimNodeForUser(
   // biome-ignore lint/suspicious/noExplicitAny: Prisma `$transaction` tx client, matching the callers.
   tx: any,
@@ -83,22 +132,25 @@ export async function claimNodeForUser(
 
   const treeId = member.tree.id
   const node = member.node
+  const alreadyClaimedResult = async (): Promise<ClaimNodeResult> => {
+    const existing = await tx.passportClaimRequest.findFirst({
+      where: { passportId: node.passportId, claimantUserId: userId, status: "APPROVED" },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    })
+    return {
+      outcome: CLAIM_NODE_RESULT.ALREADY_CLAIMED,
+      nodeId: node.id,
+      claimId: existing?.id ?? "",
+    }
+  }
 
   // (c) Idempotency + accountless guard. If the node's Passport already belongs to THIS
   // claimant, a prior click already succeeded — return a no-op success. If it belongs to
   // someone ELSE, the node is taken.
   if (node.passport.userId) {
     if (node.passport.userId === userId) {
-      const existing = await tx.passportClaimRequest.findFirst({
-        where: { passportId: node.passportId, claimantUserId: userId, status: "APPROVED" },
-        orderBy: { createdAt: "desc" },
-        select: { id: true },
-      })
-      return {
-        outcome: CLAIM_NODE_RESULT.ALREADY_CLAIMED,
-        nodeId: node.id,
-        claimId: existing?.id ?? "",
-      }
+      return alreadyClaimedResult()
     }
     throw new Error(CLAIM_ACCEPT_ERROR.ALREADY_OWNED_BY_OTHER)
   }
@@ -133,6 +185,13 @@ export async function claimNodeForUser(
       representTreeId: true,
     },
   })
+
+  // The claim write below references User through both claimantUserId and reviewedById. PostgreSQL
+  // holds FK KEY SHARE locks until this Serializable transaction ends, so acquire the canonical
+  // Passport→Award→Review merge scope first. Otherwise account deletion can hold the signup
+  // Passport while waiting for this User, as this transaction waits for that same Passport.
+  const identityPreflight = await preflightClaimIdentityMerge(tx, { userId, node })
+  if (identityPreflight === "already-claimed") return alreadyClaimedResult()
 
   const claim = reusable
     ? await tx.passportClaimRequest.update({

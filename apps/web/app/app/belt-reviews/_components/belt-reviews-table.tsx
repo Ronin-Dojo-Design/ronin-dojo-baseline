@@ -1,19 +1,26 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Compose the promoter-review projection through the existing AdminCollection primitive
+ * @wired   app/app/belt-reviews/page.tsx
+ */
 "use client"
 
-import { useQueryStates } from "nuqs"
 import { use, useMemo } from "react"
 import { AdminCollection } from "~/components/admin/admin-collection"
 import type { findPendingPromoterReviews } from "~/server/admin/rank-reviews/queries"
-import { rankReviewsTableParamsSchema } from "~/server/admin/rank-reviews/schema"
+import type { ExtendedSortingState } from "~/types"
 import { getColumns } from "./belt-reviews-table-columns"
+
+type BeltReviewRow = Awaited<ReturnType<typeof findPendingPromoterReviews>>["rows"][number]
 
 type BeltReviewsTableProps = {
   reviewsPromise: ReturnType<typeof findPendingPromoterReviews>
+  sorting: ExtendedSortingState<BeltReviewRow>
+  pageSize: number
 }
 
-export function BeltReviewsTable({ reviewsPromise }: BeltReviewsTableProps) {
+export function BeltReviewsTable({ reviewsPromise, sorting, pageSize }: BeltReviewsTableProps) {
   const { rows, total, pageCount } = use(reviewsPromise)
-  const [{ perPage, sort }] = useQueryStates(rankReviewsTableParamsSchema, { shallow: false })
 
   const columns = useMemo(() => getColumns(), [])
 
@@ -24,8 +31,8 @@ export function BeltReviewsTable({ reviewsPromise }: BeltReviewsTableProps) {
       data={rows}
       columns={columns}
       pageCount={pageCount}
-      sorting={sort}
-      pageSize={perPage}
+      sorting={sorting}
+      pageSize={pageSize}
       emptyState="No belt promoter-change reviews are waiting."
     />
   )

@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Enforce immutable promoter proposals and steward decisions under one transaction lock law
+ * @wired   server/belt/router.ts, server/admin/rank-reviews/actions.ts
+ */
 import "server-only"
 
 import { ORPCError } from "@orpc/server"
@@ -7,6 +12,7 @@ import {
   RankEntryReviewReason,
   RankEntryReviewStatus,
 } from "~/.generated/prisma/client"
+import { OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
 import { decideBackfillPromoterTransition } from "~/server/belt/belt-gate"
 import { getMemberAwards, resolveAnchorAward } from "~/server/belt/queries"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
@@ -59,11 +65,6 @@ async function lockRankEntryReview(tx: PromoterProposalTx, reviewId: string): Pr
   await tx.$queryRaw`SELECT "id" FROM "RankEntryReview" WHERE "id" = ${reviewId} FOR UPDATE`
 }
 
-const OPEN_PROMOTER_REVIEW_STATUSES = [
-  RankEntryReviewStatus.PENDING,
-  RankEntryReviewStatus.PROPOSAL_PENDING,
-] as const
-
 async function readPromoterWorkflowReferences(tx: PromoterProposalTx, rankAwardId: string) {
   const award = await tx.rankAward.findUnique({
     where: { id: rankAwardId },
@@ -74,7 +75,7 @@ async function readPromoterWorkflowReferences(tx: PromoterProposalTx, rankAwardI
   const reviews = await tx.rankEntryReview.findMany({
     where: {
       rankEntry: { rankAwardId },
-      status: { in: [...OPEN_PROMOTER_REVIEW_STATUSES] },
+      status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] },
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
     },
     select: {
@@ -85,6 +86,21 @@ async function readPromoterWorkflowReferences(tx: PromoterProposalTx, rankAwardI
     orderBy: { id: "asc" },
   })
   return { award, reviews }
+}
+
+type PromoterWorkflowReferences = Awaited<ReturnType<typeof readPromoterWorkflowReferences>>
+
+/** Flatten one workflow snapshot into the Passport tier its locks depend on. */
+function promoterReferencePassportIds(references: PromoterWorkflowReferences): string[] {
+  if (!references) return []
+  return [
+    references.award.passportId,
+    references.award.awardedByPassportId,
+    ...references.reviews.flatMap(review => [
+      review.expectedPromoterPassportId,
+      review.proposedPromoterPassportId,
+    ]),
+  ].filter((id): id is string => Boolean(id))
 }
 
 /**
@@ -112,17 +128,10 @@ export async function lockPromoterWorkflowScope({
   if (!initial) throw new Error("Rank award not found.")
 
   const lockedPassportIds = [
-    ...new Set(
-      [
-        initial.award.passportId,
-        initial.award.awardedByPassportId,
-        candidatePromoterPassportId,
-        ...initial.reviews.flatMap(review => [
-          review.expectedPromoterPassportId,
-          review.proposedPromoterPassportId,
-        ]),
-      ].filter((id): id is string => Boolean(id)),
-    ),
+    ...new Set([
+      ...promoterReferencePassportIds(initial),
+      ...(candidatePromoterPassportId ? [candidatePromoterPassportId] : []),
+    ]),
   ].sort()
 
   for (const passportId of lockedPassportIds) {
@@ -142,16 +151,7 @@ export async function lockPromoterWorkflowScope({
 
   const lockedPassportIdSet = new Set(lockedPassportIds)
   const referencesAfterAwardLock = await readPromoterWorkflowReferences(tx, rankAwardId)
-  const referencePassportIds = referencesAfterAwardLock
-    ? [
-        referencesAfterAwardLock.award.passportId,
-        referencesAfterAwardLock.award.awardedByPassportId,
-        ...referencesAfterAwardLock.reviews.flatMap(review => [
-          review.expectedPromoterPassportId,
-          review.proposedPromoterPassportId,
-        ]),
-      ].filter((id): id is string => Boolean(id))
-    : []
+  const referencePassportIds = promoterReferencePassportIds(referencesAfterAwardLock)
   if (
     !referencesAfterAwardLock ||
     referencesAfterAwardLock.award.passportId !== initial.award.passportId ||
@@ -168,16 +168,7 @@ export async function lockPromoterWorkflowScope({
 
   const current = await readPromoterWorkflowReferences(tx, rankAwardId)
   const lockedReviewIdSet = new Set(lockedReviewIds)
-  const finalReferencePassportIds = current
-    ? [
-        current.award.passportId,
-        current.award.awardedByPassportId,
-        ...current.reviews.flatMap(review => [
-          review.expectedPromoterPassportId,
-          review.proposedPromoterPassportId,
-        ]),
-      ].filter((id): id is string => Boolean(id))
-    : []
+  const finalReferencePassportIds = promoterReferencePassportIds(current)
   if (
     !current ||
     current.award.passportId !== initial.award.passportId ||
@@ -262,9 +253,7 @@ export async function findAndLockPendingPromoterReview(
   const identity = await tx.rankEntryReview.findFirst({
     where: {
       rankEntryId: entry.id,
-      status: {
-        in: [RankEntryReviewStatus.PENDING, RankEntryReviewStatus.PROPOSAL_PENDING],
-      },
+      status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] },
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
     },
     select: { id: true },
@@ -279,17 +268,20 @@ export async function findAndLockPendingPromoterReview(
 }
 
 /**
- * Lock and report every review attached to an already-locked award. Terminal decisions are
- * immutable history too: member deletion must not cascade-erase an APPROVED or DENIED proposal.
+ * Lock and report every review attached to an already-locked award. The RankEntry parent must be
+ * locked before inspecting its children: a rolling legacy writer creates its review in a later
+ * transaction, and the FK's key-share lock then either commits before this inspection or waits
+ * until deletion commits and fails. Terminal decisions are immutable history too: member deletion
+ * must not cascade-erase an APPROVED or DENIED proposal.
  */
 export async function hasLockedRankEntryReviewHistory(
   tx: PromoterProposalTx,
   rankAwardId: string,
 ): Promise<boolean> {
-  const entry = await tx.rankEntry.findUnique({
-    where: { rankAwardId },
-    select: { id: true },
-  })
+  const entries = await tx.$queryRaw<
+    Array<{ id: string }>
+  >`SELECT "id" FROM "RankEntry" WHERE "rankAwardId" = ${rankAwardId} FOR UPDATE`
+  const entry = entries[0]
   if (!entry) return false
 
   const reviews = await tx.rankEntryReview.findMany({
@@ -320,6 +312,17 @@ async function writeBackfillStatusAudit(
       after: { verificationStatus: target },
     },
   })
+}
+
+/** Apply non-promoter edits once without duplicating the award→entry compatibility write. */
+async function applySiblingFactsIfPresent(
+  tx: PromoterProposalTx,
+  rankAwardId: string,
+  siblingFacts: Record<string, unknown>,
+): Promise<void> {
+  if (Object.keys(siblingFacts).length === 0) return
+  await tx.rankAward.update({ where: { id: rankAwardId }, data: siblingFacts })
+  await syncRankEntryFromAward(tx, rankAwardId)
 }
 
 /**
@@ -365,10 +368,7 @@ export async function applyMemberPromoterTransition({
         message: "This belt already has a different promoter change awaiting review.",
       })
     }
-    if (Object.keys(siblingFacts).length > 0) {
-      await tx.rankAward.update({ where: { id: currentAward.id }, data: siblingFacts })
-      await syncRankEntryFromAward(tx, currentAward.id)
-    }
+    await applySiblingFactsIfPresent(tx, currentAward.id, siblingFacts)
     return { transition: "proposal_pending" as const, reviewId: pending.id }
   }
 
@@ -391,18 +391,12 @@ export async function applyMemberPromoterTransition({
   })
 
   if (transition === "no_change") {
-    if (Object.keys(siblingFacts).length > 0) {
-      await tx.rankAward.update({ where: { id: currentAward.id }, data: siblingFacts })
-      await syncRankEntryFromAward(tx, currentAward.id)
-    }
+    await applySiblingFactsIfPresent(tx, currentAward.id, siblingFacts)
     return { transition }
   }
 
   if (transition === "propose") {
-    if (Object.keys(siblingFacts).length > 0) {
-      await tx.rankAward.update({ where: { id: currentAward.id }, data: siblingFacts })
-      await syncRankEntryFromAward(tx, currentAward.id)
-    }
+    await applySiblingFactsIfPresent(tx, currentAward.id, siblingFacts)
     const review = await tx.rankEntryReview.create({
       data: {
         rankEntryId: entry.id,
@@ -455,9 +449,9 @@ export async function applyMemberPromoterTransition({
 }
 
 /** Load a captured proposal under the canonical Passport→Award→Review lock order. */
-async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: string) {
-  const identity = await tx.rankEntryReview.findUnique({
-    where: { id: reviewId },
+async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: string, brand: Brand) {
+  const identity = await tx.rankEntryReview.findFirst({
+    where: { id: reviewId, rankEntry: { rank: { brand } } },
     select: { rankEntry: { select: { rankAwardId: true } } },
   })
   if (!identity) throw new Error("Review not found.")
@@ -474,6 +468,7 @@ async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: strin
       ...CAPTURED_REVIEW_SELECT,
       rankEntry: {
         select: {
+          rank: { select: { brand: true } },
           rankAward: {
             select: { id: true, awardedByPassportId: true, notes: true },
           },
@@ -482,6 +477,7 @@ async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: strin
     },
   })
   if (!review) throw new Error("Review not found.")
+  if (review.rankEntry.rank.brand !== brand) throw new Error("Review not found.")
   if (review.status !== RankEntryReviewStatus.PROPOSAL_PENDING) {
     throw new Error("This review has already been decided.")
   }
@@ -503,7 +499,7 @@ export async function approveCapturedPromoterReview(
   reviewId: string,
   { brand, userId }: { brand: Brand; userId: string },
 ) {
-  const review = await loadCapturedPendingReview(tx, reviewId)
+  const review = await loadCapturedPendingReview(tx, reviewId, brand)
   const active = review.rankEntry.rankAward
   if (
     active.awardedByPassportId !== review.expectedPromoterPassportId ||
@@ -517,6 +513,7 @@ export async function approveCapturedPromoterReview(
       id: review.id,
       status: RankEntryReviewStatus.PROPOSAL_PENDING,
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
+      rankEntry: { rank: { brand } },
     },
     data: { status: RankEntryReviewStatus.APPROVED },
   })
@@ -571,12 +568,13 @@ export async function denyCapturedPromoterReview(
   reviewId: string,
   { brand, userId }: { brand: Brand; userId: string },
 ) {
-  const review = await loadCapturedPendingReview(tx, reviewId)
+  const review = await loadCapturedPendingReview(tx, reviewId, brand)
   const claimed = await tx.rankEntryReview.updateMany({
     where: {
       id: review.id,
       status: RankEntryReviewStatus.PROPOSAL_PENDING,
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
+      rankEntry: { rank: { brand } },
     },
     data: { status: RankEntryReviewStatus.DENIED },
   })

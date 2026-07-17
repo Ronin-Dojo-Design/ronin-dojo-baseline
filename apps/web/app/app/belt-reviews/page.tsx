@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Give BBL stewards an inspectable queue of unresolved promoter-change reviews
+ * @wired   server/admin/rank-reviews/queries.ts, app/app/belt-reviews/_components/belt-reviews-table.tsx
+ */
 import type { Metadata } from "next"
 import { Suspense } from "react"
 import { BeltReviewsTable } from "~/app/app/belt-reviews/_components/belt-reviews-table"
@@ -32,8 +37,22 @@ export default async ({ searchParams }: PageProps<"/app/belt-reviews">) => {
   const reviewsPromise = findPendingPromoterReviews(search)
 
   return (
-    <Suspense fallback={<DataTableSkeleton title="Belt reviews" />}>
-      <BeltReviewsTable reviewsPromise={reviewsPromise} />
+    <Suspense
+      fallback={
+        <DataTableSkeleton
+          title="Belt reviews"
+          columnCount={4}
+          searchableColumnCount={0}
+          filterableColumnCount={0}
+          showViewOptions={false}
+        />
+      }
+    >
+      <BeltReviewsTable
+        reviewsPromise={reviewsPromise}
+        sorting={search.sort}
+        pageSize={search.perPage}
+      />
     </Suspense>
   )
 }

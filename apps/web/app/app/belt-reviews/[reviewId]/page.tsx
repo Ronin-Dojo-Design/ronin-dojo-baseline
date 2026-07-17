@@ -1,7 +1,13 @@
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Let BBL stewards inspect immutable promoter evidence before deciding a review
+ * @wired   server/admin/rank-reviews/queries.ts, app/app/belt-reviews/_components/belt-review-actions.tsx
+ */
 import { formatDate } from "@dirstack/utils"
 import { notFound } from "next/navigation"
 import type { ReactNode } from "react"
 import { BeltReviewActions } from "~/app/app/belt-reviews/_components/belt-review-actions"
+import { beltReviewDetailState } from "~/app/app/belt-reviews/_components/belt-review-detail-state"
 import { Badge } from "~/components/common/badge"
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Card } from "~/components/common/card"
@@ -47,21 +53,51 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
   const { passport, rank, rankAward } = rankEntry
   const memberName = passportDisplayName(passport) ?? "Unnamed member"
   const anchorAward = passport.rankAwardsEarned[0] ?? null
-  const hasCapturedProposal =
-    review.proposalCapturedAt !== null &&
-    review.expectedPromoterPassportId !== null &&
-    review.proposedPromoterPassportId !== null
   const proposedPromoterName = review.proposedPromoter
     ? (passportDisplayName(review.proposedPromoter) ?? "Unnamed promoter")
     : "Proposal unavailable"
-  const isReviewable = review.status === "PROPOSAL_PENDING" && hasCapturedProposal
-  const activeMatchesCapture =
-    rankAward.awardedByPassportId === review.expectedPromoterPassportId &&
-    rankAward.notes === review.expectedPromoterName
-  const canApprove = isReviewable && activeMatchesCapture
-  const statusVariant =
-    review.status === "APPROVED" ? "success" : review.status === "DENIED" ? "danger" : "warning"
-  const statusLabel = review.status === "PROPOSAL_PENDING" ? "PENDING" : review.status
+  const detailState = beltReviewDetailState({
+    status: review.status,
+    proposalCapturedAt: review.proposalCapturedAt,
+    expectedPromoterPassportId: review.expectedPromoterPassportId,
+    expectedPromoterName: review.expectedPromoterName,
+    proposedPromoterPassportId: review.proposedPromoterPassportId,
+    activePromoterPassportId: rankAward.awardedByPassportId,
+    activePromoterName: rankAward.notes,
+  })
+
+  let decisionSurface: ReactNode
+  if (detailState.surface === "actions") {
+    decisionSurface = (
+      <Card className="p-4">
+        {detailState.showStaleWarning && (
+          <Note role="alert" className="mb-4 text-amber-700 dark:text-amber-400">
+            The accepted promoter changed after this proposal was captured. Approval is disabled;
+            deny this stale proposal or use the explicit admin override.
+          </Note>
+        )}
+        <BeltReviewActions
+          reviewId={review.id}
+          memberName={memberName}
+          rankName={rank.name}
+          proposedPromoterName={proposedPromoterName}
+          canApprove={detailState.canApprove}
+        />
+      </Card>
+    )
+  } else if (detailState.surface === "legacy") {
+    decisionSurface = (
+      <p className="text-sm text-muted-foreground">
+        This legacy review has no immutable promoter proposal and cannot be actioned.
+      </p>
+    )
+  } else {
+    decisionSurface = (
+      <p className="text-sm text-muted-foreground">
+        This promoter-change review is {review.status} and can no longer be actioned.
+      </p>
+    )
+  }
 
   return (
     <Wrapper>
@@ -84,7 +120,7 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
             <div>
               <dt className="text-muted-foreground">Status</dt>
               <dd>
-                <Badge variant={statusVariant}>{statusLabel}</Badge>
+                <Badge variant={detailState.statusVariant}>{detailState.statusLabel}</Badge>
               </dd>
             </div>
             <div>
@@ -114,7 +150,7 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
           >
             Belt
           </Heading>
-          <div className="flex flex-wrap items-center gap-3">
+          <Stack wrap>
             <BeltSwatch
               variant="belt"
               colorHex={rank.colorHex}
@@ -126,7 +162,7 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
             <Badge variant={rankEntry.status === "VERIFIED" ? "success" : "outline"}>
               {rankEntry.status}
             </Badge>
-          </div>
+          </Stack>
         </Card>
 
         <Card className="p-4">
@@ -151,7 +187,7 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
             <div>
               <dt className="text-muted-foreground">Promoter when requested</dt>
               <dd>
-                {hasCapturedProposal
+                {detailState.hasCapturedProposal
                   ? renderPassportValue(
                       review.expectedPromoter,
                       review.expectedPromoterName,
@@ -199,31 +235,7 @@ export default async function ({ params }: PageProps<"/app/belt-reviews/[reviewI
           </p>
         </Card>
 
-        {isReviewable ? (
-          <Card className="p-4">
-            {!activeMatchesCapture && (
-              <Note role="alert" className="mb-4 text-amber-700 dark:text-amber-400">
-                The accepted promoter changed after this proposal was captured. Approval is
-                disabled; deny this stale proposal or use the explicit admin override.
-              </Note>
-            )}
-            <BeltReviewActions
-              reviewId={review.id}
-              memberName={memberName}
-              rankName={rank.name}
-              proposedPromoterName={proposedPromoterName}
-              canApprove={canApprove}
-            />
-          </Card>
-        ) : review.status === "PENDING" ? (
-          <p className="text-sm text-muted-foreground">
-            This legacy review has no immutable promoter proposal and cannot be actioned.
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            This promoter-change review is {review.status} and can no longer be actioned.
-          </p>
-        )}
+        {decisionSurface}
       </Stack>
     </Wrapper>
   )

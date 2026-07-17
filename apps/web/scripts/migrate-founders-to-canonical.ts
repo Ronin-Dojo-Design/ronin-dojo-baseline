@@ -2,7 +2,12 @@ import "dotenv/config"
 
 import { readFileSync, writeFileSync } from "node:fs"
 import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
-import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
+import {
+  lockPromoterIdentityMergeScope,
+  repointPromoterIdentityForMerge,
+  restorePromoterIdentityFromMergeManifest,
+  type PromoterIdentityMergeManifest,
+} from "~/server/identity/repoint-promoter-identity"
 import { db } from "~/services/db"
 
 /**
@@ -82,6 +87,8 @@ type MemberSnapshot = {
 }
 
 type Backup = {
+  formatVersion: 2
+  operation: "migrate-founders-to-canonical"
   ts: string
   treeId: string
   // Creates are identified for rollback by the @@unique(treeId,nodeId) pair — ids are DB-minted.
@@ -98,6 +105,57 @@ type Backup = {
   deletedNode: Record<string, unknown> | null
   deletedPassport: Record<string, unknown> | null
   deletedProfile: Record<string, unknown> | null
+  // Exact RankAward / RankEntryReview before-image moved off the deleted Passport.
+  promoterIdentityMerge: PromoterIdentityMergeManifest | null
+}
+
+function assertRollbackArtifactVersion(backup: Backup): void {
+  if (backup.formatVersion !== 2 || backup.operation !== "migrate-founders-to-canonical") {
+    throw new Error("REFUSE: file is not a supported migrate-founders recovery artifact.")
+  }
+}
+
+function assertDeletedPassportHasManifest(backup: Backup): void {
+  if (backup.deletedPassport && !backup.promoterIdentityMerge) {
+    throw new Error(
+      "REFUSE: backup predates promoter-edge recovery manifests; rollback cannot safely recreate the deleted Passport.",
+    )
+  }
+}
+
+function assertManifestHasDeletedPassport(backup: Backup): void {
+  if (!backup.deletedPassport && backup.promoterIdentityMerge) {
+    throw new Error("REFUSE: promoter recovery manifest has no deleted Passport before-image.")
+  }
+}
+
+function assertManifestOwnsDeletedPassport(backup: Backup): void {
+  if (!backup.deletedPassport || !backup.promoterIdentityMerge) return
+  if (
+    backup.promoterIdentityMerge.fromPassportId !== (backup.deletedPassport as { id?: string }).id
+  ) {
+    throw new Error("REFUSE: promoter recovery manifest does not belong to the deleted Passport.")
+  }
+}
+
+function assertDeletedNodeOwnsDeletedPassport(backup: Backup): void {
+  if (!backup.deletedNode) return
+  const node = backup.deletedNode as { slug?: string; passportId?: string }
+  const passportId = (backup.deletedPassport as { id?: string } | null)?.id
+  if (node.slug !== ERIK_PLACEHOLDER_SLUG) {
+    throw new Error("REFUSE: deleted node before-image is not the expected Erik placeholder.")
+  }
+  if (node.passportId !== passportId) {
+    throw new Error("REFUSE: deleted node before-image is not the expected Erik placeholder.")
+  }
+}
+
+function assertRollbackArtifactShape(backup: Backup): void {
+  assertRollbackArtifactVersion(backup)
+  assertDeletedPassportHasManifest(backup)
+  assertManifestHasDeletedPassport(backup)
+  assertManifestOwnsDeletedPassport(backup)
+  assertDeletedNodeOwnsDeletedPassport(backup)
 }
 
 const MEMBER_SELECT = {
@@ -548,8 +606,21 @@ async function dryRunOrApply(apply: boolean) {
     return
   }
 
+  // Acquire an exact promoter before-image before writing the recovery artifact. The apply
+  // transaction locks the graph again and requires an exact match, so an intervening edge change
+  // aborts before any unbacked promoter edge can move.
+  const promoterIdentityMerge =
+    erikSwap && erikPlaceholder
+      ? await db.$transaction(
+          tx => lockPromoterIdentityMergeScope(tx, erikPlaceholder.passportId, erikRich.passportId),
+          { isolationLevel: "Serializable", maxWait: 30_000, timeout: 60_000 },
+        )
+      : null
+
   // ── Backup BEFORE apply ─────────────────────────────────────────────────────
   const backup: Backup = {
+    formatVersion: 2,
+    operation: "migrate-founders-to-canonical",
     ts: new Date().toISOString(),
     treeId: canonical.id,
     plannedCreates: [
@@ -583,6 +654,7 @@ async function dryRunOrApply(apply: boolean) {
     deletedNode: erikSwap && erikPlaceholder ? { ...erikPlaceholder, passport: undefined } : null,
     deletedPassport: erikSwap ? placeholderPassport : null,
     deletedProfile: erikSwap && profileDecision === "delete" ? placeholderProfile : null,
+    promoterIdentityMerge,
   }
   const backupPath = `/tmp/migrate-founders-backup-${Date.now()}.json`
   writeFileSync(backupPath, JSON.stringify(backup, null, 2))
@@ -612,7 +684,15 @@ async function dryRunOrApply(apply: boolean) {
       // Acquire the shared identity graph lock tiers before any mutation in this transaction. The
       // later Erik swap can then delete the stale Passport without losing active/review provenance.
       if (erikSwap && erikPlaceholder) {
-        await repointPromoterIdentityForMerge(tx, erikPlaceholder.passportId, erikRich.passportId)
+        if (!backup.promoterIdentityMerge) {
+          throw new Error("ABORT: Erik merge has no promoter recovery manifest.")
+        }
+        await repointPromoterIdentityForMerge(
+          tx,
+          erikPlaceholder.passportId,
+          erikRich.passportId,
+          backup.promoterIdentityMerge,
+        )
       }
 
       // 1. Carlos Sr (root) + Carlos Jr.
@@ -771,8 +851,28 @@ async function dryRunOrApply(apply: boolean) {
 
 async function rollback(file: string) {
   const backup = JSON.parse(readFileSync(file, "utf8")) as Backup
+  assertRollbackArtifactShape(backup)
+
   await db.$transaction(
     async (tx: Tx) => {
+      const treeNow = await tx.lineageTree.findUnique({
+        where: { id: backup.treeId },
+        select: { slug: true, isPublished: true },
+      })
+      const richErikNow = await tx.lineageNode.findUnique({
+        where: { slug: ERIK_RICH_SLUG },
+        select: { passportId: true },
+      })
+      if (!treeNow?.isPublished || treeNow.slug !== CANONICAL_SLUG) {
+        throw new Error("REFUSE: recovery artifact does not target the published canonical tree.")
+      }
+      if (
+        backup.promoterIdentityMerge &&
+        richErikNow?.passportId !== backup.promoterIdentityMerge.toPassportId
+      ) {
+        throw new Error("REFUSE: promoter recovery target is not the canonical Erik Passport.")
+      }
+
       // 1. Recreate the placeholder passport → node → edge (FK order).
       if (backup.deletedPassport) {
         const p = backup.deletedPassport as Record<string, unknown>
@@ -784,6 +884,11 @@ async function rollback(file: string) {
             createdAt: new Date(p.createdAt as string),
           },
         })
+        // Restore only the award ids and independent review fields captured before apply. The
+        // helper locks the full current canonical graph and uses conditional FK-only writes, so
+        // unrelated promoter edges acquired since the migration remain canonical and review
+        // `updatedAt` values retain their historical timeline.
+        await restorePromoterIdentityFromMergeManifest(tx, backup.promoterIdentityMerge!)
       }
       if (backup.deletedNode) {
         const n = backup.deletedNode as Record<string, unknown>

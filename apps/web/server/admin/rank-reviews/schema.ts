@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Keep belt-review pagination and sorting aligned with the shared AdminCollection contract
+ * @wired   app/app/belt-reviews/page.tsx
+ */
 import { createSearchParamsCache, parseAsInteger } from "nuqs/server"
 import { getSortingStateParser } from "~/lib/parsers"
 import type { RankReviewAdminRow } from "./queries"

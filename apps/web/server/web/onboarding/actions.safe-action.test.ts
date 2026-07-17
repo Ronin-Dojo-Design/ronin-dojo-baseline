@@ -88,7 +88,9 @@ beforeAll(async () => {
       brand: TEST_BRAND,
       name: tag("Discipline"),
       slug: tag("discipline"),
-      code: tag("DISC").slice(0, 16),
+      // Keep the entropy-bearing end of the timestamp inside the 16-char DB limit. Truncating the
+      // shared `onboarding-…` prefix made interrupted runs collide for months at a time.
+      code: `OB-${TS.toString(36)}`,
     },
   })
 

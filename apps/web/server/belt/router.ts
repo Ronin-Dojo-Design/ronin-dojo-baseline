@@ -1,5 +1,6 @@
 import { ORPCError } from "@orpc/server"
 import { Brand } from "~/.generated/prisma/client"
+import { deriveTrustState, OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
 import {
   ceilingSortOrder,
   type FactKey,
@@ -83,7 +84,7 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
     select: {
       status: true,
       reviews: {
-        where: { status: { in: ["PENDING", "PROPOSAL_PENDING"] } },
+        where: { status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] } },
         select: { id: true },
         take: 1,
       },
@@ -93,11 +94,10 @@ async function enrichedCard(passportId: string, rankAwardId: string): Promise<Be
   return {
     ...toBeltCard(award, entry?.status),
     trustState: entry
-      ? entry.reviews.length > 0
-        ? "pending_review"
-        : entry.status === "VERIFIED"
-          ? "verified"
-          : "unverified"
+      ? deriveTrustState({
+          verified: entry.status === "VERIFIED",
+          hasPendingReview: entry.reviews.length > 0,
+        })
       : undefined,
   }
 }
@@ -232,6 +232,84 @@ function factSnapshot(row: {
 /** Prisma surface the capture needs — the award `$transaction` client threads through here. */
 type FactCaptureTx = Pick<typeof db, "passport" | "organization" | "lead" | "leadFollowUp">
 
+async function resolveRegisteredPromoterFact(
+  tx: FactCaptureTx,
+  promoterPassportId: string,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  const promoterPassport = await tx.passport.findUnique({
+    where: { id: promoterPassportId },
+    select: { id: true },
+  })
+  if (!promoterPassport) {
+    throw new ORPCError("BAD_REQUEST", {
+      message: "That instructor can't be linked — pick another from the list or type their name.",
+    })
+  }
+  return { awardedByPassportId: promoterPassport.id, notes: null }
+}
+
+async function resolveNamedPromoterFact(
+  tx: FactCaptureTx,
+  name: string | null,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  if (!name) return { awardedByPassportId: null, notes: null }
+
+  const placeholder = await ensurePromoterPlaceholder(name, tx)
+  await emitPromoterLead(
+    {
+      promoterName: name,
+      source: "belt-journey",
+      passportId: placeholder?.passportId ?? null,
+    },
+    tx,
+  )
+  return { awardedByPassportId: placeholder?.passportId ?? null, notes: name }
+}
+
+async function resolvePromoterFactWithCapture(
+  tx: FactCaptureTx,
+  promoter: Exclude<FactUpdateInput["promoter"], undefined>,
+): Promise<Pick<FactUpdateData, "awardedByPassportId" | "notes">> {
+  if (promoter?.awardedByPassportId) {
+    // The picker options are cached. Revalidate the Passport so a stale id becomes a useful
+    // BAD_REQUEST instead of a swallowed P2003.
+    return resolveRegisteredPromoterFact(tx, promoter.awardedByPassportId)
+  }
+
+  const name = promoter?.name?.trim() || null
+  // Freetext promoter capture is identity + pipeline, kept inside the award transaction so later
+  // validation failures roll both artifacts back with the fact write.
+  return resolveNamedPromoterFact(tx, name)
+}
+
+async function resolveSchoolFactWithCapture(
+  tx: FactCaptureTx,
+  school: Exclude<FactUpdateInput["school"], undefined>,
+): Promise<Pick<FactUpdateData, "organizationId" | "location">> {
+  if (school?.organizationId) {
+    const organization = await tx.organization.findUnique({
+      where: { id: school.organizationId },
+      select: { id: true },
+    })
+    if (!organization) {
+      throw new ORPCError("BAD_REQUEST", {
+        message:
+          "That school is no longer available — pick another from the list or type its name.",
+      })
+    }
+    return { organizationId: organization.id, location: null }
+  }
+
+  const schoolName = school?.name?.trim() || null
+  if (schoolName) {
+    await emitSchoolLead(
+      { schoolName, source: "belt-journey", country: school?.country ?? null },
+      tx,
+    )
+  }
+  return { organizationId: null, location: schoolName }
+}
+
 /**
  * Resolve a fact-edit input into a partial `RankAward` update AND capture the recruitment
  * side-effects (SESSION_0541 rename — was the misleadingly-named `buildFactUpdateData`; the
@@ -253,87 +331,10 @@ async function resolveFactUpdateWithCapture(
   const data: FactUpdateData = {}
 
   if (input.awardedAt !== undefined) data.awardedAt = input.awardedAt
-
-  if (input.promoter !== undefined) {
-    if (input.promoter?.awardedByPassportId) {
-      // The picker sends a Passport id (belt-tab-loader.getBeltPromoterOptions is keyed
-      // by passport). Verify it still exists — the option list is cached, so a stale or
-      // invalid id would otherwise P2003 into a swallowed 500 (SESSION_0497). Missing →
-      // BAD_REQUEST so the client shows a real message, not the blanket "couldn't save".
-      const promoterPassport = await tx.passport.findUnique({
-        where: { id: input.promoter.awardedByPassportId },
-        select: { id: true },
-      })
-      if (!promoterPassport) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "That instructor can't be linked — pick another from the list or type their name.",
-        })
-      }
-      data.awardedByPassportId = promoterPassport.id
-      data.notes = null
-    } else {
-      const name = input.promoter?.name?.trim() || null
-      if (name) {
-        // Freetext promoter → capture the coach as BOTH artifacts (SESSION_0540 operator model),
-        // both inside the award tx (WL-P3-44):
-        //  1. IDENTITY — find-or-create a recruited-coach placeholder Passport (claim door = phase-2,
-        //     D-045) and point the award FK at it, so the promoter sits on the identity graph. The
-        //     typed name also rides `notes` (the card + editor prefill read it).
-        //  2. PIPELINE — emit a deduped recruitment `Lead` (the PERSON mirror of the freetext-school
-        //     lead) so the coach enters the outreach / CRM funnel, LINKED to that placeholder via
-        //     `meta.passportId`. Never sends outreach; the invite is an operator click.
-        const placeholder = await ensurePromoterPlaceholder(name, tx)
-        data.awardedByPassportId = placeholder?.passportId ?? null
-        data.notes = name
-        await emitPromoterLead(
-          {
-            promoterName: name,
-            source: "belt-journey",
-            passportId: placeholder?.passportId ?? null,
-          },
-          tx,
-        )
-      } else {
-        // Clearing the promoter.
-        data.awardedByPassportId = null
-        data.notes = null
-      }
-    }
-  }
-
-  if (input.school !== undefined) {
-    if (input.school?.organizationId) {
-      // Same guard as the promoter: the school option list is cached too, so a school
-      // deleted inside that window would P2003 here (SESSION_0497). Missing → BAD_REQUEST.
-      const org = await tx.organization.findUnique({
-        where: { id: input.school.organizationId },
-        select: { id: true },
-      })
-      if (!org) {
-        throw new ORPCError("BAD_REQUEST", {
-          message:
-            "That school is no longer available — pick another from the list or type its name.",
-        })
-      }
-      data.organizationId = org.id
-      data.location = null
-    } else {
-      const schoolName = input.school?.name?.trim() || null
-      data.organizationId = null
-      data.location = schoolName
-      // Freetext school → capture the demand as a deduped school-outreach lead
-      // (Slice 1). Never sends outreach — the invite is an operator click. The
-      // country (Locked #7) belongs to the school, so it rides here → sets the
-      // placeholder Organization.country (ignored on a registered-org pick).
-      if (schoolName) {
-        await emitSchoolLead(
-          { schoolName, source: "belt-journey", country: input.school?.country ?? null },
-          tx,
-        )
-      }
-    }
-  }
+  if (input.promoter !== undefined)
+    Object.assign(data, await resolvePromoterFactWithCapture(tx, input.promoter))
+  if (input.school !== undefined)
+    Object.assign(data, await resolveSchoolFactWithCapture(tx, input.school))
 
   return data
 }

@@ -1,5 +1,8 @@
 import type { BeltFamily } from "~/components/common/belt-swatch"
+import type { BeltTrustState } from "~/lib/belt/review-state"
 import type { BeltCardOutput } from "~/server/belt/schemas"
+
+export { type BeltTrustState, deriveTrustState } from "~/lib/belt/review-state"
 
 /**
  * One render-ready milestone media item, projected off {@link BeltCardOutput}.
@@ -66,27 +69,6 @@ export type BeltRankViewModel = {
  * - `pending_review` — an open `RankEntryReview` exists (e.g. a changed promoter)
  *   awaiting an instructor — nothing is wrong, it is in flight.
  */
-export type BeltTrustState = "verified" | "unverified" | "pending_review"
-
-/**
- * Derive a member entry's {@link BeltTrustState} — an open review always wins
- * (the belt is in flight regardless of its stored status), else the entry's
- * verified flag decides. Pure so it is unit-testable and callable from the
- * server projection without a DOM (mirrors {@link deriveBeltStatus}). Kept
- * Prisma-free: callers pass a plain `verified` boolean (`status === "VERIFIED"`)
- * so this module never imports the generated client into client chrome.
- */
-export function deriveTrustState({
-  verified,
-  hasPendingReview,
-}: {
-  verified: boolean
-  hasPendingReview: boolean
-}): BeltTrustState {
-  if (hasPendingReview) return "pending_review"
-  return verified ? "verified" : "unverified"
-}
-
 /** The badge shape a trust state maps to — reuses existing `Badge` variants (no new component). */
 export type BeltTrustBadge = {
   variant: "success" | "outline" | "info"

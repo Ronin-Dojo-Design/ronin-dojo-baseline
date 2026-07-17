@@ -2191,6 +2191,9 @@ enum RankEntryReviewStatus {
   PENDING
   APPROVED
   DENIED
+  // @added   SESSION_0542 (2026-07-16)
+  // @why     Prevent rolling legacy decision writers from consuming immutable promoter proposals
+  // @wired   server/belt/promoter-proposal-core.ts, server/admin/rank-reviews/actions.ts
   /// Captured active-first promoter proposal. Kept distinct from legacy PENDING so a rolling old
   /// decision writer cannot approve the row without applying its immutable proposed promoter.
   PROPOSAL_PENDING
@@ -2295,6 +2298,9 @@ model RankEntryReview {
   status                     RankEntryReviewStatus @default(PENDING)
   reason                     RankEntryReviewReason
   note                       String?
+  // @added   SESSION_0542 (2026-07-16)
+  // @why     Preserve the accepted and proposed promoter identities as an immutable decision snapshot
+  // @wired   server/belt/promoter-proposal-core.ts, server/admin/rank-reviews/queries.ts
   /// Captures the immutable proposal snapshot boundary. Null means a legacy review without payload.
   proposalCapturedAt         DateTime?
   /// Active promoter identity/name observed when the proposal was captured.

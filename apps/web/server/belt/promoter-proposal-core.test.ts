@@ -7,6 +7,7 @@ mock.module("server-only", () => ({}))
 const {
   approveCapturedPromoterReview,
   denyCapturedPromoterReview,
+  hasLockedRankEntryReviewHistory,
   lockPromoterWorkflowScope,
   lockUntilStableAuthorityAnchor,
 } = await import("~/server/belt/promoter-proposal-core")
@@ -107,6 +108,7 @@ describe("promoter proposal transaction core", () => {
       proposedPromoterPassportId: "coach-b",
       rankEntry: {
         rankAwardId: "award",
+        rank: { brand: Brand.BBL },
         rankAward: {
           id: "award",
           awardedByPassportId: "coach-a",
@@ -117,11 +119,9 @@ describe("promoter proposal transaction core", () => {
     const tx = {
       $queryRaw: async (parts: TemplateStringsArray, ...values: unknown[]) => {
         const sql = parts.join("?")
-        const tier = sql.includes('FROM "Passport"')
-          ? "Passport"
-          : sql.includes('FROM "RankAward"')
-            ? "Award"
-            : "Review"
+        let tier = "Review"
+        if (sql.includes('FROM "Passport"')) tier = "Passport"
+        else if (sql.includes('FROM "RankAward"')) tier = "Award"
         events.push(`lock:${tier}:${String(values[0])}`)
         return [{ id: values[0] }]
       },
@@ -140,6 +140,7 @@ describe("promoter proposal transaction core", () => {
             proposedPromoterPassportId: review.proposedPromoterPassportId,
           },
         ],
+        findFirst: async () => ({ rankEntry: { rankAwardId: "award" } }),
         findUnique: async () => review,
         updateMany: async () => ({ count: 1 }),
       },
@@ -158,6 +159,94 @@ describe("promoter proposal transaction core", () => {
       "lock:Award:award",
       "lock:Review:review",
     ])
+  })
+
+  it("refuses a decision when the locked review no longer belongs to the actor brand", async () => {
+    let initialWhere: unknown
+    let mutationCount = 0
+    const review = {
+      id: "review",
+      status: "PROPOSAL_PENDING",
+      reason: "PROMOTER_CHANGED",
+      rankEntryId: "entry",
+      proposalCapturedAt: new Date("2026-07-16T00:00:00.000Z"),
+      expectedPromoterPassportId: "coach-a",
+      expectedPromoterName: null,
+      proposedPromoterPassportId: "coach-b",
+      rankEntry: {
+        rank: { brand: Brand.BASELINE_MARTIAL_ARTS },
+        rankAward: { id: "award", awardedByPassportId: "coach-a", notes: null },
+      },
+    }
+    const tx = {
+      $queryRaw: async (_parts: TemplateStringsArray, ...values: unknown[]) => [{ id: values[0] }],
+      rankAward: {
+        findUnique: async () => ({
+          id: "award",
+          passportId: "member",
+          awardedByPassportId: "coach-a",
+        }),
+      },
+      rankEntryReview: {
+        findMany: async () => [
+          {
+            id: review.id,
+            expectedPromoterPassportId: review.expectedPromoterPassportId,
+            proposedPromoterPassportId: review.proposedPromoterPassportId,
+          },
+        ],
+        findFirst: async (args: { where: unknown }) => {
+          initialWhere = args.where
+          return { rankEntry: { rankAwardId: "award" } }
+        },
+        findUnique: async () => review,
+        updateMany: async () => {
+          mutationCount += 1
+          return { count: 1 }
+        },
+      },
+      auditLog: {
+        create: async () => {
+          mutationCount += 1
+          return {}
+        },
+      },
+    }
+
+    await expect(
+      denyCapturedPromoterReview(tx as never, review.id, {
+        brand: Brand.BBL,
+        userId: "admin",
+      }),
+    ).rejects.toThrow("Review not found")
+    expect(initialWhere).toEqual({
+      id: review.id,
+      rankEntry: { rank: { brand: Brand.BBL } },
+    })
+    expect(mutationCount).toBe(0)
+  })
+
+  it("locks the RankEntry before an empty history read so a legacy FK insert cannot slip through", async () => {
+    const events: string[] = []
+    const tx = {
+      $queryRaw: async (parts: TemplateStringsArray, ...values: unknown[]) => {
+        const sql = parts.join("?")
+        if (sql.includes('FROM "RankEntry" WHERE')) {
+          events.push(`lock:RankEntry:${String(values[0])}`)
+          return [{ id: "entry" }]
+        }
+        throw new Error(`Unexpected lock query: ${sql}`)
+      },
+      rankEntryReview: {
+        findMany: async () => {
+          events.push("read:Reviews")
+          return []
+        },
+      },
+    }
+
+    await expect(hasLockedRankEntryReviewHistory(tx as never, "award")).resolves.toBeFalse()
+    expect(events).toEqual(["lock:RankEntry:award", "read:Reviews"])
   })
 
   it("locks each replacement authority anchor until the final resolved anchor is stable", async () => {
@@ -196,9 +285,12 @@ describe("promoter proposal transaction core", () => {
             proposedPromoterPassportId: "promoter-b",
           },
         ],
+        findFirst: async () => {
+          lookup += 1
+          return { rankEntry: { rankAwardId: "award" } }
+        },
         findUnique: async () => {
           lookup += 1
-          if (lookup === 1) return { rankEntry: { rankAwardId: "award" } }
           return {
             id: "review",
             status: "PROPOSAL_PENDING",
@@ -209,6 +301,7 @@ describe("promoter proposal transaction core", () => {
             expectedPromoterName: null,
             proposedPromoterPassportId: "promoter-b",
             rankEntry: {
+              rank: { brand: Brand.BBL },
               rankAward: {
                 id: "award",
                 awardedByPassportId: null,

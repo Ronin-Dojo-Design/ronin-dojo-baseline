@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Keep belt-edit promoter feedback aligned with server transition law
+ * @wired   components/web/belt/belt-edit-form.tsx, components/web/belt/belt-journey-grid.tsx
+ */
 export type PromoterFeedbackIntent = "none" | "verify" | "proposal" | "unverified" | "recruit"
 
 /**

@@ -1,21 +1,41 @@
-const ALLOWED_SEED_DATABASES = new Set(["ronindojo_test", "ronindojo_e2e", "ronindojo_dev"])
+import {
+  CI_E2E_DATABASE_NAME,
+  LOCAL_E2E_DATABASE_NAME,
+  parseLocalPostgresTarget,
+  type DatabaseGuardOptions,
+} from "./e2e-db-env"
 
+const LOCAL_SEED_DATABASES = new Set([LOCAL_E2E_DATABASE_NAME, "ronindojo_dev"])
+
+/**
+ * The full Prisma seed is destructive by design. Preserve the documented local dev/e2e/scratch
+ * targets, but require a parsed loopback PostgreSQL authority. CI may additionally use its exact
+ * disposable test database.
+ */
 export function assertSafeSeedTarget(
   databaseUrl: string | undefined,
+  options: DatabaseGuardOptions = {},
 ): asserts databaseUrl is string {
-  if (!databaseUrl) throw new Error("Refusing to seed: DATABASE_URL is unset")
-
-  let dbName: string
+  let database: string
   try {
-    dbName = decodeURIComponent(new URL(databaseUrl).pathname.replace(/^\//, ""))
-  } catch {
-    throw new Error("Refusing to seed: DATABASE_URL is invalid")
+    database = parseLocalPostgresTarget(databaseUrl, "DATABASE_URL").database
+  } catch (error) {
+    throw new Error(`Refusing to seed: ${(error as Error).message}`)
   }
 
-  const isNamedScratch = /^ronindojo_[a-z0-9_-]*scratch[a-z0-9_-]*$/i.test(dbName)
-  if (!ALLOWED_SEED_DATABASES.has(dbName) && !isNamedScratch) {
+  const isCi = options.isCi ?? process.env.CI === "true"
+  const isNamedScratch = /^ronindojo_[a-z0-9_-]*scratch[a-z0-9_-]*$/i.test(database)
+  const isAllowed =
+    LOCAL_SEED_DATABASES.has(database) ||
+    isNamedScratch ||
+    (isCi && database === CI_E2E_DATABASE_NAME)
+
+  if (!isAllowed) {
+    const expected = isCi
+      ? `${LOCAL_E2E_DATABASE_NAME}, ronindojo_dev, ronindojo_*scratch*, or CI-only ${CI_E2E_DATABASE_NAME}`
+      : `${LOCAL_E2E_DATABASE_NAME}, ronindojo_dev, or ronindojo_*scratch*`
     throw new Error(
-      `Refusing to seed protected database "${dbName}". Use ronindojo_test, ronindojo_e2e, ronindojo_dev, or a named ronindojo_*scratch* database.`,
+      `Refusing to seed protected database "${database}". Expected exact local ${expected}.`,
     )
   }
 }

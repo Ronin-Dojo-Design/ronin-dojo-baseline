@@ -1,12 +1,18 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Provide the fixed open promoter-review queue and detail projection for BBL stewards
+ * @wired   app/app/belt-reviews/page.tsx, app/app/belt-reviews/[reviewId]/page.tsx
+ */
 import "server-only"
 
 import {
+  Brand,
   type Prisma,
   RankAwardVerificationStatus,
   RankEntryReviewReason,
-  RankEntryReviewStatus,
 } from "~/.generated/prisma/client"
-import { clampListPageParams, runAdminListTransaction } from "~/server/admin/list-query"
+import { OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
+import { clampListPageParams, runAdminListParallel } from "~/server/admin/list-query"
 import type { RankReviewsTableSchema } from "~/server/admin/rank-reviews/schema"
 import { db } from "~/services/db"
 
@@ -135,17 +141,16 @@ const promoterReviewDetailSelect = {
   },
 } satisfies Prisma.RankEntryReviewSelect
 
-export type PromoterReviewDetail = Prisma.RankEntryReviewGetPayload<{
-  select: typeof promoterReviewDetailSelect
-}>
-
 // Captured proposals use a proposal-only status as a rolling-writer barrier: the previous release
 // only actions `PENDING`, so it cannot decide them without applying B. Legacy payload-less PENDING
 // rows stay visible here for operator inventory but the detail/action core fails them closed.
 const OPEN_PROMOTER_CHANGED: Prisma.RankEntryReviewWhereInput = {
-  status: { in: [RankEntryReviewStatus.PENDING, RankEntryReviewStatus.PROPOSAL_PENDING] },
+  status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] },
   reason: RankEntryReviewReason.PROMOTER_CHANGED,
+  rankEntry: { rank: { brand: Brand.BBL } },
 }
+
+const MAX_REVIEW_PAGE_SIZE = 50
 
 // Only `createdAt` is a real scalar to order by; the member / belt / promoter cells are
 // resolved off relations and have no column to sort on. Anything else falls back to oldest-first.
@@ -158,9 +163,11 @@ const resolveOrderBy = (
 }
 
 export async function findPendingPromoterReviews(search: RankReviewsTableSchema) {
-  const { page, perPage } = clampListPageParams(search.page, search.perPage)
+  const clamped = clampListPageParams(search.page, search.perPage)
+  const page = clamped.page
+  const perPage = Math.min(clamped.perPage, MAX_REVIEW_PAGE_SIZE)
 
-  return runAdminListTransaction({
+  return runAdminListParallel({
     perPage,
     findMany: () =>
       db.rankEntryReview.findMany({
@@ -180,7 +187,11 @@ export async function findPendingPromoterReviews(search: RankReviewsTableSchema)
  */
 export function findPromoterReviewById(reviewId: string) {
   return db.rankEntryReview.findFirst({
-    where: { id: reviewId, reason: RankEntryReviewReason.PROMOTER_CHANGED },
+    where: {
+      id: reviewId,
+      reason: RankEntryReviewReason.PROMOTER_CHANGED,
+      rankEntry: { rank: { brand: Brand.BBL } },
+    },
     select: promoterReviewDetailSelect,
   })
 }

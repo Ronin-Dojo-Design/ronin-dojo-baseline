@@ -1,7 +1,6 @@
 import "dotenv/config"
 
 import { writeFileSync } from "node:fs"
-import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 import { db } from "~/services/db"
 
 /**
@@ -93,6 +92,9 @@ async function main() {
           displayName: true,
           userId: true,
           rankAwardsEarned: { select: { id: true } },
+          rankAwardsPromoted: { select: { id: true } },
+          expectedPromoterReviews: { select: { id: true } },
+          proposedPromoterReviews: { select: { id: true } },
           affiliations: { select: { id: true } },
           directoryProfile: { select: { id: true, slug: true } },
         },
@@ -134,6 +136,18 @@ async function main() {
       throw new Error(
         `GUARD: dup passport has ${dup.passport.rankAwardsEarned.length} rank award(s) — not a bare duplicate; review before delete`,
       )
+    if (dup.passport && dup.passport.rankAwardsPromoted.length > 0)
+      throw new Error(
+        `GUARD: dup passport promotes ${dup.passport.rankAwardsPromoted.length} rank award(s) — recovery artifact cannot restore those edges; aborting`,
+      )
+    if (dup.passport && dup.passport.expectedPromoterReviews.length > 0)
+      throw new Error(
+        `GUARD: dup passport is the expected promoter in ${dup.passport.expectedPromoterReviews.length} review(s) — recovery artifact cannot restore those edges; aborting`,
+      )
+    if (dup.passport && dup.passport.proposedPromoterReviews.length > 0)
+      throw new Error(
+        `GUARD: dup passport is the proposed promoter in ${dup.passport.proposedPromoterReviews.length} review(s) — recovery artifact cannot restore those edges; aborting`,
+      )
 
     console.log(
       `\nFIX 2 (Renato dup): DELETE duplicate "${dup.slug}" (passport "${dup.passport?.displayName}")`,
@@ -169,8 +183,6 @@ async function main() {
       })
     }
     if (dup) {
-      if (!keeper.passport) throw new Error("GUARD: Renato keeper has no Passport — aborting")
-      await repointPromoterIdentityForMerge(tx, RENATO_DUP_PASSPORT_ID, keeper.passport.id)
       // Passport delete cascades node + members + edges + directoryProfile (all onDelete: Cascade).
       await tx.passport.delete({ where: { id: RENATO_DUP_PASSPORT_ID } })
     }

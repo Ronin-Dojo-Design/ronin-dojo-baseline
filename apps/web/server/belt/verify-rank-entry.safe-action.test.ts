@@ -1,6 +1,6 @@
 /**
- * SESSION_0523 A3 — `verifyRankEntry` integration coverage (the ONLY reachable path
- * that flips a self-submit belt UNVERIFIED → VERIFIED).
+ * SESSION_0523 A3 — `verifyRankEntry` integration coverage for the standalone path
+ * that flips an unreviewed self-submit belt UNVERIFIED → VERIFIED.
  *
  * `verifyRankEntry` is a next-safe-action `adminActionClient` that opens its OWN
  * `db.$transaction`, so it is invoked end-to-end through the wrapped export with the
@@ -16,6 +16,8 @@
  *   - idempotent re-verify of an already-VERIFIED entry is a no-op end-state;
  *   - an IMPORTED-backed award keeps its IMPORTED provenance while its entry stays VERIFIED
  *     (the code only promotes non-IMPORTED / non-VERIFIED awards).
+ *   - an open promoter-change review rejects standalone verification without mutating the review,
+ *     award, entry, or audit history.
  *
  * `verifyRankEntry` sends no email, so no notify seam is stubbed.
  *
@@ -61,6 +63,11 @@ type Fixture = {
   rejectEntryId: string // UNVERIFIED → the authz-rejection target (stays UNVERIFIED)
   importedAwardId: string
   importedEntryId: string // derived VERIFIED off an IMPORTED award
+  openReviewAwardId: string
+  openReviewEntryId: string
+  openReviewId: string
+  promoterUserIds: string[]
+  promoterPassportIds: string[]
 }
 
 let fx: Fixture | null = null
@@ -70,9 +77,16 @@ async function makeAwardWithEntry(
   passportId: string,
   rankId: string,
   verificationStatus: "UNVERIFIED" | "IMPORTED",
+  awardedByPassportId?: string,
 ): Promise<{ awardId: string; entryId: string }> {
   const award = await db.rankAward.create({
-    data: { passportId, rankId, source: "STATED", verificationStatus },
+    data: {
+      passportId,
+      rankId,
+      source: "STATED",
+      verificationStatus,
+      ...(awardedByPassportId ? { awardedByPassportId } : {}),
+    },
     select: { id: true },
   })
   await syncRankEntryFromAward(db, award.id)
@@ -101,14 +115,54 @@ beforeAll(async () => {
     data: { displayName: tag("member-pp"), userId: memberUser.id },
     select: { id: true },
   })
+  const acceptedPromoterUser = await db.user.create({
+    data: {
+      name: tag("accepted-promoter"),
+      email: `${tag("accepted-promoter")}@test.local`,
+    },
+    select: { id: true },
+  })
+  const proposedPromoterUser = await db.user.create({
+    data: {
+      name: tag("proposed-promoter"),
+      email: `${tag("proposed-promoter")}@test.local`,
+    },
+    select: { id: true },
+  })
+  const acceptedPromoter = await db.passport.create({
+    data: { displayName: tag("accepted-promoter"), userId: acceptedPromoterUser.id },
+    select: { id: true },
+  })
+  const proposedPromoter = await db.passport.create({
+    data: { displayName: tag("proposed-promoter"), userId: proposedPromoterUser.id },
+    select: { id: true },
+  })
 
   const whiteRankId = await bjjRankId("White Belt")
   const blueRankId = await bjjRankId("Blue Belt")
   const purpleRankId = await bjjRankId("Purple Belt")
+  const brownRankId = await bjjRankId("Brown Belt")
 
   const verify = await makeAwardWithEntry(memberPassport.id, whiteRankId, "UNVERIFIED")
   const reject = await makeAwardWithEntry(memberPassport.id, purpleRankId, "UNVERIFIED")
   const imported = await makeAwardWithEntry(memberPassport.id, blueRankId, "IMPORTED")
+  const openReviewTarget = await makeAwardWithEntry(
+    memberPassport.id,
+    brownRankId,
+    "UNVERIFIED",
+    acceptedPromoter.id,
+  )
+  const openReview = await db.rankEntryReview.create({
+    data: {
+      rankEntryId: openReviewTarget.entryId,
+      status: "PROPOSAL_PENDING",
+      reason: "PROMOTER_CHANGED",
+      proposalCapturedAt: new Date(),
+      expectedPromoterPassportId: acceptedPromoter.id,
+      proposedPromoterPassportId: proposedPromoter.id,
+    },
+    select: { id: true },
+  })
 
   fx = {
     adminUserId: adminUser.id,
@@ -118,6 +172,11 @@ beforeAll(async () => {
     rejectEntryId: reject.entryId,
     importedAwardId: imported.awardId,
     importedEntryId: imported.entryId,
+    openReviewAwardId: openReviewTarget.awardId,
+    openReviewEntryId: openReviewTarget.entryId,
+    openReviewId: openReview.id,
+    promoterUserIds: [acceptedPromoterUser.id, proposedPromoterUser.id],
+    promoterPassportIds: [acceptedPromoter.id, proposedPromoter.id],
   }
 })
 
@@ -126,11 +185,15 @@ afterAll(async () => {
   await db.auditLog.deleteMany({ where: { userId: fx.adminUserId } })
   // RankEntry cascades off both RankAward and Passport; delete awards then passport.
   await db.rankAward.deleteMany({ where: { passportId: fx.memberPassportId } })
-  await db.passport.deleteMany({ where: { id: fx.memberPassportId } })
-  await db.user.deleteMany({ where: { id: { in: [fx.adminUserId, fx.memberUserId] } } })
+  await db.passport.deleteMany({
+    where: { id: { in: [fx.memberPassportId, ...fx.promoterPassportIds] } },
+  })
+  await db.user.deleteMany({
+    where: { id: { in: [fx.adminUserId, fx.memberUserId, ...fx.promoterUserIds] } },
+  })
 })
 
-describe("verifyRankEntry — the only self-submit UNVERIFIED → VERIFIED path (A3)", () => {
+describe("verifyRankEntry — standalone self-submit UNVERIFIED → VERIFIED path (A3)", () => {
   it("returns serverError 'User not authenticated' when no session (entry untouched)", async () => {
     if (!fx) throw new Error("fixture not initialized")
     setTestSession(null)
@@ -229,5 +292,76 @@ describe("verifyRankEntry — the only self-submit UNVERIFIED → VERIFIED path 
       select: { status: true },
     })
     expect(entry.status).toBe("VERIFIED")
+  })
+
+  it("rejects an open promoter review without changing the review, award, entry, or audit", async () => {
+    if (!fx) throw new Error("fixture not initialized")
+    setTestSession({ id: fx.adminUserId, role: "admin" })
+
+    const reviewBefore = await db.rankEntryReview.findUniqueOrThrow({
+      where: { id: fx.openReviewId },
+      select: {
+        status: true,
+        expectedPromoterPassportId: true,
+        proposedPromoterPassportId: true,
+        updatedAt: true,
+      },
+    })
+    const entryBefore = await db.rankEntry.findUniqueOrThrow({
+      where: { id: fx.openReviewEntryId },
+      select: { status: true },
+    })
+    const awardBefore = await db.rankAward.findUniqueOrThrow({
+      where: { id: fx.openReviewAwardId },
+      select: { verificationStatus: true, awardedByPassportId: true },
+    })
+    const auditCountBefore = await db.auditLog.count({
+      where: {
+        action: "belt.entry.verified",
+        entityType: "RankEntry",
+        entityId: fx.openReviewEntryId,
+        userId: fx.adminUserId,
+      },
+    })
+
+    const result = await verifyRankEntry({ rankEntryId: fx.openReviewEntryId })
+
+    expect(result?.serverError).toBe(
+      "Resolve the open promoter-change review before verifying this rank.",
+    )
+    expect(result?.data).toBeUndefined()
+    expect(
+      await db.rankEntryReview.findUniqueOrThrow({
+        where: { id: fx.openReviewId },
+        select: {
+          status: true,
+          expectedPromoterPassportId: true,
+          proposedPromoterPassportId: true,
+          updatedAt: true,
+        },
+      }),
+    ).toEqual(reviewBefore)
+    expect(
+      await db.rankEntry.findUniqueOrThrow({
+        where: { id: fx.openReviewEntryId },
+        select: { status: true },
+      }),
+    ).toEqual(entryBefore)
+    expect(
+      await db.rankAward.findUniqueOrThrow({
+        where: { id: fx.openReviewAwardId },
+        select: { verificationStatus: true, awardedByPassportId: true },
+      }),
+    ).toEqual(awardBefore)
+    expect(
+      await db.auditLog.count({
+        where: {
+          action: "belt.entry.verified",
+          entityType: "RankEntry",
+          entityId: fx.openReviewEntryId,
+          userId: fx.adminUserId,
+        },
+      }),
+    ).toBe(auditCountBefore)
   })
 })

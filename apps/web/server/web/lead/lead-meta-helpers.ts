@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Remove duplicated Lead.meta coercion from school and promoter outreach flows
+ * @wired   server/web/lead/emit-school-lead.ts, server/web/lead/emit-promoter-lead.ts
+ */
 import type { Prisma } from "~/.generated/prisma/client"
 
 /**

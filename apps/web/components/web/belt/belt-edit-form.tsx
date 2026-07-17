@@ -398,6 +398,7 @@ export function BeltEditForm({
                     options={sortedPromoterOptions}
                     value={promoter}
                     onValueChange={setPromoter}
+                    clearable={false}
                     placeholder="Select or type your promoter..."
                     searchPlaceholder="Search instructors, or type a name..."
                     renderCreateLabel={text => (

@@ -1,5 +1,7 @@
 import "server-only"
 
+import { OPEN_RANK_ENTRY_REVIEW_STATUSES } from "~/lib/belt/review-state"
+
 import { Brand } from "~/.generated/prisma/client"
 import type { CreatableOption } from "~/components/common/creatable-combobox"
 import type { BeltRankViewModel } from "~/components/web/belt/belt-view-model"
@@ -127,7 +129,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
         // PENDING rows remain open during rollout; captured proposals use PROPOSAL_PENDING so the
         // previous release cannot decide them without applying B.
         reviews: {
-          where: { status: { in: ["PENDING", "PROPOSAL_PENDING"] } },
+          where: { status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] } },
           select: { id: true },
           take: 1,
         },

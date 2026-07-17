@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0541 (2026-07-15)
+ * @why     Require an explicit confirmation before a steward approves or denies a promoter proposal
+ * @wired   app/app/belt-reviews/[reviewId]/page.tsx
+ */
 "use client"
 
 import { CheckIcon, XIcon } from "lucide-react"
