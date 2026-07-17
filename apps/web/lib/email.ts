@@ -92,6 +92,11 @@ export const getBrandSenderAddress = (brand?: Brand, senderEmail = getBrandSende
   return `${getBrandSenderName(brand)} <${senderEmail}>`
 }
 
+const isMockedResendSend = () => {
+  const send = resend?.emails?.send as unknown
+  return typeof send === "function" && "mock" in send
+}
+
 /**
  * Prepares an email for sending by adding defaults
  * @param email - The email to prepare
@@ -123,6 +128,11 @@ export const sendEmail = async (email: EmailParams): Promise<CreateEmailResponse
     if (isProd) {
       throw new Error("RESEND_API_KEY is not configured — cannot send email in production.")
     }
+    return undefined
+  }
+
+  if (env.NODE_ENV === "test" && !isMockedResendSend()) {
+    console.log("[email:test:no-send]", email.to, email.subject)
     return undefined
   }
 

@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-17
-last_agent: codex-session-0548
+last_agent: codex-session-0551
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -223,12 +223,17 @@ aggregator reads it with no new parser logic.
 
 ### G-012 — Count-neutral DB-backed verification (fixture-ownership module)
 
-- **Status:** open · P2
+- **Status:** landed · P2 · SESSION_0551
 - **Objective:** extract the repeated fixture-ownership pattern across 71 DB-backed tests into one reusable
   module — rollback adapter, tagged-cleanup adapter, run-identity, FK-safe teardown order, and count-neutral
   proof. The current state has 6 identical `inRolledBackTx` rollback implementations copied across test
   files; 36 tests use ad-hoc tag/prefix deletion; and SESSION_0542's D-047 leak proved that green assertions
   alone do not prove fixture ownership.
+- **Landed:** `apps/web/lib/test/fixture-ownership.ts` provides the shared rollback adapter, run identity,
+  FK-safe exact/tagged cleanup, and count-neutral proof helper. SESSION_0551 migrated all 6 copied rollback
+  call-sites plus the directory paywall and authenticated lineage e2e seed helpers; remaining ad-hoc cleanup
+  migrations should follow [`test-fixture-ownership.md`](../../runbooks/sops/test-fixture-ownership.md) in
+  small batches.
 - **Lane:** test infrastructure / developer experience. **Independent of FI-001 / G-001 sequencing** — can
   land in any focused infrastructure session.
 - **Enables:** safer DB-backed test authoring across the repo, closes the class of teardown leaks that
