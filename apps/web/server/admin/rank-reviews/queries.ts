@@ -6,7 +6,6 @@
 import "server-only"
 
 import {
-  Brand,
   type Prisma,
   RankAwardVerificationStatus,
   RankEntryReviewReason,
@@ -144,10 +143,12 @@ const promoterReviewDetailSelect = {
 // Captured proposals use a proposal-only status as a rolling-writer barrier: the previous release
 // only actions `PENDING`, so it cannot decide them without applying B. Legacy payload-less PENDING
 // rows stay visible here for operator inventory but the detail/action core fails them closed.
+// Scoped by the belt.admin permission gate + the PROMOTER_CHANGED reason, NOT by rank brand:
+// BBL ranks are brand-agnostic (`Rank.brand` is nullable; live BJJ ranks are null, not BBL), so a
+// `rank: { brand: BBL }` filter would hide every real review.
 const OPEN_PROMOTER_CHANGED: Prisma.RankEntryReviewWhereInput = {
   status: { in: [...OPEN_RANK_ENTRY_REVIEW_STATUSES] },
   reason: RankEntryReviewReason.PROMOTER_CHANGED,
-  rankEntry: { rank: { brand: Brand.BBL } },
 }
 
 const MAX_REVIEW_PAGE_SIZE = 50
@@ -190,7 +191,6 @@ export function findPromoterReviewById(reviewId: string) {
     where: {
       id: reviewId,
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
-      rankEntry: { rank: { brand: Brand.BBL } },
     },
     select: promoterReviewDetailSelect,
   })

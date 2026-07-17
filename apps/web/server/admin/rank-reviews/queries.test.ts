@@ -1,6 +1,6 @@
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dependency.
 import { beforeEach, describe, expect, it, mock } from "bun:test"
-import { Brand } from "~/.generated/prisma/client"
+import { RankEntryReviewReason } from "~/.generated/prisma/client"
 
 mock.module("server-only", () => ({}))
 
@@ -37,25 +37,28 @@ beforeEach(() => {
   findFirstCalls.length = 0
 })
 
-describe("belt-review query brand boundary", () => {
-  it("pins both queue reads to BBL and caps a crafted page size", async () => {
+describe("belt-review query scope + page cap", () => {
+  // Scope is reason (PROMOTER_CHANGED) + open status, NOT rank brand: BBL ranks are brand-agnostic
+  // (`Rank.brand` nullable; live BJJ ranks are null), so a `rank: { brand: BBL }` filter hid every
+  // real review. Authorization is enforced by the belt.admin permission gate on the action, not here.
+  it("scopes both queue reads to open PROMOTER_CHANGED proposals and caps a crafted page size", async () => {
     await findPendingPromoterReviews({ page: 1, perPage: 500, sort: [] })
 
-    const expectedBrandScope = { rankEntry: { rank: { brand: Brand.BBL } } }
+    const expectedScope = { reason: RankEntryReviewReason.PROMOTER_CHANGED }
     expect(findManyCalls).toHaveLength(1)
-    expect(findManyCalls[0]?.where).toMatchObject(expectedBrandScope)
+    expect(findManyCalls[0]?.where).toMatchObject(expectedScope)
     expect(findManyCalls[0]?.take).toBe(50)
     expect(countCalls).toHaveLength(1)
-    expect(countCalls[0]?.where).toMatchObject(expectedBrandScope)
+    expect(countCalls[0]?.where).toMatchObject(expectedScope)
   })
 
-  it("pins guessed-id detail reads to BBL", async () => {
+  it("scopes guessed-id detail reads to a PROMOTER_CHANGED proposal", async () => {
     await findPromoterReviewById("aaaaaaaaaaaaaaaaaaaaaaaa")
 
     expect(findFirstCalls).toHaveLength(1)
     expect(findFirstCalls[0]?.where).toMatchObject({
       id: "aaaaaaaaaaaaaaaaaaaaaaaa",
-      rankEntry: { rank: { brand: Brand.BBL } },
+      reason: RankEntryReviewReason.PROMOTER_CHANGED,
     })
   })
 })

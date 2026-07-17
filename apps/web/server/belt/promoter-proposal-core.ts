@@ -449,9 +449,12 @@ export async function applyMemberPromoterTransition({
 }
 
 /** Load a captured proposal under the canonical Passport→Award→Review lock order. */
-async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: string, brand: Brand) {
+// Reviews are scoped by the belt.admin permission gate and the PROMOTER_CHANGED reason, NOT by
+// rank brand: BBL ranks are brand-agnostic (`Rank.brand` is nullable and the live BJJ ranks are
+// null, not BBL), so a `rank: { brand }` filter would reject every real review as "not found".
+async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: string) {
   const identity = await tx.rankEntryReview.findFirst({
-    where: { id: reviewId, rankEntry: { rank: { brand } } },
+    where: { id: reviewId },
     select: { rankEntry: { select: { rankAwardId: true } } },
   })
   if (!identity) throw new Error("Review not found.")
@@ -468,7 +471,6 @@ async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: strin
       ...CAPTURED_REVIEW_SELECT,
       rankEntry: {
         select: {
-          rank: { select: { brand: true } },
           rankAward: {
             select: { id: true, awardedByPassportId: true, notes: true },
           },
@@ -477,7 +479,6 @@ async function loadCapturedPendingReview(tx: PromoterProposalTx, reviewId: strin
     },
   })
   if (!review) throw new Error("Review not found.")
-  if (review.rankEntry.rank.brand !== brand) throw new Error("Review not found.")
   if (review.status !== RankEntryReviewStatus.PROPOSAL_PENDING) {
     throw new Error("This review has already been decided.")
   }
@@ -499,7 +500,7 @@ export async function approveCapturedPromoterReview(
   reviewId: string,
   { brand, userId }: { brand: Brand; userId: string },
 ) {
-  const review = await loadCapturedPendingReview(tx, reviewId, brand)
+  const review = await loadCapturedPendingReview(tx, reviewId)
   const active = review.rankEntry.rankAward
   if (
     active.awardedByPassportId !== review.expectedPromoterPassportId ||
@@ -513,7 +514,6 @@ export async function approveCapturedPromoterReview(
       id: review.id,
       status: RankEntryReviewStatus.PROPOSAL_PENDING,
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
-      rankEntry: { rank: { brand } },
     },
     data: { status: RankEntryReviewStatus.APPROVED },
   })
@@ -568,13 +568,12 @@ export async function denyCapturedPromoterReview(
   reviewId: string,
   { brand, userId }: { brand: Brand; userId: string },
 ) {
-  const review = await loadCapturedPendingReview(tx, reviewId, brand)
+  const review = await loadCapturedPendingReview(tx, reviewId)
   const claimed = await tx.rankEntryReview.updateMany({
     where: {
       id: review.id,
       status: RankEntryReviewStatus.PROPOSAL_PENDING,
       reason: RankEntryReviewReason.PROMOTER_CHANGED,
-      rankEntry: { rank: { brand } },
     },
     data: { status: RankEntryReviewStatus.DENIED },
   })
