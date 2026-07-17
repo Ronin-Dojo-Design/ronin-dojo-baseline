@@ -23,17 +23,21 @@
  */
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 
 // IMPORTANT: install safe-action mocks BEFORE any module that touches `~/server`,
 // `~/lib/auth`, `next/headers`, or `next/cache` is imported.
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
 installSafeActionMocks({ brand: "BBL" })
+// The production core is correctly marked `server-only`; Bun's test resolver does not
+// install that marker package, so stub it before dynamically importing the action.
+mock.module("server-only", () => ({}))
 
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
-import { verifyRankEntry } from "~/server/belt/verify-rank-entry"
 import { db } from "~/services/db"
+
+const { verifyRankEntry } = await import("~/server/belt/verify-rank-entry")
 
 const TS = Date.now()
 const PREFIX = `verify-rank-entry-${TS}`

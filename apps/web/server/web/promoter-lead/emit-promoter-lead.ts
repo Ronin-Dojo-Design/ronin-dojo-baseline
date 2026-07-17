@@ -148,6 +148,7 @@ async function findMatchedOpenLead(
     fuzzyMatchSchool(
       promoterName,
       openLeads.map(lead => ({ name: promoterLeadName(lead), lead })),
+      1, // exact-normalized — matches promoter-placeholder.ts so lead count ↔ placeholder count stay coherent
     )?.lead ?? null
   )
 }

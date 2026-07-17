@@ -78,3 +78,27 @@ it("dedups the same coach into one demand-counted lead (idempotent) and keeps th
 it("returns null for a blank promoter name (nothing to capture)", async () => {
   expect(await emitPromoterLead({ promoterName: "   ", source: "belt-journey" })).toBeNull()
 })
+
+it("near-miss names ('John'/'Jon') each create a SEPARATE lead — exact-normalized dedup matches placeholder", async () => {
+  const johnName = tag("John Smith coherence")
+  const jonName = tag("Jon Smith coherence")
+
+  const johnResult = await emitPromoterLead({
+    promoterName: johnName,
+    source: "belt-journey",
+    passportId: "pp-john-smith",
+  })
+  const jonResult = await emitPromoterLead({
+    promoterName: jonName,
+    source: "belt-journey",
+    passportId: "pp-jon-smith",
+  })
+
+  // Two distinct leads — coherent with two distinct placeholders.
+  expect(johnResult?.leadId).not.toBe(jonResult?.leadId)
+  expect(jonResult?.createdLead).toBe(true)
+  expect(jonResult?.matchedBy).toBe("none")
+  // passportId is correct for each — not flip-flopped.
+  expect(johnResult?.passportId).toBe("pp-john-smith")
+  expect(jonResult?.passportId).toBe("pp-jon-smith")
+})

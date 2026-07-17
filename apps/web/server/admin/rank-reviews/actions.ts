@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { RankEntryReviewStatus } from "~/.generated/prisma/client"
 import { adminActionClient } from "~/lib/safe-actions"
-import { verifyRankEntryInTransaction } from "~/server/belt/verify-rank-entry"
+import { verifyRankEntryInTransaction } from "~/server/belt/verify-rank-entry-core"
 import type { db } from "~/services/db"
 
 const reviewIdSchema = z.object({ reviewId: z.string().min(1) })
