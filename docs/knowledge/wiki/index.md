@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-16
 author: Brian + Copilot
-last_agent: codex-session-0542
+last_agent: codex-session-0543
 ---
 
 # LLM Wiki Index
@@ -695,6 +695,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0540](../../sprints/SESSION_0540.md) | session--open | closed — **Belt verification/backfill model and recruited-coach capture foundation.** PR #209 merged; SESSION_0542 repaired stale close metadata. |
 | [SESSION_0541](../../sprints/SESSION_0541.md) | session--implement | closed — **Five-commit belt-lane hardening follow-up.** Transaction-folded placeholder/Lead capture, ADR 0047, strict-normalized placeholder policy, rich join picker, and G-010 queue landed; verify wave was interrupted and its medium findings move to 0542. |
 | [SESSION_0542](../../sprints/SESSION_0542.md) | session--implement | closed — **Belt-review integrity, inspect-before-decide UX, and local DB command safety.** Atomic captured proposals, rollout-safe review state, strict coach identity, guarded E2E/prodsnap roles, full gates, and mobile/browser proof; local push held for explicit authorization. |
+| [SESSION_0543](../../sprints/SESSION_0543.md) | session--open | in progress — **PR #210 merge-readiness and architecture routing.** Review/fix, hostile residual, fallow, and code-quality gates precede an operator-selected Goals Ledger route. |
 
 ## Protocols
 

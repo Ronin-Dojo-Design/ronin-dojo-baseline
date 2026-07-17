@@ -5,13 +5,14 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-07-16
-last_agent: codex-session-0542
+last_agent: codex-session-0543
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0542.md
+  - docs/sprints/SESSION_0543.md
 ---
 
 # Drift Register
@@ -677,9 +678,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Current leak closed:** three repeatable teardown gaps were corrected in
   `claim-review-actions.test.ts`, `editor-actions.test.ts`, and `queries.integration.test.ts`. Their 39 focused
   tests passed and held the inventory exactly at 34/18/134 with zero `RankEntryReview` rows before and after.
+- **SESSION_0543 update:** one overloaded, aborted prodsnap verification attempt ran alongside reviewer workloads
+  and left the local mirror at 41 Users, 22 Organizations, 138 Passports, and zero `RankEntryReview` rows: a
+  +7/+4/+4 delta from the verified SESSION_0542 baseline. Read-only inventory attributes the new rows to interrupted
+  onboarding fixtures (`1784228078417`, `1784228265795`), `session-0097-checkout-1784228042288`, and
+  `s0440-rvcs-1784228106630`. The onboarding discriminator bug that made interrupted runs collide was fixed, but
+  that does not authorize deleting this existing residue.
 - **Residual risk:** historical fixture rows reduce the restored mirror's fidelity and may distort future
   integration queries, but deleting by a name prefix without dependency inventory could remove data that a later
   test or local investigation still references.
 - **Fix direction:** create a read-only dependency inventory and reviewed backup-first, prefix-scoped cleanup for
-  the confirmed fixture families; prove count and FK deltas on a scratch clone before applying it to prodsnap.
-- **Status: OPEN (local data hygiene, non-blocking for the SESSION_0542 application release).**
+  the confirmed fixture families; prove count and FK deltas on a scratch clone before applying it to prodsnap. Keep
+  cleanup separate from the proposed count-neutral verification goal: the goal prevents recurring residue, while
+  D-047 removes already-existing local data only through an explicitly authorized operation.
+- **Status: OPEN (local data hygiene, non-blocking for the PR #210 application release).** No cleanup was performed
+  in SESSION_0543.
