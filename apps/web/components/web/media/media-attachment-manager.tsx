@@ -1,42 +1,15 @@
 "use client"
 
 import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core"
-import {
-  arrayMove,
-  rectSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import {
-  GripVerticalIcon,
   LinkIcon,
   LockKeyholeIcon,
   LockOpenIcon,
-  RotateCcwIcon,
-  SaveIcon,
   Trash2Icon,
   UploadIcon,
   UserRoundCheckIcon,
 } from "lucide-react"
 import { useAction } from "next-safe-action/hooks"
-import {
-  type ChangeEvent,
-  type CSSProperties,
-  Fragment,
-  type ReactNode,
-  useRef,
-  useState,
-} from "react"
+import { type ChangeEvent, Fragment, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
@@ -46,7 +19,12 @@ import { H6 } from "~/components/common/heading"
 import { Hint } from "~/components/common/hint"
 import { Input } from "~/components/common/input"
 import { Stack } from "~/components/common/stack"
-import { cx } from "~/lib/utils"
+import {
+  MediaOrderControls,
+  SortableMediaGrid,
+  SortableMediaTile,
+  useSortableMediaOrder,
+} from "~/components/web/media/sortable-media-grid"
 import {
   attachWebMediaUrl,
   promotePassportAvatarMedia,
@@ -90,8 +68,22 @@ const attachmentIds = (attachments: DashboardMediaAttachment[]) =>
  * SESSION_0529 (Slice 3B) adds three default-off/default-on knobs for the member
  * authored-technique sheet — URL-paste video attach, dnd ordering, and hiding the
  * R2 uploader — all riding the same server pipeline (no parallel media seam).
+ *
+ * WL-P2-52: the Card chrome is now COMPOSITIONAL, not a knob (the Giddy split-trigger — a 4th
+ * boolean would have forced the manager split). `MediaAttachmentManager` = Card +
+ * `MediaAttachmentPanel`; a host that already provides chrome (the authored-create Drawer) renders
+ * the bare `MediaAttachmentPanel` instead of stacking a Card inside its sheet.
  */
-export function MediaAttachmentManager({
+export function MediaAttachmentManager(props: MediaAttachmentManagerProps) {
+  return (
+    <Card hover={false}>
+      <MediaAttachmentPanel {...props} />
+    </Card>
+  )
+}
+
+/** The manager's header + controls + grid WITHOUT the Card chrome (see the split note above). */
+export function MediaAttachmentPanel({
   target,
   initialAttachments,
   title = "Media",
@@ -239,35 +231,20 @@ export function MediaAttachmentManager({
     urlAttach.execute({ target, url })
   }
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
-  const currentIds = attachmentIds(attachments)
-  const hasOrderChanges =
-    sortable &&
-    savedIds.length === currentIds.length &&
-    savedIds.some((id, index) => currentIds[index] !== id)
+  // Shared ordering mechanics (WL-P2-49) — items/persistence stay here, the dnd seam is shared.
+  const {
+    currentIds,
+    hasOrderChanges: orderDiverged,
+    handleDragEnd,
+    resetOrder,
+  } = useSortableMediaOrder({
+    items: attachments,
+    setItems: setAttachments,
+    getId: attachment => attachment.attachmentId,
+    savedIds,
+  })
+  const hasOrderChanges = sortable && orderDiverged
   const isDragDisabled = reorder.isPending || attachments.length < 2
-
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return
-    setAttachments(items => {
-      const oldIndex = items.findIndex(({ attachmentId }) => attachmentId === String(active.id))
-      const newIndex = items.findIndex(({ attachmentId }) => attachmentId === String(over.id))
-      if (oldIndex === -1 || newIndex === -1) return items
-      return arrayMove(items, oldIndex, newIndex)
-    })
-  }
-
-  const handleResetOrder = () => {
-    setAttachments(current =>
-      savedIds
-        .map(id => current.find(item => item.attachmentId === id))
-        .filter((item): item is DashboardMediaAttachment => item != null),
-    )
-  }
 
   const tiles = attachments.map(attachment => {
     const card = (
@@ -292,20 +269,27 @@ export function MediaAttachmentManager({
     )
 
     return sortable ? (
-      <SortableAttachmentTile
+      <SortableMediaTile
         key={attachment.attachmentId}
         id={attachment.attachmentId}
         disabled={isDragDisabled}
+        className="relative"
+        draggingClassName="z-10 opacity-70"
+        grip={{
+          label: "Drag to reorder",
+          size: "xs",
+          className: "absolute bottom-1 right-1 cursor-grab touch-none",
+        }}
       >
         {card}
-      </SortableAttachmentTile>
+      </SortableMediaTile>
     ) : (
       <Fragment key={attachment.attachmentId}>{card}</Fragment>
     )
   })
 
   return (
-    <Card hover={false}>
+    <>
       <CardHeader direction="column" size="xs">
         <H6 render={props => <h2 {...props}>{props.children}</h2>}>{title}</H6>
         <CardDescription>{description}</CardDescription>
@@ -365,26 +349,11 @@ export function MediaAttachmentManager({
 
         {hasOrderChanges && (
           <Stack size="xs" wrap className="w-full items-center">
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              prefix={<RotateCcwIcon />}
-              disabled={reorder.isPending}
-              onClick={handleResetOrder}
-            >
-              Reset
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="primary"
-              prefix={<SaveIcon />}
+            <MediaOrderControls
               isPending={reorder.isPending}
-              onClick={() => reorder.execute({ target, attachmentIds: currentIds })}
-            >
-              Save order
-            </Button>
+              onReset={resetOrder}
+              onSave={() => reorder.execute({ target, attachmentIds: currentIds })}
+            />
           </Stack>
         )}
 
@@ -395,15 +364,13 @@ export function MediaAttachmentManager({
               : "No media yet. Uploaded images and video appear here."}
           </Hint>
         ) : sortable ? (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
+          <SortableMediaGrid
+            ids={currentIds}
             onDragEnd={handleDragEnd}
+            className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3"
           >
-            <SortableContext items={currentIds} strategy={rectSortingStrategy}>
-              <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">{tiles}</div>
-            </SortableContext>
-          </DndContext>
+            {tiles}
+          </SortableMediaGrid>
         ) : (
           <div className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">{tiles}</div>
         )}
@@ -418,49 +385,7 @@ export function MediaAttachmentManager({
           />
         )}
       </Stack>
-    </Card>
-  )
-}
-
-/**
- * Sortable wrapper for one attachment tile (SESSION_0529 Slice 3B) — the dnd-kit `useSortable`
- * wiring adapted from `content-media-panel.tsx` (reuse the ordering pattern, don't rebuild dnd).
- * The grip button carries the drag listeners so the card's own buttons stay tappable.
- */
-function SortableAttachmentTile({
-  id,
-  disabled,
-  children,
-}: {
-  id: string
-  disabled: boolean
-  children: ReactNode
-}) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id,
-    disabled,
-  })
-
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <div ref={setNodeRef} style={style} className={cx("relative", isDragging && "z-10 opacity-70")}>
-      {children}
-      <Button
-        type="button"
-        size="xs"
-        variant="secondary"
-        prefix={<GripVerticalIcon />}
-        aria-label="Drag to reorder"
-        disabled={disabled}
-        className="absolute bottom-1 right-1 cursor-grab touch-none"
-        {...attributes}
-        {...listeners}
-      />
-    </div>
+    </>
   )
 }
 

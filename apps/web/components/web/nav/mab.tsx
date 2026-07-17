@@ -239,6 +239,11 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
   // still mounted below when enabled so an open sheet survives a fan close.)
   if (!mounted || !enabled || actions.length === 0) return null
 
+  // Direct-fire for a one-action fan (WL-P2-52 P3): an Elite non-admin's single "Add a technique"
+  // shouldn't hide behind a fan-open detour — the FAB tap runs the action itself. `runAction`
+  // keeps the haptic + fan-close bookkeeping identical to a fanned tap.
+  const soleAction = actions.length === 1 ? actions[0] : null
+
   const { anchor } = CORNER_CONFIG[corner]
 
   return (
@@ -308,12 +313,12 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
               })}
           </AnimatePresence>
 
-          {/* The FAB itself — tap toggles the fan; drag repositions. */}
+          {/* The FAB itself — tap toggles the fan (or direct-fires a sole action); drag repositions. */}
           <motion.button
             type="button"
-            onClick={handleToggleFan}
-            aria-label={open ? t("mab_close") : t("mab_open")}
-            aria-expanded={open}
+            onClick={soleAction ? () => runAction(soleAction.onSelect) : handleToggleFan}
+            aria-label={soleAction ? t(soleAction.labelKey) : open ? t("mab_close") : t("mab_open")}
+            aria-expanded={soleAction ? undefined : open}
             whileTap={reduceMotion ? undefined : { scale: 0.92 }}
             className="relative flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"
           >

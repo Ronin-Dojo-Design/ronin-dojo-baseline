@@ -40,14 +40,25 @@ type TechniquesTableProps = {
    * so the button hides and the authored plus-card is their create path.
    */
   showOrgCreate?: boolean
+  /**
+   * Whether the viewer holds the authoring capability (the plus-card renders above this table) —
+   * steers the empty-state copy toward the action instead of reciting who is allowed (WL-P2-52:
+   * the old copy read as a denial to the very member it was inviting).
+   */
+  canCreate?: boolean
 }
 
-export function TechniquesTable({ techniques, showOrgCreate = false }: TechniquesTableProps) {
+export function TechniquesTable({
+  techniques,
+  showOrgCreate = false,
+  canCreate = false,
+}: TechniquesTableProps) {
   if (techniques.length === 0) {
     return (
       <Note>
-        No techniques yet. School owners/instructors and Elite members can add techniques to their
-        curriculum.
+        {canCreate
+          ? "No techniques yet. Use “Add technique” above to publish your first one to your profile curriculum."
+          : "No techniques yet. Techniques you author — or manage for your school — will show up here."}
       </Note>
     )
   }
@@ -56,9 +67,11 @@ export function TechniquesTable({ techniques, showOrgCreate = false }: Technique
     <Stack size="lg" direction="column">
       <Stack size="sm" direction="row" className="items-center justify-between">
         <H4>Techniques ({techniques.length})</H4>
+        {/* WL-P2-52: named destination — staff also see the authored plus-card, so the two create
+            affordances must say WHERE each one puts the technique (school library vs profile). */}
         {showOrgCreate && (
           <Button size="sm" variant="primary" render={<Link href="/app/techniques/new" />}>
-            Add Technique
+            Add school technique
           </Button>
         )}
       </Stack>

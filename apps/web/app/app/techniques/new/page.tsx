@@ -5,6 +5,7 @@ import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
 import { Brand } from "~/.generated/prisma/client"
 import { getPageMetadata } from "~/lib/pages"
+import { findActiveStaffMembership } from "~/server/web/techniques/permissions"
 import { getTechniqueFormOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
@@ -23,17 +24,9 @@ export default async function NewTechniquePage() {
   const session = await getServerSession()
   if (!session?.user) redirect("/auth/login?next=/app/techniques/new")
 
-  // Find org where user is an ACTIVE owner/instructor (SESSION_0529 review fix — a CANCELLED
-  // staff membership must not authorize; matches `hasOrgStaffRole` + the techniques-tab gate).
-  const membership = await db.membership.findFirst({
-    where: {
-      userId: session.user.id,
-      status: "ACTIVE",
-      roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      organization: { brand: Brand.BBL },
-    },
-    include: { organization: { select: { id: true } } },
-  })
+  // Find org where user is an ACTIVE owner/instructor — the ONE shared ACTIVE-staff predicate
+  // (WL-P2-49; a CANCELLED staff membership must not authorize, matching the techniques-tab gate).
+  const membership = await findActiveStaffMembership(db, session.user.id, { brand: Brand.BBL })
 
   if (!membership) notFound()
 
@@ -50,7 +43,7 @@ export default async function NewTechniquePage() {
       />
 
       <TechniqueForm
-        organizationId={membership.organization.id}
+        organizationId={membership.organizationId}
         disciplines={disciplines}
         belts={belts}
       />

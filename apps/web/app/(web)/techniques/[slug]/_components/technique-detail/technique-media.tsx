@@ -1,8 +1,7 @@
 import { LockKeyholeIcon } from "lucide-react"
-import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
-import { Link } from "~/components/common/link"
 import { Section } from "~/components/web/ui/section"
+import { UpgradePanel } from "~/components/web/ui/upgrade-panel"
 import { toVideoEmbedUrl } from "~/lib/video-embed"
 import type {
   GatedTechniqueTile,
@@ -91,31 +90,21 @@ function TechniqueMediaLockTile({ media }: { media: GatedTechniqueTile["media"] 
   )
 }
 
-/** The centered upgrade CTA — shown when EVERY clip is locked (behavior-preserving fully-premium case). */
+/**
+ * The centered upgrade CTA — shown when EVERY clip is locked (behavior-preserving fully-premium
+ * case). Renders the shared `UpgradePanel` primitive (WL-P2-63) — strings only; the locked tiles'
+ * urls/posters were already stripped server-side by `gateTechniqueMedia` and never reach here.
+ */
 function TechniqueMediaUpgradePanel() {
   return (
     <Section>
       <H4>Media</H4>
-      <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed bg-muted/30 px-6 py-12 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-background text-muted-foreground">
-          <LockKeyholeIcon className="size-7" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <p className="font-medium text-foreground">Premium technique</p>
-          <p className="max-w-md text-sm text-muted-foreground">
-            This lesson is part of the Black Belt Legacy premium curriculum. Upgrade to unlock the
-            full video.
-          </p>
-        </div>
-        <Button
-          variant="primary"
-          size="md"
-          prefix={<LockKeyholeIcon />}
-          render={<Link href="/lineage/join" />}
-        >
-          Unlock with Premium
-        </Button>
-      </div>
+      <UpgradePanel
+        heading="Premium technique"
+        description="This lesson is part of the Black Belt Legacy premium curriculum. Upgrade to unlock the full video."
+        ctaLabel="Unlock with Premium"
+        href="/lineage/join"
+      />
     </Section>
   )
 }

@@ -5,7 +5,10 @@ import { Stack } from "~/components/common/stack"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { findUserTechniques } from "~/server/web/dashboard/queries"
-import { canCreateTechniqueForUser } from "~/server/web/techniques/permissions"
+import {
+  canCreateTechniqueForUser,
+  findActiveStaffMembership,
+} from "~/server/web/techniques/permissions"
 import { getTechniqueFormOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
@@ -27,17 +30,9 @@ export async function DashboardTechniquesTab() {
     }),
     // Whether the org-canonical editor (`/app/techniques/new`) is reachable — the same
     // OWNER/INSTRUCTOR gate that page enforces, so the table never links a guaranteed 404
-    // to an Elite (non-staff) author. ACTIVE-only (SESSION_0529 review fix): a CANCELLED staff
-    // membership must not authorize, matching `hasOrgStaffRole`/`canCreateTechniqueForUser`.
-    db.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        status: "ACTIVE",
-        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-        organization: { brand: Brand.BBL },
-      },
-      select: { id: true },
-    }),
+    // to an Elite (non-staff) author. The ONE shared ACTIVE-staff predicate (WL-P2-49): a
+    // CANCELLED staff membership must not authorize, matching `canCreateTechniqueForUser`.
+    findActiveStaffMembership(db, session.user.id, { brand: Brand.BBL }),
   ])
 
   const formOptions = canCreate ? await getTechniqueFormOptions() : null
@@ -62,7 +57,7 @@ export async function DashboardTechniquesTab() {
       {canCreate && formOptions && (
         <AuthoredTechniqueCreate disciplines={formOptions.disciplines} belts={formOptions.belts} />
       )}
-      <TechniquesTable techniques={rows} showOrgCreate={Boolean(orgStaff)} />
+      <TechniquesTable techniques={rows} showOrgCreate={Boolean(orgStaff)} canCreate={canCreate} />
     </Stack>
   )
 }

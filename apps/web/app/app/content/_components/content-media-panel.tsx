@@ -1,32 +1,21 @@
 "use client"
 
-import {
-  closestCenter,
-  DndContext,
-  type DragEndEvent,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core"
-import {
-  arrayMove,
-  rectSortingStrategy,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { GripVerticalIcon, RotateCcwIcon, SaveIcon, Trash2Icon, UploadIcon } from "lucide-react"
+import { Trash2Icon, UploadIcon } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useAction } from "next-safe-action/hooks"
-import { type ChangeEvent, type CSSProperties, useEffect, useRef, useState } from "react"
+import { type ChangeEvent, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
+import {
+  MediaOrderControls,
+  SortableMediaGrid,
+  SortableMediaTile,
+  useSortableMediaOrder,
+} from "~/components/web/media/sortable-media-grid"
 import {
   attachMediaToAtom,
   removeMediaAttachment,
@@ -56,22 +45,22 @@ function SortableMediaAttachmentCard({
   isDragDisabled,
   onRemove,
 }: SortableMediaAttachmentCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: attachment.id,
-    disabled: isDragDisabled,
-  })
-
-  const style: CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
   return (
-    <li
-      ref={setNodeRef}
-      style={style}
-      className={isDragging ? "list-none opacity-70" : "list-none"}
+    // The shared tile (WL-P2-49) renders the grip as the li's last child, so the `group`
+    // hover-reveal moves from the Card to the li (same hover surface — the li wraps the Card
+    // exactly; the grip keeps its shipped top-left placement).
+    <SortableMediaTile
+      as="li"
+      id={attachment.id}
+      disabled={isDragDisabled}
+      className="group relative list-none"
+      draggingClassName="opacity-70"
       aria-label={attachment.media.title || attachment.media.type}
+      grip={{
+        label: "Drag to reorder media",
+        className:
+          "absolute top-2 left-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity",
+      }}
     >
       <Card className="relative group overflow-hidden p-0">
         {attachment.media.url && (
@@ -93,23 +82,13 @@ function SortableMediaAttachmentCard({
         <Button
           size="sm"
           variant="secondary"
-          prefix={<GripVerticalIcon />}
-          aria-label="Drag to reorder media"
-          disabled={isDragDisabled}
-          className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-          {...attributes}
-          {...listeners}
-        />
-        <Button
-          size="sm"
-          variant="secondary"
           prefix={<Trash2Icon />}
           aria-label="Remove media attachment"
           className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
           onClick={() => onRemove(attachment.id)}
         />
       </Card>
-    </li>
+    </SortableMediaTile>
   )
 }
 
@@ -156,16 +135,19 @@ export function ContentMediaPanel({ atom }: ContentMediaPanelProps) {
     setOrderedAttachments(atom.mediaAttachments)
   }, [atom.mediaAttachments])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
-  const savedOrder = attachmentIds(atom.mediaAttachments)
-  const currentOrder = attachmentIds(orderedAttachments)
-  const hasOrderChanges =
-    savedOrder.length === currentOrder.length &&
-    savedOrder.some((id, index) => currentOrder[index] !== id)
+  // Shared ordering mechanics (WL-P2-49) — the saved order derives from the server prop; reset
+  // re-derives from it (a just-removed id is simply absent from the current items, so it drops).
+  const {
+    currentIds: currentOrder,
+    hasOrderChanges,
+    handleDragEnd,
+    resetOrder,
+  } = useSortableMediaOrder({
+    items: orderedAttachments,
+    setItems: setOrderedAttachments,
+    getId: attachment => attachment.id,
+    savedIds: attachmentIds(atom.mediaAttachments),
+  })
   const isDragDisabled = reorder.isPending || isUploading || orderedAttachments.length < 2
 
   const handleUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -177,24 +159,8 @@ export function ContentMediaPanel({ atom }: ContentMediaPanelProps) {
     e.target.value = ""
   }
 
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over) return
-    if (active.id === over.id) return
-
-    setOrderedAttachments(items => {
-      const oldIndex = items.findIndex(({ id }) => id === String(active.id))
-      const newIndex = items.findIndex(({ id }) => id === String(over.id))
-      if (oldIndex === -1 || newIndex === -1) return items
-      return arrayMove(items, oldIndex, newIndex)
-    })
-  }
-
   const handleSaveOrder = () => {
-    reorder.execute({ atomId: atom.id, attachmentIds: attachmentIds(orderedAttachments) })
-  }
-
-  const handleResetOrder = () => {
-    setOrderedAttachments(atom.mediaAttachments)
+    reorder.execute({ atomId: atom.id, attachmentIds: currentOrder })
   }
 
   const handleRemove = async (attachmentId: string) => {
@@ -213,26 +179,11 @@ export function ContentMediaPanel({ atom }: ContentMediaPanelProps) {
         <H4>Media ({atom.mediaAttachments.length})</H4>
         <Stack size="xs" wrap>
           {hasOrderChanges && (
-            <>
-              <Button
-                size="sm"
-                variant="secondary"
-                prefix={<RotateCcwIcon />}
-                disabled={reorder.isPending}
-                onClick={handleResetOrder}
-              >
-                Reset
-              </Button>
-              <Button
-                size="sm"
-                variant="primary"
-                prefix={<SaveIcon />}
-                isPending={reorder.isPending}
-                onClick={handleSaveOrder}
-              >
-                Save order
-              </Button>
-            </>
+            <MediaOrderControls
+              isPending={reorder.isPending}
+              onReset={resetOrder}
+              onSave={handleSaveOrder}
+            />
           )}
           <Button
             size="sm"
@@ -256,20 +207,21 @@ export function ContentMediaPanel({ atom }: ContentMediaPanelProps) {
       />
 
       {orderedAttachments.length > 0 ? (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={currentOrder} strategy={rectSortingStrategy}>
-            <ul className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3">
-              {orderedAttachments.map(attachment => (
-                <SortableMediaAttachmentCard
-                  key={attachment.id}
-                  attachment={attachment}
-                  isDragDisabled={isDragDisabled}
-                  onRemove={handleRemove}
-                />
-              ))}
-            </ul>
-          </SortableContext>
-        </DndContext>
+        <SortableMediaGrid
+          as="ul"
+          ids={currentOrder}
+          onDragEnd={handleDragEnd}
+          className="grid gap-3 @md:grid-cols-2 @lg:grid-cols-3"
+        >
+          {orderedAttachments.map(attachment => (
+            <SortableMediaAttachmentCard
+              key={attachment.id}
+              attachment={attachment}
+              isDragDisabled={isDragDisabled}
+              onRemove={handleRemove}
+            />
+          ))}
+        </SortableMediaGrid>
       ) : (
         <p className="text-sm text-muted">
           No media attached. Upload images, videos, or audio to attach to this content atom.

@@ -16,6 +16,39 @@ type AppDb = typeof appDb
 const TECHNIQUE_STAFF_ROLES = ["OWNER", "INSTRUCTOR"] as const
 
 /**
+ * The ONE "user is ACTIVE OWNER/INSTRUCTOR staff" membership where-fragment (WL-P2-49). The
+ * predicate had drifted into ~5 hand-copied shapes, and SESSION_0529 proved the drift class: new
+ * code copied the UNHARDENED no-ACTIVE variant (a CANCELLED staff membership must never authorize —
+ * SESSION_0528 Doug P3 / SESSION_0529 Giddy fix-now). Exported for the one nested-relation user
+ * (`findUserTechniques`, which filters an organization's memberships); everything else goes through
+ * `findActiveStaffMembership`.
+ */
+export function activeStaffMembershipWhere(userId: string) {
+  return {
+    userId,
+    status: "ACTIVE" as const,
+    roleAssignments: { some: { role: { code: { in: [...TECHNIQUE_STAFF_ROLES] } } } },
+  }
+}
+
+/**
+ * Find the user's ACTIVE OWNER/INSTRUCTOR membership, scoped by brand (the capability/gate reads —
+ * `Membership.brand` is minted from its organization's brand) or by a specific organization (the
+ * per-row edit gate). Returns `organizationId` so create surfaces can target the school. `null` →
+ * not staff.
+ */
+export async function findActiveStaffMembership(
+  database: AppDb,
+  userId: string,
+  scope: { brand: Brand } | { organizationId: string },
+) {
+  return database.membership.findFirst({
+    where: { ...activeStaffMembershipWhere(userId), ...scope },
+    select: { id: true, organizationId: true },
+  })
+}
+
+/**
  * Can this user AUTHOR a technique? (ADR 0046 D5.) Mirrors `canUploadMediaForUser` — capability-based,
  * not membership-gated. BBL's roster is placeholder Passports via `LineageTree` (no OWNER/INSTRUCTOR
  * `Membership` rows), so the old org-membership-only gate locked EVERY BBL member out of authoring; this
@@ -45,15 +78,7 @@ export const canCreateTechniqueForUser = cache(
       return true
     }
 
-    const staff = await database.membership.findFirst({
-      where: {
-        userId: user.id,
-        brand,
-        status: "ACTIVE",
-        roleAssignments: { some: { role: { code: { in: [...TECHNIQUE_STAFF_ROLES] } } } },
-      },
-      select: { id: true },
-    })
+    const staff = await findActiveStaffMembership(database, user.id, { brand })
     return Boolean(staff)
   },
 )
