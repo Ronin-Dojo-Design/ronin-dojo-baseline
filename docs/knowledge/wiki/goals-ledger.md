@@ -180,7 +180,7 @@ aggregator reads it with no new parser logic.
 
 ### G-010 — Instructor review queue for backfill promoter-changed reviews
 
-- **Status:** done — P1 (SESSION_0541 + SESSION_0542)
+- **Status:** done — P1 (SESSION_0541 + SESSION_0542 + SESSION_0544/PR #210 squash-merged)
 - **Objective:** the `belt.admin` AdminCollection queue now actions captured
   `RankEntryReview{PROMOTER_CHANGED, status: PROPOSAL_PENDING}` proposals through an inspect-before-decide detail route.
   Approval atomically applies the immutable proposed promoter and verifies the belt; denial preserves the
@@ -191,5 +191,41 @@ aggregator reads it with no new parser logic.
   different-promoter backfill can actually be reviewed instead of sitting UNVERIFIED forever.
 - **Why:** SESSION_0540 shipped reviews as CREATE-without-consumer. SESSION_0541 added the queue; SESSION_0542
   closed the second-order integrity and AdminCollection findings with an immutable proposal snapshot,
-  transaction-serialized decisions, addressable detail, and confirmation UX. The separate register-later
-  confirmation/MERGE loop is explicitly owned by RankEntry-retirement epic task H rather than this completed queue.
+  transaction-serialized decisions, addressable detail, and confirmation UX. SESSION_0543/0544 hardened the
+  review with lock-before-read race close, belt.admin permission parity, DB-target guards, and CI-caught
+  brand-null fix. PR #210 squash-merged to main 2026-07-17. The separate register-later confirmation/MERGE
+  loop is explicitly owned by RankEntry-retirement epic task H rather than this completed queue.
+
+### G-011 — RankEntry unification (retire RankAward)
+
+- **Status:** proposed · **Blocked-by: G-001 / FI-001** (post-send epic; do not start before Brian
+  Truelson's email ships and the moat is live)
+- **Objective:** collapse `RankAward` + `RankEntry` into ONE rank model — delete the compatibility Seam,
+  the dual-write call sites, and every `RankAward`-direct reader. The result is a single `RankEntry` Module
+  that hides rank fact, provenance, trust, and proposal-preservation rules.
+- **Pointer:** full plan lives at [`docs/product/black-belt-legacy/rankentry-unification-epic.md`](../../product/black-belt-legacy/rankentry-unification-epic.md).
+  Do not duplicate the plan here — this Goals Ledger row is a backlog-visibility pointer only.
+- **Scope signal:** `RankAward` appears in 44 non-test, non-script TS/TSX files; 10 compatibility writer
+  call sites identified in the epic. The epic has tasks A–H; task H is the table-drop.
+- **Lane:** belt / schema. **Depends on:** G-001 / FI-001 (send Brian Truelson's verified-lineage email).
+  **Enables:** KISS rank model (operator mandate, SESSION_0523), G-010 task H (register-later loop), ADR 0047
+  trust-state consolidation.
+- **Why:** the epic doc exists and the mandate is clear, but without a Goals Ledger row the unification work
+  is invisible to `ledger-backlog.ts` and future bow-in planning. This row surfaces it for prioritization
+  without blocking anything active. (SESSION_0542 architecture scan; SESSION_0544 TASK_05.)
+
+### G-012 — Count-neutral DB-backed verification (fixture-ownership module)
+
+- **Status:** open · P2
+- **Objective:** extract the repeated fixture-ownership pattern across 71 DB-backed tests into one reusable
+  module — rollback adapter, tagged-cleanup adapter, run-identity, FK-safe teardown order, and count-neutral
+  proof. The current state has 6 identical `inRolledBackTx` rollback implementations copied across test
+  files; 36 tests use ad-hoc tag/prefix deletion; and SESSION_0542's D-047 leak proved that green assertions
+  alone do not prove fixture ownership.
+- **Lane:** test infrastructure / developer experience. **Independent of FI-001 / G-001 sequencing** — can
+  land in any focused infrastructure session.
+- **Enables:** safer DB-backed test authoring across the repo, closes the class of teardown leaks that
+  produced D-047 and the SESSION_0542 interrupted-run residue (41 Users / 22 Organizations / 138 Passports).
+- **Why:** 6 copied rollback implementations + 71 tests with manual teardown = a real, measurable duplication
+  problem with a concrete Adapter waiting to be extracted. Distinct from D-047 (one-time historical cleanup);
+  this goal is the recurring pattern fix. (SESSION_0542 architecture scan; SESSION_0544 TASK_05.)

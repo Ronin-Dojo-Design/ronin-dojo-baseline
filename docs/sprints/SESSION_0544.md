@@ -169,7 +169,7 @@ sequential. TASK_05 may begin as soon as the merge verdict is issued.
 | SESSION_0544_TASK_02 | completed | Fallow delta neutral: introduced dead=0, dup=25, complexity=8 (all unchanged) |
 | SESSION_0544_TASK_03 | completed | Code-quality rescore: Unit-1 9.05→9.2 (D1+D3 up), Units 2+3 unchanged; mean 9.23 |
 | SESSION_0544_TASK_04 | completed | Hostile-close: PROCEED/MERGE-READY; brand-regression class closed; all 8 questions PASS |
-| SESSION_0544_TASK_05 | in-progress | Architecture grill presented; awaiting operator direction |
+| SESSION_0544_TASK_05 | completed | G-011 (RankEntry pointer, blocked post-G-001) + G-012 (DB verification, new) added to Goals Ledger |
 
 ## What landed
 
@@ -190,7 +190,7 @@ sequential. TASK_05 may begin as soon as the merge verdict is issued.
 | `bun run typecheck` | exit 0 |
 | `bun run format:check` | 1969/1969 formatted |
 | `bun run lint:check` | exit 0; baseline warnings only (no new belt-review/rank-reviews/promoter warning) |
-| `npx next build` | in progress locally (resource contention with ronin-0541 worktree build); CI/Vercel authoritative |
+| `npx next build` | ✅ exit 0 (completed; output: static pages including /tournaments routes) |
 | CI on HEAD `8eb8bb77` | ✅ ALL GREEN: Playwright ×3 (chromium/firefox/webkit), typecheck, unit tests, Oxc, Vercel |
 | `bunx fallow audit --changed-since origin/main` | introduced dead=0, dup=25, complexity=8 (unchanged from SESSION_0543 baseline) |
 | Doug delta review `2f02b6fe` | 9.4/10 READY — no P1/P2; auth gate intact; Brand import clean |
@@ -201,8 +201,9 @@ sequential. TASK_05 may begin as soon as the merge verdict is issued.
 
 ## Open decisions / blockers
 
-- PR #210 merge (= prod deploy to blackbeltlegacy.com): held for operator's explicit "go."
-- TASK_05 architecture direction: operator decision after grilling.
+- PR #210 squash-merged to main 2026-07-17T03:34:55Z (merge commit `0da7e7f6`). CI + Vercel on main in progress.
+- G-011 + G-012 added to Goals Ledger per operator direction.
+- CI result on main: pending — watching to green.
 
 ## Next session
 
