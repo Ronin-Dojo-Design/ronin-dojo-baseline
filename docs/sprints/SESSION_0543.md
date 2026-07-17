@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0543 — PR #210 merge-readiness + architecture routing"
 slug: session-0543
-type: session--open
-status: in-progress
+type: session--review
+status: closed
 created: 2026-07-16
 updated: 2026-07-16
 last_agent: claude-recovery-of-codex-session-0543
@@ -375,6 +375,12 @@ only one open PR, so the per-PR worktree fan-out rule does not apply.
 
 ## Decisions resolved
 
+- **Recovery-session operator decisions (salvage of crashed codex-session-0543):** (1) the uncommitted 0543
+  diff is the salvage target — no further crash-hunting; (2) adopt-and-finish `SESSION_0543.md` rather than mint a
+  0544; (3) the 0541 lane is done — `session-0542` (PR #210) is the umbrella carrying 0541+0542+0543, `ronin-0541`
+  left untouched; (4) finish TASK_04 code-quality, park TASK_05 architecture route; (5) **push authorized** — the
+  3 salvage commits were pushed to update draft PR #210 and re-run CI on head `562b9607`. PR #210 stays draft;
+  mark-ready/merge/deploy remain separate operator decisions.
 - **Local PR verdict:** `READY (pending operator go)`. No push, draft-state change, review trigger, merge, deploy,
   or external mutation occurred.
 - **Review gate mode:** `all_hands` because the branch contains schema/migration, auth, database-safety, concurrency,
@@ -457,7 +463,23 @@ routes it to D-047's backup-first, prefix-scoped cleanup lane.
 
 ### Goal
 
+Disposition draft PR #210 and run the parked TASK_05 architecture-route grill. Once CI is green on head
+`562b9607`, decide with the operator whether to mark PR #210 ready (→ CodeRabbit/human review) and merge
+(merge = prod-deploy trigger — held separately). Then grill the SESSION_0542 architecture shortlist and route
+at most one Goals-Ledger direction.
+
+### Inputs to read
+
+- This file (`SESSION_0543.md`) — the salvaged review/fallow/code-quality record and the recovery close.
+- PR #210 CI result on head `562b9607` (the authoritative e2e + DB-concurrency gate deferred locally).
+- `/tmp/architecture-review-20260716-113052.html` (if still present) + the SESSION_0542 architecture shortlist.
+- ADR 0047 (promoter-as-placeholder) and `SESSION_0542.md`.
+
 ### First task
+
+Confirm PR #210 CI is green on `562b9607`. If green and the operator gives the word: mark PR #210 ready, trigger
+review, and decide the merge (prod deploy). If CI is red, triage the failing check on the branch (Playwright e2e /
+unit-test / typecheck) before any state change. Do NOT rerun the architecture scan — grill the existing shortlist.
 
 ## Review log
 
@@ -673,6 +695,58 @@ risk a behavior regression for no real gain — out of scope per the matrix's no
 
 ## ADR / ubiquitous-language check
 
+- **No new ADR.** ADR 0047 (promoter-as-placeholder recruited-coach identity) already governs this slice; the
+  salvaged work extends its lock/immutability law without changing a ratified decision. The deferred database
+  contract remains owned by WL-P1-9, not a new ADR.
+- **No new ubiquitous-language term.** `trust state` (verified / unverified / pending_review) and the belt-review
+  detail-state classifier are code-internal projections of existing terms, centralized in `lib/belt/review-state.ts`
+  and traced via `@wired`; no glossary change warranted.
+
 ## Reflections
 
+- **The crashed Codex work was not in a worktree — it was uncommitted in the canonical checkout.** The known
+  `.codex/worktrees/b717` was empty; `ronin-0539` was a `.git`-less husk already on origin. The real at-risk asset
+  was a 41-file + 11-untracked diff sitting on the `session-0542` branch in the canonical checkout. First move on
+  any crashed-session salvage: `git status` the canonical checkout, not just the worktree list.
+- **A recovery chain hides how much is already safe.** `fb41acdf` ("recover interrupted 0541 and bow in 0542")
+  showed 0541→0542→0543 was a chain of interrupted sessions. Only 0543's output was uncommitted; 0541 (owned by the
+  live lane) and 0542 (pushed as PR #210) were already protected. Classifying each layer against origin/main kept
+  the salvage from re-landing already-safe work.
+- **Commit before you gate or dispatch.** The whole lane exists because crashes lose *uncommitted* work — so the
+  first action after confirming the target was to commit (protecting the asset and neutralizing the
+  `workflow-over-dirty-tree-clobbers-edits` subagent-stash risk), then gate.
+- **The crash's worst gap was verification, not code.** The doc's own table admitted an inconclusive 21-min
+  typecheck and infra-blocked Chromium. The code was ~90% done and 9.7-reviewed; what a crash-salvage most needed
+  was a *fresh* green gate — which this run re-established (typecheck exit 0, build 207/207, pure tests 21/21).
+- **Don't manufacture churn to "finish" a quality task.** TASK_04's honest outcome was zero fixes: the residual
+  complexity was essential concurrency orchestration (documented) or already-routed duplication. Extracting from the
+  race-proof `$transaction` callback would have risked a regression for no gain.
+
 ## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0543 `last_agent` → `claude-recovery-of-codex-session-0543`; new `lib/belt/*` + detail-state helpers carry `@added/@why/@wired`; no wiki page frontmatter otherwise changed |
+| Backlinks/index sweep | wiki `index.md` SESSION_0543 row flipped in-progress → closed; no new cross-refs |
+| Wiki lint | `bun run wiki:lint` via gate runner — 0 err / 53 warn (all pre-existing baseline) |
+| Kaizen reflection | Reflections section present: yes |
+| Hostile close review | codex TASK_02 hostile residual pass (8 questions, aggregate 9.0 proceed) retained + this recovery pass confirms it on the re-verified head; no new blocker |
+| Code-quality gate (Class-A/B) | TASK_04 matrix: 3 units 9.05 / 9.1 / 9.4 (mean 9.2, all Strong, no capped failure); 0 fixes |
+| Runtime verification (Doug) | static gates green (typecheck/format/lint/build/pure-tests 21/21); live e2e + DB-concurrency → CI on PR #210 head `562b9607` (authoritative) |
+| Review & Recommend | Next session goal written: yes (PR #210 disposition + TASK_05 architecture grill) |
+| Memory sweep | 1 durable recovery gotcha captured (crashed-Codex work lives uncommitted in the canonical checkout, not the worktree) |
+| Next session unblock check | unblocked — first task (confirm PR #210 CI green) is doable; merge/mark-ready held on operator word |
+| Git hygiene | branch `session-0542-belt-review-remediation`; 3 code/doc commits pushed under this session's authorization (`3b6a800a`/`1fccbb7b`/`562b9607`); this close-doc commit held for a separate (free, docs-only) push go |
+| Graphify update | nodes=17477 edges=34357 communities=2294 (refreshed pre-commit by the gate runner) |
+
+## Close notes
+
+**Unclean-recovery close.** This session adopted and finished the interrupted `codex-session-0543`, whose bow-out
+never ran (crash during TASK_04). Incident logged in `docs/knowledge/wiki/incidents.md`. No data was lost — the
+crashed diff was recovered from the canonical working tree, committed, re-verified green, and pushed to PR #210.
+
+**Deferral-guard dismissals (all justified — no un-ledgered lost work):** TASK_05 parked → captured in the
+Next-session block (next bow-in read-path) and operator explicitly declined a Goals-Ledger edit; "DB-concurrency
+/ live e2e deferred to CI" and "PR #210 CI result" → verification-locus scope notes (CI is the authoritative
+gate), not tracked future work; the two hostile-review "deferred contract" lines → WL-P1-9, already ledgered and
+cited in SESSION_0543_FINDING_01.

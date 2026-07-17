@@ -4,8 +4,8 @@ slug: incidents
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-17
+last_agent: claude-recovery-of-codex-session-0543
 ---
 
 # Incidents Log
@@ -32,3 +32,4 @@ See [closing ritual — unclean close recovery](../../rituals/closing.md#unclean
 | 2026-07-15 | SESSION_0540 | unclean-close | Implementation and hostile close were complete and PR #209 later merged, but frontmatter remained `in-progress` | Set status to `closed`, updated merged/ledger evidence, added a recovery note, and restored wiki discoverability | SESSION_0542 |
 | 2026-07-15 | SESSION_0541 | unclean-close | Claude hit its session limit after five clean commits landed and while the Doug/Giddy/Desi verify wave was running | Proved no source edits were lost, preserved the five-commit branch, backfilled partial verdicts/findings, closed the session honestly, and opened SESSION_0542 for remediation | SESSION_0542 |
 | 2026-07-16 | SESSION_0542 | local-data-recovery | A raw Prisma reset intended for disposable `ronindojo_e2e` resolved to local, non-disposable `ronindojo_prodsnap` because only `DATABASE_URL` was checked and the effective Prisma target was not pinned; remote production was never touched | Restored durable live state from a new read-only production dump, verified core counts, deliberately deployed reviewed migration 78, pinned both URLs, added guarded E2E target tests, and reconciled active destructive recipes. With no pre-incident local backup, any prodsnap-only drift is unknown/unrecoverable; retained artifacts preserve recovery evidence, not that prior local state. | SESSION_0542 |
+| 2026-07-16 | SESSION_0543 | unclean-close | `codex-session-0543` crashed mid-TASK_04 (code-quality); bow-out never ran. Its completed TASK_01–03 review/fallow work (belt-review queue, RankEntry lock, DB-target guards, promoter-identity repoint) sat **uncommitted** in the canonical checkout working tree on branch `session-0542-belt-review-remediation` (41 modified + 11 untracked, incl. the SESSION_0543 record itself). `.codex/worktrees/b717` was empty; `ronin-0539` was a `.git`-less husk already on origin — the real at-risk asset was in the canonical tree, not a worktree | Inventoried read-only, classified each recovery-chain layer against origin/main (0541 owned by live lane, 0542 pushed as PR #210, only 0543 uncommitted), committed the salvage first to protect it (`3b6a800a`/`1fccbb7b`), re-verified the full gate fresh green (typecheck exit 0 — resolving the crash's 21-min inconclusive hang; build 207/207; pure/guard tests 21/21), completed TASK_04 code-quality (`562b9607`), pushed all three to update draft PR #210, and closed the session honestly | SESSION_0543 (Claude recovery) |
