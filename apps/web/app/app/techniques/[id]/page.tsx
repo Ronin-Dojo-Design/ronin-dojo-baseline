@@ -11,6 +11,7 @@ import { getPageMetadata } from "~/lib/pages"
 import { can } from "~/server/orpc/permissions"
 import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
 import { getDashboardMediaAttachments } from "~/server/web/media/queries"
+import { findActiveStaffMembership } from "~/server/web/techniques/permissions"
 import { getTechniqueFormOptions } from "~/server/web/techniques/queries"
 import { db } from "~/services/db"
 
@@ -74,13 +75,9 @@ export default async function EditTechniquePage({ params }: Props) {
   if (!isStaff) {
     if (!technique.organizationId) notFound()
 
-    const membership = await db.membership.findFirst({
-      where: {
-        userId: session.user.id,
-        organizationId: technique.organizationId,
-        status: "ACTIVE",
-        roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-      },
+    // The ONE shared ACTIVE-staff predicate (WL-P2-49), org-scoped to this row's school.
+    const membership = await findActiveStaffMembership(db, session.user.id, {
+      organizationId: technique.organizationId,
     })
 
     if (!membership) notFound()

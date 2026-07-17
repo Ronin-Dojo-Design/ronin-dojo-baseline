@@ -1,5 +1,6 @@
 import { cache } from "react"
 import type { Brand } from "~/.generated/prisma/client"
+import { activeStaffMembershipWhere } from "~/server/web/techniques/permissions"
 import { db } from "~/services/db"
 
 export const findUserEnrollments = cache(async (userId: string, brand: Brand) => {
@@ -73,18 +74,16 @@ export const findUserTechniques = cache(async (userId: string, brand: Brand) => 
   // Techniques the user can manage: their org-library rows (OWNER/INSTRUCTOR school staff) PLUS
   // their own AUTHORED rows (ADR 0046 D2 — `authorPassportId` via the user's Passport, org-grouped
   // or profile-only alike; SESSION_0529 Slice 3B).
+  // @changed WL-P2-49: the staff leg now rides the ONE shared predicate — which adds
+  // `status: ACTIVE`. This was the last unhardened copy (SESSION_0529 Giddy drift class); the read
+  // now matches the write-gates, so a CANCELLED staff member no longer sees org rows they can't edit.
   return db.technique.findMany({
     where: {
       OR: [
         {
           organization: {
             brand,
-            memberships: {
-              some: {
-                userId,
-                roleAssignments: { some: { role: { code: { in: ["OWNER", "INSTRUCTOR"] } } } },
-              },
-            },
+            memberships: { some: activeStaffMembershipWhere(userId) },
           },
         },
         { brand, author: { userId } },

@@ -7,14 +7,14 @@ import type {
   SetTechniqueFeaturedInput,
   UpdateTechniqueInput,
 } from "~/server/web/techniques/crud-schemas"
-import { canCreateTechniqueForUser } from "~/server/web/techniques/permissions"
+import {
+  canCreateTechniqueForUser,
+  findActiveStaffMembership,
+} from "~/server/web/techniques/permissions"
 import { TECHNIQUE_ERROR } from "~/server/web/techniques/technique-errors"
 import type { db as appDb } from "~/services/db"
 
 type AppDb = typeof appDb
-
-/** OWNER/INSTRUCTOR of a school may author/edit that school's techniques (ADR 0046 D5). */
-const TECHNIQUE_STAFF_ROLES = ["OWNER", "INSTRUCTOR"] as const
 
 /**
  * Is this Prisma P2002 specifically the AUTHORED partial unique index
@@ -51,23 +51,17 @@ const isAuthoredSlugConflict = (error: unknown): boolean => {
   return haystack.includes("Technique_authored_slug_key") || haystack.includes("authorPassportId")
 }
 
+/**
+ * OWNER/INSTRUCTOR of a school may author/edit that school's techniques (ADR 0046 D5). Delegates
+ * to the ONE shared ACTIVE-staff predicate (WL-P2-49) — a CANCELLED OWNER/INSTRUCTOR must not
+ * authorize (SESSION_0528 Doug P3).
+ */
 async function hasOrgStaffRole(
   db: AppDb,
   userId: string,
   organizationId: string,
 ): Promise<boolean> {
-  const membership = await db.membership.findFirst({
-    where: {
-      userId,
-      organizationId,
-      // Only an ACTIVE membership authorizes — a CANCELLED OWNER/INSTRUCTOR must not (matches
-      // `canCreateTechniqueForUser`, SESSION_0528 Doug P3).
-      status: "ACTIVE",
-      roleAssignments: { some: { role: { code: { in: [...TECHNIQUE_STAFF_ROLES] } } } },
-    },
-    select: { id: true },
-  })
-  return Boolean(membership)
+  return Boolean(await findActiveStaffMembership(db, userId, { organizationId }))
 }
 
 /**
