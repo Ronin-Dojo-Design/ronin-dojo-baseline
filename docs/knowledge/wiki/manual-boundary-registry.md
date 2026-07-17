@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-06-04
+updated: 2026-07-16
 author: Brian + ChatGPT
-last_agent: claude-session-0345
+last_agent: codex-session-0548
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -91,7 +91,7 @@ Blocker classes:
 - **Owner:** owner + Cody
 - **Blocker class:** `mobile_contract`
 - **Proof required:** one explicit architecture decision + implementation target
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-002 — brand scope hardening
 
@@ -99,7 +99,7 @@ Blocker classes:
 - **Owner:** Cody
 - **Blocker class:** `auth_decision`
 - **Proof required:** code path + test evidence + updated auth doc
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-003 — brand switcher
 
@@ -107,7 +107,7 @@ Blocker classes:
 - **Owner:** Cody
 - **Blocker class:** `runtime_proof`
 - **Proof required:** working end-to-end flow, session survives reload
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-004 — S2 Passport bootstrap
 
@@ -131,7 +131,7 @@ Blocker classes:
 - **Owner:** Brandon + owner
 - **Blocker class:** `brand_migration`
 - **Proof required:** approved alias map + rollout checklist
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-007 — staging deploy
 
@@ -139,7 +139,7 @@ Blocker classes:
 - **Owner:** Cody + Doug
 - **Blocker class:** `deploy_env`
 - **Proof required:** deploy succeeds + smoke checklist passes
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-008 — docs/wiki quality
 
@@ -147,7 +147,7 @@ Blocker classes:
 - **Owner:** Petey + Doug
 - **Blocker class:** `docs_wiring`
 - **Proof required:** wiki lint pass + index updates
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-009 — content engine path
 
@@ -155,7 +155,7 @@ Blocker classes:
 - **Owner:** Petey + Iggy + owner
 - **Blocker class:** `content_system_decision`
 - **Proof required:** written policy + phased adoption plan
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-010 — legacy migration
 
@@ -163,7 +163,7 @@ Blocker classes:
 - **Owner:** Petey + owner
 - **Blocker class:** `brand_migration`
 - **Proof required:** updated program lane note
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-011 — directory monetization
 
@@ -179,7 +179,7 @@ Blocker classes:
 - **Owner:** owner + Cody
 - **Blocker class:** `cleanup`
 - **Proof required:** explicit owner approval + path verification before delete/archive
-- **Status:** open
+- **Status:** operator-manual — open
 
 #### MB-013 — security and financial transaction readiness
 
@@ -187,7 +187,7 @@ Blocker classes:
 - **Owner:** Cody + Doug + Giddy
 - **Blocker class:** `qa_proof`
 - **Proof required:** security test matrix, monitoring hooks, Customer Portal/customer ID path, non-tournament ledger projection, subscription policy proof, manual payment entitlement path, payment/entitlement drift audit, and launch-readiness signoff
-- **Status:** open
+- **Status:** operator-manual — open
 
 **SESSION_0313 update (2026-05-31):** Security readiness moved from narrative review to linked documentation artifacts: `docs/security/ronin-security-risk-register.md`, `docs/security/payment-security-checklist.md`, `docs/security/privacy-data-classification.md`, and `docs/security/security-test-plan.md`. This satisfies the documentation side of the security test matrix handoff, but MB-013 remains **open** until payment/customer portal proof, monitoring hooks, drift audit scheduling, manual payment entitlement parity, and launch signoff are implemented and verified.
 
@@ -197,7 +197,7 @@ Blocker classes:
 - **Owner:** owner + Cody
 - **Blocker class:** `deploy_env`
 - **Proof required:** Vercel domain config screenshots/log, populated `HOST_TO_BRAND`, `allowedOrigins` array, and a pre-staging env-validation run
-- **Status:** open
+- **Status:** operator-manual — open
 - **Specific gates:** register all four brand apex domains, fill `HOST_TO_BRAND` production rows in `~/lib/brand-context.ts`, configure `experimental.serverActions.allowedOrigins` in `next.config.ts`, and verify env validation covers Better Auth, Postgres, Stripe, Redis (Upstash), S3, cron secret, and Plausible.
 
 #### MB-015 — Resend transactional email setup

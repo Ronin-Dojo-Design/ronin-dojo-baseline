@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-17
-last_agent: codex-session-0546
+last_agent: codex-session-0548
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -129,7 +129,7 @@ aggregator reads it with no new parser logic.
 
 ### G-007 — PR-review automation: open PRs as a live Loop-of-Loops source
 
-- **Status:** open — P1
+- **Status:** done — P1 (SESSION_0548 verified fully shipped)
 - **Objective:** make `/bow-in` auto-pick-up open-PR review/fix the way it picks up ledger debt.
   (a) add a **live `PR` source** to `scripts/ledger-backlog.ts` — query
   `gh pr list --state open --json number,title,headRefName,isDraft,reviewDecision,statusCheckRollup`,
@@ -147,6 +147,12 @@ aggregator reads it with no new parser logic.
   *capability* is this goal (GL); the *running PRs* surface automatically once the source ships.
 - **Why:** closes the OTHER half of the Loop-of-Loops — inbound ledger debt **and** outbound open-PR
   review become one auto-surfaced backlog; the operator just runs `/bow-in`.
+- **Progress:** DONE. (a) `scripts/ledger-backlog.ts` has the live `PR` source and shared parser;
+  `apps/web/lib/loop-board/fetch-ledgers.ts` projects PRs into the board. (b) `docs/rituals/opening.md`
+  §1c routes open PRs to `/pr-fix-loop`. (c) `.claude/skills/pr-fix-loop/SKILL.md` now has the
+  worktree fan-out contract: one subagent per PR, own `git worktree`, pr-review-score-fix +
+  `/fallow-fix-loop` + hostile-close, local commits only, concurrency cap, pause-on-merge, and no push
+  without operator authorization.
 
 ### G-008 — BBL lineage/profile visual expansion (parked direction)
 

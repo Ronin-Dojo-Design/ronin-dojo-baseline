@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-06-28
-last_agent: claude-session-0459
+updated: 2026-07-16
+last_agent: codex-session-0548
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -44,6 +44,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [per-app-db-separation](database/per-app-db-separation.md) — one DB per product (ADR 0038): each app owns its prisma + DATABASE_URL + migrations; how to add the next product DB + the isolation proof.
 - [prisma-workflow](database/prisma-workflow.md) — day-to-day Prisma workflow.
 - [neon-advisory-lock-recovery](database/neon-advisory-lock-recovery.md) — recovering from Neon advisory-lock contention.
+- [neon-credential-rotation](database/neon-credential-rotation.md) — operator-only rotation steps for production Neon credentials.
 
 ## Onboarding
 
