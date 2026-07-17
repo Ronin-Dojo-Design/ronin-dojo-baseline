@@ -591,6 +591,36 @@ none.** Every residual is either essential documented complexity or already-rout
 Manufacturing an extraction from the concurrency-critical tx callback or the picker-options twin would
 risk a behavior regression for no real gain — out of scope per the matrix's no-regression rule.
 
+### Post-push — CI caught a real regression in the salvage (fixed same session)
+
+The authorized push to update PR #210 (head `562b9607`) ran the authoritative CI gate that local
+verification had deferred. **Unit tests failed: 7 DB-backed tests in `actions.safe-action.test.ts`**
+("rank-review decisions — captured PROMOTER_CHANGED proposal"), all with the same signature — the review
+row not found (`"Review not found."`, `proposedPromoterPassportId` undefined, empty queue, concurrency
+winner count 0). Typecheck / Oxc / Vercel passed; this was purely the DB decision path.
+
+**Root cause (a real production regression, not a flake or test gap):** SESSION_0542/0543 added
+`rankEntry: { rank: { brand: Brand.BBL } }` as "server-pinned BBL" defense-in-depth to the queue query,
+detail lookup, and decision core. But `Rank.brand` is **nullable** and real BBL BJJ ranks are
+**`brand = null`** (prodsnap: 179 null / 1 BBL / 16 BASELINE; the live "White Belt" BJJ rank is null).
+So `rank: { brand: BBL }` matched ~nothing — in production the entire belt-review feature would break
+(empty queue, null detail, every approve/deny throwing "Review not found"). CI caught it because
+`db:seed` correctly seeds the BJJ rank as `brand = null`. The crash had left the full DB suite un-rerun
+after these edits, so the 9.7 all-hands review scored code whose brand assumption was never DB-exercised.
+
+**Fix (`2f02b6fe`):** removed the `rank.brand` filter from `queries.ts` (queue + detail) and
+`promoter-proposal-core.ts` (lookup where + the `!== brand` throw + both decision where-clauses). `brand`
+is kept where legitimately used — the audit-log `brand:` column and the verify path. Authorization is
+enforced by the `belt.admin` permission gate, not rank brand. Obsolete "actor brand boundary" unit test
+deleted; `queries.test.ts` rewritten to assert the real scope (`reason=PROMOTER_CHANGED` + the `take=50`
+page cap). Re-verified: `actions.safe-action.test.ts` **15/15** against `ronindojo_e2e` (brand-null White
+Belt rank, count-neutral 0/0 residue); mock suites 6/6 + 2/2; typecheck/format/lint/next build green.
+
+**Lesson:** for a crashed-session salvage, the authoritative CI gate is not optional polish — a
+self-review of never-DB-exercised code (here, a brand assumption contradicted by the live data model)
+scored 9.7 while carrying a feature-breaking regression. Cross-brand review scoping, if ever needed, is a
+separate concern for the G-002 per-product-DB lane (which physically separates the data anyway).
+
 ## Hostile close review
 
 ### SESSION_0543 — PR #210 merge-readiness + architecture routing
@@ -732,11 +762,11 @@ risk a behavior regression for no real gain — out of scope per the matrix's no
 | Kaizen reflection | Reflections section present: yes |
 | Hostile close review | codex TASK_02 hostile residual pass (8 questions, aggregate 9.0 proceed) retained + this recovery pass confirms it on the re-verified head; no new blocker |
 | Code-quality gate (Class-A/B) | TASK_04 matrix: 3 units 9.05 / 9.1 / 9.4 (mean 9.2, all Strong, no capped failure); 0 fixes |
-| Runtime verification (Doug) | static gates green (typecheck/format/lint/build/pure-tests 21/21); live e2e + DB-concurrency → CI on PR #210 head `562b9607` (authoritative) |
+| Runtime verification (Doug) | CI on `562b9607` **caught a real regression** (7 DB-tests, brand-null-rank filter); root-caused + fixed in `2f02b6fe`; re-verified `actions.safe-action.test.ts` 15/15 vs `ronindojo_e2e` (count-neutral) + mock 6/6·2/2 + typecheck/format/lint/build green; CI re-run pending on the fix re-push |
 | Review & Recommend | Next session goal written: yes (PR #210 disposition + TASK_05 architecture grill) |
 | Memory sweep | 1 durable recovery gotcha captured (crashed-Codex work lives uncommitted in the canonical checkout, not the worktree) |
 | Next session unblock check | unblocked — first task (confirm PR #210 CI green) is doable; merge/mark-ready held on operator word |
-| Git hygiene | branch `session-0542-belt-review-remediation`; 3 code/doc commits pushed under this session's authorization (`3b6a800a`/`1fccbb7b`/`562b9607`); this close-doc commit held for a separate (free, docs-only) push go |
+| Git hygiene | branch `session-0542-belt-review-remediation`; `3b6a800a`/`1fccbb7b`/`562b9607` pushed under this session's authorization (CI then caught the regression); fix `2f02b6fe` + close docs `5e81eac5` + this amendment committed locally, **held for the operator's re-push go** |
 | Graphify update | nodes=17477 edges=34357 communities=2294 (refreshed pre-commit by the gate runner) |
 
 ## Close notes
