@@ -317,9 +317,7 @@ export const Mab = ({ permissions, postStyles }: MabProps) => {
           <motion.button
             type="button"
             onClick={soleAction ? () => runAction(soleAction.onSelect) : handleToggleFan}
-            aria-label={
-              soleAction ? t(soleAction.labelKey) : open ? t("mab_close") : t("mab_open")
-            }
+            aria-label={soleAction ? t(soleAction.labelKey) : open ? t("mab_close") : t("mab_open")}
             aria-expanded={soleAction ? undefined : open}
             whileTap={reduceMotion ? undefined : { scale: 0.92 }}
             className="relative flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary focus-visible:outline"

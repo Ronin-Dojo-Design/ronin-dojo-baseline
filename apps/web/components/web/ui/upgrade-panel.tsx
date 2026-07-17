@@ -36,7 +36,12 @@ export function UpgradePanel({ heading, description, ctaLabel, href }: UpgradePa
         <p className="font-medium text-foreground">{heading}</p>
         <p className="max-w-md text-sm text-muted-foreground">{description}</p>
       </div>
-      <Button variant="primary" size="md" prefix={<LockKeyholeIcon />} render={<Link href={href} />}>
+      <Button
+        variant="primary"
+        size="md"
+        prefix={<LockKeyholeIcon />}
+        render={<Link href={href} />}
+      >
         {ctaLabel}
       </Button>
     </div>
