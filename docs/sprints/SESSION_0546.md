@@ -200,7 +200,7 @@ Recon runs while the worktree bootstraps (done). Build tasks sequential in this 
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0546_TASK_01 | landed | Recon complete: lane essentially SHIPPED (all epic phases but Phase-4 nav entry; zero orphaned components; no-leak gate confirmed type-encoded). Fork surfaced to operator. |
-| SESSION_0546_TASK_02 | in-progress | Cody: quality lane WL-P2-63 + WL-P2-49 + WL-P2-52 remainder (behavior-preserving; no-leak hard gate) |
+| SESSION_0546_TASK_02 | landed | Quality lane: 5 commits (85434ba4 UpgradePanel · c8b77b4d sortable-media-grid + findActiveStaffMembership, 6th predicate copy found+killed · be7a9f60 WL-P2-52 remainder · cd3f471e oxfmt · 4bedac24 inventory). All gates PASS (tsc, lint 0 rewrites, format 1971 files, tests 106/0, next build 214/214, wiki-lint). No-leak re-verified (type untouched, grep-proof, 34 gating tests pass). Flagged: findUserTechniques +ACTIVE hardening (deliberate, ledger-intended); entitled-poster P3 SKIPPED (conflicts test-encoded 0529 viewer-independent policy → escalate, re-ledger). Affected e2e (mobile-shell MAB) deferred to CI per standing rule. |
 | SESSION_0546_TASK_03 | landed | Desi spec delivered: 20+ proposals in 3 waves (Wave 1 = 11 P1 smalls), 5 operator forks (F1 Lenis, F2 ComboBuilder, F3 schema-vs-derive, F4 tint channels, F5 beta copy). Grill dispatched. |
 | SESSION_0546_TASK_04 | pending | Beta-flag the technique graph via EXISTING patterns (feature-log.ts FeatureStatus + /app/beta precedent) — after Desi spec locks treatment |
 | SESSION_0546_TASK_05 | pending | Build waves from grilled Desi spec (Cody) → Doug delta verify + live PNG-export check |
