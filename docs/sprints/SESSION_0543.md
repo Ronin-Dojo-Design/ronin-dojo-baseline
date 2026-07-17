@@ -621,6 +621,10 @@ self-review of never-DB-exercised code (here, a brand assumption contradicted by
 scored 9.7 while carrying a feature-breaking regression. Cross-brand review scoping, if ever needed, is a
 separate concern for the G-002 per-product-DB lane (which physically separates the data anyway).
 
+**Fix pushed → CI fully green on `672f4608`:** Unit tests (bun test), Playwright ×3 (chromium/firefox/webkit),
+Typecheck, Oxc, and Vercel all pass. PR #210 remains draft; mark-ready / review / merge (prod deploy) are
+separate operator decisions.
+
 ## Hostile close review
 
 ### SESSION_0543 — PR #210 merge-readiness + architecture routing
