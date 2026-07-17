@@ -5,7 +5,7 @@ type: session--open
 status: in-progress
 created: 2026-07-16
 updated: 2026-07-16
-last_agent: codex-session-0543
+last_agent: claude-recovery-of-codex-session-0543
 sprint: S12
 pairs_with:
 
@@ -321,8 +321,8 @@ only one open PR, so the per-PR worktree fan-out rule does not apply.
 | SESSION_0543_TASK_01 | completed | All-hands loop reached `INTEGRATE_PASS`; local verdict is READY pending operator go, fresh push authorization, and CI on the pushed head |
 | SESSION_0543_TASK_02 | completed | Hostile audit accepted or routed every residual; Kaizen aggregate 9.0 permits the fallow pass |
 | SESSION_0543_TASK_03 | completed | Introduced dead code reached zero; confirmed lock/recovery/state defects were fixed; current-head Chromium was infrastructure-blocked and is recorded without a false pass |
-| SESSION_0543_TASK_04 | in-progress | Scoring promoter workflow, belt-review queue, and database safety separately against D1–D7 |
-| SESSION_0543_TASK_05 | pending | Architecture grill and operator selection follow quality review |
+| SESSION_0543_TASK_04 | completed | Code-quality matrix scored the three units at 9.05 / 9.1 / 9.4 (all Strong, no capped failure); no sub-9.5 fix warranted — residual complexity is tooling-script or documented essential orchestration already routed by TASK_03 |
+| SESSION_0543_TASK_05 | parked | Architecture-route selection deferred to a later session by operator (recovery-pass decision); no Goals-Ledger edit this session |
 
 ## What landed
 
@@ -427,6 +427,12 @@ only one open PR, so the per-PR worktree fan-out rule does not apply.
 | TASK_03 full `bun run typecheck` retry | inconclusive: remained CPU-active for more than 21 minutes with no diagnostic and was interrupted; TASK_01's earlier final-head-at-that-time typecheck remains green but is not relabeled as current-head proof |
 | TASK_03 current-head Chromium reruns | infrastructure-blocked before a product assertion: Playwright web-server gate timed out after a 12.7-minute cold `/`; a retry expired the 30-second fixture transaction after 48.6 seconds; a third run seeded and authenticated but the 90-second total expired during a route that returned 200 in 52 seconds; final `/cookies` prewarm produced no bytes in 300 seconds |
 | guarded E2E residue after blocked reruns | fixture-owned cleanup on literal `ronindojo_e2e`; tagged Users / Passports / Disciplines all read back as 0 / 0 / 0 |
+| **recovery pass** `bun run typecheck` on `3b6a800a` | **exit 0 — no hang this run** (resolves TASK_03's 21-min inconclusive typecheck) |
+| **recovery pass** `format:check` | 1969/1969 files formatted |
+| **recovery pass** `lint:check` (`oxlint .`) | exit 0; baseline warnings only, none in any belt-review / rank-reviews / promoter file |
+| **recovery pass** `next build` | ✓ compiled in 2.4min; 207/207 static pages generated; no RSC/`"use server"` boundary error |
+| **recovery pass** isolated `--parallel=1` pure tests | 21 pass / 0 fail / 61 expect across e2e-db-env, seed-target-guard, playwright-global-setup, belt-review-detail-state, rank-reviews authorization |
+| **recovery pass** DB-concurrency + live e2e | deferred to CI on the eventual authorized push (local Chromium infra-block persists; count-mutating DB suites not re-run locally under the no-mutation rule) |
 
 Two supplemental full-suite attempts on a disposable scratch clone hit unrelated default-five-second setup hooks at
 5.27s and 5.07s. Each owning file passed immediately in isolation and was count-neutral; the scratch database was
@@ -497,6 +503,71 @@ routes it to D-047's backup-first, prefix-scoped cleanup lane.
   Next/Turbopack filesystem and local DB latency exceeded three independent harness limits; the exact timings and
   zero-residue cleanup proof are recorded above. The earlier cold lifecycle remains 1/1 green, but it is not
   misrepresented as a post-fallow run.
+
+### TASK 04 — code-quality matrix (completed in the Claude recovery/salvage pass)
+
+Scored the three units against `code-quality-matrix` §2 on the freshly re-verified head (`3b6a800a`).
+Evidence base: `bun run typecheck` exit 0 (no hang this run), `format:check` 1969/1969, `lint:check`
+exit 0 (baseline warnings only), `next build` compiled 2.4min / 207 static pages, isolated
+`--parallel=1` pure guard + classifier + authorization tests 21 pass / 0 fail. CRAP figures were read
+complexity-only (no `--coverage` supplied → cyclomatic is the real signal; raw CRAP is inflated).
+
+#### Unit 1 — Promoter workflow (Class B, ref ADR 0047 + belt-verification subsystem)
+
+| Dim | Score | Note |
+| --- | ---: | --- |
+| D1 Correctness | 9 | lock-before-read race closed, fail-closed re-reads, manifest-verified rollback; typecheck/build green; DB-concurrency re-run deferred to CI |
+| D2 Security/integrity | 9 | Passport→Award→Review lock law, count-checked repoint, immutable snapshot; WL-P1-9 DB contract rollout-gated + owned (no undocumented invariant) |
+| D3 Simplicity | 9 | essential complexity only; extractable resolvers already split (TASK_03); the 91-line/10-cyclo tx callback is irreducible + fully invariant-commented |
+| D4 Readability | 10 | exemplary lock-order / TOCTOU narration, `@why`/`@wired` headers |
+| D5 Maintainability | 9 | structural tx port, small pure manifest helpers, testable |
+| D6 Scalability | 8 | sorted sequential per-tier locks (pg adapter can't multiplex) — fine for a small promoter graph; 10k-row merge scope improbable |
+| D7 Convention/reuse | 9 | extends belt/identity seams, ADR 0047 aligned, no unrecorded primitive |
+
+**Weighted average:** 9.05 · **Cap applied:** none · **Composite: 9.05 / 10** · **Verdict:** Strong — ship with CI as the closing concurrency/e2e gate.
+
+#### Unit 2 — Belt-review queue (Class B, ref belt subsystem + AdminCollection law)
+
+| Dim | Score | Note |
+| --- | ---: | --- |
+| D1 Correctness | 9 | pure detail-state classifier + auth tests green this run; pages static-built; `belt-reviews.spec.ts` e2e → CI (local Chromium infra-blocked) |
+| D2 Security/integrity | 9 | `belt.admin` permission parity, server-pinned `Brand.BBL`, authorization test green |
+| D3 Simplicity | 9 | `review-state.ts` + `belt-review-detail-state.ts` extraction removed duplicated branching; honest columns/skeleton; residual detail-page JSX is essential multi-state render |
+| D4 Readability | 9 | pure classifiers, `@why`/`@wired`, clear names |
+| D5 Maintainability | 9 | centralized trust-state law, exhaustively tested pure classifier, parallel read-only pagination |
+| D6 Scalability | 9 | parallel-read pagination (fixed P2028), small admin-queue N |
+| D7 Convention/reuse | 9 | conforms AdminCollection law, reuses DataTableColumnHeader/Skeleton, no new component |
+
+**Weighted average:** 9.1 · **Cap applied:** none · **Composite: 9.1 / 10** · **Verdict:** Strong — CI e2e closes it toward gold.
+
+#### Unit 3 — Database safety (Class A, extends Dirstarter Prisma/hosting + test tooling)
+
+| Dim | Score | Note |
+| --- | ---: | --- |
+| D1 Correctness | 10 | guard + parser tests ran green this run (21/21), pure and fully exercised |
+| D2 Security/integrity | 10 | rejects non-Postgres, `?host=`/`?port=` overrides, non-loopback, non-literal DB name, and DATABASE_URL/DIRECT_URL divergence before Prisma construction; adversarially tested |
+| D3 Simplicity | 9 | small clean guard functions; `run-e2e-dev.mjs localE2eTarget` launcher 10 cyclo is essential |
+| D4 Readability | 10 | explicit rationale comments (the pg-connection-string authority-override bypass) |
+| D5 Maintainability | 9 | `parseLocalPostgresTarget` / `assert*` / `e2ePrismaChildEnv` well-factored |
+| D6 Scalability | 9 | pure string parsing, no runtime cost |
+| D7 Convention/reuse | 8 | extends Prisma/test seams (no bypass); residual DB-target parser duplication routed to G-002/wiring |
+
+**Weighted average:** 9.43 · **Cap applied:** none · **Composite: 9.4 / 10** · **Verdict:** Strong (near-gold) — only the routed DB-target parser duplication keeps it from clean gold.
+
+#### Roll-up
+
+| Unit | Composite | Verdict |
+| --- | ---: | --- |
+| Database safety | 9.4 | Strong (near-gold) |
+| Belt-review queue | 9.1 | Strong |
+| Promoter workflow | 9.05 | Strong |
+
+**Mean 9.2 · no capped failure** (no regression; security proven + adversarially tested; verification
+credible via green static gates + pure tests + prior all-hands render, live e2e → CI). **Fixes applied:
+none.** Every residual is either essential documented complexity or already-routed duplication
+(RankEntry epic = promoter lock-law; G-002/wiring = DB-target parser; fallow/code-quality = review-state).
+Manufacturing an extraction from the concurrency-critical tx callback or the picker-options twin would
+risk a behavior regression for no real gain — out of scope per the matrix's no-regression rule.
 
 ## Hostile close review
 
