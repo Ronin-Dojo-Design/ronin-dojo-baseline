@@ -15,6 +15,8 @@ import { createPrintfulOrder } from "~/server/web/merch/printful-actions"
 import { db } from "~/services/db"
 
 const SUBSCRIPTION_PAYMENT_GRACE_DAYS = 7
+const BBL_BILLING_URL = "https://blackbeltlegacy.com/app/membership"
+const BBL_CLAIM_REVIEW_URL = "https://blackbeltlegacy.com/app/claims"
 
 const formatMoney = (cents: number | null | undefined, currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency }).format((cents ?? 0) / 100)
@@ -1281,7 +1283,7 @@ export const processStripeWebhook = async (
                 subject: `Welcome to Black Belt Legacy ${primaryPlan.name}`,
                 heading: `Your ${primaryPlan.name} membership is active`,
                 intro:
-                  "Thanks for joining Black Belt Legacy. Your paid membership is now active and your brand-aware lineage profile benefits are ready.",
+                  "Thanks for joining Black Belt Legacy. Your paid membership is active and your lineage profile benefits are ready.",
                 tier,
                 details: [
                   { label: "Tier", value: primaryPlan.name },
@@ -1431,6 +1433,7 @@ export const processStripeWebhook = async (
                 { label: "Grace period", value: `${SUBSCRIPTION_PAYMENT_GRACE_DAYS} days` },
               ],
               ctaLabel: "Update card",
+              ctaUrl: BBL_BILLING_URL,
               rateLimitKey: `payment-failed:${event.data.object.id}`,
             })
           }
@@ -1549,6 +1552,8 @@ export const processStripeWebhook = async (
               { label: "Dispute", value: dispute.id },
               { label: "Payment intent", value: paymentIntentId },
             ],
+            ctaLabel: "Open claim review",
+            ctaUrl: BBL_CLAIM_REVIEW_URL,
             rateLimitKey: `dispute:${dispute.id}`,
           })
         }

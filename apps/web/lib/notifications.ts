@@ -645,7 +645,7 @@ export type BblFounderLongRoadParams = {
   brand: Brand
   to: string
   firstName?: string | null
-  /** The minted, email-bound magic link that one-click claims the recipient's node. */
+  /** Durable sign-in URL; the email-bound claim is reconciled after sign-in. */
   claimUrl: string
   /** "founder" = Bob's letter. "tony" = Tony sees the letter verbatim + a short preface. */
   variant?: "founder" | "tony"
@@ -699,7 +699,7 @@ export type BblFirstTesterWelcomeParams = {
   to: string
   /** First-person salutation name (e.g. "Brian"). */
   recipientName: string
-  /** The minted, email-bound magic link that one-click signs in + claims the node. */
+  /** Durable sign-in URL; the email-bound claim is reconciled after sign-in. */
   claimUrl: string
 }
 

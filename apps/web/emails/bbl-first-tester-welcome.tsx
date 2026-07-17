@@ -13,7 +13,7 @@ import {
  * long-time loyal member and Black Belt Legacy's FIRST non-admin tester. Written
  * founder-to-member in the first person ("I"), it mirrors the founder
  * "Long Road" letter (`bbl-the-long-road.tsx`): the BBL wrapper, the red-circle
- * numbered step pattern, and a one-click claim magic link carried inside.
+ * numbered step pattern, and a durable sign-in link carried inside.
  *
  * It says the things this moment calls for: gratitude for years of loyalty, the
  * invitation to be the first real claim test, a genuine ask for friction
@@ -32,7 +32,7 @@ import {
 type EmailProps = BblEmailWrapperProps & {
   /** First-person salutation name (e.g. "Brian"). */
   recipientName: string
-  /** The recipient's one-click claim/sign-in magic link (button + paste fallback). */
+  /** Durable sign-in URL (button + paste fallback); claim binding reconciles after sign-in. */
   claimUrl: string
 }
 
@@ -99,8 +99,8 @@ export const EmailBblFirstTesterWelcome = ({
       </Text>
 
       <Text>
-        That link opens your sign-in screen. Sign in with either method below and your profile
-        claims itself on the spot — it&apos;s bound to your email, so there&apos;s nothing to enter
+        That link opens your sign-in screen. Sign in with either method below and your profile claim
+        connects to your account — it&apos;s bound to your email, so there&apos;s nothing to enter
         and nothing to expire. Take all the time you need.
       </Text>
 
@@ -158,8 +158,8 @@ export const EmailBblFirstTesterWelcome = ({
       {/* How signing in AND claiming works — login-explainer pattern. */}
       <Eyebrow>How to Sign In — and How Your Profile Claims Itself</Eyebrow>
       <Text className="mt-0">
-        The link above signs you in automatically this first time and claims your profile on the
-        spot. For every visit after, here are your two ways back in — I&apos;d start with Google.
+        The link above opens the sign-in screen and connects your profile claim after you sign in.
+        For every visit after, here are your two ways back in — I&apos;d start with Google.
       </Text>
 
       <Section className="my-4 overflow-hidden rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-4 py-4">
@@ -197,8 +197,8 @@ export const EmailBblFirstTesterWelcome = ({
           Here&apos;s the part you don&apos;t have to think about: your profile is already linked to
           your email behind the scenes. The moment you sign in —{" "}
           <strong>by Google or by Magic Link, it doesn&apos;t matter which</strong> — your profile
-          claims itself automatically. There are no extra steps, no forms, nothing to fill out. Sign
-          in, and it&apos;s yours.
+          connects to your account automatically. There are no extra steps, no forms, nothing to
+          fill out. Sign in, and it&apos;s yours.
         </Text>
       </Section>
 
