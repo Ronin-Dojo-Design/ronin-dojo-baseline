@@ -12,6 +12,15 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "~/components/common/drawer"
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/common/dialog"
 import { Stack } from "~/components/common/stack"
 import { MediaAttachmentPanel } from "~/components/web/media/media-attachment-manager"
 import { TechniqueForm } from "~/app/(web)/dashboard/technique-form"
@@ -47,6 +56,7 @@ export function AuthoredTechniqueCreate({ disciplines, belts }: AuthoredTechniqu
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const [open, setOpen] = useState(false)
+  const [discardDialogOpen, setDiscardDialogOpen] = useState(false)
   const [created, setCreated] = useState<{ id: string; name: string; slug: string } | null>(null)
   // Details-phase dirty flag (WL-P2-52 P3 dirty-guard) — a ref, not state: it only gates the
   // dismiss handler, so re-rendering on every keystroke would be waste.
@@ -58,17 +68,11 @@ export function AuthoredTechniqueCreate({ disciplines, belts }: AuthoredTechniqu
     if (shouldAutoOpen) setOpen(true)
   }, [shouldAutoOpen])
 
-  const handleOpenChange = (next: boolean) => {
-    // Dirty-guard (WL-P2-52 P3): dismissing the details phase with typed input silently discarded
-    // it. Confirm before closing; the media phase (`created`) has nothing unsaved — its attach
-    // actions persist as they run.
-    if (!next && !created && isFormDirtyRef.current) {
-      if (!window.confirm("Discard this technique? Your unsaved details will be lost.")) {
-        return
-      }
-    }
-    setOpen(next)
-    if (next) return
+  // Final-close path is intentionally separate from the dismiss request. The confirmation Dialog
+  // can therefore close independently without re-entering the Drawer's dirty guard.
+  const closeDrawer = () => {
+    setDiscardDialogOpen(false)
+    setOpen(false)
     const didCreate = created !== null
     isFormDirtyRef.current = false
     setCreated(null)
@@ -83,6 +87,23 @@ export function AuthoredTechniqueCreate({ disciplines, belts }: AuthoredTechniqu
     if (didCreate) {
       router.refresh()
     }
+  }
+
+  const handleOpenChange = (next: boolean) => {
+    if (next) {
+      setOpen(true)
+      return
+    }
+
+    // Dirty-guard (WL-P2-52 P3): dismissing the details phase with typed input silently discarded
+    // it. Keep the Drawer mounted behind the confirmation; the media phase (`created`) has nothing
+    // unsaved because attachment actions persist as they run.
+    if (!created && isFormDirtyRef.current) {
+      setDiscardDialogOpen(true)
+      return
+    }
+
+    closeDrawer()
   }
 
   return (
@@ -150,6 +171,23 @@ export function AuthoredTechniqueCreate({ disciplines, belts }: AuthoredTechniqu
           )}
         </DrawerContent>
       </Drawer>
+
+      <Dialog open={discardDialogOpen} onOpenChange={setDiscardDialogOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Discard this technique?</DialogTitle>
+            <DialogDescription>Your unsaved details will be lost.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" size="md" variant="secondary" />}>
+              Keep editing
+            </DialogClose>
+            <Button type="button" size="md" variant="destructive" onClick={closeDrawer}>
+              Discard technique
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

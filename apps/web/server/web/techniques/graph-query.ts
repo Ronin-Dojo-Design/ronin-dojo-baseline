@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
 import graphData from "~/prisma/data/bbl-bjj-graph.json"
+import { deriveGraphBeltLevel } from "~/server/web/techniques/graph-belt-level"
 import { db } from "~/services/db"
 
 const GRAPH_TAG_SLUG = "bjj-technique-graph"
@@ -40,6 +41,9 @@ export type BjjTechniqueGraphNode = {
   difficultyLevel: string | null
   position: string | null
   category: string | null
+  beltLevelMin: {
+    colorHex: string | null
+  } | null
   teachingCues: string[]
   curriculumItems: {
     id: string
@@ -83,6 +87,7 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
       difficultyLevel: true,
       isFoundational: true,
       teachingCues: true,
+      beltLevelMin: { select: { colorHex: true } },
       curriculumLinks: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -90,7 +95,13 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
             select: {
               id: true,
               title: true,
-              course: { select: { title: true, slug: true } },
+              course: {
+                select: {
+                  title: true,
+                  slug: true,
+                  rank: { select: { colorHex: true, sortOrder: true } },
+                },
+              },
             },
           },
         },
@@ -121,6 +132,10 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
       difficultyLevel: technique.difficultyLevel,
       position: technique.position,
       category: technique.category,
+      beltLevelMin: deriveGraphBeltLevel(
+        technique.beltLevelMin,
+        technique.curriculumLinks.map(link => link.curriculumItem.course.rank),
+      ),
       teachingCues: technique.teachingCues,
       curriculumItems: technique.curriculumLinks.map(link => ({
         id: link.curriculumItem.id,

@@ -4,14 +4,15 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-17
+last_agent: codex-session-0546
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
   - docs/knowledge/wiki/files/loop-board.md
 backlinks:
   - docs/knowledge/wiki/index.md
+  - docs/sprints/SESSION_0546.md
 tags:
   - governance
   - goals
@@ -229,3 +230,19 @@ aggregator reads it with no new parser logic.
 - **Why:** 6 copied rollback implementations + 71 tests with manual teardown = a real, measurable duplication
   problem with a concrete Adapter waiting to be extracted. Distinct from D-047 (one-time historical cleanup);
   this goal is the recurring pattern fix. (SESSION_0542 architecture scan; SESSION_0544 TASK_05.)
+
+### G-013 — Finish the BJJ technique experience epic
+
+- **Status:** in-progress — P1
+- **Objective:** continue the operator-pinned technique graph/curriculum epic after SESSION_0546 Wave 1:
+  Wave 2 graph tooltips, animated filter pill, zoom/fit easing, selected-neighborhood glow, empty/reset states,
+  and difficulty help; Wave 3 motion-only CurriculumJourney, key-point peek, grid stagger, and node menu; then
+  read-only curated Combo Flows. Preserve beta posture, keyboard/reduced-motion parity, and the locked-media
+  invariant (no URL or media-id-bearing poster).
+- **Lane:** BJJ techniques / curriculum / design. **Depends on:** SESSION_0546 Wave 1 (landed locally).
+  **First task:** B1 graph-node tooltips + C2 filter pill as one reviewed slice, then C4/C5.
+- **Constraints:** extend existing Dirstarter Content/Media/Monetization seams; derive-only content v1; no
+  schema migration, Lenis, nav promotion, QuestPanel/XP, Eskrima appendix, haptics, or authoring flow.
+- **Why:** Brian explicitly pinned this epic. Wave 1 fixed the conversion/access and visual foundation; the
+  remaining interaction and narrative layers are now a bounded, independently reviewable continuation rather
+  than untracked design intent. (SESSION_0546.)

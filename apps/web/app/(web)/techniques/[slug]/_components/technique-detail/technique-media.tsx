@@ -1,5 +1,8 @@
 import { LockKeyholeIcon } from "lucide-react"
+import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
+import { Link } from "~/components/common/link"
+import { Stack } from "~/components/common/stack"
 import { Section } from "~/components/web/ui/section"
 import { UpgradePanel } from "~/components/web/ui/upgrade-panel"
 import { toVideoEmbedUrl } from "~/lib/video-embed"
@@ -66,26 +69,27 @@ function TechniqueMediaItem({
 
 /**
  * A per-tile lock (SESSION_0527 Slice 0) — the mixed free/premium case, where SOME clips play and
- * SOME are gated. Shows the poster (if any) under a lock scrim; carries NO playable url. The single
- * centered upgrade panel below still covers the fully-premium case.
+ * SOME are gated. Carries NO playable url AND no poster/media-id-bearing path: the lock tile takes
+ * zero media props by construction. Its compact secondary CTA reuses the established upgrade funnel
+ * idiom; the single centered upgrade panel below still covers the fully-premium case.
  */
-function TechniqueMediaLockTile({ media }: { media: GatedTechniqueTile["media"] }) {
+function TechniqueMediaLockTile() {
   return (
-    <div className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30">
-      {media.thumbnailUrl && (
-        <img
-          src={media.thumbnailUrl}
-          alt=""
-          aria-hidden
-          className="absolute inset-0 size-full object-cover opacity-40"
-        />
-      )}
-      <span className="relative flex flex-col items-center gap-2 text-center">
-        <span className="flex size-12 items-center justify-center rounded-full bg-background text-muted-foreground">
+    <div className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-lg border border-dashed bg-muted/30 transition-colors duration-200 hover:border-primary/40 hover:bg-primary/5 focus-within:border-primary/40 focus-within:bg-primary/5 active:border-primary/50 active:bg-primary/10 motion-reduce:transition-none">
+      <Stack direction="column" size="sm" className="relative items-center px-4 text-center">
+        <span className="flex size-12 items-center justify-center rounded-full bg-background text-muted-foreground shadow-sm transition-[transform,color,box-shadow] duration-300 group-hover:-translate-y-0.5 group-hover:rotate-[-4deg] group-hover:scale-105 group-hover:text-primary group-hover:shadow-md group-focus-within:-translate-y-0.5 group-focus-within:rotate-[-4deg] group-focus-within:scale-105 group-focus-within:text-primary group-focus-within:shadow-md group-active:translate-y-0 group-active:rotate-0 group-active:scale-95 group-active:text-primary group-active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none">
           <LockKeyholeIcon className="size-6" />
         </span>
         <span className="text-sm font-medium text-foreground">Premium clip</span>
-      </span>
+        <Button
+          size="sm"
+          variant="secondary"
+          prefix={<LockKeyholeIcon />}
+          render={<Link href="/lineage/join" />}
+        >
+          Unlock with Premium
+        </Button>
+      </Stack>
     </div>
   )
 }
@@ -130,7 +134,7 @@ export function TechniqueMedia({ tiles, techniqueName, allLocked }: TechniqueMed
       <div className="grid gap-4 sm:grid-cols-2">
         {tiles.map(tile =>
           tile.locked ? (
-            <TechniqueMediaLockTile key={tile.id} media={tile.media} />
+            <TechniqueMediaLockTile key={tile.id} />
           ) : (
             <TechniqueMediaItem key={tile.id} media={tile.media} techniqueName={techniqueName} />
           ),

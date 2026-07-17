@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-17
 author: Brian + Copilot
-last_agent: claude-recovery-of-codex-session-0543
+last_agent: codex-session-0546
 ---
 
 # LLM Wiki Index
@@ -697,6 +697,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0542](../../sprints/SESSION_0542.md) | session--implement | closed — **Belt-review integrity, inspect-before-decide UX, and local DB command safety.** Atomic captured proposals, rollout-safe review state, strict coach identity, guarded E2E/prodsnap roles, full gates, and mobile/browser proof; local push held for explicit authorization. |
 | [SESSION_0543](../../sprints/SESSION_0543.md) | session--review | closed — **PR #210 merge-readiness (salvaged from crashed codex-session-0543).** Claude recovery: committed the uncommitted 0543 review/fallow diff, re-verified the local gate, completed TASK_04 code-quality (3 units 9.05/9.1/9.4), and pushed to draft PR #210. **CI then caught a real regression** — the 0542/0543 `rank: { brand: BBL }` review filter broke belt-reviews because real BBL BJJ ranks are `brand=null` (7 DB-tests failed); fixed in `2f02b6fe` by dropping the filter (authz stays on the `belt.admin` gate), re-verified 15/15 vs `ronindojo_e2e`. Fix pushed → **CI fully green on `672f4608`** (unit/Playwright×3/typecheck/Oxc/Vercel). TASK_05 architecture route PARKED; PR #210 stays draft (mark-ready/merge = operator decisions). |
 | [SESSION_0544](../../sprints/SESSION_0544.md) | session--review | **closed** — PR #210 squash-merged `0da7e7f6`, all CI + E2E ×3 + Vercel green. Delta review 9.23/10 mean; brand-regression class closed. G-011 (RankEntry pointer, blocked) + G-012 (DB verification, P2) added to Goals Ledger. |
+| [SESSION_0546](../../sprints/SESSION_0546.md) | session--implement | **closed** — Technique quality lane + Wave 1 polish: shared UpgradePanel/sortable media/staff predicate, graph/curriculum/watch UX, derived belt rails, responsive/export proof, Desi GO, Doug GO-WITH-NOTE 9.7. Local commit only; push held. |
+| [SESSION_0547](../../sprints/SESSION_0547.md) | session--plan | **closed** — Board sweep and six-lane clear-by-Saturday plan persisted; fan-out paused for explicit operator control. |
 
 ## Protocols
 

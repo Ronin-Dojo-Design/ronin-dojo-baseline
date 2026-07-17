@@ -4,6 +4,7 @@ import { BookOpenIcon, CheckCircle2Icon, LinkIcon, LockIcon } from "lucide-react
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { Badge } from "~/components/common/badge"
+import { BeltSwatch } from "~/components/common/belt-swatch"
 import { Button } from "~/components/common/button"
 import { Card, CardDescription, CardFooter, CardHeader } from "~/components/common/card"
 import {
@@ -15,6 +16,8 @@ import {
   DialogTitle,
 } from "~/components/common/dialog"
 import { H3 } from "~/components/common/heading"
+import { Note } from "~/components/common/note"
+import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
 import type { BjjCurriculumItemView, BjjCurriculumLevelView } from "~/server/web/curriculum/queries"
@@ -24,6 +27,33 @@ type BjjCurriculumBrowserProps = {
 }
 
 const ALL_TOPICS = "all"
+
+const ACCESS_LABELS: Record<string, string> = {
+  public: "Public",
+  student: "Student access",
+  member: "Member access",
+}
+
+const accessKey = (access: string) => access.trim().toLowerCase()
+
+const accessLabel = (access: string) => {
+  const key = accessKey(access)
+  const knownLabel = ACCESS_LABELS[key]
+  if (knownLabel) return knownLabel
+
+  return key
+    .split(/[-_]/)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+const accessUpgradeLine = (access: string): string | null => {
+  const key = accessKey(access)
+  if (key === "public") return null
+  if (key === "student") return "Enroll as a student to unlock the guided lesson."
+  if (key === "member") return "Upgrade your membership to unlock the guided lesson."
+  return "Upgrade your access to unlock the guided lesson."
+}
 
 export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
   const [selectedLevelId, setSelectedLevelId] = useState(levels[0]?.id ?? "")
@@ -74,11 +104,7 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
                 setSelectedTopic(ALL_TOPICS)
               }}
             >
-              <span
-                className="mr-1 inline-block size-2 rounded-full border border-foreground/20"
-                style={{ backgroundColor: level.rank?.colorHex ?? "hsl(var(--primary))" }}
-                aria-hidden="true"
-              />
+              <BeltSwatch colorHex={level.rank?.colorHex} className="size-2.5" />
               {level.rank?.shortName ?? level.title.replace(/^BJJ\s+/, "")}
             </Button>
           ))}
@@ -113,6 +139,7 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
             <CurriculumItemCard
               key={item.id}
               item={item}
+              beltColorHex={selectedLevel.rank?.colorHex}
               onSelect={() => setSelectedItemId(item.id)}
             />
           ))}
@@ -134,21 +161,27 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
                 {selectedItem.category && <Badge variant="primary">{selectedItem.category}</Badge>}
                 {selectedItem.section && <Badge variant="soft">{selectedItem.section}</Badge>}
                 {selectedItem.isRequired && <Badge variant="success">Required</Badge>}
-                {selectedItem.access !== "public" && (
+                {accessKey(selectedItem.access) !== "public" && (
                   <Badge variant="warning" prefix={<LockIcon />}>
-                    {selectedItem.access}
+                    {accessLabel(selectedItem.access)}
                   </Badge>
                 )}
               </Stack>
 
+              {accessUpgradeLine(selectedItem.access) && (
+                <Note>{accessUpgradeLine(selectedItem.access)}</Note>
+              )}
+
               {selectedItem.keyPoints.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Key points</p>
-                  <ul className="space-y-1 text-sm text-secondary-foreground">
-                    {selectedItem.keyPoints.map(point => (
-                      <li key={point}>- {point}</li>
-                    ))}
-                  </ul>
+                  <Prose className="prose-sm max-w-none">
+                    <ul>
+                      {selectedItem.keyPoints.map(point => (
+                        <li key={point}>{point}</li>
+                      ))}
+                    </ul>
+                  </Prose>
                 </div>
               )}
 
@@ -186,17 +219,26 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
 
 function CurriculumItemCard({
   item,
+  beltColorHex,
   onSelect,
 }: {
   item: BjjCurriculumItemView
+  beltColorHex?: string | null
   onSelect: () => void
 }) {
   return (
     <Card
       render={<button type="button" onClick={onSelect} />}
-      className="min-h-44 text-left"
+      className="min-h-44 text-left transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:-translate-y-1 focus-visible:shadow-lg active:translate-y-0 active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none"
+      style={beltColorHex ? { borderLeftColor: beltColorHex, borderLeftWidth: 3 } : undefined}
       aria-label={item.title}
     >
+      {beltColorHex && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-0 w-px bg-border"
+        />
+      )}
       <CardHeader size="xs" direction="row" className="items-start justify-between gap-3">
         <Stack direction="column" size="xs" className="min-w-0">
           <H3 size="h5" className="line-clamp-2 text-base">
@@ -226,9 +268,9 @@ function CurriculumItemCard({
             {item.techniqueLinks.length} graph links
           </Badge>
         )}
-        {item.access !== "public" && (
+        {accessKey(item.access) !== "public" && (
           <Badge variant="warning" size="sm" prefix={<LockIcon />}>
-            {item.access}
+            {accessLabel(item.access)}
           </Badge>
         )}
       </CardFooter>

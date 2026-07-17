@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
+import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import { cx } from "~/lib/utils"
 import type {
@@ -40,30 +41,36 @@ const PAN_STEP = 48
 type GraphNodeType = BjjTechniqueGraphNode["type"]
 type FilterValue = "all" | GraphNodeType
 
-const NODE_TYPES: { value: FilterValue; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "position", label: "Positions" },
-  { value: "submission", label: "Submissions" },
-  { value: "transition", label: "Transitions" },
-  { value: "counter", label: "Counters" },
+const NODE_TYPES: { value: FilterValue; label: string; dotClass: string }[] = [
+  { value: "all", label: "All", dotClass: "bg-foreground" },
+  { value: "position", label: "Positions", dotClass: "bg-sky-500" },
+  { value: "submission", label: "Submissions", dotClass: "bg-red-500" },
+  { value: "transition", label: "Transitions", dotClass: "bg-amber-500" },
+  { value: "counter", label: "Counters", dotClass: "bg-violet-500" },
 ]
 
 const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
 
 const nodeTypeClass = (type: GraphNodeType) => {
-  if (type === "position") return "border-primary/60 bg-card text-primary"
-  if (type === "submission") return "border-destructive/60 bg-card text-destructive"
-  if (type === "counter") {
-    return "border-muted-foreground/50 bg-muted text-muted-foreground"
+  // Solid light/dark fills are deliberate: each tint stays faint but OPAQUE, so overlapping graph
+  // nodes never blend into a muddy third color and the legend dots remain an exact visual key.
+  if (type === "position") {
+    return "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200"
   }
-  return "border-foreground/35 bg-card text-foreground"
+  if (type === "submission") {
+    return "border-red-400 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
+  }
+  if (type === "counter") {
+    return "border-violet-400 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-200"
+  }
+  return "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
 }
 
 const edgeTypeClass = (type: GraphNodeType) => {
-  if (type === "position") return "stroke-primary"
-  if (type === "submission") return "stroke-destructive"
-  if (type === "counter") return "stroke-muted-foreground"
-  return "stroke-foreground"
+  if (type === "position") return "stroke-sky-500"
+  if (type === "submission") return "stroke-red-500"
+  if (type === "counter") return "stroke-violet-500"
+  return "stroke-amber-500"
 }
 
 const labelForType = (type: GraphNodeType) =>
@@ -76,10 +83,14 @@ const EXPORT_CAPTURE_STYLES: Record<
   GraphNodeType,
   { background: string; border: string; text: string }
 > = {
-  position: { background: "rgb(254 242 242)", border: "rgb(248 113 113)", text: "rgb(185 28 28)" },
-  submission: { background: "rgb(255 247 237)", border: "rgb(251 146 60)", text: "rgb(194 65 12)" },
-  transition: { background: "rgb(248 250 252)", border: "rgb(148 163 184)", text: "rgb(15 23 42)" },
-  counter: { background: "rgb(243 244 246)", border: "rgb(156 163 175)", text: "rgb(55 65 81)" },
+  position: { background: "rgb(240 249 255)", border: "rgb(56 189 248)", text: "rgb(7 89 133)" },
+  submission: {
+    background: "rgb(254 242 242)",
+    border: "rgb(248 113 113)",
+    text: "rgb(153 27 27)",
+  },
+  transition: { background: "rgb(255 251 235)", border: "rgb(251 191 36)", text: "rgb(120 53 15)" },
+  counter: { background: "rgb(245 243 255)", border: "rgb(167 139 250)", text: "rgb(91 33 182)" },
 }
 
 type ExportStyleSnapshot = {
@@ -133,6 +144,23 @@ const withExportSafeStyles = async <T,>(
     for (const child of Array.from(node.querySelectorAll<HTMLElement>("span"))) {
       setStyle(child, "color", style.text)
     }
+  }
+
+  // Preserve the second tint channel in PNG exports. The generic OKLab-safety pass above clears
+  // every background first, so each data-driven Rank.colorHex edge is restored explicitly here.
+  for (const beltEdge of Array.from(
+    root.querySelectorAll<HTMLElement>("[data-graph-belt-color]"),
+  )) {
+    const beltColor = beltEdge.dataset.graphBeltColor
+    if (beltColor) setStyle(beltEdge, "background-color", beltColor)
+  }
+
+  // Keep the token-neutral contrast edge visible beside very light Rank colors (especially white
+  // belt). The generic OKLab-safety pass clears token backgrounds, so restore this one explicitly.
+  for (const hairline of Array.from(
+    root.querySelectorAll<HTMLElement>("[data-graph-belt-hairline]"),
+  )) {
+    setStyle(hairline, "background-color", "rgb(203 213 225)")
   }
 
   for (const edge of Array.from(root.querySelectorAll<SVGPathElement>("[data-graph-edge-type]"))) {
@@ -329,6 +357,10 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                 aria-pressed={activeType === type.value}
                 onClick={() => setActiveType(type.value)}
               >
+                <span
+                  aria-hidden="true"
+                  className={cx("size-2 shrink-0 rounded-full ring-1 ring-black/10", type.dotClass)}
+                />
                 {type.label}
               </Button>
             ))}
@@ -431,7 +463,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   key={node.id}
                   type="button"
                   className={cx(
-                    "absolute flex flex-col justify-center gap-1 rounded-lg border-2 px-3 text-left shadow-sm transition focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     selectedNodeId === node.id && "z-10 ring-2 ring-ring",
                     nodeTypeClass(node.type),
                   )}
@@ -455,6 +487,21 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   <span className="line-clamp-2 text-sm font-semibold leading-tight">
                     {node.label}
                   </span>
+                  {node.beltLevelMin?.colorHex && (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        data-graph-belt-hairline
+                        className="absolute inset-x-0 bottom-[3px] h-px bg-border"
+                      />
+                      <span
+                        aria-hidden="true"
+                        data-graph-belt-color={node.beltLevelMin.colorHex}
+                        className="absolute inset-x-0 bottom-0 h-[3px]"
+                        style={{ backgroundColor: node.beltLevelMin.colorHex }}
+                      />
+                    </>
+                  )}
                 </button>
               ))}
             </div>
@@ -485,11 +532,13 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               {selectedNode.teachingCues.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Teaching cues</p>
-                  <ul className="space-y-1 text-sm text-secondary-foreground">
-                    {selectedNode.teachingCues.map(cue => (
-                      <li key={cue}>- {cue}</li>
-                    ))}
-                  </ul>
+                  <Prose className="prose-sm max-w-none">
+                    <ul>
+                      {selectedNode.teachingCues.map(cue => (
+                        <li key={cue}>{cue}</li>
+                      ))}
+                    </ul>
+                  </Prose>
                 </div>
               )}
 

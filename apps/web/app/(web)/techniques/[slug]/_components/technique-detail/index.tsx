@@ -1,4 +1,6 @@
 import dynamic from "next/dynamic"
+import { Stack } from "~/components/common/stack"
+import { ListingSaveButton } from "~/components/web/listing/listing-save-button"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { TechniqueBadges } from "./technique-badges"
@@ -33,6 +35,10 @@ export function TechniqueDetail({ technique, brand, gatedMedia }: TechniqueDetai
       </Intro>
 
       <TechniqueBadges technique={technique} />
+
+      <Stack direction="row" size="xs" className="w-full">
+        <ListingSaveButton subjectType="TECHNIQUE" subjectId={technique.id} />
+      </Stack>
 
       <TechniqueMedia
         tiles={gatedMedia.tiles}

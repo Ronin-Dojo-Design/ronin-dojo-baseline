@@ -1,7 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
+import { Note } from "~/components/common/note"
+import { Stack } from "~/components/common/stack"
 import { TechniqueGraph } from "~/components/web/techniques/technique-graph"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
@@ -40,11 +43,22 @@ export default async function TechniqueGraphPage() {
       />
 
       <Intro>
-        <IntroTitle>{PAGE_TITLE}</IntroTitle>
+        <Stack direction="row" size="sm" className="items-center">
+          <IntroTitle>{PAGE_TITLE}</IntroTitle>
+          <Badge variant="caution" size="md">
+            Beta
+          </Badge>
+        </Stack>
         <IntroDescription>{PAGE_DESCRIPTION}</IntroDescription>
-        <Button variant="secondary" render={<Link href="/techniques" />}>
-          Technique Library
-        </Button>
+        <Note>Beta preview — the graph is usable now while we refine its interactions.</Note>
+        <Stack direction="row" size="xs">
+          <Button variant="secondary" render={<Link href="/techniques" />}>
+            Technique Library
+          </Button>
+          <Button variant="secondary" render={<Link href="/curriculum" />}>
+            BJJ Curriculum
+          </Button>
+        </Stack>
       </Intro>
 
       <Section className="md:block">
