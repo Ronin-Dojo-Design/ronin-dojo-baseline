@@ -463,23 +463,30 @@ routes it to D-047's backup-first, prefix-scoped cleanup lane.
 
 ### Goal
 
-Disposition draft PR #210 and run the parked TASK_05 architecture-route grill. Once CI is green on head
-`562b9607`, decide with the operator whether to mark PR #210 ready (→ CodeRabbit/human review) and merge
-(merge = prod-deploy trigger — held separately). Then grill the SESSION_0542 architecture shortlist and route
-at most one Goals-Ledger direction.
+Land PR #210 (belt-review remediation) cleanly and run the parked TASK_05 architecture-route grill. PR #210 is
+**ready · CI-green · MERGEABLE/CLEAN** on head `672f4608`; CodeRabbit review is triggered. Close out review,
+re-confirm quality on the FINAL post-fix diff, then decide the merge (prod deploy — operator word) and grill the
+architecture shortlist.
 
 ### Inputs to read
 
-- This file (`SESSION_0543.md`) — the salvaged review/fallow/code-quality record and the recovery close.
-- PR #210 CI result on head `562b9607` (the authoritative e2e + DB-concurrency gate deferred locally).
+- This file (`SESSION_0543.md`) — the salvaged review/fallow/code-quality record, the CI-caught regression + fix.
+- PR #210 CodeRabbit + any human review comments on head `672f4608`.
 - `/tmp/architecture-review-20260716-113052.html` (if still present) + the SESSION_0542 architecture shortlist.
 - ADR 0047 (promoter-as-placeholder) and `SESSION_0542.md`.
 
 ### First task
 
-Confirm PR #210 CI is green on `562b9607`. If green and the operator gives the word: mark PR #210 ready, trigger
-review, and decide the merge (prod deploy). If CI is red, triage the failing check on the branch (Playwright e2e /
-unit-test / typecheck) before any state change. Do NOT rerun the architecture scan — grill the existing shortlist.
+**Re-run the quality loops on the FINAL post-fix diff of PR #210 before merge** — they ran this session on the
+*pre-fix* code (TASK_01–04), and the regression fix `2f02b6fe` landed after, so re-confirm on the current head:
+
+1. **`/pr-review-fix`** on PR #210 — triage CodeRabbit/human findings + score → fix mechanical blockers on the branch.
+2. **`/code-quality`** on the final diff — re-score the three units (promoter workflow / belt-review queue / DB safety) now that the brand filter is gone; confirm no new sub-9.5 gap.
+3. **`/fallow-fix-loop`** on the final diff — re-baseline introduced dead-code/dup/complexity delta after the fix.
+4. **`hostile-close-review.md`** — re-run the eight hostile questions on the merge-candidate head; confirm the brand-regression class is closed and no residual.
+
+Then, on the operator's explicit word, **merge PR #210 (= prod deploy to blackbeltlegacy.com)**. Finally, grill the
+parked TASK_05 architecture shortlist and route at most one Goals-Ledger direction (do NOT rerun the architecture scan).
 
 ## Review log
 
