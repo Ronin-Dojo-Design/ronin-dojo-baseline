@@ -1,10 +1,10 @@
 ---
 title: "SESSION 0541 — belt-verification lane cleanup + hardening + promoter-as-placeholder ADR (plan-first)"
 slug: session-0541
-type: session--open
-status: in-progress
+type: session--implement
+status: complete
 created: 2026-07-15
-updated: 2026-07-15
+updated: 2026-07-16
 last_agent: claude-session-0541
 sprint: S12
 pairs_with:
@@ -259,14 +259,49 @@ Grill the operator BEFORE building TASK_03–08 (plan-first per standing rule). 
 
 ## What landed
 
-<!-- Filled at bow-out. -->
+All 14 tasks landed. Summary by area:
+
+**Belt-funnel hardening (TASK_01–07 / f0c83c48):**
+- Fallow cleanup: extracted `lead-meta-helpers.ts` (killed 53-line clone in both lead emitters), removed dead
+  `findOwnMilestone` self-dup + `BELT_STATUS_LABEL` dead export.
+- ADR 0047 authored: ratifies promoter-as-placeholder as a legitimate doorless identity sub-shape (doorless
+  until phase-2), exact-normalized dedup (bias to duplicates + admin MERGE escape), tx-fold boundary, and the
+  recruit-on-both-paths + honest-rename decision.
+- Promoter capture folded inside the award `$transaction` (no orphan stub on fail-closed); `resolveFactUpdateWithCapture`
+  is the named seam; "claimable" overstatement removed; WL-P3-44/45/47 resolved.
+- `ubiquitous-language.md` updated with "recruited-coach placeholder" and "doorless placeholder" terms.
+
+**G-010 review queue (TASK_08 / 031b73fa):**
+- `/app/belt-reviews` AdminCollection queue for `PENDING PROMOTER_CHANGED` reviews.
+- Inline Approve (verifies RankEntry → APPROVED) / Dismiss (DENIED) with `adminActionClient` authz + audit.
+- `beltReviews` permission added to roles.ts + admin-sections.ts + sidebar.
+
+**Join-wizard rich-belt parity (TASK_09 / e6ef5ff1):**
+- `lineage-step.tsx` rank picker upgraded to `variant="belt" size="sm"` BeltSwatch — matches claim picker.
+
+**Giddy follow-ups F1–F6 (TASK_11–14 / cc42aa03 + c3da2512):**
+- F1: `findMatchedOpenLead` threshold raised to 1 (exact-normalized, coherent with placeholder side); John/Jon
+  near-miss coherence test added to `emit-promoter-lead.test.ts`.
+- F2: `verifyRankEntryInTransaction` extracted to `verify-rank-entry-core.ts` (`import "server-only"`, not
+  `"use server"`); `rank-reviews/actions.ts` imports from core directly.
+- F3: inline binary-moderation ratified as a sanctioned AdminCollection sub-pattern in ADR 0047 Consequences
+  (exempt from D2 row→detail rule when: single status enum, reversible, RBAC-gated).
+- F4/F5: ADR 0047 D4 tx-coupling tradeoff noted + D5 admin-skips-trust note added (intentional).
+- F6: `verifyRankEntryInTransaction` added to `rankentry-unification-epic.md` G relocate list.
+
+**Gates:** typecheck clean · format:check clean · lint warnings pre-existing (not in diff) · unit tests 4/4 +
+5/5 · next build in CI (e2e in CI).
 
 ## Next session
 
 ### Goal
 
-<!-- Filled at bow-out. -->
+Open PR #210 merge + quality loops: run `/pr-fix-loop` on PR #210 (`session-0542-belt-review-remediation`),
+verify CI green, close the merge. Then ledger sweep: close the SESSION_0541 resolved WL/D/G ledger rows, check
+the `rankentry-unification-epic.md` epic D milestone.
 
 ### First task
 
-<!-- Filled at bow-out. -->
+Check PR #210 CI status (`gh pr checks 210`). If green: push this branch + open PR for the SESSION_0541
+work, then merge PR #210. If CI is red on #210: run `/pr-fix-loop` on #210 first. The SESSION_0541 work is
+ready to push (gates passed) — operator "go" needed.

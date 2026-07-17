@@ -180,7 +180,8 @@ follow-ups, not silent nulls.
 - **WL-P3-46** — `apps/web/app/(web)/lineage/join/join-legacy-wizard/lineage-step.tsx:103-114` — the join-wizard
   rank picker still renders the `dot` BeltSwatch while the claim picker now renders the rich `variant="belt"
   size="sm"`. Two rank pickers, two treatments — parity upgrade (out of the SESSION_0540 approved artifact scope).
-  (Desi LOW, SESSION_0540.)
+  (Desi LOW, SESSION_0540.) **Resolved SESSION_0541** (`e6ef5ff1`): `lineage-step.tsx` rank picker upgraded to
+  `variant="belt" size="sm"` BeltSwatch — both rank pickers now render the rich belt treatment.
 - **WL-P3-47** — `apps/web/server/belt/router.ts:178` — `buildFactUpdateData` is a side-effecting "builder": it
   mints a placeholder Passport (`ensurePromoterPlaceholder`) + emits a recruitment Lead (`emitPromoterLead`), and
   it's called on the ADMIN fact-edit path (`:535`) as well as the member path (`:462`). So an admin free-typing a

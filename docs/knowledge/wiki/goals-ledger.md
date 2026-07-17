@@ -180,7 +180,7 @@ aggregator reads it with no new parser logic.
 
 ### G-010 — Instructor review queue for backfill promoter-changed reviews
 
-- **Status:** open — P1
+- **Status:** DONE — SESSION_0541 (`031b73fa`)
 - **Objective:** build the admin surface that ACTIONS the `RankEntryReview{PROMOTER_CHANGED, status: PENDING}`
   rows the SESSION_0540 backfill-verification model CREATES. Conform to the AdminCollection data-table pattern
   (`/app/techniques` reference; `runAdminListTransaction`, inline-gated index): list member/belt/reason/note,

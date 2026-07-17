@@ -636,4 +636,6 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   and the honest-rename admin-path policy (D5/WL-P3-47). "Claimable" softened → "recruited-coach placeholder (claim
   door = phase-2)" in `promoter-placeholder.ts` + `emit-promoter-lead.ts` + `ubiquitous-language.md` (FINDING_01).
   Dedup tightened to exact-normalized (FINDING_03, `f0c83c48`). RankAward-keyed trust logic logged to the
-  RankAward-retire epic task G (FINDING_06, D6). Remaining: G-010 review queue + the phase-2 confirm/merge loop.
+  RankAward-retire epic task G (FINDING_06, D6). G-010 review queue LANDED SESSION_0541 (`031b73fa`,
+  `/app/belt-reviews` AdminCollection). Remaining: the phase-2 confirm/merge loop (lead coach registers →
+  belt FK binds → coach confirms → UNVERIFIED→VERIFIED; ADR 0047 D1 scope). **D-045 fully closed.**
