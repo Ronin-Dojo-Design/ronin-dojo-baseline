@@ -138,10 +138,17 @@ TASK_02's Obsidian-native build + optional RDD skin variant run only after the o
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0566_TASK_01 | landed | hallmark vendored + D11 preamble — commit `33cf123c`; push HELD |
-| SESSION_0566_TASK_02 | presented | 2 options × light/dark published (Artifact `e9eeeda8…`); Playwright-verified; build waits on the operator pick |
-| SESSION_0566_TASK_03 | landed | wayfinder + 4 siblings vendored (commit `0136e371`, CLI over-sync reverted to ordered scope); maiden map = issue #218, research #220/#221 resolved, frontier #219/#222 (HITL) |
-| SESSION_0566_TASK_04 | surfaced | OD-A checklist ready; executes only with the operator at the laptop |
+| SESSION_0566_TASK_01 | landed | hallmark vendored + D11 preamble — merged to main via PR #225 (operator "2 is go") |
+| SESSION_0566_TASK_02 | landed | Mockups presented (Artifact `e9eeeda8…`) → operator picked BUILD BOTH; Worn Gi + Mat Room snippets built by parallel Fable lanes into `Baseline_Vault/.obsidian/snippets/`, harness-verified light/dark/mobile, enabled in appearance.json (+ gold accent `#cfb87c` → seed red) |
+| SESSION_0566_TASK_03 | landed | wayfinder vendored (PR #225); maiden map #218: #219 resolved (c) FULL MIRROR, #220/#221 research resolved, frontier #222 (meeting) + #224/#223 blocked |
+| SESSION_0566_TASK_04 | surfaced | OD-A checklist ready; operator-interactive, not run |
+| SESSION_0566_TASK_05 | landed | Mammoth demo pack (NEW scope, #219 amendment): `~/Desktop/Mammoth_Demo_Vault/` — cockpit note + mammoth-crm skin (product tokens `#ff6a1a`/graphite, verified both themes), 5 script templates + conversion-tracking writeup (Lane C), dummy contacts/projects, Start Here, standalone HTML web mirror. Shareable folder for the Michael Flores meeting |
+
+## Decisions resolved (mid-session)
+
+- #219 = (c) full mirror both cockpits; demo-vault-as-deliverable; script-templates program added (graduates to OD-B3).
+- Operator: build BOTH mockup options (no single pick); demo/dummy data unrestricted, real-data mirror gated on #222/#224.
+- Push: "2 is go" → PR #225 squash-merged (`01ca1f5e`); later session-doc commits HELD for bow-out go.
 
 ## What landed
 
