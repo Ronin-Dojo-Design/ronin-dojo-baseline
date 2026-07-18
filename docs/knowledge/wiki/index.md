@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-17
+updated: 2026-07-18
 author: Brian + Copilot
-last_agent: codex-session-0551
+last_agent: codex-session-0567
 ---
 
 # LLM Wiki Index
@@ -701,6 +701,12 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0547](../../sprints/SESSION_0547.md) | session--plan | **closed** — Board sweep and six-lane clear-by-Saturday plan persisted; fan-out paused for explicit operator control. |
 | [SESSION_0549](../../sprints/SESSION_0549.md) | session--implement | closed — **Admin-route retirement cleanup.** Deleted the dead `/admin` shell/sidebar/palette stack, repointed live admin literals to `/app`, corrected legacy redirects, closed WL-P2-40/WL-P3-34/FS-0026/RISK #3 evidence, and held at the push gate. |
 | [SESSION_0551](../../sprints/SESSION_0551.md) | session--implement | closed — **Lane C test-infrastructure hardening.** G-012 fixture ownership helper landed; six rollback copy-sites plus representative e2e seed cleanup migrated; TFF-010/TFF-011 fixed; TFF-008 warm-up landed with local browser waiver; full unit gate green; push held. |
+| [SESSION_0552](../../sprints/SESSION_0552.md) | session--implement | closed — FI-002 lifecycle-email copy audit. |
+| [SESSION_0554](../../sprints/SESSION_0554.md) | session--plan | closed — FI-003 claim-funnel plan. |
+| [SESSION_0555](../../sprints/SESSION_0555.md) | session--open | closed — Claudex fan-out execution, PR #211 closure, and merge-wave plan. |
+| [SESSION_0564](../../sprints/SESSION_0564.md) | session--plan | closed — Obsidian Dashboard Epic plan-first grill. |
+| [SESSION_0565](../../sprints/SESSION_0565.md) | session--implement | closed — Merge wave execution: land B/C/D/F lanes onto main. |
+| [SESSION_0567](../../sprints/SESSION_0567.md) | session--open | closed — Parallel recovery wave + merged-trunk quality suite; local G3 lanes complete, CSP canary held. |
 
 ## Protocols
 
