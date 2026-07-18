@@ -1,5 +1,6 @@
 export type GraphBeltLevel = {
   colorHex: string | null
+  name: string | null
 }
 
 type LinkedCourseRank = GraphBeltLevel & {
@@ -13,7 +14,8 @@ type LinkedCourseRank = GraphBeltLevel & {
  * 2. Otherwise, use the lowest-sort-order Rank among linked curriculum Courses.
  * 3. Techniques with neither source remain unranked.
  *
- * The returned graph DTO intentionally stays color-only; sortOrder is query-local derivation data.
+ * The returned graph DTO intentionally stays display-only (color + label); sortOrder is
+ * query-local derivation data and never reaches the client payload.
  */
 export const deriveGraphBeltLevel = (
   directBelt: GraphBeltLevel | null,
@@ -27,5 +29,5 @@ export const deriveGraphBeltLevel = (
     if (!lowestRank || rank.sortOrder < lowestRank.sortOrder) lowestRank = rank
   }
 
-  return lowestRank ? { colorHex: lowestRank.colorHex } : null
+  return lowestRank ? { colorHex: lowestRank.colorHex, name: lowestRank.name } : null
 }

@@ -8,6 +8,7 @@ import {
   RotateCcwIcon,
   WorkflowIcon,
 } from "lucide-react"
+import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "~/components/common/badge"
@@ -23,6 +24,16 @@ import {
 } from "~/components/common/dialog"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/common/tooltip"
+import {
+  buildGraphNodeTooltip,
+  labelForGraphNodeType,
+} from "~/components/web/techniques/technique-graph-tooltip"
 import { cx } from "~/lib/utils"
 import type {
   BjjTechniqueGraph,
@@ -73,11 +84,8 @@ const edgeTypeClass = (type: GraphNodeType) => {
   return "stroke-amber-500"
 }
 
-const labelForType = (type: GraphNodeType) =>
-  type
-    .split("-")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
+// ~250ms keeps casual pans quiet while staying instant once a tooltip chain is open (provider-shared).
+const TOOLTIP_DELAY_MS = 250
 
 const EXPORT_CAPTURE_STYLES: Record<
   GraphNodeType,
@@ -226,6 +234,8 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<FilterValue>("all")
   const [isExporting, setIsExporting] = useState(false)
+  // Reduced motion drops the shared layoutId → the filter pill swaps instantly instead of sliding.
+  const reducedMotion = useReducedMotion()
   const canvasRef = useRef<HTMLDivElement>(null)
   const exportRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -340,7 +350,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   }
 
   return (
-    <>
+    <TooltipProvider delay={TOOLTIP_DELAY_MS}>
       <Card className="gap-3 p-3 md:p-4">
         <Stack direction="row" wrap size="sm" className="w-full items-center justify-between">
           <Stack direction="row" wrap size="xs" className="items-center">
@@ -348,22 +358,45 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               {graph.nodes.length} techniques
             </Badge>
             <Badge variant="soft">{graph.edges.length} links</Badge>
-            {NODE_TYPES.map(type => (
-              <Button
-                key={type.value}
-                type="button"
-                size="sm"
-                variant={activeType === type.value ? "primary" : "secondary"}
-                aria-pressed={activeType === type.value}
-                onClick={() => setActiveType(type.value)}
-              >
-                <span
-                  aria-hidden="true"
-                  className={cx("size-2 shrink-0 rounded-full ring-1 ring-black/10", type.dotClass)}
-                />
-                {type.label}
-              </Button>
-            ))}
+            <div
+              role="group"
+              aria-label="Filter techniques by type"
+              className="relative flex flex-wrap items-center gap-0.5 rounded-md bg-foreground/10 p-0.5"
+            >
+              {NODE_TYPES.map(type => {
+                const isActive = activeType === type.value
+
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => setActiveType(type.value)}
+                    className={cx(
+                      "relative z-10 flex cursor-pointer items-center gap-1.5 rounded-[5px] px-2.5 py-1 text-xs font-medium transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      !isActive && "opacity-60 hover:opacity-100",
+                    )}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={cx(
+                        "size-2 shrink-0 rounded-full ring-1 ring-black/10",
+                        type.dotClass,
+                      )}
+                    />
+                    {type.label}
+                    {isActive && (
+                      <motion.span
+                        aria-hidden="true"
+                        className="absolute inset-0 -z-10 rounded-[5px] bg-background shadow-sm"
+                        layoutId={reducedMotion ? undefined : "graph-filter-pill"}
+                        transition={{ type: "tween", duration: 0.125, ease: "easeOut" }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
           </Stack>
 
           <Stack direction="row" wrap size="xs">
@@ -458,52 +491,81 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                 ))}
               </svg>
 
-              {visibleNodes.map(node => (
-                <button
-                  key={node.id}
-                  type="button"
-                  className={cx(
-                    "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    selectedNodeId === node.id && "z-10 ring-2 ring-ring",
-                    nodeTypeClass(node.type),
-                  )}
-                  data-graph-node-type={node.type}
-                  style={{
-                    left: node.x,
-                    top: node.y,
-                    width: NODE_WIDTH,
-                    height: NODE_HEIGHT,
-                  }}
-                  aria-label={`${node.label}, ${labelForType(node.type)}`}
-                  aria-pressed={selectedNodeId === node.id}
-                  onClick={event => {
-                    event.stopPropagation()
-                    setSelectedNodeId(node.id)
-                  }}
-                >
-                  <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
-                    {labelForType(node.type)}
-                  </span>
-                  <span className="line-clamp-2 text-sm font-semibold leading-tight">
-                    {node.label}
-                  </span>
-                  {node.beltLevelMin?.colorHex && (
-                    <>
-                      <span
-                        aria-hidden="true"
-                        data-graph-belt-hairline
-                        className="absolute inset-x-0 bottom-[3px] h-px bg-border"
-                      />
-                      <span
-                        aria-hidden="true"
-                        data-graph-belt-color={node.beltLevelMin.colorHex}
-                        className="absolute inset-x-0 bottom-0 h-[3px]"
-                        style={{ backgroundColor: node.beltLevelMin.colorHex }}
-                      />
-                    </>
-                  )}
-                </button>
-              ))}
+              {visibleNodes.map(node => {
+                const tooltip = buildGraphNodeTooltip(node)
+                const tooltipMeta = [
+                  tooltip.typeLabel,
+                  tooltip.position,
+                  tooltip.beltName,
+                  tooltip.difficultyLevel,
+                  tooltip.isFoundational ? "Foundational" : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+
+                return (
+                  <Tooltip key={node.id}>
+                    <TooltipTrigger
+                      render={
+                        <button
+                          type="button"
+                          className={cx(
+                            "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            selectedNodeId === node.id && "z-10 ring-2 ring-ring",
+                            nodeTypeClass(node.type),
+                          )}
+                          data-graph-node-type={node.type}
+                          style={{
+                            left: node.x,
+                            top: node.y,
+                            width: NODE_WIDTH,
+                            height: NODE_HEIGHT,
+                          }}
+                          aria-label={`${node.label}, ${labelForGraphNodeType(node.type)}`}
+                          aria-pressed={selectedNodeId === node.id}
+                          onClick={event => {
+                            event.stopPropagation()
+                            setSelectedNodeId(node.id)
+                          }}
+                        >
+                          <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
+                            {labelForGraphNodeType(node.type)}
+                          </span>
+                          <span className="line-clamp-2 text-sm font-semibold leading-tight">
+                            {node.label}
+                          </span>
+                          {node.beltLevelMin?.colorHex && (
+                            <>
+                              <span
+                                aria-hidden="true"
+                                data-graph-belt-hairline
+                                className="absolute inset-x-0 bottom-[3px] h-px bg-border"
+                              />
+                              <span
+                                aria-hidden="true"
+                                data-graph-belt-color={node.beltLevelMin.colorHex}
+                                className="absolute inset-x-0 bottom-0 h-[3px]"
+                                style={{ backgroundColor: node.beltLevelMin.colorHex }}
+                              />
+                            </>
+                          )}
+                        </button>
+                      }
+                    />
+                    <TooltipContent
+                      side="top"
+                      sideOffset={8}
+                      size="md"
+                      className="max-w-[24em] flex-col items-start gap-1 text-left motion-reduce:duration-0"
+                    >
+                      <span className="text-[0.6875rem] font-semibold uppercase leading-tight tracking-wide opacity-80">
+                        {tooltipMeta}
+                      </span>
+                      {tooltip.summary && <span className="leading-snug">{tooltip.summary}</span>}
+                    </TooltipContent>
+                  </Tooltip>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -521,7 +583,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               </DialogHeader>
 
               <Stack direction="row" wrap size="xs">
-                <Badge variant="primary">{labelForType(selectedNode.type)}</Badge>
+                <Badge variant="primary">{labelForGraphNodeType(selectedNode.type)}</Badge>
                 {selectedNode.position && <Badge variant="soft">{selectedNode.position}</Badge>}
                 {selectedNode.difficultyLevel && (
                   <Badge variant="outline">{selectedNode.difficultyLevel}</Badge>
@@ -575,6 +637,6 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </TooltipProvider>
   )
 }

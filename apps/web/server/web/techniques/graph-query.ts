@@ -43,6 +43,7 @@ export type BjjTechniqueGraphNode = {
   category: string | null
   beltLevelMin: {
     colorHex: string | null
+    name: string | null
   } | null
   teachingCues: string[]
   curriculumItems: {
@@ -87,7 +88,7 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
       difficultyLevel: true,
       isFoundational: true,
       teachingCues: true,
-      beltLevelMin: { select: { colorHex: true } },
+      beltLevelMin: { select: { colorHex: true, name: true } },
       curriculumLinks: {
         orderBy: { sortOrder: "asc" },
         select: {
@@ -99,7 +100,7 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
                 select: {
                   title: true,
                   slug: true,
-                  rank: { select: { colorHex: true, sortOrder: true } },
+                  rank: { select: { colorHex: true, name: true, sortOrder: true } },
                 },
               },
             },
