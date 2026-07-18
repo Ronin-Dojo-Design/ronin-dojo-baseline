@@ -8,6 +8,7 @@ import {
   RotateCcwIcon,
   WorkflowIcon,
 } from "lucide-react"
+import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Badge } from "~/components/common/badge"
@@ -233,6 +234,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<FilterValue>("all")
   const [isExporting, setIsExporting] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
   const canvasRef = useRef<HTMLDivElement>(null)
   const exportRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
@@ -355,22 +357,55 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               {graph.nodes.length} techniques
             </Badge>
             <Badge variant="soft">{graph.edges.length} links</Badge>
-            {NODE_TYPES.map(type => (
-              <Button
-                key={type.value}
-                type="button"
-                size="sm"
-                variant={activeType === type.value ? "primary" : "secondary"}
-                aria-pressed={activeType === type.value}
-                onClick={() => setActiveType(type.value)}
-              >
-                <span
-                  aria-hidden="true"
-                  className={cx("size-2 shrink-0 rounded-full ring-1 ring-black/10", type.dotClass)}
-                />
-                {type.label}
-              </Button>
-            ))}
+            {NODE_TYPES.map(type => {
+              const isActive = activeType === type.value
+
+              return (
+                // ONE visual family — the sliding pill is the single active indicator (a variant
+                // flip on top would be a redundant double indicator). The pill lives at -z-10
+                // inside the isolated Button, so it paints above the Button's own background but
+                // below its label and never occludes the focus-visible ring. overflow-visible
+                // lets the pill stay visible mid-slide between chips (cross-row slides included).
+                <Button
+                  key={type.value}
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  aria-pressed={isActive}
+                  className={cx(
+                    "relative isolate overflow-visible",
+                    isActive && "z-10 text-primary-foreground hover:text-primary-foreground",
+                  )}
+                  onClick={() => setActiveType(type.value)}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      "size-2 shrink-0 rounded-full ring-1 ring-black/10",
+                      type.dotClass,
+                      isActive && "bg-primary-foreground",
+                    )}
+                  />
+                  {type.label}
+                  {isActive && (
+                    // Mirrors the layoutId pill precedent in
+                    // components/web/products/product-interval-switch.tsx:55-61 (unique layoutId —
+                    // "indicator" is taken). Animates only on activeType change; keyboard
+                    // Enter/Space hits the same onClick, so the pill moves identically.
+                    <motion.span
+                      aria-hidden="true"
+                      layoutId="graph-type-pill"
+                      className="absolute inset-0 -z-10 rounded-md bg-primary"
+                      transition={{
+                        type: "tween",
+                        duration: prefersReducedMotion ? 0 : 0.125,
+                        ease: "easeOut",
+                      }}
+                    />
+                  )}
+                </Button>
+              )
+            })}
           </Stack>
 
           <Stack direction="row" wrap size="xs">
