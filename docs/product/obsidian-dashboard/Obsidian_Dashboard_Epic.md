@@ -161,6 +161,11 @@ tooling per ADR 0034 — kernel + modules).
   order (un-themed cockpit first, demo-data mode until layout earns trust), and
   options-not-edits mockup iteration (named PNG options, light+dark, human picks). Transcript
   notes land in the same pack when transferred. Done: screenshot parity laptop/phone.
+  **Identified gap (operator, 0564 close): the CRM panel.** The AIOS reference has a CRM tab +
+  "touches due" chips; Mammoth's CRM is the obvious data source but lives on its own DB
+  (ADR 0038) — surfacing it in the dashboard crosses a product boundary. UNPLANNED fog: route
+  through a **wayfinder map** ("Mammoth CRM ↔ dashboard integration") as the skill's maiden run,
+  next session, before any dashboard build (fallback: /grill-me).
 - **OD-B5 — Replace the `obsidian-vault` skill.** New SKILL.md pointing at the canonical vault
   path, the note-type taxonomy, wikilink conventions, and vault-kit commands; delete the dead
   WSL-path skill in both `.claude/skills` and `.agents/skills` mirrors. Done: skill loads and

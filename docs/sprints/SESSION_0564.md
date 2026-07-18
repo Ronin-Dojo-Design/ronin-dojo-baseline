@@ -2,9 +2,9 @@
 title: "SESSION 0564 — Obsidian Dashboard Epic: plan-first grill (vault→repo, dashboard, Hermes, design skills)"
 slug: session-0564
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-07-17
-updated: 2026-07-17
+updated: 2026-07-18
 last_agent: claude-session-0564
 sprint: S12
 pairs_with:
@@ -192,7 +192,10 @@ D1–D12 — see epic §3 (single source; not duplicated here).
 
 | Command / smoke | Result |
 | --- | --- |
-| `bun run wiki:lint` (worktree) | (run at close — recorded below) |
+| `bash scripts/bow-out-gates.sh` | All gates PASS (task log 6 rows; wiki:lint 0 err/54 pre-existing warn; build skipped docs-only; git clean) |
+| `bun run scripts/wiki-lint.ts` (after every commit) | 0 errors / 54 warnings (baseline held across 7 commits) |
+| Web research (2 subagents) | wayfinder + hallmark sources verified; video URL confirmed (youtube.com/watch?v=7ixrbVKX7bk) |
+| Vault filesystem verification | 5-vault constellation verified by direct inspection (obsidian.json, sync.json absence, Spotlight + find) |
 
 ## Open decisions / blockers
 
@@ -225,23 +228,78 @@ two skills (hallmark; wayfinder + 4 deps, conformed) — then ratify the vault-k
 
 ### First task
 
-Read `docs/product/obsidian-dashboard/Obsidian_Dashboard_Epic.md` §5-A. Start OD-A1 (split the
-canonical core; media → `_archive/`) with the operator present, then OD-A2 (vault → private git
-repo). Skills vendor (OD §7) can run in parallel as a disjoint lane. Note: the 0555 merge wave
-may still be queued — it takes precedence if the operator says so.
+Read `docs/product/obsidian-dashboard/Obsidian_Dashboard_Epic.md` §5-A. Order (operator,
+0564 close): (1) **skills vendor first** (hallmark; wayfinder + 4 deps, conformed — OD §7);
+(2) **wayfinder maiden run**: chart the "Mammoth CRM ↔ dashboard integration" map — the CRM
+panel/tab is an identified OD-B4 gap and crosses the per-product DB boundary (ADR 0038), so
+resolve the fog as decision tickets BEFORE dashboard build (fallback: quick /grill-me if
+wayfinder's out-of-box friction bites); (3) OD-A1/A2 vault consolidation with the operator
+present. Note: merge-wave remnants (lanes A/B/E) may still be landing — check origin/main first.
 
 ## Review log
 
+### SESSION_0564_REVIEW_01 — Plan-lane close review
+
+- **Reviewed tasks:** SESSION_0564_TASK_01..03 (+ mid-session amendments)
+- **Dirstarter docs check:** not applicable (docs/governance lane; no L1 area touched)
+- **Verdict:** The epic survived contact with reality repeatedly in one session — 3 grill rounds,
+  a pilot pivot, 15 inspiration frames, a dictated brain-dump, and two vault-forensics reversals —
+  and absorbed all of it as amendments to the same 12-decision skeleton. Plan quality is proven by
+  amendment cost staying low. Weakness: Workstream A remains estimate-heavy until the operator is
+  at the laptop; Sync subscription still unverified.
+- **Score:** 9.0/10
+- **Follow-up:** first build session executes Phase 1 + ratifies the vault-kit ADR.
+
 ## Hostile close review
+
+- **Giddy:** pass — lane isolation held (own worktree/branch; merge wave untouched; one
+  goals-ledger conflict resolved at merge with both sides preserved); binaries kept out of the
+  monorepo per doctrine; folder promotion follows existing product-folder conventions.
+- **Doug:** pass — docs-only diff; all gates green at every commit; claims in the epic §2
+  inventory are each backed by direct filesystem verification recorded in-session; no app code,
+  no migrations, no vault content in repo.
+- **Desi:** not applicable (no UI touched; design DNA captured as inputs only).
+- **Kaizen aggregate:** 9/10 — high-throughput plan session with verified inputs; deducted for
+  the two inference reversals (phone-vault Sync pairing, "other two files") that direct
+  verification later corrected — verify-before-inferring earlier next time.
 
 ## ADR / ubiquitous-language check
 
-- ADR update: TBD at bow-out (epic may warrant an ADR for the vault↔repo model — grill decides).
-- Ubiquitous language: "Hermes" (local cron agent) + "vault-kit" candidates — confirm at doc time.
+- ADR update **not required this session** (plan-only). The epic explicitly stages ratification:
+  the two-repo vault-kit model + the D12 never-auto-send invariant → ADR in the first build
+  session (epic §9).
+- Ubiquitous language: "vault-kit", "Hermes" (local cron agent — note friendly name collision
+  with Eric Michaud's agent), "skin playground", "inspiration pack", "Email Boards" introduced;
+  all defined in the epic/PACK.md at first use.
 
 ## Reflections
+
+The grill format earned its keep: three AskUserQuestion rounds with recommendations attached
+resolved 12 forks from a phone, and every later input (screenshots, dictation) amended rather
+than broke the plan — cheap-to-amend is the real test of a plan's shape.
+
+Verification beat inference twice: the phone vault "obviously" paired via Obsidian Sync until
+sync.json's absence proved otherwise, and the "other two files" guess (iCloud vaults) was right
+only by luck of the operator's confirmation. The pattern to keep: state the inference, then
+verify on disk before writing it into canon — both corrections were one command away.
+
+The session also demonstrated the capture-path problem it plans to solve: a note shared from the
+phone routed to Todoist, a vault duplicate appeared mid-session, and the transcript arrived by
+paste — five vault copies and three capture destinations is exactly why Workstream A ships
+first. The epic's best property may be that its planning session doubled as its evidence base.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
+| Gate runner | `bow-out-gates.sh` all PASS (see Verification) |
+| JETTY/frontmatter sweep | All new docs carry full frontmatter; goals-ledger bumped to 2026-07-18/claude-session-0564 |
+| Backlinks/index sweep | New docs pair epic ↔ raw ↔ BBL input ↔ session |
+| Wiki lint | 0 errors / 54 pre-existing warnings |
+| Kaizen reflection | Reflections above |
+| Hostile close review | SESSION_0564_REVIEW_01 + hostile block above |
+| Review & Recommend | Next session staged (epic Phase 1; first task = OD-A1 + skills vendor) |
+| Ledger routing | No new FS/D/INC rows (no SOP misses; epic tracks the stale-skill fix as OD-B5); G-014..G-017 added |
+| Memory sweep | `obsidian-vault-constellation` memory written + MEMORY.md index line |
+| Git hygiene | 7 commits on `session-0564-obsidian-epic`; PR #217 squash-merged on operator's word |
+| Graphify update | Refreshed on canonical main post-merge (stats in close report) |
