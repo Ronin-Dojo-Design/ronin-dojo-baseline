@@ -138,10 +138,10 @@ TASK_02's Obsidian-native build + optional RDD skin variant run only after the o
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0566_TASK_01 | pending | hallmark vendor commit + D11 preamble |
-| SESSION_0566_TASK_02 | pending | mockup rounds 2×{light,dark} → operator pick |
-| SESSION_0566_TASK_03 | pending | wayfinder vendor + Mammoth CRM map |
-| SESSION_0566_TASK_04 | pending | OD-A surfaced (operator-interactive) |
+| SESSION_0566_TASK_01 | landed | hallmark vendored + D11 preamble — commit `33cf123c`; push HELD |
+| SESSION_0566_TASK_02 | presented | 2 options × light/dark published (Artifact `e9eeeda8…`); Playwright-verified; build waits on the operator pick |
+| SESSION_0566_TASK_03 | landed | wayfinder + 4 siblings vendored (commit `0136e371`, CLI over-sync reverted to ordered scope); maiden map = issue #218, research #220/#221 resolved, frontier #219/#222 (HITL) |
+| SESSION_0566_TASK_04 | surfaced | OD-A checklist ready; executes only with the operator at the laptop |
 
 ## What landed
 
