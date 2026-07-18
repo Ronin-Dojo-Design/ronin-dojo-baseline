@@ -205,18 +205,58 @@ TASK_02's Obsidian-native build + optional RDD skin variant run only after the o
 
 ## Next session
 
+Two lanes queued; the operator picks which fires first. SESSION_0567.md (already on main)
+carries the app-code integration lane (quality → billing → held lanes → E2E matrix → CSP
+canary → deploy authorization). THIS block carries the **BBL Obsidian dashboard continuation
+lane** — bow-in prompt written out below, paste-ready.
+
 ### Goal
 
-Operator's pinned 0567 list (app-code lane): integrate quality → billing → held lanes; `next
-build`; affected E2E + CI browser matrix; fix reds; CSP Preview canary; only then authorize
-prod deploy/flip. Separate interactive session: OD-A vault consolidation (A1→A5). Post-meeting:
-wayfinder work-through of #223/#224.
+BBL Obsidian dashboard build-out (OD-A vault time + OD-B4 v2 panels per the post-0566 epic
+amendment) + maximize Michael's Mammoth lane pre-meeting so the meeting itself is
+add-his-specifics-live, and post-meeting work is only his notes + the localhost dev site.
 
 ### First task
 
-Confirm lane/PR state vs the operator's inventory (0545/0550/0559/0561/0567-quality complete
-local; 0556/0557/0560 WIP; 0558/0562/0563 dirty — all preserved), then start the integration
-merge wave with full gates per lane.
+Paste-ready bow-in prompt for the continuation session:
+
+```text
+/bow-in Act as PETEY (sub-agents inherit this session model). Pin THIS lane (operator /goal
+wins over the SESSION_0567 default): BBL Obsidian dashboard build-out + Mammoth pre-meeting
+maximization, continuing SESSION_0566's lane. Take the next free session number (0568+,
+FS-0030 ID-space check) and a fresh worktree off latest origin/main.
+
+Read first: Obsidian_Dashboard_Epic.md §5-B OD-B4 "Panel additions (post-0566)" + §5-D
+OD-D8/OD-D9 (the amendment), SESSION_0566.md close, goals G-018/G-019, memory
+`skills-vendor-and-brand-skins` (skin/harness recipe + skills-CLI gotcha), wayfinder map #218
+(frontier #222/#223/#224).
+
+Task order:
+1. VAULT TIME (OD-A1→A5, WITH me at the laptop — surface each step, I execute the personal
+   data moves): core split <100MB → vault git init + private remote → RoninDojoDesign fold-in
+   incl. plugin harvest (style-settings, dataview, quickadd, metadata-menu, advanced-canvas,
+   todoist-sync) → archive RoninDojoObsidian 13GB → Obsidian Sync wiring with merge-on-connect
+   for BOTH phone vaults. I supply my Todoist API key at the todoist-sync step — key goes in
+   the plugin config/keychain, NEVER committed to vault git or repo (epic §9; add
+   .obsidian/plugins secret paths to the vault .gitignore).
+2. OD-B4 COMMAND CENTER v2 on Baseline_Vault: merge the two demo notes into the real
+   `02_Dashboards/Command Center.md` successor using the shipped skins (bbl-worn-gi /
+   bbl-mat-room — I'll say which becomes default); build the amended panels: ops-board
+   projection note (demo data until OD-D8 Hermes exists), graph_report.md copy, docs-nav +
+   graphify-viz link-outs (test core Web Viewer plugin for in-pane), Todoist-fed task panel.
+   Keep Tasks/Dataview blocks degrading gracefully.
+3. MAMMOTH PRE-MEETING MAX (~/Desktop/Mammoth_Demo_Vault + G-019): polish the cockpit +
+   landing draft to demo-grade; pre-stage empty "Michael's notes" surfaces (frontmatter-ready
+   blank cards/sections on cockpit, scripts, landing) so during the meeting we type his
+   specifics INTO the live dashboard; prep the zip for Drive/Dropbox (his pick, #222). After
+   the meeting: his notes → then the localhost dev site (clients/mammoth-build-crm landing
+   flesh-out — app-code, own gates).
+STANDING RULES: explicit per-push authorization (build/verify/show, HOLD each push gate);
+no vault content into the monorepo; no secrets in vault/repo; browser-MCP-lock fallback =
+isolated Playwright; #222 collect list at the meeting (OAuth · real-data consent ·
+Drive-vs-Dropbox · Calendar+Todoist keys · script feedback). Bring me: the OD-A step
+prompts one at a time, and the Command Center v2 layout before you commit it.
+```
 
 ## Review log
 

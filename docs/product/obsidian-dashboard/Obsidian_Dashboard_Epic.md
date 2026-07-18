@@ -165,7 +165,21 @@ tooling per ADR 0034 — kernel + modules).
   "touches due" chips; Mammoth's CRM is the obvious data source but lives on its own DB
   (ADR 0038) — surfacing it in the dashboard crosses a product boundary. UNPLANNED fog: route
   through a **wayfinder map** ("Mammoth CRM ↔ dashboard integration") as the skill's maiden run,
-  next session, before any dashboard build (fallback: /grill-me).
+  next session, before any dashboard build (fallback: /grill-me). **RESOLVED SESSION_0566:**
+  map = issue #218; #219 = **(c) full mirror in both cockpits**; demo-vault-as-deliverable
+  (`~/Desktop/Mammoth_Demo_Vault/`); read-path (#223) + real-data tenancy (#224) still open.
+  **Panel additions (operator, 2026-07-18 post-0566 close):**
+  - **Ops-board panel** — Hermes projection of the DB Kanban (`KanbanCard` / `/app/loop-board` /
+    AdminKanban) into an Obsidian Kanban-plugin note, **read-only v1** (same pattern as E-P2
+    email boards); drag-back write sync is its own pre-build grill (two-sources-of-truth,
+    D12-adjacent). Job = OD-D8.
+  - **Repo artifacts on the dashboard** — `graphify` `graph_report.md` is markdown → Hermes
+    copies it into the vault (OD-D9); the docs navigator (`docs/index.html`) and graphify viz
+    HTML get Command Center **link-outs** (Obsidian can't inline arbitrary local HTML; test the
+    core Web Viewer plugin during vault time as the in-pane upgrade).
+  - **Todoist wiring (operator's personal keys)** — todoist-sync-plugin (already in the OD-A3
+    harvest) + the operator's API key (keychain/env, NEVER vault/repo — §9) unblocks the
+    stranded "Ronin" capture→Todoist notes and feeds the OD-D2 daily brief task inputs.
 - **OD-B5 — Replace the `obsidian-vault` skill.** New SKILL.md pointing at the canonical vault
   path, the note-type taxonomy, wikilink conventions, and vault-kit commands; delete the dead
   WSL-path skill in both `.claude/skills` and `.agents/skills` mirrors. Done: skill loads and
@@ -225,6 +239,11 @@ flowchart TD
   sweep for martial-arts trends + outreach targets, scored AIOS-Content-tab style (generated-at,
   confidence, evidence gaps — PACK.md anatomy) into a Command Center panel; feeds the BBL
   "Legacy" content series + partnerships outreach (see BBL input doc §4).
+- **OD-D8 — Ops-board projection.** Reads `KanbanCard` board state (the `/app/loop-board`
+  source; DB is SoT) → writes/refreshes an Obsidian Kanban note panel. Read-only v1; write-back
+  gated behind its own grill. (Cheap model; added post-0566.)
+- **OD-D9 — Repo-artifacts copy.** Copies `.graphify/graph_report.md` into the vault + refreshes
+  Command Center link-outs (docs navigator, graphify viz HTML). Trivial cron. (Added post-0566.)
 - **Capture shortcut (rides OD-D5):** iPhone Shortcut — watch video → summarize → action plan →
   markdown → queue/ledger → vault inbox (operator's thoughts-to-text workflow; our models
   replace Gemini per §6; the yt-dlp recipe is the laptop half).
