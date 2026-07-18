@@ -73,7 +73,7 @@ The vault is the **heartbeat of the brand** — four jobs on one surface:
 | D8 | Email scope | **Plan all three phases now** (sweep+categorize, reply drafts, full approval/send flow) in spec-grade detail; build hands off to Codex CLI / cheap-model worktree subagents; v1 build = sweep+categorize |
 | D9 | Email goals shape | Program row (5 brands) + pilot row. **Amended post-grill (operator, 0564): pilot = BBL first** (Brian's own mailbox — no external OAuth blocker); Mammoth = first follower. Michael Flores video meeting **2026-07-18** = showcase the Obsidian/Hermes setup + collect Mammoth OAuth, plus possible **Google Calendar** integration and **Todoist** API keys (todoist-sync-plugin already in the Design-vault plugin harvest, OD-A3) |
 | D10 | Wayfinder | Vendor + conform (skill + its 4 sibling deps; tracker ops → `gh`; epic-scale usage only) |
-| D11 | Hallmark | Vendor as-is, scoped to greenfield/mockups/skins — ui-kit token contract stays law on product surfaces |
+| D11 | Hallmark | Vendor as-is, scoped to greenfield/mockups/skins — ui-kit token contract stays law on product surfaces. **Amended (SESSION_0569 grill, 2026-07-18): read-only `audit` verb allowed on product surfaces; punch list routes through Desi + doctrine; `redesign`/default builds stay banned there** |
 | D12 | Send safety | Hermes/email automation NEVER auto-sends. Sweep/categorize/draft freely; every send is an explicit human approval. Standing invariant across all phases. |
 
 ## 4. Target architecture

@@ -10,7 +10,10 @@ version: 1.1.0
 > Hallmark runs ONLY on: greenfield mockups, vault-skin exploration (OD-B2 skin playground),
 > and showcase/pitch pages. It NEVER touches `apps/web` (or `clients/*`) product surfaces —
 > there the `packages/ui-kit` token contract + design-system doctrine stay law, and hallmark
-> themes/palettes must not leak in (epic §9 scope guard). Brand mockups consume the REAL
+> themes/palettes must not leak in (epic §9 scope guard). **Amendment (SESSION_0569 grill,
+> 2026-07-18): the read-only `audit` verb MAY run against `apps/web`/`clients/*` surfaces — it
+> edits nothing, and its ranked punch list routes through Desi + the design-system doctrine
+> before any build. `redesign`, `study`-rebuild, and default builds remain banned there.** Brand mockups consume the REAL
 > `BrandSettings` seed tokens as the color anchor (brand color SoT is the DB seed — D6);
 > hallmark may layer texture/structure on top, never fork the palette. The `study` verb
 > additionally powers the OD-D5 design-drop watcher. Context gate (PACK.md, Impeccable
