@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder bun run db:generate && tsc --noEmit",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate",
     "db:studio": "prisma studio",
