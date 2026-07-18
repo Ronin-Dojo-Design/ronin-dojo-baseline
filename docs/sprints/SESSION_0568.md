@@ -180,7 +180,7 @@ lane is parallel-safe (disjoint vault files, no git in subagents — memory
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0568_TASK_01 | partial — MB-016 | OD-A1 done: 129 unique files reconciled non-destructively; bulk archive split left the synced core at 53 MB. OD-A2–A5 remain operator-only because the canonical vault contains credential files, the phone vault is not mounted, private-Git remote creation needs owner authority, and Sync requires an in-app phone↔laptop smoke. |
+| SESSION_0568_TASK_01 | OD-A1+A2 done — MB-016 | OD-A1: 129 files reconciled non-destructively, archive split → 53 MB core. **OD-A2 (Opus continuation):** vault `git init` + `.gitignore` (SHH_Folder/Baseline_SHH.txt/_archive/secret plugin data) + secret-scan (path+content, 0 real key literals) + private remote `Ronin-Dojo-Design/RDD_Baseline44_Vault` (PRIVATE) + push. Plus plugin-free CSS-only skin switcher (radio + `:has(:checked)`, reading-mode) + interactive render Artifact (both skins × light/dark). A3–A5 (Design fold-in, iCloud archive, Sync/phone pairing) + obsidian-git auto-backup + in-app eyeball remain owner-only (MB-016). |
 | SESSION_0568_TASK_02 | implemented — smoke pending MB-016 | Command Center v2 replaced the legacy query page using the Worn Gi default. Added Overview/Work/Content/Email/Ops/Repo/CRM anatomy, read-only Ops projection, Repo Signals, safe Todoist disconnected state, plugin fallbacks, and local artifact link-outs. Static structure/link verification passed; real Obsidian light/dark/phone eyeball remains manual. |
 | SESSION_0568_TASK_03 | pre-meeting complete; landing remains GL:G-019 | Mammoth demo vault polished with linked Michael-feedback sheets, share handoff, no-secrets boundary, and a 128 KB share zip. Secret-pattern scan and 0-unresolved-wikilink check passed. Post-meeting React/vault landing flesh-out remains correctly open under GL:G-019 because no approved Michael notes were supplied. |
 
@@ -229,20 +229,39 @@ lane is parallel-safe (disjoint vault files, no git in subagents — memory
 
 ## Next session
 
-### Goal
+### Goal (operator-pinned, continues the Obsidian dashboard lane)
 
-Execute the operator board's top item, FI-001 / G-001 Brian Truelson first-tester onboarding, unless the operator explicitly chooses the MB-016 Obsidian vault-time block first.
+Close the gap between Eric Michaud's AIOS "Pimp My Vault" setup and ours, then run an operator
+grill to decide what to integrate, then a hallmark design pass with **Desi driving**.
+
+1. **Template gap audit.** Compare Eric Michaud's provided setup (the FREE "Pimp My Vault" prompt
+   pack in his pinned comment, the Impeccable + `DESIGN.md`/GetDesign.MD + Google Stitch workflow,
+   and the AIOS cockpit anatomy captured in `PACK.md`) against what we already have (OD-B4 Command
+   Center v2, the two BBL skins, the CSS skin switcher, hallmark, the OD-B2 skins pipeline). Produce
+   a "what his has that we don't" gap list. **Grab the pinned prompt pack** and file it into the
+   inspiration pack.
+2. **`/grill-me` + `/grill-with-docs`** on that gap list to decide what the operator wants integrated
+   (which cockpit tabs/panels, the DESIGN.md-per-brand pattern, Impeccable-style context-gating for
+   design skills, etc.) — crystallize decisions into the epic / an ADR inline.
+3. **`/hallmark` design pass with Desi driving.** hallmark IS installed (`.claude/skills/hallmark`,
+   vendored 0566, D11-scoped) and the Desi agent exists — wire it so the repo dispatches the **Desi**
+   subagent to run the hallmark design pass (Desi drives hallmark on the vault-dashboard / skin
+   surfaces). No skill needs building; if a thin wiring tweak is wanted, use `write-a-skill`.
 
 ### Inputs to read
 
-- `docs/product/black-belt-legacy/POST_LAUNCH_SOT.md` (FI-001)
-- `docs/knowledge/wiki/goals-ledger.md` (G-001)
-- `docs/knowledge/wiki/manual-boundary-registry.md` (MB-016 if vault time is selected)
-- `docs/sprints/SESSION_0568.md`
+- `Baseline_Vault/10_Design/_inspiration/obsidian-dashboard/PACK.md` (Eric Michaud AIOS DNA + resources)
+- Eric Michaud's pinned "Pimp My Vault" prompt pack (YouTube `7ixrbVKX7bk`) once grabbed
+- `docs/product/obsidian-dashboard/Obsidian_Dashboard_Epic.md` (OD-B2/B4 + skins pipeline)
+- `.claude/skills/hallmark/SKILL.md` + `.claude/agents/Desi.md` (design-pass wiring)
+- `docs/knowledge/wiki/manual-boundary-registry.md` (MB-016 owner vault-time still open in parallel)
 
 ### First task
 
-Run `apps/web/scripts/board-backlog.ts`, confirm FI-001 still leads, then inspect its existing implementation/data state before any mutation. If the operator selects vault time instead, begin MB-016 with the credential-folder move and private-Git first-commit review at the laptop.
+Read `PACK.md` + the grabbed prompt pack, then produce the template gap-audit list (his-vs-ours).
+Then open the `/grill-me` on integration scope before any build. Parallel owner track (not agent-solo):
+MB-016 remaining vault-time — obsidian-git auto-backup, Obsidian Sync phone↔laptop pairing, and the
+in-app Command Center v2 + skin-switcher eyeball.
 
 ## Review log
 

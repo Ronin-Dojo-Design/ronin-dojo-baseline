@@ -214,12 +214,13 @@ Blocker classes:
 
 #### MB-016 — canonical Obsidian vault activation and native smoke
 
-- **Boundary:** Finish OD-A2–A5 without leaking personal credentials or orphaning phone captures: move `SHH_Folder` outside the synced vault; review the ignored file set and first private-Git commit; authorize/create the private remote; configure obsidian-git; pair the Desktop vault and both phone vaults to one Obsidian Sync remote; exclude `_archive/`; smoke Command Center v2 in real Obsidian light/dark/phone.
+- **Boundary:** Finish OD-A2–A5 without leaking personal credentials or orphaning phone captures. **DONE (SESSION_0568 Opus continuation, agent-safe with per-action operator go):** `SHH_Folder` + `Baseline_SHH.txt` + `_archive/` + secret plugin data (`copilot`/`obsidian-git`/`todoist` `data.json`) gitignored; ignored set + 334-file first commit reviewed and secret-scanned (path + content, 0 real key literals); private remote `Ronin-Dojo-Design/RDD_Baseline44_Vault` created **PRIVATE** + pushed. **REMAINS (owner-only, in-app):** configure obsidian-git auto-backup; pair the Desktop vault + both phone vaults to one Obsidian Sync remote; eyeball Command Center v2 + the new plugin-free CSS skin switcher in real Obsidian light/dark/phone; store the Todoist token outside notes/vault-git when wired.
 - **Owner:** Brian at the laptop + phone; agent may guide and verify outputs one step at a time.
 - **Blocker class:** `qa_proof`
-- **Proof required:** secret scan and reviewed first-commit file list; private remote confirmed; phone edit appears on laptop and laptop edit on phone; archive remains local-only; Command Center v2 screenshot/eyeball in Worn Gi light/dark and phone widths; Todoist token stored outside notes/vault Git.
+- **Proof required:** ✅ secret scan + reviewed 334-file first commit; ✅ private remote confirmed (`RDD_Baseline44_Vault`, PRIVATE); ✅ archive local-only (gitignored). REMAINS: phone edit appears on laptop and vice-versa (Sync); Command Center v2 + skin-switcher eyeball in Worn Gi light/dark and phone widths; Todoist token stored outside notes/vault Git.
 - **Status:** waiting_on_owner
 - **Added:** SESSION_0568; OD-A1 core split complete (53 MB), OD-A2–A5 and native OD-B4 smoke remain.
+- **Updated:** SESSION_0568 (Opus continuation) — OD-A2 vault git init + gitignore + secret-scan + private remote + push **DONE**; only Sync/phone-pairing + obsidian-git auto-backup + in-app Command Center/switcher eyeball remain owner-only.
 
 SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs.
 
