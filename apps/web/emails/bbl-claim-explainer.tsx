@@ -8,7 +8,7 @@ import {
   type BblEmailWrapperProps,
 } from "~/emails/components/bbl-wrapper"
 
-const ADMIN_URL = "https://blackbeltlegacy.com/admin"
+const ADMIN_URL = "https://blackbeltlegacy.com/app"
 
 /**
  * Technical heads-up to Tony (SESSION_0419) so he's in the loop if Bob mentions the

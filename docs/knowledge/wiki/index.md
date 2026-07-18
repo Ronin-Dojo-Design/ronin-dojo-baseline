@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-17
 author: Brian + Copilot
-last_agent: codex-session-0548
+last_agent: codex-session-0551
 ---
 
 # LLM Wiki Index
@@ -699,6 +699,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0544](../../sprints/SESSION_0544.md) | session--review | **closed** — PR #210 squash-merged `0da7e7f6`, all CI + E2E ×3 + Vercel green. Delta review 9.23/10 mean; brand-regression class closed. G-011 (RankEntry pointer, blocked) + G-012 (DB verification, P2) added to Goals Ledger. |
 | [SESSION_0546](../../sprints/SESSION_0546.md) | session--implement | **closed** — Technique quality lane + Wave 1 polish: shared UpgradePanel/sortable media/staff predicate, graph/curriculum/watch UX, derived belt rails, responsive/export proof, Desi GO, Doug GO-WITH-NOTE 9.7. Local commit only; push held. |
 | [SESSION_0547](../../sprints/SESSION_0547.md) | session--plan | **closed** — Board sweep and six-lane clear-by-Saturday plan persisted; fan-out paused for explicit operator control. |
+| [SESSION_0549](../../sprints/SESSION_0549.md) | session--implement | closed — **Admin-route retirement cleanup.** Deleted the dead `/admin` shell/sidebar/palette stack, repointed live admin literals to `/app`, corrected legacy redirects, closed WL-P2-40/WL-P3-34/FS-0026/RISK #3 evidence, and held at the push gate. |
+| [SESSION_0551](../../sprints/SESSION_0551.md) | session--implement | closed — **Lane C test-infrastructure hardening.** G-012 fixture ownership helper landed; six rollback copy-sites plus representative e2e seed cleanup migrated; TFF-010/TFF-011 fixed; TFF-008 warm-up landed with local browser waiver; full unit gate green; push held. |
 
 ## Protocols
 
@@ -780,6 +782,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [MCP Usage Runbook](../../runbooks/dev-environment/mcp-usage-runbook.md)                                          | runbook           | active                                                                                                                                                                                            |
 | [Deployment](../../runbooks/deploy/deployment.md)                                                                 | runbook           | active                                                                                                                                                                                            |
 | [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md)                                            | runbook           | active                                                                                                                                                                                            |
+| [Test Fixture Ownership](../../runbooks/sops/test-fixture-ownership.md)                                           | runbook           | active — DB-backed test rollback, run identity, FK-safe cleanup, and count-neutral proof helper                                                                                                   |
 | [Course + Curriculum Runbook](../../runbooks/domain-features/course-curriculum-runbook.md)                        | runbook           | active                                                                                                                                                                                            |
 | [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md)                                     | runbook           | active                                                                                                                                                                                            |
 | [UI Library Candidates](../../runbooks/design/ui-library-candidates.md)                                           | runbook           | active                                                                                                                                                                                            |

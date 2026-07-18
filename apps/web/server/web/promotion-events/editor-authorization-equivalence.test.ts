@@ -23,6 +23,7 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 
+import { inRolledBackTx, type TestTransactionClient } from "~/lib/test/fixture-ownership"
 import type { AuthzUser } from "~/lib/authz"
 import {
   assertLineageAxisEquivalence,
@@ -32,27 +33,12 @@ import type {
   AuthorizableRankAward,
   PromotionEventAuthoringScope,
 } from "~/server/web/promotion-events/editor-authorization"
-import { db } from "~/services/db"
 
-// biome-ignore lint/suspicious/noExplicitAny: tx client surface.
-type Tx = any
+type Tx = TestTransactionClient
 
 const TS = Date.now()
 let seq = 0
 const uid = (name: string) => `eq-${TS}-${seq++}-${name}`
-
-class Rollback extends Error {}
-
-async function inRolledBackTx(body: (tx: Tx) => Promise<void>): Promise<void> {
-  try {
-    await db.$transaction(async (tx: Tx) => {
-      await body(tx)
-      throw new Rollback()
-    })
-  } catch (error) {
-    if (!(error instanceof Rollback)) throw error
-  }
-}
 
 async function makeNode(tx: Tx): Promise<{ passportId: string; nodeId: string }> {
   const passport = await tx.passport.create({

@@ -60,7 +60,7 @@ EmailAdminBblJoinLegacy.PreviewProps = {
   rankSummary: "BJJ black belt",
   trainedUnder: "Rigan Machado",
   represent: "Rigan Machado lineage",
-  adminLeadUrl: "https://blackbeltlegacy.com/admin/leads/example",
+  adminLeadUrl: "https://blackbeltlegacy.com/app/leads/example",
   checkoutUrl: "https://blackbeltlegacy.com/lineage/join?submitted=true#lineage-membership",
   claimCreated: true,
 } satisfies EmailProps

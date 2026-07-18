@@ -22,8 +22,8 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 
+import { inRolledBackTx, type TestTransactionClient } from "~/lib/test/fixture-ownership"
 import { placeLeadIntoLineage } from "~/server/admin/lineage/place-lead-core"
-import { db } from "~/services/db"
 
 const BRAND = "BASELINE_MARTIAL_ARTS" as const
 
@@ -31,21 +31,7 @@ const TS = Date.now()
 let seq = 0
 const uid = (name: string) => `al-${TS}-${seq++}-${name}`
 
-// biome-ignore lint/suspicious/noExplicitAny: tx client surface.
-type Tx = any
-
-class Rollback extends Error {}
-
-async function inRolledBackTx(body: (tx: Tx) => Promise<void>): Promise<void> {
-  try {
-    await db.$transaction(async (tx: Tx) => {
-      await body(tx)
-      throw new Rollback()
-    })
-  } catch (error) {
-    if (!(error instanceof Rollback)) throw error
-  }
-}
+type Tx = TestTransactionClient
 
 /** A person = Passport + LineageNode; when `treeId` given, also a member under `parentMemberId`. */
 async function makePerson(

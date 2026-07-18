@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-07-12
-last_agent: claude-session-0529
+updated: 2026-07-17
+last_agent: codex-session-0551
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -59,15 +59,19 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
 
 ### TFF-010 — paywall e2e seed: unique `code` derived by truncating OFF the unique suffix (P2002 under parallel workers)
 
-- **Status:** `open` (workaround known; background chip spawned SESSION_0521).
+- **Status:** `fixed` (SESSION_0551).
 - **What broke:** first FI-024 round-trip run hit a P2002 on `Discipline @@unique([code, brand])`.
   `apps/web/e2e/helpers/seed-directory-paywall-db.ts` (~lines 30, 136): `makeRunId()` appends a UUID for
   uniqueness, but `code = slugify('dp-' + runId).slice(0, 16)` truncates to exactly `dp-{13-digit-ms}` —
   **dropping the UUID**. Two seeds in the same millisecond (parallel Playwright workers) collide.
 - **Repro:** run `e2e/directory/profile-paywall.spec.ts` with >1 worker so two seeds land in the same ms;
   single-worker (`--workers=1`) clears it (how Doug disambiguated the false-red, SESSION_0521).
-- **Fix direction:** keep the code within its 16-char budget but derived from the *unique* part (short
-  base36/hash of the UUID), or widen the code discipline. Not part of any FI-024 diff — pre-existing infra.
+- **Fix:** `seed-directory-paywall-db.ts` now uses
+  `createFixtureRunIdentity(TAG_PREFIX).shortCode("dp")`, preserving the UUID suffix inside the
+  16-character `Discipline.code` budget. The entitlement seed also switched to `upsert` so parallel
+  workers do not race the shared `{brand,key}` entitlement.
+- **Verified:** direct parallel seed proof 2/2 with two simultaneous `seedDirectoryPaywallFixture()` calls
+  against `ronindojo_e2e`, plus the full unit gate `bun run test` green in SESSION_0551.
 - **Reusable pattern:** a "unique" key derived from a **truncated non-unique prefix** of a unique value is
   a collision class, not uniqueness — check what the `slice()` actually keeps.
 
@@ -132,7 +136,7 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
 
 ### TFF-008 — `e2e/lineage/authenticated-lifecycle.spec.ts:88` flakes on a hammered/cold dev server (JIT-compile timing)
 
-- **Status:** `open` (diagnosed, not code-fixed — env/harness, not a product bug; SESSION_0504).
+- **Status:** `fixed-with-local-browser-waiver` (SESSION_0551).
 - **Last observed:** 2026-07-06. During SESSION_0504's close, after 3 agents (Cody build + Doug verify +
   Petey) pounded ONE shared local `:3004` dev server through repeated full-suite runs + 2 system kills/
   restarts, `authenticated-lifecycle:88` ("anonymous claim and edit routes redirect to the real login
@@ -145,10 +149,12 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   auth/edit/middleware files and the edit route imports NONE of the changed files (byte-identical to
   baseline); (b) it passed the full suite 34/34 on a fresh server earlier; (c) **re-ran 5/5 green on a
   fresh unloaded `:3004` server** (first-hand).
-- **Fix (recommended, not done — out of SESSION_0504's page-pass scope):** harden the harness — pre-warm
-  the `/lineage/[slug]/edit/[nodeId]` route with a fetch before the assertion, and/or raise the timeout
-  for that specific redirect, and/or give parallel worktree sessions **separate dev-server ports** so one
-  suite doesn't starve another's. Do NOT read a red here as a code regression without a fresh-server re-run.
+- **Fix:** `expectAnonymousLoginRedirect()` now pre-hits the target route through Playwright's request
+  context with `maxRedirects: 0` before the browser `goto`, warming the dynamic edit route before the
+  assertion clock starts.
+- **Verified:** code path covered by the affected spec setup, but local browser repeat proof was blocked in
+  SESSION_0551 by Chromium `SIGTRAP` before assertions and Turbopack `EMFILE` when Playwright tried to
+  spawn a second web server. Keep CI Playwright as the final browser proof for this row.
 - **Reusable pattern:** a scary e2e red on a server shared by parallel agents ≠ a regression. Disambiguate
   with (1) a diff + transitive-import check that the changed files don't reach the failing route, and (2) a
   fresh-server isolated re-run. Relates to the shared-DB/one-server parallel-session trap.
@@ -195,16 +201,18 @@ Proven green 4× consecutively: **418 pass / 0 fail across 75 files, ~67s**. Mec
 [`sop-test-writing.md`](../../runbooks/sops/sop-test-writing.md) §2. Future speed-up path (per-worker DB
 isolation) noted there too.
 
-### TFF-011 — stripe webhook concurrency test is load-sensitive under the full suite (OPEN, SESSION_0529)
+### TFF-011 — stripe webhook concurrency test is load-sensitive under the full suite (fixed SESSION_0551)
 
 - **Symptom:** `apps/web/app/api/stripe/webhooks/route.test.ts:1384` (parallel-webhook capacity race) fails
   under a full `bun run test` run (400 vs 200) but passes 10/10 isolated. Observed once in three full-suite
   runs during SESSION_0529 (Doug's first run red; builder's + delta runs green).
 - **Diagnosis (probable):** timing/capacity assumption in the parallel-webhook test breaks under suite-wide
   load; not diff-related (SESSION_0529 touched no stripe/webhook code).
-- **Fix direction:** make the capacity race deterministic (explicit synchronization or a serialized fixture) —
-  it masks future gate signal until fixed.
-- **Status:** OPEN (SESSION_0529 grill wrap — operator-ratified ledger row).
+- **Fix:** SESSION_0551 kept the duplicate-capacity proof but serialized the two webhook posts, removing the
+  suite-wide Postgres scheduling assumption while still asserting one active entry and one refunded loser.
+- **Status:** `fixed`.
+- **Verified:** `bun run test app/api/stripe/webhooks/route.test.ts` 2/2 isolated, plus full `bun run test`
+  green after the change: 1532 pass / 0 fail across 204 web files.
 
 ## Relationships
 

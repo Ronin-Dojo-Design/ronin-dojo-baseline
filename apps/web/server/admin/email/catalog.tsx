@@ -91,7 +91,7 @@ const templates: BblEmailTemplate[] = [
         rankSummary="BJJ black belt"
         trainedUnder="Rigan Machado"
         represent="Rigan Machado lineage"
-        adminLeadUrl="https://blackbeltlegacy.com/admin/leads/example"
+        adminLeadUrl="https://blackbeltlegacy.com/app/leads/example"
         checkoutUrl={`${context.joinUrl}?submitted=true#lineage-membership`}
         claimCreated={true}
       />

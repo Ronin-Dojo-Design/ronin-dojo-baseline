@@ -13,7 +13,7 @@ type EmailProps = BblEmailWrapperProps & {
   firstName?: string | null
   /** The imported profile's display name, e.g. "Chris Haueter". */
   profileName: string
-  /** Absolute URL that starts the claim flow for this person's node. */
+  /** Durable sign-in URL; the profile claim reconciles after sign-in via the email binding. */
   claimUrl: string
   /** Comped membership tier label (the gift). */
   compTier?: "ELITE"
@@ -60,12 +60,13 @@ export const EmailBblClaimYourProfile = ({
           How to claim your profile — 3 steps
         </Text>
         <Text className="mb-0 mt-3 text-[14px] leading-7 text-neutral-800">
-          <strong>1.</strong> Click the button below — it signs you in instantly, no password to set
+          <strong>1.</strong> Click the button below to open the sign-in screen — no password to set
           up or remember.
           <br />
           <strong>2.</strong> Confirm your details and add a photo if you like.
           <br />
-          <strong>3.</strong> That&apos;s it — your profile is claimed and live.
+          <strong>3.</strong> That&apos;s it — your profile is claimed after sign-in and ready to
+          update.
         </Text>
         <Text className="mb-0 mt-2 text-[13px] text-neutral-500">
           Once you&apos;re in, you can see your students in the lineage tree and edit anything that

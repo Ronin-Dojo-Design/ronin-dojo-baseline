@@ -81,12 +81,9 @@ export const Search = () => {
 
   // C2-8: shared `isAdmin` predicate, not a forked `role === "admin"`.
   const viewerIsAdmin = isAdmin(session?.user)
-  // DRIFT (logged, not fixed here): `/admin/*` admin CRUD moved to `/app/*` (0441–0448), and the
-  // `[slug]` admin-detail routes this prefixed don't exist under EITHER prefix. Repairing the
-  // search-result href routing needs a target-route decision (out of this pass's scope) — the admin
-  // quick-actions below are repaired (dead `/admin/*/new` → live `/app/*/new`) but this branch is
-  // left as-is so behavior on the public (non-admin-path) branch is unchanged.
-  const isAdminPath = pathname.startsWith("/admin")
+  // App search results should target the canonical `/app` admin surfaces directly;
+  // `/admin` is now a redirect-only legacy prefix.
+  const isAppPath = pathname.startsWith("/app")
   const hasQuery = !!q.length
 
   const handleOpenChange = (open: boolean) => {
@@ -240,7 +237,7 @@ export const Search = () => {
           name={t("navigation.tools")}
           items={results?.tools}
           onItemSelect={navigateTo}
-          getHref={({ slug }) => `${isAdminPath ? "/admin/tools" : ""}/${slug}`}
+          getHref={({ slug }) => `${isAppPath ? "/app/tools" : ""}/${slug}`}
           renderItemDisplay={({ name, faviconUrl, websiteUrl }) => (
             <>
               {faviconUrl && <img src={faviconUrl} alt="" width={16} height={16} />}
@@ -254,7 +251,7 @@ export const Search = () => {
           name={t("navigation.categories")}
           items={results?.categories}
           onItemSelect={navigateTo}
-          getHref={({ slug }) => `${isAdminPath ? "/admin" : ""}/categories/${slug}`}
+          getHref={({ slug }) => `${isAppPath ? "/app" : ""}/categories/${slug}`}
           renderItemDisplay={({ name }) => name}
         />
 
@@ -262,7 +259,7 @@ export const Search = () => {
           name={t("navigation.tags")}
           items={results?.tags}
           onItemSelect={navigateTo}
-          getHref={({ slug }) => `${isAdminPath ? "/admin" : ""}/tags/${slug}`}
+          getHref={({ slug }) => `${isAppPath ? "/app" : ""}/tags/${slug}`}
           renderItemDisplay={({ name }) => name}
         />
       </CommandList>

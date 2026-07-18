@@ -45,6 +45,7 @@ type LifecycleCatalogEntry = {
 
 const PROFILE_URL = "https://blackbeltlegacy.com/app/profile"
 const BILLING_URL = "https://blackbeltlegacy.com/app/membership"
+const CLAIM_REVIEW_URL = "https://blackbeltlegacy.com/app/claims"
 
 // FI-012: single-sourced from `lib/notifications.ts` so the admin preview renders the
 // EXACT "what this tier includes" strings a real lifecycle email sends — no drifting
@@ -311,10 +312,11 @@ export const LIFECYCLE_CATALOG: LifecycleCatalogEntry[] = [
     sample: {
       subject: "Claim dispute needs review",
       heading: "A claim needs your review",
-      intro: "Two accounts are contesting the same lineage node. Review and resolve in admin.",
+      intro:
+        "Two accounts are contesting the same lineage node. Review and resolve it in Black Belt Legacy.",
       details: [{ label: "Node", value: "chris-haueter" }],
       ctaLabel: "Open admin review",
-      ctaUrl: "https://blackbeltlegacy.com/admin/claims",
+      ctaUrl: CLAIM_REVIEW_URL,
     },
   },
 ]

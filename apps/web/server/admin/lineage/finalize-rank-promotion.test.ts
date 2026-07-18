@@ -12,29 +12,14 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 
-import { db } from "~/services/db"
+import { inRolledBackTx, type TestTransactionClient } from "~/lib/test/fixture-ownership"
 import { finalizeRankPromotion } from "~/server/admin/lineage/claim-finalize"
 
 const TS = Date.now()
 let seq = 0
 const uid = (name: string) => `frp-${TS}-${seq++}-${name}`
 
-// biome-ignore lint/suspicious/noExplicitAny: tx client surface.
-type Tx = any
-
-class Rollback extends Error {}
-
-/** Run `body` inside a transaction that is ALWAYS rolled back — zero persistence, zero teardown. */
-async function inRolledBackTx(body: (tx: Tx) => Promise<void>): Promise<void> {
-  try {
-    await db.$transaction(async (tx: Tx) => {
-      await body(tx)
-      throw new Rollback()
-    })
-  } catch (error) {
-    if (!(error instanceof Rollback)) throw error
-  }
-}
+type Tx = TestTransactionClient
 
 /** A member: an owned Passport + an unverified LineageNode (unless `verified`). */
 async function makeMember(

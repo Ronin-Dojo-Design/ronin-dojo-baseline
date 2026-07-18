@@ -6,6 +6,11 @@
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient, type UserRole } from "../../.generated/prisma/client"
+import {
+  cleanupOwnedTestRows,
+  cleanupTaggedLineageFixtures,
+  createFixtureRunIdentity,
+} from "../../lib/test/fixture-ownership"
 import type { LineageLifecycleFixture, LineageLifecycleState } from "./seed-lineage-lifecycle"
 
 const adapter = new PrismaPg({
@@ -25,74 +30,17 @@ const LINEAGE_ELITE_ENTITLEMENT_KEY = "LINEAGE_ELITE"
 
 type Visibility = "PUBLIC" | "UNLISTED" | "RESTRICTED" | "PRIVATE"
 
-const makeRunId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-")
 
 async function sweepStaleLifecycleRows() {
-  const [staleTrees, staleUsers, staleNodes] = await Promise.all([
-    prisma.lineageTree.findMany({
-      where: { description: { contains: TAG_PREFIX } },
-      select: { id: true },
-    }),
-    prisma.user.findMany({
-      where: { email: { contains: TAG_PREFIX } },
-      select: { id: true },
-    }),
-    prisma.lineageNode.findMany({
-      where: { slug: { contains: TAG_PREFIX } },
-      select: { id: true },
-    }),
-  ])
-
-  const treeIds = staleTrees.map(tree => tree.id)
-  const userIds = staleUsers.map(user => user.id)
-  const nodeIds = staleNodes.map(node => node.id)
-
-  if (treeIds.length === 0 && userIds.length === 0 && nodeIds.length === 0) return
-
-  await prisma.auditLog.deleteMany({
-    where: {
-      OR: [{ userId: { in: userIds } }, { entityId: { in: [...treeIds, ...nodeIds] } }],
-    },
+  await cleanupTaggedLineageFixtures(prisma, {
+    treeDescriptionContains: TAG_PREFIX,
+    userEmailContains: TAG_PREFIX,
+    nodeSlugContains: TAG_PREFIX,
+    rankNameContains: ["E2E Black Belt"],
+    rankSystemNameContains: ["E2E Lifecycle Rank System"],
+    disciplineSlugContains: [TAG_PREFIX],
   })
-  await prisma.lineageClaimEvidence.deleteMany({
-    where: { claimRequest: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] } },
-  })
-  await prisma.lineageClaimRequest.deleteMany({
-    where: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] },
-  })
-  // SESSION_0440 — the unified door (ADR 0036) writes PassportClaimRequest; its node/tree
-  // FKs are SetNull-on-delete, so a stale row survives the node/tree sweep above unless we
-  // delete it here (its passport may also be an accountless placeholder the user-sweep misses).
-  await prisma.passportClaimEvidence.deleteMany({
-    where: { claimRequest: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] } },
-  })
-  await prisma.passportClaimRequest.deleteMany({
-    where: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] },
-  })
-  await prisma.lineageTreeAccess.deleteMany({
-    where: { OR: [{ treeId: { in: treeIds } }, { userId: { in: userIds } }] },
-  })
-  await prisma.lineageRelationship.deleteMany({
-    where: { OR: [{ fromNodeId: { in: nodeIds } }, { toNodeId: { in: nodeIds } }] },
-  })
-  await prisma.lineageTreeMember.deleteMany({
-    where: { OR: [{ treeId: { in: treeIds } }, { nodeId: { in: nodeIds } }] },
-  })
-  await prisma.lineageVisualGroup.deleteMany({ where: { treeId: { in: treeIds } } })
-  await prisma.lineageTree.deleteMany({ where: { id: { in: treeIds } } })
-  await prisma.lineageNode.deleteMany({ where: { id: { in: nodeIds } } })
-  await prisma.rankAward.deleteMany({ where: { passport: { userId: { in: userIds } } } })
-  await prisma.rank.deleteMany({ where: { name: { contains: "E2E Black Belt" } } })
-  await prisma.rankSystem.deleteMany({
-    where: { name: { contains: "E2E Lifecycle Rank System" } },
-  })
-  await prisma.discipline.deleteMany({ where: { slug: { contains: TAG_PREFIX } } })
-  await prisma.session.deleteMany({ where: { userId: { in: userIds } } })
-  await prisma.userEntitlement.deleteMany({ where: { userId: { in: userIds } } })
-  await prisma.directoryProfile.deleteMany({ where: { passport: { userId: { in: userIds } } } })
-  await prisma.passport.deleteMany({ where: { userId: { in: userIds } } })
-  await prisma.user.deleteMany({ where: { id: { in: userIds } } })
 }
 
 async function grantLineagePremiumEntitlement({
@@ -202,7 +150,8 @@ async function createUserNode({
 async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
   await sweepStaleLifecycleRows()
 
-  const runId = makeRunId()
+  const identity = createFixtureRunIdentity(TAG_PREFIX)
+  const runId = identity.runId
   const searchToken = `${TAG_PREFIX}-${runId}`
   const treeSlug = slugify(`${searchToken}-tree`)
   const treeName = `E2E Authenticated Lineage ${runId}`
@@ -240,7 +189,7 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
       brand: TEST_BRAND,
       name: `E2E Lifecycle Discipline ${runId}`,
       slug: slugify(`${searchToken}-discipline`),
-      code: slugify(`e2e-${runId}`).slice(0, 16),
+      code: identity.shortCode("e2e"),
     },
   })
 
@@ -647,45 +596,17 @@ async function readLineageLifecycleState(
 }
 
 async function cleanupLineageLifecycleFixture(fixture: LineageLifecycleFixture) {
-  await prisma.auditLog.deleteMany({
-    where: {
-      OR: [
-        { userId: { in: fixture.userIds } },
-        { entityId: fixture.claimTargetMemberId },
-        { entityId: fixture.claimTargetNodeId },
-      ],
-    },
+  await cleanupOwnedTestRows(prisma, {
+    userIds: fixture.userIds,
+    treeIds: [fixture.treeId],
+    nodeIds: fixture.nodeIds,
+    memberIds: fixture.memberIds,
+    groupIds: fixture.groupIds,
+    rankAwardIds: [fixture.rankAwardId],
+    rankIds: [fixture.rankId],
+    rankSystemIds: [fixture.rankSystemId],
+    disciplineIds: [fixture.disciplineId],
   })
-  await prisma.lineageClaimEvidence.deleteMany({
-    where: { claimRequest: { treeId: fixture.treeId } },
-  })
-  await prisma.lineageClaimRequest.deleteMany({ where: { treeId: fixture.treeId } })
-  // SESSION_0440 — unified PassportClaimRequest rows written by the node-submit door.
-  await prisma.passportClaimEvidence.deleteMany({
-    where: { claimRequest: { treeId: fixture.treeId } },
-  })
-  await prisma.passportClaimRequest.deleteMany({ where: { treeId: fixture.treeId } })
-  await prisma.lineageTreeAccess.deleteMany({ where: { treeId: fixture.treeId } })
-  await prisma.lineageRelationship.deleteMany({
-    where: {
-      OR: [{ fromNodeId: { in: fixture.nodeIds } }, { toNodeId: { in: fixture.nodeIds } }],
-    },
-  })
-  await prisma.lineageTreeMember.deleteMany({ where: { id: { in: fixture.memberIds } } })
-  await prisma.lineageVisualGroup.deleteMany({ where: { id: { in: fixture.groupIds } } })
-  await prisma.lineageTree.deleteMany({ where: { id: fixture.treeId } })
-  await prisma.lineageNode.deleteMany({ where: { id: { in: fixture.nodeIds } } })
-  await prisma.rankAward.deleteMany({ where: { id: fixture.rankAwardId } })
-  await prisma.rank.deleteMany({ where: { id: fixture.rankId } })
-  await prisma.rankSystem.deleteMany({ where: { id: fixture.rankSystemId } })
-  await prisma.discipline.deleteMany({ where: { id: fixture.disciplineId } })
-  await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.userEntitlement.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.directoryProfile.deleteMany({
-    where: { passport: { userId: { in: fixture.userIds } } },
-  })
-  await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })
 }
 
 const decodeFixture = () => {

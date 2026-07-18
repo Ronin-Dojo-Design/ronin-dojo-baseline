@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-07-16
-last_agent: codex-session-0548
+updated: 2026-07-17
+last_agent: codex-session-0551
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -99,6 +99,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [sop-e2e-user-lifecycle](sops/sop-e2e-user-lifecycle.md) — end-to-end user lifecycle. Includes security gates per stage.
 - [sop-agent-workflows-and-rituals](sops/sop-agent-workflows-and-rituals.md) — agent workflows & session rituals.
 - [sop-email-runbook](sops/sop-email-runbook.md) — email sending SOP.
+- [test-fixture-ownership](sops/test-fixture-ownership.md) — DB-backed test rollback, run identity, FK-safe cleanup, and count-neutral proof helper.
 
 ## Security & Data Integrity
 

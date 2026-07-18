@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-17
+last_agent: codex-session-0549
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -538,8 +538,9 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   `[[admin-app-migration-revalidate-paths]]`.
 - **Verification:** typecheck/lint/format + local `next build` green; root cause proven on three legs (prod
   audit log showing persisted-but-unrefreshed saves, `/admin/*`=308-stub vs `/app/*`=live topology, the
-  `next.config.ts` redirect map). Live render of the fixed refresh is deploy-gated (verify post-merge).
-- **Status:** mitigated (deploy-verify pending).
+  `next.config.ts` redirect map). SESSION_0549 re-swept `revalidatePath("/admin` across `apps/web/server` and
+  `apps/web/app`; grep is clean, and the `/admin` route tree is no longer mounted in app code.
+- **Status:** closed for admin-route residue as of SESSION_0549; keep applying the checklist to future route moves.
 
 ### FS-0027 — Multi-file `bun test` run without `--parallel=1`; rediscovered a documented SOP
 
