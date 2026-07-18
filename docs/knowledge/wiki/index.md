@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-18
 author: Brian + Copilot
-last_agent: codex-session-0567
+last_agent: claude-session-0569
 ---
 
 # LLM Wiki Index
@@ -707,6 +707,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0564](../../sprints/SESSION_0564.md) | session--plan | closed — Obsidian Dashboard Epic plan-first grill. |
 | [SESSION_0565](../../sprints/SESSION_0565.md) | session--implement | closed — Merge wave execution: land B/C/D/F lanes onto main. |
 | [SESSION_0567](../../sprints/SESSION_0567.md) | session--open | closed — Parallel recovery wave + merged-trunk quality suite; local G3 lanes complete, CSP canary held. |
+| [SESSION_0569](../../sprints/SESSION_0569.md) | session--implement | closed — G-013 Wave 2 first batch (B1 tooltips, C2 pill, hallmark-audit smalls, re-pitch, roving tabindex) + WL-P2-64 tests + D11 audit-only amendment; held at push gate. |
 
 ## Protocols
 

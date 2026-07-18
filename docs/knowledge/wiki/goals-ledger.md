@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-18
-last_agent: claude-session-0564
+last_agent: claude-session-0569
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -252,6 +252,14 @@ aggregator reads it with no new parser logic.
   invariant (no URL or media-id-bearing poster).
 - **Lane:** BJJ techniques / curriculum / design. **Depends on:** SESSION_0546 Wave 1 (landed locally).
   **First task:** B1 graph-node tooltips + C2 filter pill as one reviewed slice, then C4/C5.
+- **Progress (SESSION_0569):** Wave 2 first batch LANDED — B1 tooltips (no-media DTO, L1 tooltip,
+  250ms/instant-focus) + C2 layoutId pill + hallmark-audit smalls (AUD-1 export font/crop fix,
+  AUD-2 badge demotion, AUD-3 readable curriculum tabs, AUD-4 ctrl/⌘-gated wheel zoom) + fix batch
+  (shared tooltip reduced-motion consolidation, 47-node coordinate re-pitch 67→0 overlaps, roving
+  tabindex). Triple-reviewed (Doug 9.6×2, Desi GO-WITH-CHANGES), code-quality 9.4. **Next batch:**
+  C4 zoom/fit easing (+ WL-P2-67 ZOOM_MIN + D-4 cooperative touch) + C5 neighborhood glow +
+  D-3 pill parity on curriculum rows; then D3 empty states + B2 difficulty tooltips; then Wave 3.
+  Audit defers D-1 (chart-token remap) and D-5→done/D-6 tracked in SESSION_0569.
 - **Constraints:** extend existing Dirstarter Content/Media/Monetization seams; derive-only content v1; no
   schema migration, Lenis, nav promotion, QuestPanel/XP, Eskrima appendix, haptics, or authoring flow.
 - **Why:** Brian explicitly pinned this epic. Wave 1 fixed the conversion/access and visual foundation; the
@@ -339,3 +347,19 @@ aggregator reads it with no new parser logic.
 - **Pointer:** `docs/product/mammoth-build/` (PRD + STORIES, added when the mock came off
   prod at `524f0286`). **Lane:** Mammoth product. **Why:** was briefly live on BBL prod;
   now the client-facing follow-up artifact after the 2026-07-18 meeting.
+
+### G-020 — Desi-driven hallmark audit program — BBL public surfaces
+
+- **Status:** open — P2
+- **Objective:** run the read-only `hallmark audit` (D11 as amended SESSION_0569: audit-only on
+  `apps/web`; `redesign`/default stays banned) across the BBL public surfaces — home, lineage,
+  directory, posts/blog, profiles, join funnel — Desi driving; every punch list routes through
+  Desi + design-system doctrine (tokens stay law) before any build. Template: the SESSION_0569
+  technique-surface pass (audit → merged Desi brief → batched build → review gates).
+- **Pointer:** SESSION_0569 (grill outcomes + the technique-pass recipe); hallmark preamble D11
+  amendment; wayfinder D10 preamble.
+- **Lane:** design / public surfaces. **Mapping:** multi-session by construction → open a
+  **wayfinder map** (`wayfinder:map` issue + per-surface audit tickets) when this lane starts —
+  its proper epic-scale use per D10. **Why:** operator-ratified at the SESSION_0569 grill —
+  extend the anti-slop consistency lens beyond the technique surfaces without re-litigating scope
+  per session.
