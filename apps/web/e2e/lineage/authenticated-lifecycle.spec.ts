@@ -59,6 +59,10 @@ async function expectAnonymousLoginRedirect(page: Page, nextPath: string) {
   await page.context().clearCookies()
   await page.context().clearPermissions()
   await page.goto("about:blank")
+  // TFF-008: this dynamic edit route can be cold-compiled by Turbopack while the
+  // browser assertion clock is already running. A request-context pre-hit warms
+  // the route and ignores the expected unauth redirect response.
+  await page.request.get(nextPath, { maxRedirects: 0, timeout: 60_000 }).catch(() => null)
   await page.goto(nextPath)
   await expectLoginRedirect(page, nextPath)
   await expect(page.getByRole("heading", { name: /sign in/i, level: 3 })).toBeVisible({

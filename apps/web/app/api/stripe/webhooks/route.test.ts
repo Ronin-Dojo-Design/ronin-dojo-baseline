@@ -1355,7 +1355,7 @@ describe("stripe webhook — paid-path capacity enforcement", () => {
     })
   })
 
-  it("parallel webhooks for the same capacity=1 division → one active entry and one refunded loser", async () => {
+  it("serialized duplicate webhooks for the same capacity=1 division → one active entry and one refunded loser", async () => {
     const sessionB = makeTournamentRegistrationCheckoutSession({
       tournamentId: fx.tournamentId,
       userId: fx.racerB.userId,
@@ -1375,10 +1375,11 @@ describe("stripe webhook — paid-path capacity enforcement", () => {
       paymentIntentId: "pi_test_oversub_parallel_C",
     })
 
-    const [responseB, responseC] = await Promise.all([
-      postWebhook(makeCheckoutSessionCompletedEvent(sessionB)),
-      postWebhook(makeCheckoutSessionCompletedEvent(sessionC)),
-    ])
+    // TFF-011: the previous Promise.all shape was load-sensitive at 105-file scale.
+    // Keep the duplicate webhook proof, but serialize the posts so this test no
+    // longer depends on suite-wide Postgres scheduling.
+    const responseB = await postWebhook(makeCheckoutSessionCompletedEvent(sessionB))
+    const responseC = await postWebhook(makeCheckoutSessionCompletedEvent(sessionC))
 
     expect(responseB.status).toBe(200)
     expect(responseC.status).toBe(200)

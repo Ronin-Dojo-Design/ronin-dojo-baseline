@@ -8,6 +8,7 @@
  */
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
+import { cleanupOwnedTestRows, createFixtureRunIdentity } from "../../lib/test/fixture-ownership"
 import { LINEAGE_PREMIUM_ENTITLEMENT_KEY } from "../../lib/entitlements/lineage-comp"
 import { grantComp } from "../../server/entitlements/comp-grants"
 import type { DirectoryPaywallSeedFixture } from "./seed-directory-paywall"
@@ -27,18 +28,18 @@ const SOCIAL_PLATFORM = "website"
 const LOCATION_CITY = "Denver"
 const ORG_NAME_SUFFIX = "Paywall Dojo"
 
-const makeRunId = () => `${Date.now()}-${crypto.randomUUID().slice(0, 8)}`
 const slugify = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, "-")
 
-async function ensurePremiumEntitlement(createdEntitlementIds: string[]) {
-  const existing = await prisma.entitlement.findUnique({
+async function ensurePremiumEntitlement() {
+  const entitlement = await prisma.entitlement.upsert({
     where: { brand_key: { brand: TEST_BRAND, key: LINEAGE_PREMIUM_ENTITLEMENT_KEY } },
+    update: {},
+    create: {
+      brand: TEST_BRAND,
+      key: LINEAGE_PREMIUM_ENTITLEMENT_KEY,
+      name: "Lineage Premium",
+    },
   })
-  if (existing) return existing
-  const entitlement = await prisma.entitlement.create({
-    data: { brand: TEST_BRAND, key: LINEAGE_PREMIUM_ENTITLEMENT_KEY, name: "Lineage Premium" },
-  })
-  createdEntitlementIds.push(entitlement.id)
   return entitlement
 }
 
@@ -118,24 +119,25 @@ async function createProfile({
 }
 
 async function seedDirectoryPaywallFixture(): Promise<DirectoryPaywallSeedFixture> {
-  const runId = makeRunId()
+  const identity = createFixtureRunIdentity(TAG_PREFIX)
+  const runId = identity.runId
   const createdEntitlementIds: string[] = []
-  await ensurePremiumEntitlement(createdEntitlementIds)
+  await ensurePremiumEntitlement()
 
   const organization = await prisma.organization.create({
     data: {
       brand: TEST_BRAND,
       type: "DOJO",
       name: `${TAG_PREFIX} ${ORG_NAME_SUFFIX} ${runId}`,
-      slug: slugify(`${TAG_PREFIX}-org-${runId}`),
+      slug: identity.slug("org"),
     },
   })
   const discipline = await prisma.discipline.create({
     data: {
       brand: TEST_BRAND,
       name: `${TAG_PREFIX} Discipline ${runId}`,
-      slug: slugify(`${TAG_PREFIX}-discipline-${runId}`),
-      code: slugify(`dp-${runId}`).slice(0, 16),
+      slug: identity.slug("discipline"),
+      code: identity.shortCode("dp"),
     },
   })
   const rankSystem = await prisma.rankSystem.create({
@@ -182,7 +184,7 @@ async function seedDirectoryPaywallFixture(): Promise<DirectoryPaywallSeedFixtur
   const tree = await prisma.lineageTree.create({
     data: {
       brand: TEST_BRAND,
-      slug: slugify(`${TAG_PREFIX}-tree-${runId}`),
+      slug: identity.slug("tree"),
       name: `E2E Directory Paywall ${runId}`,
       description: `E2E directory paywall tree ${TAG_PREFIX} ${runId}`,
       visibility: "PUBLIC",
@@ -216,26 +218,16 @@ async function seedDirectoryPaywallFixture(): Promise<DirectoryPaywallSeedFixtur
 }
 
 async function cleanupDirectoryPaywallFixture(fixture: DirectoryPaywallSeedFixture) {
-  await prisma.auditLog.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.userEntitlement.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.lineageTreeMember.deleteMany({ where: { treeId: fixture.treeId } })
-  await prisma.lineageTree.deleteMany({ where: { id: fixture.treeId } })
-  await prisma.lineageNode.deleteMany({ where: { id: { in: fixture.nodeIds } } })
-  await prisma.rankAward.deleteMany({ where: { passport: { userId: { in: fixture.userIds } } } })
-  await prisma.membership.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.rank.deleteMany({ where: { name: { contains: fixture.runId } } })
-  await prisma.rankSystem.deleteMany({ where: { name: { contains: fixture.runId } } })
-  await prisma.session.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.directoryProfile.deleteMany({
-    where: { passport: { userId: { in: fixture.userIds } } },
+  await cleanupOwnedTestRows(prisma, {
+    userIds: fixture.userIds,
+    treeIds: [fixture.treeId],
+    nodeIds: fixture.nodeIds,
+    rankNameContains: [fixture.runId],
+    rankSystemNameContains: [fixture.runId],
+    organizationNameContains: [fixture.runId],
+    disciplineSlugContains: [fixture.runId],
+    entitlementIds: fixture.createdEntitlementIds,
   })
-  await prisma.passport.deleteMany({ where: { userId: { in: fixture.userIds } } })
-  await prisma.user.deleteMany({ where: { id: { in: fixture.userIds } } })
-  await prisma.organization.deleteMany({ where: { name: { contains: fixture.runId } } })
-  await prisma.discipline.deleteMany({ where: { slug: { contains: fixture.runId } } })
-  for (const entitlementId of fixture.createdEntitlementIds) {
-    await prisma.entitlement.delete({ where: { id: entitlementId } })
-  }
 }
 
 const command = process.argv[2]
