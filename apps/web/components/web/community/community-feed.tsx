@@ -133,6 +133,7 @@ export const CommunityFeed = ({ views, styles, viewer, savedPostIds }: Community
                 onValueChange={value => setStyleFilter(typeof value === "string" ? value : "")}
                 placeholder={t("all_styles")}
                 size="sm"
+                aria-label={t("filter_by_style")}
               />
             )}
 
@@ -169,7 +170,7 @@ export const CommunityFeed = ({ views, styles, viewer, savedPostIds }: Community
                   setTypeFilter(ALL)
                   setStyleFilter("")
                 }}
-                className="text-primary underline-offset-2 hover:underline"
+                className="text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               >
                 {t("clear_filters")}
               </button>

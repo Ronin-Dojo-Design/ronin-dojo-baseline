@@ -75,7 +75,10 @@ export function StudentsCarousel({
   if (students.length === 0) return null
 
   return (
-    <section aria-label="Students">
+    // WL-P3-26 (SESSION_0557): `w-full min-w-0` is load-bearing — the InfoTab parent Stack is
+    // `items-start`, so a bare section sizes to max-content and the inner `overflow-x-auto` rows
+    // can never engage (the same latent width trap V2's P1 fix closed in students-carousel-v2).
+    <section aria-label="Students" className="w-full min-w-0">
       <H6 className="mb-2 text-muted-foreground uppercase tracking-wide">Students</H6>
       <Accordion type="multiple" className="flex flex-col gap-2">
         {groupByBelt(students, disciplineId).map(group => (

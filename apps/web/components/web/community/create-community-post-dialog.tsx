@@ -33,6 +33,7 @@ import { Stack } from "~/components/common/stack"
 import { Switch } from "~/components/common/switch"
 import { TextArea } from "~/components/common/textarea"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
+import { UPGRADE_HREF } from "~/components/web/community/community-premium"
 import { COMMUNITY_POST_TYPES } from "~/components/web/community/post-type"
 import { useSession } from "~/lib/auth-client"
 import { createCommunityPost, uploadCommunityPostImage } from "~/server/web/community/actions"
@@ -56,8 +57,11 @@ import { communityPostImageSchema, createCommunityPostSchema } from "~/server/we
 /** Title input cap — mirrored into the remaining-characters hint (C1-7). */
 const TITLE_MAX_LENGTH = 100
 
-/** The paid-tier upgrade funnel — the same route the profile/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
+/** Content cap — surfaces as a live countdown once the member is close (SESSION_0557 Desi P3). */
+const CONTENT_MAX_LENGTH = 2000
+
+/** Under this many characters left, the content hint swaps to the live countdown (title parity). */
+const CONTENT_COUNTER_THRESHOLD = 100
 
 type CreateCommunityPostDialogProps = {
   styles: { id: string; name: string }[]
@@ -150,6 +154,8 @@ export const CreateCommunityPostDialog = ({
 
   const imageUrl = form.watch("imageUrl")
   const title = form.watch("title")
+  const content = form.watch("content")
+  const contentRemaining = CONTENT_MAX_LENGTH - (content?.length ?? 0)
 
   if (!session?.user) {
     return <LoginDialog isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -260,7 +266,7 @@ export const CreateCommunityPostDialog = ({
                   {/* C1-7: `maxLength` silently swallowed keystrokes at the cap — surface how many
                       characters remain so it's a visible limit, not a mystery. */}
                   <Hint>
-                    {t("title_hint", { remaining: TITLE_MAX_LENGTH - (title?.length ?? 0) })}
+                    {t("chars_left", { remaining: TITLE_MAX_LENGTH - (title?.length ?? 0) })}
                   </Hint>
                   <FormMessage />
                 </FormItem>
@@ -277,11 +283,17 @@ export const CreateCommunityPostDialog = ({
                     <TextArea
                       placeholder={t("content_placeholder")}
                       className="min-h-32"
-                      maxLength={2000}
+                      maxLength={CONTENT_MAX_LENGTH}
                       {...field}
                     />
                   </FormControl>
-                  <Hint>{t("content_hint")}</Hint>
+                  {/* Static hint until the cap is close, then the live countdown (title parity —
+                      the C1-7 lesson: `maxLength` swallows keystrokes silently). */}
+                  <Hint>
+                    {contentRemaining <= CONTENT_COUNTER_THRESHOLD
+                      ? t("chars_left", { remaining: contentRemaining })
+                      : t("content_hint")}
+                  </Hint>
                   <FormMessage />
                 </FormItem>
               )}

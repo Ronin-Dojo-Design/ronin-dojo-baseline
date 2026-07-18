@@ -1,16 +1,20 @@
 "use client"
 
-import { LockKeyholeIcon } from "lucide-react"
+import { PlayIcon } from "lucide-react"
 import Image from "next/image"
-import { useFormatter, useTranslations } from "next-intl"
+import { useFormatter } from "next-intl"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
 import { H4 } from "~/components/common/heading"
 import { Link } from "~/components/common/link"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
+import {
+  CommunityPremiumBadge,
+  CommunityUnlockButton,
+} from "~/components/web/community/community-premium"
 import { Author } from "~/components/web/ui/author"
+import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import type { CommunityPostView } from "~/server/web/community/post-gate"
 
 /**
@@ -28,33 +32,45 @@ type CommunityPostRowProps = {
   initialSaved?: boolean
 }
 
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
-
 export const CommunityPostRow = ({
   view,
   isAdmin = false,
   initialSaved,
 }: CommunityPostRowProps) => {
   const format = useFormatter()
-  const t = useTranslations("community")
   const post = view.post
   const locked = view.locked
 
+  // List-density media parity with the grid card (SESSION_0557 Desi P2): a video-first post
+  // without an uploaded image gets the provider thumbnail here too — the density toggle no longer
+  // silently drops the post's media. YouTube only (Vimeo has no static thumbnail URL).
+  const media = view.locked ? null : view.post
+  const thumbnailUrl = media ? (media.imageUrl ?? toVideoThumbnailUrl(media.videoUrl)) : null
+  const isVideoThumbnail = !!media && !media.imageUrl && !!thumbnailUrl
+
   return (
     <Card isRevealed className="flex-row items-stretch gap-4 overflow-clip p-4">
-      {view.locked === false && view.post.imageUrl && (
+      {thumbnailUrl && (
         <Link
           href={`/posts/${post.slug}`}
           className="relative hidden aspect-video w-40 shrink-0 self-center overflow-clip rounded-md sm:block"
         >
           <Image
-            src={view.post.imageUrl}
+            src={thumbnailUrl}
             alt={post.title}
             fill
             className="object-cover"
             sizes="160px"
           />
+          {/* Play glyph — decorative (the link carries the semantics); literal black/white scrim,
+              the video-overlay convention on any theme (mirrors the grid card at row scale). */}
+          {isVideoThumbnail && (
+            <span aria-hidden className="absolute inset-0 grid place-items-center">
+              <span className="grid size-8 place-items-center rounded-full bg-black/60 text-white">
+                <PlayIcon className="size-3.5 fill-current" />
+              </span>
+            </span>
+          )}
         </Link>
       )}
 
@@ -62,11 +78,7 @@ export const CommunityPostRow = ({
         <div className="flex flex-wrap items-center gap-2">
           <CommunityPostFlair type={post.type} />
 
-          {post.isPremium && (
-            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
-              {t("premium_badge")}
-            </Badge>
-          )}
+          {post.isPremium && <CommunityPremiumBadge />}
 
           {post.style && (
             <Badge variant="outline" size="sm">
@@ -101,16 +113,7 @@ export const CommunityPostRow = ({
           />
 
           {locked ? (
-            // `secondary` weight here (the detail panel uses `primary`) — a deliberate funnel
-            // hierarchy: the detail is the conversion surface, cards/rows are the browse surface.
-            <Button
-              size="sm"
-              variant="secondary"
-              prefix={<LockKeyholeIcon />}
-              render={<Link href={UPGRADE_HREF} />}
-            >
-              {t("unlock_cta")}
-            </Button>
+            <CommunityUnlockButton />
           ) : (
             <CommunityPostActions
               postId={post.id}

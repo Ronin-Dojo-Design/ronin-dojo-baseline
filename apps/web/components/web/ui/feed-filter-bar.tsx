@@ -32,7 +32,7 @@ type FeedFilterBarProps = {
   tabs: FeedFilterTab[]
   activeTab: string
   onTabChange: (value: string) => void
-  /** Accessible name for the pill tablist. */
+  /** Accessible name for the filter pill group (prop name kept for consumer stability). */
   tablistLabel: string
   view: FeedView
   onViewChange: (view: FeedView) => void
@@ -79,12 +79,15 @@ export const FeedFilterBar = ({
     // C1-1: `mobile` opts the bar into stickiness on mobile too (default `Sticky` is `md:sticky` only).
     <Sticky mobile isOverlay className="border-b bg-background/80 backdrop-blur">
       <div className="flex items-center justify-between gap-4 py-3">
-        {/* Pill tablist. The edge-fade (C1-3) hints there's more to scroll on narrow screens where the
-            row truncates to a couple of pills — WebKit-safe mask gradient, decorative. */}
+        {/* Filter pill group. The edge-fade (C1-3) hints there's more to scroll on narrow screens
+            where the row truncates to a couple of pills — WebKit-safe mask gradient, decorative.
+            SESSION_0557 Desi P1: these are FILTERS, not tabs — the old `role="tablist"/"tab"`
+            promised arrow-key navigation + tabpanels that never existed. `role="group"` +
+            `aria-pressed` is the exact idiom the grid/list toggle below already uses. */}
         <div className="relative -mx-1 min-w-0 flex-1">
           <div
             className="flex items-center gap-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,transparent,black_1rem,black_calc(100%-1.5rem),transparent)]"
-            role="tablist"
+            role="group"
             aria-label={tablistLabel}
           >
             {tabs.map(tab => {
@@ -93,8 +96,7 @@ export const FeedFilterBar = ({
                 <button
                   key={tab.value}
                   type="button"
-                  role="tab"
-                  aria-selected={activeTab === tab.value}
+                  aria-pressed={activeTab === tab.value}
                   onClick={() => onTabChange(tab.value)}
                   className={tabClassName(activeTab === tab.value)}
                 >

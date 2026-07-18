@@ -1,13 +1,15 @@
 "use client"
 
-import { LockKeyholeIcon, PlayIcon } from "lucide-react"
+import { PlayIcon } from "lucide-react"
 import Image from "next/image"
-import { useFormatter, useTranslations } from "next-intl"
+import { useFormatter } from "next-intl"
 import { Badge } from "~/components/common/badge"
-import { Button } from "~/components/common/button"
-import { Link } from "~/components/common/link"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
+import {
+  CommunityPremiumBadge,
+  CommunityUnlockButton,
+} from "~/components/web/community/community-premium"
 import { ListingCard } from "~/components/web/listing/listing-card"
 import { Author } from "~/components/web/ui/author"
 import { toVideoThumbnailUrl } from "~/lib/video-embed"
@@ -29,16 +31,12 @@ type CommunityPostCardProps = {
   initialSaved?: boolean
 }
 
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
-
 export const CommunityPostCard = ({
   view,
   isAdmin = false,
   initialSaved,
 }: CommunityPostCardProps) => {
   const format = useFormatter()
-  const t = useTranslations("community")
   const post = view.post
 
   const authorFooter = (
@@ -70,9 +68,7 @@ export const CommunityPostCard = ({
         headerBadges={
           <div className="ml-auto flex shrink-0 items-center gap-1.5">
             <CommunityPostFlair type={post.type} />
-            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
-              {t("premium_badge")}
-            </Badge>
+            <CommunityPremiumBadge />
           </div>
         }
         tagline={post.excerpt}
@@ -80,16 +76,7 @@ export const CommunityPostCard = ({
         footer={
           <>
             {authorFooter}
-            {/* Cards/rows use a `secondary` Unlock CTA (the detail panel uses `primary`) — a
-                deliberate funnel-weight hierarchy: the detail is the conversion surface. */}
-            <Button
-              size="sm"
-              variant="secondary"
-              prefix={<LockKeyholeIcon />}
-              render={<Link href={UPGRADE_HREF} />}
-            >
-              {t("unlock_cta")}
-            </Button>
+            <CommunityUnlockButton />
           </>
         }
       />
@@ -108,6 +95,9 @@ export const CommunityPostCard = ({
       alt={post.title}
       width={1200}
       height={630}
+      // Grid slot is ~1/3 viewport on desktop — without `sizes` the 2400w retina candidate ships
+      // to a ~400px slot (SESSION_0557 Desi P3; the row already passes `sizes="160px"`).
+      sizes="(max-width: 640px) 100vw, 33vw"
       className="aspect-video w-full object-cover"
     />
   ) : videoThumbnailUrl ? (
@@ -137,11 +127,7 @@ export const CommunityPostCard = ({
       headerBadges={
         <div className="ml-auto flex shrink-0 items-center gap-1.5">
           <CommunityPostFlair type={post.type} />
-          {post.isPremium && (
-            <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
-              {t("premium_badge")}
-            </Badge>
-          )}
+          {post.isPremium && <CommunityPremiumBadge />}
         </div>
       }
       tagline={post.excerpt}

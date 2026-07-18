@@ -101,7 +101,7 @@ export default async function ({ searchParams }: Props) {
       <Breadcrumbs items={breadcrumbs} />
 
       {/* Hero band — the legacy feed's header band, tokens-only (primary/card gradients). */}
-      <section className="relative w-full overflow-hidden rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card px-6 py-8">
+      <section className="relative w-full overflow-hidden rounded-xl border bg-linear-to-br from-primary/10 via-card to-card px-6 py-8">
         <Intro>
           <IntroTitle>{metadata.title}</IntroTitle>
           <IntroDescription>{metadata.description}</IntroDescription>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import { LockKeyholeIcon } from "lucide-react"
 import Image from "next/image"
 import { notFound } from "next/navigation"
 import { getFormatter, getTranslations } from "next-intl/server"
@@ -8,6 +7,10 @@ import { Badge } from "~/components/common/badge"
 import { Stack } from "~/components/common/stack"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
+import {
+  CommunityPremiumBadge,
+  UPGRADE_HREF,
+} from "~/components/web/community/community-premium"
 import { ExternalLink } from "~/components/web/external-link"
 import { Markdown } from "~/components/web/markdown"
 import { Author } from "~/components/web/ui/author"
@@ -30,9 +33,6 @@ import { findCommunityPostBySlug } from "~/server/web/community/queries"
 export const dynamicParams = true
 
 type Props = PageProps<"/posts/[slug]">
-
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
 
 /**
  * Community post detail (SESSION_0493, ADR 0042 Amendment 1). HIDDEN posts 404 for everyone except
@@ -86,11 +86,7 @@ export default async function (props: Props) {
       <Stack size="sm">
         <CommunityPostFlair type={post.type} />
 
-        {post.isPremium && (
-          <Badge variant="warning" size="sm" prefix={<LockKeyholeIcon />}>
-            {t("premium_badge")}
-          </Badge>
-        )}
+        {post.isPremium && <CommunityPremiumBadge />}
 
         {post.style && (
           <Badge variant="outline" size="sm">

@@ -229,6 +229,9 @@ function StudentCard({
           </motion.span>
         )}
         {isVerified && (
+          // Color pair intentionally mirrors the Badge `success` variant recipe (badge.tsx) — if
+          // that palette shifts, update this chip in lockstep. Kept hand-rolled (not an icon-only
+          // Badge) while V2 is in the FI-018 bake-off: zero visual churn on a frozen candidate.
           <span
             title="Verified"
             className="absolute right-1 top-1 z-10 flex items-center justify-center rounded-full border bg-background p-0.5 text-green-700 dark:text-green-300"
