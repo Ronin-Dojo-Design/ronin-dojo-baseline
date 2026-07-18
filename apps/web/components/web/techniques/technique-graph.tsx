@@ -235,6 +235,9 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const [pan, setPan] = useState({ x: 48, y: 48 })
   const [zoom, setZoom] = useState(1)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  // APG roving tabindex over the node layer (D-5): the last-active node id. Persists across
+  // Tab-out/Tab-in so re-entering the layer returns to where the user left off.
+  const [rovingNodeId, setRovingNodeId] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<FilterValue>("all")
   const [isExporting, setIsExporting] = useState(false)
   const prefersReducedMotion = useReducedMotion()
@@ -261,11 +264,22 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   )
   const nodeById = useMemo(() => new Map(visibleNodes.map(node => [node.id, node])), [visibleNodes])
   // Derive tooltip DTOs once per nodes-array identity — not per node per render, which re-ran
-  // deriveNodeTooltip on every pan pointermove (SESSION_0569 Desi P3 + Doug P3).
+  // deriveNodeTooltip on every pan pointermove (SESSION_0569 Desi P3 + Doug P3). Sorted into
+  // LINEAR reading order (y, then x) so DOM order, screen-reader order and the roving-tabindex
+  // arrow order are the same sequence.
   const visibleNodesWithTooltips = useMemo(
-    () => visibleNodes.map(node => ({ node, tooltip: deriveNodeTooltip(node) })),
+    () =>
+      [...visibleNodes]
+        .sort((a, b) => a.y - b.y || a.x - b.x)
+        .map(node => ({ node, tooltip: deriveNodeTooltip(node) })),
     [visibleNodes],
   )
+  // The layer's ONE tab stop: the last-active node when it is still visible, else the first node
+  // in reading order (e.g. after a type-filter change hid it).
+  const rovingActiveId =
+    rovingNodeId && visibleNodeIds.has(rovingNodeId)
+      ? rovingNodeId
+      : visibleNodesWithTooltips[0]?.node.id
   const allNodeById = useMemo(
     () => new Map(graph.nodes.map(node => [node.id, node])),
     [graph.nodes],
@@ -336,6 +350,47 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     })
   }
 
+  // Roving tabindex keyboard model (APG), LINEAR over reading order — deliberately NOT 2D
+  // spatial nav. Right/Down = next, Left/Up = prev, Home/End = first/last, clamped at the ends
+  // (no wrap). stopPropagation keeps these arrows from ALSO panning the canvas (whose own
+  // keydown handler pans when the canvas itself is focused); Enter/Space fall through to the
+  // node button's click → dialog, and focus itself opens the tooltip instantly (B1 unchanged).
+  const handleNodeLayerKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const { key } = event
+    const isRovingKey =
+      key === "ArrowRight" ||
+      key === "ArrowDown" ||
+      key === "ArrowLeft" ||
+      key === "ArrowUp" ||
+      key === "Home" ||
+      key === "End"
+    if (!isRovingKey || visibleNodesWithTooltips.length === 0) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const lastIndex = visibleNodesWithTooltips.length - 1
+    const currentIndex = visibleNodesWithTooltips.findIndex(
+      ({ node }) => node.id === rovingActiveId,
+    )
+    const nextIndex =
+      key === "Home"
+        ? 0
+        : key === "End"
+          ? lastIndex
+          : key === "ArrowRight" || key === "ArrowDown"
+            ? Math.min(lastIndex, Math.max(0, currentIndex) + 1)
+            : Math.max(0, currentIndex - 1)
+
+    const next = visibleNodesWithTooltips[nextIndex]?.node
+    if (!next) return
+
+    setRovingNodeId(next.id)
+    // Focus synchronously (tabIndex flips on the re-render; programmatic focus works either way).
+    // Node ids are slugs ([a-z0-9-]), safe inside an attribute selector.
+    canvasRef.current?.querySelector<HTMLButtonElement>(`[data-node-id="${next.id}"]`)?.focus()
+  }
+
   const exportPng = async () => {
     const exportNode = exportRef.current
     if (!exportNode) return
@@ -353,7 +408,10 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
       // `bounds × zoom + padding` width overshot into trailing whitespace when panned negative.
       const cropX0 = Math.max(0, pan.x - EXPORT_CROP_PADDING)
       const cropY0 = Math.max(0, pan.y - EXPORT_CROP_PADDING)
-      const cropX1 = Math.min(exportNode.clientWidth, pan.x + bounds.width * zoom + EXPORT_CROP_PADDING)
+      const cropX1 = Math.min(
+        exportNode.clientWidth,
+        pan.x + bounds.width * zoom + EXPORT_CROP_PADDING,
+      )
       const cropY1 = Math.min(
         exportNode.clientHeight,
         pan.y + bounds.height * zoom + EXPORT_CROP_PADDING,
@@ -528,7 +586,11 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                 delay to 0), while keyboard focus still opens instantly (Base UI focus-open is
                 not delayed and the wrapper's data-instant:duration-0 skips the animation). */}
             <TooltipProvider delay={250}>
+              {/* role="group" (NOT a partially-implemented grid role): the node buttons form one
+                  composite widget whose single tab stop is the roving tabIndex=0 node below. */}
               <div
+                role="group"
+                aria-label="Technique nodes"
                 className="absolute left-0 top-0"
                 style={{
                   width: bounds.width,
@@ -536,6 +598,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                   transformOrigin: "0 0",
                 }}
+                onKeyDown={handleNodeLayerKeyDown}
               >
                 <svg
                   aria-hidden="true"
@@ -564,6 +627,9 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                               nodeTypeClass(node.type),
                             )}
                             data-graph-node-type={node.type}
+                            data-node-id={node.id}
+                            // Roving tabindex: ONE node is the layer's tab stop, arrows move it.
+                            tabIndex={node.id === rovingActiveId ? 0 : -1}
                             style={{
                               left: node.x,
                               top: node.y,
@@ -572,6 +638,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                             }}
                             aria-label={`${node.label}, ${typeLabelFor(node.type)}`}
                             aria-pressed={selectedNodeId === node.id}
+                            onFocus={() => setRovingNodeId(node.id)}
                             onClick={event => {
                               event.stopPropagation()
                               setSelectedNodeId(node.id)
