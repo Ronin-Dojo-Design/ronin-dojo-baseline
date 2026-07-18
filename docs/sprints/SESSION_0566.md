@@ -2,7 +2,7 @@
 title: "SESSION 0566 — BBL Obsidian Command Center: skills vendor + mockup rounds + wayfinder maiden map"
 slug: session-0566
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-18
 updated: 2026-07-18
 last_agent: claude-session-0566
@@ -138,46 +138,145 @@ TASK_02's Obsidian-native build + optional RDD skin variant run only after the o
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0566_TASK_01 | landed | hallmark vendored + D11 preamble — commit `33cf123c`; push HELD |
-| SESSION_0566_TASK_02 | presented | 2 options × light/dark published (Artifact `e9eeeda8…`); Playwright-verified; build waits on the operator pick |
-| SESSION_0566_TASK_03 | landed | wayfinder + 4 siblings vendored (commit `0136e371`, CLI over-sync reverted to ordered scope); maiden map = issue #218, research #220/#221 resolved, frontier #219/#222 (HITL) |
-| SESSION_0566_TASK_04 | surfaced | OD-A checklist ready; executes only with the operator at the laptop |
+| SESSION_0566_TASK_01 | landed | hallmark vendored + D11 preamble — merged to main via PR #225 (operator "2 is go") |
+| SESSION_0566_TASK_02 | landed | Mockups presented (Artifact `e9eeeda8…`) → operator picked BUILD BOTH; Worn Gi + Mat Room snippets built by parallel Fable lanes into `Baseline_Vault/.obsidian/snippets/`, harness-verified light/dark/mobile, enabled in appearance.json (+ gold accent `#cfb87c` → seed red) |
+| SESSION_0566_TASK_03 | landed | wayfinder vendored (PR #225); maiden map #218: #219 resolved (c) FULL MIRROR, #220/#221 research resolved, frontier #222 (meeting) + #224/#223 blocked |
+| SESSION_0566_TASK_04 | surfaced | OD-A checklist ready; operator-interactive, not run |
+| SESSION_0566_TASK_05 | landed | Mammoth demo pack (NEW scope, #219 amendment): `~/Desktop/Mammoth_Demo_Vault/` — cockpit note + mammoth-crm skin (product tokens `#ff6a1a`/graphite, verified both themes), 5 script templates + conversion-tracking writeup (Lane C), dummy contacts/projects, Start Here, standalone HTML web mirror. Shareable folder for the Michael Flores meeting |
+
+## Decisions resolved (mid-session)
+
+- #219 = (c) full mirror both cockpits; demo-vault-as-deliverable; script-templates program added (graduates to OD-B3).
+- Operator: build BOTH mockup options (no single pick); demo/dummy data unrestricted, real-data mirror gated on #222/#224.
+- Push: "2 is go" → PR #225 squash-merged (`01ca1f5e`); later session-doc commits HELD for bow-out go.
 
 ## What landed
 
-## Decisions resolved
+- **Repo (main, PR #225 `01ca1f5e`):** hallmark v1.1.0 vendored + D11 preamble; wayfinder +
+  research/grilling/domain-modeling + prototype refresh + D10 preamble (gh wayfinding-ops
+  mapping inline); skills CLI over-sync reverted to ordered scope; SESSION_0566 opened.
+- **Repo (this bow-out PR):** goals G-018 (per-brand skins program) + G-019 (Mammoth landing
+  resurrection); session doc close.
+- **Baseline_Vault:** `bbl-worn-gi.css` + `bbl-mat-room.css` snippets (seed tokens, embedded
+  Inter/Poppins, Playwright-verified light/dark/390px by two parallel Fable lanes); two demo
+  Command Center notes; snippets enabled + accent `#cfb87c` gold → seed red `#E52421`.
+- **Mammoth_Demo_Vault (new, shareable):** cockpit note + `mammoth-crm` skin (product tokens,
+  verified both themes); 5 script templates + conversion-tracking explainer; PEMB-aligned dummy
+  records; landing draft note + recovered prod mock html (`524f0286^`) + standalone web mirror;
+  Start Here.
+- **GitHub:** wayfinder maiden map #218 charted; #219/#220/#221 resolved+closed; #222/#223/#224
+  open with updated context; 5 `wayfinder:*` labels created.
+- **Mockup round:** Artifact `e9eeeda8…` (2 options × light/dark on real seed tokens).
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
+| `.claude/skills/hallmark/**` (+`.agents` via symlink layout) | vendored, D11 preamble in SKILL.md |
+| `.agents/skills/{wayfinder,research,grilling,domain-modeling}/**` + `.claude` symlinks | vendored; D10 preamble in wayfinder SKILL.md |
+| `.agents/skills/prototype/*` | upstream refresh (wayfinder sibling dep) |
+| `skills-lock.json` | rebuilt = HEAD + 5 kept entries |
+| `docs/knowledge/wiki/goals-ledger.md` | +G-018, +G-019 |
+| `docs/sprints/SESSION_0566.md` | this doc |
+| Vault files (Baseline_Vault, Mammoth_Demo_Vault) | listed above — deliberately NOT in repo (epic §9) |
 
 ## Verification
 
 | Command / smoke | Result |
 | --- | --- |
+| `bun run wiki:lint` (×3: pre-#225, goals commit, close) | 0 errors, 54 pre-existing warnings |
+| Round-1 mockups — Playwright 1420px ×4 frames | verified before publish |
+| `bbl-worn-gi` / `bbl-mat-room` harness shots light/dark/390px | lane-verified vs approved frames (pixel-sampled); Mat Room dark re-eyeballed by lead |
+| `mammoth-crm` harness dark+light | verified; 3 inline-block width bugs found+fixed across 2 iterations |
+| PR #225 | squash-merged to main `01ca1f5e` |
+| Browser-pane MCP | locked by sibling session → isolated-Playwright fallback used throughout |
 
 ## Open decisions / blockers
+
+- **SESSION_0565.md stray** (canonical, untracked, stale 0564-titled merge-wave copy) — delete
+  or retitle+commit as the merge-wave record. Operator call.
+- **`petey-plan.md` repo-root stray** (tracked, SESSION_0282 relic) — delete candidate.
+- **ADR not yet written:** two-repo vault-kit model + D12 send invariant (epic §9 wants
+  ratification in a build session) — next docs session.
+- **#222 meeting collect-list** (today): Mammoth OAuth · real-data-mirror consent (#224) ·
+  Drive-vs-Dropbox share preference · Google Calendar + Todoist keys · script-template feedback.
+- **#223/#224** unblock after the meeting; work-through via wayfinder (one ticket/session).
+- Seven detached `fallow-audit-base-cache-*` worktrees — prune approved-pending-confirm.
 
 ## Next session
 
 ### Goal
 
+Operator's pinned 0567 list (app-code lane): integrate quality → billing → held lanes; `next
+build`; affected E2E + CI browser matrix; fix reds; CSP Preview canary; only then authorize
+prod deploy/flip. Separate interactive session: OD-A vault consolidation (A1→A5). Post-meeting:
+wayfinder work-through of #223/#224.
+
 ### First task
+
+Confirm lane/PR state vs the operator's inventory (0545/0550/0559/0561/0567-quality complete
+local; 0556/0557/0560 WIP; 0558/0562/0563 dirty — all preserved), then start the integration
+merge wave with full gates per lane.
 
 ## Review log
 
+### SESSION_0566_REVIEW_01 — skins + demo pack close review
+
+- **Reviewed tasks:** TASK_01–TASK_05
+- **Dirstarter docs check:** not applicable (no `apps/web` product surface touched)
+- **Verdict:** Vendor scope was held tight against a CLI that tried to sync ~15 unrequested
+  skills — the revert-to-ordered-scope was the right call and is reproducible from the commit
+  message. Skins are seed-token-true and harness-verified; the harness is a DOM *approximation*
+  of Obsidian reading view, so real-app rendering deltas remain possible until the operator
+  eyeballs the two notes (known residual). Mammoth demo pack is coherent and PEMB-aligned;
+  its numbers are self-consistent but hand-set.
+- **Score:** 8.5/10
+- **Follow-up:** operator eyeball of both BBL notes + Mammoth vault in real Obsidian.
+
 ## Hostile close review
+
+Abbreviated inline (operator-directed immediate close; full dispatch waived).
+
+- **Giddy:** pass — vendor commits scoped + reversible; lockfile rebuild documented; no
+  app-code drift; vault writes additive-only, no overwrites.
+- **Doug:** pass with caveat — every visual claim carries a Playwright artifact, but no
+  verification ran inside real Obsidian (harness-DOM proxy only); flagged as residual risk.
+- **Desi:** pass — both skins hold the seed-token law (no gold, red-as-accent-only), options
+  are structurally distinct, phone collapse present in all three snippets.
+- **Kaizen aggregate:** 8/10 — high output integrity; the un-eyeballed Obsidian rendering and
+  the skipped OD-A are the honest gaps.
 
 ## ADR / ubiquitous-language check
 
-- ADR update: candidate — epic §9 flags the two-repo vault-kit model + D12 send invariant for
-  ratification in the first build session; confirm with operator at close.
-- Ubiquitous language update not required so far.
+- ADR update deferred (recorded in Open decisions): two-repo vault-kit + D12 invariant still
+  need ratification; nothing this session contradicts existing ADRs (0034/0038 respected —
+  Mammoth boundary questions routed through the wayfinder map, not code).
+- Ubiquitous language: "demo-vault-as-deliverable", "skin" (snippet + cssclass pair), and the
+  wayfinder ticket vocabulary entered use via the epic + map; wiki entry not yet required.
 
 ## Reflections
+
+The session limit killed both build lanes at spawn and the resume-from-transcript path brought
+them back with zero re-briefing — the lane prompts being fully self-contained is what made that
+free. The skills CLI over-sync is the sharp lesson: a vendor tool that silently refreshes and
+adds beyond the asked scope must be treated like a codemod — run, diff, keep-list, revert the
+rest. Options-not-edits (PACK doctrine) proved itself twice: the operator picked "both" only
+because both existed as verified frames, and the same harness pattern then carried Mammoth in
+one inline pass. Ordered task 2 changed shape mid-session (pick-one → build-both → plus a whole
+Mammoth demo pack) — the map absorbed the scope change as ticket resolutions instead of plan
+churn, which is exactly what wayfinder is for.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
+| JETTY/frontmatter sweep | this file frontmatter `status: closed`, type left `session--open` (mixed plan/build) |
+| Backlinks/index sweep | pairs_with epic + SESSION_0564; no new wiki pages created |
+| Wiki lint | 0 errors / 54 pre-existing warnings (3 runs) |
+| Kaizen reflection | Reflections above |
+| Hostile close review | abbreviated inline (operator-directed), verdicts above |
+| Review & Recommend | Next session block filled (0567 integration + OD-A + map work-through) |
+| Memory sweep | `obsidian-vault-constellation` updated; new `skills-vendor-and-brand-skins` memory; MEMORY.md indexed |
+| Next session unblock check | wayfinder + hallmark on main (`01ca1f5e`); demo vault self-contained; no unpushed blockers after this PR |
+| Git hygiene | bow-out PR (this commit) — see PR link in chat |
+| Graphify update | run post-merge in canonical (result in chat) |
