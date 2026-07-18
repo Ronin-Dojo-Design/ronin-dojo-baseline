@@ -4,8 +4,8 @@ slug: petey-plan-0559-creator-payout
 type: petey-plan
 status: active
 created: 2026-07-17
-updated: 2026-07-17
-last_agent: claude-session-0559
+updated: 2026-07-18
+last_agent: codex-session-0567
 pairs_with:
   - docs/sprints/SESSION_0559.md
   - docs/knowledge/wiki/goals-ledger.md
@@ -63,8 +63,8 @@ Every claim below cites its repo source.
 - **The Connect seam was pre-reserved.** `StripeCustomer.accountScope` defaults `"platform"` and its
   schema comment says "platform vs connect" (`apps/web/prisma/schema.prisma` ~line 1938,
   SESSION_0107). `StripeWebhookEvent` (same file, below `StripeCustomer`) already gives webhook
-  idempotency. Webhook + payments seams: `apps/web/app/api/webhooks/stripe/` +
-  `apps/web/server/web/payments/`.
+  idempotency. Webhook + billing seams: `apps/web/app/api/stripe/webhooks/` +
+  `apps/web/server/web/billing/`.
 - **A Connect payout pipeline was already sketched** — archived
   `docs/sprints/_archive/SESSION_0098.md` §"BBL Connect lineage payout pipeline": separate webhook
   destination (likely `/api/stripe/connect/webhooks`, `STRIPE_CONNECT_WEBHOOK_SECRET`), candidate
@@ -154,7 +154,7 @@ subscriptions-only, §0).
 ### 2.2 Money flow — separate charges & transfers
 
 Membership revenue already lands on the BBL platform account (ADR 0030; checkout + entitlement
-webhooks at `apps/web/app/api/webhooks/stripe/` → `apps/web/server/web/payments/`). Payouts are
+webhooks at `apps/web/app/api/stripe/webhooks/` → `apps/web/server/web/billing/`). Payouts are
 therefore **separate transfers**: the monthly pool close (§4, PR-4/PR-5) creates Stripe **Transfers**
 from the BBL platform balance to each payee's connected account; Stripe then pays out on the
 account's schedule. Destination charges are the wrong tool — there is no per-item charge to
@@ -349,7 +349,8 @@ Sequential lane, one PR per slice; each PR passes the standard gates (typecheck 
 
 - **Agent:** Cody (after operator grill resolves; ADR text = Petey/operator)
 - **What:** Ratify the grill outcomes as **ADR 0048 — creator-payout model** (next free number after
-  `docs/architecture/decisions/0047-...`); add `CreatorPayoutAccount` + `CreatorEarningEvent` +
+  `docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md`); add
+  `CreatorPayoutAccount` + `CreatorEarningEvent` +
   enums (hand-authored additive migration).
 - **Done means:** ADR merged; migration applies cleanly on a prodsnap copy; zero UI/behavior change.
 
@@ -436,8 +437,8 @@ Strictly sequential PR-1 → PR-5 (each consumes the prior's schema/seams). PR-6
 ### Dirstarter implementation template
 
 - **Docs read first:** <https://dirstarter.com/docs/integrations/payments> (2026-07-17)
-- **Baseline pattern to extend:** the Stripe seam (`apps/web/server/web/payments/`,
-  `apps/web/app/api/webhooks/stripe/`, `StripeCustomer`/`StripeWebhookEvent`) + `UserEntitlement`
+- **Baseline pattern to extend:** the Stripe seam (`apps/web/server/web/billing/`,
+  `apps/web/app/api/stripe/webhooks/`, `StripeCustomer`/`StripeWebhookEvent`) + `UserEntitlement`
   gating + the `AdminCollection` frame (ADR 0045) + the `(web)/dashboard` tab family
 - **Custom delta:** Connect payout rail, attribution ledger, earnings surface — Dirstarter ships
   none of these (checkout + subscriptions only)

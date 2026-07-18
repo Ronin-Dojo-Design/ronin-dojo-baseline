@@ -4,8 +4,8 @@ slug: session-0559
 type: session--plan
 status: closed
 created: 2026-07-17
-updated: 2026-07-17
-last_agent: claude-session-0559
+updated: 2026-07-18
+last_agent: codex-session-0567
 sprint: S12
 pairs_with:
 
@@ -136,8 +136,8 @@ Sequential — TASK_02 consumes TASK_01's grounding. Single inline lane (docs-on
 ### Dirstarter implementation template
 
 - **Docs read first:** <https://dirstarter.com/docs/integrations/payments> (2026-07-17)
-- **Baseline pattern to extend:** Stripe checkout/subscription seam (`server/web/payments/`,
-  `app/api/webhooks/stripe/`, `StripeCustomer`/`StripeWebhookEvent`) + `UserEntitlement` gate
+- **Baseline pattern to extend:** Stripe checkout/subscription seam (`server/web/billing/`,
+  `app/api/stripe/webhooks/`, `StripeCustomer`/`StripeWebhookEvent`) + `UserEntitlement` gate
 - **Custom delta:** Stripe Connect payout rail + attribution ledger + earnings surface (Dirstarter
   has no marketplace/payout layer)
 - **No-bypass proof:** live payments doc enumerates checkout + subscriptions only; nothing replaced
