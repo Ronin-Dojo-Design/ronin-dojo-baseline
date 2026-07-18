@@ -4,8 +4,8 @@ slug: petey-plan
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-06-30
-last_agent: claude-session-0476
+updated: 2026-07-18
+last_agent: codex-session-0570
 pairs_with:
   - docs/agents/petey.md
   - docs/protocols/review-recommend.md
@@ -131,7 +131,8 @@ Once the operator approves the plan, Petey executes it by orchestration, not by 
    builds and verifies; it does **not** push/merge/deploy. Every push waits for the operator's explicit word
    ([explicit-push-authorization](giddy-merge-strategy.md)).
 
-The roster agentTypes (`petey` / `cody` / `doug` / `giddy` / `desi`) live in `.claude/agents/*.md`. Reserve
+The roster agentTypes (`petey` / `cody` / `doug` / `giddy` / `desi` / `brandon`) live in
+`.claude/agents/*.md`; Brandon also has the cross-runtime `.agents/skills/brandon/` adapter. Reserve
 fan-out for genuinely-disjoint work — a one-file change is a single inline Cody, not a fleet (CLAUDE.md rule).
 This is what makes "default to Petey orchestration" a **mechanism**, not an aspiration.
 

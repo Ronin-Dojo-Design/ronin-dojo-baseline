@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-29
 updated: 2026-07-18
-last_agent: claude-session-0569
+last_agent: codex-session-0570
 pairs_with:
   - docs/sprints/SESSION_0304.md
   - docs/sprints/SESSION_0347.md
@@ -18,6 +18,7 @@ backlinks:
   - docs/sprints/SESSION_0519.md
   - docs/sprints/SESSION_0542.md
   - docs/sprints/SESSION_0546.md
+  - docs/sprints/SESSION_0570.md
 ---
 
 # Wiring Ledger — not-done, gaps, and handroll slips
@@ -261,6 +262,11 @@ follow-ups, not silent nulls.
   fails; terminal legacy history and canonical identity collapse remain allowed. This is an **expand/contract
   deploy-order gate**, not optional cleanup and not safe to fold into the first Vercel prebuild migration. (Doug
   hostile close + identity-merge hostile follow-up, SESSION_0542.)
+- **WL-P3-53** — Mammoth `/app` and `/app/new` can return HTTP 200 for the route shell while their automatic
+  `listProjects()` Server Action POST fails with an unhandled `UnauthorizedError` 500 when no session exists.
+  Diagnose the intended signed-out boundary, then render a friendly auth-required or recovery state without the
+  noisy unhandled rejection. Acceptance: signed-out route behavior is explicit and tested; authenticated pipeline
+  loading is separately smoke-proven. (SESSION_0570_FINDING_02.)
 
 ## localStorage / sessionStorage gaps
 

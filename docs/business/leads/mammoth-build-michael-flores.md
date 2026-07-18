@@ -2,16 +2,17 @@
 title: Lead — Mammoth Metal Buildings (Michael Flores)
 slug: lead-mammoth-build
 type: lead
-status: INTAKE_SCHEDULED
+status: DISCOVERY_IN_PROGRESS
 source: REFERRAL
 created: 2026-06-20
-last_agent: petey
+updated: 2026-07-18
+last_agent: codex-session-0570
 client:
   company: Mammoth Metal Buildings
   site: https://mammoth.build
   contact: Michael Flores
   role: General Manager
-engagement: HubSpot Commerce Hub — lead-to-order revenue operations
+engagement: Mammoth CRM + HubSpot/QuickBooks integration discovery — prospect-to-satisfied-installation
 backlinks:
   - docs/business/calendar-of-events.md
   - docs/business/README.md
@@ -138,8 +139,10 @@ Stages, each with an **exit gate** (required before advancing):
 5. **Deposit Invoiced** — deposit payment link sent/paid.
 6. **Engineering Released** — PE stamp obtained for the stamp-state (gate before fabrication).
 7. **Fabrication / Production** — fabrication-milestone invoice issued.
-8. **Delivery & Erection** — sequenced delivery; delivery-milestone invoice.
-9. **Closed-Won / Order Complete** — final invoice; fulfillment handoff; record retained.
+8. **Delivery** — sequenced delivery; delivery-milestone invoice; Installation Path confirmed.
+9. **Installation** — Mammoth-Installed execution or Customer-Installed readiness/guided-install flow.
+10. **Satisfied Installation / Successful Close** — required proof + satisfaction confirmation; final invoice;
+    unresolved concerns remain open as owned Resolution Tasks.
    (Mirror stage: **Closed-Lost / Nurture**.)
 
 ## 5. PEMB-specific custom properties (ties CRM to the engineering reality)
@@ -209,7 +212,28 @@ subscriptions where applicable.
 6. Validate the proposed pipeline + milestone-billing model (§4–§6).
 7. Resolve remaining open decisions (§7); next step: scope + proposal.
 
-## 9. Done means
+## 9. Intake outcome — 2026-07-18
+
+The Product North Star is ratified:
+
+> Know every prospect personally, make the next action effortless, and carry every building opportunity
+> through delivery and a satisfied installation without dropping the relationship.
+
+A Successful Close explicitly supports two equal paths: Mammoth-Installed, or Customer-Installed with
+Mammoth-provided brand-specific readiness, education, SOPs, protocols, step-by-step guides, onboarding
+wizards, role how-tos, support, proof, and satisfaction follow-through. Delivery or order confirmation
+alone is not Complete.
+
+Canonical requirements and stories are integrated into:
+
+- [`PRD.md`](../../product/mammoth-build/PRD.md)
+- [`STORIES.md`](../../product/mammoth-build/STORIES.md)
+- [`UBIQUITOUS_LANGUAGE.md`](../../product/mammoth-build/UBIQUITOUS_LANGUAGE.md)
+
+The next decision gate is the operator/client grill: ratify Brandon's recommended mission and public
+motto, then lock the 8:00-AM sales cockpit outcome and success metric before building the lead-roster slice.
+
+## 10. Done means
 
 - This brief committed (✅ this file).
 - Intake logged on the [calendar of events](../calendar-of-events.md) (✅).

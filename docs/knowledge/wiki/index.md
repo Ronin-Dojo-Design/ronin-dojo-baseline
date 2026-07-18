@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-18
 author: Brian + Copilot
-last_agent: claude-session-0569
+last_agent: codex-session-0570
 ---
 
 # LLM Wiki Index
@@ -89,6 +89,9 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md)                            | report  | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
 | [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec    | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan                                                            |
 | [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md)                                                  | sot     | active — single light P0/P1/P2 running list + Now-live (MVP_LIVE) + widget Feedback inbox; supersedes feature-intake-ledger (SESSION_0424); `lifecycle:` yaml convention                                                                                            |
+| [Mammoth Build CRM PRD](../../product/mammoth-build/PRD.md)                                                          | prd     | draft — SESSION_0570 ratified Product North Star, Brand Heartbeat, and delivery → two-path Satisfied Installation finish line                                                                        |
+| [Mammoth Build CRM Stories](../../product/mammoth-build/STORIES.md)                                                  | stories | draft — sales cockpit, delivery/installation, enablement, satisfaction, and brand-quality backlog                                                                                                    |
+| [Mammoth Build Ubiquitous Language](../../product/mammoth-build/UBIQUITOUS_LANGUAGE.md)                              | concept | active — canonical Prospect/Lead/Opportunity/Project, Installation Path, Satisfied Installation, Successful Close, and enablement terms                                                              |
 
 ## Architecture
 
@@ -710,6 +713,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0567](../../sprints/SESSION_0567.md) | session--open | closed — Parallel recovery wave + merged-trunk quality suite; local G3 lanes complete, CSP canary held. |
 | [SESSION_0568](../../sprints/SESSION_0568.md) | session--open | closed — Recovered Obsidian vault lane: OD-A1 core split, Command Center v2, Mammoth meeting/share pack; operator-only Git/Sync/native smoke routed to MB-016. |
 | [SESSION_0569](../../sprints/SESSION_0569.md) | session--implement | closed — G-013 Wave 2 first batch (B1 tooltips, C2 pill, hallmark-audit smalls, re-pitch, roving tabindex) + WL-P2-64 tests + D11 audit-only amendment; held at push gate. |
+| [SESSION_0570](../../sprints/SESSION_0570.md) | session--plan | closed — Michael Flores intake notes, Mammoth brand/product canon, Brandon role, MMB lean operating-model handoff, and Keychain-only HubSpot safety boundary. |
 
 ## Protocols
 
@@ -748,6 +752,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | --------------------------------------- | -------- | ------ |
 | [Petey](../../agents/petey.md)          | protocol | active |
 | [Cody](../../agents/cody.md)            | protocol | active |
+| [Brandon](../../agents/brandon.md)      | protocol | active |
 | [Agents README](../../agents/README.md) | protocol | active |
 
 ## Runbooks

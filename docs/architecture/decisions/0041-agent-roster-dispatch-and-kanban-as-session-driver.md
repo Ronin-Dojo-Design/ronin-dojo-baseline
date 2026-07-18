@@ -4,8 +4,8 @@ slug: adr-0041-agent-roster-dispatch-and-kanban-as-session-driver
 type: decision
 status: accepted
 created: 2026-06-30
-updated: 2026-06-30
-last_agent: claude-session-0476
+updated: 2026-07-18
+last_agent: codex-session-0570
 deciders: Brian Scott
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -15,6 +15,7 @@ pairs_with:
   - docs/rituals/closing.md
   - docs/learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
+  - docs/agents/brandon.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:
@@ -66,6 +67,11 @@ but never wired:
   not a hat-swap. `petey-plan.md` ends with a `## Dispatch` section that turns its Agent-assignments table into
   actual `Agent()` spawns. The lead may still act inline for a single coherent change; fan-out is reserved for
   genuinely-disjoint work (a one-file change is one inline Cody, not a fleet).
+- **SESSION_0570 extension — Brandon joins the dispatch layer.** The previously prose-only brand/marketing
+  reviewer now has canonical authority at `docs/agents/brandon.md`, a read-only Claude adapter at
+  `.claude/agents/brandon.md`, and a model-agnostic Codex/skill adapter at
+  `.agents/skills/brandon/SKILL.md`. Both adapters point to the canonical role; they do not duplicate it.
+  Brandon recommends brand language and spec deltas but never writes production code or publishes.
 
 **D2 — The DB Kanban board is the session driver (bidirectional).**
 

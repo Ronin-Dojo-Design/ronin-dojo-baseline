@@ -4,8 +4,8 @@ slug: agent-systems-map
 type: concept
 status: active
 created: 2026-06-29
-updated: 2026-07-12
-last_agent: claude-session-0529
+updated: 2026-07-18
+last_agent: codex-session-0570
 pairs_with:
   - docs/protocols/WORKFLOW_5.0.md
   - docs/rituals/opening.md
@@ -70,6 +70,7 @@ finding type → its canonical ledger). Plus ~35 skills and the [domain hubs](..
 | Prove a change actually works | `/verify` + [`qa-runtime-verification`](../../protocols/qa-runtime-verification.md) | runtime evidence, not "it compiles" |
 | Emergency user-blocking prod bug | [`hot-fix-protocol`](../../protocols/hot-fix-protocol.md) | fast within the push gate, not past it |
 | Stand up a new client product | `/new-client-recipe` | own DB + brand, monorepo (ADR 0034/0038) |
+| Turn interviews into mission/motto/brand canon or messaging requirements | **Brandon** ([role](../../agents/brandon.md)) | separate confirmed truth from recommendations; make promises acceptance-testable |
 | Repo feels heavy / duplicated / drifting | [`hostile-repo-review`](../../protocols/hostile-repo-review.md) | the repo-wide lean-out (this session) |
 
 ## 2. Context discipline — "each agent only sees what it needs"
@@ -86,6 +87,7 @@ bigger window isn't always better.
 | Reviewer | [Doug](../../agents/doug.md) | the diff, the Verification contract, the evidence |
 | (adversarial) | [Giddy](../../agents/giddy.md) | the whole-session/whole-repo lens (hostile close + repo review) |
 | (design) | [Desi](../../agents/desi.md) | the brand surfaces, the card contract, the L1 primitives |
+| (brand/rollout) | [Brandon](../../agents/brandon.md) | confirmed product truth, PRD/STORIES, public copy, message hierarchy |
 
 Reinforced by `CLAUDE.md`'s sub-agent fan-out rule (parallelize only genuinely-disjoint work) and the
 operator's **"fresh chat past the ~120K dumb zone"** discipline — bigger context ≠ better.

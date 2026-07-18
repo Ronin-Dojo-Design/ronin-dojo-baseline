@@ -4,8 +4,8 @@ slug: agents-readme
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-06-30
-last_agent: claude-session-0476
+updated: 2026-07-18
+last_agent: codex-session-0570
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -44,9 +44,11 @@ All six personas are now active per WORKFLOW_5.0.md:
 | Giddy | Architecture + Git strategy | Worktree boundaries, branch strategy, Dirstarter compliance |
 | Doug | QA + release readiness | Failure modes, test gates, migration rehearsal |
 | Desi | UX + design consistency | Screen→backend contract verification |
-| Brandon | Brand + marketing rollout | Launch narrative, messaging per brand |
+| [Brandon](brandon.md) | Brand + marketing rollout | Brand truth, mission/motto, message hierarchy, voice, rollout + PRD/STORIES deltas |
 
-> Petey, Cody, Doug, Giddy, and Desi now have dedicated `.claude/agents/*.md` agentType configs — dispatchable directly via the Agent tool's `subagent_type` (in addition to the prose persona docs here). Brandon remains a prose-only review voice defined in [WORKFLOW_5.0.md](../protocols/WORKFLOW_5.0.md) § Persona responsibilities, invoked during the review pass loop.
+> All six personas have canonical prose definitions under `docs/agents/`. Claude dispatch adapters live
+> in `.claude/agents/*.md`; Brandon also exposes the model-agnostic `.agents/skills/brandon/SKILL.md` adapter
+> so Codex and other skill-aware runtimes consume the same role rather than a forked prompt.
 
 ## Active rituals + protocols
 

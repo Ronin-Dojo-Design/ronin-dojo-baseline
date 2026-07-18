@@ -6,7 +6,7 @@ status: active
 created: 2026-04-27
 updated: 2026-07-18
 author: Brian + ChatGPT
-last_agent: codex-session-0568
+last_agent: codex-session-0570
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -36,6 +36,7 @@ backlinks:
   - docs/sprints/SESSION_0171.md
   - docs/sprints/SESSION_0344.md
   - docs/sprints/SESSION_0568.md
+  - docs/sprints/SESSION_0570.md
 tags:
   - blockers
   - ops
@@ -221,6 +222,18 @@ Blocker classes:
 - **Status:** waiting_on_owner
 - **Added:** SESSION_0568; OD-A1 core split complete (53 MB), OD-A2–A5 and native OD-B4 smoke remain.
 - **Updated:** SESSION_0568 (Opus continuation) — OD-A2 vault git init + gitignore + secret-scan + private remote + push **DONE**; only Sync/phone-pairing + obsidian-git auto-backup + in-app Command Center/switcher eyeball remain owner-only.
+
+#### MB-017 — MMB temporary HubSpot credential rotation and least privilege
+
+- **Boundary:** A HubSpot login was supplied through a screenshot during SESSION_0570 and is therefore
+  considered exposed. Do not use or preserve it as the lasting credential.
+- **Owner:** Michael rotates/revokes sessions and mediates 2FA; Brian enters the replacement locally.
+- **Blocker class:** `auth_decision`
+- **Proof required:** Michael confirms rotation; the replacement exists only in macOS Keychain under the MMB
+  temporary service reference; a metadata-only secret scan finds no password/2FA copy in repo or vault; access
+  expiry/revocation owner is recorded; any lasting integration uses approved least-privilege OAuth/scoped access.
+- **Status:** waiting_on_credentials
+- **Added:** SESSION_0570.
 
 SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs.
 
