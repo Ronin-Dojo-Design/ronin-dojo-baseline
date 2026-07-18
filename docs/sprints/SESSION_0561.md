@@ -180,6 +180,23 @@ memory + sprint mining.
 | oxfmt coverage check | `format:check` = `oxfmt --check .` scoped to `apps/web` only — does NOT cover `.claude/` or `docs/`; no oxfmt gate applies to this lane |
 | Task-log gate (`awk` count ≥ 1) | pass — 3 task rows |
 
+### SESSION_0567 held-lane pickup verification
+
+The held branch was rebased onto current `origin/main` and independently re-gated from its isolated
+worktree before handoff. The database-backed suite ran in an explicitly exclusive DB lane; the
+earlier contended run was discarded rather than treated as evidence.
+
+| Command / smoke | Result |
+| --- | --- |
+| `.claude/skills/worktree-setup/bootstrap.sh` | pass — dependencies installed, Prisma client generated, no tracked bootstrap changes |
+| `bun run typecheck` | pass |
+| `bun run lint` | pass — advisory baseline warnings only |
+| `bun run format` | pass — no app-file changes |
+| `bun test` (exclusive DB lane, PID 55096) | exit 0 — 1536 pass, 0 fail, 4370 `expect()` calls, 205 files, 345.45s |
+| `bun run wiki:lint` | 0 errors, 54 baseline warnings |
+| Skill conformance audit | pass — valid frontmatter; 551-character description; all five required triggers present; 81 lines; every cited cross-reference exists |
+| `git diff --check` | clean |
+
 ## Open decisions / blockers
 
 - Push held per brief — local commit on `session-0561-preview-artifacts-skill` awaits the
@@ -228,6 +245,15 @@ on the operator's go, and fold the branch into the merge wave (docs-only — no 
 - **Kaizen aggregate:** 9/10 — deliverable complete and history-grounded; deducted for the
   subagent-wait stall mid-session (coordinator had to prod; the mining finished inline).
 
+### SESSION_0567 pickup addendum
+
+- **Giddy:** pass — clean rebase onto current `origin/main`; docs/skill-only delta remains isolated;
+  no push, PR, merge, deploy, or production mutation performed.
+- **Doug:** pass — bootstrap, typecheck, lint, format, wiki lint, skill-conformance audit, diff
+  check, and an exclusive full test suite are green.
+- **Kaizen aggregate:** 9.4/10 — current-base and full-suite proof close the original unbootstrapped
+  evidence gap; the first real published Artifact remains the downstream acceptance test.
+
 ## ADR / ubiquitous-language check
 
 - ADR update not required — skill encodes an existing operator-endorsed practice (SESSION_0539);
@@ -259,6 +285,6 @@ subagent synchronously or proceed inline and merge its findings when they arrive
 | Wiki lint | run at close — result in Verification table |
 | Hostile close review | section above (Giddy/Doug pass, Desi n/a, Kaizen 9/10) |
 | Review & Recommend | Next session block written |
-| Git hygiene | one local commit on `session-0561-preview-artifacts-skill` — hash in bow-out report; push HELD |
+| Git hygiene | local commits on `session-0561-preview-artifacts-skill`; branch clean and push HELD at the explicit authorization gate |
 | Graphify update | skipped by design — lean docs close in un-bootstrapped worktree (graph lives in canonical checkout) |
 | Memory sweep | no new memory needed — the skill itself is the durable artifact (supersedes re-recording the 0539 memory) |
