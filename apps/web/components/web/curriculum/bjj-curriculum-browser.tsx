@@ -99,13 +99,20 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
               size="sm"
               variant={selectedLevel.id === level.id ? "primary" : "secondary"}
               aria-pressed={selectedLevel.id === level.id}
+              // Visible label is the level title; rank.shortName stays as compact aria support
+              // only (appended so the accessible name still contains the visible text).
+              aria-label={
+                level.rank?.shortName
+                  ? `${level.title.replace(/^BJJ\s+/, "")} (${level.rank.shortName})`
+                  : undefined
+              }
               onClick={() => {
                 setSelectedLevelId(level.id)
                 setSelectedTopic(ALL_TOPICS)
               }}
             >
               <BeltSwatch colorHex={level.rank?.colorHex} className="size-2.5" />
-              {level.rank?.shortName ?? level.title.replace(/^BJJ\s+/, "")}
+              {level.title.replace(/^BJJ\s+/, "")}
             </Button>
           ))}
         </Stack>

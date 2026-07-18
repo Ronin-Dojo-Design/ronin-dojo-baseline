@@ -318,6 +318,9 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   }
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    // Zoom only on an explicit gesture: ctrl/cmd + wheel, or a trackpad pinch (which browsers
+    // report as a ctrlKey wheel). A plain wheel falls through to normal page scroll.
+    if (!event.ctrlKey && !event.metaKey) return
     event.preventDefault()
     updateZoom(zoom + (event.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP))
   }
@@ -385,7 +388,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
       <Card className="gap-3 p-3 md:p-4">
         <Stack direction="row" wrap size="sm" className="w-full items-center justify-between">
           <Stack direction="row" wrap size="xs" className="items-center">
-            <Badge variant="primary" prefix={<WorkflowIcon />}>
+            <Badge variant="soft" prefix={<WorkflowIcon />}>
               {graph.nodes.length} techniques
             </Badge>
             <Badge variant="soft">{graph.edges.length} links</Badge>
