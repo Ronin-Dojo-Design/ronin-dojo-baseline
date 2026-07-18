@@ -274,11 +274,14 @@ readiness check. No agent edits canonical `main` outside TASK_01 governance/qual
 
 ### Goal
 
-Run authorized CSP Preview canary, verify browser reports in Vercel, then decide production enforcement.
+Integrate local G3 stack, run authoritative build + Playwright/E2E CI, then run authorized CSP Preview
+canary and verify browser reports in Vercel before deciding production enforcement.
 
 ### First task
 
-Read lane SHAs and authorize only exact push/PR/merge/deploy/env actions desired.
+Read lane SHAs. Rehearse merge order (quality → billing → held lanes), run `next build`, run affected
+Playwright/E2E coverage plus CI's browser matrix, fix red results, then request exact PR/merge/deploy/env
+authorization. Do not flip CSP or deploy production before Preview report delivery is proven.
 
 ## Review log
 
