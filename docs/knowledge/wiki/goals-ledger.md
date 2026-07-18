@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-17
-last_agent: codex-session-0551
+updated: 2026-07-18
+last_agent: claude-session-0564
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -257,3 +257,62 @@ aggregator reads it with no new parser logic.
 - **Why:** Brian explicitly pinned this epic. Wave 1 fixed the conversion/access and visual foundation; the
   remaining interaction and narrative layers are now a bounded, independently reviewable continuation rather
   than untracked design intent. (SESSION_0546.)
+
+### G-014 — Obsidian Dashboard Epic — vault-kit + dashboard design/planning
+
+- **Status:** in-progress — P1
+- **Objective:** execute the SESSION_0564 epic: ONE canonical vault (Baseline_Vault consolidation,
+  Design-vault fold-in, 13 GB RoninDojoObsidian archive), layered git+Obsidian-Sync phone/laptop
+  parity, and the in-repo `vault-kit/` (idempotent installer, DB-seed-token brand skins, template
+  library, Command Center v2 on Bases/Dataview/Kanban) — the vault as design-system skins + quick
+  mockups + client business-showcase + dashboard.
+- **Pointer:** full plan at
+  [`docs/product/obsidian-dashboard/Obsidian_Dashboard_Epic.md`](../../product/obsidian-dashboard/Obsidian_Dashboard_Epic.md)
+  (workstreams A–C; tasks OD-A1..OD-C3). This row is backlog visibility only — do not duplicate.
+- **Lane:** design-system / operator tooling. **Includes:** skills onboarding (vendor `hallmark`;
+  vendor+conform `wayfinder` + 4 sibling deps; replace the dead-path `obsidian-vault` skill).
+- **Why:** operator-pinned "heartbeat of the brand" — the vault-kit installer doubles as the RDD
+  client-automation demo (ADR 0034 platform model extended to the workbench layer).
+
+### G-015 — Hermes local automation + Model Option research-recommend
+
+- **Status:** open — P1
+- **Objective:** build Hermes (`vault-kit/hermes/`): launchd-scheduled `claude -p` job runner with
+  ntfy reporting, running the v1 job set — daily brief, weekly review draft, content-engine sweep,
+  design-drop watcher (hallmark `study`), email sweep — writing markdown into the canonical vault.
+  Ship the **Model Option** research-recommend doc (per-job model matrix, measured token volumes
+  after 2 weeks live, subscription-`claude -p`-vs-API decision record; task OD-D1b).
+- **Pointer:** epic §5-D + §6 (tasks OD-D1..OD-D6, OD-D1b). **Depends on:** G-014 phase 1
+  (canonical vault + sync). **Invariant:** Hermes never auto-sends anything (epic D12).
+- **Lane:** automation / agentic ops.
+- **Why:** the dashboard is only alive if something feeds it daily; Hermes is the feed and the
+  first productized "automate a client's daily workflow" proof.
+
+### G-016 — Email Boards program (5 brands, phased)
+
+- **Status:** open — P2
+- **Objective:** per-brand email boards (BBL · Baseline · Mammoth · Tuff Buffs · WEKAF) per epic
+  Workstream E: E-P1 sweep+categorize (read-only) → E-P2 board surface (vault kanban + Command
+  Center rollup) → E-P3 reply drafts (into cards, never outboxes) → E-P4 explicit per-message
+  approval→send. Cards carry the frontmatter contract; message-id ledger keeps sweeps idempotent;
+  OAuth tokens live in keychain/env only (never vault/repo).
+- **Pointer:** epic §5-E (spec, sequence diagram, integration notes). **Execution recipe:** Fable
+  plans → Codex CLI worktree lanes and/or cheap-model caveman subagent fan-out under simple Petey
+  orchestration — one lane per brand once the pilot proves the shape.
+- **Lane:** automation / email. **Depends on:** G-017 pilot. **Gate:** E-P4 ships nothing until
+  its approval-UX grill (epic D12).
+- **Why:** staged so brand lanes are ready-to-grab vertical slices alongside codebase work.
+
+### G-017 — Email Boards BBL pilot (then Mammoth)
+
+- **Status:** open — P1
+- **Objective:** prove E-P1+E-P2 on **BBL first** (Brian's own mailbox via Gmail API — zero
+  external OAuth blockers): Hermes email sweep, categorized cards on a BBL board note, Command
+  Center rollup. Success = demo-ready for the Michael Flores video meeting (2026-07-18 showcase
+  of the Obsidian/Hermes setup) + a week of daily use with zero duplicate cards. **Mammoth =
+  first follower**: Michael's OAuth (+ possible Google Calendar integration and Todoist API keys
+  — todoist-sync-plugin already in the Design-vault harvest) collected at that meeting.
+- **Pointer:** epic §5-E phases E-P1/E-P2 (D9 as amended). **Depends on:** G-015 (Hermes core).
+  **Feeds:** G-016 5-brand fan-out.
+- **Lane:** automation / email / BBL→Mammoth. **Why:** pilot on our own mailbox, showcase to the
+  client, then onboard the client — the vault-kit business-showcase motion in miniature.
