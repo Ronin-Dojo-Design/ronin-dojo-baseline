@@ -203,11 +203,18 @@ D1–D12 — see epic §3 (single source; not duplicated here).
   OAuth + possible Google Calendar / Todoist API keys. (Email pilot pivoted to BBL — D9 amended
   by operator post-grill; Mammoth = first follower.)
 - E-P4 approval-UX grill — operator, before any send-flow build.
-- Dashboard inspiration pack: 10 screenshots RECEIVED + filed to
+- Dashboard inspiration pack: 15 screenshots RECEIVED + filed to
   `Baseline_Vault/10_Design/_inspiration/obsidian-dashboard/` with PACK.md manifest (source:
-  TheEricMichaud "Obsidian Customization Is Getting Out of Hand"; design DNA distilled into epic
-  OD-B2/B4/D5). Still pending from phone: the Talk-To-Text transcript notes (cleaned + raw) →
-  same folder. Video URL lookup in flight → PACK.md field.
+  TheEricMichaud "Obsidian Customization Is Getting Out of Hand", URL verified; design DNA
+  distilled into epic OD-B2/B4/D5 incl. Metrics/Content-tab anatomy + Impeccable mechanics).
+- Thoughts-To-Text transcript RECEIVED (pasted; the "Obsidian Design System" share had routed
+  to Todoist via the "Ronin" capture destination). Filed: verbatim raw →
+  `docs/product/obsidian-dashboard/raw/2026-07-18-brian-thoughts-to-text.md`; BBL-side
+  distillation → `docs/product/black-belt-legacy/gi-brand-experience-and-content-atoms.md`
+  (PROPOSED input); epic amended (OD-B2 skin roster, OD-C1 offline-mirror, OD-D7 trend radar,
+  OD-D5 capture shortcut, folder-promotion note).
+- Bow In/Bow Out ritual UX + Sensei greeter — needs its OWN grill (Petey + operator → Desi)
+  before any build; BBL input doc §2 carries the fork list.
 
 ## Next session
 

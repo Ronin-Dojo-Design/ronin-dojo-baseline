@@ -54,6 +54,7 @@ The vault is the **heartbeat of the brand** — four jobs on one surface:
 | **RoninDojoDesign** | iCloud Obsidian | 356 MB / 16 md + assets | Design/branding vault (BBL, MAD, RDD-Custom Sites, JETTY standards, canvases). FOLD its brand/design assets into the canonical vault. Rich plugin set worth harvesting (style-settings, dataview, quickadd, metadata-menu, advanced-canvas). |
 | **RoninDojoObsidian** | iCloud Obsidian | 13 GB / 13,473 files | Mostly a stale `ronin-dojo-monorepo` copy inside a vault. ARCHIVE off iCloud (reclaims 13 GB); nothing folds in except any unique scraps found during sweep. |
 | **`ronin_obsidian_starter_vault/`** | repo root (git-tracked) | small | The ChatGPT starter seed the live core evolved from. Becomes raw material for `vault-kit/` templates; the tracked copy retires when vault-kit lands (do not maintain two template sources). |
+| **Baseline_ObsidianDB** (phone) | Obsidian mobile | 136 files / 409 folders shown | Phone-side vault mirroring Baseline_Vault's structure exactly; not in iCloud → an **Obsidian Sync remote pairing appears already live** (laptop `sync: true`). OD-A5 step 1 = confirm the pairing + selective-sync settings (count gap suggests heavy folders already excluded). The capture-app "Baseline Inbox" destination presumably routes here. |
 | **`obsidian-vault` skill** | `.claude/skills/obsidian-vault/` (+ `.agents` mirror) | — | Points at a dead WSL path (`/mnt/d/...`). REPLACE with a Baseline_Vault-aware skill (task B5). |
 | Operator design notes | `Baseline_Vault/Obsidian Integration and Automation.txt` | — | 3-layer model (Obsidian = workbench → publish → transactional services), note-type taxonomy, plugin ladder. Treated as design input throughout. |
 
@@ -140,6 +141,11 @@ tooling per ADR 0034 — kernel + modules).
   harness → Playwright screenshot at fixed viewport → snippet/smoke tests → only then apply the
   snippet (PACK.md doctrine #5). Done: switching snippets re-skins the whole vault incl.
   dashboard; tokens byte-match the seed values (no hand-forked colors — D6); pipeline tests green.
+  **Skin-playground roster (operator 2026-07-18, thoughts-to-text):** BBL worn-gi fabric
+  ("sweat-in-battle"), gi-weave/stitch textures, tatami/wood/bamboo matte, gi/nogi variants,
+  puzzle-mat red/blue, Fuji-mat background. Textures layer ON TOP of seed tokens (tokens = color
+  law; textures = skin personality). Same skins later apply to the BBL site + admin chrome — see
+  `docs/product/black-belt-legacy/gi-brand-experience-and-content-atoms.md`.
 - **OD-B3 — Template library.** Port + upgrade the 90_Templates set (Templater-ready) and the
   `.base` files; add design-domain templates (Design DNA note, Mockup brief, Client showcase
   walkthrough). Done: templates render via Templater in the canonical vault.
@@ -163,6 +169,9 @@ tooling per ADR 0034 — kernel + modules).
 
 - **OD-C1 — Read-model:** server-side reader of the vault git repo (clone/pull on the server or
   read via GitHub API) exposing notes/frontmatter as a typed read-model. No DB migration.
+  Requirement (operator 2026-07-18): the web dashboard should MIRROR the vault's look/feel/
+  functions with offline access — vault-first architecture already guarantees the offline half
+  (Obsidian IS the offline client); the web surface mirrors, never replaces.
 - **OD-C2 — `/app/vault-dashboard` route:** loop-board-style projection of the Command Center
   (reuse `BoardCard`/AdminCollection patterns — the one-surface law applies).
 - **OD-C3 — Showcase mode:** a shareable, read-only demo view for client pitches.
@@ -206,6 +215,13 @@ flowchart TD
   markdown transcript → cheap-model DNA distill — manual-run first, watcher-triggered later.
   (Mid model, vision.)
 - **OD-D6 — Email sweep job.** See Workstream E — E-P1 is the Hermes job.
+- **OD-D7 — Trend radar (candidate, P2 — parked until D1–D6 live).** Reddit/YouTube/podcast
+  sweep for martial-arts trends + outreach targets, scored AIOS-Content-tab style (generated-at,
+  confidence, evidence gaps — PACK.md anatomy) into a Command Center panel; feeds the BBL
+  "Legacy" content series + partnerships outreach (see BBL input doc §4).
+- **Capture shortcut (rides OD-D5):** iPhone Shortcut — watch video → summarize → action plan →
+  markdown → queue/ledger → vault inbox (operator's thoughts-to-text workflow; our models
+  replace Gemini per §6; the yt-dlp recipe is the laptop half).
 
 ### Workstream E — Email Boards program (5 brands; spec now, build hands off)
 
@@ -303,6 +319,12 @@ Phase 5:                      E-P3 drafts → E-P4 approval/send  ·  OD-C1..C3 
 
 Workstream A is operator-assisted (personal data moves); B onward are agent-executable lanes.
 A and the skills vendor are disjoint → can run same session.
+
+**Folder promotion (operator 2026-07-18):** this folder graduates to full product shape —
+`PRD.md` + `STORIES.md` (via `/to-prd` off this epic + `raw/`) in an early build session,
+matching the black-belt-legacy / mammoth-build conventions. `raw/` holds text sources
+(thoughts-to-text, transcripts); binary assets stay in the vault pack (Giddy rule: decisions
+and specs in the repo, design raw material in the workbench).
 
 ## 9. Scope guards + risks
 
