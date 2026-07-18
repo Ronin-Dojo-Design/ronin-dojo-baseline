@@ -40,7 +40,9 @@ const sourceField = (notes: string | null, label: string) => {
   return line?.slice(label.length + 1).trim() ?? ""
 }
 
-const keyPointsFromNotes = (notes: string | null) => {
+// Exported for the technique graph's node tooltips (node-tooltip.ts): both surfaces must parse
+// the "Key points:" block out of CurriculumItem.notes identically, so this stays the ONE parser.
+export const keyPointsFromNotes = (notes: string | null) => {
   if (!notes) return []
   const lines = notes.split("\n")
   const start = lines.findIndex(line => line.trim() === "Key points:")

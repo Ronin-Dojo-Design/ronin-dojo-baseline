@@ -23,12 +23,19 @@ import {
 } from "~/components/common/dialog"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/common/tooltip"
 import { cx } from "~/lib/utils"
 import type {
   BjjTechniqueGraph,
   BjjTechniqueGraphEdge,
   BjjTechniqueGraphNode,
 } from "~/server/web/techniques/graph-query"
+import { deriveNodeTooltip } from "~/server/web/techniques/node-tooltip"
 
 const NODE_WIDTH = 168
 const NODE_HEIGHT = 64
@@ -438,73 +445,113 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
             onWheel={handleWheel}
             onKeyDown={handleKeyDown}
           >
-            <div
-              className="absolute left-0 top-0"
-              style={{
-                width: bounds.width,
-                height: bounds.height,
-                transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                transformOrigin: "0 0",
-              }}
-            >
-              <svg
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 overflow-visible"
-                width={bounds.width}
-                height={bounds.height}
+            {/* One provider for the whole node layer: ~250ms hover-open (the L1 wrapper defaults
+                delay to 0), while keyboard focus still opens instantly (Base UI focus-open is
+                not delayed and the wrapper's data-instant:duration-0 skips the animation). */}
+            <TooltipProvider delay={250}>
+              <div
+                className="absolute left-0 top-0"
+                style={{
+                  width: bounds.width,
+                  height: bounds.height,
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transformOrigin: "0 0",
+                }}
               >
-                {visibleEdges.map(edge => (
-                  <GraphEdge key={edge.id} edge={edge} nodeById={nodeById} />
-                ))}
-              </svg>
-
-              {visibleNodes.map(node => (
-                <button
-                  key={node.id}
-                  type="button"
-                  className={cx(
-                    "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    selectedNodeId === node.id && "z-10 ring-2 ring-ring",
-                    nodeTypeClass(node.type),
-                  )}
-                  data-graph-node-type={node.type}
-                  style={{
-                    left: node.x,
-                    top: node.y,
-                    width: NODE_WIDTH,
-                    height: NODE_HEIGHT,
-                  }}
-                  aria-label={`${node.label}, ${labelForType(node.type)}`}
-                  aria-pressed={selectedNodeId === node.id}
-                  onClick={event => {
-                    event.stopPropagation()
-                    setSelectedNodeId(node.id)
-                  }}
+                <svg
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 overflow-visible"
+                  width={bounds.width}
+                  height={bounds.height}
                 >
-                  <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
-                    {labelForType(node.type)}
-                  </span>
-                  <span className="line-clamp-2 text-sm font-semibold leading-tight">
-                    {node.label}
-                  </span>
-                  {node.beltLevelMin?.colorHex && (
-                    <>
-                      <span
-                        aria-hidden="true"
-                        data-graph-belt-hairline
-                        className="absolute inset-x-0 bottom-[3px] h-px bg-border"
+                  {visibleEdges.map(edge => (
+                    <GraphEdge key={edge.id} edge={edge} nodeById={nodeById} />
+                  ))}
+                </svg>
+
+                {visibleNodes.map(node => {
+                  const tooltip = deriveNodeTooltip(node)
+
+                  return (
+                    // Force-closed while the node dialog is open (Base UI also closes on trigger
+                    // press, but `disabled` makes it deterministic). Hover-open is mouse-only in
+                    // Base UI, so touch keeps its tap→dialog behavior with no tooltip-on-tap.
+                    <Tooltip key={node.id} disabled={selectedNodeId !== null}>
+                      <TooltipTrigger
+                        render={
+                          <button
+                            type="button"
+                            className={cx(
+                              "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                              selectedNodeId === node.id && "z-10 ring-2 ring-ring",
+                              nodeTypeClass(node.type),
+                            )}
+                            data-graph-node-type={node.type}
+                            style={{
+                              left: node.x,
+                              top: node.y,
+                              width: NODE_WIDTH,
+                              height: NODE_HEIGHT,
+                            }}
+                            aria-label={`${node.label}, ${labelForType(node.type)}`}
+                            aria-pressed={selectedNodeId === node.id}
+                            onClick={event => {
+                              event.stopPropagation()
+                              setSelectedNodeId(node.id)
+                            }}
+                          >
+                            <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
+                              {labelForType(node.type)}
+                            </span>
+                            <span className="line-clamp-2 text-sm font-semibold leading-tight">
+                              {node.label}
+                            </span>
+                            {node.beltLevelMin?.colorHex && (
+                              <>
+                                <span
+                                  aria-hidden="true"
+                                  data-graph-belt-hairline
+                                  className="absolute inset-x-0 bottom-[3px] h-px bg-border"
+                                />
+                                <span
+                                  aria-hidden="true"
+                                  data-graph-belt-color={node.beltLevelMin.colorHex}
+                                  className="absolute inset-x-0 bottom-0 h-[3px]"
+                                  style={{ backgroundColor: node.beltLevelMin.colorHex }}
+                                />
+                              </>
+                            )}
+                          </button>
+                        }
                       />
-                      <span
-                        aria-hidden="true"
-                        data-graph-belt-color={node.beltLevelMin.colorHex}
-                        className="absolute inset-x-0 bottom-0 h-[3px]"
-                        style={{ backgroundColor: node.beltLevelMin.colorHex }}
-                      />
-                    </>
-                  )}
-                </button>
-              ))}
-            </div>
+                      {/* TEXT ONLY (strict no-media contract, see node-tooltip.ts) — never render
+                        img/iframe/video or links/buttons in here. Portals to body, outside
+                        exportRef, so the PNG export never captures an open tooltip. */}
+                      <TooltipContent
+                        side="top"
+                        size="md"
+                        className="flex-col items-start gap-1 text-left"
+                      >
+                        <span className="font-semibold">{tooltip.heading}</span>
+                        <span className="text-[0.625rem] font-medium uppercase tracking-wide opacity-70">
+                          {tooltip.typeLabel}
+                        </span>
+                        {tooltip.definition && (
+                          <span className="opacity-90">{tooltip.definition}</span>
+                        )}
+                        {tooltip.keyPoints.length > 0 && (
+                          <ul className="list-disc space-y-0.5 pl-4 opacity-90">
+                            {tooltip.keyPoints.map(point => (
+                              <li key={point}>{point}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  )
+                })}
+              </div>
+            </TooltipProvider>
           </div>
         </div>
       </Card>

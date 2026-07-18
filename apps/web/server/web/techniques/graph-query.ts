@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
 import graphData from "~/prisma/data/bbl-bjj-graph.json"
+import { keyPointsFromNotes } from "~/server/web/curriculum/queries"
 import { deriveGraphBeltLevel } from "~/server/web/techniques/graph-belt-level"
 import { db } from "~/services/db"
 
@@ -50,6 +51,7 @@ export type BjjTechniqueGraphNode = {
     title: string
     courseTitle: string
     courseSlug: string
+    keyPoints: string[]
   }[]
 }
 
@@ -95,6 +97,9 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
             select: {
               id: true,
               title: true,
+              // Scalar text only — NEVER select mediaUrl/mediaType or media relations here. The
+              // graph DTO feeds hover tooltips and must stay media-free (see node-tooltip.ts).
+              notes: true,
               course: {
                 select: {
                   title: true,
@@ -142,6 +147,7 @@ export const getBjjTechniqueGraph = async (brand: Brand): Promise<BjjTechniqueGr
         title: link.curriculumItem.title,
         courseTitle: link.curriculumItem.course.title,
         courseSlug: link.curriculumItem.course.slug,
+        keyPoints: keyPointsFromNotes(link.curriculumItem.notes),
       })),
     })
   }
