@@ -41,8 +41,8 @@ describe("migrated admin app redirects", () => {
         destination: "/app/certificates/:path*",
         permanent: true,
       },
-      { source: "/admin/posts", destination: "/app/posts", permanent: true },
-      { source: "/admin/posts/:path*", destination: "/app/posts/:path*", permanent: true },
+      { source: "/admin/posts", destination: "/app/blog", permanent: true },
+      { source: "/admin/posts/:path*", destination: "/app/blog/:path*", permanent: true },
       { source: "/admin/content", destination: "/app/content", permanent: true },
       { source: "/admin/content/:path*", destination: "/app/content/:path*", permanent: true },
       { source: "/admin/media", destination: "/app/media", permanent: true },
@@ -102,6 +102,13 @@ describe("migrated admin app redirects", () => {
       },
       { source: "/admin/schedule", destination: "/app/schedule", permanent: true },
       { source: "/admin/schedule/:path*", destination: "/app/schedule/:path*", permanent: true },
+      { source: "/admin/task-board", destination: "/app/loop-board", permanent: true },
+      { source: "/admin/techniques", destination: "/app/techniques", permanent: true },
+      {
+        source: "/admin/techniques/:path*",
+        destination: "/app/techniques/:path*",
+        permanent: true,
+      },
       { source: "/admin/billing", destination: "/app/billing", permanent: true },
       { source: "/admin/billing/:path*", destination: "/app/billing/:path*", permanent: true },
       { source: "/admin/categories", destination: "/app/categories", permanent: true },
@@ -225,6 +232,8 @@ describe("migrated admin app redirects", () => {
     expect(resolveMigratedAppRedirect("/admin/invites/new")).toBe("/app/invites/new")
     expect(resolveMigratedAppRedirect("/admin/leads/lead_123")).toBe("/app/leads/lead_123")
     expect(resolveMigratedAppRedirect("/admin/email")).toBe("/app/email")
+    expect(resolveMigratedAppRedirect("/admin/posts")).toBe("/app/blog")
+    expect(resolveMigratedAppRedirect("/admin/posts/post_123")).toBe("/app/blog/post_123")
     expect(resolveMigratedAppRedirect("/admin/brand-settings")).toBe("/app/brand-settings")
     expect(resolveMigratedAppRedirect("/admin/privacy")).toBe("/app/privacy/requests")
     expect(resolveMigratedAppRedirect("/admin/privacy/requests/dsr_123")).toBe(
@@ -242,6 +251,9 @@ describe("migrated admin app redirects", () => {
     )
     expect(resolveMigratedAppRedirect("/admin/schedule")).toBe("/app/schedule")
     expect(resolveMigratedAppRedirect("/admin/schedule/month")).toBe("/app/schedule/month")
+    expect(resolveMigratedAppRedirect("/admin/task-board")).toBe("/app/loop-board")
+    expect(resolveMigratedAppRedirect("/admin/techniques")).toBe("/app/techniques")
+    expect(resolveMigratedAppRedirect("/admin/techniques/abc")).toBe("/app/techniques/abc")
     expect(resolveMigratedAppRedirect("/admin/pricing-plans")).toBe("/app/pricing-plans")
     expect(resolveMigratedAppRedirect("/admin/tools/tool_123")).toBe("/app/tools/tool_123")
   })
