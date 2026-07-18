@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-16
+updated: 2026-07-18
 author: Brian + ChatGPT
-last_agent: codex-session-0548
+last_agent: codex-session-0568
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -35,6 +35,7 @@ backlinks:
   - docs/sprints/SESSION_0170.md
   - docs/sprints/SESSION_0171.md
   - docs/sprints/SESSION_0344.md
+  - docs/sprints/SESSION_0568.md
 tags:
   - blockers
   - ops
@@ -210,6 +211,15 @@ Blocker classes:
 - **Last verified:** 2026-05-26
 - **Specific gates:** Create Resend account → add sending domain (baselinemartialarts.com) → add DNS records (SPF, DKIM, DMARC) → verify → update `.env` → test delivery. Current sandbox key `re_DGuMPeUi_*` is placeholder. Magic link auth and merch order confirmation emails are both wired and waiting.
 - **Added:** SESSION_0113
+
+#### MB-016 — canonical Obsidian vault activation and native smoke
+
+- **Boundary:** Finish OD-A2–A5 without leaking personal credentials or orphaning phone captures: move `SHH_Folder` outside the synced vault; review the ignored file set and first private-Git commit; authorize/create the private remote; configure obsidian-git; pair the Desktop vault and both phone vaults to one Obsidian Sync remote; exclude `_archive/`; smoke Command Center v2 in real Obsidian light/dark/phone.
+- **Owner:** Brian at the laptop + phone; agent may guide and verify outputs one step at a time.
+- **Blocker class:** `qa_proof`
+- **Proof required:** secret scan and reviewed first-commit file list; private remote confirmed; phone edit appears on laptop and laptop edit on phone; archive remains local-only; Command Center v2 screenshot/eyeball in Worn Gi light/dark and phone widths; Todoist token stored outside notes/vault Git.
+- **Status:** waiting_on_owner
+- **Added:** SESSION_0568; OD-A1 core split complete (53 MB), OD-A2–A5 and native OD-B4 smoke remain.
 
 SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs.
 

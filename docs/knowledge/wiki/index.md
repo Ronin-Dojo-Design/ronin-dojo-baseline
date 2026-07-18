@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-18
 author: Brian + Copilot
-last_agent: codex-session-0567
+last_agent: codex-session-0568
 ---
 
 # LLM Wiki Index
@@ -706,7 +706,9 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0555](../../sprints/SESSION_0555.md) | session--open | closed — Claudex fan-out execution, PR #211 closure, and merge-wave plan. |
 | [SESSION_0564](../../sprints/SESSION_0564.md) | session--plan | closed — Obsidian Dashboard Epic plan-first grill. |
 | [SESSION_0565](../../sprints/SESSION_0565.md) | session--implement | closed — Merge wave execution: land B/C/D/F lanes onto main. |
+| [SESSION_0566](../../sprints/SESSION_0566.md) | session--open | closed — Obsidian dashboard build: skills vendored, Worn Gi/Mat Room/Mammoth skins and demo vault shipped, wayfinder map captured. |
 | [SESSION_0567](../../sprints/SESSION_0567.md) | session--open | closed — Parallel recovery wave + merged-trunk quality suite; local G3 lanes complete, CSP canary held. |
+| [SESSION_0568](../../sprints/SESSION_0568.md) | session--open | closed — Recovered Obsidian vault lane: OD-A1 core split, Command Center v2, Mammoth meeting/share pack; operator-only Git/Sync/native smoke routed to MB-016. |
 
 ## Protocols
 
