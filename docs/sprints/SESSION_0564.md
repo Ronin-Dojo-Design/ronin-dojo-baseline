@@ -203,9 +203,11 @@ D1–D12 — see epic §3 (single source; not duplicated here).
   OAuth + possible Google Calendar / Todoist API keys. (Email pilot pivoted to BBL — D9 amended
   by operator post-grill; Mammoth = first follower.)
 - E-P4 approval-UX grill — operator, before any send-flow build.
-- Dashboard inspiration pack (YouTube screenshots + Talk-To-Text transcripts) — lives in Apple
-  Notes/Photos on the operator's phone; transfer path given (Files app → iCloud Desktop →
-  `Baseline_Vault/00_Inbox`, prefix `dashboard-inspo-`). Fold into epic OD-B4 when it lands.
+- Dashboard inspiration pack: 10 screenshots RECEIVED + filed to
+  `Baseline_Vault/10_Design/_inspiration/obsidian-dashboard/` with PACK.md manifest (source:
+  TheEricMichaud "Obsidian Customization Is Getting Out of Hand"; design DNA distilled into epic
+  OD-B2/B4/D5). Still pending from phone: the Talk-To-Text transcript notes (cleaned + raw) →
+  same folder. Video URL lookup in flight → PACK.md field.
 
 ## Next session
 

@@ -134,16 +134,26 @@ tooling per ADR 0034 — kernel + modules).
   `bun vault-kit install <vault-path>` script (idempotent, copy-with-manifest so updates don't
   clobber user edits). Done: installer runs against a scratch vault; manifest tracks provenance.
 - **OD-B2 — Skins generator.** Reads per-brand `BrandSettings` seed tokens → emits
-  `skins/<brand>.css` (Obsidian snippet) + a Style Settings preset per brand (BBL · Baseline ·
-  Mammoth · Tuff Buffs · WEKAF). Done: switching snippets re-skins the whole vault incl.
-  dashboard; tokens byte-match the seed values (no hand-forked colors — D6).
+  `skins/<brand>.css` (Obsidian snippet) + a Style Settings preset + a generated **brand sheet
+  note** (typography/palette/texture reference page) per brand (BBL · Baseline · Mammoth ·
+  Tuff Buffs · WEKAF). Ship the inspiration pack's **verified theming pipeline**: HTML preview
+  harness → Playwright screenshot at fixed viewport → snippet/smoke tests → only then apply the
+  snippet (PACK.md doctrine #5). Done: switching snippets re-skins the whole vault incl.
+  dashboard; tokens byte-match the seed values (no hand-forked colors — D6); pipeline tests green.
 - **OD-B3 — Template library.** Port + upgrade the 90_Templates set (Templater-ready) and the
   `.base` files; add design-domain templates (Design DNA note, Mockup brief, Client showcase
   walkthrough). Done: templates render via Templater in the canonical vault.
 - **OD-B4 — Command Center v2 (dashboard v1).** Rebuild `02_Dashboards/Command Center.md` on
   Bases + Dataview + Kanban + Tasks: today panel (from Hermes daily brief), tasks-by-note-type,
   content-engine queue, email-board summary, design-drop inbox. Must degrade gracefully on
-  phone (Bases/Dataview both run on mobile). Done: screenshot parity laptop/phone.
+  phone (Bases/Dataview both run on mobile). **Inspiration inputs (captured 2026-07-18):**
+  `Baseline_Vault/10_Design/_inspiration/obsidian-dashboard/PACK.md` — 10 annotated frames from
+  TheEricMichaud's "Obsidian Customization Is Getting Out of Hand" (AIOS Command Center V3) +
+  distilled design DNA. Adopt its Overview anatomy (Today banner + stat chips + Top-3-with-why +
+  Daily Drivers + Signals + Quick Capture + illustrated metric cards), its **UX-before-theming**
+  order (un-themed cockpit first, demo-data mode until layout earns trust), and
+  options-not-edits mockup iteration (named PNG options, light+dark, human picks). Transcript
+  notes land in the same pack when transferred. Done: screenshot parity laptop/phone.
 - **OD-B5 — Replace the `obsidian-vault` skill.** New SKILL.md pointing at the canonical vault
   path, the note-type taxonomy, wikilink conventions, and vault-kit commands; delete the dead
   WSL-path skill in both `.claude/skills` and `.agents/skills` mirrors. Done: skill loads and
@@ -191,7 +201,10 @@ flowchart TD
 - **OD-D4 — Content-engine sweep.** Frontmatter scan for `status: ready_to_publish`, stale
   drafts, orphan tasks → Command Center panel note. (Cheap model.)
 - **OD-D5 — Design-drop watcher.** Watches `00_Inbox/design-drops/`; new screenshot/URL note →
-  hallmark `study` → Design DNA note filed under `10_Design/`. (Mid model, vision.)
+  hallmark `study` → Design DNA note filed under `10_Design/`. Includes the documented
+  **video→transcript→DNA recipe** (PACK.md "Automation recipe"): yt-dlp caption fetch → cleaned
+  markdown transcript → cheap-model DNA distill — manual-run first, watcher-triggered later.
+  (Mid model, vision.)
 - **OD-D6 — Email sweep job.** See Workstream E — E-P1 is the Hermes job.
 
 ### Workstream E — Email Boards program (5 brands; spec now, build hands off)
