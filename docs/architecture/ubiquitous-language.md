@@ -39,6 +39,23 @@ It exists to prevent AI-assisted development from creating naming drift, duplica
 
 If a code change introduces, renames, or changes the meaning of a domain concept, update this file in the same change.
 
+## Repository & environment language
+
+### Active monorepo
+
+`ronin-dojo-baseline` (GitHub `Ronin-Dojo-Design/ronin-dojo-baseline`) — the **current, active, production** platform monorepo; `main` = prod. The local working checkout is the directory `ronin-dojo-app`, but the canonical repo name is `ronin-dojo-baseline` (its Vercel project + `blackbeltlegacy.com`).
+_Avoid_: calling it "ronin-dojo-app" as the canonical name, or "black-belt-legacy" as the repo name.
+
+### Old monorepo
+
+`ronin-dojo-monorepo` (`/Users/brianscott/dev/ronin-dojo-monorepo`) — the **retired, reference-only** legacy monorepo. Read-only; a source for component-porting and design-pattern reference (e.g. the TuffBuffs admin brand switcher). Never build, deploy, or mutate it.
+_Avoid_: treating it as active, or confusing it with the active monorepo.
+
+### Vault repo
+
+`RDD_Baseline44_Vault` (GitHub `Ronin-Dojo-Design/RDD_Baseline44_Vault`, **private**) — the operator's canonical Obsidian vault as its own lean git repo (`~/Desktop/Baseline_Vault`), separate from the monorepo (ADR two-repo model). Stood up SESSION_0568.
+_Avoid_: committing vault content into the monorepo, or vice versa.
+
 ## Operational governance language
 
 ### Bow-in
