@@ -36,7 +36,7 @@ import type {
   BjjTechniqueGraphEdge,
   BjjTechniqueGraphNode,
 } from "~/server/web/techniques/graph-query"
-import { deriveNodeTooltip } from "~/server/web/techniques/node-tooltip"
+import { deriveNodeTooltip, typeLabelFor } from "~/server/web/techniques/node-tooltip"
 
 const NODE_WIDTH = 168
 const NODE_HEIGHT = 64
@@ -81,12 +81,6 @@ const edgeTypeClass = (type: GraphNodeType) => {
   if (type === "counter") return "stroke-violet-500"
   return "stroke-amber-500"
 }
-
-const labelForType = (type: GraphNodeType) =>
-  type
-    .split("-")
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ")
 
 const EXPORT_CAPTURE_STYLES: Record<
   GraphNodeType,
@@ -266,6 +260,12 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     [graph.edges, visibleNodeIds],
   )
   const nodeById = useMemo(() => new Map(visibleNodes.map(node => [node.id, node])), [visibleNodes])
+  // Derive tooltip DTOs once per nodes-array identity — not per node per render, which re-ran
+  // deriveNodeTooltip on every pan pointermove (SESSION_0569 Desi P3 + Doug P3).
+  const visibleNodesWithTooltips = useMemo(
+    () => visibleNodes.map(node => ({ node, tooltip: deriveNodeTooltip(node) })),
+    [visibleNodes],
+  )
   const allNodeById = useMemo(
     () => new Map(graph.nodes.map(node => [node.id, node])),
     [graph.nodes],
@@ -348,17 +348,23 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
       // Crop to the drawn graph (content bounds × zoom at the current pan, plus a margin)
       // instead of the full 72vh container, clamped to the visible viewport because
       // overflow-hidden clips anything panned outside it. html2canvas x/y are relative to the
-      // captured element's own bounds.
-      const cropX = Math.max(0, pan.x - EXPORT_CROP_PADDING)
-      const cropY = Math.max(0, pan.y - EXPORT_CROP_PADDING)
-      const cropWidth = Math.min(
-        exportNode.clientWidth - cropX,
-        bounds.width * zoom + EXPORT_CROP_PADDING * 2,
+      // captured element's own bounds. The content occupies [pan, pan + bounds × zoom] inside
+      // the element, so a NEGATIVE pan shrinks the crop from the right/bottom edge too — the old
+      // `bounds × zoom + padding` width overshot into trailing whitespace when panned negative.
+      const cropX0 = Math.max(0, pan.x - EXPORT_CROP_PADDING)
+      const cropY0 = Math.max(0, pan.y - EXPORT_CROP_PADDING)
+      const cropX1 = Math.min(exportNode.clientWidth, pan.x + bounds.width * zoom + EXPORT_CROP_PADDING)
+      const cropY1 = Math.min(
+        exportNode.clientHeight,
+        pan.y + bounds.height * zoom + EXPORT_CROP_PADDING,
       )
-      const cropHeight = Math.min(
-        exportNode.clientHeight - cropY,
-        bounds.height * zoom + EXPORT_CROP_PADDING * 2,
-      )
+      // Degenerate guard: content panned fully outside the viewport leaves an empty (or inverted)
+      // crop rect — fall back to capturing the whole visible canvas instead of a 1×1 PNG.
+      const cropIsDegenerate = cropX1 - cropX0 < 1 || cropY1 - cropY0 < 1
+      const cropX = cropIsDegenerate ? 0 : cropX0
+      const cropY = cropIsDegenerate ? 0 : cropY0
+      const cropWidth = cropIsDegenerate ? exportNode.clientWidth : cropX1 - cropX0
+      const cropHeight = cropIsDegenerate ? exportNode.clientHeight : cropY1 - cropY0
 
       const canvas = await withExportSafeStyles(exportNode, () =>
         html2canvas(exportNode, {
@@ -409,7 +415,10 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   aria-pressed={isActive}
                   className={cx(
                     "relative isolate overflow-visible",
-                    isActive && "z-10 text-primary-foreground hover:text-primary-foreground",
+                    // border-transparent! kills the secondary variant's 1px muted frame (and its
+                    // hover darken) on the already-active chip — the pill is the only indicator.
+                    isActive &&
+                      "z-10 border-transparent! text-primary-foreground hover:border-transparent! hover:text-primary-foreground",
                   )}
                   onClick={() => setActiveType(type.value)}
                 >
@@ -539,9 +548,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   ))}
                 </svg>
 
-                {visibleNodes.map(node => {
-                  const tooltip = deriveNodeTooltip(node)
-
+                {visibleNodesWithTooltips.map(({ node, tooltip }) => {
                   return (
                     // Force-closed while the node dialog is open (Base UI also closes on trigger
                     // press, but `disabled` makes it deterministic). Hover-open is mouse-only in
@@ -563,7 +570,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                               width: NODE_WIDTH,
                               height: NODE_HEIGHT,
                             }}
-                            aria-label={`${node.label}, ${labelForType(node.type)}`}
+                            aria-label={`${node.label}, ${typeLabelFor(node.type)}`}
                             aria-pressed={selectedNodeId === node.id}
                             onClick={event => {
                               event.stopPropagation()
@@ -571,7 +578,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                             }}
                           >
                             <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
-                              {labelForType(node.type)}
+                              {typeLabelFor(node.type)}
                             </span>
                             <span className="line-clamp-2 text-sm font-semibold leading-tight">
                               {node.label}
@@ -611,8 +618,9 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                         )}
                         {tooltip.keyPoints.length > 0 && (
                           <ul className="list-disc space-y-0.5 pl-4 opacity-90">
-                            {tooltip.keyPoints.map(point => (
-                              <li key={point}>{point}</li>
+                            {tooltip.keyPoints.map((point, index) => (
+                              // Index-safe key: cue text is data-authored and can repeat.
+                              <li key={`${node.id}-${index}`}>{point}</li>
                             ))}
                           </ul>
                         )}
@@ -638,7 +646,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               </DialogHeader>
 
               <Stack direction="row" wrap size="xs">
-                <Badge variant="primary">{labelForType(selectedNode.type)}</Badge>
+                <Badge variant="primary">{typeLabelFor(selectedNode.type)}</Badge>
                 {selectedNode.position && <Badge variant="soft">{selectedNode.position}</Badge>}
                 {selectedNode.difficultyLevel && (
                   <Badge variant="outline">{selectedNode.difficultyLevel}</Badge>

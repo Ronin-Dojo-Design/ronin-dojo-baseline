@@ -16,7 +16,12 @@ export type TechniqueNodeTooltip = {
 const DEFINITION_MAX_LENGTH = 140
 const KEY_POINT_CAP = 3
 
-const typeLabelFor = (type: BjjTechniqueGraphNode["type"]) =>
+/**
+ * THE ONE humanizer for graph node types ("position" → "Position", hyphens → spaces). Exported so
+ * the graph component consumes the same helper (SESSION_0569 Doug P3 — was duplicated as
+ * `labelForType` in technique-graph.tsx).
+ */
+export const typeLabelFor = (type: BjjTechniqueGraphNode["type"]) =>
   type
     .split("-")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -30,7 +35,13 @@ const deriveDefinition = (description: string | null): string | null => {
   const sentence = (/^[\s\S]*?[.!?](?=\s|$)/.exec(text)?.[0] ?? text).trim()
   if (sentence.length <= DEFINITION_MAX_LENGTH) return sentence
 
-  return `${sentence.slice(0, DEFINITION_MAX_LENGTH - 1).trimEnd()}…`
+  // Clamp at a word boundary so the ellipsis never lands mid-word ("gri…"). A single unbroken
+  // ≥139-char token has no boundary to respect, so only then does the hard clamp stand.
+  const clamped = sentence.slice(0, DEFINITION_MAX_LENGTH - 1)
+  const lastSpace = clamped.lastIndexOf(" ")
+  const atWordBoundary = lastSpace > 0 ? clamped.slice(0, lastSpace) : clamped
+
+  return `${atWordBoundary.trimEnd()}…`
 }
 
 /** Teaching cues win; otherwise fall back to parsed curriculum-item key points. Capped at 3. */

@@ -68,6 +68,27 @@ describe("deriveNodeTooltip", () => {
     expect(definition!.endsWith("…")).toBe(true)
   })
 
+  test("the clamp lands on a word boundary — never a mid-word ellipsis like 'grippin…'", () => {
+    // 9-char words: the raw 139-char slice cuts the 16th "gripping" mid-word ("grip"); the
+    // word-boundary clamp must drop that partial and end on a complete word.
+    const definition = deriveNodeTooltip(
+      makeNode({ description: `${"gripping ".repeat(30).trim()}. Second sentence.` }),
+    ).definition
+
+    expect(definition).not.toBeNull()
+    expect(definition!.length).toBeLessThanOrEqual(140)
+    expect(definition!.endsWith("gripping…")).toBe(true)
+    expect(definition).not.toContain("grip…")
+  })
+
+  test("a single unbroken over-length token keeps the hard clamp (no word boundary to respect)", () => {
+    const definition = deriveNodeTooltip(
+      makeNode({ description: `${"x".repeat(200)}. Second sentence.` }),
+    ).definition
+
+    expect(definition).toBe(`${"x".repeat(139)}…`)
+  })
+
   test("a missing or blank description derives a null definition", () => {
     expect(deriveNodeTooltip(makeNode({ description: null })).definition).toBeNull()
     expect(deriveNodeTooltip(makeNode({ description: "   " })).definition).toBeNull()

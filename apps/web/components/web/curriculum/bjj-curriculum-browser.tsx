@@ -92,29 +92,32 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
     <>
       <Stack direction="column" size="lg">
         <Stack direction="row" wrap size="xs" className="items-center">
-          {levels.map(level => (
-            <Button
-              key={level.id}
-              type="button"
-              size="sm"
-              variant={selectedLevel.id === level.id ? "primary" : "secondary"}
-              aria-pressed={selectedLevel.id === level.id}
-              // Visible label is the level title; rank.shortName stays as compact aria support
-              // only (appended so the accessible name still contains the visible text).
-              aria-label={
-                level.rank?.shortName
-                  ? `${level.title.replace(/^BJJ\s+/, "")} (${level.rank.shortName})`
-                  : undefined
-              }
-              onClick={() => {
-                setSelectedLevelId(level.id)
-                setSelectedTopic(ALL_TOPICS)
-              }}
-            >
-              <BeltSwatch colorHex={level.rank?.colorHex} className="size-2.5" />
-              {level.title.replace(/^BJJ\s+/, "")}
-            </Button>
-          ))}
+          {levels.map(level => {
+            // ONE derivation for the visible label AND the aria-label so they can never drift.
+            const levelLabel = level.title.replace(/^BJJ\s+/, "")
+
+            return (
+              <Button
+                key={level.id}
+                type="button"
+                size="sm"
+                variant={selectedLevel.id === level.id ? "primary" : "secondary"}
+                aria-pressed={selectedLevel.id === level.id}
+                // Visible label is the level title; rank.shortName stays as compact aria support
+                // only (appended so the accessible name still contains the visible text).
+                aria-label={
+                  level.rank?.shortName ? `${levelLabel} (${level.rank.shortName})` : undefined
+                }
+                onClick={() => {
+                  setSelectedLevelId(level.id)
+                  setSelectedTopic(ALL_TOPICS)
+                }}
+              >
+                <BeltSwatch colorHex={level.rank?.colorHex} className="size-2.5" />
+                {levelLabel}
+              </Button>
+            )
+          })}
         </Stack>
 
         <Stack direction="row" wrap size="xs" className="items-center">
