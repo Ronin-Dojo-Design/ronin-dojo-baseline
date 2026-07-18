@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-16
+updated: 2026-07-18
 author: Brian + ChatGPT
-last_agent: codex-session-0548
+last_agent: codex-session-0568
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -35,6 +35,7 @@ backlinks:
   - docs/sprints/SESSION_0170.md
   - docs/sprints/SESSION_0171.md
   - docs/sprints/SESSION_0344.md
+  - docs/sprints/SESSION_0568.md
 tags:
   - blockers
   - ops
@@ -210,6 +211,16 @@ Blocker classes:
 - **Last verified:** 2026-05-26
 - **Specific gates:** Create Resend account → add sending domain (baselinemartialarts.com) → add DNS records (SPF, DKIM, DMARC) → verify → update `.env` → test delivery. Current sandbox key `re_DGuMPeUi_*` is placeholder. Magic link auth and merch order confirmation emails are both wired and waiting.
 - **Added:** SESSION_0113
+
+#### MB-016 — canonical Obsidian vault activation and native smoke
+
+- **Boundary:** Finish OD-A2–A5 without leaking personal credentials or orphaning phone captures. **DONE (SESSION_0568 Opus continuation, agent-safe with per-action operator go):** `SHH_Folder` + `Baseline_SHH.txt` + `_archive/` + secret plugin data (`copilot`/`obsidian-git`/`todoist` `data.json`) gitignored; ignored set + 334-file first commit reviewed and secret-scanned (path + content, 0 real key literals); private remote `Ronin-Dojo-Design/RDD_Baseline44_Vault` created **PRIVATE** + pushed. **REMAINS (owner-only, in-app):** configure obsidian-git auto-backup; pair the Desktop vault + both phone vaults to one Obsidian Sync remote; eyeball Command Center v2 + the new plugin-free CSS skin switcher in real Obsidian light/dark/phone; store the Todoist token outside notes/vault-git when wired.
+- **Owner:** Brian at the laptop + phone; agent may guide and verify outputs one step at a time.
+- **Blocker class:** `qa_proof`
+- **Proof required:** ✅ secret scan + reviewed 334-file first commit; ✅ private remote confirmed (`RDD_Baseline44_Vault`, PRIVATE); ✅ archive local-only (gitignored). REMAINS: phone edit appears on laptop and vice-versa (Sync); Command Center v2 + skin-switcher eyeball in Worn Gi light/dark and phone widths; Todoist token stored outside notes/vault Git.
+- **Status:** waiting_on_owner
+- **Added:** SESSION_0568; OD-A1 core split complete (53 MB), OD-A2–A5 and native OD-B4 smoke remain.
+- **Updated:** SESSION_0568 (Opus continuation) — OD-A2 vault git init + gitignore + secret-scan + private remote + push **DONE**; only Sync/phone-pairing + obsidian-git auto-backup + in-app Command Center/switcher eyeball remain owner-only.
 
 SESSION_0163 update: Baseline DNS instructions now match the verified Resend dashboard setup from 2026-05-13 15:04, and the stale `rv_` ownership-token / legacy return-path CNAME guidance has been removed from active docs.
 

@@ -13,6 +13,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0546.md
+  - docs/sprints/SESSION_0568.md
 tags:
   - governance
   - goals
@@ -281,6 +282,10 @@ aggregator reads it with no new parser logic.
   vendor+conform `wayfinder` + 4 sibling deps; replace the dead-path `obsidian-vault` skill).
 - **Why:** operator-pinned "heartbeat of the brand" — the vault-kit installer doubles as the RDD
   client-automation demo (ADR 0034 platform model extended to the workbench layer).
+- **Progress (SESSION_0568):** OD-A1 core split complete (53 MB); OD-B4 Command Center v2 built in the
+  canonical vault with Worn Gi default and graceful fallbacks. G-014 stays in progress: private Git,
+  Sync/phone merge, native Obsidian smoke, and credential-safe Todoist setup are routed to MB-016;
+  vault-kit packaging/automation work remains in the epic.
 
 ### G-015 — Hermes local automation + Model Option research-recommend
 
@@ -347,6 +352,8 @@ aggregator reads it with no new parser logic.
 - **Pointer:** `docs/product/mammoth-build/` (PRD + STORIES, added when the mock came off
   prod at `524f0286`). **Lane:** Mammoth product. **Why:** was briefly live on BBL prod;
   now the client-facing follow-up artifact after the 2026-07-18 meeting.
+- **Progress (SESSION_0568):** demo vault polished and packaged with empty Michael-feedback surfaces;
+  landing flesh-out stays open until approved client vocabulary, claims, photos, and project proof exist.
 
 ### G-020 — Desi-driven hallmark audit program — BBL public surfaces
 
