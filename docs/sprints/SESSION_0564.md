@@ -199,8 +199,13 @@ D1–D12 — see epic §3 (single source; not duplicated here).
 - Push of `session-0564-obsidian-epic` — HELD for operator authorization (docs-only; no deploy
   via `ignoreCommand`).
 - Obsidian Sync subscription state unverified (OD-A5 step 1 checks it; fallback obsidian-git).
-- Mammoth mailbox provider/OAuth — confirm with Michael Flores before E-P1 pilot build.
+- Michael Flores video meeting 2026-07-18: showcase the Obsidian/Hermes plan; collect Mammoth
+  OAuth + possible Google Calendar / Todoist API keys. (Email pilot pivoted to BBL — D9 amended
+  by operator post-grill; Mammoth = first follower.)
 - E-P4 approval-UX grill — operator, before any send-flow build.
+- Dashboard inspiration pack (YouTube screenshots + Talk-To-Text transcripts) — lives in Apple
+  Notes/Photos on the operator's phone; transfer path given (Files app → iCloud Desktop →
+  `Baseline_Vault/00_Inbox`, prefix `dashboard-inspo-`). Fold into epic OD-B4 when it lands.
 
 ## Next session
 

@@ -298,13 +298,16 @@ aggregator reads it with no new parser logic.
   its approval-UX grill (epic D12).
 - **Why:** staged so brand lanes are ready-to-grab vertical slices alongside codebase work.
 
-### G-017 — Email Boards Mammoth pilot (Michael Flores + Brian)
+### G-017 — Email Boards BBL pilot (then Mammoth)
 
 - **Status:** open — P1
-- **Objective:** prove E-P1+E-P2 on the Mammoth CRM lane first: Hermes email sweep against
-  Michael Flores's + Brian's mailboxes (provider/OAuth confirmed with Michael), categorized cards
-  on a Mammoth board note, Command Center rollup, two live users triaging. Success = a week of
-  daily use with the board reflecting reality and zero duplicate cards.
-- **Pointer:** epic §5-E phases E-P1/E-P2. **Depends on:** G-015 (Hermes core).
+- **Objective:** prove E-P1+E-P2 on **BBL first** (Brian's own mailbox via Gmail API — zero
+  external OAuth blockers): Hermes email sweep, categorized cards on a BBL board note, Command
+  Center rollup. Success = demo-ready for the Michael Flores video meeting (2026-07-18 showcase
+  of the Obsidian/Hermes setup) + a week of daily use with zero duplicate cards. **Mammoth =
+  first follower**: Michael's OAuth (+ possible Google Calendar integration and Todoist API keys
+  — todoist-sync-plugin already in the Design-vault harvest) collected at that meeting.
+- **Pointer:** epic §5-E phases E-P1/E-P2 (D9 as amended). **Depends on:** G-015 (Hermes core).
   **Feeds:** G-016 5-brand fan-out.
-- **Lane:** automation / email / Mammoth. **Why:** the live client want — pilot before program.
+- **Lane:** automation / email / BBL→Mammoth. **Why:** pilot on our own mailbox, showcase to the
+  client, then onboard the client — the vault-kit business-showcase motion in miniature.

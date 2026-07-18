@@ -69,7 +69,7 @@ The vault is the **heartbeat of the brand** — four jobs on one surface:
 | D6 | Skins token source | **DB seed tokens → generated snippets**: vault-kit generator reads each brand's `BrandSettings` seed (brand color SoT is the DB) and emits per-brand CSS snippets + Style Settings presets |
 | D7 | Hermes v1 jobs | ALL of: daily brief, weekly review draft, content-engine sweep, design-drop watcher, **email sweep** |
 | D8 | Email scope | **Plan all three phases now** (sweep+categorize, reply drafts, full approval/send flow) in spec-grade detail; build hands off to Codex CLI / cheap-model worktree subagents; v1 build = sweep+categorize |
-| D9 | Email goals shape | Program row (5 brands) + Mammoth pilot row (Michael Flores + Brian = first users) |
+| D9 | Email goals shape | Program row (5 brands) + pilot row. **Amended post-grill (operator, 0564): pilot = BBL first** (Brian's own mailbox — no external OAuth blocker); Mammoth = first follower. Michael Flores video meeting **2026-07-18** = showcase the Obsidian/Hermes setup + collect Mammoth OAuth, plus possible **Google Calendar** integration and **Todoist** API keys (todoist-sync-plugin already in the Design-vault plugin harvest, OD-A3) |
 | D10 | Wayfinder | Vendor + conform (skill + its 4 sibling deps; tracker ops → `gh`; epic-scale usage only) |
 | D11 | Hallmark | Vendor as-is, scoped to greenfield/mockups/skins — ui-kit token contract stays law on product surfaces |
 | D12 | Send safety | Hermes/email automation NEVER auto-sends. Sweep/categorize/draft freely; every send is an explicit human approval. Standing invariant across all phases. |
@@ -198,8 +198,12 @@ flowchart TD
 
 **Product shape:** per-brand "email board" — a kanban-style surface (vault-native first:
 `11_Email_Boards/<brand>.md` kanban notes; later projected into the web dashboard) where swept
-emails land as cards: `Inbox → Needs reply → Drafted → Approved → Sent / Archived`. Mammoth
-pilot users: Michael Flores + Brian.
+emails land as cards: `Inbox → Needs reply → Drafted → Approved → Sent / Archived`.
+
+**Pilot = BBL** (Brian's own mailbox — no external OAuth dependency; doubles as the live demo for
+the Michael Flores meeting 2026-07-18). **First follower = Mammoth** (Michael's OAuth collected at
+that meeting). Candidate adjacent integrations from the same meeting: Google Calendar (daily-brief
+calendar panel, OD-D2) and Todoist (existing todoist-sync-plugin lever) — or the custom stack only.
 
 **Phases (each independently shippable; all planned now per D8):**
 
@@ -210,10 +214,10 @@ pilot users: Michael Flores + Brian.
 | E-P3 | **Reply drafts**: for `Needs reply` cards, Hermes writes a draft INTO the card (never into the mail client's outbox); operator edits in Obsidian | none |
 | E-P4 | **Approval → send**: explicit per-message human approval flips a card to `Approved`; a send executor delivers via the mailbox API and records the receipt on the card. Auto-send does not exist (D12) | gated |
 
-**Integration spec (E-P1):** mailbox access per brand via Gmail API (Brian) / the client's
-provider (Mammoth — confirm with Michael); OAuth tokens stored locally (keychain/env file,
-NEVER in the vault or repo — vault is synced+git). Idempotency: message-id ledger file so
-re-sweeps don't duplicate cards. Rate: hourly during work hours.
+**Integration spec (E-P1):** BBL pilot via Gmail API on Brian's mailbox; Mammoth via the
+provider Michael confirms. OAuth tokens stored locally (keychain/env file, NEVER in the vault or
+repo — vault is synced+git). Idempotency: message-id ledger file so re-sweeps don't duplicate
+cards. Rate: hourly during work hours.
 
 ```mermaid
 sequenceDiagram
@@ -280,7 +284,7 @@ Skill installs are epic tasks (first build session), not SESSION_0564 work.
 Phase 1 (next 1–2 sessions):  OD-A1..A5 (consolidation+sync)  +  skills vendor (hallmark, wayfinder)
 Phase 2:                      OD-B1..B5 (vault-kit + skins + Command Center v2 + skill replace)
 Phase 3:                      OD-D1..D5 (Hermes core + 4 non-email jobs)  +  OD-D1b Model Option doc
-Phase 4:                      E-P1/E-P2 Mammoth pilot (Hermes email sweep + boards)  → Codex/subagent fan-out to 5 brands
+Phase 4:                      E-P1/E-P2 BBL pilot (Hermes email sweep + boards)  → Mammoth  → Codex/subagent fan-out to 5 brands
 Phase 5:                      E-P3 drafts → E-P4 approval/send  ·  OD-C1..C3 web dashboard
 ```
 
