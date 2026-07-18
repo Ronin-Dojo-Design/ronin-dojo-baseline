@@ -30,7 +30,7 @@ const LoginStep = ({ n, children }: { n: number; children: React.ReactNode }) =>
  * The founder's email to Bob Bass (SESSION_0418; durable link SESSION_0513).
  *
  * A founder-to-founder letter addressed to "Mr. Bass": a warm "we're finally
- * here" invite, the "Open the preview" private-link CTA, a two-method sign-in
+ * here" invite, the "Open the preview" durable-link CTA, a two-method sign-in
  * guide (Google + Magic Link, each as red-circle numbered steps), and "The Long
  * Road" — Brian Scott's 8-year founder testament
  * (RoninDashboard/philosophy/THE_LONG_ROAD.md).
@@ -146,8 +146,8 @@ export const EmailBblTheLongRoad = ({
         We are finally here — the new Black Belt Legacy — your lineage under Rigan, your students,
         and the whole network in one place — and I&apos;d love your eyes on it. This link opens the
         full site for you. Any tweaks or edits, additions or removals you want are easy to do —
-        quickly, professionally, and perfectly. The backend security and stability is airtight, and
-        the frontend is beautifully rendered, ready for you.
+        quickly and professionally. The backend security and stability is built for the road ahead,
+        and the frontend is beautifully rendered, ready for you.
       </Text>
 
       <Text>
@@ -170,8 +170,8 @@ export const EmailBblTheLongRoad = ({
 
       <Text>
         Take a look around — the lineage tree, your profile, and the sign-up flow. Signing in from
-        that link claims your profile and locks in your place at the head of the lineage — and the
-        link never expires, so open it whenever you like.
+        that link connects your profile claim and keeps your place at the head of the lineage — and
+        the link is durable, so open it whenever you like.
       </Text>
 
       <Hr className="my-6 border-neutral-200" />
@@ -180,7 +180,7 @@ export const EmailBblTheLongRoad = ({
       <Eyebrow>Signing In — Two Easy Ways</Eyebrow>
       <Text className="mt-0">
         The link above opens your sign-in screen — sign in with either method below and your profile
-        claims itself on the spot. I&apos;d start with Google.
+        claim connects to your account. I&apos;d start with Google.
       </Text>
 
       <Section className="my-4 overflow-hidden rounded-lg border border-solid border-neutral-200 bg-neutral-50 px-4 py-4">
