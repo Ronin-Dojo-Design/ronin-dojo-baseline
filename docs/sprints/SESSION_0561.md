@@ -4,8 +4,8 @@ slug: session-0561
 type: session--implement
 status: closed
 created: 2026-07-17
-updated: 2026-07-17
-last_agent: claude-session-0561
+updated: 2026-07-18
+last_agent: codex-session-0567
 sprint: S23
 pairs_with:
 
@@ -61,8 +61,8 @@ Single source of truth is the frontmatter `status:` field (`in-progress` → `cl
 
 - Graph status: not built in this worktree (graph lives in the canonical checkout — empty stats
   here mean "not built", never "no matches"). Discovery done via targeted sprint-doc mining
-  (SESSION_0539 artifact endorsement, 0505/0507 qlmanage + browser-MCP-lock lessons, 0523
-  preview_start-vs-worktree lesson) through a read-only Explore subagent instead.
+  (SESSION_0539 artifact endorsement, 0505/0506/0508 qlmanage + browser-MCP-lock/isolated-Playwright
+  lessons, 0523 preview_start-vs-worktree lesson) through a read-only Explore subagent instead.
 
 ## Petey plan
 
@@ -76,8 +76,8 @@ repo-proven Artifact preview workflow, and hold at the push gate.
 #### SESSION_0561_TASK_01 — Mine repo history for the pattern
 
 - **Agent:** Explore subagent
-- **What:** Collect the real-practice inputs: SESSION_0539 endorsement quotes, 0505/0507 qlmanage +
-  isolated-Playwright recipes, 0523 worktree dev-server lesson, existing canonical docs to
+- **What:** Collect the real-practice inputs: SESSION_0539 endorsement quotes, 0505/0506/0508
+  qlmanage + isolated-Playwright recipes, 0523 worktree dev-server lesson, existing canonical docs to
   reference, confirmation no preview-artifacts skill exists.
 - **Done means:** Findings report with exact commands/quotes + canonical doc pointers.
 - **Depends on:** nothing
@@ -139,13 +139,13 @@ memory + sprint mining.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0561_TASK_01 | landed | Explore subagent mined 0539/0505/0507/0523 + canonical docs |
+| SESSION_0561_TASK_01 | landed | Explore subagent mined 0539/0505/0506/0508/0523 + canonical docs |
 | SESSION_0561_TASK_02 | landed | `.claude/skills/preview-artifacts/SKILL.md` authored |
 | SESSION_0561_TASK_03 | landed | Gates green; lean close; local commit (held) |
 
 ## What landed
 
-- `.claude/skills/preview-artifacts/SKILL.md` — new skill (88 lines, write-a-skill-conformant:
+- `.claude/skills/preview-artifacts/SKILL.md` — new skill (81 lines, write-a-skill-conformant:
   name + trigger-rich description frontmatter, no bundled files needed). Encodes the
   SESSION_0539-endorsed pattern with repo-proven mechanics: the two shapes (live design mock ·
   screenshot gallery), asset collection (worktree `next dev` via Bash with `RESEND_API_KEY=` guard
@@ -175,7 +175,7 @@ memory + sprint mining.
 | --- | --- |
 | `git diff --check` | clean (no whitespace errors) |
 | Frontmatter validity (write-a-skill: name + "Use when" description, <1024 chars, third person) | pass — see skill header |
-| SKILL.md length vs ~100-line convention | 88 lines — pass |
+| SKILL.md length vs ~100-line convention | 81 lines — pass |
 | `bun run wiki:lint` | 0 errors, 54 warnings — ALL pre-existing (none in this session's touched files; grep-verified) |
 | oxfmt coverage check | `format:check` = `oxfmt --check .` scoped to `apps/web` only — does NOT cover `.claude/` or `docs/`; no oxfmt gate applies to this lane |
 | Task-log gate (`awk` count ≥ 1) | pass — 3 task rows |
