@@ -45,6 +45,7 @@ const ZOOM_MIN = 0.35
 const ZOOM_MAX = 1.8
 const ZOOM_STEP = 0.12
 const PAN_STEP = 48
+const EXPORT_CROP_PADDING = 24
 
 type GraphNodeType = BjjTechniqueGraphNode["type"]
 type FilterValue = "all" | GraphNodeType
@@ -135,6 +136,14 @@ const withExportSafeStyles = async <T,>(
     setStyle(element, "box-shadow", "none")
     setStyle(element, "caret-color", "rgb(17 24 39)")
     setStyle(element, "color", "rgb(17 24 39)")
+    // Pin an export-safe stack for the capture only (snapshot/restore puts the app font back):
+    // html2canvas measures text with whatever font is live, so a webfont mid-swap or a stack it
+    // can't resolve shifts glyph metrics and clips node labels in the PNG.
+    setStyle(
+      element,
+      "font-family",
+      'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif',
+    )
     setStyle(element, "outline-color", "rgb(148 163 184)")
     setStyle(element, "text-decoration-color", "rgb(17 24 39)")
     setStyle(element, "text-shadow", "none")
@@ -325,16 +334,39 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   }
 
   const exportPng = async () => {
-    if (!exportRef.current) return
+    const exportNode = exportRef.current
+    if (!exportNode) return
     setIsExporting(true)
     try {
+      // Fonts still loading would rasterize with fallback metrics — wait for the full set first.
+      await document.fonts.ready
       const html2canvas = (await import("html2canvas")).default
-      const canvas = await withExportSafeStyles(exportRef.current, () =>
-        html2canvas(exportRef.current!, {
+
+      // Crop to the drawn graph (content bounds × zoom at the current pan, plus a margin)
+      // instead of the full 72vh container, clamped to the visible viewport because
+      // overflow-hidden clips anything panned outside it. html2canvas x/y are relative to the
+      // captured element's own bounds.
+      const cropX = Math.max(0, pan.x - EXPORT_CROP_PADDING)
+      const cropY = Math.max(0, pan.y - EXPORT_CROP_PADDING)
+      const cropWidth = Math.min(
+        exportNode.clientWidth - cropX,
+        bounds.width * zoom + EXPORT_CROP_PADDING * 2,
+      )
+      const cropHeight = Math.min(
+        exportNode.clientHeight - cropY,
+        bounds.height * zoom + EXPORT_CROP_PADDING * 2,
+      )
+
+      const canvas = await withExportSafeStyles(exportNode, () =>
+        html2canvas(exportNode, {
           backgroundColor: "#ffffff",
           logging: false,
           scale: 2,
           useCORS: true,
+          x: cropX,
+          y: cropY,
+          width: Math.max(1, Math.ceil(cropWidth)),
+          height: Math.max(1, Math.ceil(cropHeight)),
         }),
       )
       const link = document.createElement("a")
