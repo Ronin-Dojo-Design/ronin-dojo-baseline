@@ -316,3 +316,26 @@ aggregator reads it with no new parser logic.
   **Feeds:** G-016 5-brand fan-out.
 - **Lane:** automation / email / BBL→Mammoth. **Why:** pilot on our own mailbox, showcase to the
   client, then onboard the client — the vault-kit business-showcase motion in miniature.
+
+### G-018 — Per-brand Command Center skins program (RDD · Baseline · WEKAF)
+
+- **Status:** open — P3 (future lane; operator-declared SESSION_0566)
+- **Objective:** extend the OD-B2 skin family so every remaining brand gets its own cockpit
+  skin + vault setup: RDD, Baseline, and WEKAF USA Stick Fighting — seed-token-derived, same
+  cockpit anatomy, textures as personality. BBL ×2 (`bbl-worn-gi`, `bbl-mat-room`) and Mammoth
+  (`mammoth-crm`) shipped SESSION_0566 and are the templates.
+- **Pointer:** epic §5-B OD-B2; SESSION_0566 snippets + harness/Playwright verify pattern.
+- **Lane:** design / vault-kit. **Depends on:** OD-B1 packaging (skins ship via installer,
+  not hand copies). **Why:** same cockpit, different skin + data wiring — the platform motion.
+
+### G-019 — Mammoth landing resurrection + flesh-out
+
+- **Status:** open — P2
+- **Objective:** flesh out the Mammoth landing on both surfaces: (a) localhost dev —
+  `clients/mammoth-build-crm/app/page.tsx` already renders the React landing (SiteHeader ·
+  MirrorVisual · BuildingTypesGrid · InquiryForm); (b) vault — `Mammoth — Landing (draft).md`
+  in the demo vault (ported SESSION_0566). Start-from artifact: the prod mock recovered from
+  git (`524f0286^:apps/web/public/mammoth-build.html`; copy ships in the demo vault).
+- **Pointer:** `docs/product/mammoth-build/` (PRD + STORIES, added when the mock came off
+  prod at `524f0286`). **Lane:** Mammoth product. **Why:** was briefly live on BBL prod;
+  now the client-facing follow-up artifact after the 2026-07-18 meeting.
