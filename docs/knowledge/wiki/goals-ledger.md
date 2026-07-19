@@ -396,3 +396,44 @@ aggregator reads it with no new parser logic.
   optional and one-way until its source-of-truth and credential decisions are explicit.
 - **Why:** turns the ratified Mammoth Brand Heartbeat and no-drop sales promise into the smallest
   repeatable operating loop without creating a second CRM, second ledger, or client-data repo.
+
+### G-022 — Technique graph out of beta (GA)
+
+- **Status:** in-progress — P1 (Brian goal, opened SESSION_0578)
+- **Objective:** promote the technique graph from `FeatureStatus: "beta"` (feature-log.ts +
+  on-page Badge/Note — the graph is already PUBLIC at `/techniques/graph`, not `/app/beta`-gated)
+  to GA. Ratified GA bar (SESSION_0578 grill): **(1)** ALL remaining 0546 Desi design waves —
+  Wave 2 remainder (C4 zoom/fit easing, C5 neighborhood glow, D3 empty states, B2 difficulty
+  tooltips) AND Wave 3 (E1 CurriculumJourney motion-only scrollytelling, B3 key-point peek,
+  C3 grid stagger, G2 node-modal menu) — plus WL-P2-65/66/67 and D-4 cooperative touch, plus
+  the GA flip surface (Desi AUD2-4: naming unification — three names for one destination —
+  de-beta chip/note removal, and entry-affordance upgrade; links from the Library index and
+  Curriculum page EXIST — the SESSION_0578 "nothing links to the graph" claim was corrected by
+  the Desi audit); **(2)** member progress
+  tracking is FLIP-BLOCKING — wire the existing zero-write-path `TechniqueProgress` model
+  (oRPC write layer + detail-page control + dashboard); **(3)** graph content scope AMENDED to
+  **grappling arts only — BJJ + judo + wrestling takedowns; no striking, no weapons** (supersedes
+  the epic's BJJ-only line for the technique system; ADR check owed at the first build lane's
+  close). E2 Combo Flows stays post-GA (sequenced after E1).
+- **Tracked children (the three fan-out lanes, planned SESSION_0578):**
+  - **Design axis — LANE A** (`session-0581-technique-ga-design`, lands LAST, owns the flip):
+    Wave 2 remainder + Wave 3 + WL-P2-65/66/67 + D-4 + SESSION_0578 Desi hallmark-audit items +
+    multi-art layout expansion + entry wiring + feature-log flip. Multi-session lane — continuation
+    tasks live in this row and the wiring-ledger, per the fan-out recipe.
+  - **Schema-wiring axis — LANE B** (`session-0580-technique-progress`): `TechniqueProgress`
+    write path (oRPC per the FULL-oRPC direction), detail-page tracking control, dashboard wiring;
+    graph-overlay display deferred post-GA (Lane A file ownership).
+  - **Monorepo-harvest axis — LANE C** (`session-0579-grappling-data`): grappling-arts data
+    adoption — `bjj.js` 98-technique trunk (SALVAGE) + `bjjCanvasData.js` lineage (already the
+    app JSON's ancestor) + Kodokan judo 20-throws seed and `judo.js` (ADAPT — grappling now in
+    scope) via a shown-before-run TS transform; backfill the ~14 dark graph slugs; **wrestling
+    takedowns = named content gap (no dataset exists in the monorepo — authoring task)**;
+    PII exports and striking/weapons data REJECTED. Small hand-authored migration allowed
+    (e.g. `nativeName`/`aliases`) — NEVER `migrate dev`.
+- **Lane:** BJJ→grappling techniques / curriculum / schema wiring. **Extends:** G-013 (the design
+  waves fold into Lane A; G-013 remains the design-epic tracker). **Depends on:** SESSION_0578
+  plan + prompts (`docs/protocols/fan-out-session-recipe.md`). Merge order **C → B → A**; the
+  flip is the last commit of Lane A.
+- **Why:** Brian pinned GA promotion as a proper goal: the graph is the technique system's front
+  door, curriculum at real scale needs the harvested trunk data, and progress tracking is the
+  member-facing value that justifies GA. (SESSION_0578 grill, 4 forks resolved.)
