@@ -42,6 +42,10 @@ presence for new rows.
   additive delta — e.g. `nativeName`/`aliases` — is ratified at its own bow-in grill)
 - **new** transform script (node/TS; shown to the operator before running)
 
+Constraint (Doug close-finding): seeded `notes`/key-point data must PRESERVE the
+`keyPointsFromNotes` parse contract in `server/web/curriculum/queries.ts` (Lane A's file — both
+the graph and curriculum surfaces parse it).
+
 ### LANE B — member progress wiring (`session-0580-technique-progress`)
 
 Wire the existing zero-write-path `TechniqueProgress` model (NOT_STARTED→…→MASTERED,
@@ -60,6 +64,13 @@ overlay = post-GA (Lane A file). No migration needed — the model exists.
 - `apps/web/app/(web)/techniques/[slug]/_components/technique-detail/*` (+ **new**
   `technique-progress-control.tsx` component file)
 
+Pins (Doug close-findings): `dashboard/queries.ts` and `techniques/permissions.ts` edits are
+**additive-only** — unowned consumers exist (billing/school/membership tabs; 9 permission
+importers incl. nav) — new queries/predicates beside existing ones, no refactors. Note: the
+first progress WRITE lights up the existing directory rich-profile READ surface
+(`profile-projection.ts:214`, `canRenderRichMedia`-gated) — direct input to the AUD2-5
+channel decision.
+
 ### LANE A — GA design close-out + flip (`session-0581-technique-ga-design`, multi-session)
 
 Wave 2 remainder + Wave 3 + WL-P2-65/66/67 + D-4 + SESSION_0578 Desi audit items + multi-art
@@ -72,6 +83,8 @@ recipe §6.
 - `apps/web/components/web/techniques/*` (incl. `technique-graph.tsx` + any WL-P3-53 split-outs)
 - `apps/web/components/web/curriculum/*`
 - `apps/web/server/web/techniques/graph-query.ts`, `node-tooltip.ts`, `graph-belt-level.ts` (+ tests)
+- `apps/web/server/web/curriculum/queries.ts` (Doug close-finding: shared `keyPointsFromNotes`
+  parse contract — all three importers are Lane A files)
 - `apps/web/prisma/data/bbl-bjj-graph.json` (layout — the ONLY lane that writes it)
 - `apps/web/lib/utils.ts` (WL-P2-66) · `apps/web/lib/feature-log.ts` + `FEATURES.md` (flip)
 - `apps/web/app/(web)/techniques/page.tsx`, `graph/page.tsx`, `app/(web)/curriculum/page.tsx`
@@ -104,8 +117,9 @@ live, and flips beta→GA only when G-022's flip-blocking children are all close
 ## SESSION_0578 Desi hallmark audit punch list (AUD2-1..12)
 
 Audit-only per D11-as-amended; full text in the SESSION_0578 record. Routed (>3 ledgered tasks —
-all tracked as G-022 children here; **WL-row creation deferred to the lanes' closes** to avoid
-ID-space collision with the live 0575 ledger-mechanization lane):
+all tracked as G-022 children here; lanes mint any new WL/ledger IDs via
+`scripts/ledger-id-next.ts` — the 0575 mechanization is merged and its sweep never touched the
+rows this plan cites, per the Giddy close review):
 
 | Id | Sev | Finding (short) | Lane |
 | --- | --- | --- | --- |
@@ -132,7 +146,9 @@ judo seed lands.
 
 ## Paste-ready lane prompts
 
-The three prompts live verbatim in the SESSION_0578 close report (chat deliverable) and follow
-[recipe §2](../protocols/fan-out-session-recipe.md) — pinned number, worktree/branch/setup,
-owned-scope + non-goals, ledger rows, gates, push/hold, gotcha floor, bow-out/loop-state. Blocks
-must not be trimmed when re-using.
+The three prompts are **committed verbatim in
+[`SESSION_0578.md` §"Fan-out lane prompts"](../sprints/SESSION_0578.md)** (launch artifact —
+never chat-only, per recipe §6) and follow [recipe §2](../protocols/fan-out-session-recipe.md) —
+pinned number, worktree/branch/setup, owned-scope + non-goals, ledger rows, gates, push/hold,
+gotcha floor, bow-out/loop-state. Blocks must not be trimmed when re-using. The grappling-scope
+**ADR is a blocking merge-gate on Lane C** (Giddy close condition).

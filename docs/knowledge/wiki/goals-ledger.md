@@ -413,8 +413,9 @@ aggregator reads it with no new parser logic.
   tracking is FLIP-BLOCKING — wire the existing zero-write-path `TechniqueProgress` model
   (oRPC write layer + detail-page control + dashboard); **(3)** graph content scope AMENDED to
   **grappling arts only — BJJ + judo + wrestling takedowns; no striking, no weapons** (supersedes
-  the epic's BJJ-only line for the technique system; ADR check owed at the first build lane's
-  close). E2 Combo Flows stays post-GA (sequenced after E1).
+  the epic's BJJ-only line for the technique system; the ratifying ADR is a **blocking
+  merge-gate on Lane C/SESSION_0579** — Giddy close condition). E2 Combo Flows stays post-GA
+  (sequenced after E1).
 - **Tracked children (the three fan-out lanes, planned SESSION_0578):**
   - **Design axis — LANE A** (`session-0581-technique-ga-design`, lands LAST, owns the flip):
     Wave 2 remainder + Wave 3 + WL-P2-65/66/67 + D-4 + SESSION_0578 Desi hallmark-audit items +

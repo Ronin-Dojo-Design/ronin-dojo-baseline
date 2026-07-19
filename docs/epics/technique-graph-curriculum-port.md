@@ -15,6 +15,11 @@
 
 ## Scope
 
+> **AMENDED (SESSION_0578, G-022):** the technique system's scope is now **grappling arts —
+> BJJ + judo + wrestling takedowns; never striking or weapons**. See
+> [`technique-graph-ga-fanout.md`](technique-graph-ga-fanout.md) + goals-ledger G-022; the
+> ratifying ADR is a blocking merge-gate on lane SESSION_0579. The line below is historical.
+
 **BJJ ONLY for now.** Defer eskrima / muay thai / boxing / karate (the source ships them; import only
 the BJJ slices).
 

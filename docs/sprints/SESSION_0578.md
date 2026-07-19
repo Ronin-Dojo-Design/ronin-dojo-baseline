@@ -2,7 +2,7 @@
 title: "SESSION 0578 — Petey plan: technique graph out of beta (GA gap list + 3-lane fan-out + recipe template)"
 slug: session-0578
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-07-19
 updated: 2026-07-19
 last_agent: claude-session-0578
@@ -258,8 +258,9 @@ own pre-flight at their bow-ins (encoded in their prompts).
   read-path wired from agent-systems-map cross-references.
 - **Desi hallmark audit** (SESSION_0578, audit-only per D11): AUD2-1..12 + conforms-list +
   multi-art readiness verdict; >3 tasks wired to the ledger as G-022 children.
-- **Three paste-ready lane prompts** (0579 data / 0580 progress / 0581 design+flip) delivered in
-  the close report.
+- **Three paste-ready lane prompts** (0579 data / 0580 progress / 0581 design+flip) — committed
+  verbatim in this file's "Fan-out lane prompts" section (Giddy close must-fix: launch artifacts
+  never live only in chat), with the Doug/Giddy close-findings integrated.
 
 ## Decisions resolved
 
@@ -269,8 +270,13 @@ own pre-flight at their bow-ins (encoded in their prompts).
 - AUD2-5 (progress display channel) + AUD2-6 (multi-art identity model) = named pre-build
   decision gates encoded in the lane prompts — Cody builds nothing against them until grilled at
   lane bow-in.
-- WL-row creation deferred to lane closes (0575 ID-mechanization collision avoidance); audit
-  findings tracked as G-022 children meanwhile.
+- WL-row creation routed through `scripts/ledger-id-next.ts` at lane closes — Giddy's close
+  review PROVED 0575 already merged locally (`25940eb9`), never touched goals-ledger, and its one
+  WL renumber (WL-P3-37→55) misses every row this plan cites; audit findings tracked as G-022
+  children meanwhile.
+- Giddy close conditions applied: grappling-scope ADR is a **blocking merge-gate on Lane C**
+  (not a soft check); the port epic stamped with the supersession note; prompts committed
+  in-file.
 - Bow-in "nothing links to the graph" claim corrected by the Desi audit (links exist; gap =
   affordance/naming).
 
@@ -295,13 +301,15 @@ own pre-flight at their bow-ins (encoded in their prompts).
 
 ## Open decisions / blockers
 
-- **Push gate:** docs-only diff (no prod deploy — `ignoreCommand` skips build); awaiting the
-  operator's explicit go.
+- **Push gate:** RELEASED — operator "Push go" received; docs-only diff (no prod deploy —
+  `ignoreCommand` skips build); single push at close per FS-0025 order.
 - **E2 Combo Flows**: left post-GA (sequenced after E1) — operator may veto into the GA bar.
 - **Wrestling takedowns**: no source dataset — authoring task tracked under G-022 Lane C; not a
   lane blocker.
 - AUD2-5 / AUD2-6 decision gates resolve at lane bow-ins (encoded in prompts).
-- Sibling 0575 merge coordination: ledger edits here are additive-only; re-check at merge.
+- Sibling coordination RESOLVED by Giddy's close evidence: 0575 merged locally without touching
+  goals-ledger; 0577 = `clients/mammoth-build-crm/*` only; local canonical main is 2 unpushed
+  commits ahead — zero file overlap, append-merge at their push.
 
 ## Next session
 
@@ -317,13 +325,333 @@ feeds Lane A's layout expansion. Each lane re-runs the FS-0030 ID-space check at
 
 ## Review log
 
+### SESSION_0578_REVIEW_01 — Desi hallmark audit (technique GA surfaces)
+
+- **Reviewed tasks:** SESSION_0578_TASK_08 (audit of the GA target surfaces, not of session code)
+- **Dirstarter docs check:** not applicable (audit-only; doctrine + 0546/0569 canon as law)
+- **Verdict:** surfaces craft-solid and doctrine-conformant at component level; GA risk = three
+  ledgered P1 defects (already flip-blocking), an unowned flip surface (AUD2-4), and two
+  channel-budget decisions (AUD2-5/6) that must precede builds. Multi-art: not ready as-is;
+  foundation holds under spatial+filter-axis art identity.
+- **Score:** n/a (audit, not a diff review)
+- **Follow-up:** AUD2-1..12 routed to lanes via the fanout doc; corrections folded into G-022.
+
+### SESSION_0578_REVIEW_02 — Hostile close (Giddy structure + Doug proof-verification)
+
+- **Reviewed tasks:** the full docs diff + the disjointness proof + prompt safety
+- **Verdict:** see Hostile close review section.
+
 ## Hostile close review
+
+- **Giddy:** pass (one must-fix, applied) — placement correct (epics/protocols idiom); recipe
+  EXTENDS §5b + loop-of-loops, no ritual contradiction; G-022 append clean, 0575 collision
+  disproven with evidence; ADR deferral correct at authority level but upgraded to a **blocking
+  Lane C merge-gate**; trunk shape clean. Must-fix executed: the three prompts committed into
+  this file; port epic stamped.
+- **Doug:** GO-WITH-NOTE 9.2/10, no cap — disjointness proof held under adversarial import-graph
+  checks (A↔B no edges; importer read-only on the JSON; router registration B-only); ALL five
+  fact-checks CONFIRMED; 0579–0581 collision-free. Note applied: `server/web/curriculum/queries.ts`
+  assigned to Lane A + Lane C parse-contract constraint; Lane B additive-only pins;
+  WL-P3-53 split constraint recorded in the Lane A prompt.
+- **Desi:** pass — delivered the AUD2 audit (SESSION_0578_REVIEW_01); no UI touched this session.
+- **Kaizen aggregate:** 9.2/10 — Doug's verified score stands as the session floor; every
+  reviewer finding was either applied in the close commit or ledgered; the one bow-in factual
+  error (entry links) was caught by the session's own review chain before ratification.
 
 ## ADR / ubiquitous-language check
 
+- ADR update **not required this session**: plan/docs-only; no architectural decision ratified in
+  code. The **grappling-arts scope amendment is ADR-worthy** — the ADR check is explicitly owed
+  at Lane C's (SESSION_0579) close, the first build lane to act on it (recorded in G-022 + the
+  Lane C prompt). ADR 0044 (motion posture, no Lenis) and ADR 0046 (authoring/ownership axes)
+  confirmed valid and load-bearing in the lane prompts.
+- Ubiquitous language update **not required**: "fan-out lane", "owned file set", "shared-by-rule
+  files" are defined in `fan-out-session-recipe.md` (protocol vocabulary, not domain terms);
+  no new domain nouns entered the model.
+
 ## Reflections
+
+- **The audit falsified the plan's premise before it shipped.** The bow-in claim "nothing links
+  to the graph" survived my own spot-check (I grepped the wrong tree) and died only when Desi
+  read the actual index component. The fan-out recipe now encodes proof-by-listing for file
+  claims; the deeper lesson repeats 0546/0569 — measure before scoping, and route a reviewer at
+  the surface you're about to change, not just the one you think you're changing.
+- **The grill changed the product, not just the plan.** Two of four forks came back different
+  from the recommendation (Wave 3 in the GA bar; progress flip-blocking) and one came back as a
+  scope amendment nobody had on the table (grappling arts). Grilling before finalizing is where
+  operator intent actually enters the system — a plan ratified without it would have shipped a
+  smaller, wrong GA.
+- **ID-space discipline under parallel lanes worked, then immediately got tested.** 0575's live
+  ledger-mechanization lane forced the additive-only rule AND the WL-row deferral — the first
+  real exercise of the recipe's shared-by-rule-files section, written hours earlier.
+- **Model note:** discovery + audit ran as four sub-agent dispatches (2 Explore scouts, Desi,
+  Giddy+Doug close pair) with Petey verification of every load-bearing claim; one scout claim
+  was corrected (entry links), zero unverified claims entered the ledger.
 
 ## Full close evidence
 
 | Step | Proof |
 | --- | --- |
+| Gate runner (`bow-out-gates.sh`) | Task log PASS (11 rows) · format-fix 0 code files · wiki:lint 0 err / 54 warn · build skipped (docs-only) · graphify nodes=14786 edges=32031 · git clean · secret scan PASS |
+| JETTY/frontmatter sweep | SESSION_0578 frontmatter closed, `type: session--plan`, dated 2026-07-19, `claude-session-0578`; new docs carry full frontmatter (fanout epic doc is a docs/epics hand-off doc, no frontmatter by idiom). |
+| Backlinks/index sweep | G-022 cites SESSION_0578; agent-systems-map cross-references the recipe; recipe pairs_with the map + loop-of-loops + rituals. |
+| Ledger cross-off | No rows flipped by design: G-022 newly opened (in-progress); G-013 unchanged (design waves fold into Lane A); WL-P2-65/66/67 + WL-P3-53/54 stay open (assigned to lanes); FI-001 parked; FS-0030 already mitigated. Gate-runner candidates confirmed as mentions, not resolutions. |
+| Finding router | AUD2-1..12 → G-022 children + fanout-doc routing table (WL-row creation deferred to lane closes — 0575 ID-mechanization collision avoidance). No new FS/D/INC rows: the bow-in entry-link error was caught and corrected in-session by the review chain working as designed. |
+| Deferral guard | Every deferred item is ledgered: Wave 3 slices, wrestling authoring gap, E2 Combo Flows (post-GA), AUD2-10 continuation — all under G-022 / the fanout doc. |
+| Kaizen reflection | Present — falsified premise, grill-changed-product, ID-space discipline. |
+| Hostile close review | Giddy + Doug dispatched on the close diff; verdicts in section above. |
+| Review & Recommend | Next-session block = launch the fan-out (Lane C first); prompts delivered. |
+| Memory sweep | `technique-graph-g022-fanout.md` memory + MEMORY.md index line written. |
+| Next session unblock check | Unblocked — prompts self-contained; lanes re-run FS-0030 at bow-in; no dependency on this chat. |
+| Git hygiene | `76670149` (deliverables) + close commit on `session-0578-technique-ga-plan`; single push at close (operator "Push go" received). |
+| Graphify update | Gate runner recorded stats; canonical-checkout refresh happens post-merge per 0569 precedent (worktree graph is by-design partial; canonical tree hosts live sibling 0575 — not mutated from this session). |
+
+## Fan-out lane prompts (launch artifact — paste verbatim)
+
+> Committed per Giddy's close must-fix (recipe §6: a lane whose work lives only in chat dies at
+> session end). These versions INTEGRATE the Doug close-findings (curriculum parser ownership,
+> additive-only pins) and Giddy's conditions (ADR = blocking Lane C gate; WL IDs via
+> `scripts/ledger-id-next.ts` — SESSION_0575's mechanization is merged). The epic doc
+> `docs/epics/technique-graph-ga-fanout.md` remains the plan of record on any conflict.
+
+### LANE C — SESSION 0579 (lands first)
+
+```text
+/bow-in Act as PETEY→CODY→DOUG. This is LANE C of the G-022 fan-out ("Technique graph out of
+beta"), planned at SESSION_0578. Read FIRST: docs/epics/technique-graph-ga-fanout.md +
+goals-ledger G-022 + docs/sprints/SESSION_0578.md (harvest inventory + AUD2 audit). Do not
+re-plan the fan-out; execute this lane. Merge order C→B→A — this lane lands FIRST.
+
+SESSION NUMBER: pinned 0579. Re-run the FS-0030 ID-space check at bow-in (0574–0578 burned/live;
+0580/0581 reserved for lanes B/A); if 0579 is taken, go above and note it. Never renumber or
+touch sibling files.
+
+WORKTREE: fresh /Users/brianscott/dev/ronin-0579 off latest origin/main, branch
+session-0579-grappling-data. Run /worktree-setup FIRST. Graphify reads 0 nodes in a fresh
+worktree = not-built, NEVER "no matches" — query the canonical checkout for discovery.
+
+GOAL: grappling curriculum data at scale. Adopt from the READ-ONLY monorepo
+(/Users/brianscott/dev/ronin-dojo-monorepo): (1) tuffbuffs bjj.js — 98-technique trunk, 15-level
+ladder; (2) Kodokan 20-throws seed + judo.js (grappling now IN scope per the SESSION_0578
+amendment: BJJ + judo + wrestling takedowns only — NO striking, NO weapons, ever). Write a
+node/TS transform (SHOW it to the operator before running — never Python) producing new payload
+files under apps/web/prisma/data/; extend apps/web/prisma/import-bbl-bjj-curriculum.ts; backfill
+the ~14 graph slugs present in bbl-bjj-graph.json but missing published DB rows; seed
+disciplines/styles, curriculum links, belt linkage. AUD2-11: live-verify curriculum level tab
+titles — if they render as codes (W0/BL0), retitle the CurriculumLevel seed rows to human names
+(data-side fix). AUD2-6 (your share): add a zero-AABB-overlap guard to the seed/verify path and
+do NOT extend Bjj* naming into new seed code. HARD CONSTRAINT (Doug): seeded notes/key-point
+data must PRESERVE the keyPointsFromNotes parse contract in server/web/curriculum/queries.ts
+(Lane A's file — both the graph and curriculum surfaces parse it; do not edit that file).
+
+BOW-IN GRILL (resolve with the operator before building): (1) small additive hand-authored
+migration (nativeName/aliases for judo japanese names) vs mapping into existing fields/tags;
+(2) judo discipline/style row modeling; (3) whether judo rows get the graph tag now — recommend
+NO: new techniques land Library-dark for the graph until Lane A adds layout slots; the importer
+must not require JSON presence for new rows.
+
+OWNED FILES (the disjointness contract): apps/web/prisma/import-bbl-bjj-curriculum.ts · NEW
+apps/web/prisma/data/* payloads · apps/web/prisma/schema.prisma + ONE new migration dir (only if
+grill-ratified) · the new transform script · the new grappling-scope ADR.
+NON-GOALS (other lanes' territory): components/*, lib/*, app/(web) pages, server/web/* (Lane A
+owns curriculum/queries.ts + the graph server modules) · bbl-bjj-graph.json (Lane A — you READ
+it, never write it) · server routers, dashboard, technique-detail (Lane B) · the beta flip ·
+wrestling authoring (no dataset exists — keep it ledgered under G-022) · striking/weapons/PII
+data (REJECTED).
+
+GATES: bun run typecheck · bun run lint:check (bun run lint WRITES files) · repo-wide bun run
+format:check (you are ADDING files) · bun run test (NEVER bare multi-file bun test) · npx next
+build off git diff origin/main..HEAD · importer idempotency proof (run twice, identical result) ·
+record counts vs source (98 BJJ / 20 judo) in the SESSION Verification table · **BLOCKING
+merge-gate (Giddy): write the grappling-arts scope ADR (BJJ+judo+wrestling takedowns, no
+striking/weapons — supersedes the port epic's BJJ-only line) at this lane's close; the lane
+does not push without it.**
+
+PUSH POLICY: commit locally at close; HOLD at the push gate for the operator's explicit go.
+
+GOTCHAS (floor — never trim): hand-authored migrations ONLY, NEVER prisma migrate dev (worktrees
+share ONE local DB) · ../ronin-dojo-monorepo is READ-ONLY · technique-media NO-LEAK invariant is
+law (locked ⇒ no url AND no media-id-bearing poster) — technique-media-gate.ts is out of your
+scope, leave it untouched · Rank.brand is NULLABLE — never scope rank/belt queries by rank.brand ·
+Prisma never in "use client" modules · unit tests can fire REAL Resend emails (0551 seam
+unmerged) — add no tests touching email paths · sibling lanes are LIVE — coordinate, never
+clobber · on any limit/config/sandbox error STOP and paste the EXACT error verbatim · unknown =
+"I don't know", never theorize.
+
+BOW-OUT: full close per closing.md. Flip/annotate G-022 Lane C children (additive ledger edits
+only). Mint any new ledger IDs via scripts/ledger-id-next.ts (0575's mechanization, merged).
+Next-session block = lane state per fan-out-session-recipe.md §6.
+```
+
+### LANE B — SESSION 0580 (lands second)
+
+```text
+/bow-in Act as PETEY→CODY→DOUG. This is LANE B of the G-022 fan-out ("Technique graph out of
+beta"), planned at SESSION_0578. Read FIRST: docs/epics/technique-graph-ga-fanout.md +
+goals-ledger G-022 + AUD2-5 in docs/sprints/SESSION_0578.md + prisma TechniqueProgress model +
+apps/web/server/belt/router.ts (the oRPC domain-router idiom). Do not re-plan; execute. Merge
+order C→B→A — this lane lands SECOND (rebase over origin/main after Lane C merges).
+
+SESSION NUMBER: pinned 0580 (FS-0030 re-check at bow-in; 0579/0581 belong to lanes C/A; if taken
+go above). WORKTREE: fresh /Users/brianscott/dev/ronin-0580 off latest origin/main, branch
+session-0580-technique-progress. Run /worktree-setup FIRST (graphify 0 nodes there = not-built,
+never "no matches").
+
+GOAL: wire member technique progress — FLIP-BLOCKING for GA. The TechniqueProgress model EXISTS
+(NOT_STARTED/LEARNING/DRILLING/SPARRING/MASTERED, @@unique[userId,techniqueId], verifiedBy) with
+ZERO write paths today (read-projected only in directory profile payloads). Build: (1) a new
+oRPC domain router apps/web/server/techniques/router.ts (FULL-oRPC direction — do NOT add
+next-safe-action surfaces) registered with one line in apps/web/server/router.ts — own-user
+upsert/clear of status + lastDrilledAt + notes; verifiedBy/instructor-verification is OUT of v1;
+(2) apps/web/server/web/techniques/progress.ts + .test.ts (query/write layer, mocked-Prisma
+query-shape test per the WL-P2-64 idiom); (3) a NEW technique-progress-control.tsx mounted in
+app/(web)/techniques/[slug]/_components/technique-detail/index.tsx near the Save row; (4)
+dashboard wiring via server/web/dashboard/queries.ts (findUserTechniques) +
+app/(web)/dashboard/techniques-tab.tsx / techniques-table.tsx. Any signed-in member tracks their
+OWN progress (free tier included — engagement driver); no entitlement gate on own-progress
+writes.
+
+BOW-IN GRILL (decision gate — build NOTHING before it): AUD2-5 — ratify ONE progress display
+channel used identically everywhere. Desi's constraint: the badge/tint budget is SPENT (graph
+node: fill=type, bottom bar=belt, ring=focus; cards carry Premium/Video/Foundational + belt).
+Candidates: a leading glyph/checkmark in the identity cluster, or ONE dedicated progress badge
+that REPLACES Foundational in the trailing row. NEVER a third color channel on graph nodes. You
+implement the ratified channel on detail page + dashboard ONLY; Lane A applies the same channel
+to cards/graph in its later slices. Record the decision in G-022. GRILL INPUT (Doug): the first
+progress WRITE lights up the existing directory rich-profile READ surface
+(profile-projection.ts:214, canRenderRichMedia-gated) — decide whether that projection is
+desired at v1 or filtered.
+
+OWNED FILES: NEW server/techniques/router.ts + its one registration line in server/router.ts ·
+NEW server/web/techniques/progress.ts + test · server/web/techniques/permissions.ts
+(ADDITIVE-ONLY — 9 existing importers incl. nav; new predicates beside existing, no refactors) ·
+server/web/dashboard/queries.ts (+ test; ADDITIVE-ONLY — billing/school/membership tabs consume
+it; new queries beside existing, no refactors) · app/(web)/dashboard/techniques-tab.tsx +
+techniques-table.tsx · app/(web)/techniques/[slug]/_components/technique-detail/* + NEW
+technique-progress-control.tsx.
+NON-GOALS: technique-graph.tsx and ALL components/web/techniques|curriculum shared components
+(Lane A) · server/web/curriculum/queries.ts (Lane A) · prisma schema/data/importer (Lane C) —
+the model needs NO migration; if a schema gap appears STOP and flag, do not migrate · the beta
+flip · graph progress overlay (post-GA, Lane A).
+
+GATES: bun run typecheck · bun run lint:check · repo-wide bun run format:check (adding files) ·
+bun run test (never bare multi-file bun test) · npx next build off git diff origin/main..HEAD ·
+RUNTIME proof of the write path: dev server via Bash `cd apps/web && npx next dev --turbo`
+(preview_start CANNOT serve a worktree — Browser pane reads :3000, or isolated Playwright),
+exercise upsert→render→clear live · no-leak regression check: profile projection keeps
+techniqueProgress behind canRenderRichMedia.
+
+CACHE TRAP: technique content reads are cached (broad "techniques" cacheTag WL-P2-50 +
+"bjj-technique-graph" tag). Progress writes must NOT bust technique content caches — keep
+own-user progress reads uncached or under their own user-scoped tag.
+
+PUSH POLICY: commit locally; HOLD for the operator's explicit go; lands after Lane C.
+
+GOTCHAS (floor — never trim): hand-authored migrations only, NEVER prisma migrate dev (shared
+local DB — and you need no migration) · ../ronin-dojo-monorepo READ-ONLY · technique-media
+NO-LEAK invariant untouched (locked ⇒ no url AND no media-id poster) · Prisma never in
+"use client" modules · unit tests can fire REAL Resend emails — no tests through email paths ·
+bun run lint WRITES files · sibling lanes LIVE — coordinate, never clobber · on limit/config/
+sandbox errors STOP and paste the EXACT error verbatim · unknown = "I don't know".
+
+BOW-OUT: full close; Desi in the review wave (member-facing UI); flip G-022 Lane B children;
+mint new ledger IDs via scripts/ledger-id-next.ts; Next-session block = lane state per
+fan-out-session-recipe.md §6.
+```
+
+### LANE A — SESSION 0581 (multi-session; lands last; owns the flip)
+
+```text
+/bow-in Act as PETEY→CODY→DOUG with Desi IN the review wave. This is LANE A of the G-022
+fan-out ("Technique graph out of beta") — the GA design lane; it lands LAST and owns the
+beta→GA flip. Read FIRST: docs/epics/technique-graph-ga-fanout.md + goals-ledger G-022 +
+SESSION_0578 (full AUD2-1..12 audit + conforms-do-not-touch list) + SESSION_0546 (Desi spec
+waves + forks F1–F5) + SESSION_0569 (Wave 2 first batch + Next-session block) + wiring-ledger
+WL-P2-65/66/67, WL-P3-53/54. Do not re-plan the fan-out; execute. This is a MULTI-SESSION lane:
+work in ledgered slices per fan-out-session-recipe.md §6 — remaining tasks live under G-022,
+each continuation session is a fresh full-citizen session continuing from the row's next open
+child.
+
+SESSION NUMBER: pinned 0581 for slice 1 (FS-0030 re-check at bow-in; 0579/0580 belong to lanes
+C/B; if taken go above; continuations take the next free number at their own bow-ins).
+WORKTREE: fresh /Users/brianscott/dev/ronin-0581 off latest origin/main, branch
+session-0581-technique-ga-design. Run /worktree-setup FIRST (graphify 0 nodes = not-built).
+REBASE RULE: before the layout-expansion and progress-channel slices, rebase over origin/main so
+merged Lanes C (content) and B (progress channel decision) are present.
+
+SLICE PLAN (ledgered; one reviewable slice per session, §5b chain each):
+S1: C4 zoom/fit easing (never during drag) + WL-P2-67 viewport-aware ZOOM_MIN (mobile fit must
+frame all nodes at 375px) + D-4 cooperative touch gestures + AUD2-3 mobile toolbar density (one
+decision with the clamp fix, not two) + AUD2-8 dead-token fix (bg-[radial-gradient(...hsl(var(
+--border))...)] never paints — live-verify computed style FIRST, then var(--color-border), and
+grep for other hsl(var(-- survivors) + AUD2-9 demote PNG export to secondary.
+S2: C5 selected-neighborhood glow + D3 empty states — scope explicitly INCLUDES the curriculum
+browser's silent-empty topic-filter grid (AUD2-7: EmptyList + "Show all topics" reset) + B2
+difficulty-term tooltips (graph-side) + WL-P2-65 export label clip (run the ledger's
+disambiguation experiment first, then fix the winning variable, prove with real export bytes) +
+WL-P2-66 reduced-motion cascade fix in lib/utils.ts popoverAnimationClasses (fix ONCE, prove
+computed animation-name: none on ≥2 consumer surfaces under emulated reduce — class presence is
+NOT behavior; shared-primitive change ⇒ affected e2e per the standing gate).
+S3: Wave 3 — E1 CurriculumJourney scrollytelling (motion-only: useScroll + motion/react +
+useReducedMotion fallback = today's browser; F1 Lenis is REJECTED, never re-open) + B3 key-point
+hover peek + C3 grid stagger + G2 node-modal ellipsis menu (fold AUD2-12: "View technique"
+becomes the dialog's primary).
+S4: multi-art layout expansion — judo cluster coordinates into bbl-bjj-graph.json (you are the
+ONLY lane that writes this file), zero-AABB-overlap proof live at 1280×800 AND 375×812,
+formalize WL-P3-54 as a layout-invariant unit test, WL-P3-53 export-subsystem extraction on
+touch (SPLIT CONSTRAINT, Doug: unowned techniques/tags/[slug] + categories/[slug] pages import
+technique-listing/technique-query — split-outs must preserve export paths/props or ride-along
+those pages explicitly) — THEN AUD2-4 the flip surface: ONE name everywhere (not "BJJ"-bound —
+multi-art constraint), remove Beta Badge + Note from graph/page.tsx, upgrade the Library entry
+to the TechniquesCrossLinks card idiom (fourth card, zero new components), update the export
+filename, and FLIP feature-log.ts beta→live (+ FEATURES.md mirror) as the lane's LAST commit —
+only when G-022's flip-blocking children (incl. Lane B) are ALL closed.
+
+BOW-IN GRILL (before S1; blocks S4): AUD2-6 multi-art identity model — Desi's constraint: art
+identity = spatial cluster/region + a second filter axis, NEVER a third color channel; type
+tints stay the one fill language; make type→style maps exhaustive (compile-time Record, no
+silent ?? transition fallback that renders new types amber in exports); plan the de-Bjj* naming
+(queries, component names, page titles, export filename). Ratify with the operator; record in
+G-022.
+
+OWNED FILES: components/web/techniques/* (incl. technique-graph.tsx + WL-P3-53 split-outs) ·
+components/web/curriculum/* · server/web/techniques/graph-query.ts, node-tooltip.ts,
+graph-belt-level.ts (+ tests) · server/web/curriculum/queries.ts (the keyPointsFromNotes parse
+contract — Doug close-finding) · prisma/data/bbl-bjj-graph.json · lib/utils.ts ·
+lib/feature-log.ts + FEATURES.md · app/(web)/techniques/page.tsx, graph/page.tsx,
+app/(web)/curriculum/page.tsx · app/(web)/techniques/_components/techniques-index/*.
+NON-GOALS: prisma schema/importer/seed payloads (Lane C) · server routers, dashboard,
+technique-detail, progress files (Lane B — apply the AUD2-5-ratified progress channel to cards/
+graph only in a post-B slice) · E2 Combo Flows (post-GA, after E1) · nav promotion beyond the
+ratified entry affordance · any new dependency (NO Lenis).
+
+CONFORMS — DO NOT TOUCH (Desi, SESSION_0578): F4 dual tint channels · D-5 roving tabindex
+composite · B1 tooltip no-media DTO contract · C2 layoutId pill · AUD-4 ctrl/⌘ wheel gate ·
+export snapshot/restore machinery (keep rgb() literals in lockstep with nodeTypeClass) ·
+ListingCard composition + ListingSaveButton · locked-media zero-prop tile + UpgradePanel ·
+curriculum belt rail · page scaffolding.
+
+GATES per slice: bun run typecheck · bun run lint:check · repo-wide bun run format:check ·
+bun run test (never bare multi-file bun test) · npx next build off git diff origin/main..HEAD ·
+NO-LEAK re-proof whenever graph-query/node-tooltip change (scalar-only select pinned by test;
+DTO closed key set; SSR sweep for media-key strings) · runtime verification headless (dev server
+via Bash — preview_start cannot serve a worktree; isolated Playwright for live-DOM AABB /
+computed styles; qlmanage -t -s N for SVG→PNG) · real export bytes for any export change ·
+Desi + Doug review the SAME commit before the next slice.
+
+PUSH POLICY: commit locally; HOLD at the push gate each slice for the operator's explicit go;
+this lane lands LAST — the flip commit never pushes before Lanes C and B are merged and the
+operator says go.
+
+GOTCHAS (floor — never trim): hand-authored migrations only, NEVER prisma migrate dev (shared
+local DB; you should need none) · ../ronin-dojo-monorepo READ-ONLY · technique-media NO-LEAK is
+law (locked ⇒ no url AND no media-id-bearing poster) · class presence ≠ behavior (computed-style
+probes for every reduced-motion claim) · unit tests can fire REAL Resend emails — no tests
+through email paths · bun run lint WRITES files · sibling lanes LIVE — coordinate, never
+clobber · on limit/config/sandbox errors STOP and paste the EXACT error verbatim · unknown =
+"I don't know".
+
+BOW-OUT per session: full close; flip G-022 Lane A children; mint new ledger IDs via
+scripts/ledger-id-next.ts; hostile close; Next-session block names the lane's next open child
+per fan-out-session-recipe.md §6.
+```
