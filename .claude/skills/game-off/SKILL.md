@@ -23,7 +23,11 @@ description: Close a lean Mammoth (MMB) work session. Use when the operator says
    engineering verification, and sales outcomes separate; never infer or self-award a client
    rating.
 6. Confirm vault projections did not become CRM, goal-ledger, or product-spec authorities.
-7. No push, deploy, merge, external share, integration connect, or live-vault mutation
+7. **Secret-scan before any vault git commit, and always before any vault remote push** —
+   from the vault root:
+   `grep -rnE "(sk-[A-Za-z0-9]{20}|api[_-]?key\s*[:=]\s*\S{16,}|Bearer [A-Za-z0-9._-]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY|password\s*[:=])" --include="*.md" --include="*.json" --include="*.html" .`
+   Any hit blocks the commit/push until the value is removed and rotated.
+8. No push, deploy, merge, external share, integration connect, or live-vault mutation
    without the separate authorization that action requires.
 
 Mode controls whether the vault closing card is added, never whether the canonical ritual runs.

@@ -17,7 +17,10 @@ description: Close a risk-proportionate Mammoth or client-ops work session. Use 
    record token/cost telemetry only when exposed, otherwise `unavailable`; keep client satisfaction,
    engineering verification, and sales outcomes separate; never infer or self-award a client rating.
 5. Confirm that vault projections did not become CRM, goal-ledger, or product-spec authorities.
-6. Do not push, deploy, merge, share externally, connect an integration, or mutate a live private vault
+6. Secret-scan before any vault git commit, and always before any vault remote push — from the vault root:
+   `grep -rnE "(sk-[A-Za-z0-9]{20}|api[_-]?key\s*[:=]\s*\S{16,}|Bearer [A-Za-z0-9._-]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY|password\s*[:=])" --include="*.md" --include="*.json" --include="*.html" .`
+   Any hit blocks the commit/push until the value is removed and rotated.
+7. Do not push, deploy, merge, share externally, connect an integration, or mutate a live private vault
    without the separate authorization required for that action.
 
 The mode controls whether a vault closing card is added, never whether the canonical closing ritual runs.
