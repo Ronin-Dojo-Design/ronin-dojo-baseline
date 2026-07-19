@@ -66,6 +66,7 @@ export type SalesCockpitActivity = {
 
 export type SalesCockpitProject = {
   activities: SalesCockpitActivity[];
+  attempts: AttemptLogEntry[];
   contact: {
     companyName: string | null;
     email: string;
@@ -76,6 +77,8 @@ export type SalesCockpitProject = {
   id: string;
   name: string;
   nextTask: string;
+  /** The Opportunity's Lead Source (`LeadSource` enum value, brief §3a #1). */
+  source: string;
   stage: string;
 };
 
@@ -126,6 +129,82 @@ export function validateContactAttemptInput(input: ContactAttemptInput): ValidCo
   }
 
   return { ...input, nextAction, nextActionDueAt, notes };
+}
+
+// ---------------------------------------------------------------------------
+// Contact-attempt log (SESSION_0577 slice C) — Attempt 1/2/3 cadence
+// ---------------------------------------------------------------------------
+
+/** The manual follow-up cadence target: three attempts before re-triage. */
+export const ATTEMPT_CADENCE_TARGET = 3;
+
+export type AttemptLogEntry = {
+  activityId: string;
+  /** 1-based, chronological: Attempt 1 = the earliest recorded attempt. */
+  attemptNumber: number;
+  channel: ContactAttemptChannel;
+  occurredAt: string;
+  /** Human line without the "Contact Attempt — " prefix (e.g. "Manual call: Left message"). */
+  summary: string;
+};
+
+export type AttemptProgress = {
+  cadenceMet: boolean;
+  count: number;
+  label: string;
+};
+
+const ATTEMPT_TITLE_PREFIX = "Contact Attempt — ";
+
+type AttemptSourceActivity = Pick<
+  SalesCockpitActivity,
+  "completedAt" | "createdAt" | "id" | "status" | "title" | "type"
+>;
+
+function isRecordedAttempt(activity: AttemptSourceActivity): boolean {
+  return (
+    activity.status === "completed" &&
+    CONTACT_ATTEMPT_CHANNELS.includes(activity.type as ContactAttemptChannel)
+  );
+}
+
+/**
+ * Number a project's recorded Contact Attempts chronologically (Attempt 1 =
+ * earliest). Pass the FULL attempt history — numbering a truncated "recent"
+ * slice would renumber old attempts as new ones age out.
+ */
+export function buildAttemptLog(activities: AttemptSourceActivity[]): AttemptLogEntry[] {
+  return activities
+    .filter(isRecordedAttempt)
+    .map((activity) => ({
+      activityId: activity.id,
+      channel: activity.type as ContactAttemptChannel,
+      occurredAt: activity.completedAt ?? activity.createdAt,
+      summary: activity.title.startsWith(ATTEMPT_TITLE_PREFIX)
+        ? activity.title.slice(ATTEMPT_TITLE_PREFIX.length)
+        : activity.title,
+    }))
+    .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt))
+    .map((entry, index) => ({ ...entry, attemptNumber: index + 1 }));
+}
+
+/** The "Attempt N of 3" cadence readout for a project's attempt count. */
+export function attemptProgress(count: number): AttemptProgress {
+  if (count === 0) {
+    return { cadenceMet: false, count, label: `No attempts yet — target ${ATTEMPT_CADENCE_TARGET}` };
+  }
+  if (count <= ATTEMPT_CADENCE_TARGET) {
+    return {
+      cadenceMet: count === ATTEMPT_CADENCE_TARGET,
+      count,
+      label: `Attempt ${count} of ${ATTEMPT_CADENCE_TARGET}`,
+    };
+  }
+  return {
+    cadenceMet: true,
+    count,
+    label: `${count} attempts — ${ATTEMPT_CADENCE_TARGET}-attempt cadence complete`,
+  };
 }
 
 export function bucketDueActivities(

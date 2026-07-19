@@ -16,6 +16,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
               <Link href="/app/sales" className="text-muted transition-colors hover:text-ink">
                 Sales cockpit
               </Link>
+              <Link href="/app/leads" className="text-muted transition-colors hover:text-ink">
+                Lead intake
+              </Link>
               <Link href="/app/new" className="text-muted transition-colors hover:text-ink">
                 New Job Order
               </Link>

@@ -3,11 +3,13 @@
 import { MCard } from "@ronin-dojo/ui-kit";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSalesCockpit, recordContactAttempt } from "@/lib/actions";
+import { leadSourceLabel } from "@/lib/lead-source";
 import {
   CONTACT_ATTEMPT_CHANNEL_LABELS,
   CONTACT_ATTEMPT_CHANNELS,
   CONTACT_ATTEMPT_OUTCOME_LABELS,
   CONTACT_ATTEMPT_OUTCOMES,
+  attemptProgress,
   type ContactAttemptChannel,
   type ContactAttemptOutcome,
   type SalesCockpitReadModel,
@@ -190,7 +192,10 @@ export default function SalesCockpitPage() {
                 selected={project.id === selectedProjectId}
                 onSelect={setSelectedProjectId}
                 data={{
-                  badges: [{ label: project.stage, tone: "neutral" }],
+                  badges: [
+                    { label: project.stage, tone: "neutral" },
+                    { label: leadSourceLabel(project.source), tone: "neutral" },
+                  ],
                   eyebrow: project.contact.companyName ?? "Opportunity",
                   id: project.id,
                   meta: project.name,
@@ -305,9 +310,12 @@ function ContactWorkspace(props: WorkspaceProps) {
         <p className="text-sm text-muted">{project.contact.companyName ?? "No company linked"}</p>
         <p className="mt-2 text-sm text-muted">{project.contact.email || "No email recorded"}</p>
         <p className="text-sm text-muted">{project.contact.phone || "No phone recorded"}</p>
+        <p className="text-sm text-muted">Lead Source: {leadSourceLabel(project.source)}</p>
         <p className="mt-3 text-xs uppercase tracking-wide text-muted">Current Next Action</p>
         <p className="text-sm">{project.nextTask || "No compatibility projection set"}</p>
       </div>
+
+      <AttemptLog project={project} />
 
       <form onSubmit={props.onSubmit} className="rounded-lg border border-border bg-surface p-4">
         <fieldset disabled={props.saving} className="space-y-3">
@@ -400,6 +408,39 @@ function ContactWorkspace(props: WorkspaceProps) {
           </ol>
         )}
       </div>
+    </div>
+  );
+}
+
+function AttemptLog({ project }: { project: SalesCockpitReadModel["roster"][number] }) {
+  const progress = attemptProgress(project.attempts.length);
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold">Contact-attempt log</h3>
+        <span
+          className={`rounded-full border px-2 py-0.5 text-xs ${
+            progress.cadenceMet ? "border-primary text-primary" : "border-border text-muted"
+          }`}
+        >
+          {progress.label}
+        </span>
+      </div>
+      {project.attempts.length === 0 ? (
+        <p className="mt-2 text-sm text-muted">
+          No attempts recorded yet. Attempts land here as Attempt 1, 2, 3.
+        </p>
+      ) : (
+        <ol className="mt-3 space-y-2">
+          {project.attempts.map((entry) => (
+            <li key={entry.activityId} className="flex items-baseline gap-2 text-sm">
+              <span className="shrink-0 font-semibold">Attempt {entry.attemptNumber}</span>
+              <span className="min-w-0 flex-1">{entry.summary}</span>
+              <span className="shrink-0 text-xs text-muted">{formatDue(entry.occurredAt)}</span>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

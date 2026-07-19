@@ -9,10 +9,11 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "test": "bun test --parallel=1",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate",
     "db:studio": "prisma studio",
-    "db:push": "prisma db push --skip-generate",
+    "db:push": "prisma db push",
     "db:reset": "prisma migrate reset",
     "db:seed": "bun prisma/seed.ts"
   },

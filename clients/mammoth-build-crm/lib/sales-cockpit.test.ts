@@ -1,7 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import {
+  ATTEMPT_CADENCE_TARGET,
   CONTACT_ATTEMPT_OUTCOME_LABELS,
+  attemptProgress,
   bucketDueActivities,
+  buildAttemptLog,
   validateContactAttemptInput,
   type SalesQueueItem,
 } from "./sales-cockpit";
@@ -74,5 +77,69 @@ describe("sales cockpit pure rules", () => {
     });
     expect(valid.nextAction).toBe("Send the requested specification sheet");
     expect(valid.notes).toBe("Customer requested gauge options.");
+  });
+});
+
+const attempt = (
+  id: string,
+  occurredAt: string,
+  overrides: Partial<Parameters<typeof buildAttemptLog>[0][number]> = {},
+): Parameters<typeof buildAttemptLog>[0][number] => ({
+  completedAt: occurredAt,
+  createdAt: occurredAt,
+  id,
+  status: "completed",
+  title: "Contact Attempt — Manual call: Left message",
+  type: "call",
+  ...overrides,
+});
+
+describe("contact-attempt log", () => {
+  test("numbers recorded attempts chronologically, skipping tasks and open activities", () => {
+    const log = buildAttemptLog([
+      attempt("third", "2026-07-19T17:00:00.000Z", {
+        title: "Contact Attempt — Manual email: Connected",
+        type: "email",
+      }),
+      attempt("first", "2026-07-17T15:00:00.000Z"),
+      attempt("not-an-attempt", "2026-07-18T09:00:00.000Z", { status: "open", type: "task" }),
+      attempt("second", "2026-07-18T16:00:00.000Z", { type: "meeting" }),
+    ]);
+
+    expect(log.map((entry) => [entry.attemptNumber, entry.activityId])).toEqual([
+      [1, "first"],
+      [2, "second"],
+      [3, "third"],
+    ]);
+    expect(log[2]).toMatchObject({ channel: "email", summary: "Manual email: Connected" });
+  });
+
+  test("falls back to createdAt ordering and keeps unprefixed titles verbatim", () => {
+    const log = buildAttemptLog([
+      attempt("legacy", "2026-07-16T10:00:00.000Z", {
+        completedAt: null,
+        title: "Called about the quote",
+      }),
+    ]);
+    expect(log[0]).toMatchObject({
+      attemptNumber: 1,
+      occurredAt: "2026-07-16T10:00:00.000Z",
+      summary: "Called about the quote",
+    });
+  });
+
+  test("reads out the Attempt-N-of-3 cadence", () => {
+    expect(attemptProgress(0)).toEqual({
+      cadenceMet: false,
+      count: 0,
+      label: `No attempts yet — target ${ATTEMPT_CADENCE_TARGET}`,
+    });
+    expect(attemptProgress(2)).toEqual({ cadenceMet: false, count: 2, label: "Attempt 2 of 3" });
+    expect(attemptProgress(3)).toEqual({ cadenceMet: true, count: 3, label: "Attempt 3 of 3" });
+    expect(attemptProgress(5)).toEqual({
+      cadenceMet: true,
+      count: 5,
+      label: "5 attempts — 3-attempt cadence complete",
+    });
   });
 });

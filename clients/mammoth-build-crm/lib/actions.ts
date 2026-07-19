@@ -23,14 +23,18 @@ import { ORDER_STAGE, nextStage, stageIndex } from "./stages";
 import { db } from "./db";
 import { getServerSession } from "./auth";
 import {
+  CONTACT_ATTEMPT_CHANNELS,
   CONTACT_ATTEMPT_CHANNEL_LABELS,
   CONTACT_ATTEMPT_OUTCOME_LABELS,
   bucketDueActivities,
+  buildAttemptLog,
   validateContactAttemptInput,
   type ContactAttemptInput,
   type SalesCockpitReadModel,
   type SalesQueueItem,
 } from "./sales-cockpit";
+import type { ExistingContact } from "./lead-ingest";
+import type { LeadSourceValue } from "./lead-source";
 import type { BuildPhoto, NewProjectInput, Project, StageId } from "./types";
 import type { BoardCard } from "@ronin-dojo/ui-kit/kanban";
 
@@ -405,8 +409,6 @@ export async function removeProject(id: string): Promise<void> {
 // Board reconcile (the AdminKanban BoardStore.save path)
 // ---------------------------------------------------------------------------
 
-type LeadSourceValue = "referral" | "web_form" | "phone" | "email" | "trade_show" | "other";
-
 const SOURCE_BY_CARD: Record<string, LeadSourceValue> = {
   web: "web_form",
   email: "email",
@@ -497,16 +499,18 @@ export async function reconcileBoard(cards: BoardCard[]): Promise<void> {
 export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
   const ownerId = await requireOwner();
   const now = new Date();
-  const [projects, nextActions] = await Promise.all([
+  const visibleProjects = {
+    OR: [{ ownerId }, { ownerId: null }],
+    stage: { notIn: ["complete", "lost"] as StageId[] },
+  };
+  const [projects, nextActions, attemptRows] = await Promise.all([
     db.project.findMany({
-      where: {
-        OR: [{ ownerId }, { ownerId: null }],
-        stage: { notIn: ["complete", "lost"] },
-      },
+      where: visibleProjects,
       select: {
         id: true,
         name: true,
         nextTask: true,
+        source: true,
         stage: true,
         contact: {
           select: {
@@ -550,7 +554,48 @@ export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
         project: { select: { id: true, name: true, contact: { select: { name: true } } } },
       },
     }),
+    // The FULL attempt history per visible project (slice C). Deliberately not the
+    // take-12 recent-activity slice: attempt numbers are chronological from the
+    // first attempt, so truncation would renumber as history grows.
+    db.activity.findMany({
+      where: {
+        ownerId,
+        project: visibleProjects,
+        status: "completed",
+        type: { in: [...CONTACT_ATTEMPT_CHANNELS] },
+      },
+      orderBy: { createdAt: "asc" },
+      select: {
+        completedAt: true,
+        createdAt: true,
+        id: true,
+        projectId: true,
+        status: true,
+        title: true,
+        type: true,
+      },
+    }),
   ]);
+
+  const attemptsByProject = new Map<string, ReturnType<typeof buildAttemptLog>>();
+  {
+    const grouped = new Map<string, Parameters<typeof buildAttemptLog>[0]>();
+    for (const rowItem of attemptRows) {
+      const list = grouped.get(rowItem.projectId) ?? [];
+      list.push({
+        completedAt: rowItem.completedAt?.toISOString() ?? null,
+        createdAt: rowItem.createdAt.toISOString(),
+        id: rowItem.id,
+        status: rowItem.status,
+        title: rowItem.title,
+        type: rowItem.type,
+      });
+      grouped.set(rowItem.projectId, list);
+    }
+    for (const [projectId, list] of grouped) {
+      attemptsByProject.set(projectId, buildAttemptLog(list));
+    }
+  }
 
   const queueItems: SalesQueueItem[] = nextActions.map((activity) => ({
     activityId: activity.id,
@@ -582,12 +627,30 @@ export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
         name: project.contact.name,
         phone: project.contact.phone,
       },
+      attempts: attemptsByProject.get(project.id) ?? [],
       id: project.id,
       name: project.name,
       nextTask: project.nextTask,
+      source: project.source,
       stage: project.stage,
     })),
   };
+}
+
+/**
+ * The minimal contact index the lead-sheet ingest preview dedupes against
+ * (SESSION_0577 slice A/B). CRM-GLOBAL on purpose — the same semantics as
+ * `findOrCreateContact`'s global email dedupe above: a sheet re-listing a known
+ * contact should read "already in CRM" regardless of who owns its projects.
+ * Owner-gated like every action; returns only the fields dedupe needs, never
+ * CRM record bodies.
+ */
+export async function listLeadDedupeIndex(): Promise<ExistingContact[]> {
+  await requireOwner();
+  return db.contact.findMany({
+    orderBy: { createdAt: "asc" },
+    select: { email: true, id: true, name: true, phone: true },
+  });
 }
 
 /**
