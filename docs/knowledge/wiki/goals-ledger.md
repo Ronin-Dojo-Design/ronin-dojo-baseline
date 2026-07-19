@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-18
-last_agent: claude-session-0569
+updated: 2026-07-19
+last_agent: codex-session-0571
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -14,6 +14,7 @@ backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0546.md
   - docs/sprints/SESSION_0568.md
+  - docs/sprints/SESSION_0571.md
 tags:
   - governance
   - goals
@@ -370,3 +371,28 @@ aggregator reads it with no new parser logic.
   its proper epic-scale use per D10. **Why:** operator-ratified at the SESSION_0569 grill —
   extend the anti-slop consistency lens beyond the technique surfaces without re-litigating scope
   per session.
+
+### G-021 — Mammoth lean operating shell + sales-cockpit tracer
+
+- **Status:** in-progress — P1
+- **Objective:** give Mammoth one lightweight operating projection and one safe daily sales path:
+  `/game-on` → live evidence → `/game-off`, plus Today queue → lead roster → contact workspace →
+  Contact Attempt → one owned, due Next Action. Reusable templates/presets live in the monorepo;
+  private notes stay in the Mammoth vault; CRM truth stays in Mammoth's database.
+- **Lane:** Mammoth product / vault-kit / CRM. **Session:**
+  [`SESSION_0571`](../../sprints/SESSION_0571.md). **Depends on:** G-014 vault-kit packaging and
+  the existing ADR 0038 per-product Mammoth DB.
+- **Progress:** SESSION_0571 reconciled the phone/iCloud/local evidence, kept
+  `MMB_INITIAL_INTAKE` explicitly missing, mapped the legacy `/GOALS` folder as historical rather
+  than importing duplicate goal bodies, and rejected premature `discuss-determine` skill promotion.
+  The reusable operating shell, Mammoth dashboard projection, and sanitized Activity-backed tracer landed.
+  The next slice is an authenticated DB-backed concurrency smoke with sanitized fixtures, followed by operator
+  ratification of the provisional attempt-outcome vocabulary before any schema/import/integration work.
+  Private-vault `MMB_SESSION_0002` also queues the operator's lean SESSION_SUMMARY_REPORTS/recipe, Michael/Brian
+  goal views, CV-001 EEE, CV-002 Token Discipline, BHB/runbook, and local-agent feasibility discovery; its first
+  decision is whether ADR 0048's separate-live-vault boundary should remain or be amended.
+- **Boundaries:** no real lead import, scraping, send/call/email automation, provider connection,
+  secret storage, or HubSpot use. HubSpot rotation remains owner-mediated under MB-017; Todoist is
+  optional and one-way until its source-of-truth and credential decisions are explicit.
+- **Why:** turns the ratified Mammoth Brand Heartbeat and no-drop sales promise into the smallest
+  repeatable operating loop without creating a second CRM, second ledger, or client-data repo.

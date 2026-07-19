@@ -1,0 +1,17 @@
+{
+  "id": "mammoth",
+  "variables": {
+    "CLIENT_NAME": "Mammoth Metal Buildings",
+    "CLIENT_SHORT_NAME": "Mammoth",
+    "DASHBOARD_FILENAME": "Command Center — Mammoth.md",
+    "OPERATING_MANTRA": "Know the customer. Carry the build. Finish proud.",
+    "SESSION_ID": "SESSION_0571",
+    "SESSION_LINK": "docs/sprints/SESSION_0571.md",
+    "GOAL_LEDGER_LINK": "docs/knowledge/wiki/goals-ledger.md",
+    "PRD_LINK": "docs/product/mammoth-build/PRD.md",
+    "STORIES_LINK": "docs/product/mammoth-build/STORIES.md",
+    "ADR_LINK": "docs/architecture/decisions/0048-two-repo-vault-kit-and-client-ops-projections.md",
+    "HUBSPOT_STATUS": "Rotation required; access is owner-mediated and Keychain-only",
+    "TODOIST_STATUS": "Optional; scoped local credential and target project not configured"
+  }
+}

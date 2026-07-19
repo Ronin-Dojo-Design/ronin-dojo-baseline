@@ -4,13 +4,14 @@ slug: obsidian-dashboard-epic
 type: plan
 status: active
 created: 2026-07-17
-updated: 2026-07-17
-last_agent: claude-session-0564
+updated: 2026-07-19
+last_agent: codex-session-0571
 pairs_with:
 
   - docs/sprints/SESSION_0564.md
   - docs/knowledge/wiki/goals-ledger.md
   - docs/knowledge/wiki/design-system-doctrine.md
+  - docs/architecture/decisions/0048-two-repo-vault-kit-and-client-ops-projections.md
 backlinks:
 
   - docs/knowledge/wiki/index.md

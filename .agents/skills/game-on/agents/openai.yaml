@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game On"
+  short_description: "Start a lean MMB operating session"
+  default_prompt: "Use $game-on to start this MMB session in the correct operating mode."

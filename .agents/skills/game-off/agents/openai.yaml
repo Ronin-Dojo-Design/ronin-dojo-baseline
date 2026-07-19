@@ -1,0 +1,4 @@
+interface:
+  display_name: "Game Off"
+  short_description: "Close a lean MMB operating session"
+  default_prompt: "Use $game-off to close this MMB session with proportional evidence."

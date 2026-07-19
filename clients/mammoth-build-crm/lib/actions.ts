@@ -22,6 +22,15 @@
 import { ORDER_STAGE, nextStage, stageIndex } from "./stages";
 import { db } from "./db";
 import { getServerSession } from "./auth";
+import {
+  CONTACT_ATTEMPT_CHANNEL_LABELS,
+  CONTACT_ATTEMPT_OUTCOME_LABELS,
+  bucketDueActivities,
+  validateContactAttemptInput,
+  type ContactAttemptInput,
+  type SalesCockpitReadModel,
+  type SalesQueueItem,
+} from "./sales-cockpit";
 import type { BuildPhoto, NewProjectInput, Project, StageId } from "./types";
 import type { BoardCard } from "@ronin-dojo/ui-kit/kanban";
 
@@ -299,7 +308,6 @@ export async function patchProject(id: string, changes: Partial<Project>): Promi
   // run `orderFieldsFor`; a raw `patch({ stage })` would bypass the order-confirm rule.
   const scalarKeys: (keyof Project)[] = [
     "name",
-    "nextTask",
     "notes",
     "buildingType",
     "use",
@@ -361,10 +369,7 @@ export async function advanceProject(id: string): Promise<Project> {
   return toProject(row as unknown as DbProject);
 }
 
-export async function addPhoto(
-  projectId: string,
-  photo: Omit<BuildPhoto, "id">,
-): Promise<Project> {
+export async function addPhoto(projectId: string, photo: Omit<BuildPhoto, "id">): Promise<Project> {
   const ownerId = await requireOwner();
   await requireOwnedProject(projectId, ownerId);
   await db.buildPhoto.create({
@@ -482,4 +487,172 @@ export async function reconcileBoard(cards: BoardCard[]): Promise<void> {
       await createProjectFromCard(card, stage, ownerId);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Sales cockpit tracer (SESSION_0571_TASK_03)
+// ---------------------------------------------------------------------------
+
+/** Owner-scoped Today queue, active Opportunity roster, and Contact workspace read model. */
+export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
+  const ownerId = await requireOwner();
+  const now = new Date();
+  const [projects, nextActions] = await Promise.all([
+    db.project.findMany({
+      where: {
+        OR: [{ ownerId }, { ownerId: null }],
+        stage: { notIn: ["complete", "lost"] },
+      },
+      select: {
+        id: true,
+        name: true,
+        nextTask: true,
+        stage: true,
+        contact: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            company: { select: { name: true } },
+          },
+        },
+        activities: {
+          where: { ownerId },
+          orderBy: { createdAt: "desc" },
+          take: 12,
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            body: true,
+            status: true,
+            dueAt: true,
+            completedAt: true,
+            createdAt: true,
+          },
+        },
+      },
+      orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
+    }),
+    db.activity.findMany({
+      where: {
+        dueAt: { not: null },
+        ownerId,
+        project: { ownerId, stage: { notIn: ["complete", "lost"] } },
+        status: "open",
+        type: "task",
+      },
+      select: {
+        id: true,
+        title: true,
+        dueAt: true,
+        project: { select: { id: true, name: true, contact: { select: { name: true } } } },
+      },
+    }),
+  ]);
+
+  const queueItems: SalesQueueItem[] = nextActions.map((activity) => ({
+    activityId: activity.id,
+    contactName: activity.project.contact.name,
+    dueAt: activity.dueAt!.toISOString(),
+    projectId: activity.project.id,
+    projectName: activity.project.name,
+    title: activity.title,
+  }));
+
+  return {
+    asOf: now.toISOString(),
+    queue: bucketDueActivities(queueItems, now),
+    roster: projects.map((project) => ({
+      activities: project.activities.map((activity) => ({
+        body: activity.body,
+        completedAt: activity.completedAt?.toISOString() ?? null,
+        createdAt: activity.createdAt.toISOString(),
+        dueAt: activity.dueAt?.toISOString() ?? null,
+        id: activity.id,
+        status: activity.status,
+        title: activity.title,
+        type: activity.type,
+      })),
+      contact: {
+        companyName: project.contact.company?.name ?? null,
+        email: project.contact.email,
+        id: project.contact.id,
+        name: project.contact.name,
+        phone: project.contact.phone,
+      },
+      id: project.id,
+      name: project.name,
+      nextTask: project.nextTask,
+      stage: project.stage,
+    })),
+  };
+}
+
+/**
+ * Record one manual Contact Attempt and atomically leave exactly one owned, due Next Action.
+ * No provider call/email/send happens here: the channel describes an attempt completed elsewhere.
+ */
+export async function recordContactAttempt(
+  input: ContactAttemptInput,
+): Promise<SalesCockpitReadModel> {
+  const ownerId = await requireOwner();
+  const valid = validateContactAttemptInput(input);
+  await requireOwnedProject(valid.projectId, ownerId);
+  const completedAt = new Date();
+  const outcomeLabel = CONTACT_ATTEMPT_OUTCOME_LABELS[valid.outcome];
+  const channelLabel = CONTACT_ATTEMPT_CHANNEL_LABELS[valid.channel];
+
+  await db.$transaction(async (transaction) => {
+    const claim = await transaction.project.updateMany({
+      where: { id: valid.projectId, OR: [{ ownerId }, { ownerId: null }] },
+      data: { ownerId },
+    });
+    if (claim.count !== 1) {
+      throw new Error("Opportunity is no longer available to this owner");
+    }
+    const project = await transaction.project.findUniqueOrThrow({
+      where: { id: valid.projectId },
+      select: { contactId: true },
+    });
+    // The conditional project write locks this Opportunity before task replacement. Concurrent calls
+    // serialize on that row, so the second closes the first's task before creating its replacement.
+    await transaction.activity.updateMany({
+      where: { ownerId, projectId: valid.projectId, status: "open", type: "task" },
+      data: { completedAt, status: "completed" },
+    });
+    await transaction.activity.create({
+      data: {
+        body: valid.notes
+          ? `Provisional outcome: ${outcomeLabel}\n${valid.notes}`
+          : `Provisional outcome: ${outcomeLabel}`,
+        completedAt,
+        contactId: project.contactId,
+        ownerId,
+        projectId: valid.projectId,
+        status: "completed",
+        title: `Contact Attempt — ${channelLabel}: ${outcomeLabel}`,
+        type: valid.channel,
+      },
+    });
+    await transaction.activity.create({
+      data: {
+        body: "Owned Next Action created by the sales-cockpit tracer.",
+        contactId: project.contactId,
+        dueAt: valid.nextActionDueAt,
+        ownerId,
+        projectId: valid.projectId,
+        status: "open",
+        title: valid.nextAction,
+        type: "task",
+      },
+    });
+    await transaction.project.update({
+      where: { id: valid.projectId },
+      data: { nextTask: valid.nextAction },
+    });
+  });
+
+  return getSalesCockpit();
 }

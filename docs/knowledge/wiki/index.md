@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-18
+updated: 2026-07-19
 author: Brian + Copilot
-last_agent: codex-session-0570
+last_agent: codex-session-0571
 ---
 
 # LLM Wiki Index
@@ -92,6 +92,8 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Mammoth Build CRM PRD](../../product/mammoth-build/PRD.md)                                                          | prd     | draft — SESSION_0570 ratified Product North Star, Brand Heartbeat, and delivery → two-path Satisfied Installation finish line                                                                        |
 | [Mammoth Build CRM Stories](../../product/mammoth-build/STORIES.md)                                                  | stories | draft — sales cockpit, delivery/installation, enablement, satisfaction, and brand-quality backlog                                                                                                    |
 | [Mammoth Build Ubiquitous Language](../../product/mammoth-build/UBIQUITOUS_LANGUAGE.md)                              | concept | active — canonical Prospect/Lead/Opportunity/Project, Installation Path, Satisfied Installation, Successful Close, and enablement terms                                                              |
+| [Mammoth Build Operating System](../../product/mammoth-build/OPERATING_SYSTEM.md)                                    | protocol | active — three authorities, lean `/game-on`→`/game-off`, vault/CRM/public surface boundaries, and proportional quality/privacy gates                                                                 |
+| [Mammoth Operating-Context Recovery Manifest](../../product/mammoth-build/MMB_RECOVERY_MANIFEST.md)                  | reference | active — phone/iCloud/local artifact paths, missing `MMB_INITIAL_INTAKE`, legacy goal disposition, and Discussion→Determination→Decision pilot                                                       |
 
 ## Architecture
 
@@ -193,6 +195,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [ADR 0042 — Canonical public blog = `Post`/`/blog`; `ContentAtom` stays the content-ops engine](../../architecture/decisions/0042-canonical-blog-surface-post-over-contentatom.md) | decision | accepted                                                |
 | [ADR 0043 — RankAward fact vs member-owned RankMilestone](../../architecture/decisions/0043-rank-award-fact-vs-member-milestone.md)                                                | decision | superseded — migration history; see BBL RankEntry canon |
 | [ADR 0047 — Recruited-coach placeholder identity + exact-normalized dedup](../../architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md)                   | decision | accepted                                                |
+| [ADR 0048 — Two-repo vault-kit and client-ops projections](../../architecture/decisions/0048-two-repo-vault-kit-and-client-ops-projections.md)                                     | decision | accepted — reusable kit in monorepo; live client vault private; product DB remains CRM truth |
 
 ## Learning Records
 
@@ -714,6 +717,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0568](../../sprints/SESSION_0568.md) | session--open | closed — Recovered Obsidian vault lane: OD-A1 core split, Command Center v2, Mammoth meeting/share pack; operator-only Git/Sync/native smoke routed to MB-016. |
 | [SESSION_0569](../../sprints/SESSION_0569.md) | session--implement | closed — G-013 Wave 2 first batch (B1 tooltips, C2 pill, hallmark-audit smalls, re-pitch, roving tabindex) + WL-P2-64 tests + D11 audit-only amendment; held at push gate. |
 | [SESSION_0570](../../sprints/SESSION_0570.md) | session--plan | closed — Michael Flores intake notes, Mammoth brand/product canon, Brandon role, MMB lean operating-model handoff, and Keychain-only HubSpot safety boundary. |
+| [SESSION_0571](../../sprints/SESSION_0571.md) | session--closed | closed — Mammoth recovery/authority map, G-021, vault-kit client-ops shell, private dashboard projection, and sanitized Activity-backed sales tracer. |
 
 ## Protocols
 

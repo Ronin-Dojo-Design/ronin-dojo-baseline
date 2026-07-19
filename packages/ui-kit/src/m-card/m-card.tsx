@@ -112,6 +112,7 @@ export function MCard<K extends MCardKind>(props: MCardProps<K>): ReactNode {
     return (
       <button
         type="button"
+        aria-pressed={selected}
         className={rootClassName}
         onClick={() => onSelect(data.id)}
         {...dataAttrs}

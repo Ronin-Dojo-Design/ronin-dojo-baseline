@@ -4,8 +4,8 @@ slug: log
 type: protocol
 status: superseded
 created: 2026-04-26
-updated: 2026-07-16
-last_agent: codex-session-0543
+updated: 2026-07-19
+last_agent: codex-session-0571
 ---
 
 # Wiki Change Log
@@ -397,3 +397,17 @@ Use this file only as historical context for early wiki adoption.
 - Built the first real `m-card` slice: `apps/web/components/web/m-card/m-card.tsx` (`kind=roster` on the Dirstarter base `components/common/card.tsx`) + `apps/web/lib/m-card/map-roster.ts`; `/directory/profiles` people now render via m-card (orgs/trees stay on `FacetResultCard`), parity preserved.
 - Token-only theming (`--rank-color`→`--primary` fallback); presentation-only (redaction upstream). Unit test (shape + no leak) + a desktop/390px e2e.
 - Wiki sync: `m-card-pattern.md` lifecycle PLANNED→WIP; `index.md` row updated to WIP + slice-1 note; `custom-component-inventory.md` MCard row flipped to BUILT. PR #150.
+
+## SESSION_0571 — 2026-07-18 — Mammoth lean operating shell and recovery map
+
+- Reconciled the phone screenshots against the canonical repo, Baseline vault/Downloads, private Mammoth
+  vault, and locally visible iCloud Obsidian mirror. Screenshot-listed notes and legacy goal images were
+  located; `MMB_INITIAL_INTAKE` remains explicitly missing pending its source or phone Sync.
+- Added G-021 and a recovery/authority manifest. Legacy `/GOALS` records remain historical pointers rather
+  than a second live backlog; current goals stay in the Goals Ledger.
+- Ratified ADR 0048: reusable vault templates/presets/installer live in the monorepo; live client notes and
+  dashboards stay private; Mammoth's database remains transactional CRM truth.
+- Added the first `vault-kit` client-ops slice, Mammoth preset, and thin `/game-on`/`/game-off` skills. Scratch
+  and private-vault installs preserve user-edited managed files and are byte-stable on a second run.
+- Kept the legacy Discussion→Determination→Decision shape as a three-use template pilot. No skill was
+  promoted because the existing artifact has no unique execution contract beyond Petey/grilling/SESSION notes.

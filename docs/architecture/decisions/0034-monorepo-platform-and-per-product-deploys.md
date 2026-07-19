@@ -4,12 +4,13 @@ slug: adr-0034-monorepo-platform-and-per-product-deploys
 type: decision
 status: accepted
 created: 2026-06-21
-updated: 2026-06-21
-last_agent: claude-session-0421
+updated: 2026-07-19
+last_agent: codex-session-0571
 pairs_with:
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
   - docs/product/black-belt-legacy/SOT-ADR.md
   - docs/knowledge/wiki/ronin-project-context.md
+  - docs/architecture/decisions/0048-two-repo-vault-kit-and-client-ops-projections.md
 backlinks:
   - docs/knowledge/wiki/index.md
 tags:

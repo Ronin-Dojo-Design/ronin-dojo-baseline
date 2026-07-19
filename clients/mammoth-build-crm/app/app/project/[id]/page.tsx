@@ -59,7 +59,8 @@ export default function ProjectDetailPage() {
         <div>
           <h1 className="font-display text-2xl font-bold">{project.name}</h1>
           <p className="mt-1 text-sm text-muted">
-            {project.buildingType} · {project.use || "Use TBD"} · {project.region || "Region TBD"} · {dims}
+            {project.buildingType} · {project.use || "Use TBD"} · {project.region || "Region TBD"} ·{" "}
+            {dims}
           </p>
           <p className="text-sm text-muted">
             {project.contactName} · {project.contactEmail}
@@ -104,27 +105,29 @@ export default function ProjectDetailPage() {
         </div>
         {blockedToComplete && (
           <p className="mt-2 text-xs text-primary-hover">
-            Guardrail: a project can't be completed until it's a confirmed order (deposit stage or beyond).
+            Guardrail: a project can't be completed until it's a confirmed order (deposit stage or
+            beyond).
           </p>
         )}
       </div>
 
-      {/* Next-step guardrail */}
+      {/* Next Action compatibility projection; mutations belong to the sales tracer. */}
       <div className="mt-4 rounded-lg border border-border bg-surface p-4">
-        <label className="block">
-          <span className="mb-1 block text-sm text-muted">
-            Next step (required — a project with no next step is flagged at risk)
-          </span>
-          <input
-            value={project.nextTask}
-            onChange={(e) => void patch(project.id, { nextTask: e.target.value })}
-            placeholder="What happens next?"
-            className="w-full rounded-md border border-border bg-bg px-3 py-2 text-sm outline-none focus:border-primary"
-          />
-        </label>
-        {project.nextTask.trim() === "" && project.stage !== "complete" && project.stage !== "lost" && (
-          <p className="mt-2 text-xs text-primary-hover">⚠ No next step set — this project is at risk of being dropped.</p>
-        )}
+        <p className="text-sm text-muted">Current Next Action</p>
+        <p className="mt-1 text-sm">{project.nextTask || "No Next Action recorded"}</p>
+        <a
+          href="/app/sales"
+          className="mt-3 inline-flex text-sm font-semibold text-primary hover:text-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        >
+          Record an attempt and replace the Next Action
+        </a>
+        {project.nextTask.trim() === "" &&
+          project.stage !== "complete" &&
+          project.stage !== "lost" && (
+            <p className="mt-2 text-xs text-primary-hover">
+              ⚠ No next step set — this project is at risk of being dropped.
+            </p>
+          )}
       </div>
 
       {/* Build documentation */}
