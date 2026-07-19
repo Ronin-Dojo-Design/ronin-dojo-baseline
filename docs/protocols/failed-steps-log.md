@@ -745,6 +745,26 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
 
 Read this section at bow-in instead of skimming every individual entry.
 
+### FS-0033 — Negative asserted from a silently-failing filesystem search (lost-intake false negative)
+
+- **Session:** SESSION_0573 (Claude, Petey orchestrator).
+- **Step failed:** operator asked for `MMB_INITIAL_INTAKE_RVT.md`. A multi-path `find` (iCloud + `~/Vaults` +
+  `~/Desktop` + repo) returned zero matches with stderr suppressed (`2>/dev/null`), and the agent asserted
+  "**doesn't exist anywhere**." The file had existed at `~/Desktop/Baseline_Vault/MMB_INITIAL_INTAKE.md` since
+  13:45 that day — a later explicit `ls ~/Desktop` + Obsidian vault-registry check found it in minutes. The
+  operator had to paste the content into chat to unblock (rescue worked, but the assertion was false).
+- **Root cause:** the sweep's failure mode was invisible — `2>/dev/null` swallowed whatever blocked the Desktop
+  path (sandbox/TCC or find-expression precedence), so "no output" was read as "no matches." This is the exact
+  anti-pattern already ratified for grep/graphify ("never assert a negative from an errored/empty search" —
+  discovery memory, opening.md §3d) applied to `find`.
+- **Impact:** LOW-MEDIUM — wrong factual claim to the operator; recovery cost one paste + one re-search. No data
+  lost (content-identical copy verified by diff).
+- **Corrective action:** before asserting any filesystem negative: (1) run the sweep **with stderr visible**
+  (or explicitly checked), (2) confirm each root actually enumerated (`ls` one known child), (3) prefer
+  authoritative registries over raw sweeps when they exist (Obsidian's `obsidian.json` vault registry answered
+  in one call). Re-searched with errors surfaced before the SOT_Vault answer in the same session.
+- **Status:** mitigated (corrective recipe applied in-session; this entry is the durable record).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.

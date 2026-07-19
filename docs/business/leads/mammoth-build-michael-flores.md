@@ -5,8 +5,8 @@ type: lead
 status: DISCOVERY_IN_PROGRESS
 source: REFERRAL
 created: 2026-06-20
-updated: 2026-07-18
-last_agent: codex-session-0570
+updated: 2026-07-19
+last_agent: claude-session-0573
 client:
   company: Mammoth Metal Buildings
   site: https://mammoth.build
@@ -228,7 +228,7 @@ Canonical requirements and stories are integrated into:
 
 - [`PRD.md`](../../product/mammoth-build/PRD.md)
 - [`STORIES.md`](../../product/mammoth-build/STORIES.md)
-- [`UBIQUITOUS_LANGUAGE.md`](../../product/mammoth-build/UBIQUITOUS_LANGUAGE.md)
+- [`CONTEXT.md`](../../product/mammoth-build/CONTEXT.md)
 
 The next decision gate is the operator/client grill: ratify Brandon's recommended mission and public
 motto, then lock the 8:00-AM sales cockpit outcome and success metric before building the lead-roster slice.

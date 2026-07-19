@@ -3,6 +3,11 @@ name: design-an-interface
 description: Generate multiple radically different interface designs for a module using parallel sub-agents. Use when user wants to design an API, explore interface options, compare module shapes, or mentions "design it twice".
 ---
 
+> **Repo scope (RDD-local preamble — MMB-D-026; not upstream).** Before generating designs,
+> read root `DESIGN.md` (GetDesign.MD/Stitch format — tokens are LAW on product surfaces, D11)
+> and check `CONTEXT-MAP.md` for the bounded context whose glossary names the domain. Hallmark
+> reads the same law via its `references/design-md.md`.
+
 # Design an Interface
 
 Based on "Design It Twice" from "A Philosophy of Software Design": your first idea is unlikely to be the best. Generate multiple radically different designs, then compare.

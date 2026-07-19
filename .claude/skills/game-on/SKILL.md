@@ -9,8 +9,11 @@ description: Start a lean Mammoth (MMB) work session. Use when the operator says
    session. Never summarize, copy, or replace it here.
 2. Load **pointers, not bodies** (open only what the task needs):
    - Root `CONTEXT.md` + `DESIGN.md` (platform domain model / design law).
-   - Mammoth canon: `docs/product/mammoth-build/` — `PRD.md`, `STORIES.md`,
-     `UBIQUITOUS_LANGUAGE.md`, `OPERATING_SYSTEM.md`.
+   - Mammoth canon (D-023 five-pointer set — the ONLY session-start loads): MMB
+     `CONTEXT.md` (glossary) · `BRAND_HEART_BEAT.md` · `STORIES.md` (THE spec surface;
+     specs = `## Solution` sections) · owner pointers (Michael → client folder; Brian →
+     `MMB_GOALS`) · session template + recipe cards. `PRD.md` / `OPERATING_SYSTEM.md` /
+     runbooks = backlink-only, on demand.
    - Default MMB task = "Pickup" of the highest-numbered `MMB_SESSION_NNNN.md` in the
      Mammoth vault.
 3. Classify the work:

@@ -4,10 +4,10 @@ slug: core-values
 type: reference
 status: active
 created: 2026-07-18
-updated: 2026-07-18
-last_agent: claude-session-0572
+updated: 2026-07-19
+last_agent: claude-session-0573
 pairs_with:
-  - docs/product/mammoth-build/UBIQUITOUS_LANGUAGE.md
+  - docs/product/mammoth-build/CONTEXT.md
   - docs/sprints/SESSION_0572.md
 backlinks:
   - docs/knowledge/wiki/index.md

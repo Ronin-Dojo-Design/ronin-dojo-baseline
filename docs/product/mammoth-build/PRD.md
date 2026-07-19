@@ -4,9 +4,9 @@ slug: mammoth-build-prd
 type: prd
 status: draft
 created: 2026-06-20
-updated: 2026-07-18
+updated: 2026-07-19
 author: Brian + Petey
-last_agent: codex-session-0570
+last_agent: claude-session-0573
 backlinks:
   - docs/product/README.md
   - docs/business/leads/project-mammoth-build-crm.md
@@ -17,7 +17,7 @@ pairs_with:
   - docs/architecture/decisions/0038-per-product-database-separation.md
   - docs/runbooks/database/per-app-db-separation.md
   - clients/mammoth-build-crm/prisma/schema.prisma
-  - docs/product/mammoth-build/UBIQUITOUS_LANGUAGE.md
+  - docs/product/mammoth-build/CONTEXT.md
 tags:
   - product
   - mammoth-build
@@ -79,7 +79,7 @@ must feel:
 - **Smooth and reliable:** visible ownership, predictable handoffs, honest status, and no silent drops.
 - **Human under automation:** automate administration to create more time for relationships, never to erase them.
 
-Canonical terms and boundaries live in [Mammoth Build Ubiquitous Language](UBIQUITOUS_LANGUAGE.md).
+Canonical terms and boundaries live in [Mammoth Build Ubiquitous Language](CONTEXT.md).
 
 ## Canonical Successful Close
 

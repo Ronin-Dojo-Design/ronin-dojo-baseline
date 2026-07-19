@@ -4,9 +4,9 @@ slug: mammoth-build-stories
 type: stories
 status: draft
 created: 2026-06-20
-updated: 2026-07-18
+updated: 2026-07-19
 author: Brian + Petey
-last_agent: codex-session-0570
+last_agent: claude-session-0573
 backlinks:
   - docs/product/README.md
   - docs/product/mammoth-build/PRD.md
@@ -14,7 +14,7 @@ pairs_with:
   - docs/product/mammoth-build/PRD.md
   - docs/business/leads/project-mammoth-build-crm.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
-  - docs/product/mammoth-build/UBIQUITOUS_LANGUAGE.md
+  - docs/product/mammoth-build/CONTEXT.md
 tags:
   - product
   - mammoth-build

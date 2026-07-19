@@ -17,6 +17,16 @@ disable-model-invocation: true
 > (`gh issue list --label 'wayfinder:grilling' ...` etc.); claim = self-assign. HITL
 > tickets (grilling/prototype) wait for the operator — never self-answer them (D12-adjacent
 > invariant: the human's side is the human's).
+>
+> **Ticket weight + agent routing (SESSION_0573, MMB-D-019).** Every ticket body carries two
+> lines directly under `Part of #<map>`: `Weight: full | quick` and `Agent: <route>`.
+> **full** = persona-driven HITL — Petey `/pp` grill, /grilling, prototype-react — one per
+> session. **quick** = subagent fan-out (Cody×N in worktrees, Doug verify, research subagents,
+> BBL-wave style) — several may run per session since the lead context only orchestrates.
+> Research tickets are quick by nature. Maps may group the `## Tickets` checklist under
+> `### Wave/Phase — <name>` headings (epic → lanes/phases → weighted tickets). Goals stay in
+> the goals ledgers (`MMB_GOALS` / `goals-ledger.md`) and link to maps — the map is the route,
+> never the goal authority.
 
 A loose idea has arrived — too big for one agent session, and wrapped in fog: the way from here to the **destination** isn't visible yet. Wayfinding is about finding that way, not charging at the destination. This skill charts the way as a **shared map** on the repo's issue tracker, then works its **decision tickets** — questions whose resolution is a decision, not slices of a build to execute — one at a time until the route is clear.
 

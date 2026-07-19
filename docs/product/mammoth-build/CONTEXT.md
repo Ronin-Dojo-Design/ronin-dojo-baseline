@@ -1,11 +1,11 @@
 ---
-title: "Mammoth Build Ubiquitous Language"
-slug: mammoth-build-ubiquitous-language
+title: "Mammoth Build CONTEXT — bounded-context glossary"
+slug: mammoth-build-context
 type: concept
 status: active
 created: 2026-07-18
-updated: 2026-07-18
-last_agent: claude-session-0572
+updated: 2026-07-19
+last_agent: claude-session-0573
 pairs_with:
   - docs/product/mammoth-build/PRD.md
   - docs/product/mammoth-build/STORIES.md
@@ -20,9 +20,9 @@ tags:
   - installation
 ---
 
-# Mammoth Build Ubiquitous Language
+# Mammoth Build CONTEXT — bounded-context glossary
 
-Product-specific language for the Mammoth sales, delivery, installation, and enablement experience.
+The Mammoth bounded context's glossary (Pocock CONTEXT.md; renamed from UBIQUITOUS_LANGUAGE.md at SESSION_0573, MMB-D-024). Product-specific language for the Mammoth sales, delivery, installation, and enablement experience.
 These definitions govern product copy, workflow labels, SOPs, stories, automation, and completion gates.
 
 ## Brand language

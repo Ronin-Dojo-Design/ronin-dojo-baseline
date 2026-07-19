@@ -9,7 +9,7 @@ last_agent: codex-session-0571
 pairs_with:
   - docs/product/mammoth-build/PRD.md
   - docs/product/mammoth-build/STORIES.md
-  - docs/product/mammoth-build/UBIQUITOUS_LANGUAGE.md
+  - docs/product/mammoth-build/CONTEXT.md
   - docs/architecture/decisions/0048-two-repo-vault-kit-and-client-ops-projections.md
   - docs/sprints/SESSION_0571.md
 backlinks:

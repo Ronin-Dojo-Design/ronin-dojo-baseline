@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-18
+updated: 2026-07-19
 author: Brian + Copilot
-last_agent: claude-session-0572
+last_agent: claude-session-0573
 ---
 
 # LLM Wiki Index
@@ -91,7 +91,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md)                                                  | sot     | active — single light P0/P1/P2 running list + Now-live (MVP_LIVE) + widget Feedback inbox; supersedes feature-intake-ledger (SESSION_0424); `lifecycle:` yaml convention                                                                                            |
 | [Mammoth Build CRM PRD](../../product/mammoth-build/PRD.md)                                                          | prd     | draft — SESSION_0570 ratified Product North Star, Brand Heartbeat, and delivery → two-path Satisfied Installation finish line                                                                        |
 | [Mammoth Build CRM Stories](../../product/mammoth-build/STORIES.md)                                                  | stories | draft — sales cockpit, delivery/installation, enablement, satisfaction, and brand-quality backlog                                                                                                    |
-| [Mammoth Build Ubiquitous Language](../../product/mammoth-build/UBIQUITOUS_LANGUAGE.md)                              | concept | active — canonical Prospect/Lead/Opportunity/Project, Installation Path, Satisfied Installation, Successful Close, and enablement terms                                                              |
+| [Mammoth Build Ubiquitous Language](../../product/mammoth-build/CONTEXT.md)                              | concept | active — canonical Prospect/Lead/Opportunity/Project, Installation Path, Satisfied Installation, Successful Close, and enablement terms                                                              |
 | [Mammoth Build Operating System](../../product/mammoth-build/OPERATING_SYSTEM.md)                                    | protocol | active — three authorities, lean `/game-on`→`/game-off`, vault/CRM/public surface boundaries, and proportional quality/privacy gates                                                                 |
 | [Mammoth Operating-Context Recovery Manifest](../../product/mammoth-build/MMB_RECOVERY_MANIFEST.md)                  | reference | active — phone/iCloud/local artifact paths, missing `MMB_INITIAL_INTAKE`, legacy goal disposition, and Discussion→Determination→Decision pilot                                                       |
 
@@ -718,6 +718,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0569](../../sprints/SESSION_0569.md) | session--implement | closed — G-013 Wave 2 first batch (B1 tooltips, C2 pill, hallmark-audit smalls, re-pitch, roving tabindex) + WL-P2-64 tests + D11 audit-only amendment; held at push gate. |
 | [SESSION_0570](../../sprints/SESSION_0570.md) | session--plan | closed — Michael Flores intake notes, Mammoth brand/product canon, Brandon role, MMB lean operating-model handoff, and Keychain-only HubSpot safety boundary. |
 | [SESSION_0571](../../sprints/SESSION_0571.md) | session--closed | closed — Mammoth recovery/authority map, G-021, vault-kit client-ops shell, private dashboard projection, and sanitized Activity-backed sales tracer. |
+| [SESSION_0572](../../sprints/SESSION_0572.md) | session--implement | closed — Claude game-on/off skill ports, 9-fork MMB grill (MMB-D-001…009), CV ledger, per-brand BHBs, human-code-runbook, vault LLL family + session/recipe templates. |
+| [SESSION_0573](../../sprints/SESSION_0573.md) | session--open | closed — wayfinder epic: maps #228/#237 + 16 tickets (4 research resolved), MMB-D-013…027, five-pointer load-set law, UL→CONTEXT.md + CONTEXT-MAP, grill goal-election + weight/agent system, initial-intake rescue + triage. |
 
 ## Protocols
 
