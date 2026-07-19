@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-19
 author: Brian + Copilot
-last_agent: claude-session-0573
+last_agent: claude-session-0576
 ---
 
 # LLM Wiki Index
@@ -720,6 +720,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0571](../../sprints/SESSION_0571.md) | session--closed | closed — Mammoth recovery/authority map, G-021, vault-kit client-ops shell, private dashboard projection, and sanitized Activity-backed sales tracer. |
 | [SESSION_0572](../../sprints/SESSION_0572.md) | session--implement | closed — Claude game-on/off skill ports, 9-fork MMB grill (MMB-D-001…009), CV ledger, per-brand BHBs, human-code-runbook, vault LLL family + session/recipe templates. |
 | [SESSION_0573](../../sprints/SESSION_0573.md) | session--open | closed — wayfinder epic: maps #228/#237 + 16 tickets (4 research resolved), MMB-D-013…027, five-pointer load-set law, UL→CONTEXT.md + CONTEXT-MAP, grill goal-election + weight/agent system, initial-intake rescue + triage. |
+| [SESSION_0576](../../sprints/SESSION_0576.md) | session--implement | closed — MMB vault-only: v1 Obsidian Bases layer over the LLLs (#246 loop 1/3) — cockpit + 4 views over 32 note-per-row projections + additive timesheet frontmatter; evidence for grills #238/#239. (SESSION_0574/0575 = parallel lanes, close separately.) |
+| [SESSION_0575](../../sprints/SESSION_0575.md) | session--implement | closed — governance hygiene: FS-0030 mechanized (`ledger-id-next.ts`, caught + fixed the live WL-P3-37 dup), ADR 0008→superseded (ADR 0034) with MB-003 + WL-P2-9 closed, WL sweep vs the four ratified deaths (P2-8 path conform, P2-43 oRPC direction). Local commit, push held. |
 
 ## Protocols
 

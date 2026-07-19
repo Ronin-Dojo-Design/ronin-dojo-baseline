@@ -4,9 +4,9 @@ slug: manual-boundary-registry
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-18
+updated: 2026-07-19
 author: Brian + ChatGPT
-last_agent: codex-session-0570
+last_agent: claude-session-0575
 pairs_with:
   - docs/security/README.md
   - repo-truth-index
@@ -109,7 +109,7 @@ Blocker classes:
 - **Owner:** Cody
 - **Blocker class:** `runtime_proof`
 - **Proof required:** working end-to-end flow, session survives reload
-- **Status:** operator-manual — open
+- **Status:** closed — superseded SESSION_0575. The single-brand collapse ([ADR 0034](../../architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md)) killed multi-brand switching; the proof can never land. ADR 0008 marked superseded; WL-P2-9 closed with it.
 
 #### MB-004 — S2 Passport bootstrap
 
@@ -247,7 +247,7 @@ SESSION_0163 update: Baseline DNS instructions now match the verified Resend das
 
 SESSION_0023 update: Wave A added operational and billing tables (`Invoice`, `MembershipContract`, `Attendance`, `CheckIn`, `PayoutSplit`, etc.). No routes/actions expose them yet, but every future query/mutation touching these tables must prove brand scope plus organization membership/role checks before this boundary can close.
 
-**MB-003 — Active brand persistence.** The auth doc names the behavior clearly. What matters now is operational proof.
+**MB-003 — Active brand persistence.** ~~The auth doc names the behavior clearly. What matters now is operational proof.~~ **CLOSED-SUPERSEDED SESSION_0575:** the single-brand collapse (ADR 0034) removed multi-brand switching from the model entirely — no proof can ever land. See ADR 0008 (superseded) and the resolved WL-P2-9 row.
 
 **MB-004 — Passport bootstrap.** ~~Program plan notes this is code complete but still needs smoke proof. That makes this a perfect tracked manual boundary instead of a vague "almost done."~~ **VERIFIED SESSION_0011:** `scripts/smoke-passport.ts` proves User→Passport→DirectoryProfile creation, read, update, re-read, and default verification. Proof artifact: `apps/web/scripts/smoke-passport.ts` + passing run log.
 

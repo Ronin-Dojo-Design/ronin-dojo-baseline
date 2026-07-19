@@ -2,10 +2,10 @@
 title: "ADR 0008 — Brand switcher: visible to admins + multi-brand members only"
 slug: adr-0008-brand-switcher
 type: decision
-status: accepted
+status: superseded
 created: 2026-04-25
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-07-19
+last_agent: claude-session-0575
 pairs_with:
   - docs/architecture/decisions/0004-multi-brand-as-column.md
   - docs/architecture/decisions/0022-brand-chrome-resolution.md
@@ -18,7 +18,14 @@ backlinks:
 
 ## Status
 
-Accepted
+**Superseded by [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md) (SESSION_0575).**
+The single-brand collapse killed the premise: multi-*brand* (one app, a `Brand`-enum switcher over
+shared data) is dead; multi-*product* (separate apps in one monorepo, each on its own DB/deploy) is
+the model. No user can span brands inside one app anymore, so the switcher, `activeBrandId`
+persistence, and the MB-003 smoke proof can never land — MB-003 and WL-P2-9 close as superseded
+with this ADR. The text below is retained as historical context.
+
+~~Accepted~~
 
 ## Date
 

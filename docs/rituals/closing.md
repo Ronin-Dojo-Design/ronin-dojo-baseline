@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-19
+last_agent: claude-session-0575
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -323,6 +323,11 @@ A session surfaces different kinds of findings; each has **one** canonical home 
 | Feature status / post-launch running list | [`POST_LAUNCH_SOT.md`](../product/black-belt-legacy/POST_LAUNCH_SOT.md) (supersedes `feature-intake-ledger`) | `FI-NNN` |
 | Deferred prod/test data cleanup (leftover test accounts, banked destructive scripts, parked demo data) | [`teardown-ledger.md`](../knowledge/wiki/teardown-ledger.md) | `TD-NNN` |
 | Architectural decision made/changed/rejected | new/updated ADR in [`architecture/decisions/`](../architecture/decisions/) | `ADR NNNN` |
+
+**ID assignment (FS-0030):** before minting any `<PREFIX>-NNN` id, run
+`bun scripts/ledger-id-next.ts --prefix=<PREFIX>` — it greps the **full** docs ID space (references
+count; archives included) and prints the next safe number; `--check` flags IDs defined in more than
+one place. Never number by tail-reading the nearest table block — that is exactly the FS-0030 miss.
 
 The SESSION file's `### Findings (severity ≥ medium)` block stays **session-scoped** and should backlink the canonical ledger row — never duplicate a cross-session severity list into the SESSION file (it rots; see `wiki/log.md`).
 

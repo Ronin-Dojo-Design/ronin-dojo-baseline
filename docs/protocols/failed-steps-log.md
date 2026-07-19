@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-17
-last_agent: codex-session-0549
+updated: 2026-07-19
+last_agent: claude-session-0575
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -628,7 +628,13 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   that flags duplicate ledger ids across docs.
 - **Verification:** `for id in FI-020..FI-029; grep -rl` sweep run SESSION_0520 — FI-022–026 unique,
   FI-026+ free; SESSION_0520/POST_LAUNCH_SOT/goals-ledger now agree.
-- **Status:** mitigated (manual rule); mechanization open.
+- **Mechanization (SESSION_0575):** `scripts/ledger-id-next.ts` landed — `--prefix=<X>` prints the
+  next safe ID (max+1 over every occurrence in `docs/`, pad-tolerant `0*` matching, archives
+  included); `--check` flags IDs with more than one defining row/heading (exit 1) plus phantom
+  references (cited but defined nowhere — informational). First run caught a live collision:
+  WL-P3-37 defined twice in `wiring-ledger.md` (resolved SESSION_0575). Wired into the bow-out
+  read-path at closing.md §6.7 (the finding router — the moment IDs get minted).
+- **Status:** mitigated (mechanized — `scripts/ledger-id-next.ts`, closing.md §6.7).
 
 ### FS-0031 — E2E assertions shipped "verified by inspection"; reddened `main` three times in one session
 
