@@ -446,6 +446,6 @@ index-load race) that static gates never would.
 | Review & Recommend | Next session goal + first task written (loop 2/3 election) |
 | Memory sweep | `mammoth-crm-tracer-lane` memory added; `mmb-lll-and-game-skills` next-lane line updated |
 | Next session unblock check | worktree + scratch DB left bootstrapped; loop-2 candidates + open decisions enumerated |
-| Git hygiene | content commit on `session-0577-mmb-crm` (hash in the close commit that adds this row); no push (morning wave, explicit-push-authorization) |
+| Git hygiene | content commit `9994335f` on `session-0577-mmb-crm` (13 files, +1690/−9) + this docs-only close commit; no push (morning wave, explicit-push-authorization) |
 | Graphify update | skipped with reason — lane lives on a worktree branch; the canonical graph can't index uncommitted branch work; refresh belongs to the post-merge morning wave (canonical checkout untouched by this lane) |
 | Fallow delta | health 89.5→89.5 · dupes +0 lines (tables in Verification) |
