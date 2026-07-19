@@ -2,20 +2,21 @@
  * Lead-sheet ingestion — pure parse + dedupe rules (SESSION_0577, G-021 tracer).
  *
  * Turns a pasted/uploaded CSV or JSON lead sheet into normalized preview rows
- * and a dedupe report. PREVIEW ONLY by design: nothing here writes the DB —
- * the import commit is a later loop slice, after the operator reacts (G-021's
- * "no real lead import" boundary). No parsing dependency: the CSV state
- * machine below covers quoted fields, escaped quotes, and CRLF — all a lead
- * sheet export needs.
+ * and a dedupe report. Pure by design: nothing here writes the DB — the import
+ * COMMIT (SESSION_0582) re-runs these same rules server-side via
+ * lib/lead-commit.ts and writes behind an explicit confirm. No parsing
+ * dependency: the CSV state machine below covers quoted fields, escaped
+ * quotes, and CRLF — all a lead sheet export needs.
  *
  * Dedupe is CRM-GLOBAL on purpose, same SCOPE as `findOrCreateContact`'s global
- * email dedupe in lib/actions.ts — but deliberately BROADER in matching: this
- * preview is case-insensitive on email and also matches normalized phones,
- * while the current write path dedupes case-sensitive email only. The import
- * slice must reconcile the two (widen the write path or narrow this) before
- * any commit path exists — Doug SESSION_0577 finding #1.
+ * dedupe in lib/actions.ts — and since SESSION_0582 the same MATCHING too:
+ * preview and write path (`findOrCreateContact` / `commitLeadSheet`) both
+ * consume the ONE matcher in lib/contact-match.ts (case-insensitive email +
+ * normalized last-10-digit phone). Doug SESSION_0577 finding #1 resolved by
+ * widening the write path (operator ratification 2026-07-19).
  */
 
+import { emailKey, phoneKey } from "./contact-match";
 import { normalizeLeadSource, type LeadSourceValue } from "./lead-source";
 
 export type LeadSheetFormat = "csv" | "json";
@@ -264,24 +265,8 @@ function buildRow(fields: Partial<Record<ColumnKey, string>>, rowNumber: number)
 }
 
 // ---------------------------------------------------------------------------
-// Dedupe
+// Dedupe (matching keys live in lib/contact-match.ts — shared with the write path)
 // ---------------------------------------------------------------------------
-
-function emailKey(email: string): string | null {
-  const key = email.trim().toLowerCase();
-  return key.includes("@") ? key : null;
-}
-
-/**
- * Digits-only phone key, trimmed to the last 10 digits (US local form) so
- * "+1 (555) 010-0134" and "555-010-0134" collide. Under 7 digits is too weak
- * a signal to dedupe on — treated as no key.
- */
-function phoneKey(phone: string | null | undefined): string | null {
-  const digits = (phone ?? "").replace(/\D/g, "");
-  if (digits.length < 7) return null;
-  return digits.length > 10 ? digits.slice(-10) : digits;
-}
 
 /** Lookup state for one dedupe pass: the CRM index plus keys seen in the sheet. */
 type DedupeIndex = {

@@ -33,7 +33,9 @@ import {
   type SalesCockpitReadModel,
   type SalesQueueItem,
 } from "./sales-cockpit";
-import type { ExistingContact } from "./lead-ingest";
+import { phoneKey } from "./contact-match";
+import { FIRST_TOUCH_NEXT_TASK, planLeadCommit, type LeadCommitReport } from "./lead-commit";
+import type { ExistingContact, LeadSheetFormat } from "./lead-ingest";
 import type { LeadSourceValue } from "./lead-source";
 import type { BuildPhoto, NewProjectInput, Project, StageId } from "./types";
 import type { BoardCard } from "@ronin-dojo/ui-kit/kanban";
@@ -246,17 +248,40 @@ async function loadProject(id: string): Promise<Project> {
   return toProject(row as unknown as DbProject);
 }
 
-/** Find a contact by email (CRM dedupe), else create one. */
-async function findOrCreateContact(name?: string, email?: string) {
+/**
+ * Find a contact by case-insensitive email, then by normalized phone, else
+ * create one. The write-path half of the ONE dedupe semantic
+ * (lib/contact-match.ts) — widened at SESSION_0582 to match the ingest
+ * preview (operator ratification #1): email compares case-insensitively, and a
+ * provided phone falls back to a last-10-digit match. Phone candidates are
+ * keyed in JS because the column stores free-form spellings SQL can't
+ * normalize — same tracer-scale tradeoff as `listLeadDedupeIndex`.
+ */
+async function findOrCreateContact(name?: string, email?: string, phone?: string) {
   const trimmedEmail = (email ?? "").trim();
+  const trimmedPhone = (phone ?? "").trim();
   if (trimmedEmail) {
-    const existing = await db.contact.findFirst({ where: { email: trimmedEmail } });
+    const existing = await db.contact.findFirst({
+      where: { email: { equals: trimmedEmail, mode: "insensitive" } },
+    });
     if (existing) {
       return existing;
     }
   }
+  const byPhone = phoneKey(trimmedPhone);
+  if (byPhone) {
+    const candidates = await db.contact.findMany({ where: { phone: { not: null } } });
+    const match = candidates.find((candidate) => phoneKey(candidate.phone) === byPhone);
+    if (match) {
+      return match;
+    }
+  }
   return db.contact.create({
-    data: { name: (name ?? "").trim() || "Unknown", email: trimmedEmail },
+    data: {
+      name: (name ?? "").trim() || "Unknown",
+      email: trimmedEmail,
+      phone: trimmedPhone || null,
+    },
   });
 }
 
@@ -292,7 +317,7 @@ export async function createProject(input: NewProjectInput): Promise<Project> {
       eaveHeight: input.eaveHeight,
       notes: input.notes,
       stage: "lead",
-      nextTask: "First-touch follow-up within 24h",
+      nextTask: FIRST_TOUCH_NEXT_TASK,
       orderConfirmed: false,
     },
     include: PROJECT_INCLUDE,
@@ -451,7 +476,11 @@ async function createProjectFromCard(
   stage: StageId,
   ownerId: string,
 ): Promise<void> {
-  const contact = await findOrCreateContact(card.contact?.name, card.contact?.email);
+  const contact = await findOrCreateContact(
+    card.contact?.name,
+    card.contact?.email,
+    card.contact?.phone,
+  );
   await db.project.create({
     data: {
       id: card.id, // preserve the kernel card id so subsequent saves UPDATE, not dupe
@@ -463,7 +492,7 @@ async function createProjectFromCard(
       region: "",
       stage,
       source: mapSource(card.source),
-      nextTask: card.nextStep?.trim() || "First-touch follow-up within 24h",
+      nextTask: card.nextStep?.trim() || FIRST_TOUCH_NEXT_TASK,
       ...(await orderFieldsFor(stage, { orderConfirmed: false, orderNumber: null })),
       lostReason: card.lostReason ?? null,
     },
@@ -651,6 +680,54 @@ export async function listLeadDedupeIndex(): Promise<ExistingContact[]> {
     orderBy: { createdAt: "asc" },
     select: { email: true, id: true, name: true, phone: true },
   });
+}
+
+/**
+ * Import a previewed lead sheet — the COMMIT half of /app/leads (SESSION_0582,
+ * G-021 loop 2, behind the page's explicit confirm). Owner-gated. Takes the RAW
+ * sheet text + the previewed format and re-runs the SAME parse + dedupe rules
+ * server-side (lib/lead-commit.ts → lib/lead-ingest.ts → lib/contact-match.ts)
+ * — client-shaped rows are never trusted. Each non-duplicate row creates a
+ * Contact and a lead-stage Project (owner = caller, first-touch next task) so
+ * imported leads land on the pipeline and the Today queue. Matched rows are
+ * skipped + reported, never enriched or overwritten. The contact index is read
+ * INSIDE the transaction so classification and writes see one consistent
+ * snapshot — re-committing the same sheet dedupes against the rows the first
+ * run created (second run = all skipped).
+ *
+ * RETENTION LAW: the sheet body goes to the CRM DB only — it is never logged
+ * or echoed back; the report carries counts + row-number errors.
+ */
+export async function commitLeadSheet(
+  text: string,
+  format: LeadSheetFormat,
+): Promise<LeadCommitReport> {
+  const ownerId = await requireOwner();
+  const raw = typeof text === "string" ? text : "";
+  return db.$transaction(
+    async (transaction) => {
+      const existing = await transaction.contact.findMany({
+        orderBy: { createdAt: "asc" },
+        select: { email: true, id: true, name: true, phone: true },
+      });
+      const plan = planLeadCommit(raw, format, existing);
+      let created = 0;
+      for (const entry of plan.creates) {
+        const contact = await transaction.contact.create({
+          data: entry.contact,
+          select: { id: true },
+        });
+        await transaction.project.create({
+          data: { ...entry.project, contactId: contact.id, ownerId },
+        });
+        created++;
+      }
+      return { created, errors: plan.errors, skippedDuplicates: plan.skippedDuplicates };
+    },
+    // Up to MAX_SHEET_ROWS × 2 sequential inserts — the default 5s interactive
+    // transaction budget is too tight for a full sheet on a cold pool.
+    { timeout: 30_000 },
+  );
 }
 
 /**
