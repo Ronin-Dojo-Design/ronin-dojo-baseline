@@ -302,3 +302,4 @@ recommendation grounded in canon the subagents had actually read.
 | Deferral guard | 2 routed (WL-P3-56 clients-CI test gap · WL-P3-57 worktree sweep), 1 dismissed (Graphify scope note — no future work), #246-S2 reworded to its live-tracker home |
 | Next session unblock check | unblocked — stub self-contained; BLOCKED-ON-USER only if operator re-elects the lane |
 | Git hygiene | worktree list cleaned of ronin-0577; single close commit + push (wave item 3); hash in bow-out chat |
+| Telemetry | elapsed ≈ 06:10–07:10 (~1 h, estimate-grade) · token cost **335K** (operator `/cost`, post-close) |
