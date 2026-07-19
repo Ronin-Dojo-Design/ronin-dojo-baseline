@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-07-17
-last_agent: codex-session-0551
+updated: 2026-07-18
+last_agent: claude-session-0572
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -26,6 +26,7 @@ from package scripts alone. Start with these files, then record any drift you fi
 | Task area | Read first | Why |
 | --- | --- | --- |
 | Local app/dev server | [dev-environment](dev-environment/dev-environment.md) | Canonical app root, env, database, dev-server command, local brand hosts, and webpack fallback when Turbopack regresses on DB-backed page smoke tests. |
+| Human/agent boundary | [human-code-runbook](human-code-runbook.md) | What humans decide vs what agents may read/write; techstack home (MMB-D-008); evidence + rollback law; local-agent rows proposed until the feasibility lab. |
 | Production deploy | [vercel-deploy](deploy/vercel-deploy.md) | Active Vercel root/build/env truth for `apps/web`. |
 | Domain cutover/DNS | [vercel-domain-setup-runbook](deploy/vercel-domain-setup-runbook.md) | Record-based Bluehost → Vercel domain setup; do not rediscover DNS steps. |
 | BBL production | [bbl-production-runbook](deploy/bbl-production-runbook.md) | BBL-specific production gates and open DNS source-of-truth decision. |

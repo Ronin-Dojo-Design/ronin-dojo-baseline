@@ -5,7 +5,7 @@ type: concept
 status: active
 created: 2026-07-18
 updated: 2026-07-18
-last_agent: codex-session-0570
+last_agent: claude-session-0572
 pairs_with:
   - docs/product/mammoth-build/PRD.md
   - docs/product/mammoth-build/STORIES.md
@@ -27,14 +27,12 @@ These definitions govern product copy, workflow labels, SOPs, stories, automatio
 
 ## Brand language
 
+Canonical brand statements (Heartbeat, North Star, Mission, Motto, Mantra, Soul of Sales) live in
+[BRAND_HEART_BEAT.md](BRAND_HEART_BEAT.md) — one BHB per brand, statements stated only there.
+
 | Term | Definition | Aliases to avoid |
 | --- | --- | --- |
-| **Product North Star** | Know every prospect personally, make the next action effortless, and carry every building opportunity through delivery and a satisfied installation without dropping the relationship. | CRM goal, automation goal |
-| **Brand Heartbeat (BHB)** | The felt Mammoth experience: capable, personal, proud, educational, enjoyable, cohesive, efficient, smooth, and reliable. | Theme, vibe |
-| **Soul of Sales** | Know the customer personally and passionately deliver the right next step through the entire relationship. | Sales style, sales script |
-| **Mission** | Help people build with confidence by carrying every project from its first conversation through delivery and a satisfied installation. | Vision, slogan |
-| **Brand Motto** | **Built all the way through.** | “We don't quote, ship, and disappear” as the primary headline |
-| **Internal Mantra** | **Know the customer. Carry the build. Finish proud.** | Motto when speaking to customers |
+| **Brand Heartbeat (BHB)** | The felt brand experience, stated per-brand in that brand's `BRAND_HEART_BEAT.md`. | Theme, vibe |
 | **Microdelight** | A restrained, useful moment of clarity, encouragement, progress, or celebration that makes work feel easier without becoming childish or distracting. | Gamification, decoration |
 
 ## People and commercial records
@@ -74,6 +72,21 @@ These definitions govern product copy, workflow labels, SOPs, stories, automatio
 | **Step-by-Step Guide** | A task-specific instructional sequence written for the person performing the work. | SOP, article |
 | **Onboarding Wizard** | A guided, stateful flow that establishes prerequisites, explains why, captures choices, and leaves the user ready for the next stage. | Form, tour |
 | **Role How-To** | A concise instruction for one job role at one lifecycle stage. | Generic documentation |
+
+## Ops vocabulary (vault-kit / session operations)
+
+Reusable client-ops pattern language (ADR 0048: kit vocabulary is monorepo authority; vaults link, never copy).
+
+| Term | Definition | File shape |
+| --- | --- | --- |
+| **LLL (Light-Lean-Ledger)** | One row-based ledger pattern: typed YAML frontmatter, stable `MMB-<X>-NNN` row IDs, boolean/MC answers, ≤1-line rationale, links out to canonical bodies. | `MMB_<CONCERN>.md`, table rows |
+| **LLL family (MMB)** | The five instances: `MMB_DECISIONS` (ratified, `adr` flag) · `MMB_GRILL` (raw Q/A trail) · `MMB_GOALS` (owner/due/Next Action) · `MMB_WIRING` · `MMB_OPS` (drift + failed steps + incidents). | MMB-D-002 |
+| **Grill row** | A decision fork posed as multiple-choice with a recommended option; the answer is one letter/boolean. Ratified rows promote GRILL → DECISIONS; platform-durable rows promote to a monorepo ADR. | `MMB-Q-NNN` → `MMB-D-NNN` |
+| **session_kind** | Bounded frontmatter vocabulary — `planning · implementation · code-review · pickup · mixed` — that routes a `/game-off` close into the matching one-row log. | MMB session frontmatter |
+| **MMB session file** | One `MMB_SESSION_NNNN.md` per session: opening card → task/evidence table → recipe card → closing card (MMB-D-003). | vault, one note |
+| **Recipe card** | The session's material skill/agent/tool calls recorded by type + accomplishment, never transcript; flags repeatable-template candidates. | session file section |
+| **CV (Core Value)** | ADR-shaped value row: CV-001 **EEE** (Effective · Efficient · Excellent), CV-002 **TD** (Token Discipline). Ledger prototyped only after surviving grill + three uses. | pending grill |
+| **BHB** | `BRAND_HEART_BEAT.md` — per-brand canonical brand statements (Heartbeat/North Star/Mission/Motto/Mantra/Voice). | one per brand: [Mammoth](BRAND_HEART_BEAT.md) · [BBL](../black-belt-legacy/BRAND_HEART_BEAT.md) |
 
 ## Relationships
 

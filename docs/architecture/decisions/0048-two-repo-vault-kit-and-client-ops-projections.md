@@ -4,8 +4,8 @@ slug: adr-0048-two-repo-vault-kit-and-client-ops-projections
 type: decision
 status: accepted
 created: 2026-07-18
-updated: 2026-07-19
-last_agent: codex-session-0571
+updated: 2026-07-18
+last_agent: claude-session-0572
 pairs_with:
   - docs/architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md
   - docs/architecture/decisions/0038-per-product-database-separation.md
@@ -25,6 +25,8 @@ tags:
 ## Status
 
 Accepted in SESSION_0571 from the operator-ratified SESSION_0570 boundary and Obsidian Dashboard Epic D2/D5.
+Re-ratified in SESSION_0572: the operator grilled the in-monorepo-vault hypothesis and retained this decision
+(vault-side capture: `MMB_DECISIONS` row MMB-D-001).
 
 ## Context
 

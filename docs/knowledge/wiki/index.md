@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-19
+updated: 2026-07-18
 author: Brian + Copilot
-last_agent: codex-session-0571
+last_agent: claude-session-0572
 ---
 
 # LLM Wiki Index
@@ -810,6 +810,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [Test Fail Fix Ledger](test-fail-fix-ledger.md)                                                                   | reference         | active — clustered failing-test pointers + fix status; TFF-001..005 resolved (SESSION_0342, `--parallel=1`); close-router for test findings; read with `sop-test-writing.md` §2                   |
 | [Teardown Ledger](teardown-ledger.md)                                                                             | reference         | active — deferred prod/test data cleanup (`TD-NNN`); created SESSION_0457 (TD-001 FI-001 test user parked, TD-002 banked Baseline purge); wired into `ledger-backlog.ts`                          |
 | [Goals Ledger](goals-ledger.md)                                                                                   | reference         | active — top-of-backlog goals/objectives (`G-NNN`, code `GL`); created SESSION_0458; makes the operator `/goal` durable; wired into `ledger-backlog.ts` + the loop-board (goals lead the backlog) |
+| [Core Values Ledger](core-values.md)                                                                              | reference         | active — `CV-NNN` value rows governing doc/wiki/runbook writing style; CV-001 EEE + CV-002 TD ratified SESSION_0572; applies to new/touched docs only                                             |
 
 ## Code files (annotated)
 
