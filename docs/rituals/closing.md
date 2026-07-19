@@ -141,6 +141,8 @@ Before committing:
 2. **Worktree check**: Run `git worktree list`. If a session worktree is clean and its branch is already merged into the active branch, remove the worktree and delete the local branch. If it still has unique commits or uncommitted files, record the branch/path and leave it in place.
    - **Parallel-dispatch sessions (own worktree):** if this session ran in its own worktree (e.g. `../ronin-NNNN` on branch `session-NNNN-<lane>`, as set up by `/new-client-recipe`-style parallel dispatch), the close MUST self-clean once its branch is merged to `main`: `git worktree remove ../ronin-NNNN` then `git branch -d session-NNNN-<lane>`. Leaving stale worktrees/branches is the parallel-session equivalent of an unclean close.
 3. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
+   The gate runner's **Gate 12b secret scan** (key/token/private-key patterns over touched files) is the
+   deterministic backstop — a hit blocks commit/push until the value is removed **and rotated**.
 4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
 5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
 

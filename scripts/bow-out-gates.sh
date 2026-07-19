@@ -270,6 +270,28 @@ else
   HOSTILE_STATE="likely n/a (docs-only) — confirm"
 fi
 
+# ── Gate 12b — Secret scan (touched files, blocking) ─────────────────────────
+section "Gate 12b — Secret scan"
+SECRET_HITS=""
+SECRET_RE='(sk-[A-Za-z0-9]{20}|api[_-]?key[[:space:]]*[:=][[:space:]]*[^[:space:]]{16,}|Bearer [A-Za-z0-9._-]{20,}|BEGIN (RSA|OPENSSH) PRIVATE KEY)'
+while IFS= read -r file; do
+  [ -n "$file" ] && [ -f "$file" ] || continue
+  case "$file" in
+    *.md|*.json|*.yml|*.yaml|*.html|*.env*|*.txt) : ;;
+    *) continue ;;
+  esac
+  HIT="$(grep -nE "$SECRET_RE" "$file" 2>/dev/null | head -2 || true)"
+  [ -n "$HIT" ] && SECRET_HITS="${SECRET_HITS}${file}: $(echo "$HIT" | head -1)"$'\n'
+done <<< "$TOUCHED"
+if [ -n "$SECRET_HITS" ]; then
+  echo "SECRET SCAN FAILED (blocking) — remove AND rotate before commit/push:"
+  printf '%s' "$SECRET_HITS" | sed 's/^/  /'
+  EV_SECRETS="FAIL — hits found (blocking)"
+else
+  echo "secret scan: clean (touched md/json/yaml/html/env/txt)"
+  EV_SECRETS="PASS (clean)"
+fi
+
 # ── Gate 13 — Frontmatter staleness (touched docs, detect-only) ──────────────
 # (surfaced in the remainder checklist below; computed here so it's inline)
 STALE_FM=""
@@ -306,6 +328,7 @@ cat <<EVIDENCE
 | Build | $EV_BUILD |
 | Graphify | $EV_GRAPHIFY |
 | Git state | $EV_GITSTATE |
+| Secret scan | $EV_SECRETS |
 | Touched | $TOUCHED_COUNT files (docs=$DOCS_COUNT · app=$APP_COUNT · other=$OTHER_COUNT) |
 EVIDENCE
 
