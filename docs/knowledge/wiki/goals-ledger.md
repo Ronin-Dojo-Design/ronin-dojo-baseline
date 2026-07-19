@@ -438,3 +438,49 @@ aggregator reads it with no new parser logic.
 - **Why:** Brian pinned GA promotion as a proper goal: the graph is the technique system's front
   door, curriculum at real scale needs the harvested trunk data, and progress tracking is the
   member-facing value that justifies GA. (SESSION_0578 grill, 4 forks resolved.)
+
+### G-023 — WORKFLOW_6.0: session-recipe OS + SOT_Cookbook + brand SOT cards
+
+- **Status:** open — P1 (operator-ratified direction, SESSION_0574 extended grill; build not started)
+- **Est:** 4 sessions (0 spent) — A docs · B docs · C small-code · D epic-plan
+- **Objective:** crown the lived orchestrator/fan-out/review-wave pattern as the governing OS.
+  Ratified forks (operator MC grill, 8 volleys): **6.0 = thin ~150-line pointer-first spine**,
+  WORKFLOW_5.0 kept-superseded (its rituals read is DEAD canon — opening.md step 2 still mandates
+  5.0's archived calendar + `wt-*` map) · **SOT_Cookbook.md** = new 1-screen router at
+  `docs/protocols/`; agent-systems-map §1 router table MOVES into it, map demotes to concept;
+  old `session-ops-cookbook.md` renamed `session-command-log.md` · **4 recipe cards** in
+  `docs/protocols/recipes/` (orchestrator · epic-plan · lane · review-wave; vault 90_Templates
+  format generalized: persona pack + load-set + overlays + minimum-output contract) ·
+  **additive `recipe:` frontmatter key** on staged stubs = hydration at adopt · **brand SOT
+  cards** = conformed `docs/product/<brand>/README.md` "SOT — <BRAND>" pointer cards (no new
+  SOT_* family; Status·Goals·Load-set·Canonical·Maps, D-023 pointer law) · **lane facet +
+  `--lane=` filter** on the universal ledgers (parse the `Lane:` bullet in `ledger-parse.ts`;
+  views are filters, never files; vault MMB IDs stay vault-side per ADR 0048) · **epic wiring** =
+  G-row `Est:` + children as SoT, wayfinder GitHub maps/tickets per epic (#228/#237 pattern),
+  reservation branches + `recipe: lane` stubs for lane-1 only · **merge-wave =
+  `docs/protocols/recipes/merge-wave.md` standalone card; `giddy-merge-strategy.md` RETIRES into
+  it** (supersede-banner; G0–G4 gates absorbed, not lost — operator override of the
+  extend-in-place recommendation).
+- **Tracked children:**
+  - Session A (docs-only, free push): WORKFLOW_6.0.md spine · 5.0 supersede banner · rituals
+    repointed (kills the dead-canon read) · ~15 referrer conform · merge-wave.md card +
+    giddy-merge-strategy retirement · ADR 0050.
+  - Session B (docs-only): SOT_Cookbook.md + router move + map demotion · 4 recipe cards +
+    `recipe:` key in SESSION_TEMPLATE · 5 brand SOT cards · session-ops-cookbook rename.
+  - Session C (small code, apps/web gates): `lane` facet in `ledger-parse.ts` + `--lane=` in
+    `ledger-backlog.ts` + `Est:` grammar + open-row backfill + parser unit test.
+  - Session D: /pp epic-planning session — R2's first firing on the new machinery
+    (features → epics → Est + lanes + wayfinder tickets + lane-1 stubs).
+- **Vault constellation (direction, own small vault-ops session — NOT in A–C):** brand-prefixed
+  vault names ratified in principle (MMB_Vault · BBL_Vault · RDD_Vault · BMA_Vault · USA_Vault);
+  rename = folder + obsidian.json registry + separate-git-dir pointer with Obsidian closed
+  (FS-0033: check registries first; iCloud mid-sync renames are hazardous). Only MMB exists —
+  others created on first real session (D-012 needs-phone router), names reserved now. **SOT
+  cards live in the REPO** (agents in worktrees/cloud lack vault access; ADR 0048 privacy);
+  vault dashboards may link the repo card, never the reverse.
+- **Lane:** repo (platform governance). **Depends on:** ADR 0049 (staged stubs, lane enum,
+  reservations) · `fan-out-session-recipe.md` · SESSION_0574 (lived orchestrator + wave) ·
+  SESSION_0578 (lived epic-plan + lane prompts). Research reports: Petey/Giddy subagents,
+  SESSION_0574 extended chat.
+- **Why:** the pattern already runs the repo by hand (0574/0577/0578 proved it in one night);
+  6.0 makes it law the read-path consumes, and the rituals currently point at a corpse.
