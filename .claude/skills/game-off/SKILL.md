@@ -19,7 +19,12 @@ description: Close a lean Mammoth (MMB) work session. Use when the operator says
    - unfinished work + one named Next Action;
    - integration/credential status as non-secret pointers only.
 5. Lean Profile telemetry (`docs/sprints/SESSION_0570.md`): report actual elapsed time when
-   known; token/cost only when exposed, else `unavailable`; keep client satisfaction,
+   known. **Token/cost is mechanized (SESSION_0574):** run
+   `bun scripts/session-cost.ts --latest` — it reads the statusline telemetry payload
+   (`~/.claude/telemetry/<session_id>.json`, written by `~/.claude/statusline-telemetry.ts`)
+   plus the session transcript, and prints token split + est. cost + the harness's own
+   `total_cost_usd`. Record those numbers. Fall back to prompting the operator for `/cost`
+   only when the script reports no payload AND no transcript. Keep client satisfaction,
    engineering verification, and sales outcomes separate; never infer or self-award a client
    rating.
 6. Confirm vault projections did not become CRM, goal-ledger, or product-spec authorities.
