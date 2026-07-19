@@ -24,6 +24,12 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 last_agent: <agent>-session-NNNN
 sprint: <S#>
+lane: repo # ADR 0049 lane facet: repo | rdd | mmb | bbl | bma | usa (usa = WEKAF-USA)
+lane_seq: # optional per-lane ordinal (int) — renders as e.g. MMB_0006; omit for lane: repo
+vault_session: # e.g. "MMB_SESSION_0006" when a vault twin exists (twin carries repo_session:)
+goal_ids: [] # goals-ledger IDs worked, e.g. [G-021, MMB-G-004]
+tickets: [] # wayfinder issue numbers, e.g. ["233"]
+next_session: # filled at bow-out with the pre-staged stub path (ADR 0049)
 pairs_with:
 
   - docs/sprints/SESSION_<previous>.md

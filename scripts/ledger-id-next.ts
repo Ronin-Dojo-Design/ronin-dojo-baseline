@@ -23,7 +23,8 @@
  * sprint citations with no failed-steps-log entry) — informational, not a failure.
  */
 
-import { readdirSync, readFileSync } from "node:fs"
+import { execSync } from "node:child_process"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 
 const ROOT = resolve(import.meta.dir, "..")
@@ -33,9 +34,10 @@ const JSON_OUT = ARGS.includes("--json")
 const CHECK = ARGS.includes("--check")
 const PREFIX = (ARGS.find(a => a.startsWith("--prefix=")) ?? "").split("=")[1]?.toUpperCase()
 
-// The grep-assigned ledger ID spaces (llm-wiki-schema / loop-of-loops). ADR/SESSION/LR numbers
-// come from filenames, not doc greps, so they are out of scope here. RISK uses bare `#N` — too
-// generic to grep safely — and stays manual.
+// The grep-assigned ledger ID spaces (llm-wiki-schema / loop-of-loops). ADR/LR numbers come
+// from filenames, not doc greps, so they are out of scope here. SESSION numbers get their own
+// filename+ref mode below (--prefix=SESSION, ADR 0049). RISK uses bare `#N` — too generic to
+// grep safely — and stays manual.
 const PREFIXES = ["G", "FS", "D", "FI", "MB", "TFF", "INC", "TD", "WL-P1", "WL-P2", "WL-P3"] as const
 
 function walkMarkdown(dir: string): string[] {
@@ -128,11 +130,58 @@ if (CHECK) {
 }
 
 if (!PREFIX) {
-  console.error(`Usage: bun scripts/ledger-id-next.ts --prefix=<${PREFIXES.join("|")}> | --check [--json]`)
+  console.error(`Usage: bun scripts/ledger-id-next.ts --prefix=<${PREFIXES.join("|")}|SESSION> | --check [--json]`)
   process.exit(2)
 }
+
+/**
+ * ADR 0049 session-number mint. SESSION numbers come from filenames + git refs, never doc greps:
+ * parallel worktrees claim numbers invisibly in their own docs trees, but the shared ref
+ * namespace is a registry every checkout sees pre-merge. "Claimed" = the union of
+ *   (a) docs/sprints/SESSION_NNNN.md in THIS checkout (committed or not),
+ *   (b) docs/sprints/ of every mounted worktree (git worktree list),
+ *   (c) NNNN parsed from session-* branch names — the bow-in/reservation branch IS the claim.
+ * Gap numbers are retired, never recycled.
+ */
+if (PREFIX === "SESSION") {
+  const numbers = new Set<number>()
+  const addFromSprints = (dir: string) => {
+    if (!existsSync(dir)) return
+    for (const name of readdirSync(dir)) {
+      const m = name.match(/^SESSION_(\d{4})\.md$/)
+      if (m) numbers.add(Number.parseInt(m[1] as string, 10))
+    }
+  }
+  addFromSprints(join(ROOT, "docs", "sprints"))
+  try {
+    const worktrees = execSync("git worktree list --porcelain", { cwd: ROOT, encoding: "utf-8" })
+      .split("\n").filter(l => l.startsWith("worktree ")).map(l => l.slice("worktree ".length))
+    for (const wt of worktrees) {
+      if (resolve(wt) === ROOT) continue
+      addFromSprints(join(wt, "docs", "sprints"))
+    }
+    const branches = execSync("git branch --list --format='%(refname:short)'", { cwd: ROOT, encoding: "utf-8" })
+      .split("\n").map(s => s.trim()).filter(Boolean)
+    for (const b of branches) {
+      const m = b.match(/^session-(\d{4})(?:\D|$)/)
+      if (m) numbers.add(Number.parseInt(m[1] as string, 10))
+    }
+  } catch {
+    // Not a git checkout — the filename scan of (a) stands alone.
+  }
+  const max = numbers.size === 0 ? 0 : Math.max(...numbers)
+  const nextNum = String(max + 1).padStart(4, "0")
+  if (JSON_OUT) {
+    console.log(JSON.stringify({ prefix: "SESSION", used: numbers.size, max, next: `SESSION_${nextNum}` }))
+  } else {
+    console.log(`\n  SESSION: ${numbers.size} number(s) claimed across checkout + worktrees + session-* branches, highest SESSION_${String(max).padStart(4, "0")}.`)
+    console.log(`  Next free: SESSION_${nextNum} — claim it by creating branch session-${nextNum}-<lane-slug> (reservations too); gaps stay burned.\n`)
+  }
+  process.exit(0)
+}
+
 if (!(PREFIXES as readonly string[]).includes(PREFIX)) {
-  console.error(`Unknown prefix "${PREFIX}". Known: ${PREFIXES.join(", ")} (RISK is manual — bare #N is too generic to grep).`)
+  console.error(`Unknown prefix "${PREFIX}". Known: ${PREFIXES.join(", ")}, SESSION (RISK is manual — bare #N is too generic to grep).`)
   process.exit(2)
 }
 

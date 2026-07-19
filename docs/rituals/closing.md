@@ -70,6 +70,10 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - `Decisions resolved` — anything the user signed off on this session
 - `Open decisions / blockers` — anything unblocking the next session
 - `Next session: Goal + Inputs to read + First task`
+- **ADR 0049 pre-stage:** mint N+1 (`bun scripts/ledger-id-next.ts --prefix=SESSION`), create
+  the real `SESSION_NNNN+1.md` stub with `status: staged` + Goal/First-task copied from your
+  `Next session` block, and set `next_session:` in this session's frontmatter. The next bow-in
+  adopts the stub. Skip only when the lane explicitly ends.
 - `Task log` — the `TASK_PLAN_LOG` IDs touched this session
 - `Review log` — the `TASK_REVIEW_LOG` entry for this session
 - `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
@@ -285,7 +289,7 @@ when the diff is docs / config / thin-wrapper only.
 
 Run the [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md). This is the hard pass that checks plan sanity, Dirstarter alignment, security, data integrity, verification honesty, and WORKFLOW 5.0 compliance. If the session touched a Dirstarter baseline layer, check live `https://dirstarter.com/docs` pages and cite the sources in `TASK_REVIEW_LOG`.
 
-Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file. **Seed the `Next session → Goal + First task` from the top-ranked open backlog item** — the operator's `/app/loop-board` board order (`cd apps/web && bun scripts/board-backlog.ts --top=10`) first, falling back to the ledger rank — unless the operator pinned a `/goal`; the boundary registry + program plan then contextualize the pick (SESSION_0476 closed the gap where the next-block was authored disconnected from the live backlog). Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
+Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file — then materializes it as the ADR 0049 staged stub (§2 pre-stage step; the "optionally pre-stages" below is now the mechanized default). **Seed the `Next session → Goal + First task` from the top-ranked open backlog item** — the operator's `/app/loop-board` board order (`cd apps/web && bun scripts/board-backlog.ts --top=10`) first, falling back to the ledger rank — unless the operator pinned a `/goal`; the boundary registry + program plan then contextualize the pick (SESSION_0476 closed the gap where the next-block was authored disconnected from the live backlog). Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
 
 At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
 

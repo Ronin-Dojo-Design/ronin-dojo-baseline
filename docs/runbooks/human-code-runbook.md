@@ -4,8 +4,8 @@ slug: human-code-runbook
 type: runbook
 status: active
 created: 2026-07-18
-updated: 2026-07-18
-last_agent: claude-session-0572
+updated: 2026-07-19
+last_agent: claude-session-0574
 pairs_with:
   - docs/knowledge/wiki/core-values.md
   - docs/knowledge/wiki/agent-systems-map.md
@@ -56,6 +56,33 @@ them. Consolidated boundary rules: [agent-systems-map §4](../knowledge/wiki/age
 | Run gates, dev servers, local DB | yes | proposed: read-only queries first |
 | Touch secrets/credentials | never in plaintext (Keychain/env only) | never |
 | Send email / mutate CRM / financial actions | never without per-action authorization | never |
+
+## Gated integration lanes (#233 template · MMB-D-018 goal)
+
+ONE contract shape for every external-integration lane (cloud API, local-agent lab, client
+system) — no per-lane bespoke shapes (#233, ratified SESSION_0574 grill: A·B·A·B·B·A). A lane
+exists only as a filled row below; no row, no connect. Owner is always a named human ("Humans
+decide": integration connect = credential + legal/terms + retention review, ADR 0048.6).
+**Read-only-first is universal law** — every lane is born read-only; write-purpose lanes (e.g.
+send-email) begin in draft/dry-run phase and sending is a scope graduation. Rows sit `proposed`
+until the lane's pilot + operator word flip them `confirmed`.
+
+### Contract fields
+
+| Field | Definition | Fill guidance |
+| --- | --- | --- |
+| Owner | The ONE named human accountable for the lane end-to-end | A person, never an agent/team; owner runs connect, credential ops, and is the escalation terminus |
+| Read-only-first scope | Exact API surface + scopes granted at lane birth | Enumerate scopes verbatim; write scopes absent at birth (universal law — draft/dry-run IS the read-only phase of a write lane); cite the research ticket that legally cleared the surface |
+| Approval trigger | What requires a fresh human "go" (tiered) | Connect/credential + any scope graduation = explicit grill + decision row; recurring reads = standing per-lane approval; any mutation = per-action ("Agents may" law) |
+| Stop conditions | Halt-immediately list; on halt: capture transcript, no retry, tighten contract before rerun | Universal floor (auth failure · write/scope-exceed prompt · rate ≥80% of quota · unexpected PII · operator stop word) + per-lane additions slot |
+| Data retention | What may persist, where, for how long | Default pointer-only (ids/counts/status); record bodies never in repo/tickets/vault (ADR 0048.7); overrides per-lane via grill |
+| Escalation | Who gets pinged, in order (fixed two-tier) | Executor agent → owner; owner → client-owner only on client-visible impact; never agent → client (MMB-D-011) |
+
+### Lane contracts
+
+| Lane | Owner | Read-only-first scope | Approval trigger | Stop conditions | Data retention | Escalation | State |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| HubSpot read-only pilot (MMB-G-004) | Brian | Free-tier private app; `crm.objects.*.read` + `crm.export`; API-only, UI scraping banned (#231) | connect + credential = Brian; sync runs standing once piloted; any write scope = new grill + decision row | universal floor · rate ≥80% of 250k/day · any Pro-tier-only endpoint touched (fog: Pro delta unconfirmed) | pointer-only in repo/vault; raw pulls local-only, purged at pilot end; no CRM bodies (ADR 0048.7, MMB-D-011) | agent → Brian; Michael only on client-visible impact | proposed |
 
 ## Evidence requirements
 

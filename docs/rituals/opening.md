@@ -70,6 +70,14 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 
 Find the highest-numbered file in `docs/sprints/`. That's the previous session.
 
+> **ADR 0049 — staged stubs + number minting.** If the highest-numbered file has
+> `status: staged`, it is the pre-staged stub for **this** session: adopt it (flip `staged` →
+> `in-progress`; skip the step-6 `cp`) and treat the next-highest closed file as the previous
+> session. Mint/verify your number with `bun scripts/ledger-id-next.ts --prefix=SESSION` — it
+> scans canonical sprints ∪ every worktree's sprints ∪ `session-*` branch refs, so parallel
+> claims are visible pre-merge. On a parallel lane, create `session-NNNN-<lane-slug>` at bow-in
+> to claim the number. Gaps stay burned — never recycle a leaked number.
+
 Read at minimum:
 
 - The previous session's `Goal` (was it achieved?)
@@ -253,6 +261,12 @@ Then fill in every `<placeholder>` and delete the HTML comment blocks. The templ
 Refine `type` at bow-out: if the session was clearly one mode, narrow it. If it was mixed, leave it `session--open`. No backfill needed — old sessions stay `type: session`.
 
 Then fill in `Date`, `Operator`, `Goal`. Set frontmatter `status: in-progress`. The rest gets filled during/at end of session.
+
+**ADR 0049:** if bow-in found a `status: staged` stub (step 1), this step is just the flip
+`staged` → `in-progress` — no `cp`. Either way, fill the lane facet keys: `lane`
+(`repo | rdd | mmb | bbl | bma | usa`), optional `lane_seq` / `vault_session` / `goal_ids` /
+`tickets`. Frontmatter is the cross-ref source of truth; section-header wikilinks are human
+sugar only.
 
 If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
 
