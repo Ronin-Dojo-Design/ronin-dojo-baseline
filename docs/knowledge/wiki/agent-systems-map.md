@@ -191,6 +191,8 @@ the SESSION file's Operator line so no future reader treats a model as load-bear
 ## Cross-references
 
 - [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) — the governing OS this map sits under.
+- [fan-out-session-recipe](../../protocols/fan-out-session-recipe.md) — the cross-session sibling of §5b:
+  N parallel disjoint-lane sessions (disjointness proof, prompt skeleton, ledgered lane continuation).
 - [orchestration-hub](../../runbooks/dev-environment/orchestration-hub.md) — the exhaustive file-tree companion (`bun run docs:hub`).
 - [Opening](../../rituals/opening.md) · [Closing](../../rituals/closing.md) rituals — where routing + the finding-router live.
 - [agents/README](../../agents/README.md) — the roster (pillar 2).
