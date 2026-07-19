@@ -720,6 +720,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0571](../../sprints/SESSION_0571.md) | session--closed | closed — Mammoth recovery/authority map, G-021, vault-kit client-ops shell, private dashboard projection, and sanitized Activity-backed sales tracer. |
 | [SESSION_0572](../../sprints/SESSION_0572.md) | session--implement | closed — Claude game-on/off skill ports, 9-fork MMB grill (MMB-D-001…009), CV ledger, per-brand BHBs, human-code-runbook, vault LLL family + session/recipe templates. |
 | [SESSION_0573](../../sprints/SESSION_0573.md) | session--open | closed — wayfinder epic: maps #228/#237 + 16 tickets (4 research resolved), MMB-D-013…027, five-pointer load-set law, UL→CONTEXT.md + CONTEXT-MAP, grill goal-election + weight/agent system, initial-intake rescue + triage. |
+| [SESSION_0577](../../sprints/SESSION_0577.md) | session--implement | closed — MMB G-021 loop 1/3: sanitized CRM tracer slices (lead-sheet ingest preview + dedupe, roster Lead Source, contact-attempt log 1/2/3), scratch-DB live UAT, Doug 9.6/10, committed on `session-0577-mmb-crm` (no push). |
 
 ## Protocols
 
