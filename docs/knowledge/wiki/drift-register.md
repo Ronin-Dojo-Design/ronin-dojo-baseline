@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-07-20
-last_agent: claude-session-0582
+last_agent: claude-session-0588
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -744,13 +744,19 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix direction:** frontmatter-backfill sweep across historical SESSION files (mechanical,
   docs-only, one commit); until then projections should treat missing-status as unknown/legacy,
   not open.
-- **Status: PARTIAL — SESSION_0587.** Frontmatter-backfill DONE for **21 pre-0575 sessions**
-  carrying a non-terminal status (20 `in-progress`/`open`/`pending` flipped → `closed` via a
-  vetted list-scoped script; SESSION_0500's missing `status:` line added). Live lanes
-  (0580/0581/0583/0585) + staged (0588/0589) untouched. **Remaining (parser-side, don't rewrite
-  files):** ~20 legacy `closed-full`/`closed-quick`/`closed-partial` variants (0221–0244, 0316)
-  are validly closed but the SOT-dashboard parser classifies only exact `closed` as done — teach
-  `scripts/lib/state-of-project-parse.ts` to map the legacy variants (0585 dashboard slice-2).
+- **Status: RESOLVED — SESSION_0588.** Frontmatter-backfill DONE for **21 pre-0575 sessions**
+  (SESSION_0587: 20 non-terminal statuses flipped → `closed` via a vetted list-scoped script;
+  SESSION_0500's missing `status:` line added). **Parser-side ALREADY DONE — the earlier
+  "Remaining" note was written against a pre-commit draft and is factually wrong:**
+  `scripts/lib/state-of-project-parse.ts:97` uses `SESSION_DONE_RE = /^closed/i` (a **prefix**
+  match), so `closed-full`/`closed-quick`/`closed-partial` all bucket to `done` — asserted by
+  `state-of-project-parse.test.ts:72-77` and confirmed against the live corpus (grep: only
+  `closed`×332, `closed-full`×16, `closed-quick`×4, `closed-partial`×1 exist; **zero** bare
+  `full`/`quick`/`partial` rows). No code change needed. The one latent gap — a *bare*
+  `full`/`quick`/`partial` (no `closed-` prefix) — has 0 occurrences, and mapping it would be
+  behavior-changing (`partial` is semantically ambiguous re: partial-progress vs done), so it stays
+  a YAGNI non-item (ticket only if a real session ever uses one, with a fixture). Verified
+  SESSION_0588 (Doug review + source/corpus check).
 
 ### D-052 — `/privacy/request` redirects authenticated users to `/` (untraced)
 
@@ -762,4 +768,24 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   logged-in members — a compliance-facing gap; also blocks the DSR e2e spec locally.
 - **Fix direction:** trace the redirect (middleware / layout guard / auth callback chain) in a
   diagnose lane; add the DSR e2e back once green.
+- **Status: OPEN.**
+
+### D-053 — dual-runtime skill pairs (`.agents`/`.claude`) drift-prone: hardlinks aren't git-stored
+
+- **Discovered:** SESSION_0588 (Giddy structural pass) — `seq-research-recommend/SKILL.md` was
+  committed as two independent files under `.agents/skills/` and `.claude/skills/` (identical
+  content today, separate inodes). The repo convention is `.agents` = `.claude` **hardlinks**
+  (memory 0576), maintained by a manual `ln -f` refresh in the canonical checkout.
+- **Root mechanism:** git does not store hardlink-ness — **every fresh checkout writes separate
+  inodes** (verified SESSION_0588: even the pre-existing `seq-lane-build` pair is unlinked in a
+  fresh worktree). The hardlink is a local-checkout ergonomic only; the committed state is always
+  two files. So an edit to one runtime's copy (Claude `subagent_type` reads `.claude`; skill-aware
+  runtimes read `.agents`) silently won't reach the other → divergence on first single-tree edit.
+  There is **no re-link script** and no content-equality gate.
+- **Residual risk:** latent (content identical now); becomes real divergence the first time a skill
+  pair is edited in only one tree.
+- **Fix direction (durable guard — a worktree `ln -f` is NOT committable and vanishes on next
+  checkout):** either (a) add a `.agents`↔`.claude` byte-identical check to `wiki:lint` / a gate,
+  or (b) a re-link step in `worktree-setup` / bootstrap that `ln -f`s all skill pairs after
+  checkout. Decide in a governance/gates lane; canonical checkout can be re-linked locally meanwhile.
 - **Status: OPEN.**
