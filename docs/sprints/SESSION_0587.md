@@ -2,10 +2,12 @@
 title: "SESSION 0587 — Overnight fan-out orchestrator + AM coffee merge review (4 lanes)"
 slug: session-0587
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-19
 updated: 2026-07-20
 last_agent: claude-session-0587
+next_session: session-0588
+telemetry: "lanes=Sonnet 5 (4×, ~1.56M subagent tok); orchestrator=Fable 5 → Opus 4.8 (Fable usage-limit mid-Giddy); Giddy rerun + sweep on Opus."
 sprint: S12
 lane: repo
 goal_ids: [G-021, G-022, G-023]
@@ -262,6 +264,132 @@ Single source of truth is the frontmatter `status:` field.
 | SESSION_0587_TASK_04 | done | **Operator decision (2026-07-20): HOLD — the full 0587 trunk stays UNPUSHED until `session-0551-test-infra` (fixture-ownership fix `9d845bdd`) merges and the apps/web suite goes local-green. Not push-on-CI, not clean-run-first — the cleanest bar.** Push gate held by decision, not just awaiting a word. Dependency surfaced: 0551 is itself gated behind the 0547-wave (standing memory) — landing 0551 pulls that chain onto the critical path (route via 0589 planning or a dedicated slice; NOT decided here). Trunk is complete + verified otherwise: build GREEN · Giddy PASS 9.4 · failures proven non-regression. |
 | SESSION_0587_TASK_05 (widget/dashboard capture) | done | PL-001 (G-024 feature/feedback widget) + PL-002 (RLL/YLL link ledgers) + PL-003 (State of the Dojo as /app admin landing: AdminKanban embed + ritual render + per-product publish) captured to planning-ledger, routed to SESSION_0589; 0586 board-badge = KEEP |
 | SESSION_0587_TASK_05 | done | Operator mid-session directive: 0586 board-badge verdict = KEEP · NEW planning-ledger (PL-001) + G-024 feature/feedback-widget intake program + wiki index row (graphify-grounded: feedback-widget.tsx / reportFeedback / Report-type-Feedback / admin-feedback email) |
+
+## What landed
+
+- Adopted the SESSION_0587 staged stub (morning, operator awake — not the overnight run it was
+  staged as). Dispatched 4 parallel Sonnet Cody lanes; **all 4 landed clean, zero crash-resumes:**
+  - **0583** (G-022 Lane A S2): C5 hover-driven neighborhood glow, D3 empty states (graph +
+    curriculum AUD2-7), B2 difficulty tooltips, WL-P2-65 + WL-P2-66 resolved.
+  - **0584** (G-023 governance): WORKFLOW_6.0 spine, SOT_Cookbook, 7 recipe cards, persona
+    consolidation to `.claude/agents/`, D-049 fix, ritual repoints.
+  - **0585** (G-023 SOT dashboard slice 1): parse lib + additive `ledger-backlog --json` +
+    `state-of-project.ts` renderer + projection protocol.
+  - **0586** (G-021 loop 3b): Lead Source facet on roster + pipeline board (read-side, one
+    vocabulary; board-card badge = operator KEEP).
+- **AM sweep:** merged 0584→0585→0586→0583 (no-ff, zero conflicts, disjoint scopes), applied all
+  lanes' proposed ledger edits as single writer, ran the full gate chain, **Giddy hostile review
+  PASS 9.4/10 (zero must-fix).** Published the State-of-the-Dojo dashboard live (Artifact).
+- **Operator mid-session directives captured** (all → SESSION_0589 planning): PL-001 (G-024
+  feature/feedback widgets), PL-002 (RLL/YLL link ledgers), PL-003 (State of the Dojo as the
+  `/app` admin landing), PL-004 (brand>platform>product taxonomy — ADR-worthy), PL-005 (skin-
+  invariant law, ratified). Three ratifications resolved (name, taxonomy-direction, skin law).
+- **Operator memory corrected:** scripts are welcome (Python included) — the caution was always
+  vet-for-malware, never a tool ban ([[operator-script-caution]]).
+
+## Files touched (close-writer, direct — lane files listed in each lane's SESSION record)
+
+- `docs/knowledge/wiki/goals-ledger.md` — G-021/022/023 progress; NEW G-024.
+- `docs/knowledge/wiki/wiring-ledger.md` — WL-P2-65 ✅, WL-P2-66 ✅, NEW WL-P3-59.
+- `docs/knowledge/wiki/drift-register.md` — D-049 ✅ resolved; NEW D-050/051/052.
+- `docs/knowledge/wiki/planning-ledger.md` — NEW file; PL-001..005.
+- `docs/knowledge/wiki/index.md` — planning-ledger row.
+- peripheral doc sweep (0584 backlinks + glossary + inventory + prereqs + sop) — 9 files, via
+  sweep Cody.
+- `docs/sprints/SESSION_0587.md` — this record.
+- `~/.claude/.../memory/operator-script-caution.md` + `MEMORY.md` — the correction.
+
+## Decisions resolved
+
+- **0586 board-card Lead Source badge = KEEP.**
+- **Test verdict = non-regression** (fixture-ownership / DB-adapter class; zero failing files in
+  the merge diff; build green; Giddy PASS). **Push: HOLD until 0551 fixture-ownership merges +
+  local-green** (operator, structured choice) — **then operator said "run bow out close and then
+  you can push"** (reversal to push-on-CI-authority; reconciled at the push gate — see Open
+  decisions).
+- **Dashboard name = per-skin:** "State of the Dojo" (RDD/BBL) · "State of the Building" (MMB).
+- **Portfolio taxonomy direction = five BRANDS; brand > platform > product** (PL-004; formalize
+  as an ADR in 0589 — do NOT rewrite ADR 0034 / CLAUDE.md unilaterally).
+- **Skin-invariant law = fixed hue, brand tint** (PL-005 ratified; BBL crit-darken now in-law).
+
+## Open decisions / blockers
+
+- **PUSH RECONCILIATION (live at close):** the structured "Hold until 0551" choice and the later
+  "you can push" conflict; the local suite is still red on the fixture class and an apps/web push
+  fires CI + BBL prod deploy. Resolved at the push gate by an explicit operator confirm — recorded
+  in Git hygiene below.
+- **0551 / 0547-wave now on the critical path** — landing `session-0551-test-infra` (fixture-
+  ownership) is the gate to a clean local suite (and, under the hold reading, to the trunk push).
+  Route in 0589 or a dedicated slice.
+- **G-021 attempt-outcome vocabulary** — provisional, no terms drafted yet; blocks the next MMB
+  build slice. Needs a terms-drafting pass (0589).
+- **0583 C5 hover-glow redesign** needs a Desi/operator design sign-off (routed to 0588).
+- PL-004 (taxonomy ADR) + PL-005 (skin law) feed 0589 planning + the PL-003 dashboard slice-2.
+
+## Reflections
+
+- **Pipe-masks-exit-code trap.** The gate script piped `bun run test` and `next build` through
+  `tail`, so `echo "EXIT:$?"` captured `tail`'s exit (0), not the command's — it nearly reported
+  46 failing tests as green. Never read `$?` for a gate's result through a pipe; redirect to a
+  file and capture the real exit.
+- **Self-inflicted measurement contamination.** I started the "clean" test re-run while the gate-
+  job's `next build` prebuild `migrate deploy` was still mutating the shared local DB — confounding
+  the very measurement meant to isolate contention. A clean DB-test measurement needs ALL writers
+  quiesced, build prebuild included.
+- **Verify beliefs against the repo.** The operator's read (46 fails on MMB; bun-test fix landed)
+  was wrong on two checkable facts — root `test` filter excludes clients, and the 0551 fix is
+  unmerged. `git merge-base --is-ancestor` + the workspace filter settled it in seconds; taking
+  the belief at face value would have mis-routed the diagnosis.
+- **Fable limit mid-Giddy = the escalation valve working.** Read-only reviewer, zero corruption;
+  operator's Opus switch was the stub's designated path. Recorded the exact error, didn't theorize.
+- **Ratifications surfaced real architecture.** "Five products → five brands, brand>platform>
+  product" is an ADR-worthy taxonomy shift; flagging it as such (vs rewording the dashboard)
+  prevented an unratified CLAUDE.md / ADR-0034 rewrite.
+
+## Review log
+
+### SESSION_0587_REVIEW_01 — Giddy hostile close review (Opus rerun)
+
+- **Range:** `e2ef96a5..2a392e5c` · **Verdict: PASS 9.4/10, zero must-fix.** Merge shape (no-ff,
+  pinned order, zero conflicts), lane scope conformance, ledger reverse-check (both directions),
+  id-minting discipline, D-023 pointer/banner canon, merge-wave G0–G4 absorption, and gate-claim
+  honesty all verified. **Binding condition:** test + build green before push — build GREEN; test
+  local-red on the fixture-ownership class (proven non-regression, contaminated measurement).
+  Cap is the in-flight gates only. P3s: 0586 badge traceability seam; 0583 C5 design sign-off →
+  0588.
+- **First Giddy attempt (Fable) crashed** on the usage-credit limit mid-run (verbatim error in
+  the Operator note above); Opus rerun is authoritative. No FS/INC row — clean escalation-valve
+  handoff, not an unclean close.
+
+## ADR / ubiquitous-language check
+
+- **No ADR created this session.** PL-004 (brand > platform > product taxonomy) is **flagged
+  ADR-worthy and deferred to SESSION_0589** — it is an unratified operator direction, not yet a
+  decision to encode. ADR 0050 (grappling scope) already landed via 0579. Ubiquitous-language:
+  the brand/platform/product terms will be defined WITH the PL-004 ADR, not before.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | 6 rows (TASK_01–05 + badge/dashboard capture), gate runner PASS. |
+| JETTY/frontmatter sweep | Ledgers + planning-ledger + index bumped `updated`/`last_agent` to `claude-session-0587`; peripheral sweep Cody bumped 6 R4-flagged files. Gate runner: no stale touched-doc frontmatter. |
+| Backlinks/index sweep | NEW `planning-ledger.md` registered in `wiki/index.md`; `pairs_with` set on planning-ledger ↔ goals-ledger. |
+| Wiki lint | `bun run wiki:lint` → **0 errors / 54 warnings** (all pre-existing R8 blank-line-before-list in unrelated `petey-plan-*`/`sprints` files; none introduced). |
+| Kaizen reflection | Present (`## Reflections` — 5 notes incl. the pipe-masks-exit trap + self-inflicted DB contamination). |
+| Hostile close review | **Giddy PASS 9.4/10, zero must-fix** (`SESSION_0587_REVIEW_01`, Opus rerun after the Fable-limit crash). Dirstarter check: aligned (sweep touches no baseline layer). |
+| Code-quality gate (Class-A) | No Class-A custom code authored by the close-writer (orchestration + ledgers + docs). Lane code was self-reviewed + Giddy-verified in-lane; formal `/code-quality` not separately run (recorded honestly). |
+| Runtime verification (Doug) | Lanes ran live UAT in-worktree (0586 scratch-DB facet UAT; 0583 computed-style/export-byte probes; 0585 375px headless render). Merged-trunk: build GREEN; test local-red on the non-regression fixture class (see below). |
+| Evidence-artifact URL | State-of-the-Dojo live render — https://claude.ai/code/artifact/2cc94f39-211d-4ce4-aa2a-3f75743e4f63 (v `0587-live-render-slice1`). |
+| Build gate | **Correction to the gate runner's "skipped (docs-only)":** it diffs the working tree (all committed) — the known `bow-out-gate-runner-diffs-working-tree` gotcha. The merged trunk DOES contain apps/web (0583/0586); `next build` was run on the merged tree → **GREEN** (route tree + Static/Dynamic legend printed, incl. `/techniques/graph`). |
+| Test gate | apps/web `bun run test` → 1368 pass / 47 fail / 8 err — **local-red on the fixture-ownership / DB-adapter class, proven NON-regression** (zero failing files in the merge diff; 6 = exact 0551-fix targets; 0583 green in-worktree). Measurement contaminated (concurrent build prebuild-migrate). CI = authoritative gate. |
+| Ledger cross-off + application | Resolved: WL-P2-65 ✅ · WL-P2-66 ✅ · D-049 ✅. New: WL-P3-59 · D-050/051/052 · G-024 · PL-001..005. Progress: G-021/022/023. Board cross-off: `board-mark-done` → 0 moved (none board-tracked). Single-writer discipline (Giddy reverse-check: zero phantom rows). |
+| Deferral guard | `deferral-guard.ts` → 2 flags, **both justified-dismissed:** L365 = PL-004 (tracked in planning-ledger; guard doesn't recognize the `PL-` prefix — planning-ledger read-path wiring is the deferred PL-001 task), L377 = 0588 sweep-range (tracked in Next-session block + reserved branch `session-0588-quality-suite-review`). Gap noted: wire planning-ledger into `ledger-backlog.ts` + guard prefixes (PL-001 scope). |
+| Finding router (§6.7) | wiring→WL-P2-65/66/WL-P3-59 · drift→D-049..052 · decision→PL-004 (ADR deferred to 0589) · planning intake→NEW planning-ledger PL-001..005 · G-024. No new FS/INC (Fable-limit was a clean escalation-valve handoff, not an unclean close). |
+| Memory sweep | Corrected `operator-script-caution` (scripts welcome, vet don't ban); appended SESSION_0587 orchestration learnings to `sequence-skills-and-overnight-orchestration`. |
+| Next session unblock check | 0588 (review) unblocked; 0589 (planning) unblocked. Both reserved + staged; bow-in prompts delivered to operator. |
+| Git hygiene | branch=main; lane worktrees 0583–0586 retained pending trunk push decision (NOT auto-removed — branches unpushed). Secret scan clean. Push: **reconciled at the gate — see bow-out line.** No force-push. |
+| Graphify update | nodes=19063 · edges=36428 · communities=2600 (gate runner, pre-commit per FS-0025). |
 
 ## Next session
 
