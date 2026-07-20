@@ -76,6 +76,43 @@ plan scope.
   with repo pointers, id law, aggregator/router wiring (bundled with PL-001's wiring scope),
   and how RLL/YLL rows hydrate into goals-ledger.
 
+### PL-003 — State of the Dojo as the `/app` admin landing (AdminKanban embed + ritual render + per-product publish) — queued
+
+- **Origin:** operator directive, SESSION_0587 (2026-07-20). Extends the G-023 SOT-dashboard
+  slice-1 (0585 render, published via Artifact) toward the in-app admin surface.
+- **The ask (operator's words, faithful):**
+  1. **Embed AdminKanban** (the DB-backed loop-board — `KanbanCard`, G-003/G-007,
+     `/app/loop-board`) *into* the State of the Dojo page.
+  2. **State becomes a ritual artifact:** RENDERED at bow-in (opening.md) and UPDATED at
+     bow-out (closing.md) — a ritual step, every session.
+  3. **Publish the umbrella State** onto the **RDD admin surface** with ALL brands + clients.
+  4. **Then publish per-brand/client filtered State** onto EACH brand/client's own admin
+     surface.
+  5. Compose all of it as the **initial `/app` admin dashboard LANDING** — clicking into the
+     admin dashboard shows State of the Dojo **+** the admin section cards **+** BBL's v2 admin
+     cards, as ONE admin landing dashboard.
+- **Relationship:** this IS the SOT-dashboard **slice 2** (`/app/state`, ledgered by 0585) PLUS
+  admin-landing composition + AdminKanban embed + per-product publish + ritual wiring. Goal row:
+  [G-023](goals-ledger.md) (SOT dashboard) — propose G-023 children or a dedicated G-row at plan
+  time.
+- **Open forks for the plan session to grill (do NOT pre-resolve):**
+  - **Publish mechanism:** 0585's model is agent-publishes-via-Artifact-tool (projection-only,
+    ledgers stay SoT). Operator now wants it ON the in-app admin surface — reconcile: does the
+    ritual still render an Artifact, does it write the in-app `/app/state` data source, or both?
+  - **Per-product fan-out:** each brand/client is a separate DB + deploy (ADR 0038). One render
+    → N product admin surfaces: how (build-time inject? shared read endpoint? per-deploy render
+    step?) without cross-product data leak.
+  - **Two data sources on one surface:** AdminKanban is DB-backed (apps/web `KanbanCard`); State
+    of the Dojo is a frontmatter/ledger projection (scripts). Integrating = reconciling a live-DB
+    board with a docs projection on one page.
+  - **Admin-landing composition** must conform to the AdminCollection one-surface law
+    ([[admin-collection-one-surface-law]]) — State + section cards + BBL v2 cards as ONE
+    conformed surface, not a bespoke god-page.
+  - **Ritual wiring** is additive on top of 0584's just-rewritten opening/closing (0584 landed
+    this sweep) — new render/update steps, not a rewrite.
+- **Next step:** SESSION_0589 plan session ( `/pp` Petey plan). Bundle with PL-001/PL-002 as the
+  planning session's scope; sequence after (or alongside) the widget-intake plan.
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.

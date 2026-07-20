@@ -37,8 +37,18 @@ Brian + claude-session-0587
 > **Adopt-time notes:** (1) Timing correction — NOT run overnight; adopted the morning of
 > 2026-07-20 with the operator awake. Lanes dispatched immediately; verdicts surfaced live as
 > they land instead of banked for an AM readout. (2) Model note — lanes dispatch at Sonnet as
-> pinned; the orchestrator session itself runs on Fable 5 (telemetry recorded at close reflects
-> the split).
+> pinned; the orchestrator session ran on Fable 5 through the merge + gates + ledger-application
+> commit, then hit the Fable usage-credit limit MID-Giddy-review (exact error recorded below);
+> operator switched the session to **Opus 4.8** (the stub's escalation-valve target) and the
+> sweep continued — Giddy re-dispatched fresh on Opus. Telemetry at close reflects the
+> Sonnet(lanes) / Fable→Opus(orchestrator) split.
+>
+> **Limit event (verbatim, per standing rule — no theorizing):** the first Giddy review agent
+> terminated with: *"Agent terminated early due to an API error: You're out of usage credits.
+> Run /usage-credits to keep using Fable 5 or /model to switch models."* No corruption — Giddy
+> is read-only, zero git mutation; main HEAD stayed at the ledger commit `2a392e5c`, all four
+> lane worktrees intact. This is exactly instruction-5's escalation valve firing; the operator
+> took the intended Opus path rather than forcing through.
 
 ## Goal
 
@@ -248,7 +258,7 @@ Single source of truth is the frontmatter `status:` field.
 | --- | --- | --- |
 | SESSION_0587_TASK_01 | done | Dispatch 4 lanes (one parallel message, sonnet, background) — dispatched 2026-07-20 AM after precondition + FS-0030 checks |
 | SESSION_0587_TASK_02 | done | All 4 lanes landed clean, zero crash-resumes needed: 0586 (~36m, 278k tok) · 0585 (~40m, 256k) · 0584 (~52m, 474k) · 0583 (~2h13m, 553k) — all Sonnet, single commit each (0585: two), clean trees, zero cross-lane file overlap (proven by diff-path comm), zero schema.prisma touches |
-| SESSION_0587_TASK_03 | in-progress | AM sweep: merges DONE (4× --no-ff, ort, zero conflicts, pinned order) · gates: format:check ✓, lint:check (apps/web — root has no lint:check script; root `lint` is the fixer) ✓ w/ pre-existing warnings, typecheck ✓ after documented WL-P3-59 baseline-client generate (only failure = pre-existing apps/baseline seed.ts, zero lane files in apps/baseline), test+build running · ledger application DONE (WL-P2-65✅/66✅ + WL-P3-59 new · D-049✅ + D-050/051/052 new · G-021/022/023 progress) · peripheral doc sweep (backlinks/glossary/inventory/prereqs/sop) dispatched · Giddy pending |
+| SESSION_0587_TASK_03 | in-progress | AM sweep: merges DONE (4× --no-ff, ort, zero conflicts, pinned order) · gates: format:check ✓, lint:check (apps/web) ✓, typecheck ✓ (after WL-P3-59 baseline-client generate) · **test RED on first merged run: 1364 pass / 46 fail / 5 errors — error class `DriverAdapterError: ForeignKeyConstraintViolation` + adapter-pg `onError` = shared-local-DB reset-trap signature (per parallel-session-shared-db memory); web suite is already `--parallel=1`, and 0583 ran the SAME full web suite GREEN (1562/1563) in its worktree → contention-shaped, NOT yet proven. Gate-script pipe masked the real exit (`tail`'s $?=0). Clean serialized re-run queued once contention clears + build finishes.** · build running · ledger application DONE (WL-P2-65✅/66✅ + WL-P3-59 · D-049✅ + D-050/051/052 · G-021/022/023) · peripheral doc sweep DONE · **Giddy PASS 9.4/10 zero must-fix** (binding condition: test+build must be green before push; 9.4 cap is only the in-flight gates) |
 | SESSION_0587_TASK_04 | pending | Evidence + telemetry (Sonnet cost experiment) + HOLD push gate for coffee word |
 | SESSION_0587_TASK_05 | done | Operator mid-session directive: 0586 board-badge verdict = KEEP · NEW planning-ledger (PL-001) + G-024 feature/feedback-widget intake program + wiki index row (graphify-grounded: feedback-widget.tsx / reportFeedback / Report-type-Feedback / admin-feedback email) |
 
@@ -264,11 +274,14 @@ Two parallel sessions (operator-elected mid-0587, numbers claimed by reservation
   0587's sweep (session already big; sweep stays scoped to merge + gates + ledger + Giddy).
   Base recipe = `docs/protocols/page-code-review.md`, still pending the operator's
   review/tweaks (possible conformed `recipes/quality-suite.md` card).
-- **SESSION_0589** (`session-0589-feature-widget-plan`) — the PL-001 planning session: full
-  `/pp` Petey plan → AM_Plan_Session → fan-out build (0587 pattern) for G-024
-  feature/feedback-widget intake program. Scope also covers **PL-002** (Reddit-Links-Ledger
-  `RLL` + YouTube-Links-Ledger `YLL` intake ledgers → goals-ledger hydration) + the
-  vault-consolidation / SOT-per-brand-vaults thread it touches.
+- **SESSION_0589** (`session-0589-feature-widget-plan`) — the planning session: full
+  `/pp` Petey plan → AM_Plan_Session → fan-out build (0587 pattern). Scope = **PL-001**
+  (G-024 feature/feedback-widget intake program) + **PL-002** (Reddit-Links-Ledger `RLL` +
+  YouTube-Links-Ledger `YLL` intake ledgers → goals-ledger hydration; vault-consolidation /
+  SOT-per-brand-vaults thread) + **PL-003** (State of the Dojo as the `/app` admin landing:
+  AdminKanban embed + ritual render-at-bow-in/update-at-bow-out + per-brand/client publish +
+  admin-landing composition of State + section cards + BBL v2 cards — the G-023 SOT-dashboard
+  slice-2 continuation).
 
 ### First task
 
