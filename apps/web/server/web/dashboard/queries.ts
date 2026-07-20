@@ -104,3 +104,31 @@ export const findUserTechniques = cache(async (userId: string, brand: Brand) => 
     orderBy: { name: "asc" },
   })
 })
+
+/**
+ * The caller's OWN technique-progress rows for the dashboard "My progress" section (G-022 Lane B,
+ * SESSION_0580) — DISTINCT from `findUserTechniques` above (techniques the user AUTHORS/manages).
+ * Scoped by `technique: { brand }` (progress has no `brand` column of its own). Deliberately
+ * UNCACHED (no `react cache()` wrapper) — progress changes on every write and this is a
+ * per-request dashboard read, matching the CACHE TRAP note in `server/web/techniques/progress.ts`.
+ */
+export const findUserTechniqueProgress = async (userId: string, brand: Brand) => {
+  return db.techniqueProgress.findMany({
+    where: { userId, technique: { brand } },
+    select: {
+      id: true,
+      status: true,
+      lastDrilledAt: true,
+      updatedAt: true,
+      technique: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          discipline: { select: { id: true, name: true } },
+        },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  })
+}

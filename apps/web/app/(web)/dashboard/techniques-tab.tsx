@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation"
 import { AuthoredTechniqueCreate } from "~/app/(web)/dashboard/authored-technique-create"
-import { TechniquesTable } from "~/app/(web)/dashboard/techniques-table"
+import { TechniqueProgressTable, TechniquesTable } from "~/app/(web)/dashboard/techniques-table"
 import { Stack } from "~/components/common/stack"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { findUserTechniques } from "~/server/web/dashboard/queries"
+import { findUserTechniqueProgress, findUserTechniques } from "~/server/web/dashboard/queries"
 import {
   canCreateTechniqueForUser,
   findActiveStaffMembership,
@@ -21,7 +21,9 @@ export async function DashboardTechniquesTab() {
 
   // SESSION_0529 Slice 3B — resolve the authoring capability + the viewer's identity SERVER-side
   // (RBAC `techniques.manage` ∨ active OWNER/INSTRUCTOR ∨ Elite entitlement) and pass booleans down.
-  const [techniques, canCreate, identity, orgStaff] = await Promise.all([
+  // SESSION_0580 (G-022 Lane B) adds `progress` — the caller's OWN technique-progress rows, a
+  // DISTINCT dataset from `techniques` (authored/managed rows).
+  const [techniques, canCreate, identity, orgStaff, progress] = await Promise.all([
     findUserTechniques(session.user.id, Brand.BBL),
     canCreateTechniqueForUser(session.user, Brand.BBL),
     db.passport.findFirst({
@@ -33,6 +35,7 @@ export async function DashboardTechniquesTab() {
     // to an Elite (non-staff) author. The ONE shared ACTIVE-staff predicate (WL-P2-49): a
     // CANCELLED staff membership must not authorize, matching `canCreateTechniqueForUser`.
     findActiveStaffMembership(db, session.user.id, { brand: Brand.BBL }),
+    findUserTechniqueProgress(session.user.id, Brand.BBL),
   ])
 
   const formOptions = canCreate ? await getTechniqueFormOptions() : null
@@ -58,6 +61,7 @@ export async function DashboardTechniquesTab() {
         <AuthoredTechniqueCreate disciplines={formOptions.disciplines} belts={formOptions.belts} />
       )}
       <TechniquesTable techniques={rows} showOrgCreate={Boolean(orgStaff)} canCreate={canCreate} />
+      <TechniqueProgressTable progress={progress} />
     </Stack>
   )
 }

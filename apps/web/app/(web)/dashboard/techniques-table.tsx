@@ -1,5 +1,6 @@
 "use client"
 
+import type { TechniqueProgressStatus } from "~/.generated/prisma/browser"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
@@ -14,6 +15,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/common/table"
+import {
+  TechniqueProgressGlyph,
+  techniqueProgressLabel,
+} from "~/components/common/technique-progress-status"
 
 type TechniqueRow = {
   id: string
@@ -106,6 +111,78 @@ export function TechniquesTable({
                 </Badge>
               </TableCell>
               <TableCell>{t.difficultyLevel ?? "—"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Stack>
+  )
+}
+
+type TechniqueProgressRow = {
+  id: string
+  status: TechniqueProgressStatus
+  lastDrilledAt: Date | null
+  technique: {
+    id: string
+    name: string
+    slug: string
+    discipline: { id: string; name: string } | null
+  }
+}
+
+type TechniqueProgressTableProps = {
+  progress: TechniqueProgressRow[]
+}
+
+/**
+ * "My progress" — the techniques the viewer is TRACKING (G-022 Lane B, SESSION_0580), distinct
+ * from `TechniquesTable` above (techniques they AUTHOR/manage). Same AUD2-5-ratified leading
+ * glyph as the technique-detail control (`TechniqueProgressGlyph`) — used identically in both
+ * places, never a new color channel.
+ */
+export function TechniqueProgressTable({ progress }: TechniqueProgressTableProps) {
+  if (progress.length === 0) {
+    return (
+      <Note>
+        No tracked techniques yet. Open a technique and mark your progress to see it here.
+      </Note>
+    )
+  }
+
+  return (
+    <Stack size="lg" direction="column">
+      <H4>My progress ({progress.length})</H4>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Technique</TableHead>
+            <TableHead>Discipline</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Last drilled</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {progress.map(p => (
+            <TableRow key={p.id}>
+              <TableCell>
+                <Link href={`/techniques/${p.technique.slug}`} className="font-medium">
+                  {p.technique.name}
+                </Link>
+              </TableCell>
+              <TableCell>
+                {p.technique.discipline && (
+                  <Badge variant="soft">{p.technique.discipline.name}</Badge>
+                )}
+              </TableCell>
+              <TableCell>
+                <Stack size="xs" direction="row" className="items-center">
+                  <TechniqueProgressGlyph status={p.status} />
+                  <span>{techniqueProgressLabel[p.status]}</span>
+                </Stack>
+              </TableCell>
+              <TableCell>{p.lastDrilledAt ? p.lastDrilledAt.toLocaleDateString() : "—"}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation"
-import { Brand, type DirectoryVisibility } from "~/.generated/prisma/client"
+import {
+  Brand,
+  type DirectoryVisibility,
+  TechniqueProgressStatus,
+} from "~/.generated/prisma/client"
 import { TechniqueDetail } from "~/app/(web)/techniques/[slug]/_components/technique-detail"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { getServerSession } from "~/lib/auth"
+import { findOwnTechniqueProgress } from "~/server/web/techniques/progress"
 import { findAuthoredTechnique } from "~/server/web/techniques/queries"
 import {
   gateTechniqueMedia,
@@ -72,6 +77,17 @@ export default async function AuthoredTechniqueWatchPage({ params }: PageProps) 
     : true
   const gatedMedia = gateTechniqueMedia(attachments, viewerEntitled)
 
+  // G-022 Lane B (SESSION_0580) — same own-progress resolution as the canonical watch page.
+  const ownProgress = session?.user
+    ? await findOwnTechniqueProgress(session.user.id, technique.id)
+    : null
+  const progress = session?.user
+    ? {
+        status: ownProgress?.status ?? TechniqueProgressStatus.NOT_STARTED,
+        isTracked: Boolean(ownProgress),
+      }
+    : null
+
   // WL-P2-52 — a profile-scoped watch page needs attribution + a way back: crumb up to the
   // author's directory profile (Directory → {profile} → {technique}). Mirrors the `[id]`/`new`
   // editor breadcrumbs.
@@ -86,7 +102,12 @@ export default async function AuthoredTechniqueWatchPage({ params }: PageProps) 
           { url: `/directory/${slug}/techniques/${techniqueSlug}`, title: technique.name },
         ]}
       />
-      <TechniqueDetail technique={technique} brand={Brand.BBL} gatedMedia={gatedMedia} />
+      <TechniqueDetail
+        technique={technique}
+        brand={Brand.BBL}
+        gatedMedia={gatedMedia}
+        progress={progress}
+      />
     </>
   )
 }

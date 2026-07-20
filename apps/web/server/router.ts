@@ -2,6 +2,7 @@ import { belt } from "~/server/belt/router"
 import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
 import { promotion } from "~/server/promotion/router"
+import { techniques } from "~/server/techniques/router"
 
 const ping = publicProcedure.handler(() => {
   return { status: "ok" as const, timestamp: new Date().toISOString() }
@@ -22,7 +23,8 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
  * mirroring upstream's flat `server/<entity>/router.ts` aggregation. Phase 1c
  * (SESSION_0364) adds the first migrated read surface: `lineage` (the public
  * tree-by-slug read). SESSION_0480 (Belt Journey Slice 3) adds `belt` — the
- * member-facing, own-Passport belt-journey mutations.
+ * member-facing, own-Passport belt-journey mutations. SESSION_0580 (G-022
+ * Lane B) adds `techniques` — own-user technique-progress tracking.
  */
 export const appRouter = {
   ping,
@@ -32,6 +34,7 @@ export const appRouter = {
   lineage,
   promotion,
   belt,
+  techniques,
 }
 
 export type AppRouter = typeof appRouter
