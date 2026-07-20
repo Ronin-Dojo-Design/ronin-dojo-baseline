@@ -22,7 +22,7 @@ type ExportStyleSnapshot = {
  * html2canvas will fail to parse the color. Extracted from technique-graph.tsx (SESSION_0588,
  * Desi P2) to lift the PNG-export mass out of the component; behavior preserved byte-for-byte.
  */
-export const withExportSafeStyles = async <T,>(
+const withExportSafeStyles = async <T,>(
   root: HTMLElement,
   exportRgbFor: (type: string) => ExportRgb,
   callback: () => Promise<T>,
