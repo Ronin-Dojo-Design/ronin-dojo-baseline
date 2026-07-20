@@ -38,7 +38,7 @@ plan scope.
 
 ## Rows
 
-### PL-001 — Feature + feedback widgets for all sites (idea-intake surface) — queued
+### PL-001 — Feature + feedback widgets for all sites (idea-intake surface) — planned (SESSION_0589 → lanes L2+L3)
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20), mid-orchestration.
 - **Goal row:** [G-024](goals-ledger.md) (program shell; plan-first — no build until the plan
@@ -55,12 +55,19 @@ plan scope.
   persists `Report` (type `Feedback`) + admin email (`emails/admin-feedback.tsx`); e2e
   `e2e/feedback-widget.spec.ts`. No separate feature-widget component exists. Prior backlog:
   `docs/petey-plan-0419-post-launch-sweep.md` §5.4 "make feedback widget brand/account aware".
-- **Next step:** full `/pp` Petey plan session → AM_Plan_Session → fan-out build (0587
-  pattern). That plan session also wires this ledger into `ledger-backlog.ts` + the §6.7
-  router. **Reserved: SESSION_0589** (`session-0589-feature-widget-plan`, claimed mid-0587;
-  runs parallel with SESSION_0588 quality-suite review).
+- **Planned (SESSION_0589 grill) → two lanes:**
+  - **L3 build** (`session-0592-feature-widget`, apps/web — deploys): NEW sibling
+    `feature-widget.tsx` (admins-only idea-dump; reuse the shared R2 uploader + rate-limit +
+    Report-like persistence seam — NOT an overload of `feedback-widget.tsx`). Intake path =
+    **DB inbox → admin triage view → session-time promotion to `PL` rows** (replaces today's
+    operator relay; markdown ledger stays SoT of *planned* work, DB is the raw inbox). Mount
+    scope = **BBL `/app` admin first** (reference impl, structured for `packages/ui-kit`
+    extraction); MMB mount = fast-follow.
+  - **L2 wiring** (`session-0591-ledger-wiring`, scripts/docs): wire the planning-ledger into
+    `scripts/ledger-backlog.ts` (`PL` code + union), closing.md §6.7 finding router, and
+    `scripts/deferral-guard.ts:49` prefix regex (bundled with the RLL/YLL/GPTLL wiring below).
 
-### PL-002 — Link-intake ledgers: Reddit (RLL) + YouTube (YLL) + ChatGPT (GPTLL) — queued
+### PL-002 — Link-intake ledgers: Reddit (RLL) + YouTube (YLL) + ChatGPT (GPTLL) — planned (SESSION_0589 → lane L2)
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20) — "noted as I was thinking about it";
   GPTLL added later same session; flesh out in the SESSION_0589 planning session.
@@ -77,9 +84,20 @@ plan scope.
   stub folders for Reddit already exist in `RDD_Master_Vault`; the vault-consolidation +
   SOT-per-brand-vaults task is partially done / partially planned (G-023 vault-constellation
   direction: brand-prefixed vault names ratified in principle, only MMB exists).
-- **Next step:** SESSION_0589 plan session decides: repo-side ledger files vs vault-side capture
-  with repo pointers, id law, aggregator/router wiring (bundled with PL-001's wiring scope),
-  and how RLL/YLL rows hydrate into goals-ledger.
+- **Planned (SESSION_0589 grill) → lane L2 (`session-0591-ledger-wiring`):**
+  - **Repo-side ledgers of record** (ADR 0048): three files **created this session** —
+    [`reddit-links-ledger.md`](reddit-links-ledger.md) (`RLL`),
+    [`youtube-links-ledger.md`](youtube-links-ledger.md) (`YLL`),
+    [`chatgpt-links-ledger.md`](chatgpt-links-ledger.md) (`GPTLL`). **Three separate files** (not one
+    combined) — maps 1:1 to the operator's three-way QuickCapture inboxes (reddit/youtube/gpt) and to
+    the aggregator's one-code-per-file pattern (zero parser change). Vault = optional raw capture,
+    promoted INTO the repo ledger to count.
+  - **L2 wires** all four new codes (`PL` + `RLL`/`YLL`/`GPTLL`) into `ledger-backlog.ts`,
+    `deferral-guard.ts:49`, and closing.md §6.7; defines `RLL/YLL/GPTLL → PL/G` hydration.
+  - **GPTLL-001 seeded** (chatgpt-links-ledger) = review the ~2026-07-19 brainstorm incl. "Phase 14"
+    — **content-pending operator hand-over** (Phase 14 not found in repo graph). Parts of that
+    brainstorm already routed this session → PL-007 (GLL) + PL-008 (vault).
+  - **Vault-consolidation / SOT-per-brand-vaults** thread split out → **PL-008** (own plan session).
 
 ### PL-003 — State of the Dojo as the `/app` admin landing (AdminKanban embed + ritual render + per-product publish) — queued
 
@@ -128,10 +146,15 @@ plan scope.
   - **Skin invariants:** operator chose REVISE on the proposed "semantic tokens fixed, never
     re-skinned" law — the boundary is being re-specified (see PL-005). Do NOT encode the old law
     until PL-005 resolves.
-- **Next step:** SESSION_0589 plan session ( `/pp` Petey plan). Bundle with PL-001/PL-002/PL-004
-  as the planning session's scope; sequence after (or alongside) the widget-intake plan.
+- **Planned (SESSION_0589) → lane L4 gets its OWN `/pp` plan session**
+  (`session-0593-sotd-admin-landing-plan`, staged plan-me stub). Too large to pin into an executable
+  build stub tonight (5 open forks + a new `sotd` skill + ritual wiring + per-brand publish + a
+  data-viz component). The taxonomy dependency is now resolved (ADR 0051 → **brand tabs**, RDD
+  umbrella above them). **L4's plan must treat GLL_Epic cards (Kaizen + Giddy-lessons) as a State-of-
+  Dojo content type** — see [PL-007](#pl-007--gll_epic--giddy-lessons--kaizen--teach-code-lessons-system--queued--own-epic).
+  Bundles **PL-006** (token-cost component) as a slice.
 
-### PL-004 — Portfolio taxonomy: brand > platform > product (evolves ADR 0034) — queued · ADR-worthy
+### PL-004 — Portfolio taxonomy: kernel → brand → app → (suite→product→feature) — ✅ RATIFIED (ADR 0051, SESSION_0589)
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20), correcting the "five products"
   framing during the dashboard ratification.
@@ -145,9 +168,22 @@ plan scope.
   dashboard tabs (brand tabs, per PL-003), the vault SOT-per-brand model (PL-002 / G-023 vault
   constellation), and the RDD umbrella language. **Do NOT rewrite ADR 0034 / CLAUDE.md now** —
   formalize via a new ADR in SESSION_0589 planning, then conform the docs.
-- **Next step:** SESSION_0589 — grill the taxonomy to a ratified ADR (reconcile with ADR 0034 +
-  0040; define brand/platform/product precisely; map the five brands' current platforms/products),
-  then cascade the wording (dashboard, vault names, North Star) as conform work.
+- **Ratified (SESSION_0589 grill → [ADR 0051](../../architecture/decisions/0051-brand-platform-product-portfolio-taxonomy.md)):**
+  - **Tiers:** load-bearing spine `kernel → brand → app` (app = the deploy unit = 1 Vercel project +
+    1 DB, ADR 0038); **optional** intra-app nesting `suite → product → feature` used only as an app
+    grows (small apps stay flat — rejected the "all six tiers mandatory" god-taxonomy).
+  - **Word fixes:** old "platform" = the **kernel** (`packages/ui-kit`, ADR 0040 — name fixed, model
+    unchanged); old "product" (the whole deploy) = an **app**; "product" now = a feature-area within
+    an app.
+  - **White-label instance axis** (first-class, second dimension): Baseline produces **White Labeled
+    Dojo**; RDD resells it; each customer = a branded instance (skin + deploy). **Tuff Buffs** = pilot
+    instance → absorbed into Baseline (not a peer brand).
+  - **Portfolio = 7 brands** under the RDD umbrella: RDD (agency) · BBL ⭐ · Mammoth · Baseline
+    (=White Labeled Dojo) · WEKAF · **ACD (Amy Coaches Data — data/analytics coaching, non-dojo,
+    proves kernel domain-agnosticism)** · Tuff Buffs (instance).
+- **Next step (conform-cascade = lane L1, `session-0590-taxonomy-conform`):** restate CLAUDE.md North
+  Star, `ronin-project-context.md`, and the ADR 0034/0038/0040 supersede banners to ADR 0051's
+  vocabulary; feeds PL-003 dashboard **brand tabs** + PL-002 vault SOT-per-brand unit.
 
 ### PL-005 — Skin-invariant boundary (semantic tokens) — ✅ RATIFIED (SESSION_0587)
 
@@ -178,12 +214,79 @@ plan scope.
   data-viz treatment (follow the `dataviz` skill — semantic-token palette, accessible).
 - **Depends on / relates to:** PL-003 (State of the Dojo — the host surface) + the session
   `telemetry:` frontmatter convention started in SESSION_0587.
-- **Next step:** SESSION_0589 plan session — size it as a G-023 SOT-dashboard child (slice) or its
-  own goal.
+- **Planned (SESSION_0589):** bundled as a **slice of lane L4** (State-of-Dojo landing) — its host
+  surface. Sized + forks (telemetry schema · cost model · shared-component-vs-two-renders · dataviz
+  treatment) grilled in **L4's own plan session** (`session-0593-sotd-admin-landing-plan`), not
+  tonight. Seed data = the SESSION `telemetry:` frontmatter convention (SESSION_0587).
+
+### PL-007 — GLL_Epic — Giddy-Lessons / Kaizen / /teach code-lessons system — queued · own epic (G-025)
+
+- **Origin:** operator brainstorm dump, SESSION_0589 (2026-07-20; part of the ~2026-07-19 ChatGPT
+  brainstorm surfaced live). Operator: *"this is an epic to plan for sure — multi-session grill →
+  plan → build → code-review, the GLL_Epic under RDD."*
+- **Goal row:** [G-025](goals-ledger.md) (own epic). **Own plan-me stub:**
+  `session-0594-gll-epic-plan`.
+- **The idea (faithful capture — for the plan session to grill, NOT pre-resolved):** turn session
+  lessons from token-burn into a durable, browsable, learn-it-yourself system so the operator can
+  pick up any work (when usage is hit, or to learn/do it himself):
+  1. **Closing `/refine-recipe` binary** — a yes/no Petey step at bow-out deciding whether the
+     session's **Kaizen reflections** become durable/useful instead of the current token burn.
+  2. **Kaizen reflections as cards** on the State-of-Dojo page — swipe/search on phone.
+  3. **Giddy Lessons-Learned as cards** that click into pages/sections on the site **or** the vault
+     dashboard ("that functions/looks/feels like the site" — online on-site + local lean vault
+     version; overlaps PL-008 vault-as-site-mirror).
+  4. **`/teach` (Giddy) skill** triggered at session end → durable reusable, session-context-filled
+     "how to code it myself + why this method + alternatives considered + token cost + time
+     estimate," plus a **git-merge-strategy replay log** (which git commands were used + why → replay
+     a session to learn). Output → `human-code-runbook.md` as pointed entries.
+  5. **`/Code-Lessons` skill + Code-Lessons_Ledger** — leaner version of Giddy's lessons; a
+     hook-trigger (≥3 lessons?) groups them into a Giddy-Lesson section entry.
+- **Cross-cuts:** rituals (closing `/refine-recipe` step), skills (`/teach`, `/Code-Lessons`),
+  `human-code-runbook.md`, **and the State-of-Dojo surface (PL-003/L4 — cards render there)**. L4's
+  plan must account for GLL cards as a content type.
+- **Next step:** `session-0594-gll-epic-plan` — `/pp` grill → G-025 children + fan-out.
+
+### PL-008 — Vault consolidation + SOT-per-brand vaults as own repos (+ per-brand tooling) — queued · own plan (G-023)
+
+- **Origin:** operator, SESSION_0589 (2026-07-20). Split out of PL-002's vault thread (/rr verdict:
+  own session — too big to pin tonight).
+- **Goal row:** [G-023](goals-ledger.md) vault constellation (existing home). **Own plan-me stub:**
+  `session-0595-vault-consolidation-plan`.
+- **The idea (faithful capture):** the vault merge/separate/consolidation, where **each brand's SOT
+  Vault is its own repo** with its **own docs-navigator + graphify-output HTML**, and
+  **RDD_Master_Vault = this repo** (`ronin-dojo-baseline`). Ties to ADR 0048 (two-repo vault-kit),
+  the QuickCapture per-source inboxes (PL-002 vault side), and the per-brand tooling pipeline
+  (`docs:nav` + graphify HTML per brand). Brand-prefixed vault names ratified in principle (G-023);
+  only MMB exists.
+- **Open forks for the plan (not pre-resolved):** repo-per-brand-vault topology vs sub-folders ·
+  how per-brand docs-navigator + graphify HTML are generated + hosted · vault→repo promotion
+  mechanics for the QuickCapture inboxes (PL-002) · the "vault dashboard that looks/feels like the
+  site" surface (overlaps PL-007 GLL cards + PL-003 State-of-Dojo).
+- **Next step:** `session-0595-vault-consolidation-plan` — `/pp` grill under G-023.
+
+### PL-009 — Codex Daily Bug Scan (DBS) → ledger + State-of-Dojo component — planned (SESSION_0589 → L2 + L4 + fresh-Codex L`session-0596`)
+
+- **Origin:** operator directive, SESSION_0589 (2026-07-20). The DBS "ran this morning and has work
+  to review/merge."
+- **The idea:** the scheduled **Codex Daily Bug Scan** feeds a **findings ledger**
+  ([`daily-bug-scan-ledger.md`](daily-bug-scan-ledger.md), `DBS`, created this session) which renders
+  as a **visual UI/UX component on the State of the Dojo page** — on the local opening/closing
+  artifact AND the pushed `/app` admin dashboard landing — running after/as part of the scan.
+- **SESSION_0589 finding:** the scan is **not editable from a Claude session here** (no repo-side
+  config, no crontab; only disk/docker launchd monitors). It is Codex-Cloud-side → the pipeline is a
+  **fresh Codex session** the operator runs. This morning's output is **not located in the repo**
+  (no PRs/branch/report) — operator to point to it.
+- **Planned (three touch-points):**
+  - **L2** (`session-0591`): wire the `DBS` code into ledger-backlog + deferral-guard + §6.7.
+  - **L4** (`session-0593`): build the DBS visual component on State of the Dojo.
+  - **`session-0596-dbs-pipeline`** (fresh Codex): locate/import this morning's output; define the
+    scan→DBS-ledger append format + schedule (cron/launchd) + the L4 component's data contract.
+- **Goal row:** [G-023](goals-ledger.md) (State-of-Dojo host surface).
 
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.
+- [Daily Bug Scan Ledger](daily-bug-scan-ledger.md) — the DBS findings ledger (PL-009).
 - [Petey Plan protocol](../../protocols/petey-plan.md) — the plan-session machinery.
 - [Loop-of-Loops](../../protocols/loop-of-loops-ledger-driven-sessions.md) — ledger-driven
   session model this slots into.

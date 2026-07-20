@@ -541,13 +541,17 @@ aggregator reads it with no new parser logic.
   (`/app/state`) open. **Remaining:** Session C (lane facet + `--lane=` — read 0585's additive
   `--json` fields before extending `ledger-backlog.ts`) · Session D (/pp epic-plan dogfood) ·
   brand SOT cards (B remainder, explicitly not built per dispatch).
+- **Progress (SESSION_0589):** two children staged as their own plan-me sessions — **slice-2
+  State-of-Dojo `/app` admin landing** (PL-003 + PL-006 token-cost) → `session-0593-sotd-admin-
+  landing-plan`; **vault consolidation + SOT-per-brand-vaults-as-repos + per-brand tooling**
+  (PL-008) → `session-0595-vault-consolidation-plan`. ADR 0051 (PL-004) ratified the dashboard's
+  unit = **brand tabs** under the RDD umbrella.
 
 ### G-024 — Feature + feedback widgets for all sites (idea-intake program)
 
-- **Status:** open — queued, **plan-first** (operator directive SESSION_0587; NO build until
-  the PL-001 plan session runs — full `/pp` Petey plan → AM_Plan_Session → fan-out build, the
-  0587 orchestrator pattern).
-- **Est:** unplanned (the plan session sets it).
+- **Status:** planned — PL-001 plan session **ran (SESSION_0589)**; two executable lanes staged
+  (below), stage-for-later (operator dispatches on his word). Was plan-first (0587).
+- **Est:** 2 lanes (L2 wiring + L3 widget); MMB mount = fast-follow after kernel extraction.
 - **Objective:** ONE platform intake module (RDD kernel law — module × per-product mount, not
   forks). Phase 1: **admins-only "feature-widget"** on the MMB and BBL admin surfaces — an
   idea-dump for Brian / Michael (MMB owner, admin) / Tony (BBL admin): ideas, images, notes,
@@ -558,6 +562,29 @@ aggregator reads it with no new parser logic.
   (engagement-triggered toast; `Report` type `Feedback` persistence + admin email via
   `reportFeedback`; config `apps/web/config/feedback.ts`; e2e spec). No separate
   feature-widget component. Prior row: `petey-plan-0419` §5.4 (brand/account-aware feedback).
-- **Tracked children:** PL-001 plan session (owns scope, Est, lanes, ledger-backlog +
-  §6.7-router wiring for the planning-ledger itself).
-- **Lane:** rdd (platform module; first mounts mmb + bbl).
+- **Tracked children (staged SESSION_0589):**
+  - **L3** `session-0592-feature-widget` — NEW `feature-widget.tsx` (admins-only idea-dump; reuse
+    uploader/rate-limit/persistence seam, NOT a feedback-widget overload); **DB inbox → admin triage
+    → session-time promote to PL rows**; **BBL `/app` admin first**, structured for `packages/ui-kit`
+    extraction; MMB fast-follow.
+  - **L2** `session-0591-ledger-wiring` — wire `PL` + `RLL`/`YLL`/`GPTLL` into `ledger-backlog.ts` +
+    `deferral-guard.ts:49` + closing.md §6.7 (shared with PL-002).
+- **Lane:** rdd (platform module; first mounts bbl, then mmb).
+
+### G-025 — GLL_Epic: Giddy-Lessons / Kaizen / /teach code-lessons system
+
+- **Status:** open — queued, **plan-first** (operator directive SESSION_0589; own multi-session epic:
+  grill → plan → build → code-review). Captured as [PL-007](planning-ledger.md).
+- **Est:** unplanned (the `session-0594-gll-epic-plan` plan session sets it).
+- **Objective:** turn session lessons from token-burn into a durable, browsable, learn-it-yourself
+  system so the operator can pick up any work (usage-hit or by choice). Pieces (plan-session grills,
+  not pre-resolved): closing **`/refine-recipe` binary** (make Kaizen reflections durable) · **Kaizen
+  + Giddy-Lessons as cards** on State-of-Dojo (swipe/search on phone; click into site/vault pages) ·
+  **`/teach` skill** at session end (durable how-to-code-it-myself + why + alternatives + token cost +
+  time est + git-replay merge log) → `human-code-runbook.md` pointed entries · **`/Code-Lessons`
+  skill + Code-Lessons_Ledger** (leaner Giddy lessons; hook-trigger groups ≥N into a Giddy-Lesson
+  entry).
+- **Cross-cuts:** rituals (closing), skills, `human-code-runbook.md`, **State-of-Dojo surface (G-023
+  / PL-003 — cards render there)**, vault-as-site-mirror (PL-008).
+- **Tracked children:** `session-0594-gll-epic-plan` (own `/pp` plan → children + fan-out).
+- **Lane:** rdd (platform governance + agent-learning system).
