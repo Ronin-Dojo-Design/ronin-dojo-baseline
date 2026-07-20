@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation"
-import { Brand } from "~/.generated/prisma/client"
+import { Brand, TechniqueProgressStatus } from "~/.generated/prisma/client"
+import { getServerSession } from "~/lib/auth"
+import { findOwnTechniqueProgress } from "~/server/web/techniques/progress"
 import {
   gateTechniqueMedia,
   hasPremiumTechniqueMedia,
@@ -33,5 +35,26 @@ export default async function TechniqueDetailPage({ params }: PageProps) {
     : true
   const gatedMedia = gateTechniqueMedia(attachments, viewerEntitled)
 
-  return <TechniqueDetail technique={technique} brand={Brand.BBL} gatedMedia={gatedMedia} />
+  // G-022 Lane B (SESSION_0580) — resolve the viewer's OWN progress. `null` for an anonymous
+  // visitor (the control renders nothing for them); a signed-in viewer always gets an object, even
+  // when they have never tracked this technique (`isTracked: false`, status defaults NOT_STARTED).
+  const session = await getServerSession()
+  const ownProgress = session?.user
+    ? await findOwnTechniqueProgress(session.user.id, technique.id)
+    : null
+  const progress = session?.user
+    ? {
+        status: ownProgress?.status ?? TechniqueProgressStatus.NOT_STARTED,
+        isTracked: Boolean(ownProgress),
+      }
+    : null
+
+  return (
+    <TechniqueDetail
+      technique={technique}
+      brand={Brand.BBL}
+      gatedMedia={gatedMedia}
+      progress={progress}
+    />
+  )
 }

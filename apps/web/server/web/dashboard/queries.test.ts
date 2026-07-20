@@ -18,6 +18,10 @@
  * stubbed BEFORE the module under test loads (it reads the GLOBAL db), and the entitlement seam
  * (`next/cache` module pulled transitively via techniques/permissions) is stubbed as in
  * `apply-technique.test.ts`.
+ *
+ * `findUserTechniqueProgress` (G-022 Lane B, SESSION_0580, additive) — DISTINCT from
+ * `findUserTechniques` (authored/managed rows). Pins the query shape: scoped to the caller's own
+ * `userId`, technique brand via the nested relation (progress has no `brand` column), newest-first.
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module
@@ -30,14 +34,22 @@ mock.module("~/env", () => ({
 }))
 
 // `findUserTechniques` reads the GLOBAL db (module-level import) — the stub records the exact
-// Prisma args the query issues. Only `technique.findMany` is exercised by this file.
+// Prisma args the query issues. `technique.findMany` backs `findUserTechniques`;
+// `techniqueProgress.findMany` backs `findUserTechniqueProgress` (additive, SESSION_0580).
 type TechniqueFindManyArgs = { where: Record<string, unknown> }
 const techniqueQueries: TechniqueFindManyArgs[] = []
+const progressQueries: Array<Record<string, unknown>> = []
 mock.module("~/services/db", () => ({
   db: {
     technique: {
       findMany: async (args: TechniqueFindManyArgs) => {
         techniqueQueries.push(args)
+        return []
+      },
+    },
+    techniqueProgress: {
+      findMany: async (args: Record<string, unknown>) => {
+        progressQueries.push(args)
         return []
       },
     },
@@ -52,6 +64,7 @@ mock.module("~/server/web/entitlements/queries", () => ({
 
 beforeEach(() => {
   techniqueQueries.length = 0
+  progressQueries.length = 0
 })
 
 describe("findUserTechniques", () => {
@@ -97,5 +110,20 @@ describe("findUserTechniques", () => {
     // Referential-shape proof: if `findUserTechniques` drifts off the shared helper (hand-copies a
     // variant), this deep-equal breaks the moment the helper and the copy diverge.
     expect(staffLeg).toEqual(activeStaffMembershipWhere("user-2"))
+  })
+})
+
+describe("findUserTechniqueProgress", () => {
+  it("scopes to the caller's own userId + the technique's brand, newest-updated first", async () => {
+    const { findUserTechniqueProgress } = await import("./queries")
+
+    await findUserTechniqueProgress("user-1", "BBL" as never)
+
+    expect(progressQueries).toHaveLength(1)
+    expect(progressQueries[0]?.where).toEqual({
+      userId: "user-1",
+      technique: { brand: "BBL" },
+    })
+    expect(progressQueries[0]?.orderBy).toEqual({ updatedAt: "desc" })
   })
 })

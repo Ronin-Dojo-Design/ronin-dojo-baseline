@@ -5,6 +5,7 @@ import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
 import { TechniqueBadges } from "./technique-badges"
 import type { TechniqueDetailView } from "./technique-detail-format"
+import { TechniqueProgressControl } from "./technique-progress-control"
 import { TechniqueProseList } from "./technique-prose-list"
 import { TechniqueSafety } from "./technique-safety"
 
@@ -26,7 +27,7 @@ const TechniqueMedia = dynamic(() => import("./technique-media").then(m => m.Tec
  *
  * @see docs/runbooks/component-launch-sweep-recipe.md
  */
-export function TechniqueDetail({ technique, brand, gatedMedia }: TechniqueDetailView) {
+export function TechniqueDetail({ technique, brand, gatedMedia, progress }: TechniqueDetailView) {
   return (
     <BrandTypography brand={brand} className={bblHeadingScopeClass}>
       <Intro>
@@ -36,8 +37,15 @@ export function TechniqueDetail({ technique, brand, gatedMedia }: TechniqueDetai
 
       <TechniqueBadges technique={technique} />
 
-      <Stack direction="row" size="xs" className="w-full">
+      <Stack direction="row" size="xs" className="w-full flex-wrap items-center">
         <ListingSaveButton subjectType="TECHNIQUE" subjectId={technique.id} />
+        {progress && (
+          <TechniqueProgressControl
+            techniqueId={technique.id}
+            initialStatus={progress.status}
+            initialIsTracked={progress.isTracked}
+          />
+        )}
       </Stack>
 
       <TechniqueMedia

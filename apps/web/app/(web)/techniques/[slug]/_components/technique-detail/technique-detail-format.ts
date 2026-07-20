@@ -1,4 +1,4 @@
-import type { Brand } from "~/.generated/prisma/client"
+import type { Brand, TechniqueProgressStatus } from "~/.generated/prisma/client"
 import type { GatedTechniqueMedia } from "~/server/web/techniques/technique-media-gate"
 import type { TechniqueOne } from "~/server/web/techniques/payloads"
 
@@ -25,4 +25,11 @@ export type TechniqueDetailView = {
    * single centered upgrade panel (behavior-preserving for a fully-premium technique).
    */
   gatedMedia: GatedTechniqueMedia
+  /**
+   * G-022 Lane B (SESSION_0580) — the viewer's OWN technique-progress, resolved server-side.
+   * `null` for an anonymous visitor (no "own progress" to show); a signed-in viewer always gets an
+   * object, `isTracked: false` when they have never set a status (the control still renders so they
+   * can start tracking).
+   */
+  progress: { status: TechniqueProgressStatus; isTracked: boolean } | null
 }
