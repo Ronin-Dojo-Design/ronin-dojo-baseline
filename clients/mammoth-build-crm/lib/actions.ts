@@ -526,10 +526,50 @@ export async function reconcileBoard(cards: BoardCard[]): Promise<void> {
 // Sales cockpit tracer (SESSION_0571_TASK_03)
 // ---------------------------------------------------------------------------
 
+/**
+ * Group the flat contact-attempt rows by project and build each project's attempt log.
+ * Extracted from `getSalesCockpit` (SESSION_0588 P3) so the cockpit read stays under the
+ * CRAP complexity bar — the grouping double-loop is self-contained and reads on its own.
+ */
+function groupAttemptsByProject(
+  rows: readonly {
+    projectId: string;
+    completedAt: Date | null;
+    createdAt: Date;
+    id: string;
+    status: string;
+    title: string;
+    type: string;
+  }[],
+): Map<string, ReturnType<typeof buildAttemptLog>> {
+  const grouped = new Map<string, Parameters<typeof buildAttemptLog>[0]>();
+  for (const rowItem of rows) {
+    const list = grouped.get(rowItem.projectId) ?? [];
+    list.push({
+      completedAt: rowItem.completedAt?.toISOString() ?? null,
+      createdAt: rowItem.createdAt.toISOString(),
+      id: rowItem.id,
+      status: rowItem.status,
+      title: rowItem.title,
+      type: rowItem.type,
+    });
+    grouped.set(rowItem.projectId, list);
+  }
+  const attemptsByProject = new Map<string, ReturnType<typeof buildAttemptLog>>();
+  for (const [projectId, list] of grouped) {
+    attemptsByProject.set(projectId, buildAttemptLog(list));
+  }
+  return attemptsByProject;
+}
+
 /** Owner-scoped Today queue, active Opportunity roster, and Contact workspace read model. */
 export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
   const ownerId = await requireOwner();
   const now = new Date();
+  // `stage notIn [complete, lost]` scopes the cockpit to ACTIVE opportunities only. This is why
+  // the cockpit's Lead Source facet counts differ from the /app pipeline board's, which tallies
+  // ALL projects incl. Closed-Lost — cockpit = live work queue, board = full pipeline. Parity gap
+  // is BY DESIGN, ratified SESSION_0588; do not widen this filter to "match" the board.
   const visibleProjects = {
     OR: [{ ownerId }, { ownerId: null }],
     stage: { notIn: ["complete", "lost"] as StageId[] },
@@ -608,25 +648,7 @@ export async function getSalesCockpit(): Promise<SalesCockpitReadModel> {
     }),
   ]);
 
-  const attemptsByProject = new Map<string, ReturnType<typeof buildAttemptLog>>();
-  {
-    const grouped = new Map<string, Parameters<typeof buildAttemptLog>[0]>();
-    for (const rowItem of attemptRows) {
-      const list = grouped.get(rowItem.projectId) ?? [];
-      list.push({
-        completedAt: rowItem.completedAt?.toISOString() ?? null,
-        createdAt: rowItem.createdAt.toISOString(),
-        id: rowItem.id,
-        status: rowItem.status,
-        title: rowItem.title,
-        type: rowItem.type,
-      });
-      grouped.set(rowItem.projectId, list);
-    }
-    for (const [projectId, list] of grouped) {
-      attemptsByProject.set(projectId, buildAttemptLog(list));
-    }
-  }
+  const attemptsByProject = groupAttemptsByProject(attemptRows);
 
   const queueItems: SalesQueueItem[] = nextActions.map((activity) => ({
     activityId: activity.id,

@@ -20,6 +20,12 @@
  * store instead — `save`/`reconcileBoard` is untouched either way, and a
  * `reconcileBoard` call only ever touches the cards it's given, so persisting a
  * filtered subset never drops the rows that were filtered out of view.
+ *
+ * `onAfterSave` (SESSION_0588) is an optional post-persist seam so the page can
+ * refresh out-of-band derived reads (the Lead Source facet counts) after the
+ * board reconciles. A lead added via the intake column stamps a new source, so
+ * the counts are no longer immutable after mount — the callback fires once
+ * `reconcileBoard` resolves so the facet re-tallies without a full reload.
  */
 
 import type { BoardState, BoardStore } from "@ronin-dojo/ui-kit/kanban";
@@ -27,7 +33,10 @@ import { listProjects, reconcileBoard } from "./actions";
 import { projectToCard } from "./board-config";
 import type { LeadSourceValue } from "./lead-source";
 
-export function createDbBoardStore(sourceFilter?: LeadSourceValue | null): BoardStore {
+export function createDbBoardStore(
+  sourceFilter?: LeadSourceValue | null,
+  onAfterSave?: () => void,
+): BoardStore {
   return {
     async load(configId) {
       const projects = await listProjects();
@@ -38,6 +47,7 @@ export function createDbBoardStore(sourceFilter?: LeadSourceValue | null): Board
     },
     async save(state: BoardState) {
       await reconcileBoard(state.cards);
+      onAfterSave?.();
     },
   };
 }

@@ -1,4 +1,5 @@
-// Domain types for the Mammoth Build CRM MVP. Frontend-only; persisted in localStorage.
+// Domain types for the Mammoth Build CRM MVP. Persisted in the Mammoth Prisma DB
+// (`mammoth_dev`, ADR 0038 Phase 2) — no longer localStorage.
 
 import type { LeadSourceValue } from "./lead-source";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AdminKanban } from "@ronin-dojo/ui-kit/kanban";
 import { LeadSourceFacet } from "@/components/crm/LeadSourceFacet";
 import { listProjects } from "@/lib/actions";
@@ -17,30 +17,45 @@ import { countLeadSources, leadSourceLabel, type LeadSourceValue } from "@/lib/l
  * @ronin-dojo/ui-kit; the cards are the `Project` rows of `mammoth_dev`. Brand = the
  * token block in app/globals.css. (Seed comes from the DB now, not a prop.)
  *
- * Lead Source facet (SESSION_0586, G-021 loop 3b): read-side only. Counts come from one
- * `listProjects()` read — a lead's source is stamped at intake and never changes afterward,
- * so a one-time fetch is enough (no polling, no callback out of the kernel). The kernel
- * (`AdminKanban`) takes only `config` + `store` and has no filter prop (ADR 0033 D5 — the
- * board is config + data, zero per-project code in the kernel), and `useBoard` only reloads
- * when `config.id` changes, not when `store` does. So the filter narrows
- * `createDbBoardStore`'s own `load()` and the page remounts `AdminKanban` via `key` on filter
- * change — the kernel itself is never touched.
+ * Lead Source facet (SESSION_0586, G-021 loop 3b): read-side only. Counts come from a
+ * `listProjects()` read — a lead's source is stamped at intake. Because the intake column
+ * can add a lead mid-session (SESSION_0588), the counts are refreshed after every board save
+ * via the store's `onAfterSave` seam (below), not only once at mount — so a new lead's source
+ * shows up in the facet without a full reload (still no polling). The kernel (`AdminKanban`)
+ * takes only `config` + `store` and has no filter prop (ADR 0033 D5 — the board is config +
+ * data, zero per-project code in the kernel), and `useBoard` only reloads when `config.id`
+ * changes, not when `store` does. So the filter narrows `createDbBoardStore`'s own `load()`
+ * and the page remounts `AdminKanban` via `key` on filter change — the kernel itself is never
+ * touched.
  */
 export default function PipelinePage() {
   const [sourceFilter, setSourceFilter] = useState<LeadSourceValue | null>(null);
   const [counts, setCounts] = useState<Partial<Record<LeadSourceValue, number>> | null>(null);
 
+  // Unmount guard shared by the mount fetch and the after-save refresh, so a
+  // save that resolves after navigation never calls setState on an unmounted page.
+  const aliveRef = useRef(true);
   useEffect(() => {
-    let alive = true;
-    listProjects().then((projects) => {
-      if (alive) setCounts(countLeadSources(projects.map((project) => project.source)));
-    });
+    aliveRef.current = true;
     return () => {
-      alive = false;
+      aliveRef.current = false;
     };
   }, []);
 
-  const store = useMemo(() => createDbBoardStore(sourceFilter), [sourceFilter]);
+  const refreshCounts = useCallback(() => {
+    listProjects().then((projects) => {
+      if (aliveRef.current) setCounts(countLeadSources(projects.map((project) => project.source)));
+    });
+  }, []);
+
+  useEffect(() => {
+    refreshCounts();
+  }, [refreshCounts]);
+
+  const store = useMemo(
+    () => createDbBoardStore(sourceFilter, refreshCounts),
+    [sourceFilter, refreshCounts],
+  );
   const totalCount = useMemo(
     () => Object.values(counts ?? {}).reduce((sum: number, n) => sum + (n ?? 0), 0),
     [counts],

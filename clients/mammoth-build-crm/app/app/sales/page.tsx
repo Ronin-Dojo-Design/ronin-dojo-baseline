@@ -77,6 +77,12 @@ export default function SalesCockpitPage() {
   // Today queue and the contact workspace stay keyed off the full roster, independent of
   // whatever source is currently selected (same decoupling the queue already has from the
   // roster's own selection).
+  //
+  // Cross-surface parity note (ratified SESSION_0588): these facet counts intentionally differ
+  // from the /app pipeline board's. This cockpit tallies ACTIVE opportunities only — the roster
+  // is `getSalesCockpit`'s live queue (stage notIn [complete, lost]) — whereas the board facet
+  // tallies ALL projects incl. Closed-Lost. Cockpit = live work queue; board = full pipeline.
+  // This is BY DESIGN, not a drift bug: do not "reconcile" the two count populations.
   const sourceCounts = useMemo(
     () => countLeadSources((model?.roster ?? []).map((project) => project.source)),
     [model],
