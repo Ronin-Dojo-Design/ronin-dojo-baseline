@@ -27,6 +27,26 @@ export const typeLabelFor = (type: BjjTechniqueGraphNode["type"]) =>
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ")
 
+// B2: short, plain-language glossary for the DifficultyLevel enum (prisma/schema.prisma) — no
+// existing content source defines these, so this IS the one authored copy. Keyed by the raw
+// enum string; an unrecognized level still renders (label falls back to a humanized string,
+// definition to null) rather than a blank/broken tooltip — defensive-forward for future levels.
+const DIFFICULTY_DEFINITIONS: Record<string, string> = {
+  BEGINNER: "Safe to drill from day one — no prior technique required.",
+  INTERMEDIATE: "Builds on a foundational move; expect some prior mat time.",
+  ADVANCED: "Needs solid fundamentals and live-rolling experience.",
+  EXPERT: "High-risk or highly technical — reserve for experienced practitioners.",
+}
+
+/** Humanized difficulty label ("BEGINNER" → "Beginner"). Single-word enum, so a simple
+ * capitalize suffices (no hyphen/underscore splitting needed, unlike `typeLabelFor`). */
+export const difficultyLabelFor = (level: string) =>
+  level.charAt(0).toUpperCase() + level.slice(1).toLowerCase()
+
+/** Plain-language definition of a difficulty term, or `null` outside the known glossary. */
+export const difficultyDefinitionFor = (level: string): string | null =>
+  DIFFICULTY_DEFINITIONS[level] ?? null
+
 /** First sentence of the description, clamped to ~140 chars with a real ellipsis (U+2026). */
 const deriveDefinition = (description: string | null): string | null => {
   const text = description?.trim()

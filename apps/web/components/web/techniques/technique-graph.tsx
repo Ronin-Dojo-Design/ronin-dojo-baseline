@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
+import { EmptyList } from "~/components/common/empty-list"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
 import {
@@ -36,7 +37,12 @@ import type {
   BjjTechniqueGraphEdge,
   BjjTechniqueGraphNode,
 } from "~/server/web/techniques/graph-query"
-import { deriveNodeTooltip, typeLabelFor } from "~/server/web/techniques/node-tooltip"
+import {
+  deriveNodeTooltip,
+  difficultyDefinitionFor,
+  difficultyLabelFor,
+  typeLabelFor,
+} from "~/server/web/techniques/node-tooltip"
 
 const NODE_WIDTH = 168
 const NODE_HEIGHT = 64
@@ -165,6 +171,24 @@ const withExportSafeStyles = async <T,>(
     for (const child of Array.from(node.querySelectorAll<HTMLElement>("span"))) {
       setStyle(child, "color", style.text)
     }
+
+    // WL-P2-65: html2canvas mis-renders the `-webkit-box`/`-webkit-line-clamp` truncation model
+    // — it clips glyph TOPS on the name line even at today's label lengths, none of which
+    // actually need the 2-line clamp (verified against the live layout JSON: longest label is 15
+    // chars, well under one line at this node width). Disambiguation experiment (real captures,
+    // one variable isolated at a time, real html2canvas) ruled out BOTH ledger candidates — the
+    // font-family pin below and the fixed 64px node height/overflow both still clipped when
+    // isolated. Only dropping BOTH the webkit-box display AND its own overflow-hidden fixed it —
+    // an `overflow: hidden` + fixed `max-height` substitute (same visual cap, no webkit-box)
+    // reproduced the SAME clip, so html2canvas's bug here is the overflow-clip calculation
+    // itself, not `-webkit-box` specifically. `overflow: visible` is safe: the OUTER node button
+    // keeps its own `overflow-hidden` for the (never-yet-hit) case of a future longer label.
+    const label = node.querySelector<HTMLElement>('[class*="line-clamp"]')
+    if (label) {
+      setStyle(label, "display", "block")
+      setStyle(label, "-webkit-line-clamp", "none")
+      setStyle(label, "overflow", "visible")
+    }
   }
 
   // Preserve the second tint channel in PNG exports. The generic OKLab-safety pass above clears
@@ -234,9 +258,11 @@ function buildEdgePath(from: BjjTechniqueGraphNode, to: BjjTechniqueGraphNode) {
 function GraphEdge({
   edge,
   nodeById,
+  isHighlighted,
 }: {
   edge: BjjTechniqueGraphEdge
   nodeById: Map<string, BjjTechniqueGraphNode>
+  isHighlighted: boolean
 }) {
   const from = nodeById.get(edge.from)
   const to = nodeById.get(edge.to)
@@ -247,7 +273,13 @@ function GraphEdge({
     <path
       d={buildEdgePath(from, to)}
       data-graph-edge-type={edge.type}
-      className={cx("fill-none stroke-2 opacity-55", edgeTypeClass(edge.type))}
+      // C5: an edge touching the selected node brightens + thickens (the "neighborhood glow"
+      // reaching along the connection, not just sitting on the neighbor node itself).
+      className={cx(
+        "fill-none transition-[stroke-width,opacity] duration-200 motion-reduce:transition-none",
+        isHighlighted ? "stroke-[3] opacity-90" : "stroke-2 opacity-55",
+        edgeTypeClass(edge.type),
+      )}
       strokeLinecap="round"
     />
   )
@@ -257,6 +289,12 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const [pan, setPan] = useState({ x: 48, y: 48 })
   const [zoom, setZoom] = useState(1)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  // C5: hovered node id, LIVE (not sticky like rovingNodeId below) — the neighborhood glow's
+  // primary trigger. Runtime-probed: the dialog's own backdrop (bg-foreground/10 + blur-sm) is
+  // heavy enough at typical zoom that a selectedNodeId-only glow is invisible once the dialog is
+  // open, so hover (before the dialog opens) is where the glow actually reads. selectedNodeId
+  // stays a fallback source (harmless, occasionally visible through the blur).
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   // APG roving tabindex over the node layer (D-5): the last-active node id. Persists across
   // Tab-out/Tab-in so re-entering the layer returns to where the user left off.
   const [rovingNodeId, setRovingNodeId] = useState<string | null>(null)
@@ -317,6 +355,20 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     [graph.nodes],
   )
   const selectedNode = selectedNodeId ? allNodeById.get(selectedNodeId) : undefined
+  // C5: the active node's directly-connected neighbors (1-hop, either edge direction), over ALL
+  // edges (not just visibleEdges) — a neighbor hidden by the current type filter simply has no
+  // rendered button to glow, so filtering the set further would be dead code either way. Hover
+  // wins (live, visible pre-dialog); selectedNodeId is a fallback source only.
+  const glowSourceId = hoveredNodeId ?? selectedNodeId
+  const neighborNodeIds = useMemo(() => {
+    const neighbors = new Set<string>()
+    if (!glowSourceId) return neighbors
+    for (const edge of graph.edges) {
+      if (edge.from === glowSourceId) neighbors.add(edge.to)
+      else if (edge.to === glowSourceId) neighbors.add(edge.from)
+    }
+    return neighbors
+  }, [graph.edges, glowSourceId])
 
   const fitToView = useCallback(() => {
     const canvas = canvasRef.current
@@ -716,7 +768,15 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   height={bounds.height}
                 >
                   {visibleEdges.map(edge => (
-                    <GraphEdge key={edge.id} edge={edge} nodeById={nodeById} />
+                    <GraphEdge
+                      key={edge.id}
+                      edge={edge}
+                      nodeById={nodeById}
+                      isHighlighted={
+                        glowSourceId !== null &&
+                        (edge.from === glowSourceId || edge.to === glowSourceId)
+                      }
+                    />
                   ))}
                 </svg>
 
@@ -733,6 +793,14 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                             className={cx(
                               "absolute flex flex-col justify-center gap-1 overflow-hidden rounded-lg border-2 px-3 text-left shadow-sm transition-[transform,box-shadow,border-color] duration-200 hover:z-10 hover:-translate-y-0.5 hover:shadow-md active:translate-y-px active:shadow-sm motion-reduce:transform-none motion-reduce:transition-none focus-visible:z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                               selectedNodeId === node.id && "z-10 ring-2 ring-ring",
+                              // C5: the hovered/selected node's 1-hop neighbors glow — a soft
+                              // primary ring + shadow, the SAME idiom `lineage-branch.tsx` uses
+                              // for "isInSelectedPath" (never the active node's own stronger
+                              // ring). Hover-driven so it's visible WHILE exploring, before the
+                              // dialog's backdrop blur would otherwise hide it (runtime-probed).
+                              node.id !== glowSourceId &&
+                                neighborNodeIds.has(node.id) &&
+                                "z-10 ring-1 ring-primary/40 shadow-md shadow-primary/10",
                               nodeTypeClass(node.type),
                             )}
                             data-graph-node-type={node.type}
@@ -747,7 +815,17 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                             }}
                             aria-label={`${node.label}, ${typeLabelFor(node.type)}`}
                             aria-pressed={selectedNodeId === node.id}
-                            onFocus={() => setRovingNodeId(node.id)}
+                            onFocus={() => {
+                              setRovingNodeId(node.id)
+                              setHoveredNodeId(node.id)
+                            }}
+                            onBlur={() =>
+                              setHoveredNodeId(current => (current === node.id ? null : current))
+                            }
+                            onMouseEnter={() => setHoveredNodeId(node.id)}
+                            onMouseLeave={() =>
+                              setHoveredNodeId(current => (current === node.id ? null : current))
+                            }
                             onClick={event => {
                               event.stopPropagation()
                               setSelectedNodeId(node.id)
@@ -807,6 +885,34 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               </div>
             </TooltipProvider>
           </div>
+
+          {/* D3 / AUD2-7: a type filter with zero matches used to leave a silent, blank canvas —
+              same "reset the filter" idiom as `community-feed.tsx`'s EmptyList, sized to sit over
+              the dot-grid without blocking pan/drag on the empty canvas underneath. */}
+          {visibleNodesWithTooltips.length === 0 && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center p-6">
+              <EmptyList
+                render={
+                  <Card className="pointer-events-auto w-auto max-w-xs items-center gap-3 text-center" />
+                }
+              >
+                {activeType === "all"
+                  ? "No techniques in this graph yet."
+                  : `No ${NODE_TYPES.find(type => type.value === activeType)?.label.toLowerCase()} techniques in this graph yet.`}
+                {activeType !== "all" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="mt-2"
+                    onClick={() => setActiveType("all")}
+                  >
+                    Show all techniques
+                  </Button>
+                )}
+              </EmptyList>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -825,7 +931,23 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                 <Badge variant="primary">{typeLabelFor(selectedNode.type)}</Badge>
                 {selectedNode.position && <Badge variant="soft">{selectedNode.position}</Badge>}
                 {selectedNode.difficultyLevel && (
-                  <Badge variant="outline">{selectedNode.difficultyLevel}</Badge>
+                  // B2: the raw enum ("BEGINNER") never faced members — humanize it, and explain
+                  // what the term means on hover/focus (glossary lives in node-tooltip.ts; the
+                  // Base UI Tooltip.Trigger works on a plain non-button element, same idiom as
+                  // `verified-badge.tsx`/`product-features.tsx`'s Ping trigger).
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={
+                        <Badge variant="outline" className="cursor-help">
+                          {difficultyLabelFor(selectedNode.difficultyLevel)}
+                        </Badge>
+                      }
+                    />
+                    <TooltipContent>
+                      {difficultyDefinitionFor(selectedNode.difficultyLevel) ??
+                        difficultyLabelFor(selectedNode.difficultyLevel)}
+                    </TooltipContent>
+                  </Tooltip>
                 )}
                 {selectedNode.isFoundational && <Badge variant="success">Foundational</Badge>}
               </Stack>

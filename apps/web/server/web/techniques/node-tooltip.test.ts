@@ -1,7 +1,7 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, test } from "bun:test"
 import type { BjjTechniqueGraphNode } from "./graph-query"
-import { deriveNodeTooltip } from "./node-tooltip"
+import { deriveNodeTooltip, difficultyDefinitionFor, difficultyLabelFor } from "./node-tooltip"
 
 const makeCurriculumItem = (
   overrides: Partial<BjjTechniqueGraphNode["curriculumItems"][number]> = {},
@@ -121,5 +121,27 @@ describe("deriveNodeTooltip", () => {
 
   test("no cue source at all derives an empty key point list", () => {
     expect(deriveNodeTooltip(makeNode()).keyPoints).toEqual([])
+  })
+})
+
+describe("difficultyLabelFor", () => {
+  test("humanizes the raw enum value (upper-only single word)", () => {
+    expect(difficultyLabelFor("BEGINNER")).toBe("Beginner")
+    expect(difficultyLabelFor("INTERMEDIATE")).toBe("Intermediate")
+    expect(difficultyLabelFor("ADVANCED")).toBe("Advanced")
+    expect(difficultyLabelFor("EXPERT")).toBe("Expert")
+  })
+})
+
+describe("difficultyDefinitionFor", () => {
+  test("returns a plain-language definition for every known DifficultyLevel value", () => {
+    for (const level of ["BEGINNER", "INTERMEDIATE", "ADVANCED", "EXPERT"]) {
+      expect(typeof difficultyDefinitionFor(level)).toBe("string")
+      expect(difficultyDefinitionFor(level)!.length).toBeGreaterThan(0)
+    }
+  })
+
+  test("returns null for an unrecognized level (defensive-forward, never throws)", () => {
+    expect(difficultyDefinitionFor("MYTHICAL")).toBeNull()
   })
 })
