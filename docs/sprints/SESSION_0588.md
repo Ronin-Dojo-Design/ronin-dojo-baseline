@@ -2,10 +2,10 @@
 title: "SESSION 0588 — merged-trunk code-quality suite over the 0583–0586 sweep range"
 slug: session-0588
 type: session--review
-status: staged
+status: in-progress
 created: 2026-07-20
 updated: 2026-07-20
-last_agent: claude-session-0587
+last_agent: claude-session-0588
 sprint: S12
 lane: repo
 recipe: review
@@ -26,11 +26,11 @@ backlinks:
 
 ## Date
 
-<fill at adopt>
+2026-07-20
 
 ## Operator
 
-Brian + <agent>-session-0588
+Brian + claude-session-0588
 
 ## Goal
 
@@ -49,6 +49,58 @@ and the **apps/web fixture-ownership test class** (0587: 47 fail, proven non-reg
 unmerged `session-0551-test-infra` `9d845bdd`; if 0587's trunk is still held on that, note it).
 Read `docs/sprints/SESSION_0587.md` (§Full close evidence + Open decisions) first.
 
+## Bow-in
+
+- **Branch:** reservation `session-0588-quality-suite-review` was **stale** (pointed at early-0587
+  `b7ec83ae`; local `main` was not its ancestor). Reconciled: `git branch -f` moved it onto local
+  `main` (e56a0701) — carried no unique work (verified `merge-base --is-ancestor b7ec83ae main`).
+- **Repo state (confirmed):** origin/main at `85f61a9a` (through the 0586 merge — docs/scripts/clients
+  pushed); local `main` at `e56a0701` carries the full 0587 trunk incl. the **HELD 0583 apps/web
+  merge**. Push still held pending `session-0551-test-infra` (`9d845bdd`) + local-green.
+- **FS-0030:** `ledger-id-next --prefix=SESSION` → 366 numbers claimed, highest SESSION_0589; 0588 valid.
+- **Scope of review = the four-lane trunk diff** `9059a640..1e9799bf` (pre-sweep base → last lane
+  merge; excludes the 0587 close-writer bookkeeping): **69 files, +5212/−764**. Code-bearing = **24
+  files** (21 source + 5 test): 0583 apps/web ×6, 0585 scripts ×6, 0586 MMB ×12. Docs/`.claude` = 45
+  (0584 governance — wiki-lint/pointer lens).
+
+## Grill outcome (recipe finalized)
+
+Grilled the operator on adapting `page-code-review.md` (per-page) into the merged-trunk variant.
+Four decisions pinned:
+
+1. **Scope = whole diff, all four lanes** (0584 docs get a wiki-lint / pointer-discipline lens, not
+   `/code-quality`).
+2. **Depth = score + fix** — full `/fallow-fix-loop`, prove the fallow delta down.
+3. **Fix push = split by deploy unit** — 0584 docs + 0585 scripts fixes may push independently; 0583
+   apps/web rides the 0551/BBL-prod hold; 0586 MMB rides its own deploy.
+4. **Write the card** — conform into `docs/protocols/recipes/quality-suite.md` (0584 card format);
+   `page-code-review.md` stays the per-page SoT, the new card is its merged-trunk sibling. This run = the card's test case.
+
+Two locked assumptions: **re-verify bar = delta-neutral** (no NEW failing files vs 0587's documented
+fixture-ownership set — absolute green blocks on 0551, out of scope); **Desi C5 hover-glow = a design
+recommendation only** (any behavior change is a logged Step-3 exception needing operator ratification).
+
+## Fallow baseline (Step 1 — captured before any edit)
+
+`npx fallow audit --changed-since 9059a640 --gate all` (JSON at scratchpad `fallow-baseline.json`):
+
+| Metric | Total | Scoped hotspots (maxCRAP) |
+| --- | --- | --- |
+| Complexity | 23 findings | `technique-graph.tsx` 9×/**306** · MMB `sales/page.tsx` 3×/156 · MMB `actions.ts` 6×/110 · MMB `app/page.tsx` 1×/90 · `ledger-id-next.ts` 2×/42 · `ledger-backlog.ts` 1×/42 |
+| Duplication | 2 clone groups | MMB `seed.ts` ↔ `apps/baseline/prisma/seed.ts` (cross-product seed) · MMB `sales/loading.tsx` ↔ `sales/page.tsx` (skeleton) |
+| Dead code | 34 issues | 0 within the 24-file scope (all out-of-scope churn) |
+
+## Petey plan
+
+Execution shape (fan-out justified — disjoint deploy-unit file sets):
+
+- **Review pass (read-only, scored):** 0583 apps/web → Desi (UX + C5 hover-glow sign-off) + `/code-quality`
+  (highest scrutiny — member-facing, BBL-prod, CRAP 306); 0586 MMB → `/code-quality` + Doug (client gates);
+  0585 scripts → `/code-quality` (+ optional D-051 parser pickup in `state-of-project-parse.ts`); 0584
+  docs → wiki-lint + pointer/backlink discipline (Giddy-lens lite).
+- **Fix pass:** `/fallow-fix-loop`, behavior-preserving, per deploy unit; re-verify delta-neutral; prove fallow delta down.
+- **Deliverable:** the `recipes/quality-suite.md` card + logged baseline→final deltas.
+
 ## Status
 
 Single source of truth is the frontmatter `status:` field.
@@ -57,8 +109,11 @@ Single source of truth is the frontmatter `status:` field.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0588_TASK_01 | pending | Review/tweak page-code-review recipe (± conform to a recipe card) |
-| SESSION_0588_TASK_02 | pending | Run merged-trunk quality suite over 0583–0586 (baseline → review → fix → delta) |
+| SESSION_0588_TASK_01 | done | Grill + finalize recipe (4 decisions pinned); scope + fallow baseline captured |
+| SESSION_0588_TASK_02 | in-progress | Write `recipes/quality-suite.md` card (0584 format), this run as its test case |
+| SESSION_0588_TASK_03 | pending | Scored review pass (Desi/0583 + `/code-quality` per code lane + wiki-lint/0584) |
+| SESSION_0588_TASK_04 | pending | `/fallow-fix-loop` behavior-preserving fixes, split by deploy unit; re-verify delta-neutral |
+| SESSION_0588_TASK_05 | pending | Prove fallow delta; log baseline→final; push gate (HOLD, split by deploy unit) |
 
 ## Next session
 
