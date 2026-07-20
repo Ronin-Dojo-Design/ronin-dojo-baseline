@@ -2,11 +2,13 @@
 title: "Giddy Merge Strategy"
 slug: giddy-merge-strategy
 type: protocol
-status: active
+status: superseded
 created: 2026-06-20
-updated: 2026-06-20
-last_agent: claude-session-0420
+updated: 2026-07-20
+last_agent: claude-session-0584
+superseded_by: docs/protocols/recipes/merge-wave.md
 pairs_with:
+  - docs/protocols/recipes/merge-wave.md
   - docs/agents/giddy.md
   - docs/protocols/merge-to-main.md
   - docs/protocols/pr-review-score-fix-loop.md
@@ -18,6 +20,12 @@ tags:
   - merge
   - commit-gate
 ---
+
+> **SUPERSEDED by [Recipe — Merge Wave](recipes/merge-wave.md) (SESSION_0584, G-023).** The G0→G4
+> gate ladder, hard guards, branch-posture preflight, merge disposition discipline, push cadence,
+> and output contract below are **absorbed, not lost** — read the recipe card; it carries the same
+> law in the recipe-card format (persona pack + load-set + overlays + minimum-output contract).
+> This file stays as detailed historical reference.
 
 # Giddy Merge Strategy
 

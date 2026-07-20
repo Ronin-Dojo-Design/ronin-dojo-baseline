@@ -4,12 +4,12 @@ slug: hostile-close-review
 type: protocol
 status: active
 created: 2026-04-29
-updated: 2026-05-14
-last_agent: codex-session-0163
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/project-log.md
-  - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/WORKFLOW_6.0.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0024.md
@@ -91,8 +91,9 @@ SESSION file's `## Hostile close review` section.
    serve?
 6. **Verification honesty:** Did tests prove the claim, or merely prove the code
    parses?
-7. **Workflow honesty:** Was WORKFLOW 5.0 followed, including lane, worktree,
-   task IDs, review log, and score cap rules?
+7. **Workflow honesty:** Was WORKFLOW 6.0 followed, including lane discipline
+   (or a proven fan-out), worktree hygiene, task IDs, review log, and the score
+   cap rules below?
 8. **Merge readiness:** Is this ready to merge, or only ready to keep working?
 
 ## Kaizen reflection triage (required, three questions)
@@ -124,10 +125,10 @@ review` section directly under the review-questions verdict.
 | 7 – 8 | Stage a remediation session (e.g., `SESSION_NNNN.5`) covering the gaps before the next implementation session. |
 | ≤ 6 | Do not advance. Open a hostile follow-up SESSION immediately. |
 
-The Kaizen aggregate is independent of the WORKFLOW 5.0 ten-point rubric. A
-slice may score 10/10 on plan gates and still earn a Kaizen aggregate of 7
-because the Kaizen view interrogates *what is not yet proven*, not *what was
-planned*. Treat both numbers as load-bearing.
+The Kaizen aggregate is independent of the score below. A slice may score
+10/10 on plan gates and still earn a Kaizen aggregate of 7 because the Kaizen
+view interrogates *what is not yet proven*, not *what was planned*. Treat both
+numbers as load-bearing.
 
 ## Required output
 
@@ -165,7 +166,9 @@ protocol.
 
 ## Score impact
 
-Apply WORKFLOW 5.0 caps honestly:
+Apply these caps honestly — carried forward from WORKFLOW 5.0 into
+[WORKFLOW_6.0.md](WORKFLOW_6.0.md)'s condensed rubric; this file is their one home now,
+not a restatement of an external table:
 
 - Dirstarter compliance failure caps score at 8.9.
 - Data integrity failure caps score at 8.9.

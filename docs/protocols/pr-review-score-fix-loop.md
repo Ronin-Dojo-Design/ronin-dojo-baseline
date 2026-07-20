@@ -4,11 +4,11 @@ slug: pr-review-score-fix-loop
 type: protocol
 status: active
 created: 2026-06-20
-updated: 2026-06-20
-last_agent: claude-session-0420
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/protocols/merge-to-main.md
-  - docs/protocols/giddy-merge-strategy.md
+  - docs/protocols/recipes/merge-wave.md
   - docs/protocols/hostile-close-review.md
   - docs/agents/giddy.md
   - docs/agents/doug.md
@@ -74,7 +74,7 @@ bugs + reuse/simplification) at an effort matched to blast radius; escalate to
 [three-pass gate mode](#gate-modes):
 
 - **Cody** — correctness, security, architecture, does-it-build.
-- **Giddy** — scope drift, structural fit, merge/branch shape ([[giddy-merge-strategy]]).
+- **Giddy** — scope drift, structural fit, merge/branch shape ([[merge-wave]]).
 - **Doug** — test/runtime evidence, lifecycle coverage, release-readiness.
 - **Desi** — only when the diff touches UI/UX surfaces.
 
@@ -99,7 +99,7 @@ Immediately after scoring, Giddy picks exactly one decision before any fix launc
    incomplete. → Improve in place, then re-run from Step 1.
 2. **`INTEGRATE_PASS`** — binary accelerator is `yes` **and** gate score `≥ 9.5`.
    → Integrate precisely via [`merge-to-main.md`](merge-to-main.md) +
-   [[giddy-merge-strategy]] (commit/push only on explicit operator approval —
+   [[merge-wave]] (commit/push only on explicit operator approval —
    [[explicit-push-authorization]]).
 3. **`INTEGRATE_INTENT_REQUIRED`** — output has function/form signal but an
    intent-vs-method mismatch (or broader intent mismatch). → Re-derive the intent
@@ -156,6 +156,6 @@ a `scripts/` runner is a candidate follow-up — until then the loop is operator
 ## Cross-references
 
 - [Merge to Main](merge-to-main.md) — the mechanics this loop hands off to.
-- [Giddy Merge Strategy](giddy-merge-strategy.md) — commit/push gate ladder.
+- [Recipe — Merge Wave](recipes/merge-wave.md) — commit/push gate ladder.
 - [Hostile Close Review](hostile-close-review.md) — the session-close scoring sibling.
 - [Giddy](../agents/giddy.md) · [Doug](../agents/doug.md) · [Cody](../agents/cody.md)

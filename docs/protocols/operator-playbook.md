@@ -4,15 +4,16 @@ slug: operator-playbook
 type: protocol
 status: active
 created: 2026-06-22
-updated: 2026-06-22
+updated: 2026-07-20
 author: Giddy / SESSION_0429
+last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/protocols/next-session-loading-order.md
   - docs/protocols/petey-plan.md
   - docs/protocols/pr-review-score-fix-loop.md
-  - docs/protocols/giddy-merge-strategy.md
+  - docs/protocols/recipes/merge-wave.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -51,7 +52,7 @@ modules (tsc/tests miss the use-server + Prisma-in-browser traps).
 Agents **build + drive-to-green**; **you pull the merge trigger.** This held cleanly across 9 PRs
 this program. Merging app-code → prod deploy (per `vercel.json` `ignoreCommand`); docs/governance/CI
 pushes don't deploy. Sequence dependent PRs (e.g. cleanup behind its feature); independent PRs merge
-in any order. See `giddy-merge-strategy.md` + `merge-to-main.md`.
+in any order. See `recipes/merge-wave.md` + `merge-to-main.md`.
 
 ## Which loop for which signal
 

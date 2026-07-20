@@ -52,9 +52,15 @@ function walkMarkdown(dir: string): string[] {
 
 const FILES = walkMarkdown(DOCS).map(p => ({ path: p, rel: relative(ROOT, p), text: readFileSync(p, "utf-8") }))
 
-/** Every number in use for a prefix, across all occurrences (references included, archives included). */
+/**
+ * Every number in use for a prefix, across all occurrences (references included, archives
+ * included). The trailing `(?!-\d)` excludes composite session-scoped IDs like `D-0407-1` or
+ * `D-0515-01` (a per-session local drift note, `<PREFIX>-<SESSION_NNNN>-<local index>` — a
+ * DIFFERENT ID scheme from the global ledger) — D-049 (SESSION_0582/0584): without this, the
+ * "D" scan matched `D-0407` out of `D-0407-1` and inflated the reported max by hundreds.
+ */
 function usedNumbers(prefix: string): { numbers: Set<number>; padWidth: number } {
-  const re = new RegExp(`\\b${prefix.replaceAll("-", "\\-")}-(\\d+)\\b`, "g")
+  const re = new RegExp(`\\b${prefix.replaceAll("-", "\\-")}-(\\d+)\\b(?!-\\d)`, "g")
   const numbers = new Set<number>()
   const padCounts = new Map<number, number>()
   for (const f of FILES) {
@@ -66,6 +72,38 @@ function usedNumbers(prefix: string): { numbers: Set<number>; padWidth: number }
   }
   const padWidth = [...padCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 3
   return { numbers, padWidth }
+}
+
+/**
+ * The one canonical ledger file each prefix's "real" IDs are defined in — used ONLY for the
+ * D-049 self-check below (mint-scan max vs register-truth max), never for the mint itself.
+ */
+const LEDGER_FILE: Partial<Record<string, string>> = {
+  G: "knowledge/wiki/goals-ledger.md",
+  FS: "protocols/failed-steps-log.md",
+  D: "knowledge/wiki/drift-register.md",
+  FI: "product/black-belt-legacy/POST_LAUNCH_SOT.md",
+  MB: "knowledge/wiki/manual-boundary-registry.md",
+  TFF: "knowledge/wiki/test-fail-fix-ledger.md",
+  INC: "knowledge/wiki/incidents.md",
+  TD: "knowledge/wiki/teardown-ledger.md",
+  "WL-P1": "knowledge/wiki/wiring-ledger.md",
+  "WL-P2": "knowledge/wiki/wiring-ledger.md",
+  "WL-P3": "knowledge/wiki/wiring-ledger.md",
+}
+
+/** Max ID actually DEFINED (heading or table-row, per `definitionSites`' convention) in one file. */
+function ledgerDefinedMax(prefix: string, rel: string): number {
+  const abs = join(DOCS, rel)
+  if (!existsSync(abs)) return 0
+  const text = readFileSync(abs, "utf-8")
+  const escaped = prefix.replaceAll("-", "\\-")
+  const headingRe = new RegExp(`^#{1,6}\\s+\`?\\*{0,2}${escaped}-(\\d+)\\*{0,2}\`?\\s+—`, "gm")
+  const rowRe = new RegExp(`^\\|\\s*\`?\\*{0,2}${escaped}-(\\d+)\\*{0,2}\`?\\s*\\|`, "gm")
+  const nums: number[] = []
+  for (const m of text.matchAll(headingRe)) nums.push(Number.parseInt(m[1] as string, 10))
+  for (const m of text.matchAll(rowRe)) nums.push(Number.parseInt(m[1] as string, 10))
+  return nums.length === 0 ? 0 : Math.max(...nums)
 }
 
 /**
@@ -188,10 +226,31 @@ if (!(PREFIXES as readonly string[]).includes(PREFIX)) {
 const { numbers, padWidth } = usedNumbers(PREFIX)
 const max = numbers.size === 0 ? 0 : Math.max(...numbers)
 const next = `${PREFIX}-${String(max + 1).padStart(padWidth, "0")}`
+
+// D-049 self-check: mint-scan max vs the canonical ledger's DEFINED max. A gap > 50 means the
+// reference-scan almost certainly picked up a phantom (meta-commentary text, an ID scheme this
+// script doesn't know about, etc.) — warn and recommend register-truth instead of blind trust.
+const ledgerRel = LEDGER_FILE[PREFIX]
+let gapWarning: string | null = null
+let safeNext: string | null = null
+if (ledgerRel) {
+  const registerMax = ledgerDefinedMax(PREFIX, ledgerRel)
+  const gap = max - registerMax
+  if (gap > 50) {
+    safeNext = `${PREFIX}-${String(registerMax + 1).padStart(padWidth, "0")}`
+    gapWarning = `mint-scan max ${PREFIX}-${max} is ${gap} ahead of ${ledgerRel}'s defined max ${PREFIX}-${registerMax} — likely a phantom match (composite session-scoped IDs, or prose mentioning a number), NOT a real backlog. Recommended next free (register-truth): ${safeNext}.`
+  }
+}
+
 if (JSON_OUT) {
-  console.log(JSON.stringify({ prefix: PREFIX, used: numbers.size, max, next }))
+  console.log(JSON.stringify({ prefix: PREFIX, used: numbers.size, max, next, gapWarning, safeNext }))
 } else {
   console.log(`\n  ${PREFIX}: ${numbers.size} number(s) in use, highest ${PREFIX}-${String(max).padStart(padWidth, "0")}.`)
   console.log(`  Next free ID: ${next}`)
-  console.log(`  (max+1 over every occurrence in docs/ incl. archives — gap numbers are retired, never reuse them.)\n`)
+  console.log(`  (max+1 over every occurrence in docs/ incl. archives — gap numbers are retired, never reuse them.)`)
+  if (gapWarning) {
+    console.log(`\n  ⚠ SELF-CHECK: ${gapWarning}\n`)
+  } else {
+    console.log("")
+  }
 }

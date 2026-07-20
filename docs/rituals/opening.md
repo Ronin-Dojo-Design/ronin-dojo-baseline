@@ -4,10 +4,12 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-09
-last_agent: claude-session-0476
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/closing.md
+  - docs/protocols/WORKFLOW_6.0.md
+  - docs/protocols/SOT_Cookbook.md
   - docs/protocols/project-log.md
   - docs/runbooks/graphify-repo-memory.md
 backlinks:
@@ -135,14 +137,32 @@ skill (worktree fan-out) and [`pr-review-score-fix-loop.md`](../protocols/pr-rev
 Precedence is unchanged: an operator `/goal` or the prior `Next session` block still wins; PR-pickup is the
 default *only when nothing else is pinned*.
 
-### 2. Read WORKFLOW 5.0 + program plan
+### 1d. Parallel-lane assessment (additive, G-023)
 
-[`docs/protocols/WORKFLOW_5.0.md`](../protocols/WORKFLOW_5.0.md) is the governing operating system for SESSION_0021 forward. Read:
-- The **session calendar** — find today's session row, confirm the primary lane and main outcome.
-- The **worktree map** — confirm which worktree this session operates in.
-- The **Dirstarter alignment table** — you must fill this during bow-in.
+Once steps 1b/1c have surfaced this session's candidate work, before committing to a single lane:
+**scan whether 2+ of those candidates are genuinely disjoint** (distinct file sets, each
+independently reviewable — the same test [`fan-out-session-recipe.md`](../protocols/fan-out-session-recipe.md)
+§1 uses for a full fan-out). If they are, that's a signal to route to
+[`recipes/epic-plan.md`](../protocols/recipes/epic-plan.md) (prove disjointness, write paste-ready
+prompts, dispatch as a fan-out) instead of picking just one and leaving provably-parallel work
+queued. If nothing surfaces 2+ disjoint candidates, proceed with the single elected lane as normal
+— this step is a cheap check, not a mandate to always fan out. Cross-note the assessment
+(ran / found N disjoint candidates / found none) in the SESSION file's Bow-in section.
 
-Then skim [`docs/architecture/program-plan.md`](../architecture/program-plan.md) for broader context (partially superseded by WORKFLOW 5.0 but layered architecture and brand sequencing sections remain valid).
+### 2. Read WORKFLOW 6.0 + SOT_Cookbook
+
+[`docs/protocols/WORKFLOW_6.0.md`](../protocols/WORKFLOW_6.0.md) is the governing operating system
+for SESSION_0584 forward (supersedes 5.0 — its rituals-read is dead canon, don't read it here).
+Read the hard rules once if you haven't recently; then use
+[`SOT_Cookbook.md`](../protocols/SOT_Cookbook.md)'s task→workflow router to pick today's
+skill/loop. There is no session calendar or fixed worktree map to confirm anymore — the
+[goals ledger](../knowledge/wiki/goals-ledger.md) + `ledger-backlog.ts`/`board-backlog.ts` (step 1b)
+are the live backlog, and each lane gets its own `../ronin-NNNN` worktree
+([`seq-lane-build`](../../.claude/skills/seq-lane-build/SKILL.md)) rather than a fixed map entry.
+Dirstarter-alignment is a build-time gate, not a bow-in table — [`cody-preflight.md`](../protocols/cody-preflight.md)
+owns it when the task actually touches an L1 area.
+
+Then skim [`docs/architecture/program-plan.md`](../architecture/program-plan.md) for broader context (partially superseded but layered architecture and brand sequencing sections remain valid).
 
 ### 3. Skim relevant cross-references on demand
 
@@ -200,10 +220,11 @@ State the task in chat (or in your notes) before you start. Be explicit:
 - Why this task now? (one sentence connecting to program plan or user request)
 - What does "done" look like?
 
-**Classify, then dispatch — don't role-play the roster.** First do a **named read** of the **task → workflow
-router** (§1) and the **allowed-vs-never table** (§4) in
-[`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) — a read, not a pointer: these are session-wide
-routing + trust-boundary rules, not just skill-selection. Classify this task against the router, then
+**Classify, then dispatch — don't role-play the roster.** First do a **named read** of
+[`SOT_Cookbook.md`](../protocols/SOT_Cookbook.md)'s **task → workflow router** and the
+**allowed-vs-never table** (§4) in [`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) —
+a read, not a pointer: these are session-wide routing + trust-boundary rules, not just
+skill-selection. Classify this task against the router, then
 **dispatch the matched flow as real sub-agents** via the `Agent` tool's `subagent_type` (the roster lives in
 `.claude/agents/*.md`):
 
@@ -287,7 +308,8 @@ If anything in the previous SESSION file or the program plan looks stale or cont
 ## Cross-references
 
 - [Closing ritual](closing.md) — pairs with this; ends the session.
-- [WORKFLOW 5.0](../protocols/WORKFLOW_5.0.md) — governing operating system for SESSION_0021+; session calendar, lane model, worktree map.
+- [WORKFLOW 6.0](../protocols/WORKFLOW_6.0.md) — governing operating system for SESSION_0584+ (supersedes 5.0).
+- [SOT_Cookbook](../protocols/SOT_Cookbook.md) — the task→workflow router.
 - [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
 - [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
 - [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.

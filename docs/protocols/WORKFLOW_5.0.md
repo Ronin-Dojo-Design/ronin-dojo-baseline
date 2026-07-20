@@ -2,11 +2,13 @@
 title: "WORKFLOW 5.0 — Launch Operating System"
 slug: workflow-5
 type: protocol
-status: active
+status: superseded
 created: 2026-04-28
-updated: 2026-05-24
-last_agent: copilot-session-0241
+updated: 2026-07-20
+last_agent: claude-session-0584
+superseded_by: docs/protocols/WORKFLOW_6.0.md
 pairs_with:
+  - docs/protocols/WORKFLOW_6.0.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/architecture/s2-schema-additions.md
@@ -15,6 +17,13 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
+
+> **SUPERSEDED by [WORKFLOW 6.0](WORKFLOW_6.0.md) (SESSION_0584, G-023).** This file's
+> **rituals-read is DEAD CANON** — the single-primary-lane rule, the `wt-*` worktree map, and the
+> session calendar/launch board below no longer reflect how this repo runs (parallel fan-out lanes,
+> per-session `ronin-NNNN` worktrees, the ledger-driven backlog). Kept for history and for the
+> score-cap mechanics that [`hostile-close-review.md`](hostile-close-review.md) still carries
+> forward. **Do not bulk-read this at bow-in** — read WORKFLOW 6.0 instead.
 
 # WORKFLOW 5.0 — Launch Operating System
 
@@ -251,6 +260,7 @@ POST-LAUNCH
 
 ## Cross-references
 
+- [WORKFLOW 6.0](WORKFLOW_6.0.md) — supersedes this file (SESSION_0584, G-023). Read that one.
 - [Opening ritual](../rituals/opening.md)
 - [Closing ritual](../rituals/closing.md)
 - [S2 Schema Additions](../architecture/s2-schema-additions.md)

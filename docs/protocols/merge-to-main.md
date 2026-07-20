@@ -4,10 +4,10 @@ slug: merge-to-main
 type: protocol
 status: active
 created: 2026-05-03
-updated: 2026-05-03
-last_agent: copilot-session-0034
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
-  - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/WORKFLOW_6.0.md
   - docs/protocols/project-log.md
 backlinks:
   - docs/knowledge/wiki/index.md

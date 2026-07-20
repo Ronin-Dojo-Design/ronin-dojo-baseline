@@ -4,11 +4,11 @@ slug: hot-fix-protocol
 type: protocol
 status: active
 created: 2026-06-20
-updated: 2026-06-20
-last_agent: claude-session-0423
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/protocols/merge-to-main.md
-  - docs/protocols/giddy-merge-strategy.md
+  - docs/protocols/recipes/merge-wave.md
   - docs/protocols/failed-steps-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -25,7 +25,7 @@ tags:
 > Local-by-Flywheel targets are all dropped. **Deploy here = push to `main` → Vercel
 > builds** — there is no separate deploy step. BBL is **LIVE in production**
 > (`blackbeltlegacy.com`), so this protocol is real, not a drill: the rhythm is fast, but
-> the push still goes through the operator gate ([`giddy-merge-strategy.md`](giddy-merge-strategy.md) G4).
+> the push still goes through the operator gate ([`recipes/merge-wave.md`](recipes/merge-wave.md) G4).
 
 The rapid-response rhythm for emergency production fixes. Calm, fast, systematic — speed is
 bought by skipping exploration and scope, **not** by skipping the push gate.
@@ -89,7 +89,7 @@ git add -p && git commit -m "hotfix: <what was fixed>"
 ### Phase 6 — Deploy = push to `main` (G4 — operator gate)
 
 A hot fix is **fast within the gate, not past it.** Get the operator's explicit go for the
-push (per-action push authorization, [[explicit-push-authorization]] / `giddy-merge-strategy.md`
+push (per-action push authorization, [[explicit-push-authorization]] / `recipes/merge-wave.md`
 G4), then:
 
 ```bash
@@ -121,6 +121,6 @@ loop back to Phase 1.
 
 ## Cross-references
 
-- [Giddy Merge Strategy](giddy-merge-strategy.md) — the G4 push gate this protocol trades speed *within*.
+- [Recipe — Merge Wave](recipes/merge-wave.md) — the G4 push gate this protocol trades speed *within*.
 - [Merge to Main](merge-to-main.md) — the normal (non-emergency) landing mechanics.
 - [Failed Steps Log](failed-steps-log.md) — where a pattern-traced hot fix gets recorded.

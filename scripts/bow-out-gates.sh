@@ -292,6 +292,39 @@ else
   EV_SECRETS="PASS (clean)"
 fi
 
+# ── Gate 12c — Evidence-artifact requirement (detect-only; closing.md §6a) ───
+# Runtime-verification cell ≠ "no runtime surface touched" ⇒ an Evidence-artifact-URL
+# row is required. Both rows live in the `## Full close evidence` table the LLM writes
+# at step 6a — usually AFTER this script's first run, so a first pass finds nothing yet
+# (silently skipped, not a failure); re-running this script near close re-checks it.
+section "Gate 12c — Evidence-artifact requirement"
+EV_ARTIFACT_STATE="(n/a — evidence table not yet written; re-run near close to check)"
+if [ -n "$SESSION_FILE" ] && grep -qE '^\|\s*Runtime verification \(Doug\)\s*\|' "$SESSION_FILE" 2>/dev/null; then
+  RUNTIME_ROW="$(grep -E '^\|\s*Runtime verification \(Doug\)\s*\|' "$SESSION_FILE" | head -1)"
+  if printf '%s' "$RUNTIME_ROW" | grep -qiE 'no runtime surface touched'; then
+    echo "Runtime verification (Doug): 'no runtime surface touched' — evidence artifact not required."
+    EV_ARTIFACT_STATE="n/a — no runtime surface touched"
+  else
+    echo "Runtime verification (Doug) row present and non-trivial — checking for Evidence-artifact URL…"
+    if grep -qE '^\|\s*Evidence-artifact URL\s*\|' "$SESSION_FILE" 2>/dev/null; then
+      ARTIFACT_ROW="$(grep -E '^\|\s*Evidence-artifact URL\s*\|' "$SESSION_FILE" | head -1)"
+      if printf '%s' "$ARTIFACT_ROW" | grep -qiE 'https?://|n/a'; then
+        echo "PASS: Evidence-artifact URL row present."
+        EV_ARTIFACT_STATE="PASS (row present)"
+      else
+        echo "REQUIRED: Evidence-artifact URL row present but empty/placeholder — fill it (closing.md §6a)."
+        EV_ARTIFACT_STATE="REQUIRED — row present but empty/placeholder"
+      fi
+    else
+      echo "REQUIRED: Runtime verification (Doug) indicates a runtime surface was touched, but no"
+      echo "  Evidence-artifact URL row exists yet — add one before closing (closing.md §6a)."
+      EV_ARTIFACT_STATE="REQUIRED — missing (runtime surface touched)"
+    fi
+  fi
+else
+  echo "Full close evidence table not found (or not yet written) in $SESSION_FILE — skip for now."
+fi
+
 # ── Gate 13 — Frontmatter staleness (touched docs, detect-only) ──────────────
 # (surfaced in the remainder checklist below; computed here so it's inline)
 STALE_FM=""
@@ -329,6 +362,7 @@ cat <<EVIDENCE
 | Graphify | $EV_GRAPHIFY |
 | Git state | $EV_GITSTATE |
 | Secret scan | $EV_SECRETS |
+| Evidence-artifact URL | $EV_ARTIFACT_STATE |
 | Touched | $TOUCHED_COUNT files (docs=$DOCS_COUNT · app=$APP_COUNT · other=$OTHER_COUNT) |
 EVIDENCE
 
@@ -340,6 +374,10 @@ echo "## LLM remainder checklist"
 echo
 echo "- [ ] Reflections — write the session's reflections (judgment)."
 echo "- [ ] Hostile review — $HOSTILE_STATE"
+case "$EV_ARTIFACT_STATE" in
+  REQUIRED*) echo "- [ ] Evidence-artifact URL — $EV_ARTIFACT_STATE (closing.md §6a: publish + link before close)." ;;
+  "(n/a"*) echo "- [ ] Evidence-artifact URL — table not written yet; re-run this script after filling ## Full close evidence to check." ;;
+esac
 echo "- [ ] Review & Recommend — next pick from ${BACKLOG_SOURCE:-backlog} (see Gate 10 list above)."
 if [ -n "$LEDGER_IDS" ]; then
   echo "- [ ] Ledger cross-off — confirm + flip these candidates (detect-only; NOT edited):"
