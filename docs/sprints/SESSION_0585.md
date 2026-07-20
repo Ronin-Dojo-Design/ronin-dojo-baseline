@@ -480,5 +480,5 @@ lint / index / ledger / Graphify steps for the whole wave. This lane's own evide
 | Kaizen reflection | Reflections section above |
 | Self-review | SESSION_0585_REVIEW_01 |
 | Review & Recommend | Next session goal (orchestrator merge sweep) written |
-| Git hygiene | local commit on `session-0585-sot-dashboard` (hash below; NO push per dispatch) |
+| Git hygiene | local commit `f89dfd6d` on `session-0585-sot-dashboard` (6 files, +1508/-2; NO push per dispatch) |
 | Graphify update | deferred to the merge sweep (per lane convention — the wave-wide refresh happens once, at the sweep) |
