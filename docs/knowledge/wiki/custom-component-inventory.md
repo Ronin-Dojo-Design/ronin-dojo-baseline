@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-07-20
-last_agent: claude-session-0587
+last_agent: cody-session-0588
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -611,6 +611,15 @@ prod report stream.
 | --- | --- | --- |
 | `TechniqueProgressStatus` (glyph + maps) | `apps/web/components/common/technique-progress-status.tsx` | THE ONE AUD2-5 progress channel: leading glyph Circle→CircleDashed→CircleDotDashed→CircleDot→CircleCheck per `TechniqueProgressStatus`, single neutral tone, `role="img"` + per-state `aria-label`. Lane A applies this SAME module to cards/graph — never a second progress visual, never a third color channel on graph nodes. |
 | `TechniqueProgressControl` | `apps/web/app/(web)/techniques/[slug]/_components/technique-detail/technique-progress-control.tsx` | Own-user progress control (glyph + Select + Clear) beside `ListingSaveButton`; optimistic with rollback over the oRPC `techniques.setProgress`/`clearProgress`; no entitlement gate on own-progress by design (engagement driver). Writes revalidate paths only — never the `"techniques"`/`"bjj-technique-graph"` cache tags (WL-P2-50 trap). |
+
+## Technique graph (G-022 Lane A — public BJJ technique graph, SESSION_0583/0588)
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `TechniqueGraph` | `apps/web/components/web/techniques/technique-graph.tsx` | The pan/zoom/fit BJJ technique-graph canvas: SVG edges + HTML node buttons over `BjjTechniqueGraph`. ONE `NODE_TYPE_STYLES` record is the single source of truth for each node type's legend dot / node fill / edge stroke / PNG-export RGB (never re-split into parallel maps). Neighborhood glow uses the `lineage-branch.tsx` ring/shadow idiom via `glowSourceId = hoveredNodeId ?? selectedNodeId`. **C5 two-stage tap (ratified SESSION_0588):** on touch, first tap SELECTS a node (reveals the neighbor glow, no dialog), second tap on the already-selected node opens the detail `Dialog`; mouse/keyboard select+open in one action. D-4 cooperative touch: single-finger scrolls the page, two-finger pans/zooms. Roving-tabindex (APG) node layer. |
+| `useGraphPngExport` / `withExportSafeStyles` | `apps/web/components/web/techniques/graph-png-export.ts` | Extracted PNG-export subsystem for `TechniqueGraph` (crop-to-content + html2canvas capture). `withExportSafeStyles` pins html2canvas-safe inline styles for the capture then restores them; the per-type capture colors MUST stay literal `rgb()` (via the `exportRgbFor` accessor over `NODE_TYPE_STYLES.exportRgb`) — html2canvas cannot parse Tailwind v4 OKLab. |
+| `deriveNodeTooltip` (+ label/definition helpers) | `apps/web/server/web/techniques/node-tooltip.ts` | Server helper that projects a graph node to a strict **text-only** tooltip DTO (heading / typeLabel / definition / keyPoints). NO-LEAK hard gate: scalar text only — never url/media-id/poster; do not widen its select shape. |
+| `BjjCurriculumBrowser` | `apps/web/components/web/curriculum/bjj-curriculum-browser.tsx` | Curriculum-browser surface for the BJJ technique catalog; composes L1 Card/Badge/Stack primitives over the technique read model. |
 
 ## Per-product / clients — Mammoth CRM (SESSION_0586)
 

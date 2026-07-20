@@ -43,6 +43,7 @@ import {
   difficultyLabelFor,
   typeLabelFor,
 } from "~/server/web/techniques/node-tooltip"
+import { type ExportRgb, useGraphPngExport } from "./graph-png-export"
 
 const NODE_WIDTH = 168
 const NODE_HEIGHT = 64
@@ -51,7 +52,6 @@ const ZOOM_MIN = 0.35
 const ZOOM_MAX = 1.8
 const ZOOM_STEP = 0.12
 const PAN_STEP = 48
-const EXPORT_CROP_PADDING = 24
 // WL-P2-67: the interactive ZOOM_MIN (0.35) is a legibility floor for manual zoom (wheel/buttons/
 // pinch) — it deliberately stays put. `fitToView` needs its OWN floor: at 375px the zoom required
 // to frame every node is ~0.17-0.24 (below 0.35), so a fixed clamp there clips nodes off-screen.
@@ -66,172 +66,58 @@ const FIT_ZOOM_FLOOR = 0.05
 type GraphNodeType = BjjTechniqueGraphNode["type"]
 type FilterValue = "all" | GraphNodeType
 
+// ONE source of truth per node type: the four representations (legend dot, node fill, edge
+// stroke, PNG-export capture RGB) that were four parallel maps keyed by the same union — they can
+// no longer silently drift (Desi P2, SESSION_0588). Solid light/dark node fills are deliberate:
+// each tint stays faint but OPAQUE, so overlapping graph nodes never blend into a muddy third
+// color and the legend dots stay an exact visual key. `exportRgb` MUST stay literal `rgb()`
+// values — html2canvas cannot parse Tailwind v4's OKLab output (see graph-png-export.ts).
+const NODE_TYPE_STYLES: Record<
+  GraphNodeType,
+  { dot: string; node: string; edge: string; exportRgb: ExportRgb }
+> = {
+  position: {
+    dot: "bg-sky-500",
+    node: "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200",
+    edge: "stroke-sky-500",
+    exportRgb: { background: "rgb(240 249 255)", border: "rgb(56 189 248)", text: "rgb(7 89 133)" },
+  },
+  submission: {
+    dot: "bg-red-500",
+    node: "border-red-400 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200",
+    edge: "stroke-red-500",
+    exportRgb: { background: "rgb(254 242 242)", border: "rgb(248 113 113)", text: "rgb(153 27 27)" },
+  },
+  transition: {
+    dot: "bg-amber-500",
+    node: "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200",
+    edge: "stroke-amber-500",
+    exportRgb: { background: "rgb(255 251 235)", border: "rgb(251 191 36)", text: "rgb(120 53 15)" },
+  },
+  counter: {
+    dot: "bg-violet-500",
+    node: "border-violet-400 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-200",
+    edge: "stroke-violet-500",
+    exportRgb: { background: "rgb(245 243 255)", border: "rgb(167 139 250)", text: "rgb(91 33 182)" },
+  },
+}
+
 const NODE_TYPES: { value: FilterValue; label: string; dotClass: string }[] = [
   { value: "all", label: "All", dotClass: "bg-foreground" },
-  { value: "position", label: "Positions", dotClass: "bg-sky-500" },
-  { value: "submission", label: "Submissions", dotClass: "bg-red-500" },
-  { value: "transition", label: "Transitions", dotClass: "bg-amber-500" },
-  { value: "counter", label: "Counters", dotClass: "bg-violet-500" },
+  { value: "position", label: "Positions", dotClass: NODE_TYPE_STYLES.position.dot },
+  { value: "submission", label: "Submissions", dotClass: NODE_TYPE_STYLES.submission.dot },
+  { value: "transition", label: "Transitions", dotClass: NODE_TYPE_STYLES.transition.dot },
+  { value: "counter", label: "Counters", dotClass: NODE_TYPE_STYLES.counter.dot },
 ]
 
 const clampZoom = (value: number) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, value))
 
-const nodeTypeClass = (type: GraphNodeType) => {
-  // Solid light/dark fills are deliberate: each tint stays faint but OPAQUE, so overlapping graph
-  // nodes never blend into a muddy third color and the legend dots remain an exact visual key.
-  if (type === "position") {
-    return "border-sky-400 bg-sky-50 text-sky-800 dark:border-sky-700 dark:bg-sky-950 dark:text-sky-200"
-  }
-  if (type === "submission") {
-    return "border-red-400 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200"
-  }
-  if (type === "counter") {
-    return "border-violet-400 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-200"
-  }
-  return "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
-}
-
-const edgeTypeClass = (type: GraphNodeType) => {
-  if (type === "position") return "stroke-sky-500"
-  if (type === "submission") return "stroke-red-500"
-  if (type === "counter") return "stroke-violet-500"
-  return "stroke-amber-500"
-}
-
-const EXPORT_CAPTURE_STYLES: Record<
-  GraphNodeType,
-  { background: string; border: string; text: string }
-> = {
-  position: { background: "rgb(240 249 255)", border: "rgb(56 189 248)", text: "rgb(7 89 133)" },
-  submission: {
-    background: "rgb(254 242 242)",
-    border: "rgb(248 113 113)",
-    text: "rgb(153 27 27)",
-  },
-  transition: { background: "rgb(255 251 235)", border: "rgb(251 191 36)", text: "rgb(120 53 15)" },
-  counter: { background: "rgb(245 243 255)", border: "rgb(167 139 250)", text: "rgb(91 33 182)" },
-}
-
-type ExportStyleSnapshot = {
-  element: HTMLElement | SVGElement
-  fill: string | null
-  stroke: string | null
-  style: string | null
-}
-
-const withExportSafeStyles = async <T,>(
-  root: HTMLElement,
-  callback: () => Promise<T>,
-): Promise<T> => {
-  const elements = [
-    root,
-    ...(Array.from(root.querySelectorAll("*")) as Array<HTMLElement | SVGElement>),
-  ]
-  const snapshots: ExportStyleSnapshot[] = elements.map(element => ({
-    element,
-    fill: element.getAttribute("fill"),
-    stroke: element.getAttribute("stroke"),
-    style: element.getAttribute("style"),
-  }))
-
-  const setStyle = (element: HTMLElement | SVGElement, property: string, value: string) => {
-    element.style.setProperty(property, value, "important")
-  }
-
-  // html2canvas cannot parse Tailwind v4's OKLab color-mix output yet.
-  for (const element of elements) {
-    setStyle(element, "background-color", "transparent")
-    setStyle(element, "background-image", "none")
-    setStyle(element, "border-color", "rgb(203 213 225)")
-    setStyle(element, "box-shadow", "none")
-    setStyle(element, "caret-color", "rgb(17 24 39)")
-    setStyle(element, "color", "rgb(17 24 39)")
-    // Pin an export-safe stack for the capture only (snapshot/restore puts the app font back):
-    // html2canvas measures text with whatever font is live, so a webfont mid-swap or a stack it
-    // can't resolve shifts glyph metrics and clips node labels in the PNG.
-    setStyle(
-      element,
-      "font-family",
-      'ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif',
-    )
-    setStyle(element, "outline-color", "rgb(148 163 184)")
-    setStyle(element, "text-decoration-color", "rgb(17 24 39)")
-    setStyle(element, "text-shadow", "none")
-  }
-
-  setStyle(root, "background-color", "rgb(255 255 255)")
-
-  for (const node of Array.from(root.querySelectorAll<HTMLElement>("[data-graph-node-type]"))) {
-    const type = node.dataset.graphNodeType as GraphNodeType
-    const style = EXPORT_CAPTURE_STYLES[type] ?? EXPORT_CAPTURE_STYLES.transition
-    setStyle(node, "background-color", style.background)
-    setStyle(node, "border-color", style.border)
-    setStyle(node, "color", style.text)
-
-    for (const child of Array.from(node.querySelectorAll<HTMLElement>("span"))) {
-      setStyle(child, "color", style.text)
-    }
-
-    // WL-P2-65: html2canvas mis-renders the `-webkit-box`/`-webkit-line-clamp` truncation model
-    // — it clips glyph TOPS on the name line even at today's label lengths, none of which
-    // actually need the 2-line clamp (verified against the live layout JSON: longest label is 15
-    // chars, well under one line at this node width). Disambiguation experiment (real captures,
-    // one variable isolated at a time, real html2canvas) ruled out BOTH ledger candidates — the
-    // font-family pin below and the fixed 64px node height/overflow both still clipped when
-    // isolated. Only dropping BOTH the webkit-box display AND its own overflow-hidden fixed it —
-    // an `overflow: hidden` + fixed `max-height` substitute (same visual cap, no webkit-box)
-    // reproduced the SAME clip, so html2canvas's bug here is the overflow-clip calculation
-    // itself, not `-webkit-box` specifically. `overflow: visible` is safe: the OUTER node button
-    // keeps its own `overflow-hidden` for the (never-yet-hit) case of a future longer label.
-    const label = node.querySelector<HTMLElement>('[class*="line-clamp"]')
-    if (label) {
-      setStyle(label, "display", "block")
-      setStyle(label, "-webkit-line-clamp", "none")
-      setStyle(label, "overflow", "visible")
-    }
-  }
-
-  // Preserve the second tint channel in PNG exports. The generic OKLab-safety pass above clears
-  // every background first, so each data-driven Rank.colorHex edge is restored explicitly here.
-  for (const beltEdge of Array.from(
-    root.querySelectorAll<HTMLElement>("[data-graph-belt-color]"),
-  )) {
-    const beltColor = beltEdge.dataset.graphBeltColor
-    if (beltColor) setStyle(beltEdge, "background-color", beltColor)
-  }
-
-  // Keep the token-neutral contrast edge visible beside very light Rank colors (especially white
-  // belt). The generic OKLab-safety pass clears token backgrounds, so restore this one explicitly.
-  for (const hairline of Array.from(
-    root.querySelectorAll<HTMLElement>("[data-graph-belt-hairline]"),
-  )) {
-    setStyle(hairline, "background-color", "rgb(203 213 225)")
-  }
-
-  for (const edge of Array.from(root.querySelectorAll<SVGPathElement>("[data-graph-edge-type]"))) {
-    const type = edge.dataset.graphEdgeType as GraphNodeType
-    const style = EXPORT_CAPTURE_STYLES[type] ?? EXPORT_CAPTURE_STYLES.transition
-    edge.setAttribute("fill", "none")
-    edge.setAttribute("stroke", style.border)
-    setStyle(edge, "stroke", style.border)
-    setStyle(edge, "fill", "none")
-  }
-
-  try {
-    return await callback()
-  } finally {
-    for (const snapshot of snapshots) {
-      if (snapshot.style === null) snapshot.element.removeAttribute("style")
-      else snapshot.element.setAttribute("style", snapshot.style)
-
-      if (snapshot.fill === null) snapshot.element.removeAttribute("fill")
-      else snapshot.element.setAttribute("fill", snapshot.fill)
-
-      if (snapshot.stroke === null) snapshot.element.removeAttribute("stroke")
-      else snapshot.element.setAttribute("stroke", snapshot.stroke)
-    }
-  }
-}
+const nodeTypeClass = (type: GraphNodeType) => NODE_TYPE_STYLES[type].node
+const edgeTypeClass = (type: GraphNodeType) => NODE_TYPE_STYLES[type].edge
+// Export path reads node type from a `data-*` string, so fall back to `transition` for anything
+// off-union (matches the pre-consolidation `EXPORT_CAPTURE_STYLES[type] ?? …transition`).
+const exportRgbFor = (type: string): ExportRgb =>
+  (NODE_TYPE_STYLES[type as GraphNodeType] ?? NODE_TYPE_STYLES.transition).exportRgb
 
 type Point = { x: number; y: number }
 
@@ -288,7 +174,14 @@ function GraphEdge({
 export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const [pan, setPan] = useState({ x: 48, y: 48 })
   const [zoom, setZoom] = useState(1)
+  // C5: `selectedNodeId` is the ACTIVE node — it drives the strong ring, the glow fallback source,
+  // and (on touch) the first-tap "primed" state — but NO LONGER opens the detail dialog on its
+  // own. `dialogNodeId` is the separate signal for the open detail dialog. Splitting them is what
+  // makes two-stage touch possible: first tap sets `selectedNodeId` (glow, no dialog), second tap
+  // on the already-selected node sets `dialogNodeId` (opens the dialog). Mouse/keyboard set both
+  // at once, so desktop opens the dialog on a single click exactly as before.
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const [dialogNodeId, setDialogNodeId] = useState<string | null>(null)
   // C5: hovered node id, LIVE (not sticky like rovingNodeId below) — the neighborhood glow's
   // primary trigger. Runtime-probed: the dialog's own backdrop (bg-foreground/10 + blur-sm) is
   // heavy enough at typical zoom that a selectedNodeId-only glow is invisible once the dialog is
@@ -299,12 +192,15 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   // Tab-out/Tab-in so re-entering the layer returns to where the user left off.
   const [rovingNodeId, setRovingNodeId] = useState<string | null>(null)
   const [activeType, setActiveType] = useState<FilterValue>("all")
-  const [isExporting, setIsExporting] = useState(false)
   const prefersReducedMotion = useReducedMotion()
   const canvasRef = useRef<HTMLDivElement>(null)
   const exportRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
   const lastPointer = useRef({ x: 0, y: 0 })
+  // C5: pointer type of the most recent press on a node button, so the click handler can tell a
+  // touch tap (→ two-stage) from a mouse click (→ open immediately). Per-interaction detection
+  // (not a device media query) so a hybrid touch-laptop's mouse and touch each behave correctly.
+  const nodePointerType = useRef<string>("mouse")
   // C4: true only for the duration of an active mouse-drag pan or two-finger pinch — the ONE
   // switch that disables the eased zoom/pan transition below so it never fights a live drag.
   const [isInteracting, setIsInteracting] = useState(false)
@@ -317,6 +213,9 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   )
 
   const bounds = useMemo(() => {
+    // @why Math.max(...) spread is bounded by graph size: a curated BJJ technique graph is O(100s)
+    // of nodes, three orders of magnitude below the ~100k-arg spread limit that would overflow the
+    // call stack. If this ever renders an unbounded/user-generated graph, switch to a `reduce`.
     const width = Math.max(...graph.nodes.map(node => node.x), 0) + NODE_WIDTH + CANVAS_PADDING
     const height = Math.max(...graph.nodes.map(node => node.y), 0) + NODE_HEIGHT + CANVAS_PADDING
     return { width, height }
@@ -354,11 +253,13 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     () => new Map(graph.nodes.map(node => [node.id, node])),
     [graph.nodes],
   )
-  const selectedNode = selectedNodeId ? allNodeById.get(selectedNodeId) : undefined
+  const dialogNode = dialogNodeId ? allNodeById.get(dialogNodeId) : undefined
   // C5: the active node's directly-connected neighbors (1-hop, either edge direction), over ALL
   // edges (not just visibleEdges) — a neighbor hidden by the current type filter simply has no
-  // rendered button to glow, so filtering the set further would be dead code either way. Hover
-  // wins (live, visible pre-dialog); selectedNodeId is a fallback source only.
+  // rendered button to glow, so filtering the set further would be dead code either way. On
+  // desktop, hover wins (live, visible pre-dialog) and selectedNodeId is the fallback; on touch
+  // there is no hover, so the first-tap selectedNodeId IS the glow source (the whole point of the
+  // two-stage tap — the glow is now visible before the dialog opens).
   const glowSourceId = hoveredNodeId ?? selectedNodeId
   const neighborNodeIds = useMemo(() => {
     const neighbors = new Set<string>()
@@ -530,61 +431,15 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     canvasRef.current?.querySelector<HTMLButtonElement>(`[data-node-id="${next.id}"]`)?.focus()
   }
 
-  const exportPng = async () => {
-    const exportNode = exportRef.current
-    if (!exportNode) return
-    setIsExporting(true)
-    try {
-      // Fonts still loading would rasterize with fallback metrics — wait for the full set first.
-      await document.fonts.ready
-      const html2canvas = (await import("html2canvas")).default
-
-      // Crop to the drawn graph (content bounds × zoom at the current pan, plus a margin)
-      // instead of the full 72vh container, clamped to the visible viewport because
-      // overflow-hidden clips anything panned outside it. html2canvas x/y are relative to the
-      // captured element's own bounds. The content occupies [pan, pan + bounds × zoom] inside
-      // the element, so a NEGATIVE pan shrinks the crop from the right/bottom edge too — the old
-      // `bounds × zoom + padding` width overshot into trailing whitespace when panned negative.
-      const cropX0 = Math.max(0, pan.x - EXPORT_CROP_PADDING)
-      const cropY0 = Math.max(0, pan.y - EXPORT_CROP_PADDING)
-      const cropX1 = Math.min(
-        exportNode.clientWidth,
-        pan.x + bounds.width * zoom + EXPORT_CROP_PADDING,
-      )
-      const cropY1 = Math.min(
-        exportNode.clientHeight,
-        pan.y + bounds.height * zoom + EXPORT_CROP_PADDING,
-      )
-      // Degenerate guard: content panned fully outside the viewport leaves an empty (or inverted)
-      // crop rect — fall back to capturing the whole visible canvas instead of a 1×1 PNG.
-      const cropIsDegenerate = cropX1 - cropX0 < 1 || cropY1 - cropY0 < 1
-      const cropX = cropIsDegenerate ? 0 : cropX0
-      const cropY = cropIsDegenerate ? 0 : cropY0
-      const cropWidth = cropIsDegenerate ? exportNode.clientWidth : cropX1 - cropX0
-      const cropHeight = cropIsDegenerate ? exportNode.clientHeight : cropY1 - cropY0
-
-      const canvas = await withExportSafeStyles(exportNode, () =>
-        html2canvas(exportNode, {
-          backgroundColor: "#ffffff",
-          logging: false,
-          scale: 2,
-          useCORS: true,
-          x: cropX,
-          y: cropY,
-          width: Math.max(1, Math.ceil(cropWidth)),
-          height: Math.max(1, Math.ceil(cropHeight)),
-        }),
-      )
-      const link = document.createElement("a")
-      link.download = "bjj-technique-graph.png"
-      link.href = canvas.toDataURL("image/png")
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-    } finally {
-      setIsExporting(false)
-    }
-  }
+  // C5-adjacent: the PNG-export subsystem now lives in the `useGraphPngExport` hook (Desi P2,
+  // SESSION_0588) — same crop math + html2canvas capture, just lifted out of the component.
+  const { isExporting, exportPng } = useGraphPngExport({
+    exportRef,
+    pan,
+    zoom,
+    bounds,
+    exportRgbFor,
+  })
 
   return (
     <>
@@ -782,9 +637,12 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
 
                 {visibleNodesWithTooltips.map(({ node, tooltip }) => {
                   return (
-                    // Force-closed while the node dialog is open (Base UI also closes on trigger
-                    // press, but `disabled` makes it deterministic). Hover-open is mouse-only in
-                    // Base UI, so touch keeps its tap→dialog behavior with no tooltip-on-tap.
+                    // Force-closed once a node is selected (Base UI also closes on trigger press,
+                    // but `disabled` makes it deterministic). On desktop a node is selected only
+                    // when its dialog opens, so this still reads as "closed while the dialog is
+                    // open". Hover-open is mouse-only in Base UI, so touch never shows a tooltip —
+                    // its C5 two-stage tap (first tap selects/glows, second opens the dialog) is
+                    // unaffected by this disable.
                     <Tooltip key={node.id} disabled={selectedNodeId !== null}>
                       <TooltipTrigger
                         render={
@@ -826,9 +684,30 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                             onMouseLeave={() =>
                               setHoveredNodeId(current => (current === node.id ? null : current))
                             }
+                            // C5: record the press's pointer type so the click can distinguish a
+                            // touch tap from a mouse click (a hybrid device may do both).
+                            onPointerDown={event => {
+                              nodePointerType.current = event.pointerType
+                            }}
                             onClick={event => {
                               event.stopPropagation()
+                              // C5 two-stage tap (ratified SESSION_0588): on TOUCH, the first tap on
+                              // an unselected node only SELECTS it — revealing the neighborhood glow
+                              // that hover shows on desktop — WITHOUT opening the detail dialog; a
+                              // second tap on the already-selected node opens the dialog. Keyboard
+                              // activation (synthetic click, `detail === 0`) and mouse clicks are
+                              // unchanged: they select AND open in one action. `detail === 0` guards
+                              // the case where the last pointer press was a touch but this activation
+                              // is a keyboard Enter/Space, so keyboard never gets stuck one-tap-short.
+                              const isKeyboard = event.detail === 0
+                              const isTouchTap =
+                                !isKeyboard && nodePointerType.current === "touch"
+                              if (isTouchTap && selectedNodeId !== node.id) {
+                                setSelectedNodeId(node.id)
+                                return
+                              }
                               setSelectedNodeId(node.id)
+                              setDialogNodeId(node.id)
                             }}
                           >
                             <span className="text-[0.625rem] font-semibold uppercase leading-none tracking-normal opacity-80">
@@ -916,21 +795,31 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
         </div>
       </Card>
 
-      <Dialog open={!!selectedNode} onOpenChange={open => !open && setSelectedNodeId(null)}>
+      <Dialog
+        open={!!dialogNode}
+        onOpenChange={open => {
+          if (!open) {
+            // C5: closing the dialog clears BOTH the dialog target and the active selection, so a
+            // touch user returns to a clean, unglowed graph (and desktop behaves exactly as before).
+            setDialogNodeId(null)
+            setSelectedNodeId(null)
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl">
-          {selectedNode && (
+          {dialogNode && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedNode.label}</DialogTitle>
+                <DialogTitle>{dialogNode.label}</DialogTitle>
                 <DialogDescription>
-                  {selectedNode.description ?? "No description recorded."}
+                  {dialogNode.description ?? "No description recorded."}
                 </DialogDescription>
               </DialogHeader>
 
               <Stack direction="row" wrap size="xs">
-                <Badge variant="primary">{typeLabelFor(selectedNode.type)}</Badge>
-                {selectedNode.position && <Badge variant="soft">{selectedNode.position}</Badge>}
-                {selectedNode.difficultyLevel && (
+                <Badge variant="primary">{typeLabelFor(dialogNode.type)}</Badge>
+                {dialogNode.position && <Badge variant="soft">{dialogNode.position}</Badge>}
+                {dialogNode.difficultyLevel && (
                   // B2: the raw enum ("BEGINNER") never faced members — humanize it, and explain
                   // what the term means on hover/focus (glossary lives in node-tooltip.ts; the
                   // Base UI Tooltip.Trigger works on a plain non-button element, same idiom as
@@ -939,25 +828,25 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                     <TooltipTrigger
                       render={
                         <Badge variant="outline" className="cursor-help">
-                          {difficultyLabelFor(selectedNode.difficultyLevel)}
+                          {difficultyLabelFor(dialogNode.difficultyLevel)}
                         </Badge>
                       }
                     />
                     <TooltipContent>
-                      {difficultyDefinitionFor(selectedNode.difficultyLevel) ??
-                        difficultyLabelFor(selectedNode.difficultyLevel)}
+                      {difficultyDefinitionFor(dialogNode.difficultyLevel) ??
+                        difficultyLabelFor(dialogNode.difficultyLevel)}
                     </TooltipContent>
                   </Tooltip>
                 )}
-                {selectedNode.isFoundational && <Badge variant="success">Foundational</Badge>}
+                {dialogNode.isFoundational && <Badge variant="success">Foundational</Badge>}
               </Stack>
 
-              {selectedNode.teachingCues.length > 0 && (
+              {dialogNode.teachingCues.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Teaching cues</p>
                   <Prose className="prose-sm max-w-none">
                     <ul>
-                      {selectedNode.teachingCues.map(cue => (
+                      {dialogNode.teachingCues.map(cue => (
                         <li key={cue}>{cue}</li>
                       ))}
                     </ul>
@@ -965,11 +854,11 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                 </div>
               )}
 
-              {selectedNode.curriculumItems.length > 0 && (
+              {dialogNode.curriculumItems.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Curriculum links</p>
                   <Stack direction="column" size="xs">
-                    {selectedNode.curriculumItems.map(item => (
+                    {dialogNode.curriculumItems.map(item => (
                       <Link
                         key={item.id}
                         href={`/courses/${item.courseSlug}`}
@@ -988,8 +877,11 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               <DialogFooter>
                 <Button
                   variant="secondary"
-                  render={<Link href={selectedNode.href} />}
-                  onClick={() => setSelectedNodeId(null)}
+                  render={<Link href={dialogNode.href} />}
+                  onClick={() => {
+                    setDialogNodeId(null)
+                    setSelectedNodeId(null)
+                  }}
                 >
                   Technique Detail
                 </Button>
