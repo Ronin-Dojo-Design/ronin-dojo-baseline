@@ -11,6 +11,7 @@
  */
 
 import type { BoardCard, BoardConfig } from "@ronin-dojo/ui-kit/kanban"
+import { leadSourceLabel } from "./lead-source"
 import type { Project } from "./types"
 
 export const MAMMOTH_BOARD: BoardConfig = {
@@ -33,7 +34,15 @@ export const MAMMOTH_BOARD: BoardConfig = {
   automations: ["rotting", "next-step-reminder", "stage-sla", "order-guard", "lost-reason"],
 }
 
-/** Map an existing Mammoth Project (lib/store.ts) to a kernel BoardCard. */
+/**
+ * Map an existing Mammoth Project (lib/store.ts) to a kernel BoardCard.
+ *
+ * `source` rides the kernel's existing `BoardCard.source` field (round-tripped from the
+ * persisted `Project.source`, not just the intake-time value) so the pipeline page can filter
+ * by it without the kernel knowing what a "Lead Source" is; the badge is the same generic
+ * passthrough the order-guard badge uses, giving the roster's existing Lead Source badge its
+ * board-side parity (SESSION_0586, G-021 loop 3b).
+ */
 export function projectToCard(p: Project): BoardCard {
   return {
     id: p.id,
@@ -46,6 +55,8 @@ export function projectToCard(p: Project): BoardCard {
       orderConfirmed: p.orderConfirmed,
       ...(p.orderNumber ? { orderNumber: p.orderNumber } : {}),
     },
+    source: p.source,
+    badges: [{ label: leadSourceLabel(p.source) }],
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   }

@@ -12,17 +12,29 @@
  * `load` never returns `null` (always a BoardState), so the kernel's `seed`
  * path is unused — the DB is the single source of truth. Both surfaces (this
  * board + the project-detail `useProjects`) now read/write the same Projects.
+ *
+ * `sourceFilter` (SESSION_0586, G-021 loop 3b — read-side only) narrows `load`'s
+ * result to one Lead Source. The kernel (`AdminKanban`/`useBoard`) has no filter
+ * prop and only reloads when its `config.id` changes, so the page achieves the
+ * filter by remounting AdminKanban (`key={sourceFilter}`) over a freshly built
+ * store instead — `save`/`reconcileBoard` is untouched either way, and a
+ * `reconcileBoard` call only ever touches the cards it's given, so persisting a
+ * filtered subset never drops the rows that were filtered out of view.
  */
 
 import type { BoardState, BoardStore } from "@ronin-dojo/ui-kit/kanban";
 import { listProjects, reconcileBoard } from "./actions";
 import { projectToCard } from "./board-config";
+import type { LeadSourceValue } from "./lead-source";
 
-export function createDbBoardStore(): BoardStore {
+export function createDbBoardStore(sourceFilter?: LeadSourceValue | null): BoardStore {
   return {
     async load(configId) {
       const projects = await listProjects();
-      return { configId, cards: projects.map(projectToCard) };
+      const visible = sourceFilter
+        ? projects.filter((project) => project.source === sourceFilter)
+        : projects;
+      return { configId, cards: visible.map(projectToCard) };
     },
     async save(state: BoardState) {
       await reconcileBoard(state.cards);

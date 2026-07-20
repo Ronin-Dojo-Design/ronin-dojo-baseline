@@ -1,5 +1,7 @@
 // Domain types for the Mammoth Build CRM MVP. Frontend-only; persisted in localStorage.
 
+import type { LeadSourceValue } from "./lead-source";
+
 export type StageId =
   | "lead"
   | "qualified"
@@ -59,6 +61,8 @@ export interface Project {
   length: number | null;
   eaveHeight: number | null;
   stage: StageId;
+  /** Where the lead came in through (brief §3a #1 source tracking; `lib/lead-source.ts`). */
+  source: LeadSourceValue;
   /** "Can't drop a project" guardrail: an open project must always have a next step. */
   nextTask: string;
   orderConfirmed: boolean;

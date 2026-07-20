@@ -160,6 +160,7 @@ type DbProject = {
   length: number | null;
   eaveHeight: number | null;
   stage: string;
+  source: string;
   nextTask: string;
   orderConfirmed: boolean;
   orderNumber: string | null;
@@ -193,6 +194,7 @@ function toProject(row: DbProject): Project {
     length: row.length,
     eaveHeight: row.eaveHeight,
     stage: row.stage as StageId,
+    source: row.source as LeadSourceValue,
     nextTask: row.nextTask,
     orderConfirmed: row.orderConfirmed,
     orderNumber: row.orderNumber,

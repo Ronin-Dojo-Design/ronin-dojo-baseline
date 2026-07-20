@@ -2,8 +2,9 @@
 
 import { MCard } from "@ronin-dojo/ui-kit";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { LeadSourceFacet } from "@/components/crm/LeadSourceFacet";
 import { getSalesCockpit, recordContactAttempt } from "@/lib/actions";
-import { leadSourceLabel } from "@/lib/lead-source";
+import { countLeadSources, leadSourceLabel, type LeadSourceValue } from "@/lib/lead-source";
 import {
   CONTACT_ATTEMPT_CHANNEL_LABELS,
   CONTACT_ATTEMPT_CHANNELS,
@@ -43,6 +44,7 @@ export default function SalesCockpitPage() {
   const [notes, setNotes] = useState("");
   const [nextAction, setNextAction] = useState("");
   const [nextActionDueAt, setNextActionDueAt] = useState("");
+  const [sourceFilter, setSourceFilter] = useState<LeadSourceValue | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -70,6 +72,19 @@ export default function SalesCockpitPage() {
     () => model?.roster.find((project) => project.id === selectedProjectId) ?? null,
     [model, selectedProjectId],
   );
+
+  // Lead Source facet (SESSION_0586, G-021 loop 3b) — narrows the roster list only; the
+  // Today queue and the contact workspace stay keyed off the full roster, independent of
+  // whatever source is currently selected (same decoupling the queue already has from the
+  // roster's own selection).
+  const sourceCounts = useMemo(
+    () => countLeadSources((model?.roster ?? []).map((project) => project.source)),
+    [model],
+  );
+  const filteredRoster = useMemo(() => {
+    const roster = model?.roster ?? [];
+    return sourceFilter ? roster.filter((project) => project.source === sourceFilter) : roster;
+  }, [model, sourceFilter]);
 
   async function submitAttempt(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -183,8 +198,19 @@ export default function SalesCockpitPage() {
             Lead roster
           </h2>
           <p className="mb-3 text-sm text-muted">Active Opportunities available to this owner.</p>
-          <div className="space-y-3">
-            {model.roster.map((project) => (
+          <LeadSourceFacet
+            counts={sourceCounts}
+            total={model.roster.length}
+            selected={sourceFilter}
+            onSelect={setSourceFilter}
+          />
+          <div className="mt-3 space-y-3">
+            {filteredRoster.length === 0 ? (
+              <p className="rounded-md border border-dashed border-border p-3 text-sm text-muted">
+                No {sourceFilter ? leadSourceLabel(sourceFilter) : ""} leads.
+              </p>
+            ) : null}
+            {filteredRoster.map((project) => (
               <MCard
                 key={project.id}
                 kind="record"
