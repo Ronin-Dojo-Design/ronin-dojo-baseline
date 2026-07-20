@@ -25,7 +25,7 @@
  */
 
 import { execFileSync } from "node:child_process"
-import { existsSync, readFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import {
   aggregateFromContents,
@@ -37,6 +37,12 @@ import {
   parsePullRequests,
   type PullRequestJson,
 } from "../apps/web/lib/loop-board/ledger-parse"
+import {
+  type GoalDetail,
+  parseGoalsDetail,
+  parseSessionFile,
+  type SessionDetail,
+} from "./lib/state-of-project-parse"
 
 const ROOT = resolve(import.meta.dir, "..")
 const ARGS = process.argv.slice(2)
@@ -95,10 +101,32 @@ const items = aggregateFromContents(contents, {
   extraItems: prItems,
 })
 
+/**
+ * State-of-the-Dojo feed (SESSION_0585, G-023 child): read `docs/sprints/SESSION_*.md` +
+ * the already-loaded `GL` ledger content into the richer `SessionDetail`/`GoalDetail` shapes
+ * `scripts/state-of-project.ts` renders from. ADDITIVE ONLY — the pre-existing `items` feed
+ * (and the default text output below) is untouched. `goals-ledger.md` is read once already
+ * (as `contents.GL`, above) — reused here rather than re-read from disk.
+ */
+function readSessionsDetail(): SessionDetail[] {
+  const dir = resolve(ROOT, "docs/sprints")
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
+    .filter(f => /^SESSION_\d{4}\.md$/.test(f))
+    .map(f => {
+      const p = resolve(dir, f)
+      return parseSessionFile(p, readFileSync(p, "utf-8"))
+    })
+    .filter((s): s is SessionDetail => s !== null)
+    .sort((a, b) => Number(a.number) - Number(b.number))
+}
+
 // --- output ----------------------------------------------------------------
 
 if (JSON_OUT) {
-  console.log(JSON.stringify(items, null, 2))
+  const sessions = readSessionsDetail()
+  const goals: GoalDetail[] = contents.GL ? parseGoalsDetail(contents.GL) : []
+  console.log(JSON.stringify({ items, sessions, goals }, null, 2))
   process.exit(0)
 }
 
