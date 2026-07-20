@@ -112,8 +112,39 @@ Single source of truth is the frontmatter `status:` field.
 | SESSION_0588_TASK_01 | done | Grill + finalize recipe (4 decisions pinned); scope + fallow baseline captured |
 | SESSION_0588_TASK_02 | done | Wrote `recipes/quality-suite.md` card (0584 format); lint-clean |
 | SESSION_0588_TASK_03 | done | Review wave (Desi/0583 + Doug/0586+0585 + Giddy/structural+seed) — verdicts below |
-| SESSION_0588_TASK_04 | in-progress | Fixes: docs free-lane DONE (`f03daa62`); Cody dispatched for MMB + apps/web code |
-| SESSION_0588_TASK_05 | pending | Re-verify (Doug+Desi on Cody diff) → prove fallow delta → push gate (HOLD, split) |
+| SESSION_0588_TASK_04 | done | Fixes landed (6 commits): docs (`f03daa62`), MMB (`f9ef17f1`), apps/web (`9d116d0e` + re-verify fix `b89960d0`) |
+| SESSION_0588_TASK_05 | done | Re-verify: Doug GO · live C5 touch PASS · delta-neutral test · fallow delta proven. Push: HELD (see below) |
+
+## Fix pass — commits (on `session-0588-quality-suite-review`)
+
+| Commit | Deploy unit | What |
+| --- | --- | --- |
+| `f03daa62` | docs (free) | D-051 RESOLVED (parser already correct, verified) + D-053 (skill-pair hardlink drift) |
+| `f9ef17f1` | MMB | Lead Source facet counts refresh after board save (P2) + parity note + P3s (attemptsByProject, types.ts) |
+| `9d116d0e` | apps/web (BBL) | PNG-export → `graph-png-export.ts` · 4 color-maps → 1 `NODE_TYPE_STYLES` · `@why` · inventory · **C5 two-stage tap (ratified behavior change)** |
+| `b89960d0` | apps/web (BBL) | re-verify fix: `withExportSafeStyles` module-private (removed the +1 dead-code the extraction introduced) |
+
+## Re-verify (Step 4)
+
+- **Doug: GO** — PNG-export byte-identical (crop math + html2canvas call + OKLab-can't-reach-capture); color-map identical across all 4 `GraphNodeType` members; C5 state machine correct on all 6 scenarios; NO-LEAK intact (`node-tooltip.ts` untouched); MMB `onAfterSave`/`aliveRef` sound; MMB typecheck clean.
+- **Live C5 touch (real Playwright `hasTouch`):** fresh first-tap → select+glow, NO dialog ✓ · second-tap → dialog opens ✓ · different-node tap → selection moves, no dialog ✓ · Esc → dialog+selection cleared ✓ · mouse click → opens immediately ✓ (Claude_Browser). The one ratified behavior change is verified working.
+- **apps/web delta test: 1554 pass / 3 fail** — all 3 (`drift-audit`, `lead-country`, `node-profile-actions`) are the documented DB-adapter/hook-timeout contention class, **zero in the diff → delta-neutral** (far cleaner than 0587's contaminated 47).
+- MMB client gates: typecheck ✓ · test 40 pass ✓ · build ✓ · oxlint clean. wiki-lint 0 errors.
+
+## Fallow delta (Step 5) — `9059a640..HEAD`
+
+| Metric | Baseline | Final | Note |
+| --- | --- | --- | --- |
+| dead-code | 34 | **34** | +1 from the extraction (unused export) caught + fixed in re-verify → neutral |
+| duplication | 2 | 2 | seed dupe = intentional-leave (ADR 0038); skeleton dupe = pre-existing P3 |
+| complexity findings | 23 | 23 | **redistributed**: `technique-graph.tsx` 9→7 (1003→895 LOC), export mass isolated to `graph-png-export.ts` |
+| `technique-graph.tsx` maxCRAP | 306 | 306 | **honest caveat:** the 306 fn is `TechniqueGraph` itself (component body) + 210 `handleNodeLayerKeyDown`, NOT the PNG-export — a further render-decomposition = ticket, not this pass |
+
+## Push gate — HELD (stacking reality)
+
+The "split by deploy unit" plan is **blocked by linear history**: the 0588 branch stacks on the **still-held 0587 trunk** (which contains the 0583 apps/web merge, held until `session-0551-test-infra` merges + apps/web local-green). My docs + MMB "free" commits sit ON TOP of that held apps/web trunk, and my own 2 apps/web commits also ride the BBL-prod/0551 hold. So **pushing this branch would push the held 0583 trunk + trigger BBL prod deploy** — exactly what 0587 held. Nothing pushes without the operator's word. Options for the operator: (a) hold the whole stack behind 0551 (unchanged from 0587); (b) I cherry-pick the 3 docs + 1 MMB commit onto a fresh branch off `origin/main` for a true free-lane push, leaving apps/web held.
+
+## Next session
 
 ## Review wave — verdicts + scores
 
