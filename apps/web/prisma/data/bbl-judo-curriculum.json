@@ -1,0 +1,524 @@
+{
+  "levels": [
+    {
+      "level": {
+        "id": 1,
+        "name": "Beginner — Dai-ikkyo (Throws 1-8)",
+        "color": "#FFFFFF",
+        "belt": "white",
+        "gokyoGroup": "Dai-ikkyo",
+        "estimatedMonths": 6,
+        "description": "Foundation: ukemi, kuzushi, tai-sabaki, and the first 8 Gokyo throws."
+      },
+      "sections": [
+        {
+          "id": "judo-beginner-throws",
+          "name": "Dai-ikkyo — First Eight Throws",
+          "category": "te-waza / koshi-waza / ashi-waza",
+          "techniques": [
+            {
+              "id": "tech_judo_gokyo_01",
+              "slug": "de-ashi-harai",
+              "name": "De-ashi-harai",
+              "nativeName": "出足払",
+              "englishName": "Advancing foot sweep",
+              "aliases": ["Advanced foot sweep", "Advancing foot sweep"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "ashi-waza",
+              "description": "Timing-based forward-movement foot sweep; Intercepting a step; Teaching distance, kuzushi, and rhythm",
+              "avoidWhen": [
+                "Do not force it when uke's weight is settled, feet are static, or your own posture is leaning backward."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Time the sweep to the moment the foot leaves the ground",
+                "Kuzushi (balance break) with hands before the sweep lands",
+                "Sweep the ankle — not the shin",
+                "Follow through on the direction of the fall"
+              ],
+              "tags": ["ashi-waza", "foot-sweep", "timing", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_02",
+              "slug": "hiza-guruma",
+              "name": "Hiza-guruma",
+              "nativeName": "膝車",
+              "englishName": "Knee wheel",
+              "aliases": ["Knee wheel"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "ashi-waza",
+              "description": "Directional turn throw; Teaching steering, wheel action, and forward kuzushi",
+              "avoidWhen": [
+                "Do not jam the knee recklessly or throw when your block is late and uke has already planted solidly."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Block at the knee — not below or above",
+                "Pull-lift action with both hands creates the wheel",
+                "Rotate uke over the blocked knee",
+                "Strong tsurikomi (lift-pull) with the sleeve hand"
+              ],
+              "tags": ["ashi-waza", "wheel", "kuzushi", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_03",
+              "slug": "sasae-tsurikomi-ashi",
+              "name": "Sasae-tsurikomi-ashi",
+              "nativeName": "支釣込足",
+              "englishName": "Propping lift-pull ankle throw",
+              "aliases": ["Propping lift-pull ankle throw"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "ashi-waza",
+              "description": "Forward-lifting directional block; Entry timing, steering, and stopping forward stepping",
+              "avoidWhen": [
+                "Do not confuse it with a kick or hard shin block; avoid using it when you cannot create lift-pull kuzushi first."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Prop the ankle — not kick the shin",
+                "Lift-pull (tsurikomi) with both hands simultaneously",
+                "Precise foot placement against the advancing ankle",
+                "Drive uke forward over the propped foot"
+              ],
+              "tags": ["ashi-waza", "propping", "lift-pull", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_04",
+              "slug": "uki-goshi",
+              "name": "Uki-goshi",
+              "nativeName": "浮腰",
+              "englishName": "Floating hip",
+              "aliases": ["Floating hip"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "koshi-waza",
+              "description": "Introductory hip throw; Teaches partial hip loading, torso connection, and rotational finish",
+              "avoidWhen": [
+                "Do not over-commit your hips too deep like a full O-goshi when the lesson is light loading and timing."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Float — not full hip load (uki = floating)",
+                "Rotate uke over the side of the hip",
+                "Arm wrap creates close connection",
+                "Kuzushi pulls uke onto the hip"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "beginner", "dai-ikkyo"]
+            },
+            {
+              "id": "tech_judo_gokyo_05",
+              "slug": "o-soto-gari",
+              "name": "O-soto-gari",
+              "nativeName": "大外刈",
+              "englishName": "Major outer reap",
+              "aliases": ["Major outer reap"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "ashi-waza",
+              "description": "High-percentage backward throw; Strong for novice curriculum, self-defense entries, and big directional commitment",
+              "avoidWhen": [
+                "Do not throw your chest backward or reap without first controlling uke's upper body and balance line."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Drive uke's weight back onto the target leg first",
+                "Chest-to-chest with outside leg reaping through",
+                "Kuzushi is backward and slightly diagonal",
+                "Reap through — not into — the leg"
+              ],
+              "tags": ["ashi-waza", "reap", "backward-throw", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_06",
+              "slug": "o-goshi",
+              "name": "O-goshi",
+              "nativeName": "大腰",
+              "englishName": "Major hip throw",
+              "aliases": ["Major hip throw"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "koshi-waza",
+              "description": "Core hip-loading throw; Excellent for learning hip placement, connection, and center-line control",
+              "avoidWhen": [
+                "Do not bend at the waist to lift with the back; avoid trying to muscle a bigger uke without proper hip entry and kuzushi."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Load the full hip — uke rides across",
+                "Enter with pivot (tai-sabaki)",
+                "Pull with both hands to break balance forward",
+                "Drive hips back through the throw"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_07",
+              "slug": "o-uchi-gari",
+              "name": "O-uchi-gari",
+              "nativeName": "大内刈",
+              "englishName": "Major inner reap",
+              "aliases": ["Major inner reap"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "ashi-waza",
+              "description": "Pressure-forward then reap-inside; Effective against square stances and retreating balance",
+              "avoidWhen": [
+                "Do not over-reach with the reaping leg when your head and grips are disconnected from uke's center."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Enter deep — reaping leg goes between uke's legs",
+                "Kuzushi is backward and slightly inward",
+                "Chest stays connected throughout",
+                "Follow uke down to the mat"
+              ],
+              "tags": ["ashi-waza", "inner-reap", "dai-ikkyo", "beginner"]
+            },
+            {
+              "id": "tech_judo_gokyo_08",
+              "slug": "seoi-nage",
+              "name": "Seoi-nage",
+              "nativeName": "背負投",
+              "englishName": "Shoulder throw",
+              "aliases": ["Shoulder throw"],
+              "gokyoGroup": "Dai-ikkyo",
+              "subclass": "te-waza",
+              "description": "Classic forward shoulder throw; Teaches turning entry, close connection, and load-on-back mechanics",
+              "avoidWhen": [
+                "Do not drop your posture prematurely or spin in without first creating forward kuzushi and arm capture."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Turn in deeply — back to uke's chest",
+                "Capture uke's arm at the elbow",
+                "Load uke onto both shoulders",
+                "Pull down with arms as you bend and drive"
+              ],
+              "tags": ["te-waza", "shoulder-throw", "dai-ikkyo", "beginner"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 2,
+        "name": "Intermediate — Dai-nikyo (Throws 9-16)",
+        "color": "#3B82F6",
+        "belt": "blue",
+        "gokyoGroup": "Dai-nikyo",
+        "estimatedMonths": 12,
+        "description": "Combination attacks, counters, and the second 8 Gokyo throws."
+      },
+      "sections": [
+        {
+          "id": "judo-intermediate-throws",
+          "name": "Dai-nikyo — Second Eight Throws",
+          "category": "te-waza / koshi-waza / ashi-waza",
+          "techniques": [
+            {
+              "id": "tech_judo_gokyo_09",
+              "slug": "ko-soto-gari",
+              "name": "Ko-soto-gari",
+              "nativeName": "小外刈",
+              "englishName": "Minor outer reap",
+              "aliases": ["Minor outer reap"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "ashi-waza",
+              "description": "Smaller outside reap; Entry, combination, reaction tool, and posture-breaking follow-up",
+              "avoidWhen": [
+                "Do not over-swing the leg or assume it will work without upper-body control and a backward weight line."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Lighter contact than O-soto — heel of foot, not full leg",
+                "Strong backward kuzushi creates the throw",
+                "Works as combination follow-up to O-soto",
+                "Aim for uke's heel, not the calf"
+              ],
+              "tags": ["ashi-waza", "outer-reap", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_10",
+              "slug": "ko-uchi-gari",
+              "name": "Ko-uchi-gari",
+              "nativeName": "小内刈",
+              "englishName": "Minor inner reap",
+              "aliases": ["Minor inner reap"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "ashi-waza",
+              "description": "Inside foot attack; Strong as a setup, reaction check, and anti-square-stance tool",
+              "avoidWhen": [
+                "Do not hang your upper body over the target leg or chase the foot without first managing balance and posture."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Sweep the inside of the ankle",
+                "Diagonal backward kuzushi with hands",
+                "Small movement — timing-driven",
+                "Often combined with O-uchi-gari"
+              ],
+              "tags": ["ashi-waza", "inner-reap", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_11",
+              "slug": "koshi-guruma",
+              "name": "Koshi-guruma",
+              "nativeName": "腰車",
+              "englishName": "Hip wheel",
+              "aliases": ["Hip wheel"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "koshi-waza",
+              "description": "Wheel-type hip throw; Teaching strong rotational entry and upper-body wrapping control",
+              "avoidWhen": [
+                "Do not crank the neck carelessly in drilling; adapt grips safely and avoid forcing the head position."
+              ],
+              "accessLevel": "public",
+              "isRequired": false,
+              "keyPoints": [
+                "Wrap arm around uke's neck (not a choke)",
+                "Hip loading similar to O-goshi",
+                "Rotate uke over the loaded hip",
+                "Safety note: never tighten the neck wrap"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "wheel", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_12",
+              "slug": "tsurikomi-goshi",
+              "name": "Tsurikomi-goshi",
+              "nativeName": "釣込腰",
+              "englishName": "Lifting-pulling hip throw",
+              "aliases": ["Lifting-pulling hip throw"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "koshi-waza",
+              "description": "Grip-sensitive hip throw emphasizing lift with the lapel side; Refined kuzushi and precise hand action",
+              "avoidWhen": [
+                "Do not flatten the action into a generic hip toss; it needs clear lifting-pulling mechanics and posture."
+              ],
+              "accessLevel": "public",
+              "isRequired": false,
+              "keyPoints": [
+                "High lapel grip drives the lift",
+                "Hip entry is lighter than O-goshi",
+                "Strong tsurikomi (lift-pull) differentiates this from O-goshi",
+                "Maintain upright posture throughout"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "lift-pull", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_13",
+              "slug": "okuri-ashi-harai",
+              "name": "Okuri-ashi-harai",
+              "nativeName": "送足払",
+              "englishName": "Sliding foot sweep",
+              "aliases": ["Sliding foot sweep", "Accompanying foot sweep"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "ashi-waza",
+              "description": "Movement-driven lateral sweep; Excellent for timing, angling, and intercepting side movement",
+              "avoidWhen": [
+                "Do not attempt it against completely dead feet; it works on motion, not static resistance."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Create lateral movement with footwork first",
+                "Sweep BOTH feet simultaneously as they come together",
+                "Direction of sweep follows uke's movement",
+                "Timing is everything — cannot force it"
+              ],
+              "tags": ["ashi-waza", "foot-sweep", "movement", "timing", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_14",
+              "slug": "tai-otoshi",
+              "name": "Tai-otoshi",
+              "nativeName": "体落",
+              "englishName": "Body drop",
+              "aliases": ["Body drop"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "te-waza",
+              "description": "Classic hand-technique body drop; Teaches turn, block line, and strong forward pull",
+              "avoidWhen": [
+                "Do not try to leg-block violently at knee level or throw without full-body directional control."
+              ],
+              "accessLevel": "public",
+              "isRequired": true,
+              "keyPoints": [
+                "Block line with extended leg — not a trip",
+                "Drive uke forward and over the block",
+                "Turn body to create the angle",
+                "Arms create strong forward kuzushi"
+              ],
+              "tags": ["te-waza", "body-drop", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_15",
+              "slug": "harai-goshi",
+              "name": "Harai-goshi",
+              "nativeName": "払腰",
+              "englishName": "Sweeping hip throw",
+              "aliases": ["Sweeping hip throw"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "koshi-waza",
+              "description": "Dynamic sweeping hip throw; Combines hip loading with leg sweeping rhythm",
+              "avoidWhen": [
+                "Do not use it before the student understands balance, hip contact, and safe sweeping height."
+              ],
+              "accessLevel": "public",
+              "isRequired": false,
+              "keyPoints": [
+                "Enter like O-goshi — hip load first",
+                "Sweeping leg goes across uke's thighs — not knees",
+                "Continue sweeping through to complete the throw",
+                "Upper body drive matches the sweep timing"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "sweep", "dai-nikyo", "intermediate"]
+            },
+            {
+              "id": "tech_judo_gokyo_16",
+              "slug": "uchi-mata",
+              "name": "Uchi-mata",
+              "nativeName": "内股",
+              "englishName": "Inner thigh throw",
+              "aliases": ["Inner thigh throw"],
+              "gokyoGroup": "Dai-nikyo",
+              "subclass": "ashi-waza",
+              "description": "Major forward throw — high-value in sport and advanced standing exchange; Teaches central lift and turn",
+              "avoidWhen": [
+                "Do not rush it for brand-new students without strong posture, turning ability, and safe falling skills."
+              ],
+              "accessLevel": "public",
+              "isRequired": false,
+              "keyPoints": [
+                "Lift uke's inner thigh with sweeping leg",
+                "Turn-in is critical — back toward uke",
+                "Upper body drive creates the arc",
+                "Can be done from various grips — very adaptable"
+              ],
+              "tags": ["ashi-waza", "inner-thigh", "forward-throw", "dai-nikyo", "intermediate"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "level": {
+        "id": 3,
+        "name": "Advanced — Dai-sankyo (Throws 17-20)",
+        "color": "#8B4513",
+        "belt": "brown",
+        "gokyoGroup": "Dai-sankyo (first 4)",
+        "estimatedMonths": 18,
+        "description": "Dynamic throws, sacrifice techniques, and upper Gokyo entries."
+      },
+      "sections": [
+        {
+          "id": "judo-advanced-throws",
+          "name": "Dai-sankyo — Throws 17-20",
+          "category": "ashi-waza / yoko-sutemi-waza / koshi-waza",
+          "techniques": [
+            {
+              "id": "tech_judo_gokyo_17",
+              "slug": "ko-soto-gake",
+              "name": "Ko-soto-gake",
+              "nativeName": "小外掛",
+              "englishName": "Minor outer hook",
+              "aliases": ["Minor outer hook"],
+              "gokyoGroup": "Dai-sankyo",
+              "subclass": "ashi-waza",
+              "description": "Backward hooking action; Useful as close-range reaction tool and contrast to Ko-soto-gari",
+              "avoidWhen": [
+                "Do not blur hook and reap mechanics together; teach the difference clearly and watch twisting pressure."
+              ],
+              "accessLevel": "member",
+              "isRequired": false,
+              "keyPoints": [
+                "Hook — not sweep — the ankle",
+                "Drive backward pressure from hands",
+                "Keep own posture upright",
+                "Compare/contrast with Ko-soto-gari (reap vs hook)"
+              ],
+              "tags": ["ashi-waza", "hook", "outer", "dai-sankyo", "advanced"]
+            },
+            {
+              "id": "tech_judo_gokyo_18",
+              "slug": "tsuri-goshi",
+              "name": "Tsuri-goshi",
+              "nativeName": "釣腰",
+              "englishName": "Lifting hip throw",
+              "aliases": ["Lifting hip throw"],
+              "gokyoGroup": "Dai-sankyo",
+              "subclass": "koshi-waza",
+              "description": "Belt-lifting hip throw; Teaching back-of-belt connection, lift, and close hip mechanics",
+              "avoidWhen": [
+                "Do not teach it without discussing grip legality/context and safe gi-specific application."
+              ],
+              "accessLevel": "member",
+              "isRequired": false,
+              "keyPoints": [
+                "Grip the back of uke's belt",
+                "Lift and load onto hip simultaneously",
+                "Hip entry stays close",
+                "Consider ruleset context for belt grip"
+              ],
+              "tags": ["koshi-waza", "hip-throw", "belt-grip", "dai-sankyo", "advanced"]
+            },
+            {
+              "id": "tech_judo_gokyo_19",
+              "slug": "yoko-otoshi",
+              "name": "Yoko-otoshi",
+              "nativeName": "横落",
+              "englishName": "Side drop",
+              "aliases": ["Side drop"],
+              "gokyoGroup": "Dai-sankyo",
+              "subclass": "yoko-sutemi-waza",
+              "description": "Sacrifice throw introducing lateral dropping mechanics; Sideward balance breaking",
+              "avoidWhen": [
+                "Do not teach it before solid ukemi and spatial awareness; poor sacrifice-throw timing can create chaos fast."
+              ],
+              "accessLevel": "member",
+              "isRequired": false,
+              "keyPoints": [
+                "Drop to the side — sacrifice own position",
+                "Pull uke over you as you fall",
+                "Land on side, not back",
+                "Requires confident ukemi to practice safely"
+              ],
+              "tags": ["yoko-sutemi", "sacrifice", "side-drop", "dai-sankyo", "advanced"]
+            },
+            {
+              "id": "tech_judo_gokyo_20",
+              "slug": "ashi-guruma",
+              "name": "Ashi-guruma",
+              "nativeName": "足車",
+              "englishName": "Leg wheel",
+              "aliases": ["Leg wheel"],
+              "gokyoGroup": "Dai-sankyo",
+              "subclass": "ashi-waza",
+              "description": "Wheel action with a larger leg frame; Understanding rotational throws and transition from reaping to wheel concepts",
+              "avoidWhen": [
+                "Do not mistime the wheel contact or treat it like O-soto-gari; it needs rotational control, not brute backward force."
+              ],
+              "accessLevel": "member",
+              "isRequired": false,
+              "keyPoints": [
+                "Leg creates a fulcrum — uke rotates over it",
+                "Larger wheel arc than Hiza-guruma",
+                "Both hands drive uke's rotation",
+                "Compare: Hiza-guruma (knee), Ashi-guruma (leg), O-guruma (thigh)"
+              ],
+              "tags": ["ashi-waza", "wheel", "rotation", "dai-sankyo", "advanced"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
