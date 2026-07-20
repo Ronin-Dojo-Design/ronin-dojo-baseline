@@ -46,6 +46,16 @@ const ZOOM_MAX = 1.8
 const ZOOM_STEP = 0.12
 const PAN_STEP = 48
 const EXPORT_CROP_PADDING = 24
+// WL-P2-67: the interactive ZOOM_MIN (0.35) is a legibility floor for manual zoom (wheel/buttons/
+// pinch) — it deliberately stays put. `fitToView` needs its OWN floor: at 375px the zoom required
+// to frame every node is ~0.17-0.24 (below 0.35), so a fixed clamp there clips nodes off-screen.
+// This near-zero floor only guards the degenerate empty-bounds case, never engages in practice.
+const FIT_ZOOM_FLOOR = 0.05
+// C4: the eased zoom/pan transition (260ms ease-out-expo-like) lives in CSS classes on the node
+// layer, with `motion-reduce:transition-none` handling reduced motion at the CSS level — the
+// media query applies at computed-value time, immune to useReducedMotion()'s hydration-time
+// capture (probed live: motion's hook returned a stale false under an emulated reduce while
+// matchMedia said true). Only the drag/pinch gate (isInteracting) is inline — style beats class.
 
 type GraphNodeType = BjjTechniqueGraphNode["type"]
 type FilterValue = "all" | GraphNodeType
@@ -199,6 +209,18 @@ const withExportSafeStyles = async <T,>(
   }
 }
 
+type Point = { x: number; y: number }
+
+// D-4 cooperative touch: two-finger pinch math (distance → zoom scale, midpoint → pan delta).
+// Module-scope pure helpers — no component state, safe to unit-reason-about independently.
+function distanceBetween(a: Point, b: Point) {
+  return Math.hypot(a.x - b.x, a.y - b.y)
+}
+
+function midpointBetween(a: Point, b: Point): Point {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }
+}
+
 function buildEdgePath(from: BjjTechniqueGraphNode, to: BjjTechniqueGraphNode) {
   const x1 = from.x + NODE_WIDTH / 2
   const y1 = from.y + NODE_HEIGHT / 2
@@ -245,6 +267,16 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
   const exportRef = useRef<HTMLDivElement>(null)
   const isPanning = useRef(false)
   const lastPointer = useRef({ x: 0, y: 0 })
+  // C4: true only for the duration of an active mouse-drag pan or two-finger pinch — the ONE
+  // switch that disables the eased zoom/pan transition below so it never fights a live drag.
+  const [isInteracting, setIsInteracting] = useState(false)
+  // D-4 cooperative touch: active touch pointers by id. Size 1 = a casual single-finger touch —
+  // deliberately untouched (no capture, no preventDefault) so the page scrolls over the canvas
+  // exactly like any other content. Size 2 = the two-finger gesture that pans/zooms the graph.
+  const touchPointers = useRef(new Map<number, Point>())
+  const pinchStart = useRef<{ distance: number; midpoint: Point; zoom: number; pan: Point } | null>(
+    null,
+  )
 
   const bounds = useMemo(() => {
     const width = Math.max(...graph.nodes.map(node => node.x), 0) + NODE_WIDTH + CANVAS_PADDING
@@ -290,8 +322,13 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const nextZoom = clampZoom(
+    // WL-P2-67: bypass the interactive ZOOM_MIN floor here on purpose — Fit must be able to zoom
+    // out past 0.35 on narrow viewports so every node lands inside the viewport. Only ZOOM_MAX and
+    // the near-zero degenerate-bounds floor apply; manual zoom (wheel/buttons/pinch) keeps clampZoom.
+    const nextZoom = Math.max(
+      FIT_ZOOM_FLOOR,
       Math.min(
+        ZOOM_MAX,
         1,
         (canvas.clientWidth - 48) / Math.max(bounds.width, 1),
         (canvas.clientHeight - 48) / Math.max(bounds.height, 1),
@@ -314,12 +351,55 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) return
+
+    // D-4 cooperative touch: a single finger is left completely alone here — no capture, no
+    // preventDefault — so `touch-pan-y` (below) lets the browser scroll the page over the canvas
+    // exactly like a casual swipe over any other section. Only the SECOND touch (a genuine
+    // two-finger gesture) engages graph pan/zoom.
+    if (event.pointerType === "touch") {
+      touchPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (touchPointers.current.size !== 2) return
+
+      for (const pointerId of touchPointers.current.keys()) {
+        event.currentTarget.setPointerCapture(pointerId)
+      }
+      const [a, b] = Array.from(touchPointers.current.values())
+      pinchStart.current = {
+        distance: distanceBetween(a, b),
+        midpoint: midpointBetween(a, b),
+        zoom,
+        pan,
+      }
+      setIsInteracting(true)
+      return
+    }
+
     isPanning.current = true
+    setIsInteracting(true)
     lastPointer.current = { x: event.clientX, y: event.clientY }
     event.currentTarget.setPointerCapture(event.pointerId)
   }
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      if (!touchPointers.current.has(event.pointerId)) return
+      touchPointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY })
+      if (touchPointers.current.size !== 2 || !pinchStart.current) return
+
+      // Two active touches: this IS the two-finger gesture, so take over from native touch
+      // handling for these events only (the CSS `touch-pan-y` already keeps native pinch/pan off).
+      event.preventDefault()
+      const [a, b] = Array.from(touchPointers.current.values())
+      const scale = distanceBetween(a, b) / pinchStart.current.distance
+      const midpoint = midpointBetween(a, b)
+      setZoom(clampZoom(pinchStart.current.zoom * scale))
+      setPan({
+        x: pinchStart.current.pan.x + (midpoint.x - pinchStart.current.midpoint.x),
+        y: pinchStart.current.pan.y + (midpoint.y - pinchStart.current.midpoint.y),
+      })
+      return
+    }
+
     if (!isPanning.current) return
     const dx = event.clientX - lastPointer.current.x
     const dy = event.clientY - lastPointer.current.y
@@ -327,8 +407,15 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
     setPan(current => ({ x: current.x + dx, y: current.y + dy }))
   }
 
-  const stopPanning = () => {
+  const stopPanning = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") {
+      touchPointers.current.delete(event.pointerId)
+      if (touchPointers.current.size < 2) pinchStart.current = null
+      if (touchPointers.current.size === 0) setIsInteracting(false)
+      return
+    }
     isPanning.current = false
+    setIsInteracting(false)
   }
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
@@ -510,6 +597,10 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
             })}
           </Stack>
 
+          {/* AUD2-3: labels hide below sm so five controls fit the toolbar row without crowding
+              the mobile viewport the graph itself needs to frame (bundled with the WL-P2-67
+              ZOOM_MIN clamp fix as one decision, not two). aria-label keeps the accessible name —
+              `hidden` removes text from the a11y tree too, not just the viewport. */}
           <Stack direction="row" wrap size="xs">
             <Button
               type="button"
@@ -519,7 +610,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               aria-label="Zoom out"
               onClick={() => updateZoom(zoom - ZOOM_STEP)}
             >
-              Out
+              <span className="hidden sm:inline">Out</span>
             </Button>
             <Button
               type="button"
@@ -529,38 +620,43 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               aria-label="Zoom in"
               onClick={() => updateZoom(zoom + ZOOM_STEP)}
             >
-              In
+              <span className="hidden sm:inline">In</span>
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="sm"
               prefix={<RotateCcwIcon />}
+              aria-label="Reset zoom"
               onClick={() => {
                 setZoom(1)
                 setPan({ x: 48, y: 48 })
               }}
             >
-              Reset
+              <span className="hidden sm:inline">Reset</span>
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="sm"
               prefix={<FocusIcon />}
+              aria-label="Fit to view"
               onClick={fitToView}
             >
-              Fit
+              <span className="hidden sm:inline">Fit</span>
             </Button>
+            {/* AUD2-9: demoted to secondary — PNG export was the page's only primary button; the
+                live graph (SVG edges + HTML nodes) stays the primary surface, export is secondary. */}
             <Button
               type="button"
-              variant="primary"
+              variant="secondary"
               size="sm"
               prefix={<DownloadIcon />}
+              aria-label="Download PNG"
               isPending={isExporting}
               onClick={exportPng}
             >
-              PNG
+              <span className="hidden sm:inline">PNG</span>
             </Button>
           </Stack>
         </Stack>
@@ -574,11 +670,19 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
             tabIndex={0}
             role="application"
             aria-label="BJJ technique graph"
-            className="relative size-full cursor-grab touch-none bg-[radial-gradient(circle,_hsl(var(--border))_1px,_transparent_1px)] bg-[length:28px_28px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            // AUD2-8: `hsl(var(--border))` referenced a variable that was never defined (the
+            // token is `--color-border`, itself already a full `hsl(...)` value) — the whole
+            // background-image declaration was invalid and painted nothing. `var(--color-border)`
+            // is the live idiom.
+            // D-4: `touch-pan-y` (not `touch-none`) lets the browser keep handling single-finger
+            // vertical scroll natively — the page scrolls over the canvas — while still blocking
+            // native pinch-zoom/horizontal-pan so the two-finger gesture below can own those.
+            className="relative size-full cursor-grab touch-pan-y bg-[radial-gradient(circle,_var(--color-border)_1px,_transparent_1px)] bg-[length:28px_28px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={stopPanning}
             onPointerLeave={stopPanning}
+            onPointerCancel={stopPanning}
             onWheel={handleWheel}
             onKeyDown={handleKeyDown}
           >
@@ -591,12 +695,17 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               <div
                 role="group"
                 aria-label="Technique nodes"
-                className="absolute left-0 top-0"
+                // C4: eased zoom/fit + zoom-control transitions via CSS (see the constant-block
+                // comment). motion-reduce is handled here — NOT via useReducedMotion, whose
+                // hydration-time capture proved stale under a live emulated-reduce probe.
+                className="absolute left-0 top-0 transition-transform duration-[260ms] ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none"
                 style={{
                   width: bounds.width,
                   height: bounds.height,
                   transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                   transformOrigin: "0 0",
+                  // C4: NEVER ease during an active drag or pinch — inline style beats the class.
+                  ...(isInteracting ? { transition: "none" } : null),
                 }}
                 onKeyDown={handleNodeLayerKeyDown}
               >
