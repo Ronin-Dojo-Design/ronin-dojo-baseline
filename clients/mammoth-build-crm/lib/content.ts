@@ -1,5 +1,9 @@
 import type { Project } from "./types";
 
+// `SEED_PROJECTS` doubles as `prisma/seed.ts`'s source data — varied `source` values here
+// (referral / trade_show / web_form) are what make the Lead Source facet's per-source counts
+// non-trivial on a freshly seeded `mammoth_dev` (SESSION_0586, G-021 loop 3b).
+
 // ---- Landing content (Mammoth Metal Buildings) ----
 
 export const HERO = {
@@ -52,6 +56,7 @@ export const SEED_PROJECTS: Project[] = [
     length: 100,
     eaveHeight: 16,
     stage: "fabrication",
+    source: "referral",
     nextTask: "Send fabrication-milestone invoice; confirm steel delivery date",
     orderConfirmed: true,
     orderNumber: "MB-2041",
@@ -72,6 +77,7 @@ export const SEED_PROJECTS: Project[] = [
     length: 160,
     eaveHeight: 20,
     stage: "quote",
+    source: "trade_show",
     nextTask: "Finalize quote from product library; review wind load options",
     orderConfirmed: false,
     orderNumber: null,
@@ -92,6 +98,7 @@ export const SEED_PROJECTS: Project[] = [
     length: 80,
     eaveHeight: 18,
     stage: "lead",
+    source: "web_form",
     nextTask: "First-touch call within 24h; qualify use + timeline",
     orderConfirmed: false,
     orderNumber: null,

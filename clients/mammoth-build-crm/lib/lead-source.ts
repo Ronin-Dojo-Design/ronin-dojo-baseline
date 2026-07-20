@@ -68,3 +68,25 @@ export function normalizeLeadSource(raw: string | null | undefined): NormalizedL
   const value = ALIAS_TO_SOURCE.get(key);
   return value ? { value, matched: true } : { value: "other", matched: false };
 }
+
+/**
+ * Tally a list of persisted Lead Source values by canonical bucket — the
+ * per-source counts the roster facet and the pipeline board facet both need
+ * (SESSION_0586, G-021 loop 3b). Routes every raw value through
+ * `normalizeLeadSource` (the same normalizer the ingest preview uses) so a
+ * stray non-canonical string folds into `other` instead of its own bucket;
+ * persisted `Project.source`/`Contact.source` values are always already
+ * canonical, so this is a defensive no-op on real data. Buckets with zero
+ * items are omitted — callers that need every source to render a chip
+ * (including at zero) iterate `LEAD_SOURCES` and default missing keys to 0.
+ */
+export function countLeadSources(
+  values: readonly (string | null | undefined)[],
+): Partial<Record<LeadSourceValue, number>> {
+  const counts: Partial<Record<LeadSourceValue, number>> = {};
+  for (const raw of values) {
+    const { value } = normalizeLeadSource(raw);
+    counts[value] = (counts[value] ?? 0) + 1;
+  }
+  return counts;
+}

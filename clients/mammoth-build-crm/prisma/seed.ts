@@ -41,6 +41,7 @@ async function main() {
       length: p.length,
       eaveHeight: p.eaveHeight,
       stage: p.stage,
+      source: p.source,
       nextTask: p.nextTask,
       orderConfirmed: p.orderConfirmed,
       orderNumber: p.orderNumber,
