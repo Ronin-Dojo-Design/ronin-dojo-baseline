@@ -110,8 +110,48 @@ plan scope.
     conformed surface, not a bespoke god-page.
   - **Ritual wiring** is additive on top of 0584's just-rewritten opening/closing (0584 landed
     this sweep) — new render/update steps, not a rewrite.
-- **Next step:** SESSION_0589 plan session ( `/pp` Petey plan). Bundle with PL-001/PL-002 as the
-  planning session's scope; sequence after (or alongside) the widget-intake plan.
+- **Ratified inputs (operator, SESSION_0587) — feed the dashboard slice-2 build:**
+  - **Masthead name = per-skin (house-language seam):** "State of the Dojo" under dojo-brand
+    skins (RDD/BBL); **"State of the Building"** under the MMB/Mammoth skin. Name is ratified —
+    drop the "(name pending operator ratification)" provenance note at the next render; replace
+    with the per-skin title map.
+  - **Skin invariants:** operator chose REVISE on the proposed "semantic tokens fixed, never
+    re-skinned" law — the boundary is being re-specified (see PL-005). Do NOT encode the old law
+    until PL-005 resolves.
+- **Next step:** SESSION_0589 plan session ( `/pp` Petey plan). Bundle with PL-001/PL-002/PL-004
+  as the planning session's scope; sequence after (or alongside) the widget-intake plan.
+
+### PL-004 — Portfolio taxonomy: brand > platform > product (evolves ADR 0034) — queued · ADR-worthy
+
+- **Origin:** operator directive, SESSION_0587 (2026-07-20), correcting the "five products"
+  framing during the dashboard ratification.
+- **The direction (operator, "I think is the way to go" — a lean, ratify formally at plan time):**
+  the portfolio is **five BRANDS** (BBL · Mammoth · Baseline · Tuff Buffs · WEKAF), and **a brand
+  can contain multiple platforms, each with multiple products.** Hierarchy = **brand → platform →
+  product** (not the current flat "product = brand token-swap × modules" language).
+- **Why it's ADR-worthy, not a reword:** [ADR 0034](../../architecture/decisions/) + CLAUDE.md's
+  North Star currently call BBL/Mammoth/etc "products" of "ONE platform." This direction inverts
+  that (brand is the top unit; platforms live *inside* a brand). It reshapes: the State-of-Dojo
+  dashboard tabs (brand tabs, per PL-003), the vault SOT-per-brand model (PL-002 / G-023 vault
+  constellation), and the RDD umbrella language. **Do NOT rewrite ADR 0034 / CLAUDE.md now** —
+  formalize via a new ADR in SESSION_0589 planning, then conform the docs.
+- **Next step:** SESSION_0589 — grill the taxonomy to a ratified ADR (reconcile with ADR 0034 +
+  0040; define brand/platform/product precisely; map the five brands' current platforms/products),
+  then cascade the wording (dashboard, vault names, North Star) as conform work.
+
+### PL-005 — Skin-invariant boundary (semantic tokens) — ✅ RATIFIED (SESSION_0587)
+
+- **Ratified law (operator, SESSION_0587):** **fixed hue, brand tint.** Semantic tokens
+  (good/warn/crit) keep their recognizable hue (green/amber/red family) so meaning reads across
+  brands, but **every brand tints them toward its own palette within an accessibility-safe
+  range.** Supersedes the proposed "fixed, never re-skinned" law (rejected) — semantics are
+  neither frozen nor fully skinnable; they're hue-anchored + brand-tinted with a contrast floor.
+- **Encodes:** the existing BBL crit-darken case is now IN-LAW (a contrast-driven tint), not an
+  exception. The current mock's "semantic tokens NEVER re-skinned" comment is now WRONG — fix at
+  the PL-003 dashboard slice-2 build (tint tokens per brand + assert an accessibility-safe
+  contrast range; do not hardcode a single crit).
+- **Design-law input to:** PL-003 (dashboard render) + the brand-skin pipeline (G-018 /
+  brand-skins) + `design-system-doctrine`.
 
 ## Cross-references
 
