@@ -4,10 +4,11 @@ slug: agent-systems-map
 type: concept
 status: active
 created: 2026-06-29
-updated: 2026-07-18
-last_agent: codex-session-0570
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
-  - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/WORKFLOW_6.0.md
+  - docs/protocols/SOT_Cookbook.md
   - docs/rituals/opening.md
   - docs/rituals/closing.md
   - docs/agents/README.md
@@ -27,19 +28,21 @@ tags:
 > This map is the one-glance conceptual index: each pillar → **our** concrete implementation (linked) → and,
 > where we had the pieces but no single artifact, the **gap we filled here.** It is the conceptual companion
 > to the exhaustive [`orchestration-hub`](../../runbooks/dev-environment/orchestration-hub.md) file-tree and to
-> [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) (the governing OS). Five pillars; nothing new invented, two
-> gaps closed.
+> [WORKFLOW 6.0](../../protocols/WORKFLOW_6.0.md) (the governing OS; supersedes 5.0 as of SESSION_0584/G-023).
+> Five pillars; nothing new invented, two gaps closed (the §1 router table has since **moved** to
+> [`SOT_Cookbook.md`](../../protocols/SOT_Cookbook.md) — see §1 below).
 >
 > **How/when this is read (don't bulk-read it every session).** It's a *reference*, not hot-path context.
 > Two triggers wire it into the read-path: the [opening ritual](../../rituals/opening.md) **step 4** points at
-> the §1 **task→workflow router** when you pick a skill/loop, and `CLAUDE.md`'s "How sessions run" flags the
-> map for awareness + the §4 **allowed-vs-never** table. Consult a single pillar/table on demand — reading the
-> whole map each session would violate the **context-discipline** pillar it describes. (Deliberately **not**
-> wired into the SESSION template: that's a per-session work-ledger, not a guidance surface.)
+> [`SOT_Cookbook.md`](../../protocols/SOT_Cookbook.md)'s **task→workflow router** when you pick a skill/loop, and
+> `CLAUDE.md`'s "How sessions run" flags the map for awareness + the §4 **allowed-vs-never** table. Consult a
+> single pillar/table on demand — reading the whole map each session would violate the **context-discipline**
+> pillar it describes. (Deliberately **not** wired into the SESSION template: that's a per-session work-ledger,
+> not a guidance surface.)
 
 | Pillar | One-line | Our maturity |
 | --- | --- | --- |
-| 1. Skill routing | route a task to the right workflow, don't just prompt harder | pieces existed; **router table added below** |
+| 1. Skill routing | route a task to the right workflow, don't just prompt harder | strong (router table lives at [`SOT_Cookbook.md`](../../protocols/SOT_Cookbook.md)) |
 | 2. Context discipline | split work into focused agent contexts; bigger ≠ better | strong (the roster) |
 | 3. Work ledgers | a persistent record so the next session continues, not restarts | **over-delivered** |
 | 4. Trust boundaries | the question isn't "what *can* it do" — it's "what must it *never* do" | guards existed; **never-do table added below** |
@@ -56,22 +59,10 @@ tags:
 → `/pr-fix-loop` §1c), and [`closing.md`](../../rituals/closing.md) §6.7 is the **finding-router** (each
 finding type → its canonical ledger). Plus ~35 skills and the [domain hubs](../../runbooks/domain-features/).
 
-**Gap filled — the task → workflow router** (the one table we lacked):
-
-| When the task is… | Run | Why |
-| --- | --- | --- |
-| Unclear / multi-part / has open decisions | **Petey** + [`petey-plan`](../../protocols/petey-plan.md) + `/grill-me` | resolve the decision tree before building |
-| Build a feature against a clear plan | **Cody** + [`cody-preflight`](../../protocols/cody-preflight.md) | reuse-first; no blind new components |
-| Something is broken / a hard bug | `/diagnose` | reproduce → minimise → fix → regression-test |
-| "Is this code gold-standard?" | `/code-quality` ([matrix](../../protocols/code-quality-matrix.md)) | graded /10 vs the code-gold-standard |
-| Clean up a diff (CRAP / dupes / dead code) | `/fallow-fix-loop` | measured complexity/dup deltas + re-verify |
-| Review a branch / diff for bugs | `/code-review` or `/review` | correctness + standards/spec |
-| Keep open PRs merge-ready | `/pr-fix-loop` ([loop](../../protocols/pr-review-score-fix-loop.md)) | review → score → fix, pause-on-merge |
-| Prove a change actually works | `/verify` + [`qa-runtime-verification`](../../protocols/qa-runtime-verification.md) | runtime evidence, not "it compiles" |
-| Emergency user-blocking prod bug | [`hot-fix-protocol`](../../protocols/hot-fix-protocol.md) | fast within the push gate, not past it |
-| Stand up a new client product | `/new-client-recipe` | own DB + brand, monorepo (ADR 0034/0038) |
-| Turn interviews into mission/motto/brand canon or messaging requirements | **Brandon** ([role](../../agents/brandon.md)) | separate confirmed truth from recommendations; make promises acceptance-testable |
-| Repo feels heavy / duplicated / drifting | [`hostile-repo-review`](../../protocols/hostile-repo-review.md) | the repo-wide lean-out (this session) |
+**The task → workflow router moved (G-023, SESSION_0584):** the one-screen table lived here as a
+"gap filled" note; it now lives at [`SOT_Cookbook.md`](../../protocols/SOT_Cookbook.md) — the
+canonical, actively-maintained router (recipe cards + sequence skills folded in as new rows). Read
+that file for the live table; this section stays the *concept* anchor.
 
 ## 2. Context discipline — "each agent only sees what it needs"
 
@@ -112,7 +103,7 @@ reads its operator-set order (`apps/web/scripts/board-backlog.ts`) and bow-out m
 **Concept (image):** a wall between the agent environment and production; allowed actions vs blocked actions.
 
 **Ours:** the pieces are everywhere — the **FS-0024 git guard** + host shell-guards (block `git`/`gh`/`bun`/
-`vercel` from the read-only template cwd), [explicit-push-authorization](../../protocols/giddy-merge-strategy.md),
+`vercel` from the read-only template cwd), [explicit-push-authorization](../../protocols/recipes/merge-wave.md),
 [`code-guardrails`](../../protocols/code-guardrails.md) G1–G9, the
 [manual-boundary registry](manual-boundary-registry.md), the
 [security risk register](../../security/ronin-security-risk-register.md) — but no single allowed-vs-never view.
@@ -182,7 +173,8 @@ the SESSION file's Operator line so no future reader treats a model as load-bear
 ## What we lifted from the images
 
 1. **The skill-routing table** (§1) — we routed implicitly across the rituals; the explicit task→workflow
-   table is new and is the highest-leverage discoverability win.
+   table was the highest-leverage discoverability win here, and has since graduated to its own
+   actively-maintained home: [`SOT_Cookbook.md`](../../protocols/SOT_Cookbook.md) (G-023, SESSION_0584).
 2. **The allowed-vs-never table** (§4) — we enforced boundaries via guards/hooks but never showed them as one
    "never-do" list; a fresh agent should see it at a glance.
 3. **Per-agent context-contents** (§2) — naming what each roster agent should hold in-context (borrowed from
@@ -190,7 +182,8 @@ the SESSION file's Operator line so no future reader treats a model as load-bear
 
 ## Cross-references
 
-- [WORKFLOW 5.0](../../protocols/WORKFLOW_5.0.md) — the governing OS this map sits under.
+- [WORKFLOW 6.0](../../protocols/WORKFLOW_6.0.md) — the governing OS this map sits under (supersedes 5.0).
+- [SOT_Cookbook](../../protocols/SOT_Cookbook.md) — the live task→workflow router (moved from §1 here).
 - [fan-out-session-recipe](../../protocols/fan-out-session-recipe.md) — the cross-session sibling of §5b:
   N parallel disjoint-lane sessions (disjointness proof, prompt skeleton, ledgered lane continuation).
 - [orchestration-hub](../../runbooks/dev-environment/orchestration-hub.md) — the exhaustive file-tree companion (`bun run docs:hub`).

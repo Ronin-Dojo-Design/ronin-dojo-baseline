@@ -4,8 +4,8 @@ slug: petey-plan
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-18
-last_agent: codex-session-0570
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/agents/petey.md
   - docs/protocols/review-recommend.md
@@ -129,7 +129,7 @@ Once the operator approves the plan, Petey executes it by orchestration, not by 
    architecture/git-strategy questions to `Agent(subagent_type: "giddy", …)`.
 3. Petey collates the results, updates the SESSION `Task log`, and **holds at the push gate** — dispatch
    builds and verifies; it does **not** push/merge/deploy. Every push waits for the operator's explicit word
-   ([explicit-push-authorization](giddy-merge-strategy.md)).
+   ([explicit-push-authorization](recipes/merge-wave.md)).
 
 The roster agentTypes (`petey` / `cody` / `doug` / `giddy` / `desi` / `brandon`) live in
 `.claude/agents/*.md`; Brandon also has the cross-runtime `.agents/skills/brandon/` adapter. Reserve

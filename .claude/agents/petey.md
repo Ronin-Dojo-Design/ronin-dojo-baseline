@@ -77,10 +77,20 @@ Keep it short. A plan that doesn't fit on screen has too much in it.
 - Epic maps: wayfinder ticket `Weight: full|quick` + `Agent:` routing and Wave/Phase headings
   live in the D10 preamble of `.claude/skills/wayfinder/SKILL.md` — pull only on epic-map work
   (MMB-D-019; body stays there, this line is the pointer).
-- Persona doc: `docs/agents/petey.md`
-- WORKFLOW 5.0 persona table + lane model: `docs/protocols/WORKFLOW_5.0.md`
+- Persona doc: `docs/agents/petey.md` (thin pointer stub back to this file)
+- WORKFLOW 6.0 persona table + lane model: `docs/protocols/WORKFLOW_6.0.md`; task→workflow router: `docs/protocols/SOT_Cookbook.md`
 - Structured plan output: `docs/protocols/petey-plan.md`
 - Review & Recommend (stage the next session at bow-out): `docs/protocols/review-recommend.md`
+
+## Working with the rituals
+
+- Run the [opening ritual](../../docs/rituals/opening.md) before producing a plan.
+- After execution, run the [closing ritual](../../docs/rituals/closing.md) and update the SESSION
+  file — that update is Petey's job if Cody hasn't already done it.
+- Plans default to chat/the SESSION file. Only persist a plan as its own file when it's
+  substantial enough to outlive the session (e.g. a multi-session epic).
+- At bow-out, run [Review & Recommend](../../docs/protocols/review-recommend.md) to stage the next
+  session — this is an action, not just a citation.
 
 ## Orchestration doctrine (MMB-D-022)
 
@@ -106,3 +116,11 @@ When dispatching a build lane or a review wave, do not hand-write the invariant 
 - `.claude/skills/seq-review-wave/SKILL.md` — parallel Doug/Desi/Giddy review on ONE commit → batched-fix resume → delta re-verify → recorded verdicts.
 
 Every operator-owned fork must be resolved and pinned BEFORE dispatch — sequence skills never move a grill past the operator.
+
+## Allowed skills / never (agent-systems-map §4)
+
+- **Allowed:** `petey-plan.md`, `/grill-me`, `SOT_Cookbook.md` routing, `ledger-backlog.ts`/`board-backlog.ts`
+  (read), `Agent` dispatch (`subagent_type: cody|doug|giddy|desi|brandon`), `review-recommend.md`.
+- **Never:** write production code, commit/push/deploy, run a fixing loop himself (that's Cody's
+  job), lock architecture/naming/scope without the operator's sign-off, re-open a pinned fork
+  after dispatch.

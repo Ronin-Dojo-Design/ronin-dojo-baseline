@@ -4,8 +4,10 @@ slug: agents-readme
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-18
-last_agent: codex-session-0570
+updated: 2026-07-20
+last_agent: claude-session-0584
+pairs_with:
+  - docs/protocols/WORKFLOW_6.0.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -33,22 +35,25 @@ This is a fresh start that draws on the operational lessons from the legacy `Ron
 | Rituals | [../rituals/](../rituals/) | Per-session opening/closing checklists |
 | Sprints | [../sprints/](../sprints/) | Numbered SESSION files; the operational log |
 
-## Active personas (WORKFLOW 5.0)
+## Active personas (WORKFLOW 6.0)
 
-All six personas are now active per WORKFLOW_5.0.md:
+All six personas are now active per WORKFLOW_6.0.md:
 
 | Persona | Role | Key outputs |
 |---|---|---|
-| [Petey](petey.md) | Orchestrator | Session scope, lane selection, score gate |
-| [Cody](cody.md) | Implementation + code review | Code quality gate, pre-flight protocol |
-| Giddy | Architecture + Git strategy | Worktree boundaries, branch strategy, Dirstarter compliance |
-| Doug | QA + release readiness | Failure modes, test gates, migration rehearsal |
-| Desi | UX + design consistency | Screen→backend contract verification |
+| [Petey](petey.md) | Orchestrator | Session scope, lane selection, dispatch |
+| [Cody](cody.md) | Implementation + code review | Pre-flight protocol, self-review |
+| [Giddy](giddy.md) | Architecture + Git strategy | Structural audit, merge-wave gate ladder, Dirstarter compliance |
+| [Doug](doug.md) | QA + release readiness | Failure modes, test gates, runtime verification |
+| [Desi](desi.md) | UX + design consistency | Screen→backend contract verification |
 | [Brandon](brandon.md) | Brand + marketing rollout | Brand truth, mission/motto, message hierarchy, voice, rollout + PRD/STORIES deltas |
 
-> All six personas have canonical prose definitions under `docs/agents/`. Claude dispatch adapters live
-> in `.claude/agents/*.md`; Brandon also exposes the model-agnostic `.agents/skills/brandon/SKILL.md` adapter
-> so Codex and other skill-aware runtimes consume the same role rather than a forked prompt.
+> **Canonical definitions moved to `.claude/agents/*.md` (SESSION_0584, G-023 persona
+> consolidation).** Those files are agent-agnostic prose despite the directory name — Claude
+> dispatches them via `subagent_type`; other runtimes read the same file directly. `docs/agents/*.md`
+> (this directory) now hold **thin pointer stubs** for discovery from a `docs/`-first read path.
+> Brandon additionally exposes the model-agnostic `.agents/skills/brandon/SKILL.md` adapter so
+> Codex and other skill-aware runtimes reach the same role.
 
 ## Active rituals + protocols
 

@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-19
-last_agent: claude-session-0575
+updated: 2026-07-20
+last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -239,7 +239,7 @@ Add a `## Reflections` section to the SESSION file. Capture what's worth remembe
 
 This is the kaizen-style note from the legacy system, kept lightweight.
 
-### 6a. Evidence artifact (optional)
+### 6a. Evidence artifact (required when Doug ran live UAT; on-request otherwise)
 
 The step-1 gate runner **pre-fills the deterministic cells** of this table (task-log, format, wiki:lint, build,
 graphify, git state) — paste its output and fill only the judgment cells (Kaizen, Hostile review, Class-A score,
@@ -257,6 +257,7 @@ Review & Recommend, Memory sweep). The schema:
 | Hostile close review | <TASK_REVIEW_LOG entry or not-applicable line> |
 | Code-quality gate (Class-A) | <`/code-quality` score /10 + any hard-cap, or "no Class-A custom code this session"> |
 | Runtime verification (Doug) | <`qa-runtime-verification` result for touched routes/actions, or "no runtime surface touched"> |
+| Evidence-artifact URL | <published Artifact link for Doug's live UAT / visual proof, or "n/a — no runtime surface touched"> |
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
@@ -265,6 +266,18 @@ Review & Recommend, Memory sweep). The schema:
 ```
 
 Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
+
+**Policy (ratified SESSION_0582, wired SESSION_0584):** the `Evidence-artifact URL` row is
+**required, not optional, whenever the `Runtime verification (Doug)` row is anything other than
+"no runtime surface touched"** — i.e. whenever Doug ran a live UAT, a headless probe with visual
+output, or any check that produced something worth *seeing* (screenshots, rendered HTML, a live
+page). Publish it as an Artifact link ([[preview-via-published-artifacts]] — inline
+widgets/attachments don't render for the operator; a published HTML Artifact URL does) and paste
+the URL into the row. When the session genuinely touched no runtime surface, `n/a` is a complete
+answer — don't manufacture an artifact for a docs-only close. Outside that trigger, an artifact is
+**on-request only** (the operator can ask for one at any point; it's not a default expectation).
+[`scripts/bow-out-gates.sh`](../../scripts/bow-out-gates.sh) Gate 12c enforces this deterministically
+at close.
 
 ### 6b. Repo code glossary (optional, on-demand)
 

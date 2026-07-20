@@ -26,6 +26,8 @@ last_agent: <agent>-session-NNNN
 sprint: <S#>
 lane: repo # ADR 0049 lane facet: repo | rdd | mmb | bbl | bma | usa (usa = WEKAF-USA)
 lane_seq: # optional per-lane ordinal (int) — renders as e.g. MMB_0006; omit for lane: repo
+recipe: # optional (G-023) — name of the docs/protocols/recipes/<name>.md card this staged
+        # stub hydrates from at adopt (e.g. "lane", "orchestrator"); omit for a plain session
 vault_session: # e.g. "MMB_SESSION_0006" when a vault twin exists (twin carries repo_session:)
 goal_ids: [] # goals-ledger IDs worked, e.g. [G-021, MMB-G-004]
 tickets: [] # wayfinder issue numbers, e.g. ["233"]

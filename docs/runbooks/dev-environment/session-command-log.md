@@ -1,11 +1,12 @@
 ---
-title: Session Ops Cookbook — real commands run per session
-slug: session-ops-cookbook
+title: Session Command Log — real commands run per session
+slug: session-command-log
 type: reference
 status: active
 created: 2026-06-10
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0584
+renamed_from: docs/runbooks/dev-environment/session-ops-cookbook.md
 pairs_with:
   - docs/runbooks/dev-environment/verification-and-testing.md
   - docs/runbooks/dev-environment/dev-environment.md
@@ -25,7 +26,10 @@ tags:
   - reference
 ---
 
-# Session Ops Cookbook
+> **Renamed from `session-ops-cookbook.md` (SESSION_0584, G-023).** Same content, same purpose —
+> the name now matches sibling governance-log naming. Update any bookmark/reference.
+
+# Session Command Log
 
 A growing, copy-pasteable reference of the **actual commands** run during sessions — git, bash, gates,
 toolchain installs, and verification — so future sessions (and the operator's own review) can reuse proven

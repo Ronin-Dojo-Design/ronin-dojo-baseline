@@ -4,12 +4,12 @@ slug: hostile-repo-review
 type: protocol
 status: active
 created: 2026-05-06
-updated: 2026-06-28
+updated: 2026-07-20
 author: Brian + ChatGPT
-last_agent: claude-session-0467
+last_agent: claude-session-0584
 pairs_with:
   - docs/protocols/hostile-close-review.md
-  - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/WORKFLOW_6.0.md
   - docs/learning/ddd/learning-records/0005-extract-the-l1-down-dont-cleanroom-it.md
   - docs/runbooks/dev-environment/graphify-repo-memory.md
   - docs/knowledge/wiki/custom-component-inventory.md
@@ -106,7 +106,7 @@ Check:
 - `README.md`
 - `docs/knowledge/wiki/index.md`
 - `docs/knowledge/JETTY_3.0.md`
-- `docs/protocols/WORKFLOW_5.0.md`
+- `docs/protocols/WORKFLOW_6.0.md` (supersedes `WORKFLOW_5.0.md`, SESSION_0584)
 - `docs/protocols/hostile-close-review.md`
 - `docs/knowledge/wiki/dirstarter-component-inventory.md`
 
