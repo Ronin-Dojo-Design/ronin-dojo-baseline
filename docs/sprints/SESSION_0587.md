@@ -247,8 +247,8 @@ Single source of truth is the frontmatter `status:` field.
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0587_TASK_01 | done | Dispatch 4 lanes (one parallel message, sonnet, background) — dispatched 2026-07-20 AM after precondition + FS-0030 checks |
-| SESSION_0587_TASK_02 | in-progress | Babysit + crash-resume lanes to completion |
-| SESSION_0587_TASK_03 | pending | AM pre-review sweep (merge 0584→0585→0586→0583 · gates · ledger application · Giddy) |
+| SESSION_0587_TASK_02 | done | All 4 lanes landed clean, zero crash-resumes needed: 0586 (~36m, 278k tok) · 0585 (~40m, 256k) · 0584 (~52m, 474k) · 0583 (~2h13m, 553k) — all Sonnet, single commit each (0585: two), clean trees, zero cross-lane file overlap (proven by diff-path comm), zero schema.prisma touches |
+| SESSION_0587_TASK_03 | in-progress | AM sweep: merges DONE (4× --no-ff, ort, zero conflicts, pinned order) · gates: format:check ✓, lint:check (apps/web — root has no lint:check script; root `lint` is the fixer) ✓ w/ pre-existing warnings, typecheck ✓ after documented WL-P3-59 baseline-client generate (only failure = pre-existing apps/baseline seed.ts, zero lane files in apps/baseline), test+build running · ledger application DONE (WL-P2-65✅/66✅ + WL-P3-59 new · D-049✅ + D-050/051/052 new · G-021/022/023 progress) · peripheral doc sweep (backlinks/glossary/inventory/prereqs/sop) dispatched · Giddy pending |
 | SESSION_0587_TASK_04 | pending | Evidence + telemetry (Sonnet cost experiment) + HOLD push gate for coffee word |
 | SESSION_0587_TASK_05 | done | Operator mid-session directive: 0586 board-badge verdict = KEEP · NEW planning-ledger (PL-001) + G-024 feature/feedback-widget intake program + wiki index row (graphify-grounded: feedback-widget.tsx / reportFeedback / Report-type-Feedback / admin-feedback email) |
 

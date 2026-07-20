@@ -264,7 +264,8 @@ commit) so the term is concrete, not abstract.
   instead of restating ~60 lines of invariants per lane.
 - **/rr (research-recommend)** — the "research first, recommend, don't build" move: graphify
   prior-art query → read what exists → options → one recommendation → route to a ledger. Grounded
-  in `docs/protocols/review-recommend.md`; planned as `/seq-research-recommend` (SESSION_0584).
+  in `docs/protocols/review-recommend.md`; built as `/seq-research-recommend`
+  (`.claude/skills/seq-research-recommend/SKILL.md`, SESSION_0584).
   Example: SESSION_0582's /rr found `scripts/auto-session.sh` before anyone rebuilt an overnight
   driver.
 - **/graphify-query · /graphify-explain** — skills wrapping the Graphify-first law: budget-capped

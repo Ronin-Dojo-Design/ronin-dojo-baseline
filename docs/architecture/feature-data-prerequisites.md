@@ -4,8 +4,8 @@ slug: feature-data-prerequisites
 type: architecture
 status: active
 created: 2026-04-27
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0587
 pairs_with:
   - docs/runbooks/sops/sop-e2e-user-lifecycle.md
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
@@ -95,6 +95,7 @@ Organization → Course (orgId, disciplineId)
 
 - **Minimum:** 1 Course with ≥2 CurriculumItems, 1 enrolled user, 1 completion
 - **Seed covers:** ✅ SESSION_0156 seed creates 218 Courses, 654 CurriculumItems, 1 CourseEnrollment, and 1 CurriculumItemCompletion. See `docs/runbooks/domain-features/course-curriculum-runbook.md`.
+- **SESSION_0583 finding:** `/curriculum` 404s locally on both `ronindojo_prodsnap` and a freshly-migrated `ronindojo_e2e` — zero `Course` rows with slug prefix `bjj-level-` on either local DB, despite SESSION_0546 recording a prod import (61 techniques / 75 prereqs / 80 items at SESSION_0435). Local render of `/curriculum` requires importing that data first.
 
 ## Progress + Gamification (S7 — upcoming)
 

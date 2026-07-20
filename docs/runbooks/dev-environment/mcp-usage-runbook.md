@@ -4,11 +4,11 @@ slug: mcp-usage-runbook
 type: runbook
 status: active
 created: 2026-05-14
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0587
 pairs_with:
   - docs/runbooks/dev-environment/dev-environment.md
-  - docs/runbooks/dev-environment/session-ops-cookbook.md
+  - docs/runbooks/dev-environment/session-command-log.md
   - docs/runbooks/deploy/vercel-domain-setup-runbook.md
   - docs/runbooks/database/database.md
   - docs/runbooks/integrations/stripe-setup-runbook.md
@@ -66,7 +66,7 @@ What is actually wired on this machine (as of SESSION_0360, 2026-06-10):
 Companion CLIs in place: **Stripe CLI 1.42.11** (test-mode authed, account "Tuff Buffs"), Vercel CLI, GitHub
 CLI, Graphify. The **Claude CLI** (`~/.local/bin/claude`) is the MCP *host* — there is no "Claude MCP" server.
 For the exact install/verify commands run this session, see
-[session-ops-cookbook](session-ops-cookbook.md).
+[session-command-log](session-command-log.md).
 
 ## Source truth checked
 
@@ -366,7 +366,7 @@ Guardrails:
 1. Add Vercel MCP before the next production smoke/debug session.
 2. Use Playwright MCP for local smoke interaction if available; keep Playwright CLI as the durable proof path.
 3. Add Chrome DevTools MCP when browser failures require console, network, trace, Lighthouse, or memory evidence.
-4. **Stripe MCP — INSTALLED (SESSION_0360):** hosted `https://mcp.stripe.com`, OAuth, user scope. Run `/mcp` to authenticate, then use for test-mode product/pricing/payment inspection. Pairs with the Stripe CLI `dahlia` verification recipe in [session-ops-cookbook](session-ops-cookbook.md).
+4. **Stripe MCP — INSTALLED (SESSION_0360):** hosted `https://mcp.stripe.com`, OAuth, user scope. Run `/mcp` to authenticate, then use for test-mode product/pricing/payment inspection. Pairs with the Stripe CLI `dahlia` verification recipe in [session-command-log](session-command-log.md).
 5. If database MCP access is needed, create or select a dedicated non-production Neon branch.
 6. Verify `DATABASE_URL` and `DIRECT_URL` resolve to that same branch before enabling Neon MCP; never connect the MCP to production.
 7. Treat Supabase as a separate platform proposal. Write an ADR covering Auth, RLS, Realtime, Storage, Edge Functions, and iOS SDK posture before any adoption.

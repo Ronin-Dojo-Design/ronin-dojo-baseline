@@ -4,8 +4,8 @@ slug: runbooks-hub
 type: index
 status: active
 created: 2026-05-29
-updated: 2026-07-18
-last_agent: claude-session-0572
+updated: 2026-07-20
+last_agent: claude-session-0587
 pairs_with:
   - docs/knowledge/wiki/index.md
   - docs/architecture/security-privacy-payments-monitoring-plan.md
@@ -64,7 +64,7 @@ update the runbook, and note it in the active SESSION before continuing.
 - [dev-environment](dev-environment/dev-environment.md) — local dev setup.
 - [local-dev-auth-storage](dev-environment/local-dev-auth-storage.md) — local auth + S3/MinIO storage.
 - [mcp-usage-runbook](dev-environment/mcp-usage-runbook.md) — using the available MCP servers.
-- [session-ops-cookbook](dev-environment/session-ops-cookbook.md) — real commands run per session (git/bash/gates/toolchain installs/verification), newest first.
+- [session-command-log](dev-environment/session-command-log.md) — real commands run per session (git/bash/gates/toolchain installs/verification), newest first.
 - [graphify-repo-memory](dev-environment/graphify-repo-memory.md) — Graphify repo-graph discovery.
 - [docs-navigator](dev-environment/docs-navigator.md) — searchable HTML docs browser.
 - [autonomous-sessions](dev-environment/autonomous-sessions.md) — drive N cold bow-in→bow-out sessions as stacked PRs (`scripts/auto-session.sh`).

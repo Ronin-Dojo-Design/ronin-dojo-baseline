@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-07-20
-last_agent: claude-session-0582
+last_agent: claude-session-0587
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -611,6 +611,15 @@ prod report stream.
 | --- | --- | --- |
 | `TechniqueProgressStatus` (glyph + maps) | `apps/web/components/common/technique-progress-status.tsx` | THE ONE AUD2-5 progress channel: leading glyph Circle→CircleDashed→CircleDotDashed→CircleDot→CircleCheck per `TechniqueProgressStatus`, single neutral tone, `role="img"` + per-state `aria-label`. Lane A applies this SAME module to cards/graph — never a second progress visual, never a third color channel on graph nodes. |
 | `TechniqueProgressControl` | `apps/web/app/(web)/techniques/[slug]/_components/technique-detail/technique-progress-control.tsx` | Own-user progress control (glyph + Select + Clear) beside `ListingSaveButton`; optimistic with rollback over the oRPC `techniques.setProgress`/`clearProgress`; no entitlement gate on own-progress by design (engagement driver). Writes revalidate paths only — never the `"techniques"`/`"bjj-technique-graph"` cache tags (WL-P2-50 trap). |
+
+## Per-product / clients — Mammoth CRM (SESSION_0586)
+
+Client-product components live under `clients/*`, not `apps/web`; this section is a clearly-labeled
+subsection for them (the rest of this file is `apps/web`-only).
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `LeadSourceFacet` | `clients/mammoth-build-crm/components/crm/LeadSourceFacet.tsx` | Filter-chip row for Lead Source; consumed by `/app/sales` roster + the `/app` pipeline board. Uses the ONE `normalizeLeadSource`/`leadSourceLabel` vocabulary — never a second source-label mapping. |
 
 ## How to update this file
 

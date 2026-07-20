@@ -715,4 +715,45 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix direction:** fix the D-prefix regex/scan in `scripts/ledger-id-next.ts` (0575 mechanization
   owner) + add a self-check (mint result vs target-ledger max; warn on gap > 50). SESSION_0582 used
   register-truth D-048/D-049 after proving no D-5xx tokens exist.
-- **Status: OPEN — routed to the SESSION_0584 governance lane.**
+- **Status: ✅ RESOLVED — SESSION_0584** (applied by the SESSION_0587 sweep). Composite-ID
+  lookahead fix + generic mint-vs-register self-check in `scripts/ledger-id-next.ts`; verified
+  regression-free across all 11 known prefixes. The self-check also correctly surfaces the
+  pre-existing phantom classes (`MB-6641`, `FS-0342`/`FS-0186` — SESSION_0575 known); those are
+  detector output, not new bugs. Sweep-time proof: `--prefix=D` now warns on the phantom gap and
+  recommends register-truth D-050.
+
+### D-050 — `scripts/` has no format gate (root `format:check` covers only `apps/web`)
+
+- **Discovered:** SESSION_0585 (SOT dashboard lane) — every file in `scripts/` (pre-existing and
+  new alike) fails `oxfmt --check` under default settings; probed directly against untouched
+  files (`pr-nudge.ts`, `session-cost.ts`, pre-edit `ledger-backlog.ts`). Standing gap, not a
+  regression.
+- **Residual risk:** style drift accumulates in the repo's operational tooling; any future
+  "add scripts to the format gate" flip becomes a big-bang reformat.
+- **Fix direction:** either extend `format:check` to `scripts/` (one-time reformat commit) or
+  record the exclusion as deliberate in the gate doc. Decide in a governance/gates lane.
+- **Status: OPEN.**
+
+### D-051 — historical SESSION files missing `status:` frontmatter (SESSION_0500 confirmed)
+
+- **Discovered:** SESSION_0585 — `docs/sprints/SESSION_0500.md` has no `status:` field at all
+  (pre-ADR-0049 era); frontmatter-reading tooling (the SOT projection included) misclassifies it
+  as still-open when it is long closed (goals-ledger G-004).
+- **Residual risk:** any status-projection over `docs/sprints/` over-reports open work; the
+  class likely covers more pre-0509 files than the one confirmed instance.
+- **Fix direction:** frontmatter-backfill sweep across historical SESSION files (mechanical,
+  docs-only, one commit); until then projections should treat missing-status as unknown/legacy,
+  not open.
+- **Status: OPEN.**
+
+### D-052 — `/privacy/request` redirects authenticated users to `/` (untraced)
+
+- **Discovered:** SESSION_0583 (affected-e2e attempt) — an e2e-authenticated user is
+  deterministically redirected from `/privacy/request` to `/` instead of seeing the DSR form;
+  reproduced ×2 across a full dev-server restart. Confirmed NOT the page's own `!session?.user`
+  guard; root cause untraced. Unrelated to the lane's owned files (repros on base too).
+- **Residual risk:** if it reproduces in prod, the privacy/DSR surface is unreachable for
+  logged-in members — a compliance-facing gap; also blocks the DSR e2e spec locally.
+- **Fix direction:** trace the redirect (middleware / layout guard / auth callback chain) in a
+  diagnose lane; add the DSR e2e back once green.
+- **Status: OPEN.**

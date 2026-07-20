@@ -4,9 +4,9 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-06-21
+updated: 2026-07-20
 author: Brian + Giddy
-last_agent: claude-session-0421
+last_agent: claude-session-0587
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -18,7 +18,7 @@ pairs_with:
   - docs/product/baseline-martial-arts/PRD.md
   - docs/product/black-belt-legacy/PRD.md
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
-  - docs/runbooks/dev-environment/session-ops-cookbook.md
+  - docs/runbooks/dev-environment/session-command-log.md
 tags:
   - context
   - canon
@@ -44,7 +44,7 @@ The codebase began as a *multi-brand* martial arts platform (one shared Next.js 
 - **Lint / format:** **Oxc** — `oxlint` + `oxfmt` (replaced Biome). Gates: `bun run lint:check` / `format:check`. Run the local bin, **never `bunx oxlint`/`bunx oxfmt`** (it hangs).
 - **Language / framework:** TypeScript 6, Next.js 16, React 19, Prisma 7 — versions aligned to the in-repo `dirstarter_template` upstream reference.
 - **Typecheck is separate from lint:** `next typegen && tsc --noEmit` (Oxc does not replace `tsc`).
-- Command recipes: [session-ops-cookbook](../../runbooks/dev-environment/session-ops-cookbook.md).
+- Command recipes: [session-command-log](../../runbooks/dev-environment/session-command-log.md).
 
 ## Brands (BBL is live; the rest are dormant)
 

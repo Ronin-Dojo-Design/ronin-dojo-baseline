@@ -4,14 +4,14 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0587
 use_count: 0
 pairs_with:
   - docs/runbooks/dev-environment/mcp-usage-runbook.md
   - docs/runbooks/deploy/vercel-deploy.md
   - docs/runbooks/database/neon-advisory-lock-recovery.md
-  - docs/runbooks/dev-environment/session-ops-cookbook.md
+  - docs/runbooks/dev-environment/session-command-log.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/protocols/cody-preflight.md

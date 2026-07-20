@@ -396,8 +396,13 @@ aggregator reads it with no new parser logic.
   preview AND widened `findOrCreateContact` (case-insensitive email + last-10-digit phone;
   operator-ratified); `commitLeadSheet` owner-gated, server-side re-parse, in-tx index,
   skip+report (never enrich/overwrite), Contact + lead Project per new row; Doug GO-WITH-NOTE
-  9.6/10 with hermetic scratch-DB UAT. **Loop-3 candidates:** (b) Lead Source facet — ELECTED,
-  reserved `session-0586-mmb-lead-source` · (c) attempt-cadence surfacing · enrich-blanks-on-match
+  9.6/10 with hermetic scratch-DB UAT. **Loop-3 slice (b) LANDED**
+  ([`SESSION_0586`](../../sprints/SESSION_0586.md), 0587 sweep): Lead Source facet on the
+  Sales-cockpit roster AND the pipeline board — shared `LeadSourceFacet` chips, ONE
+  `normalizeLeadSource`/`leadSourceLabel` vocabulary, per-source counts, honest zero-count
+  empty state; read-side only (board filter = remount over filtered `BoardStore`, ui-kit kernel
+  untouched); board-card Lead Source badge (operator: KEEP); 40/40 tests + scratch-DB live UAT.
+  **Remaining loop-3 candidates:** (c) attempt-cadence surfacing · enrich-blanks-on-match
   (NEW SESSION_0582 — blank-only, never overwrite; per-field rules to pin at election).
   Attempt-outcome vocabulary STILL provisional (ratification pending). Residual note: legacy
   `findOrCreateContact` form/board entry keeps Prisma `mode:"insensitive"` vs `emailKey` JS-fold
@@ -462,13 +467,23 @@ aggregator reads it with no new parser logic.
   ([`SESSION_0581`](../../sprints/SESSION_0581.md)): C4 eased zoom-to-fit (+never-during-drag,
   CSS motion-reduce), WL-P2-67 resolved (375px fit = 61/61 nodes, zoom 0.160), D-4 cooperative
   touch (pan-y + 2-finger pinch), AUD2-3 mobile toolbar, AUD2-8 dead-token fix, AUD2-9 PNG
-  demote — computed-style/live proofs in the session file. **Open:** Lane A S2/S3/S4 + flip
-  (S2 next — 0583 reserved), wrestling authoring, graph progress overlay (post-GA).
+  demote — computed-style/live proofs in the session file. **Lane A S2 DONE**
+  ([`SESSION_0583`](../../sprints/SESSION_0583.md), 0587 sweep): C5 neighborhood glow —
+  **redesigned selected→hover-driven** (selected-glow proved invisible behind the dialog's
+  backdrop blur; judgment call flagged for Desi/operator confirm, not silently substituted) ·
+  D3 empty states (graph type-filter + AUD2-7 curriculum topic-filter EmptyList + "Show all
+  topics" reset) · B2 difficulty-term tooltips (glossary DTO in `node-tooltip.ts`, no-leak
+  re-proven) · WL-P2-65 resolved (real cause: html2canvas × `-webkit-line-clamp`; real export
+  bytes ×3) · WL-P2-66 resolved (`motion-reduce:animate-none!`, computed-style proof ×2
+  surfaces). **Open:** Lane A S3 (E1/B3/C3/G2) + S4 (multi-art + AUD2-4 flip — the GA flip),
+  wrestling authoring, graph progress overlay (post-GA).
 
 ### G-023 — WORKFLOW_6.0: session-recipe OS + SOT_Cookbook + brand SOT cards
 
-- **Status:** open — P1 (operator-ratified direction, SESSION_0574 extended grill; build not started)
-- **Est:** 4 sessions (0 spent) — A docs · B docs · C small-code · D epic-plan
+- **Status:** in-progress — P1 (operator-ratified direction, SESSION_0574 extended grill;
+  Sessions A+B core landed via SESSION_0584, SOT-dashboard slice 1 via SESSION_0585 — 0587 sweep)
+- **Est:** 4 sessions (2 spent: 0584 governance + 0585 dashboard) — remaining: C small-code ·
+  D epic-plan · brand SOT cards (B remainder)
 - **Objective:** crown the lived orchestrator/fan-out/review-wave pattern as the governing OS.
   Ratified forks (operator MC grill, 8 volleys): **6.0 = thin ~150-line pointer-first spine**,
   WORKFLOW_5.0 kept-superseded (its rituals read is DEAD canon — opening.md step 2 still mandates
@@ -510,6 +525,22 @@ aggregator reads it with no new parser logic.
   SESSION_0574 extended chat.
 - **Why:** the pattern already runs the repo by hand (0574/0577/0578 proved it in one night);
   6.0 makes it law the read-path consumes, and the rituals currently point at a corpse.
+- **Progress (0587 sweep):** **Session A + B core DONE via
+  [`SESSION_0584`](../../sprints/SESSION_0584.md)** (operator full-scope election folded A+B+
+  personas into one lane): WORKFLOW_6.0 spine · 5.0 supersede banner · rituals repointed off
+  the dead 5.0 canon (opening step 1d + step 2 rewrite; closing §6a evidence-artifact policy +
+  bow-out-gates Gate 12c dry-run-proven) · SOT_Cookbook + §1 router move + map demotion ·
+  **7** recipe cards (the planned 4 + merge-wave [giddy-merge-strategy retired, G0–G4 absorbed]
+  + PM_Planning_Lane + AM_Coffee_Merge_Review) · `recipe:` key in SESSION_TEMPLATE ·
+  session-ops-cookbook → session-command-log rename · 6 personas canonical in
+  `.claude/agents/` with Allowed/never sections (docs/agents = pointer stubs) ·
+  seq-research-recommend skill · D-049 fixed. **SOT-dashboard slice 1 DONE via
+  [`SESSION_0585`](../../sprints/SESSION_0585.md):** `state-of-project-parse` lib (30 tests) +
+  additive `ledger-backlog --json` sessions/goals fields (text output byte-stable) +
+  `state-of-project.ts` renderer + `state-of-project-projection.md` protocol; slice 2
+  (`/app/state`) open. **Remaining:** Session C (lane facet + `--lane=` — read 0585's additive
+  `--json` fields before extending `ledger-backlog.ts`) · Session D (/pp epic-plan dogfood) ·
+  brand SOT cards (B remainder, explicitly not built per dispatch).
 
 ### G-024 — Feature + feedback widgets for all sites (idea-intake program)
 

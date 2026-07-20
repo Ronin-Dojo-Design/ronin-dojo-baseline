@@ -946,6 +946,22 @@ test("downstream serial test", async ({ page }) => {
 
 SESSION_0267_TASK_02 closed SESSION_0266_FINDING_02 with this pattern.
 
+### Hover assertions — neutral mouse-move first (SESSION_0583)
+
+`.hover()` can silently fail to register if the mouse's last synthetic position is already inside
+(or adjacent to) the target element — Playwright sees no pointer movement to dispatch, so the
+`hover`/`mouseenter` state never fires. This cost real debugging time chasing a "flaky" hover
+assertion that was actually never triggering.
+
+Pattern: move the mouse to a neutral point before the hover, so the hover is a real transition.
+
+```typescript
+// ✅ Correct — neutral move before hover
+await page.mouse.move(0, 0)
+await page.getByRole("button", { name: /technique card/i }).hover()
+await expect(page.getByText(/quick actions/i)).toBeVisible()
+```
+
 ### Timeout policy
 
 | Anchor type | Recommended timeout | Rationale |

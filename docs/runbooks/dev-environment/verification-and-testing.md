@@ -4,13 +4,13 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0587
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
-  - docs/runbooks/dev-environment/session-ops-cookbook.md
+  - docs/runbooks/dev-environment/session-command-log.md
 backlinks:
   - docs/runbooks/README.md
   - docs/knowledge/wiki/index.md
