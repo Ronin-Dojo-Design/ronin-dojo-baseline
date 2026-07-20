@@ -4,8 +4,8 @@ slug: adr-0038-per-product-database-separation
 type: decision
 status: accepted
 created: 2026-06-27
-updated: 2026-07-19
-last_agent: codex-session-0571
+updated: 2026-07-20
+last_agent: claude-session-0590
 pairs_with:
   - docs/architecture/decisions/0034-monorepo-platform-and-per-product-deploys.md
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
@@ -23,6 +23,11 @@ tags:
 ---
 
 # ADR 0038 — Per-product database separation (BBL prod-repo deferred)
+
+> **⚠ Vocabulary superseded by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md)
+> (SESSION_0589).** "separate DB per **product**" now reads "separate DB per **app** (the deploy
+> unit — one Vercel project + one DB)"; old "product" = an app. Semantics identical, the noun is
+> corrected — the separation model is **unchanged**.
 
 ## Status
 

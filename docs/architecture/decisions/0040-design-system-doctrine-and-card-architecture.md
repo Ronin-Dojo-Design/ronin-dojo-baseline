@@ -4,8 +4,8 @@ slug: adr-0040-design-system-doctrine-and-card-architecture
 type: decision
 status: accepted
 created: 2026-06-28
-updated: 2026-06-28
-last_agent: claude-session-0467
+updated: 2026-07-20
+last_agent: claude-session-0590
 deciders: Brian Scott
 pairs_with:
   - docs/knowledge/wiki/design-system-doctrine.md
@@ -24,6 +24,11 @@ tags:
 ---
 
 # ADR 0040 — Design-system doctrine + card architecture (one surface, named cards)
+
+> **⚠ Name fixed by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md) (SESSION_0589).**
+> The kernel + module-library model described here **IS "the kernel" tier** of `kernel → brand →
+> app`. The design-system doctrine and card architecture are **unchanged** — ADR 0051 only fixes
+> the name (this tier was loosely called "the platform").
 
 ## Status
 

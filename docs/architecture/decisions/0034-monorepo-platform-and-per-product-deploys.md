@@ -4,8 +4,8 @@ slug: adr-0034-monorepo-platform-and-per-product-deploys
 type: decision
 status: accepted
 created: 2026-06-21
-updated: 2026-07-19
-last_agent: codex-session-0571
+updated: 2026-07-20
+last_agent: claude-session-0590
 pairs_with:
   - docs/architecture/decisions/0033-component-library-shared-kernel-and-strategic-harness.md
   - docs/product/black-belt-legacy/SOT-ADR.md
@@ -22,6 +22,13 @@ tags:
 ---
 
 # ADR 0034 — One monorepo platform + per-product Vercel deploys
+
+> **⚠ Vocabulary superseded by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md)
+> (SESSION_0589).** The *unit-of-portfolio* and *unit-of-deploy* nouns here are corrected:
+> **"platform" → "kernel"**, **"product" → "app"** (the deploy unit); "product" now means a
+> feature-area *within* an app. The strategy — one monorepo, per-deploy-unit Vercel projects, no
+> separate prod repos — is **unchanged**; only the words change. See the ADR 0051 word-fix table
+> and the `kernel → brand → app` spine.
 
 ## Status
 

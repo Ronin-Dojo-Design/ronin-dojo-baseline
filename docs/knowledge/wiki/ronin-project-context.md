@@ -6,7 +6,7 @@ status: active
 created: 2026-05-18
 updated: 2026-07-20
 author: Brian + Giddy
-last_agent: claude-session-0587
+last_agent: claude-session-0590
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -46,30 +46,42 @@ The codebase began as a *multi-brand* martial arts platform (one shared Next.js 
 - **Typecheck is separate from lint:** `next typegen && tsc --noEmit` (Oxc does not replace `tsc`).
 - Command recipes: [session-command-log](../../runbooks/dev-environment/session-command-log.md).
 
-## Brands (BBL is live; the rest are dormant)
+## Brands (the RDD portfolio — BBL is live; the rest dormant/emerging)
 
-| Brand | Product theme | Status |
-| --- | --- | --- |
-| **Black Belt Legacy** | Lineage, profiles, the promotion timeline-tree, claims, certifications, trust, paid memberships | **🚀 LAUNCHED June 19, 2026 — the only active brand.** |
-| Baseline Martial Arts | School operations, curriculum, certification, affiliation | Live proxy only — hardened the shared platform pre-BBL; not the active lane. |
-| WEKAF USA | Tournament operations | Dormant — schema exists, no active build. |
-| Ronin Dojo Design | White-label sales, demos, onboarding | Dormant — post-everything-else. |
+Per [ADR 0051](../../architecture/decisions/0051-brand-platform-product-portfolio-taxonomy.md) a
+**brand** is the top portfolio unit (`kernel → brand → app`); a brand owns **one or more apps**
+(an app = the deploy unit, one Vercel project + one DB). Seven brands under the RDD umbrella:
 
-The four-brand harness is being collapsed to single-brand BBL (see `What this project is`); the table records the historical shape, not current priority.
+| Brand | Domain | App(s) / deploy | Status |
+| --- | --- | --- | --- |
+| **Ronin Dojo Design** | agency / white-label reseller | ronindojo.design | owns the kernel + the umbrella State-of-Dojo dashboard; resells the White Labeled Dojo. |
+| **Black Belt Legacy** ⭐ | martial-arts lineage, claims, certifications, paid memberships | `apps/web` | **🚀 LAUNCHED June 19, 2026 — the active lane; flagship, permanent in-repo.** |
+| **Mammoth** | build/reno CRM | `clients/mammoth-build-crm` | client-brand app — in-repo until a contractual handoff. |
+| **Baseline** | dojo school-ops, curriculum, certification | baselinemartialarts.com | **= the White Labeled Dojo** SaaS (RDD resells it); hardened the kernel pre-BBL. |
+| **WEKAF USA** | tournament operations | dormant | schema exists, no active build. |
+| **ACD** (Amy Coaches Data) | **data/analytics coaching** (PowerBI/Tableau/SQL/Python; courses, cert, consulting) | amycoachesdata.com | **non-martial-arts** — proves the kernel + modules stay domain-agnostic. |
+| _Tuff Buffs_ | _(→ Baseline)_ | _WordPress today_ | **white-label instance** of Baseline, mid-rebrand — an instance being absorbed, not a permanent peer brand. |
 
-## Repo & product strategy (ADR 0034)
+**Disambiguation (ADR 0051):** portfolio "brand" (above) ≠ the DEAD in-app 4-brand `Brand`-enum
+harness (four brand-skins crammed into ONE app → collapsed to single-brand BBL; ~170 vestigial
+`getRequestBrand` sites slated for prune). A brand skin per *deploy* (white-label instance) is
+alive; multiple skins in one app via the enum is what's dead.
 
-**One monorepo (this repo) = the platform**; deploy unit = **per-product Vercel projects**
-(`ignoreCommand`); `main` = prod, previews = staging. **No separate prod repos.** Multi-*brand* (the
-`Brand` enum, ~170 `getRequestBrand` sites) is dead → single-brand collapse to BBL + full prune;
-**multi-*product* (separate apps in one monorepo) is the model.** Repo name stays platform-neutral
-(**not** `black-belt-legacy`). A true separate repo is reserved for a **client handoff** only.
+## Repo & product strategy (ADR 0034; taxonomy ratified by ADR 0051)
+
+**One monorepo (this repo) hosts the kernel + every brand's apps** (`kernel → brand → app`, ADR
+0051); deploy unit = **per-app Vercel projects** (`ignoreCommand`); `main` = prod, previews =
+staging. **No separate prod repos.** The in-app multi-*brand* `Brand` enum (~170 `getRequestBrand`
+sites) is dead → single-brand collapse to BBL + full prune; **multi-*app* (separate apps in one
+monorepo, one deploy per brand/instance) is the model.** Repo name stays neutral (**not**
+`black-belt-legacy`). A true separate repo is reserved for a **client handoff** only. (Old docs:
+"platform"=the kernel, "product"=an app — ADR 0051 word-fix table.)
 
 | Surface | Role | North star |
 | --- | --- | --- |
-| `apps/web` — **Black Belt Legacy** | flagship product; **permanent in-repo** (never handed off) | the verified lineage **graph** (asset/moat); **mission** (preserve the Machado / Bob Bass lineage) is the engine; revenue is exhaust; **optimize the claim loop**. Full vision: BBL PRD. |
-| `packages/ui-kit` | shared kernel (m-card, boards, tokens) | reusable leverage; published as a package on client handoff (ADR 0033 D1) |
-| `clients/*` — e.g. Mammoth CRM | client products | in-repo until a contractual handoff, then own repo consuming `ui-kit` |
+| `apps/web` — **Black Belt Legacy** | flagship **app** (BBL brand); **permanent in-repo** (never handed off) | the verified lineage **graph** (asset/moat); **mission** (preserve the Machado / Bob Bass lineage) is the engine; revenue is exhaust; **optimize the claim loop**. Full vision: BBL PRD. |
+| `packages/ui-kit` | the shared **kernel** (m-card, boards, tokens) | reusable leverage; published as a package on client handoff (ADR 0033 D1) |
+| `clients/*` — e.g. Mammoth CRM | **client-brand apps** | in-repo until a contractual handoff, then own repo consuming `ui-kit` |
 
 ## Non-negotiable rules
 

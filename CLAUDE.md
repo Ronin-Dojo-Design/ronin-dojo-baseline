@@ -56,31 +56,43 @@ into context each session; detailed rules live in referenced docs, read on deman
 
 ---
 
-## Repo & product strategy (ADR 0034)
+## Repo & product strategy (ADR 0034; taxonomy ratified by ADR 0051)
 
-- **North Star (RDD umbrella):** Ronin Dojo Design builds **ONE platform** — a shared kernel
-  (`packages/ui-kit`) + a library of **brand-agnostic feature-modules** (leads/CRM, claims, payments,
-  lineage graph, directory…). A *product* (BBL · Mammoth · Baseline · Tuff Buffs · WEKAF) = a **brand
-  token-swap × a selection of those modules**, on its own DB/deploy. **Any feature can run on any
-  project** (Mammoth exercises CRM/leads/payments; BBL exercises lineage/claims — but the modules belong
-  to the **platform**, not the product). The kernel + the module library are the moat. (ADR 0040 +
+- **North Star (RDD umbrella) — `kernel → brand → app` ([ADR 0051](docs/architecture/decisions/0051-brand-platform-product-portfolio-taxonomy.md)):**
+  Ronin Dojo Design builds on **ONE kernel** — the shared technical substrate (`packages/ui-kit`) +
+  a library of **brand-agnostic feature-modules** (leads/CRM, claims, payments, lineage graph,
+  directory…). The portfolio is a set of **brands** (BBL · Mammoth · Baseline · WEKAF · ACD · RDD);
+  each brand owns **one or more apps**, and an **app** is the deploy unit (one Vercel project + one
+  DB). As an app grows it may nest `suite → product → feature` — but small apps stay flat
+  (`app → features`); "product" now means a **feature-area within an app**, not a whole deploy.
+  **Any feature-module can run on any app** (Mammoth exercises CRM/leads/payments; BBL exercises
+  lineage/claims — but the modules belong to the **kernel**, not any one app or brand). The kernel +
+  the module library are the moat. (Old docs said "platform"=the kernel and "product"=an app — see
+  the ADR 0051 word-fix table. ADR 0040 +
   [`design-system-doctrine.md`](docs/knowledge/wiki/design-system-doctrine.md); portfolio map:
   `docs/knowledge/wiki/ronin-project-context.md`.)
+- **White-label instance axis (ADR 0051):** Baseline (brand) produces the **White Labeled Dojo**
+  (the finished school-ops SaaS); **RDD resells** it; each customer = a **white-label instance** =
+  its own brand-skinned app (own deploy + DB). **Tuff Buffs** is the pilot instance, mid-rebrand
+  **into Baseline** — an instance being absorbed, not a permanent peer brand.
 - **Operating mantra — "What would Apple / Facebook do?"** Default to the senior design-system answer:
   one foundation + a few single-purpose pieces (never a god-component / `kind`-union), **ratify the law
   then conform** to it, kill confidently-wrong docs/imports on sight, tokens-as-contract, lean over
   sprawl. Apply it to **code, docs, and process** — not just UI. (Giddy lesson:
   [`learning-records/0006`](docs/learning/ddd/learning-records/0006-design-systems-and-ui-kits.md).)
-- **One monorepo** (this repo) = the platform: `apps/web` (BBL flagship) · `clients/*` (client
-  products, e.g. Mammoth CRM) · `packages/ui-kit` (the shared kernel). Deploy unit = **per-product
-  Vercel projects** (`ignoreCommand`); `main` = prod, previews = staging. **No separate prod repos.**
-- **BBL is permanent in-repo** (flagship + the living lineage graph — never handed off). **Client
-  products live in-repo until a contractual handoff**, then extract to their own repo consuming the
+- **One monorepo** (this repo) hosts the kernel + every brand's apps: `apps/web` (BBL flagship) ·
+  `clients/*` (client-brand apps, e.g. Mammoth CRM) · `packages/ui-kit` (the shared kernel). Deploy
+  unit = **per-app Vercel projects** (`ignoreCommand`); `main` = prod, previews = staging. **No
+  separate prod repos.**
+- **BBL is permanent in-repo** (flagship + the living lineage graph — never handed off). **Client-
+  brand apps live in-repo until a contractual handoff**, then extract to their own repo consuming the
   published `ui-kit` (ADR 0033 D1). A true separate repo is reserved for client handoff only.
-- **Multi-*brand* is dead** (the 4-brand `Brand`-enum harness — single-brand collapse to BBL; the
-  ~170 vestigial `getRequestBrand` sites are slated for full prune). **Multi-*product* (separate
-  apps in one monorepo) is the model.** Repo name stays platform-neutral — **not** `black-belt-legacy`
-  (BBL's identity is its Vercel project + `blackbeltlegacy.com`).
+- **The in-app multi-*brand* `Brand`-enum harness is dead** (4 brand-skins crammed into ONE app —
+  single-brand collapse to BBL; the ~170 vestigial `getRequestBrand` sites are slated for full
+  prune). **Multi-*app* (separate apps in one monorepo, one deploy per brand/instance) is the
+  model** — a brand skin per *deploy* (the white-label instance axis) is alive; multiple skins in
+  one app via the enum is what's dead. Repo name stays neutral — **not** `black-belt-legacy` (BBL's
+  identity is its Vercel project + `blackbeltlegacy.com`).
 - **BBL north star:** the verified lineage **graph** is the asset/moat; the **mission** (preserve
   the Machado / Bob Bass lineage) is the engine; **revenue is exhaust**. Optimize the **claim loop**
   above all. Full vision: BBL PRD; portfolio map: `ronin-project-context.md`.
