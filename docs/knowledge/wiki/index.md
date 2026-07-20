@@ -819,6 +819,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [Teardown Ledger](teardown-ledger.md)                                                                             | reference         | active — deferred prod/test data cleanup (`TD-NNN`); created SESSION_0457 (TD-001 FI-001 test user parked, TD-002 banked Baseline purge); wired into `ledger-backlog.ts`                          |
 | [Goals Ledger](goals-ledger.md)                                                                                   | reference         | active — top-of-backlog goals/objectives (`G-NNN`, code `GL`); created SESSION_0458; makes the operator `/goal` durable; wired into `ledger-backlog.ts` + the loop-board (goals lead the backlog) |
 | [Core Values Ledger](core-values.md)                                                                              | reference         | active — `CV-NNN` value rows governing doc/wiki/runbook writing style; CV-001 EEE + CV-002 TD ratified SESSION_0572; applies to new/touched docs only                                             |
+| [Planning Ledger](planning-ledger.md)                                                                             | reference         | active — `PL-NNN` idea-intake queue ABOVE the goals-ledger (Brian/Michael/Tony idea dumps → `/pp` plan session → G-row); created SESSION_0587 (PL-001 = feature/feedback-widget intake surface); backlog/router wiring deferred to PL-001's plan                |
 
 ## Code files (annotated)
 

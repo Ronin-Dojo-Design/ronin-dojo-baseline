@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-20
-last_agent: claude-session-0582
+last_agent: claude-session-0587
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -510,3 +510,23 @@ aggregator reads it with no new parser logic.
   SESSION_0574 extended chat.
 - **Why:** the pattern already runs the repo by hand (0574/0577/0578 proved it in one night);
   6.0 makes it law the read-path consumes, and the rituals currently point at a corpse.
+
+### G-024 — Feature + feedback widgets for all sites (idea-intake program)
+
+- **Status:** open — queued, **plan-first** (operator directive SESSION_0587; NO build until
+  the PL-001 plan session runs — full `/pp` Petey plan → AM_Plan_Session → fan-out build, the
+  0587 orchestrator pattern).
+- **Est:** unplanned (the plan session sets it).
+- **Objective:** ONE platform intake module (RDD kernel law — module × per-product mount, not
+  forks). Phase 1: **admins-only "feature-widget"** on the MMB and BBL admin surfaces — an
+  idea-dump for Brian / Michael (MMB owner, admin) / Tony (BBL admin): ideas, images, notes,
+  feature needs, bug fixes, design changes — feeding the
+  [planning-ledger](planning-ledger.md) intake flow. Phase 2: feature-widget on the changelog
+  feature page for all logged-in users. Eventually all sites.
+- **What exists:** single `feedback-widget.tsx` on the BBL `(web)` layout
+  (engagement-triggered toast; `Report` type `Feedback` persistence + admin email via
+  `reportFeedback`; config `apps/web/config/feedback.ts`; e2e spec). No separate
+  feature-widget component. Prior row: `petey-plan-0419` §5.4 (brand/account-aware feedback).
+- **Tracked children:** PL-001 plan session (owns scope, Est, lanes, ledger-backlog +
+  §6.7-router wiring for the planning-ledger itself).
+- **Lane:** rdd (platform module; first mounts mmb + bbl).

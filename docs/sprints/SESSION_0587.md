@@ -2,10 +2,10 @@
 title: "SESSION 0587 — Overnight fan-out orchestrator + AM coffee merge review (4 lanes)"
 slug: session-0587
 type: session--open
-status: staged
+status: in-progress
 created: 2026-07-19
-updated: 2026-07-19
-last_agent: claude-session-0582
+updated: 2026-07-20
+last_agent: claude-session-0587
 sprint: S12
 lane: repo
 goal_ids: [G-021, G-022, G-023]
@@ -28,11 +28,17 @@ backlinks:
 
 ## Date
 
-<fill at adopt>
+2026-07-20
 
 ## Operator
 
-Brian + <agent>-session-0587
+Brian + claude-session-0587
+
+> **Adopt-time notes:** (1) Timing correction — NOT run overnight; adopted the morning of
+> 2026-07-20 with the operator awake. Lanes dispatched immediately; verdicts surfaced live as
+> they land instead of banked for an AM readout. (2) Model note — lanes dispatch at Sonnet as
+> pinned; the orchestrator session itself runs on Fable 5 (telemetry recorded at close reflects
+> the split).
 
 ## Goal
 
@@ -240,10 +246,11 @@ Single source of truth is the frontmatter `status:` field.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0587_TASK_01 | pending | Dispatch 4 lanes (one parallel message, sonnet, background) |
-| SESSION_0587_TASK_02 | pending | Babysit + crash-resume lanes to completion |
+| SESSION_0587_TASK_01 | done | Dispatch 4 lanes (one parallel message, sonnet, background) — dispatched 2026-07-20 AM after precondition + FS-0030 checks |
+| SESSION_0587_TASK_02 | in-progress | Babysit + crash-resume lanes to completion |
 | SESSION_0587_TASK_03 | pending | AM pre-review sweep (merge 0584→0585→0586→0583 · gates · ledger application · Giddy) |
 | SESSION_0587_TASK_04 | pending | Evidence + telemetry (Sonnet cost experiment) + HOLD push gate for coffee word |
+| SESSION_0587_TASK_05 | done | Operator mid-session directive: 0586 board-badge verdict = KEEP · NEW planning-ledger (PL-001) + G-024 feature/feedback-widget intake program + wiki index row (graphify-grounded: feedback-widget.tsx / reportFeedback / Report-type-Feedback / admin-feedback email) |
 
 ## Next session
 
