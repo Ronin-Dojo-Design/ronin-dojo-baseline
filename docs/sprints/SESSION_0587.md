@@ -259,13 +259,16 @@ Single source of truth is the frontmatter `status:` field.
 Two parallel sessions (operator-elected mid-0587, numbers claimed by reservation branches):
 
 - **SESSION_0588** (`session-0588-quality-suite-review`) — code-quality suite review session.
-  Recipe = `docs/protocols/page-code-review.md` (the packaged per-page suite: bounded file set →
-  fallow baseline → scored review → /fallow-fix-loop → re-verify → delta proof), pending the
-  operator's review/tweaks of that recipe (requested this session); merged-trunk variant
-  (SESSION_0567 shape) available if the target is a trunk range instead of pages.
+  **Target PINNED (operator, mid-0587): the merged-trunk variant (SESSION_0567 shape) over
+  this session's sweep range (the merged 0583–0586 trunk)** — deliberately deferred out of
+  0587's sweep (session already big; sweep stays scoped to merge + gates + ledger + Giddy).
+  Base recipe = `docs/protocols/page-code-review.md`, still pending the operator's
+  review/tweaks (possible conformed `recipes/quality-suite.md` card).
 - **SESSION_0589** (`session-0589-feature-widget-plan`) — the PL-001 planning session: full
   `/pp` Petey plan → AM_Plan_Session → fan-out build (0587 pattern) for G-024
-  feature/feedback-widget intake program.
+  feature/feedback-widget intake program. Scope also covers **PL-002** (Reddit-Links-Ledger
+  `RLL` + YouTube-Links-Ledger `YLL` intake ledgers → goals-ledger hydration) + the
+  vault-consolidation / SOT-per-brand-vaults thread it touches.
 
 ### First task
 

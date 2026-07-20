@@ -60,6 +60,22 @@ plan scope.
   router. **Reserved: SESSION_0589** (`session-0589-feature-widget-plan`, claimed mid-0587;
   runs parallel with SESSION_0588 quality-suite review).
 
+### PL-002 — Reddit-Links-Ledger (RLL) + YouTube-Links-Ledger (YLL) intake ledgers — queued
+
+- **Origin:** operator directive, SESSION_0587 (2026-07-20) — "noted as I was thinking about it";
+  flesh out in the SESSION_0589 planning session.
+- **The idea:** two new link-intake ledgers that feed/hydrate the goals-ledger the same way this
+  planning-ledger does: **Reddit-Links-Ledger** (`RLL-0NN`) and **YouTube-Links-Ledger**
+  (`YLL-0NN`) — captured links/threads/videos as raw planning material that graduates to PL/G
+  rows.
+- **Vault context (operator-stated, not repo-verified — vault is operator-side per ADR 0048):**
+  stub folders for Reddit already exist in `RDD_Master_Vault`; the vault-consolidation +
+  SOT-per-brand-vaults task is partially done / partially planned (G-023 vault-constellation
+  direction: brand-prefixed vault names ratified in principle, only MMB exists).
+- **Next step:** SESSION_0589 plan session decides: repo-side ledger files vs vault-side capture
+  with repo pointers, id law, aggregator/router wiring (bundled with PL-001's wiring scope),
+  and how RLL/YLL rows hydrate into goals-ledger.
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.
