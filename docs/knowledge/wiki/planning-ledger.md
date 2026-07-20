@@ -57,7 +57,8 @@ plan scope.
   `docs/petey-plan-0419-post-launch-sweep.md` §5.4 "make feedback widget brand/account aware".
 - **Next step:** full `/pp` Petey plan session → AM_Plan_Session → fan-out build (0587
   pattern). That plan session also wires this ledger into `ledger-backlog.ts` + the §6.7
-  router.
+  router. **Reserved: SESSION_0589** (`session-0589-feature-widget-plan`, claimed mid-0587;
+  runs parallel with SESSION_0588 quality-suite review).
 
 ## Cross-references
 

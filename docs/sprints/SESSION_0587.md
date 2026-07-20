@@ -256,4 +256,18 @@ Single source of truth is the frontmatter `status:` field.
 
 ### Goal
 
+Two parallel sessions (operator-elected mid-0587, numbers claimed by reservation branches):
+
+- **SESSION_0588** (`session-0588-quality-suite-review`) — code-quality suite review session.
+  Recipe = `docs/protocols/page-code-review.md` (the packaged per-page suite: bounded file set →
+  fallow baseline → scored review → /fallow-fix-loop → re-verify → delta proof), pending the
+  operator's review/tweaks of that recipe (requested this session); merged-trunk variant
+  (SESSION_0567 shape) available if the target is a trunk range instead of pages.
+- **SESSION_0589** (`session-0589-feature-widget-plan`) — the PL-001 planning session: full
+  `/pp` Petey plan → AM_Plan_Session → fan-out build (0587 pattern) for G-024
+  feature/feedback-widget intake program.
+
 ### First task
+
+Bow-in each lane per ADR 0049; 0588 waits on the operator's recipe tweaks; 0589 reads
+planning-ledger PL-001 + goals-ledger G-024 + the 0584 PM_Planning_Lane recipe card (post-merge).
