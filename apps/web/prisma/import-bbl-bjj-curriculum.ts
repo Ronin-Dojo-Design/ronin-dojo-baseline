@@ -5,21 +5,32 @@ import {
   DifficultyLevel,
   OrganizationType,
   PrismaClient,
+  StyleStatus,
   TechniqueCategory,
   TechniquePosition,
 } from "~/.generated/prisma/client"
 import curriculumData from "./data/bbl-bjj-curriculum.json"
 import graphData from "./data/bbl-bjj-graph.json"
+import judoCurriculumData from "./data/bbl-judo-curriculum.json"
 
 /**
- * Import the BJJ-only TechniqueGraph + curriculum data from the old Vite monorepo.
+ * Import grappling curriculum data (BJJ + Judo) from the old Vite monorepo, at scale.
  *
  * Source snapshots:
  * - /Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/components/canvas/bjjCanvasData.js
  * - /Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/data/curriculum/bjj.js
+ * - /Users/brianscott/dev/ronin-dojo-monorepo/src/brands/tuffbuffs/data/curriculum/judo.js
+ *   (re-shaped via prisma/transform-grappling-source.ts into bbl-judo-curriculum.json)
  *
  * BBL source history did not contain a TechniqueGraph canvas variant, so the tuffbuffs
- * BJJ canvas is the selected graph source. Non-BJJ slices are intentionally excluded.
+ * BJJ canvas is the selected graph source. Grappling scope (SESSION_0579, G-022 Lane C,
+ * see docs/architecture/decisions/ ADR for the scope amendment): BJJ + judo + wrestling
+ * takedowns only -- never striking, never weapons. Judo is Library-dark for the graph:
+ * it gets Technique/Discipline/Style/Course/CurriculumItem rows but NO graph node/edge
+ * (bbl-bjj-graph.json is Lane A's file -- read here, never written) and no
+ * TechniquePrerequisite edges are fabricated for it. This importer never requires JSON
+ * graph presence to create a new Technique row -- the judo import path below is
+ * entirely independent of `graphData`.
  *
  * Usage:
  *   cd apps/web && bun run prisma/import-bbl-bjj-curriculum.ts
@@ -35,7 +46,15 @@ const BRAND = Brand.BBL
 const ORG_SLUG = "black-belt-legacy"
 const GRAPH_TAG_SLUG = "bjj-technique-graph"
 const CURRICULUM_TAG_SLUG = "bjj-curriculum"
+const JUDO_CURRICULUM_TAG_SLUG = "judo-curriculum"
 const PUBLISHED_AT = new Date("2026-06-19T00:00:00.000Z")
+
+// AUD2-6 (Lane C share): the graph layout is hand-placed pixel coordinates; a silent
+// overlap between two node boxes is a design defect Lane A's canvas can't self-detect.
+// These match components/web/techniques/technique-graph.tsx's NODE_WIDTH/NODE_HEIGHT
+// (read there, not imported -- that file is Lane A's, out of this lane's scope).
+const GRAPH_NODE_WIDTH = 168
+const GRAPH_NODE_HEIGHT = 64
 
 type BjjGraphNode = {
   id: string
@@ -84,8 +103,74 @@ type BjjCurriculumLevel = {
   sections: BjjCurriculumSection[]
 }
 
+type JudoCurriculumTechnique = {
+  id: string
+  slug: string
+  name: string
+  nativeName: string
+  englishName: string
+  aliases: string[]
+  gokyoGroup: string
+  subclass: string
+  description: string
+  avoidWhen: string[]
+  accessLevel: string
+  isRequired: boolean
+  keyPoints: string[]
+  tags: string[]
+}
+
+type JudoCurriculumSection = {
+  id: string
+  name: string
+  category: string
+  techniques: JudoCurriculumTechnique[]
+}
+
+type JudoCurriculumLevel = {
+  level: {
+    id: number
+    name: string
+    belt: string
+    gokyoGroup: string
+    estimatedMonths: number
+    description: string
+  }
+  sections: JudoCurriculumSection[]
+}
+
 const graph = graphData as { nodes: BjjGraphNode[]; edges: BjjGraphEdge[] }
 const curriculum = curriculumData as { levels: BjjCurriculumLevel[] }
+const judoCurriculum = judoCurriculumData as { levels: JudoCurriculumLevel[] }
+
+/**
+ * AUD2-6 (Lane C share): verify the graph layout has zero axis-aligned-bounding-box
+ * overlaps between node boxes. Read-only against bbl-bjj-graph.json (Lane A owns that
+ * file); this is a verify-only guard on the seed path, never a mutation. Throws on any
+ * overlap so a future Lane A layout regression fails this script loudly instead of
+ * silently shipping two techniques stacked on top of each other.
+ */
+function verifyGraphNodeAabbNoOverlap(nodes: BjjGraphNode[]) {
+  const overlaps: Array<[string, string]> = []
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i]
+      const b = nodes[j]
+      if (!a || !b) continue
+      const overlapsX = a.x < b.x + GRAPH_NODE_WIDTH && b.x < a.x + GRAPH_NODE_WIDTH
+      const overlapsY = a.y < b.y + GRAPH_NODE_HEIGHT && b.y < a.y + GRAPH_NODE_HEIGHT
+      if (overlapsX && overlapsY) overlaps.push([a.id, b.id])
+    }
+  }
+
+  if (overlaps.length > 0) {
+    throw new Error(
+      `[bbl-bjj] AABB overlap guard failed: ${overlaps.length} node pair(s) overlap in bbl-bjj-graph.json: ${overlaps.map(([a, b]) => `${a}<->${b}`).join(", ")}`,
+    )
+  }
+
+  console.log(`[bbl-bjj] AABB overlap guard: PASS (${nodes.length} nodes, 0 overlaps)`)
+}
 
 const slugify = (value: string) =>
   value
@@ -232,6 +317,313 @@ async function ensureRankId(disciplineId: string, levelId: number) {
   return rank?.id ?? null
 }
 
+// ---------------------------------------------------------------------------
+// Judo (SESSION_0579, G-022 Lane C) -- new discipline/style rows following the SAME
+// idiom as BJJ above (discipline findFirst-or-create; Style rows scoped to a
+// discipline, mirroring the existing Karate-substyle idiom in prisma/seed.ts). Judo
+// gets its own Course/CurriculumItem set; it is intentionally NOT linked into
+// bbl-bjj-graph.json (Library-dark for the graph -- grill outcome #3) and gets no
+// fabricated TechniquePrerequisite edges (no source data for throw ordering).
+// ---------------------------------------------------------------------------
+
+async function ensureJudoDiscipline() {
+  const existing = await db.discipline.findFirst({
+    where: { OR: [{ slug: "judo" }, { code: "judo" }, { name: "Judo" }] },
+    orderBy: [{ isSystem: "desc" }, { createdAt: "asc" }],
+  })
+
+  if (existing) return existing
+
+  return await db.discipline.create({
+    data: {
+      name: "Judo",
+      slug: "judo",
+      code: "judo",
+      isSystem: true,
+      foundedBy: "Kanō Jigorō",
+      yearEstablished: 1882,
+      history:
+        "Created in Japan as a modern martial art emphasizing throws and grappling. Became an Olympic sport in 1964.",
+    },
+  })
+}
+
+async function ensureJudoStyle(disciplineId: string) {
+  const existing = await db.style.findFirst({ where: { disciplineId, code: "kodokan" } })
+  if (existing) return existing
+
+  return await db.style.create({
+    data: {
+      code: "kodokan",
+      name: "Kodokan Judo",
+      status: StyleStatus.APPROVED,
+      disciplineId,
+    },
+  })
+}
+
+const judoRankShortNameForLevel = (levelId: number) => {
+  // Beginner (Dai-ikkyo) -> white-belt kyu; Intermediate (Dai-nikyo) -> blue-belt kyu;
+  // Advanced (Dai-sankyo, first 4) -> brown-belt kyu. Matches the Kodokan Kyu-Dan
+  // shortNames seeded in prisma/seed.ts (6K..1K, 1D..10D).
+  if (levelId === 1) return "6K"
+  if (levelId === 2) return "2K"
+  return "1K"
+}
+
+async function ensureJudoRankId(disciplineId: string, levelId: number) {
+  const shortName = judoRankShortNameForLevel(levelId)
+  const rank = await db.rank.findFirst({
+    where: {
+      shortName,
+      rankSystem: { disciplineId },
+    },
+    select: { id: true },
+    orderBy: { sortOrder: "asc" },
+  })
+
+  return rank?.id ?? null
+}
+
+const notesForJudoTechnique = ({
+  technique,
+  level,
+  section,
+}: {
+  technique: JudoCurriculumTechnique
+  level: JudoCurriculumLevel["level"]
+  section: JudoCurriculumSection
+}) => {
+  const lines = [
+    `Level: ${level.name}`,
+    `Section: ${section.name}`,
+    `Category: ${humanize(technique.subclass)}`,
+    `Access: ${technique.accessLevel ?? "public"}`,
+    `Required: ${technique.isRequired ? "yes" : "no"}`,
+    "",
+    technique.description ?? "",
+  ]
+
+  if (technique.keyPoints?.length) {
+    lines.push("", "Key points:", ...technique.keyPoints.map(point => `- ${point}`))
+  }
+
+  if (technique.tags?.length) {
+    lines.push("", `Tags: ${technique.tags.join(", ")}`)
+  }
+
+  lines.push("", `Source ID: ${technique.id}`)
+
+  return lines.filter((line, index, all) => line || all[index - 1]).join("\n")
+}
+
+function flattenJudoCurriculum() {
+  const bySourceId = new Map<
+    string,
+    {
+      technique: JudoCurriculumTechnique
+      level: JudoCurriculumLevel["level"]
+      section: JudoCurriculumSection
+      order: number
+    }
+  >()
+
+  let order = 1
+  for (const level of judoCurriculum.levels) {
+    for (const section of level.sections) {
+      for (const technique of section.techniques) {
+        bySourceId.set(technique.id, {
+          technique,
+          level: level.level,
+          section,
+          order: order++,
+        })
+      }
+    }
+  }
+
+  return bySourceId
+}
+
+async function importJudo() {
+  const discipline = await ensureJudoDiscipline()
+  const style = await ensureJudoStyle(discipline.id)
+  const organization = await ensureBblOrg()
+
+  await db.organizationDiscipline.upsert({
+    where: {
+      organizationId_disciplineId: {
+        organizationId: organization.id,
+        disciplineId: discipline.id,
+      },
+    },
+    update: {},
+    create: {
+      organizationId: organization.id,
+      disciplineId: discipline.id,
+    },
+  })
+
+  await ensureCategory(
+    "judo-curriculum",
+    "Judo Curriculum",
+    "Kodokan Judo Gokyo no Waza curriculum items.",
+  )
+  await ensureTag(JUDO_CURRICULUM_TAG_SLUG, "Judo Curriculum")
+
+  const curriculumBySourceId = flattenJudoCurriculum()
+  const courseIdByLevel = new Map<number, string>()
+
+  for (const level of judoCurriculum.levels) {
+    const rankId = await ensureJudoRankId(discipline.id, level.level.id)
+    const course = await db.course.upsert({
+      where: {
+        brand_organizationId_slug: {
+          brand: BRAND,
+          organizationId: organization.id,
+          slug: `judo-level-${level.level.id}-${slugify(level.level.name.split("—")[0] ?? level.level.name)}`,
+        },
+      },
+      update: {
+        title: `Judo ${level.level.name}`,
+        description: level.level.description,
+        certificationType: CertificationType.BELT_RANK,
+        isPublished: true,
+        publishedAt: PUBLISHED_AT,
+        disciplineId: discipline.id,
+        rankId,
+      },
+      create: {
+        brand: BRAND,
+        organizationId: organization.id,
+        disciplineId: discipline.id,
+        rankId,
+        title: `Judo ${level.level.name}`,
+        slug: `judo-level-${level.level.id}-${slugify(level.level.name.split("—")[0] ?? level.level.name)}`,
+        description: level.level.description,
+        certificationType: CertificationType.BELT_RANK,
+        isPublished: true,
+        publishedAt: PUBLISHED_AT,
+      },
+    })
+    courseIdByLevel.set(level.level.id, course.id)
+  }
+
+  let curriculumItemsUpserted = 0
+  let techniquesUpserted = 0
+
+  for (const entry of curriculumBySourceId.values()) {
+    const courseId = courseIdByLevel.get(entry.level.id)
+    if (!courseId) continue
+
+    const item = await db.curriculumItem.upsert({
+      where: { id: `bbl-judo-curriculum-${entry.technique.id}` },
+      update: {
+        courseId,
+        order: entry.order,
+        title: entry.technique.name,
+        notes: notesForJudoTechnique(entry),
+        mediaUrl: null,
+        mediaType: null,
+      },
+      create: {
+        id: `bbl-judo-curriculum-${entry.technique.id}`,
+        courseId,
+        order: entry.order,
+        title: entry.technique.name,
+        notes: notesForJudoTechnique(entry),
+        mediaUrl: null,
+        mediaType: null,
+      },
+    })
+    curriculumItemsUpserted++
+
+    const tagSlugs = [
+      JUDO_CURRICULUM_TAG_SLUG,
+      `judo-${entry.technique.subclass}`,
+      ...entry.technique.tags,
+    ]
+
+    // Canonical (author-null) library technique -- same partial-unique-index manual
+    // upsert idiom as the BJJ path above (Prisma can't target the filtered index).
+    const existingTechnique = await db.technique.findFirst({
+      where: {
+        brand: BRAND,
+        organizationId: organization.id,
+        slug: entry.technique.slug,
+        authorPassportId: null,
+      },
+      select: { id: true },
+    })
+
+    const techniqueData = {
+      name: entry.technique.name,
+      nativeName: entry.technique.nativeName || null,
+      aliases: entry.technique.aliases,
+      description: entry.technique.description || entry.technique.englishName,
+      disciplineId: discipline.id,
+      styleId: style.id,
+      category: TechniqueCategory.THROW,
+      position: TechniquePosition.STANDING,
+      difficultyLevel:
+        entry.level.id === 1
+          ? DifficultyLevel.BEGINNER
+          : entry.level.id === 2
+            ? DifficultyLevel.INTERMEDIATE
+            : DifficultyLevel.ADVANCED,
+      isFoundational: entry.level.id === 1,
+      requiresPartner: true,
+      requiresEquipment: false,
+      movementPattern: humanize(entry.technique.subclass),
+      rangeBand: "Judo Gokyo",
+      teachingCues: entry.technique.keyPoints.slice(0, 8),
+      commonErrors: entry.technique.avoidWhen,
+      safetyNotes: null,
+      isPublished: true,
+      sortOrder: entry.order,
+      categories: {
+        connect: [{ slug: "judo-curriculum" }],
+      },
+      tags: {
+        connectOrCreate: Array.from(new Set(tagSlugs)).map(slug => ({
+          where: { slug },
+          create: { slug, name: humanize(slug) },
+        })),
+      },
+    }
+
+    const technique = existingTechnique
+      ? await db.technique.update({ where: { id: existingTechnique.id }, data: techniqueData })
+      : await db.technique.create({
+          data: {
+            brand: BRAND,
+            organizationId: organization.id,
+            slug: entry.technique.slug,
+            ...techniqueData,
+          },
+        })
+
+    techniquesUpserted++
+
+    await db.techniqueCurriculumLink.upsert({
+      where: {
+        techniqueId_curriculumItemId: {
+          techniqueId: technique.id,
+          curriculumItemId: item.id,
+        },
+      },
+      update: { sortOrder: 1 },
+      create: {
+        techniqueId: technique.id,
+        curriculumItemId: item.id,
+        sortOrder: 1,
+      },
+    })
+  }
+
+  return { courses: courseIdByLevel.size, curriculumItemsUpserted, techniquesUpserted }
+}
+
 function flattenCurriculum() {
   const bySourceId = new Map<
     string,
@@ -278,6 +670,7 @@ async function ensureTag(slug: string, name: string) {
 
 async function main() {
   console.log("[bbl-bjj] Importing BJJ graph and curriculum...")
+  verifyGraphNodeAabbNoOverlap(graph.nodes)
   const organization = await ensureBblOrg()
   const discipline = await ensureBjjDiscipline()
 
@@ -520,6 +913,12 @@ async function main() {
 
   console.log(
     `[bbl-bjj] courses=${courseIdByLevel.size}, curriculumItems=${curriculumItemsUpserted}, techniques=${techniquesUpserted}, prerequisites=${prerequisitesUpserted}`,
+  )
+
+  console.log("[bbl-judo] Importing Judo curriculum (Library-dark for the graph)...")
+  const judoCounts = await importJudo()
+  console.log(
+    `[bbl-judo] courses=${judoCounts.courses}, curriculumItems=${judoCounts.curriculumItemsUpserted}, techniques=${judoCounts.techniquesUpserted}`,
   )
 }
 

@@ -3913,6 +3913,14 @@ model Technique {
   // discovery until featured, while keeping its `authorPassportId` attribution.
   isFeatured        Boolean            @default(false)
   sortOrder         Int                @default(0)
+  // @added SESSION_0579 (G-022 Lane C) — native-language name for the discipline's own
+  // terminology (Judo's Kodokan throws today: e.g. "De-ashi-harai"). Null when the source
+  // has no native form (e.g. most BJJ/English-named techniques).
+  nativeName        String?
+  // @added SESSION_0579 (G-022 Lane C) — common English aliases/translation variants for
+  // the technique name (e.g. "Advancing foot sweep"). Same String[] idiom as
+  // teachingCues/commonErrors above: NOT NULL, default empty array, never nullable.
+  aliases           String[]           @default([])
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @default(now())
 
