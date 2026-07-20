@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-20
+last_agent: claude-session-0582
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -822,3 +822,24 @@ product app replicates the same posture from its own config.
 1. Do not use `school`, `style`, `belt`, or `profile` as new model names.
 1. Use `Organization`, `Discipline`, `Rank`, and `Passport` everywhere in new code.
 1. If a domain word feels unclear, stop and update this glossary before coding.
+
+## Operating vocabulary (SESSION_0582 — process terms, not domain models)
+
+Process/orchestration terms used across rituals, skills, and session records. They are NOT schema
+or product nouns — never model names — but they are locked spellings for docs and prompts:
+
+- **Sequence skill (SSS)** — a skill whose body is an ordered step list packaging other
+  skills/protocol steps for one flow (`seq-lane-build`, `seq-review-wave`); thin pointers, with
+  the G-023 recipe cards as their eventual source docs.
+- **Lane** — one disjoint parallel work stream with an owned-file contract, its own session
+  number, reservation branch, and worktree (fan-out-session-recipe.md).
+- **Staged stub** — a pre-created `status: staged` SESSION file (ADR 0049) the next bow-in
+  adopts; the PM_Planning_Lane card pre-stages an orchestrator stub whose adoption dispatches
+  overnight lanes.
+- **Merge sweep** — the close-time pass that merges lanes in ratified order, applies every lane's
+  Proposed-ledger-edits exactly once, reruns uncontended gates, and holds at the push gate.
+- **PM_Planning_Lane / AM_Coffee_Merge_Review** — the evening fork-pinning/staging session card
+  and the morning merge-review card (G-023 children; see repo-code-glossary for the operator-
+  facing definitions).
+- **/rr (research-recommend)** — graphify prior-art query → recommendation → ledger route;
+  "don't invent what the repo already has."

@@ -93,3 +93,16 @@ Keep it short. A plan that doesn't fit on screen has too much in it.
 ## Hand-off pattern
 
 Once your plan is approved (explicitly, or by the user saying "go"), hand off to Cody to execute. The plan should be self-contained enough that whoever executes doesn't need to re-read the user's original message. Hand back to Petey when execution surfaces a new decision that wasn't in the original plan.
+
+## Graphify-first discovery
+
+Before any repo-wide `grep`/`rg`/`find`/`ls` sweep, run a budget-capped graph query from the CANONICAL checkout (`graphify query "<nouns>" --budget 1500`) — recipe in `.claude/skills/graphify-query/SKILL.md`; subsystem mapping in `.claude/skills/graphify-explain/SKILL.md`. Worktree graphs read 0 nodes by design (not-built ≠ no matches — never assert a negative from one). Targeted `grep -n` inside an already-open file is fine; repo-wide discovery sweeps are not.
+
+## Sequence skills (dispatch packaging)
+
+When dispatching a build lane or a review wave, do not hand-write the invariant steps into the prompt — point the agent at the sequence skill and supply only the specifics (goal, owned files, pinned grill outcomes):
+
+- `.claude/skills/seq-lane-build/SKILL.md` — worktree lane build (claim → bootstrap → graphify recon → pre-flight → build → gates → runtime proof → session record + proposed-ledger-edits → local commit, no push).
+- `.claude/skills/seq-review-wave/SKILL.md` — parallel Doug/Desi/Giddy review on ONE commit → batched-fix resume → delta re-verify → recorded verdicts.
+
+Every operator-owned fork must be resolved and pinned BEFORE dispatch — sequence skills never move a grill past the operator.

@@ -79,3 +79,11 @@ Every line in sections 2–9 cites a file:line and pairs the visual fix with a o
 ## When you finish
 
 End your reply with a one-sentence handoff line: who should act next and on what fix-list bucket (e.g., "Hand off to Cody for HIGH + MEDIUM items in sections 2 and 4; LOW items defer to a follow-up session").
+
+## Graphify-first discovery
+
+Before any repo-wide `grep`/`rg`/`find`/`ls` sweep, run a budget-capped graph query from the CANONICAL checkout (`graphify query "<nouns>" --budget 1500`) — recipe in `.claude/skills/graphify-query/SKILL.md`; subsystem mapping in `.claude/skills/graphify-explain/SKILL.md`. Worktree graphs read 0 nodes by design (not-built ≠ no matches — never assert a negative from one). Targeted `grep -n` inside an already-open file is fine; repo-wide discovery sweeps are not.
+
+## Sequence skills
+
+When you review as part of a wave, the invariant sequence lives in `.claude/skills/seq-review-wave/SKILL.md` — same commit as the other reviewers, findings ranked P1/P2/P3 with file:line evidence, verdicts recorded in the SESSION Review log; reviewers verify, they do not fix.

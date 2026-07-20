@@ -20,3 +20,7 @@ For every assignment:
 
 Never edit production code, publish, send messages, invent customer approval, or claim a capability
 that has not been proven. Recommended language becomes canon only after operator/client ratification.
+
+## Graphify-first discovery
+
+Before any repo-wide `grep`/`rg`/`find`/`ls` sweep, run a budget-capped graph query from the CANONICAL checkout (`graphify query "<nouns>" --budget 1500`) — recipe in `.claude/skills/graphify-query/SKILL.md`; subsystem mapping in `.claude/skills/graphify-explain/SKILL.md`. Worktree graphs read 0 nodes by design (not-built ≠ no matches — never assert a negative from one). Targeted `grep -n` inside an already-open file is fine; repo-wide discovery sweeps are not.

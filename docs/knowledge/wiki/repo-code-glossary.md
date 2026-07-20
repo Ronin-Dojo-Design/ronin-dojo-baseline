@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-07-14
-last_agent: claude-session-0536
+updated: 2026-07-20
+last_agent: claude-session-0582
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -256,6 +256,29 @@ commit) so the term is concrete, not abstract.
   `RankAward`.
 - **MAB (mobile action button)** — the floating "＋" button on mobile that opens create-actions (new
   post, new technique).
+- **Sequence skill / SSS (scripted-sequence-skill)** — a skill whose body is an ordered step list
+  packaging OTHER skills/protocol steps for a given flow, so dispatch prompts shrink to "read this
+  file + lane specifics." First two: `.claude/skills/seq-lane-build/` (worktree build lane) and
+  `seq-review-wave/` (parallel review). Thin pointers by law (D-023) — the G-023 recipe cards
+  become their source docs. Example: SESSION_0582's overnight fan-out stub cites `/seq-lane-build`
+  instead of restating ~60 lines of invariants per lane.
+- **/rr (research-recommend)** — the "research first, recommend, don't build" move: graphify
+  prior-art query → read what exists → options → one recommendation → route to a ledger. Grounded
+  in `docs/protocols/review-recommend.md`; planned as `/seq-research-recommend` (SESSION_0584).
+  Example: SESSION_0582's /rr found `scripts/auto-session.sh` before anyone rebuilt an overnight
+  driver.
+- **/graphify-query · /graphify-explain** — skills wrapping the Graphify-first law: budget-capped
+  graph query instead of repo-wide grep (query the CANONICAL checkout — a worktree graph reads 0
+  nodes by design), and subsystem explanation from graph hubs instead of bulk-reading.
+- **PM_Planning_Lane / AM_Coffee_Merge_Review** — the two overnight session recipe cards (G-023
+  children, planned SESSION_0582): PM = evening grill pins every operator fork, pre-stages a
+  staged-stub orchestrator + reservation branches; overnight lanes build commit-local; AM = the
+  merge-review half — completion-triggered pre-review sweep, ntfy push, push gate held for the
+  operator's coffee word.
+- **State of the Dojo** — the read-only operator dashboard artifact projecting ledgers + SESSION
+  frontmatter (work board, goal belt-ladders, risk watch; brand tab = skin × lane filter). Name
+  pending operator ratification (Brandon pass, SESSION_0582). Projection only — the ledgers stay
+  the source of truth; `/app/loop-board` stays the editable board.
 
 ## Cross-references
 

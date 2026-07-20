@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-16
-last_agent: codex-session-0543
+updated: 2026-07-20
+last_agent: claude-session-0582
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -693,3 +693,26 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   D-047 removes already-existing local data only through an explicitly authorized operation.
 - **Status: OPEN (local data hygiene, non-blocking for the PR #210 application release).** No cleanup was performed
   in SESSION_0543.
+
+### D-048 — `TechniqueProgress.updatedAt` lacks `@updatedAt` (never updates on writes)
+
+- **Discovered:** SESSION_0580 (G-022 Lane B) live runtime proof — the column is `@default(now())`
+  only, so upserts never touch it; the dashboard "My progress" `updatedAt desc` sort silently
+  degrades to insert order. Invisible to mocked-Prisma tests; caught only by the live write proof.
+- **Fix direction:** add the `@updatedAt` attribute in `apps/web/prisma/schema.prisma` — zero-SQL
+  schema-attribute change (Prisma client-side behavior), no migration needed. Belongs to the next
+  schema-touching lane (Lane C territory owns `schema.prisma`; 0583+ continuation or a small slice).
+- **Status: OPEN.**
+
+### D-049 — `ledger-id-next --prefix=D` scan inflates (claimed next = D-516 vs register max D-047)
+
+- **Discovered:** SESSION_0582 close sweep — the mint reported `Next free ID: D-516` while the
+  drift-register's real max is D-047 and `grep -rEo "D-5[0-9]{2}" docs/ .claude/` returns ZERO
+  matches, so the scan is matching a non-ledger token family (false positive in the max+1 sweep).
+  WL-P2/WL-P3/SESSION prefixes behaved correctly the same evening.
+- **Residual risk:** blindly following the mint pollutes the register with a ~470-id gap; hand-
+  numbering against a buggy mint risks collision if the phantom source is ever real.
+- **Fix direction:** fix the D-prefix regex/scan in `scripts/ledger-id-next.ts` (0575 mechanization
+  owner) + add a self-check (mint result vs target-ledger max; warn on gap > 50). SESSION_0582 used
+  register-truth D-048/D-049 after proving no D-5xx tokens exist.
+- **Status: OPEN — routed to the SESSION_0584 governance lane.**

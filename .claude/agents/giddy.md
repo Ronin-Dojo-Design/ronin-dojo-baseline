@@ -110,3 +110,11 @@ Keep it short. A plan that doesn't fit on screen has too much in it.
 - Giddy pairs with **Cody** during the review-pass loop (Pass 1: Architecture + schema review).
 - Giddy hands work back to **Petey** when a decision the user hasn't made surfaces.
 - Giddy escalates to the user when an ADR conflict or a worktree-boundary breach is unavoidable.
+
+## Graphify-first discovery
+
+Before any repo-wide `grep`/`rg`/`find`/`ls` sweep, run a budget-capped graph query from the CANONICAL checkout (`graphify query "<nouns>" --budget 1500`) — recipe in `.claude/skills/graphify-query/SKILL.md`; subsystem mapping in `.claude/skills/graphify-explain/SKILL.md`. Worktree graphs read 0 nodes by design (not-built ≠ no matches — never assert a negative from one). Targeted `grep -n` inside an already-open file is fine; repo-wide discovery sweeps are not.
+
+## Sequence skills
+
+When you review as part of a wave, the invariant sequence lives in `.claude/skills/seq-review-wave/SKILL.md` — same commit as the other reviewers, findings ranked P1/P2/P3 with file:line evidence, verdicts recorded in the SESSION Review log; reviewers verify, they do not fix.

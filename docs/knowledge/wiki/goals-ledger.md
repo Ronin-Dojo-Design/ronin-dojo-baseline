@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-19
-last_agent: codex-session-0571
+updated: 2026-07-20
+last_agent: claude-session-0582
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -391,6 +391,17 @@ aggregator reads it with no new parser logic.
   Private-vault `MMB_SESSION_0002` also queues the operator's lean SESSION_SUMMARY_REPORTS/recipe, Michael/Brian
   goal views, CV-001 EEE, CV-002 Token Discipline, BHB/runbook, and local-agent feasibility discovery; its first
   decision is whether ADR 0048's separate-live-vault boundary should remain or be amended.
+  **SESSION_0582 (loop 2/3 slice a LANDED, merged + pushed `9f3f4696`):** lead-sheet import
+  commit behind explicit confirm — ONE shared dedupe matcher (`lib/contact-match.ts`) consumed by
+  preview AND widened `findOrCreateContact` (case-insensitive email + last-10-digit phone;
+  operator-ratified); `commitLeadSheet` owner-gated, server-side re-parse, in-tx index,
+  skip+report (never enrich/overwrite), Contact + lead Project per new row; Doug GO-WITH-NOTE
+  9.6/10 with hermetic scratch-DB UAT. **Loop-3 candidates:** (b) Lead Source facet — ELECTED,
+  reserved `session-0586-mmb-lead-source` · (c) attempt-cadence surfacing · enrich-blanks-on-match
+  (NEW SESSION_0582 — blank-only, never overwrite; per-field rules to pin at election).
+  Attempt-outcome vocabulary STILL provisional (ratification pending). Residual note: legacy
+  `findOrCreateContact` form/board entry keeps Prisma `mode:"insensitive"` vs `emailKey` JS-fold
+  edge divergence + matches "@"-less emails — reconcile at the vocabulary-ratification pass.
 - **Boundaries:** no real lead import, scraping, send/call/email automation, provider connection,
   secret storage, or HubSpot use. HubSpot rotation remains owner-mediated under MB-017; Todoist is
   optional and one-way until its source-of-truth and credential decisions are explicit.
@@ -425,7 +436,7 @@ aggregator reads it with no new parser logic.
     write path (oRPC per the FULL-oRPC direction), detail-page tracking control, dashboard wiring;
     graph-overlay display deferred post-GA (Lane A file ownership).
   - **Monorepo-harvest axis — LANE C** (`session-0579-grappling-data`): grappling-arts data
-    adoption — `bjj.js` 98-technique trunk (SALVAGE) + `bjjCanvasData.js` lineage (already the
+    adoption — `bjj.js` 80-technique trunk (SALVAGE — ground-truthed SESSION_0579; the "98" counted section objects) + `bjjCanvasData.js` lineage (already the
     app JSON's ancestor) + Kodokan judo 20-throws seed and `judo.js` (ADAPT — grappling now in
     scope) via a shown-before-run TS transform; backfill the ~14 dark graph slugs; **wrestling
     takedowns = named content gap (no dataset exists in the monorepo — authoring task)**;
@@ -438,6 +449,21 @@ aggregator reads it with no new parser logic.
 - **Why:** Brian pinned GA promotion as a proper goal: the graph is the technique system's front
   door, curriculum at real scale needs the harvested trunk data, and progress tracking is the
   member-facing value that justifies GA. (SESSION_0578 grill, 4 forks resolved.)
+- **Progress (SESSION_0582 sweep — three lanes LANDED, merged C→B→A-S1):**
+  **Lane C DONE** ([`SESSION_0579`](../../sprints/SESSION_0579.md)): judo 20/20 Kodokan adopted
+  (`nativeName`/`aliases` additive migration), AABB guard, ADR 0050 (grappling scope — the
+  blocking merge-gate) ratified. Ground-truth corrections: BJJ trunk is **80** techniques (the
+  "98" counted section objects); the "~14 dark slugs" were already backfilled pre-lane. Wrestling
+  authoring gap stays open (child, P3 — no dataset). **Lane B DONE**
+  ([`SESSION_0580`](../../sprints/SESSION_0580.md)): oRPC `techniques` router, own-user
+  upsert/clear runtime-proven, AUD2-5 channel = leading glyph via shared
+  `components/common/technique-progress-status.tsx` (Lane A consumes this SAME module for
+  cards/graph), dashboard "My progress", no-leak test green. **Lane A S1 DONE**
+  ([`SESSION_0581`](../../sprints/SESSION_0581.md)): C4 eased zoom-to-fit (+never-during-drag,
+  CSS motion-reduce), WL-P2-67 resolved (375px fit = 61/61 nodes, zoom 0.160), D-4 cooperative
+  touch (pan-y + 2-finger pinch), AUD2-3 mobile toolbar, AUD2-8 dead-token fix, AUD2-9 PNG
+  demote — computed-style/live proofs in the session file. **Open:** Lane A S2/S3/S4 + flip
+  (S2 next — 0583 reserved), wrestling authoring, graph progress overlay (post-GA).
 
 ### G-023 — WORKFLOW_6.0: session-recipe OS + SOT_Cookbook + brand SOT cards
 

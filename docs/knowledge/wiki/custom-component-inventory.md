@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-14
-last_agent: claude-session-0537
+updated: 2026-07-20
+last_agent: claude-session-0582
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -604,6 +604,13 @@ prod report stream.
 | `buildContentSecurityPolicy` / `buildHardeningHeaders` / `cspHeaderName` | `apps/web/config/security-headers.ts` | `(env, nonce?)` builders | App-agnostic. `next.config.ts` emits the STATIC hardening headers only; the nonce'd CSP is emitted from middleware (single CSP header). `script-src 'nonce-…'` (NO `'unsafe-inline'`); `style-src` KEEPS `'unsafe-inline'` — a nonce covers `<style>` elements, not inline `style={{…}}` attrs (46 files + `motion/react`). `cspEnforce` is module-private; `cspHeaderName` is the flip API. |
 | `renderWithCspNonce` | `apps/web/proxy.ts` | `(req) => NextResponse` | Middleware helper on the page-render path only: mints a per-request nonce, forwards `x-nonce` + the CSP on the REQUEST headers (Next auto-nonces its own bootstrap by reading it — honours the Report-Only header name too), sets the CSP RESPONSE header. `try/catch` → plain render on any throw (runs every request). The redirect/auth-guard branches return before it, so redirects carry no CSP. JSON-LD `<script>` is deliberately NOT nonced (data block, not script-src-governed). |
 | CSP report sink | `apps/web/app/api/csp-report/route.ts` | `POST → 204` | Public-by-design log-only violation sink (browsers post uncredentialed). Accepts both `application/reports+json` + legacy `application/csp-report`; 64KB body cap + per-instance throttle; never throws (always 204); logs 4 non-sensitive CSP fields with query strings scrubbed. Paired with `report-uri`/`report-to`/`Reporting-Endpoints`. |
+
+## Technique progress channel (SESSION_0580, G-022 Lane B — AUD2-5 ratified glyph)
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `TechniqueProgressStatus` (glyph + maps) | `apps/web/components/common/technique-progress-status.tsx` | THE ONE AUD2-5 progress channel: leading glyph Circle→CircleDashed→CircleDotDashed→CircleDot→CircleCheck per `TechniqueProgressStatus`, single neutral tone, `role="img"` + per-state `aria-label`. Lane A applies this SAME module to cards/graph — never a second progress visual, never a third color channel on graph nodes. |
+| `TechniqueProgressControl` | `apps/web/app/(web)/techniques/[slug]/_components/technique-detail/technique-progress-control.tsx` | Own-user progress control (glyph + Select + Clear) beside `ListingSaveButton`; optimistic with rollback over the oRPC `techniques.setProgress`/`clearProgress`; no entitlement gate on own-progress by design (engagement driver). Writes revalidate paths only — never the `"techniques"`/`"bjj-technique-graph"` cache tags (WL-P2-50 trap). |
 
 ## How to update this file
 

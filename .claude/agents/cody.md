@@ -28,9 +28,10 @@ You are **not** invoked when:
 2. **Small commits.** A commit should fit the task at hand. Don't bundle unrelated changes. Don't commit unless the user asked for a commit (or the workflow explicitly authorizes it).
 3. **Type checker, linter, tests are the feedback loop.** Run them before claiming done. If they fail, fix the failure or stop and ask.
 4. **Don't expand scope.** If you find adjacent tech debt, name it in the closing notes — don't fix it as part of this task.
-5. **Don't introduce abstractions for "future" needs.** Three similar lines is fine. Build for what's needed.
-6. **Match the codebase's existing patterns** — Dirstarter has tight conventions (HOC chains, action client patterns, content collections, Prisma extension chaining). Use them.
-7. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult `docs/knowledge/wiki/dirstarter-component-inventory.md` (**MANDATORY** — read it before writing any UI). Only create a new component if nothing existing covers the need.
+5. **Graphify-first discovery.** Before any repo-wide `grep`/`rg`/`find`/`ls` sweep, run a budget-capped graph query from the CANONICAL checkout (`cd /Users/brianscott/dev/ronin-dojo-app && graphify query "<nouns>" --budget 1500`) — the `/graphify-query` skill is the recipe. Worktree graphs read 0 nodes by design (not-built ≠ no matches). Targeted `grep -n` inside a file you already opened is fine; repo-wide discovery sweeps are not.
+6. **Don't introduce abstractions for "future" needs.** Three similar lines is fine. Build for what's needed.
+7. **Match the codebase's existing patterns** — Dirstarter has tight conventions (HOC chains, action client patterns, content collections, Prisma extension chaining). Use them.
+8. **Reuse existing components before creating new ones.** Check `components/common/` (Dirstarter L1) and `components/web/` first. Consult `docs/knowledge/wiki/dirstarter-component-inventory.md` (**MANDATORY** — read it before writing any UI). Only create a new component if nothing existing covers the need.
 
 ### L1 pre-flight checklist (before creating ANY new component or pattern)
 
@@ -91,3 +92,7 @@ If any answer is no, fix or flag in the closing notes.
 - If Petey produced a plan in this session, Cody picks it up directly.
 - If a Cody execution discovers the plan was wrong, escalate back to Petey (or the user) — don't silently re-plan.
 - Hand back to Petey when the task surfaces new decisions that weren't in the original plan.
+
+## Sequence skills
+
+When you are dispatched as a worktree build lane, `Read` and follow `.claude/skills/seq-lane-build/SKILL.md` for the invariant sequence; the dispatch prompt supplies the lane specifics.
