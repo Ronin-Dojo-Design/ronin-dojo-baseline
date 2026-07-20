@@ -110,10 +110,28 @@ Single source of truth is the frontmatter `status:` field.
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0588_TASK_01 | done | Grill + finalize recipe (4 decisions pinned); scope + fallow baseline captured |
-| SESSION_0588_TASK_02 | in-progress | Write `recipes/quality-suite.md` card (0584 format), this run as its test case |
-| SESSION_0588_TASK_03 | pending | Scored review pass (Desi/0583 + `/code-quality` per code lane + wiki-lint/0584) |
-| SESSION_0588_TASK_04 | pending | `/fallow-fix-loop` behavior-preserving fixes, split by deploy unit; re-verify delta-neutral |
-| SESSION_0588_TASK_05 | pending | Prove fallow delta; log baseline→final; push gate (HOLD, split by deploy unit) |
+| SESSION_0588_TASK_02 | done | Wrote `recipes/quality-suite.md` card (0584 format); lint-clean |
+| SESSION_0588_TASK_03 | done | Review wave (Desi/0583 + Doug/0586+0585 + Giddy/structural+seed) — verdicts below |
+| SESSION_0588_TASK_04 | in-progress | Fixes: docs free-lane DONE (`f03daa62`); Cody dispatched for MMB + apps/web code |
+| SESSION_0588_TASK_05 | pending | Re-verify (Doug+Desi on Cody diff) → prove fallow delta → push gate (HOLD, split) |
+
+## Review wave — verdicts + scores
+
+| Lane | Reviewer | Verdict / scores |
+| --- | --- | --- |
+| 0583 apps/web | Desi | SHIP, no P1. graph 7.0 (CRAP-306, separable PNG-export) · curriculum 7.7 · tooltip 9.0 · utils 9.3 (flag-only). **C5 hover-glow = KEEP.** |
+| 0586 MMB | Doug | SHIP 8.3. lead-source/facet 9.2–9.3 gold. P2 = stale facet counts after intake. Parity = by-design. |
+| 0585 scripts | Doug | SHIP 9.0. **D-051 already done in code** (verified). |
+| 0584 docs | Giddy | Structural PASS (no P1). Pointer-discipline PASS. seq-research-recommend skill = unlinked copies → D-053. |
+| seed dupe | Giddy `/rr` | **Leave — intentional divergence** (ADR 0038: seeds are per-product; "clone" = ~5 lines boilerplate). No build. |
+
+## Decisions resolved (operator, SESSION_0588)
+
+- **C5 hover-glow: KEEP + build touch-parity now** (first-tap selects+glows, second-tap opens) — ratified
+  behavior change (Step-4 exception; the only non-behavior-preserving item this pass).
+- **Cross-surface facet parity = BY DESIGN** (cockpit = active-only; board = all projects) — document in-code, no behavior change.
+- **0583 scope = all P2 incl. PNG-export extraction.**
+- **D-051 → RESOLVED** (parser already correct); **D-053 opened** (skill-pair hardlink drift — durable-guard fix direction).
 
 ## Next session
 
