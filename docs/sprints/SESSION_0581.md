@@ -2,7 +2,7 @@
 title: "SESSION 0581 — G-022 Lane A slice S1: graph zoom/fit easing, viewport-aware ZOOM_MIN, cooperative touch, dead-token fix, PNG demotion"
 slug: session-0581
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-19
 updated: 2026-07-19
 last_agent: claude-session-0581
