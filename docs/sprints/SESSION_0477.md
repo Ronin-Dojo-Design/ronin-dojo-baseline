@@ -2,7 +2,7 @@
 title: "SESSION 0477 — Belt Journey: RankMilestone model + member belt-by-belt edit cards (G-004 N2)"
 slug: session-0477
 type: session--implement
-status: pending
+status: closed
 created: 2026-06-30
 updated: 2026-06-30
 last_agent: claude-session-0476

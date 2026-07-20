@@ -2,6 +2,7 @@
 title: "SESSION 0500 — Petey pipeline: G-004 N1 + belt-rebase strategy + WL-P2-22 (Wave 1 fan-out)"
 slug: session-0500
 type: session--open
+status: closed
 created: 2026-07-05
 updated: 2026-07-05
 last_agent: claude-session-0500

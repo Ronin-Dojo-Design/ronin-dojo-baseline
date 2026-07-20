@@ -10,7 +10,7 @@ pairs_with:
   - docs/sprints/SESSION_0527.md
 backlinks:
   - docs/knowledge/wiki/index.md
-status: in-progress
+status: closed
 ---
 
 # SESSION 0528 — quality-pass the 0527 technique/media CRUD, then grill+plan Slice 3

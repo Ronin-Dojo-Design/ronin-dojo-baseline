@@ -2,7 +2,7 @@
 title: "SESSION 0462 — Platform: per-product CI + new-client scaffold script"
 slug: session-0462
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-28
 updated: 2026-06-28
 last_agent: claude-session-0459

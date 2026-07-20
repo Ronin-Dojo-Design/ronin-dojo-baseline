@@ -2,7 +2,7 @@
 title: "SESSION 0512 — WL-P2-36 theme color picker"
 slug: session-0512
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-08
 updated: 2026-07-08
 last_agent: claude-session-0512

@@ -2,7 +2,7 @@
 title: "SESSION 0492 — Belt-rebase FIX session: close the quality-loop findings (1 CRITICAL) → V6 → unhold #178–181"
 slug: session-0492
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-01
 updated: 2026-07-01
 last_agent: claude-session-0492

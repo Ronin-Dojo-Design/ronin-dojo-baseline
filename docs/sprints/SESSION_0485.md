@@ -2,7 +2,7 @@
 title: "SESSION 0485 — Blog vs posts surface consolidation + footer changelog link + first post (Dirty Dozen)"
 slug: session-0485
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-01
 updated: 2026-07-01
 last_agent: claude-session-0485

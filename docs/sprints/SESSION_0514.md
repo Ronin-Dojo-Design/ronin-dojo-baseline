@@ -2,7 +2,7 @@
 title: "SESSION 0514 — bow-out deferral guard"
 slug: session-0514
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-08
 updated: 2026-07-08
 last_agent: claude-session-0514

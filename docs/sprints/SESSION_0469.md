@@ -2,7 +2,7 @@
 title: "SESSION 0469 — S48 hostile-repo-review lean-out (next cruft band → DELETE manifest)"
 slug: session-0469
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-29
 updated: 2026-06-29
 last_agent: claude-session-0469

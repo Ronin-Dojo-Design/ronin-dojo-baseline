@@ -2,7 +2,7 @@
 title: "SESSION 0513 — durable email claim links (broken-link incident)"
 slug: session-0513
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-08
 updated: 2026-07-08
 last_agent: claude-session-0513

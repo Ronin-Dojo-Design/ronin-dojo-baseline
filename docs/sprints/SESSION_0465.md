@@ -1,6 +1,6 @@
 ---
 session: 465
-status: open
+status: closed
 ---
 
 # SESSION 0465 — Platform: security hardening + `apps/*` CI/deploy

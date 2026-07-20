@@ -2,7 +2,7 @@
 title: "SESSION 0476 — Close the loops: push-triggers for the roster, the router, and the Kanban backlog"
 slug: session-0476
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-06-30
 updated: 2026-06-30
 last_agent: claude-session-0474

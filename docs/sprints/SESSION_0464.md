@@ -1,6 +1,6 @@
 ---
 session: 464
-status: open
+status: closed
 ---
 
 # SESSION 0464 — Mammoth: Better Auth + staging deploy

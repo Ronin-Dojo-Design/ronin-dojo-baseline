@@ -60,14 +60,19 @@ plan scope.
   router. **Reserved: SESSION_0589** (`session-0589-feature-widget-plan`, claimed mid-0587;
   runs parallel with SESSION_0588 quality-suite review).
 
-### PL-002 — Reddit-Links-Ledger (RLL) + YouTube-Links-Ledger (YLL) intake ledgers — queued
+### PL-002 — Link-intake ledgers: Reddit (RLL) + YouTube (YLL) + ChatGPT (GPTLL) — queued
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20) — "noted as I was thinking about it";
-  flesh out in the SESSION_0589 planning session.
-- **The idea:** two new link-intake ledgers that feed/hydrate the goals-ledger the same way this
-  planning-ledger does: **Reddit-Links-Ledger** (`RLL-0NN`) and **YouTube-Links-Ledger**
-  (`YLL-0NN`) — captured links/threads/videos as raw planning material that graduates to PL/G
-  rows.
+  GPTLL added later same session; flesh out in the SESSION_0589 planning session.
+- **The idea:** three sibling link-intake ledgers that feed/hydrate the goals-ledger the same way
+  this planning-ledger does — captured links/threads/videos/transcripts as raw planning material
+  that graduates to PL/G rows:
+  - **Reddit-Links-Ledger** (`RLL-0NN`) — threads/posts.
+  - **YouTube-Links-Ledger** (`YLL-0NN`) — videos.
+  - **ChatGPT-Links-Ledger** (`GPTLL-0NN`) — ChatGPT brainstorming-session outputs/links.
+- **Specific 0589 input (operator):** there is **ChatGPT brainstorming work from the night before
+  (≈2026-07-19)** that needs to be **reviewed and queued** — it is the first GPTLL intake; the
+  0589 plan session reviews those brainstorm outputs and routes them to PL/G rows.
 - **Vault context (operator-stated, not repo-verified — vault is operator-side per ADR 0048):**
   stub folders for Reddit already exist in `RDD_Master_Vault`; the vault-consolidation +
   SOT-per-brand-vaults task is partially done / partially planned (G-023 vault-constellation
@@ -83,8 +88,13 @@ plan scope.
 - **The ask (operator's words, faithful):**
   1. **Embed AdminKanban** (the DB-backed loop-board — `KanbanCard`, G-003/G-007,
      `/app/loop-board`) *into* the State of the Dojo page.
-  2. **State becomes a ritual artifact:** RENDERED at bow-in (opening.md) and UPDATED at
-     bow-out (closing.md) — a ritual step, every session.
+  2. **State becomes a ritual artifact via a REUSABLE SKILL** (operator-pinned SESSION_0587):
+     one skill (working name `update-state-of-the-dojo` / `sotd`, mirroring the `seq-*` skill
+     pattern) that renders + publishes the projection, invoked as a **step in both rituals** —
+     `docs/rituals/opening.md` (bow-in: render current state) and `docs/rituals/closing.md`
+     (bow-out: update state). Today it's a bare script (`scripts/state-of-project.ts`, 0585) +
+     the projection protocol; it is NOT yet a skill and NOT yet a ritual step — this pins that
+     it should become both. (Ritual-step wiring is additive on 0584's just-rewritten rituals.)
   3. **Publish the umbrella State** onto the **RDD admin surface** with ALL brands + clients.
   4. **Then publish per-brand/client filtered State** onto EACH brand/client's own admin
      surface.

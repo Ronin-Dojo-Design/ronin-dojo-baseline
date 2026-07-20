@@ -2,7 +2,7 @@
 title: "SESSION 0457 — Operator-gated lineage Phase A: land Brian Truelson (WL-P2-21 clone cleanup → FI-001 send)"
 slug: session-0457
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-27
 updated: 2026-06-27
 last_agent: claude-session-0457

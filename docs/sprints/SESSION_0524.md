@@ -2,7 +2,7 @@
 title: "SESSION 0524 — WL-P2-46 WordPress belt backfill"
 slug: session-0524
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-10
 updated: 2026-07-10
 last_agent: codex-session-0524

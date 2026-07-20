@@ -44,8 +44,10 @@ Scope (read `docs/knowledge/wiki/planning-ledger.md` first):
   BBL admin surfaces → planning-ledger intake; phase 2 = changelog page for logged-in users). ONE
   platform module. Also wire the planning-ledger into `ledger-backlog.ts` + closing.md §6.7 router
   + `deferral-guard` prefixes (the deferred wiring).
-- **PL-002** — Reddit-Links-Ledger (`RLL`) + YouTube-Links-Ledger (`YLL`) intake → goals-ledger
-  hydration; repo-side vs vault-side decision + the vault-consolidation / SOT-per-brand thread.
+- **PL-002** — link-intake ledgers: Reddit (`RLL`) + YouTube (`YLL`) + **ChatGPT (`GPTLL`)** →
+  goals-ledger hydration; repo-side vs vault-side decision + the vault-consolidation / SOT-per-
+  brand thread. **Concrete first input: review + queue the ChatGPT brainstorming work from the
+  night of ~2026-07-19** (the first GPTLL intake).
 - **PL-003** — State of the Dojo as the `/app` admin landing (AdminKanban embed + ritual render at
   bow-in / update at bow-out + per-brand/client publish + admin-landing composition). G-023
   SOT-dashboard slice-2 continuation. Consumes PL-005 (skin law) + the per-skin masthead name.

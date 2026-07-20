@@ -744,7 +744,13 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix direction:** frontmatter-backfill sweep across historical SESSION files (mechanical,
   docs-only, one commit); until then projections should treat missing-status as unknown/legacy,
   not open.
-- **Status: OPEN.**
+- **Status: PARTIAL — SESSION_0587.** Frontmatter-backfill DONE for **21 pre-0575 sessions**
+  carrying a non-terminal status (20 `in-progress`/`open`/`pending` flipped → `closed` via a
+  vetted list-scoped script; SESSION_0500's missing `status:` line added). Live lanes
+  (0580/0581/0583/0585) + staged (0588/0589) untouched. **Remaining (parser-side, don't rewrite
+  files):** ~20 legacy `closed-full`/`closed-quick`/`closed-partial` variants (0221–0244, 0316)
+  are validly closed but the SOT-dashboard parser classifies only exact `closed` as done — teach
+  `scripts/lib/state-of-project-parse.ts` to map the legacy variants (0585 dashboard slice-2).
 
 ### D-052 — `/privacy/request` redirects authenticated users to `/` (untraced)
 

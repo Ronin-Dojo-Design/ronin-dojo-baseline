@@ -2,7 +2,7 @@
 title: "SESSION 0437 — E0 claim unification (P0–P4) + admin set-placeholder-avatar"
 slug: session-0437
 type: session--open
-status: in-progress
+status: closed
 created: 2026-06-23
 updated: 2026-06-23
 last_agent: claude-session-0437
