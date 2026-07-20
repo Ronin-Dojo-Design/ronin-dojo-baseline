@@ -843,3 +843,32 @@ or product nouns — never model names — but they are locked spellings for doc
   facing definitions).
 - **/rr (research-recommend)** — graphify prior-art query → recommendation → ledger route;
   "don't invent what the repo already has."
+
+### SESSION_0587 additions (process + portfolio terms)
+
+- **Planning Ledger (`PL-NNN`)** — the idea-intake queue ONE level above the goals-ledger:
+  Brian/Michael/Tony dump ideas/images/notes/needs; a `/pp` plan session graduates a PL row to a
+  `G-NNN` goal. Distinct from the goals-ledger (top-of-backlog goals) — PL is pre-plan raw intake.
+- **Link-intake ledgers — `RLL` / `YLL` / `GPTLL`** — sibling capture ledgers feeding the
+  planning-ledger: **RLL** = Reddit-Links-Ledger (threads), **YLL** = YouTube-Links-Ledger
+  (videos), **GPTLL** = ChatGPT-Links-Ledger (brainstorming-session outputs). IDs `RLL-0NN` etc.
+- **State of the Dojo** — the portfolio-status projection (sessions/goals/risks/needs-you) rendered
+  from ledgers + session frontmatter; **projection-only, ledgers stay SoT.** Per-skin masthead: it
+  is **"State of the Building"** under the MMB/Mammoth skin (house-language seam). The re-render is
+  a reusable skill (`update-state-of-the-dojo` / `sotd`) invoked as a step in both rituals.
+- **Skin invariant — "fixed hue, brand tint"** (ratified SESSION_0587, PL-005) — semantic tokens
+  (good/warn/crit) keep a recognizable hue across brands but each brand tints them toward its
+  palette within an accessibility-safe range. NOT frozen, NOT fully skinnable.
+- **Brand > Platform > Product** *(DIRECTION — ADR pending, PL-004; not yet a locked term)* —
+  operator's portfolio taxonomy: five **brands**, each holding multiple platforms, each holding
+  multiple products. Supersedes-in-intent ADR 0034's flat "product = brand token-swap." Do not
+  treat as canon until the PL-004 ADR ratifies it.
+- **Token-Cost-Tracker** *(pending build, PL-006)* — a visual UI/UX component surfacing
+  token/cost telemetry, to live on State of the Dojo + the Session-Summary-Brief.
+- **Session-Summary-Brief** — a lean per-session summary/report surface (a Token-Cost-Tracker host).
+- **Split push (deploy-unit push)** — pushing a contiguous history prefix so only the
+  deploy-triggering commits reach origin when intended; partitions a merged trunk at the
+  `vercel.json ignoreCommand` boundary (apps/web = BBL deploy) rather than all-or-nothing.
+- **Escalation valve** — the orchestrator rule to STOP (not force through) on merge conflict,
+  NO-GO/capped verdict, undocumented gate failure, schema change, or genuine ambiguity — keep
+  worktrees intact, record state, recommend a higher-tier rerun.

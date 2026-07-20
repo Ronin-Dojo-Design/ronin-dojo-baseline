@@ -4,8 +4,8 @@ slug: human-code-runbook
 type: runbook
 status: active
 created: 2026-07-18
-updated: 2026-07-19
-last_agent: claude-session-0574
+updated: 2026-07-20
+last_agent: claude-session-0587
 pairs_with:
   - docs/knowledge/wiki/core-values.md
   - docs/knowledge/wiki/agent-systems-map.md
@@ -56,6 +56,15 @@ them. Consolidated boundary rules: [agent-systems-map §4](../knowledge/wiki/age
 | Run gates, dev servers, local DB | yes | proposed: read-only queries first |
 | Touch secrets/credentials | never in plaintext (Keychain/env only) | never |
 | Send email / mutate CRM / financial actions | never without per-action authorization | never |
+| Author + run scripts (any language incl. Python) | yes — **shown before running**, vetted for malware/instability (SESSION_0587 corrected the earlier "no Python" over-read: the caution was always vet-for-malware, never a tool ban — [[operator-script-caution]]) | sandbox only |
+
+**Push strategy (SESSION_0587 — agent proposes, human authorizes):** when a merged trunk fails a
+gate, the agent may **propose a deploy-unit split push** — push the contiguous prefix whose commits
+touch no deploy-triggering paths (`apps/web`/`packages`/`bun.lock`/`package.json`/`vercel.json` for
+BBL; `clients/<product>` for a live-linked product), holding the deploy-triggering commit for its
+gate. The agent verifies the boundary (diff the paths, confirm no live Vercel link) and **holds for
+the operator's explicit per-push word** on each segment. Never force through on ambiguity — the
+**escalation valve** applies to pushes as to sweeps.
 
 ## Gated integration lanes (#233 template · MMB-D-018 goal)
 

@@ -163,6 +163,24 @@ plan scope.
 - **Design-law input to:** PL-003 (dashboard render) + the brand-skin pipeline (G-018 /
   brand-skins) + `design-system-doctrine`.
 
+### PL-006 — Token-Cost-Tracker visual component (State of the Dojo + Session-Summary-Brief) — queued
+
+- **Origin:** operator directive, SESSION_0587 (2026-07-20). Motivated by the Sonnet-cost
+  experiment telemetry this session recorded (lanes on Sonnet, orchestrator Fable→Opus).
+- **The ask:** a **visual UI/UX component** surfacing token/cost telemetry, rendered on **two
+  surfaces**: (1) the **State of the Dojo** dashboard (PL-003), and (2) the **Session-Summary-
+  Brief** (the lean per-session report surface). Shows per-session / per-model / per-lane token +
+  cost, trend over sessions.
+- **Open forks for 0589 to grill:** data source (where session token telemetry is captured
+  durably — SESSION frontmatter `telemetry:` field is the current seed; formalize a schema) ·
+  cost model (per-model $/token table; who maintains it) · whether it's a shared component reused
+  across both surfaces (AdminCollection-conformant) or two renders of one data feed · the
+  data-viz treatment (follow the `dataviz` skill — semantic-token palette, accessible).
+- **Depends on / relates to:** PL-003 (State of the Dojo — the host surface) + the session
+  `telemetry:` frontmatter convention started in SESSION_0587.
+- **Next step:** SESSION_0589 plan session — size it as a G-023 SOT-dashboard child (slice) or its
+  own goal.
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.
