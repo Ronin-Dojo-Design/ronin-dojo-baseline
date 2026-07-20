@@ -15,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
+import { EmptyList } from "~/components/common/empty-list"
 import { H3 } from "~/components/common/heading"
 import { Note } from "~/components/common/note"
 import { Prose } from "~/components/common/prose"
@@ -144,16 +145,39 @@ export function BjjCurriculumBrowser({ levels }: BjjCurriculumBrowserProps) {
           ))}
         </Stack>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {visibleItems.map(item => (
-            <CurriculumItemCard
-              key={item.id}
-              item={item}
-              beltColorHex={selectedLevel.rank?.colorHex}
-              onSelect={() => setSelectedItemId(item.id)}
-            />
-          ))}
-        </div>
+        {/* AUD2-7: a topic filter with zero matches used to strand users on a silent, blank
+            grid — same "reset" idiom as `community-feed.tsx`'s EmptyList (inline text-link
+            button, not a full CTA — there is nothing to create here, just a filter to clear). */}
+        {visibleItems.length === 0 ? (
+          <EmptyList>
+            {selectedTopic === ALL_TOPICS
+              ? `No items in ${selectedLevel.title.replace(/^BJJ\s+/, "")} yet.`
+              : `No ${selectedTopic} items in ${selectedLevel.title.replace(/^BJJ\s+/, "")}.`}
+            {selectedTopic !== ALL_TOPICS && (
+              <>
+                {" "}
+                <button
+                  type="button"
+                  onClick={() => setSelectedTopic(ALL_TOPICS)}
+                  className="text-primary underline-offset-2 hover:underline"
+                >
+                  Show all topics
+                </button>
+              </>
+            )}
+          </EmptyList>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {visibleItems.map(item => (
+              <CurriculumItemCard
+                key={item.id}
+                item={item}
+                beltColorHex={selectedLevel.rank?.colorHex}
+                onSelect={() => setSelectedItemId(item.id)}
+              />
+            ))}
+          </div>
+        )}
       </Stack>
 
       <Dialog open={!!selectedItem} onOpenChange={open => !open && setSelectedItemId(null)}>
