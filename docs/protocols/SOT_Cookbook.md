@@ -4,8 +4,8 @@ slug: sot-cookbook
 type: protocol
 status: active
 created: 2026-07-20
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-21
+last_agent: claude-session-0588
 pairs_with:
   - docs/protocols/WORKFLOW_6.0.md
   - docs/knowledge/wiki/agent-systems-map.md
@@ -60,6 +60,25 @@ here for the live table.
 - A staged `SESSION_NNNN.md` stub may carry an additive `recipe:` frontmatter key (e.g.
   `recipe: lane`) naming which card under `recipes/` it hydrates from at adopt — so the stub
   doesn't need the card's content re-pasted inline. See [`_template/SESSION_TEMPLATE.md`](../sprints/_template/SESSION_TEMPLATE.md).
+
+## The abstraction ladder — run → card → skill (climb in order, prove each rung first)
+
+New work does **not** start as a card or a skill. There are three rungs, and pre-building an upper
+one is the premature-abstraction trap the whole recipe system exists to avoid (`page-code-review.md`
+defers its `/page-review` skill "until the recipe runs clean on 2–3 pages" for exactly this reason):
+
+1. **Run it** — inline, or through the generic `epic-plan → orchestrator → lane → review-wave →
+   merge-wave` cards. First time / one-off. Most feature and migration lanes never leave this rung.
+2. **Card it** (`docs/protocols/recipes/*.md`) — *once the pattern proves reusable on a real run.*
+   The card is the source doc (persona pack + load-set + overlays + minimum-output contract).
+3. **Skill-ify it** (`.claude/skills/seq-*` pointing at the card) — **last**, only after the card
+   has run clean **2–3 times** and cheap dispatch is worth the maintenance.
+
+**The one exception — "recipe-is-the-deliverable":** when the reusable artifact *is* the point of the
+lane (not a byproduct), card it *as* you build it, on a concrete test case — e.g. `quality-suite.md`
+(SESSION_0588) was authored during its first run because the recipe was the deliverable. The skill
+(rung 3) still waits for 2–3 proven runs. **Litmus test:** if you can't name the concrete run that
+proved a card, you're on the wrong rung — run it first. Don't write `seq-<x>` before `<x>` has ever run.
 
 ## Escalation valve (every autonomous/overnight recipe carries this)
 
