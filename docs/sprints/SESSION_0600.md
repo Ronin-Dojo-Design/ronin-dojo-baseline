@@ -44,6 +44,7 @@ metrics demoted, first-run empty state); and a compact loop-board embed (this em
 AdminTODOist — do NOT revive a personal-todo surface, per ratified G-003).
 
 **Pinned decisions (SESSION_0599 grill — do NOT re-open):**
+
 - Quick-action surface = **grid launcher + short carousel** (both). Grid = Command Deck bento; carousel
   = `components/common/carousel.tsx` for the 5 actions.
 - Taxonomy = the **existing 7-group `ADMIN_SECTION_GROUPS` SOT** — do NOT fork a parallel taxonomy.
@@ -60,6 +61,7 @@ a which-user pick — not a zero-arg quick action). RDD-only actions (add-client
 ship in `apps/web`.
 
 **Owned files (disjoint set):**
+
 - `apps/web/app/app/page.tsx` — thin auth-gate + compose the shell.
 - `apps/web/app/app/_landing/*` (NEW) — `dashboard-landing.tsx` (shell) · `quick-action-carousel.tsx` ·
   `app-quick-actions.ts` (config) · quick-action grid.

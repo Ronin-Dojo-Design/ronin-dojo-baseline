@@ -2,7 +2,7 @@
 title: "SESSION 0599 — PLAN: /app admin-surface consolidation (landing shell + nav + quick-actions + AdminCollection sweep)"
 slug: session-0599
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0599
@@ -11,6 +11,7 @@ lane: repo
 recipe: epic-plan
 goal_ids: [G-026]
 tickets: []
+next_session: docs/sprints/SESSION_0600.md
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
   - docs/sprints/SESSION_0593.md
@@ -73,9 +74,11 @@ desktop sidebar accordion + mobile routes through `/app/sections`; keep `BottomN
 
 ### Drift logged
 
-- **D-052 (proposed):** ADR 0045 D5 (lines 83–86) claims "~29 kit pages" + names media/organizations/
-  claims as non-kit stragglers — all three are now conformed onto `AdminCollection`. Count is stale;
-  real remaining ≈ 19–21. One-line ADR note queued at close (route via drift-register).
+- **ADR 0045 D5 count is stale** (lines 83–86: "~29 kit pages" + names media/organizations/claims as
+  non-kit stragglers — all three are now conformed onto `AdminCollection`; real remaining ≈ 19–21). The
+  correction is **owned by G-026 WS-4** (the sweep lane amends the ADR D5 count at its close) — folded
+  into the goal, **not** minted as a standalone `D-NNN` drift row, to avoid a racing ledger-ID mint
+  across the three parallel worktrees (0593/0598/0599). Re-evaluate as a drift row only if it outlives G-026.
 
 ## Petey plan
 
@@ -143,7 +146,7 @@ Stand up G-026 (admin-surface consolidation) as an executable fan-out: 6 workstr
   mount) · `/app/events` add missing index. Route renames add matching `config/app-redirects.ts` 308s.
 - **Depends on:** WS-1 (beta retirement follows Command Deck promotion).
 
-#### WS-6 — `packages/ui-kit` extraction (DEFERRED)
+#### WS-6 — `packages/ui-kit` extraction (DEFERRED — G-026 child, gated on SESSION_0598)
 
 - **Agent:** Giddy (slice) → Cody.
 - **What:** extract `Carousel` + `QuickAction` contract to `packages/ui-kit` (inline arrow buttons +
@@ -219,3 +222,106 @@ Grill outcome + WS-1 spec + the Giddy architecture notes (shell = slot compositi
 `link`/`trigger` union; permission-gate the action set at config-build time). Confirm the
 merge-vs-keep-1:1 naming call is NOT needed for WS-1 (it's a Batch-A call). Build against placeholder
 0593 panel slots; do not create 0593's route dirs.
+
+## What landed
+
+- **/rr fan-out** (Petey census · Giddy architecture · Desi UX — 3 real subagents). Headline: the
+  admin surface is ~80% built — `ADMIN_SECTION_GROUPS` (7-group tested SOT), the beta **Command Deck**
+  tile-grid launcher, and the `AdminCollection` frame all already exist; **ADR 0045 D5 is stale**
+  (media/orgs/claims conformed → ~19 hand-rolled tables remain, not ~29).
+- **4 forks resolved** (operator MC grill): grid+carousel · keep-7-groups+merges · G-026-owns-sweep ·
+  ratify-split+mint-G-026+amend-PL-003.
+- **G-026 minted** — 6-workstream admin-consolidation epic; ADR 0045 D5's sweep finally has a goal row.
+- **SESSION_0600 staged** (`recipe: lane` WS-1 build stub) + reservation branch
+  `session-0600-admin-landing-shell` claimed off main.
+- **PL-003 p5 amended** + reciprocal cross-lane note into SESSION_0593. The 0593 session ran in
+  parallel and **mutually ratified** the boundary (its Fork 6 = "Spun out → SESSION_0599 / G-026"; the
+  WS-3 panel import-path `components/app/state-of-dojo/*` is frozen from both sides).
+- Goal reached: yes — executable fan-out + one staged build stub, no product code.
+
+## Decisions resolved
+
+- Quick-action surface = grid launcher (Command Deck) + short carousel (`carousel.tsx`) — both.
+- Taxonomy = evolve the existing 7-group `ADMIN_SECTION_GROUPS` SOT (no parallel fork) + small merges.
+- Conformance sweep owned by G-026, staged as sequential batch-children (not a big-bang, not this session).
+- 0593/0599 boundary ratified: 0593 = read-projection panels behind a frozen import-path; 0599 = shell.
+- G-NNN = **G-026** (new goal, not nested under G-023).
+
+## Files touched
+
+| File | Change |
+| --- | --- |
+| `docs/knowledge/wiki/goals-ledger.md` | + G-026 row (6-workstream epic) + `last_agent` stamp |
+| `docs/knowledge/wiki/planning-ledger.md` | PL-003 p5 amended (landing shell → G-026/0599) + stamp |
+| `docs/sprints/SESSION_0599.md` | this plan (fan-out + grill outcome + close) |
+| `docs/sprints/SESSION_0600.md` | staged `recipe: lane` WS-1 build stub |
+| `docs/sprints/SESSION_0593.md` *(sibling, not committed here)* | reciprocal cross-lane note appended (its owner committed it) |
+
+## Verification
+
+| Command / smoke | Result |
+| --- | --- |
+| `git diff main..HEAD --stat` | 4 docs files, +382/-2 — docs-only (no `apps/web`, no deploy) |
+| task-log gate (`awk … grep -c`) | 2 (≥1 ✓) |
+| `bun scripts/deferral-guard.ts SESSION_0599.md` | clean after WS-6 line got its G-026 ref (see evidence) |
+| ledger isolation | goals-ledger + planning-ledger diffs = my edits only (no sibling lines swept) |
+
+## Reflections
+
+- **The biggest win was research killing scope.** The brief read as "build a landing shell + carousel +
+  nav + a 29-page sweep." The /rr fan-out found the taxonomy SOT, the launcher, and the frame already
+  exist and D5 was stale — turning a greenfield into an *evolve* and shrinking the sweep by a third.
+  Dispatching Petey/Giddy/Desi before grilling paid for itself in one volley.
+- **The shared-checkout race was the real hazard, not the plan.** Three plan sessions in one working
+  tree; HEAD got switched under me mid-hold. Worktree isolation (`…-app-0599`) was the right fix and
+  the reason this close is safe. Lesson: parallel plan sessions want worktrees from the start, not just
+  parallel build lanes.
+- **Contract-first is what let 0593 and 0599 converge without a tug-of-war.** Freezing one interface
+  (the panel import-path + prop signature) was the entire coordination surface; both sides ratified the
+  same string independently.
+
+## Review log
+
+### SESSION_0599_REVIEW_01 — plan soundness
+
+- **Reviewed tasks:** SESSION_0599_TASK_01, SESSION_0599_TASK_02.
+- **Dirstarter docs check:** not applicable (plan/docs only; no baseline layer touched).
+- **Verdict:** the fan-out is research-grounded (3-subagent /rr), operator-ratified on all 4 forks, and
+  the one hard cross-lane dependency (WS-3 mount contract) is frozen + mutually ratified by 0593. No
+  product code, so no correctness surface. Risks R1–R3 named + mitigated (nav-only regroup avoids R2).
+- **Score:** 9.4/10 — clean, evidence-backed plan; −0.6 only because WS-4 merge-vs-keep-1:1 is a live
+  operator naming call before Batch A.
+- **Follow-up:** WS-1 build (`session-0600`, G-026 WS-1); 0593 lands skeleton panels before WS-3.
+
+## Hostile close review
+
+- **Giddy:** pass — merge-strategy converged via 0593's ratified frozen contract; worktree isolation
+  correct; no route-shadowing introduced (plan is nav-only).
+- **Doug:** pass — docs-only, diff verified 4 files, no runtime surface, no gates bypassed.
+- **Desi:** pass — UX lane first-class in the plan; grid-vs-carousel surfaced honestly, operator chose both.
+- **Kaizen aggregate:** 9.4/10 — a plan session that shrank its own scope with evidence.
+
+## ADR / ubiquitous-language check
+
+- ADR update **not required** this session (plan only). ADR 0045 D5's stale count is a documented note
+  owned by G-026 WS-4 (amended when the sweep lane closes) — no new/changed decision here.
+- Ubiquitous language **not required** — no new domain terms (reuses `AdminCollection`, `ADMIN_SECTION_GROUPS`,
+  `DashboardLanding`, `QuickAction`, mount-contract — all pre-existing or plan-scoped).
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0599 status→closed + `next_session` set + `last_agent` current; SESSION_0600 staged; goals-/planning-ledger stamped `claude-session-0599` |
+| Backlinks/index sweep | SESSION_0599 `pairs_with` = goals-ledger + SESSION_0593 + ADR 0045; wiki/index row added |
+| Wiki lint | `bun run scripts/wiki-lint.ts` ran in-worktree (bun, no node_modules) — **0 errors, 62 warnings, all pre-existing** (none in my files after fixing 2 blank-line warns in SESSION_0600) |
+| Kaizen reflection | yes — Reflections section present |
+| Hostile close review | SESSION_0599_REVIEW_01 (Giddy/Doug/Desi pass, 9.4) |
+| Code-quality gate (Class-A) | no Class-A custom code this session (plan/docs only) |
+| Runtime verification (Doug) | no runtime surface touched (plan/docs only) |
+| Evidence-artifact URL | n/a — no runtime surface touched |
+| Review & Recommend | yes — Next session = WS-1 (`session-0600-admin-landing-shell`) |
+| Memory sweep | none needed — `adr-0049-session-numbering` already records the shared-checkout HEAD-switch race + worktree-isolation mitigation (and already references this session's G-026 collision, logged by the 0598 lane). This session is a confirming instance, not a new lesson |
+| Next session unblock check | unblocked — WS-1 buildable against placeholder panel slots; only WS-4 Batch-A naming needs operator input, not WS-1 |
+| Git hygiene | branch `session-0599-admin-consolidation` (worktree `…-app-0599`); single push — hash reported at bow-out / see git log |
+| Graphify update | skipped — fresh worktree (separate/empty graph); runs on canonical checkout post-merge (0593 merge wave) |

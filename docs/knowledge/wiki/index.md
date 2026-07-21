@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-21
 author: Brian + Copilot
-last_agent: claude-session-0576
+last_agent: claude-session-0599
 ---
 
 # LLM Wiki Index
@@ -729,6 +729,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0577](../../sprints/SESSION_0577.md) | session--implement | closed — MMB G-021 loop 1/3: sanitized CRM tracer slices (lead-sheet ingest preview + dedupe, roster Lead Source, contact-attempt log 1/2/3), scratch-DB live UAT, Doug 9.6/10 (independent re-review 9.3, build re-verified at merge), merged via SESSION_0574 wave. |
 | [SESSION_0578](../../sprints/SESSION_0578.md) | session--plan | closed — G-022 opened (technique graph GA): grappling-arts scope amendment, GA bar incl. Wave 3, progress flip-blocking; Desi AUD2-1..12 audit; 3-lane fan-out (0579 data → 0580 progress → 0581 design/flip) + disjointness proof + paste-ready prompts; `fan-out-session-recipe.md` protocol. |
 | [SESSION_0597](../../sprints/SESSION_0597.md) | session--implement | closed — **Dispatched the SESSION_0589 fan-out to prod.** Reconciled 7 lanes (L1/0590 already done by a sibling → stood down; L2/L3 outstanding; plan-me/Codex routed out). Built L2/0591 (5 intake ledgers → aggregator/guard/router; parser 16/16) + L3/0592 (admins-only feature-widget → `PlanningIntake` table + AdminCollection triage, hand-authored migration, live-smoked via `DEV_LOGIN`) as sonnet Cody lanes; merged L1→L2→L3 (cherry-pick) → main `1b0945d7` → **BBL prod deploy Ready + Neon migrate applied**. Caught a false-green push-gate build (`\| tail` masked exit-1 + stale client). Completed L2's wiring (PL/RLL/YLL/GPTLL/DBS into `ledger-id-next`); new `prodsnap-refresh` recipe card; queued Desi review (0592 triage UX) + **PL-010** (FS-log repeat-offender sweep). Gotchas → memory, not FS. (SESSION_0579–0596 index backfill = pre-existing gap, not this session.) |
+| [SESSION_0599](../../sprints/SESSION_0599.md) | session--plan | closed — **`/pp` plan → G-026 `/app` admin-surface consolidation fan-out (WRITE side).** /rr (Petey census · Giddy architecture · Desi UX, 3 subagents) found the surface ~80% built — 7-group `ADMIN_SECTION_GROUPS` SOT + beta Command Deck tile-launcher + `AdminCollection` frame all exist; **ADR 0045 D5 stale** (media/orgs/claims conformed → ~19 tables, not ~29). 4 forks resolved (grid+carousel · keep-7-groups+merges · G-026-owns-sweep · ratify-split). Minted **G-026** (6-workstream epic); staged WS-1 (`session-0600-admin-landing-shell` reserved); amended PL-003 p5; ratified the 0593/0599 boundary (0593 = read-panels behind a frozen `components/app/state-of-dojo/*` import-path, 0599 = the shell) — mutually ratified by the parallel 0593. Ran in an isolated worktree (`…-app-0599`); merges in 0593's merge wave. Docs-only, push held→authorized. |
 
 ## Protocols
 
