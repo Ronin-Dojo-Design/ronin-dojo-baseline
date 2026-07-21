@@ -771,6 +771,34 @@ Read this section at bow-in instead of skimming every individual entry.
   in one call). Re-searched with errors surfaced before the SOT_Vault answer in the same session.
 - **Status:** mitigated (corrective recipe applied in-session; this entry is the durable record).
 
+### FS-0034 — Parallel plan session ran in the canonical checkout, stranding a live session's work
+
+- **Session:** SESSION_0593 (Claude). Caught live by the operator ("one was having colliding issues");
+  diagnosed by Giddy merge-strategy (read-only, ×2).
+- **Step failed:** a parallel PLAN lane (SESSION_0599 admin-consolidation) ran in the **canonical checkout**
+  (`/Users/brianscott/dev/ronin-dojo-app`) instead of its own worktree. It `git switch`ed the shared checkout
+  to its own branch while SESSION_0593 was live there with uncommitted edits to `SESSION_0593.md` — git carried
+  the dirty file onto 0599's branch, leaving 0593's branch empty and its work stranded on the wrong branch.
+  0599 also wrote a cross-lane note directly into 0593's SESSION file and left it uncommitted "for the owner."
+- **Root cause:** worktree isolation was treated as a build-lane nicety, not a law for *any* parallel lane.
+  The canonical checkout is one lane's home; switching it to another lane's branch strands whatever the home
+  lane hasn't committed. (0598, the RDD lane, did it right — its own `../ronin-dojo-app-0598` worktree — and
+  caused zero ripple, proving the rule.)
+- **Impact:** LOW — no work lost (recovered clean, commit `dc7ecc01`), caught pre-merge. But it cost a full
+  Giddy merge-strategy pass and a recovery runbook; the identical hazard is latent in every fan-out.
+- **Corrective action:** (a) this entry; (b) the rule — **every parallel lane, plan OR build, gets its own
+  `../ronin-dojo-app-NNNN` worktree; the canonical checkout never `git switch`es off its home lane's branch**
+  (already in `merge-wave.md` §Hard-guards + `fan-out-session-recipe.md`; 0599 bypassed it); (c) shared ledgers
+  are append-only with one merge owner + no per-lane `last_agent` bump; (d) cross-lane contracts travel as a
+  committed freeze the owner commits, never a dangling edit in another lane's file; (e) back up a dirty file
+  before dispatching any Bash subagent (workflow-over-dirty-tree clobber). Full teaching write-up:
+  [LR 0018](../learning/ddd/learning-records/0018-parallel-lanes-and-the-canonical-checkout-squat.md).
+- **Verification:** SESSION_0593 recovered onto its own branch + committed (`dc7ecc01`); per-lane worktrees
+  established (`git worktree list` shows 0593/0598/0599 each isolated); land order + append-only discipline
+  produced for the merge-wave.
+- **Status:** mitigated (worktrees re-isolated in-session; rule promoted to LR 0018 + this entry). Candidate
+  for PL-010's capture→prevention audit (is worktree isolation an *enforced* gate or only documented?).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
