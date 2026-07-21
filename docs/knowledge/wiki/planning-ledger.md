@@ -311,6 +311,12 @@ plan scope.
   "prove the fix is durable, don't just log it" instinct applied to the FS log.
 - **Goal row:** none yet (mint a `G-NNN` if it graduates to a program).
 
+### PL-011 — Branded client-onboarding artifacts + interactive forms — queued · own plan (G-028)
+
+- **Origin:** operator directive SESSION_0598 (uploaded RDD onboarding templates).
+- **Raw assets:** `docs/product/rdd/assets/{Initial_Client_Meeting_Template,Master_Service_Agreement_Template,NDA_Template}.docx`.
+- **Own plan-me stub:** `session-0602-rdd-onboarding-forms-plan`. **Goal row:** [G-028](goals-ledger.md).
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.

@@ -641,3 +641,22 @@ aggregator reads it with no new parser logic.
 - **Why:** the `/app` admin surface is the operator's daily console; ADR 0045 D5's conformance sweep
   was never given a goal row, and the landing/nav/quick-action shell is the reusable kernel pattern the
   RDD deploy needs. Consolidation over sprawl — "what would Apple do."
+
+### G-027 — RDD umbrella app deploy (ronindojodesign.com) + new-brand onboarding recipe family
+
+- **Status:** in-progress — P1 (planned SESSION_0598). **Lane:** rdd.
+- **Objective:** stand up `apps/rdd` (own DB/deploy/email/env/CI) + generalize the reusable new-brand
+  onboarding recipe family (RDD = exerciser #1).
+- **Children:** `session-0601-rdd-scaffold` (Slice A) → B1/B2/B3/C, staged one at a time.
+- **Cross-refs:** `new-brand-*` recipe cards; hosts the G-023 State surface; reuses the G-026 admin
+  shell (deferred WS-6 Carousel/QuickAction ui-kit extraction — RDD = the second consumer); ADR
+  0034/0038/0051; PL-005 + G-018 skin. (Minted at SESSION_0598 — G-026 was already taken by 0599.)
+
+### G-028 — Branded client-onboarding artifacts + interactive forms (RDD agency)
+
+- **Status:** proposed — own plan session (operator directive SESSION_0598). **Lane:** rdd.
+- **Objective:** brand + make interactive forms of the RDD onboarding templates (Initial Client Meeting /
+  MSA / NDA) + future ones, reusable across brands/clients; reuse-first (ONE uploader seam, existing form
+  primitives, existing entitlement gating — no 5th authz system).
+- **Origin:** operator uploads under `docs/product/rdd/assets/`. **Child:** `session-0602-rdd-onboarding-forms-plan`.
+- **Cross-refs:** `new-brand-interview-client.md` + `new-brand-intake.md`; PL-011.
