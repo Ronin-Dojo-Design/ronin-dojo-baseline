@@ -60,6 +60,10 @@ lifecycle recipe family deferred from the SESSION_0593 State-of-Dojo fan-out:
   *never pre-build a card/seq-skill for unrun work.* Author the `sotd` skill + WS-E only after the flow runs 2–3×.
 - **WS-E** is already scoped in the SESSION_0593 fan-out table (`recipes/component-lifecycle/{plan,design,build,review,wire}`
   + pointer lines in `epic-plan.md`/`lane.md`/`cody-preflight.md` + a SOT_Cookbook register).
+- **Umbrella North Star (PL-012):** this whole create-\* + lifecycle family is the **tooling substrate** for the
+  [Bubble Builder Bento Box North Star](../product/north-star-bubble-builder-bento-box.md) (`/cac` + CCC +
+  promote-to-live-component = the "Custom Card Component Catalog Creator" in miniature). Scope 0605 as a child
+  of PL-012's dedicated epic — grill the tooling, not the flagship product (that's PL-012's own session).
 
 ## Open forks to grill (do NOT pre-resolve)
 
