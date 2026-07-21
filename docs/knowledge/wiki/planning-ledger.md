@@ -99,7 +99,7 @@ plan scope.
     brainstorm already routed this session → PL-007 (GLL) + PL-008 (vault).
   - **Vault-consolidation / SOT-per-brand-vaults** thread split out → **PL-008** (own plan session).
 
-### PL-003 — State of the Dojo as the `/app` admin landing (AdminKanban embed + ritual render + per-product publish) — queued
+### PL-003 — State of the Dojo as the `/app` admin landing (AdminKanban embed + ritual render + per-product publish) — planned (SESSION_0593 → WS-A…E)
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20). Extends the G-023 SOT-dashboard
   slice-1 (0585 render, published via Artifact) toward the in-app admin surface.
@@ -207,7 +207,7 @@ plan scope.
 - **Design-law input to:** PL-003 (dashboard render) + the brand-skin pipeline (G-018 /
   brand-skins) + `design-system-doctrine`.
 
-### PL-006 — Token-Cost-Tracker visual component (State of the Dojo + Session-Summary-Brief) — queued
+### PL-006 — Token-Cost-Tracker visual component (State of the Dojo + Session-Summary-Brief) — planned (SESSION_0593 → WS-D)
 
 - **Origin:** operator directive, SESSION_0587 (2026-07-20). Motivated by the Sonnet-cost
   experiment telemetry this session recorded (lanes on Sonnet, orchestrator Fable→Opus).
