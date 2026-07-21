@@ -2,7 +2,7 @@
 title: "SESSION 0604 — Design-pass tooling: Desi-Design-Ledger + 3 design-pass recipe cards"
 slug: session-0604
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0604

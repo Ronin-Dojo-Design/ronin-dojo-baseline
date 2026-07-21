@@ -2,7 +2,7 @@
 title: "SESSION 0603 — BUILD: State-of-Dojo WS-A — projection kernel + State surface + freeze panel contract"
 slug: session-0603
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0603
