@@ -10,22 +10,24 @@ import type { badgeVariants } from "~/components/common/badge"
 import type { Phase, ProductLane } from "~/lib/state-of-dojo/parse"
 import type { VariantProps } from "~/lib/utils"
 
-/** The 4-stage ladder, in order: planned → in-flight → review → done. */
-export const PHASES: readonly Phase[] = ["planned", "in-flight", "review", "done"] as const
+/** The full 5-belt BJJ ladder, in order: planned → in-flight → review → held → done. */
+export const PHASES: readonly Phase[] = ["planned", "in-flight", "review", "held", "done"] as const
 
 /** Neutral work-board words (MMB skin + any non-belt context). */
 export const PHASE_LABEL: Record<Phase, string> = {
   planned: "Planned",
   "in-flight": "In flight",
   review: "Review",
+  held: "Held",
   done: "Done",
 }
 
-/** Belt-ladder words (dojo skins — RDD/BBL). Same 4 stages, belt vocabulary. */
+/** Belt-ladder words (dojo skins — RDD/BBL). The 5 BJJ belts; `held` = brown (ready-to-ship). */
 export const BELT_WORD: Record<Phase, string> = {
   planned: "White",
   "in-flight": "Blue",
   review: "Purple",
+  held: "Brown",
   done: "Black",
 }
 
@@ -38,6 +40,7 @@ export const PHASE_STOP_CLASS: Record<Phase, string> = {
   planned: "bg-background text-foreground border border-border",
   "in-flight": "bg-blue-700 text-white",
   review: "bg-violet-600 text-white",
+  held: "bg-[#7a5230] text-white dark:bg-[#a9784f]",
   done: "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900",
 }
 
@@ -49,6 +52,8 @@ export function phaseBadgeVariant(phase: Phase): BadgeVariant {
   switch (phase) {
     case "done":
       return "success"
+    case "held":
+      return "warning"
     case "review":
       return "info"
     case "in-flight":

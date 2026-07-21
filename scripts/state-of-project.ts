@@ -43,17 +43,19 @@ function loadFeed(): Feed {
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
 
-const PHASES: Phase[] = ["planned", "in-flight", "review", "done"]
+const PHASES: Phase[] = ["planned", "in-flight", "review", "held", "done"]
 const PHASE_LABEL: Record<Phase, string> = {
   planned: "Planned",
   "in-flight": "In flight",
   review: "Review",
+  held: "Held",
   done: "Done",
 }
 const BELT_WORD: Record<Phase, string> = {
   planned: "White",
   "in-flight": "Blue",
   review: "Purple",
+  held: "Brown",
   done: "Black",
 }
 const BRANDS: { key: ProductLane; label: string }[] = [
@@ -97,7 +99,7 @@ function workBoard(sessions: SessionDetail[]): string {
   return `<section class="work-board"><h2>Work board</h2><div class="columns">${cols}</div></section>`
 }
 
-/** One goal's belt-ladder: a 4-stop track (white/blue/purple/black); stops up to and including
+/** One goal's belt-ladder: a 5-stop track (white/blue/purple/brown/black); stops up to and including
  * the goal's current phase are "reached", the rest are dim. `dropped` goals have no natural
  * ladder position — badged separately, ladder rendered fully dim. */
 function beltLadder(g: GoalDetail): string {
@@ -132,7 +134,7 @@ function goalLadderTable(goals: GoalDetail[]): string {
     .join("")
   return `<table class="ladder-table"><thead><tr>
     <th>ID</th><th>Goal</th><th>Pri</th><th>Status</th>
-    <th>White</th><th>Blue</th><th>Purple</th><th>Black</th>
+    <th>White</th><th>Blue</th><th>Purple</th><th>Brown</th><th>Black</th>
   </tr></thead><tbody>${rows}</tbody></table>`
 }
 
@@ -211,7 +213,7 @@ h2{font-size:16px;margin:0 0 10px}
 h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
 .panel-meta{font-size:12px;color:var(--muted);margin-bottom:10px}
 .empty{color:var(--muted);font-size:13px;font-style:italic;margin:4px 0}
-.columns{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.columns{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 .col h3{display:flex;align-items:center;gap:6px}
 .count{background:var(--line);border-radius:10px;padding:1px 7px;font-size:11px;color:var(--ink)}
 .cards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-height:24px}
@@ -234,6 +236,7 @@ h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .stop-planned{background:#fff;color:var(--ink);border:1px solid var(--line)} /* white belt: 1px edge so it never disappears on the paper bg (Desi) */
 .stop-in-flight{background:#1d4ed8}
 .stop-review{background:#7c3aed}
+.stop-held{background:#7a5230}
 .stop-done{background:#111111}
 .lbl-neutral{display:none}
 [data-brand="mmb"] .lbl-belt{display:none}
@@ -250,8 +253,9 @@ footer p{margin:4px 0}
 }
 @media (max-width:480px){
   .columns{grid-template-columns:1fr}
-  /* mobile order in-flight-first (v3 mock): triage what's moving before what's planned/done */
-  .col[data-phase="in-flight"]{order:-3}
+  /* mobile order: triage what's moving + what needs you (held) before planned/done */
+  .col[data-phase="in-flight"]{order:-4}
+  .col[data-phase="held"]{order:-3}
   .col[data-phase="review"]{order:-2}
   .col[data-phase="planned"]{order:-1}
   .col[data-phase="done"]{order:0}

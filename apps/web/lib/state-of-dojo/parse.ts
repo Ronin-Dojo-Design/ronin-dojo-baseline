@@ -19,8 +19,10 @@
 export type ProductLane = "rdd" | "bbl" | "mmb"
 
 /** The belt-ladder / work-board vocabulary shared by sessions and goals: white=planned ·
- * blue=in flight · purple=review · black=done. One vocabulary, two projections. */
-export type Phase = "planned" | "in-flight" | "review" | "done"
+ * blue=in flight · purple=review · brown=held · black=done. The FULL BJJ 5-belt ladder — `held`
+ * (brown) is the push-gate-held / ready-to-ship belt between review and black. One vocabulary,
+ * two projections. */
+export type Phase = "planned" | "in-flight" | "review" | "held" | "done"
 
 export type SessionDetail = {
   number: string
@@ -98,12 +100,14 @@ export function classifySessionProduct(rawLane: string | undefined): ProductLane
 
 const SESSION_DONE_RE = /^closed/i
 
-/** staged=planned, in-progress=in flight, closed(-full/-quick/-partial)=done — plus a `review`
- * stage for a session that's in-progress AND push-gate-held (awaiting the operator's word). */
+/** staged=planned, in-progress=in flight, closed(-full/-quick/-partial)=done — plus the `held`
+ * (brown) belt for a session that's in-progress AND push-gate-held (awaiting the operator's word);
+ * that's the ready-to-ship belt before black. Sessions don't use `review` (purple) — that stop is a
+ * goal-only ratification signal (see `bucketGoalPhase`). */
 export function bucketSessionPhase(status: string, pushGateHeld: boolean): Phase {
   const s = status.trim().toLowerCase()
   if (SESSION_DONE_RE.test(s)) return "done"
-  if (s === "in-progress") return pushGateHeld ? "review" : "in-flight"
+  if (s === "in-progress") return pushGateHeld ? "held" : "in-flight"
   return "planned" // staged | open | pending | unrecognized (defensive default)
 }
 

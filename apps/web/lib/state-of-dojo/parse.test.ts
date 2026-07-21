@@ -65,9 +65,9 @@ describe("bucketSessionPhase", () => {
     expect(bucketSessionPhase("pending", false)).toBe("planned")
   })
 
-  test("in-progress -> in-flight, unless push-gate held -> review", () => {
+  test("in-progress -> in-flight, unless push-gate held -> held (brown)", () => {
     expect(bucketSessionPhase("in-progress", false)).toBe("in-flight")
-    expect(bucketSessionPhase("in-progress", true)).toBe("review")
+    expect(bucketSessionPhase("in-progress", true)).toBe("held")
   })
 
   test("any closed* variant -> done", () => {
@@ -158,7 +158,7 @@ describe("parseSessionFile", () => {
       status: "in-progress",
       lane: "bbl",
       product: "bbl",
-      phase: "review", // in-progress + push-gate-held body marker
+      phase: "held", // in-progress + push-gate-held body marker → brown (held) belt
       pushGateHeld: true,
     })
   })

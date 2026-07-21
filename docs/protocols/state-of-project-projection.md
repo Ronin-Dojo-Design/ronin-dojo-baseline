@@ -38,7 +38,7 @@ same shared parsing idiom).
 
 | Layer | File | What it adds |
 | --- | --- | --- |
-| Pure parse/classify | `apps/web/lib/state-of-dojo/parse.ts` | Frontmatter field reader, session/goal detail types, product (brand-tab) classification, the 4-stage phase bucketer, push-gate/operator-pending/review-signal detectors. Self-contained (no `fs`, no network, no `server-only`, no React) — mirrors `apps/web/lib/loop-board/ledger-parse.ts`'s shape. **ONE core, three consumers** (script feed, HTML renderer, in-app `/app/state` feed — extracted to the shared lib SESSION_0603 WS-A). |
+| Pure parse/classify | `apps/web/lib/state-of-dojo/parse.ts` | Frontmatter field reader, session/goal detail types, product (brand-tab) classification, the 5-belt phase bucketer, push-gate/operator-pending/review-signal detectors. Self-contained (no `fs`, no network, no `server-only`, no React) — mirrors `apps/web/lib/loop-board/ledger-parse.ts`'s shape. **ONE core, three consumers** (script feed, HTML renderer, in-app `/app/state` feed — extracted to the shared lib SESSION_0603 WS-A). |
 | Feed CLI | `scripts/ledger-backlog.ts --json` | ADDITIVE `sessions` (frontmatter scan of `docs/sprints/SESSION_*.md`) and `goals` (G-rows from `goals-ledger.md`, reusing the ledger content that aggregator already reads) fields, alongside the pre-existing `items` array. The default (non-JSON) text output is untouched — byte-identical before/after this session. |
 | Renderer | `scripts/state-of-project.ts [outPath]` | Shells to `ledger-backlog.ts --json`, renders one self-contained HTML file (inline CSS + a small vanilla-JS tab switcher, no runtime deps) to `outPath` (default `out/state-of-project.html`, gitignored — **never commit a render**). |
 
@@ -65,7 +65,7 @@ shelling to `gh` a second time — one external call, one resilience/fallback pa
 Three tabs, matching the ratified v3 mock: **RDD** (the umbrella/default — anything not
 classified BBL or Mammoth: platform, governance, design-system, automation…), **BBL**, **MMB**.
 Each tab is a **filter**, not a merge — the RDD tab shows only rows classified `rdd`, not
-"everything." Belt-ladder segment colors (white/blue/purple/black) are IDENTICAL across all
+"everything." Belt-ladder segment colors (white/blue/purple/brown/black) are IDENTICAL across all
 three tabs; only the accompanying **word** swaps — RDD and BBL keep the literal belt words
 ("White"/"Blue"/"Purple"/"Black" — BBL's whole domain is belts, RDD is the house default),
 MMB shows neutral labels ("Planned"/"In flight"/"Review"/"Done"). Semantic severity colors
@@ -89,19 +89,20 @@ the real enum, and prefer the enum over the heuristic once it exists.
 
 ## The shared phase vocabulary (belt ladder AND work board)
 
-One 4-stage vocabulary drives both projections: **planned** (white) → **in-flight** (blue) →
-**review** (purple) → **done** (black). White segments get a 1px edge (`border:1px solid
-var(--line)`) so the white stage never visually disappears against the paper background (Desi's
-v3-mock note).
+One 5-belt vocabulary (the full BJJ ladder) drives both projections: **planned** (white) →
+**in-flight** (blue) → **review** (purple) → **held** (brown) → **done** (black). White segments get a
+1px edge (`border:1px solid var(--line)`) so the white stage never visually disappears against the paper
+background (Desi's v3-mock note). `held` = brown = the push-gate-held / ready-to-ship belt before black
+(SESSION_0604 operator correction — the ladder is 5 belts, not 4).
 
 - **Sessions:** `staged`/`open`/`pending` → planned; `in-progress` → in-flight, UNLESS the
-  session body names a held push gate (`detectPushGateHeld`) → review; any `closed*` status →
-  done.
+  session body names a held push gate (`detectPushGateHeld`) → **held** (brown); any `closed*` status →
+  done. Sessions don't use `review` (purple) — that's a goal-only ratification signal.
 - **Goals:** `open`/`proposed`/`pending` → planned; `in-progress` → in-flight, UNLESS the goal's
   body names a pending-ratification/review condition (`detectReviewSignal`) → review;
-  `done`/`landed`/`shipped` → done. `dropped` goals have no natural ladder position (the mock's
-  4 stops don't include one) — the renderer badges them separately and renders their ladder
-  fully dim rather than inventing a 5th stop.
+  `done`/`landed`/`shipped` → done. `dropped` goals have no natural ladder position (the ladder's
+  5 stops don't include one) — the renderer badges them separately and renders their ladder
+  fully dim rather than inventing a 6th stop.
 
 ## Dashboard sections and their scope
 
