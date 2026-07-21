@@ -2,10 +2,10 @@
 title: "SESSION 0593 — PLAN: State-of-Dojo /app admin landing + token-cost (L4)"
 slug: session-0593
 type: session--plan
-status: staged
+status: in-progress
 created: 2026-07-20
 updated: 2026-07-21
-last_agent: claude-session-0588
+last_agent: claude-session-0593
 sprint: S12
 lane: repo
 recipe: epic-plan
@@ -26,11 +26,11 @@ backlinks:
 
 ## Date
 
-<fill at adopt>
+2026-07-21
 
 ## Operator
 
-Brian + <agent>-session-0593
+Brian + claude-session-0593
 
 ## Goal
 
@@ -53,6 +53,16 @@ pre-resolve.
   State-of-Dojo projection.
 - Admin-landing composition must conform to the **AdminCollection one-surface law** (State + section
   cards + BBL v2 cards as ONE surface, not a god-page).
+  - **⚠ CROSS-LANE BOUNDARY (SESSION_0599 / G-026 — ratified by operator):** the landing **SHELL** is
+    owned by the admin-consolidation lane (**G-026**, the WRITE side), **not** this lane. **0593 delivers
+    CONTENT; 0599 owns the SHELL** — no landing tug-of-war. 0593's deliverable here = each read surface as
+    a **self-fetching async panel behind a FROZEN import-path contract** — proposed
+    `components/app/state-of-dojo/{state,component-catalog,card-catalog,cookbook}-panel.tsx`,
+    placement-agnostic (no outer margin/width), optional `{ compact? }`, owning its own Suspense + empty
+    state. G-026's `DashboardLanding` shell **mounts** these (WS-3, serial-gated on this freeze). **Action
+    needed: 0593 signs off / freezes the panel import-path + prop signature**, and lands
+    placeholder-returning skeleton panels first so 0599 has something importable. PL-003 point 5 amended
+    accordingly. (Ref: SESSION_0599 grill Fork 2/5; goals-ledger G-026.)
 - Ritual wiring: new render (opening) / update (closing) steps + the reusable **`sotd` skill**.
   **Operator CONFIRMED the intent (SESSION_0588): bow-in renders what's *planned*, bow-out renders
   what *changed* — grill the HOW, not the WHETHER.** The publish channel now EXISTS — `/preview-artifacts`
