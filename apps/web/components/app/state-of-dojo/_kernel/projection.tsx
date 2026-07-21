@@ -89,7 +89,7 @@ export function ProjectionCard({ card }: { card: BoardCard }) {
 
 export function WorkBoard({ cards, belts }: { cards: BoardCard[]; belts: boolean }) {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {PHASES.map(phase => {
         const inPhase = cards
           .filter(c => c.phase === phase)
@@ -103,9 +103,10 @@ export function WorkBoard({ cards, belts }: { cards: BoardCard[]; belts: boolean
               "space-y-2",
               // Mobile: triage what's moving first (in-flight → review → planned → done).
               phase === "in-flight" && "max-sm:order-1",
-              phase === "review" && "max-sm:order-2",
-              phase === "planned" && "max-sm:order-3",
-              phase === "done" && "max-sm:order-4",
+              phase === "held" && "max-sm:order-2",
+              phase === "review" && "max-sm:order-3",
+              phase === "planned" && "max-sm:order-4",
+              phase === "done" && "max-sm:order-5",
             )}
           >
             <div className="flex items-center gap-2">
@@ -150,7 +151,7 @@ export type LadderRow = {
   dropped?: boolean
 }
 
-/** One goal's 4-stop belt track; stops up to and including the reached phase are lit, the rest dim. */
+/** One goal's 5-stop belt track (white·blue·purple·brown·black); stops up to and including the reached phase are lit, the rest dim. */
 export function PhaseLadder({ row, belts }: { row: LadderRow; belts: boolean }) {
   const reachedIndex = row.dropped ? -1 : PHASES.indexOf(row.phase)
   return (
@@ -278,7 +279,12 @@ export function PanelSkeleton({ compact }: { compact?: boolean }) {
   return (
     <div className="w-full space-y-3 rounded-lg border bg-card p-4" aria-hidden="true">
       <Skeleton className="h-4 w-40" />
-      <div className={cx("grid gap-3", compact ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4")}>
+      <div
+        className={cx(
+          "grid gap-3",
+          compact ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
+        )}
+      >
         {Array.from({ length: compact ? 2 : 4 }, (_, i) => (
           <Skeleton key={i} className="h-24 w-full rounded-md" />
         ))}
