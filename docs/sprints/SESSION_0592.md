@@ -2,9 +2,9 @@
 title: "SESSION 0592 — L3: feature-widget (admins-only idea-dump → DB inbox → PL promotion)"
 slug: session-0592
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0592
 sprint: S12
 lane: bbl
@@ -146,4 +146,21 @@ Single source of truth is the frontmatter `status:` field.
 
 ### Goal
 
+**Desi Design Review of the `/app/planning-intake` triage surface + the feature-widget** (queued by
+operator, SESSION_0592 close). L3 landed functionally green (live smoke passed), but the AdminCollection
+triage table has UX polish gaps to review — behavior-preserving, no schema/logic change.
+
 ### First task
+
+Dispatch **Desi** on the `/app/planning-intake` surface (drive it via `/api/auth/dev-login` against
+prodsnap — the migration is applied there). Concrete findings to review:
+
+- **Body column truncates** — long idea text is clipped with no wrap / tooltip / row-expand (operator
+  flagged from the smoke screenshot). Decide: wrap, line-clamp+tooltip, or a detail-expand.
+- **"Submitted by" wraps** the long user identifier awkwardly — consider a shorter identity
+  (name/avatar over raw id/email) and column-width balance.
+- General AdminCollection column-sizing + responsive/mobile pass for this surface (parity with
+  `/app/tools` · `/app/techniques`).
+- Confirm the widget trigger placement (bottom-left) reads well in prod (no Next.js dev-overlay there).
+
+Desi returns a prioritized fix list for a Cody follow-up; no behavior/logic changes in her pass.

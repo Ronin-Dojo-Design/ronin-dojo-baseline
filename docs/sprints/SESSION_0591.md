@@ -2,9 +2,9 @@
 title: "SESSION 0591 — L2: ledger wiring (PL + RLL/YLL/GPTLL → aggregator + router + deferral-guard)"
 slug: session-0591
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0591
 sprint: S12
 lane: repo
