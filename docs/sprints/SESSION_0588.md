@@ -2,10 +2,11 @@
 title: "SESSION 0588 — merged-trunk code-quality suite over the 0583–0586 sweep range"
 slug: session-0588
 type: session--review
-status: in-progress
+status: closed
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0588
+next_session: session-0589
 sprint: S12
 lane: repo
 recipe: review
@@ -113,7 +114,7 @@ Single source of truth is the frontmatter `status:` field.
 | SESSION_0588_TASK_02 | done | Wrote `recipes/quality-suite.md` card (0584 format); lint-clean |
 | SESSION_0588_TASK_03 | done | Review wave (Desi/0583 + Doug/0586+0585 + Giddy/structural+seed) — verdicts below |
 | SESSION_0588_TASK_04 | done | Fixes landed (6 commits): docs (`f03daa62`), MMB (`f9ef17f1`), apps/web (`9d116d0e` + re-verify fix `b89960d0`) |
-| SESSION_0588_TASK_05 | done | Re-verify: Doug GO · live C5 touch PASS · delta-neutral test · fallow delta proven. Push: HELD (see below) |
+| SESSION_0588_TASK_05 | done | Re-verify (Doug GO · live C5 PASS · delta-neutral · fallow neutral) → rebased onto origin → **pushed `63f686c4` (BBL+MMB deploys fired)** |
 
 ## Fix pass — commits (on `session-0588-quality-suite-review`)
 
@@ -140,11 +141,16 @@ Single source of truth is the frontmatter `status:` field.
 | complexity findings | 23 | 23 | **redistributed**: `technique-graph.tsx` 9→7 (1003→895 LOC), export mass isolated to `graph-png-export.ts` |
 | `technique-graph.tsx` maxCRAP | 306 | 306 | **honest caveat:** the 306 fn is `TechniqueGraph` itself (component body) + 210 `handleNodeLayerKeyDown`, NOT the PNG-export — a further render-decomposition = ticket, not this pass |
 
-## Push gate — HELD (stacking reality)
+## Push — DONE (operator "push it")
 
-The "split by deploy unit" plan is **blocked by linear history**: the 0588 branch stacks on the **still-held 0587 trunk** (which contains the 0583 apps/web merge, held until `session-0551-test-infra` merges + apps/web local-green). My docs + MMB "free" commits sit ON TOP of that held apps/web trunk, and my own 2 apps/web commits also ride the BBL-prod/0551 hold. So **pushing this branch would push the held 0583 trunk + trigger BBL prod deploy** — exactly what 0587 held. Nothing pushes without the operator's word. Options for the operator: (a) hold the whole stack behind 0551 (unchanged from 0587); (b) I cherry-pick the 3 docs + 1 MMB commit onto a fresh branch off `origin/main` for a true free-lane push, leaving apps/web held.
-
-## Next session
+The 0587-trunk hold cleared mid-close: origin/main had advanced to `8b26c537` (0587 trunk merged — the
+0583 apps/web already on origin), so the stacking block dissolved. **Note: the 0551 fixture-ownership fix
+is still NOT on origin** — the 0587 trunk was pushed without it, waiving that condition; 0588's bar is the
+same delta-neutral standard (met). Rebased my 6 commits onto origin/main (zero conflicts — disjoint file
+sets), re-gated (typecheck ✓ · `next build` ✓ green in 3.0min · wiki-lint 0 err), and **pushed on the
+operator's explicit "push it": `8b26c537..63f686c4 HEAD -> main`** (clean fast-forward, no force). Post-rebase
+commit hashes: docs `69cbe7a3`, MMB `7cb7a112`, apps/web `d633d456` + `c9b5a453`, session records `f5e91d2f`/`63f686c4`.
+**Deploys fired automatically:** BBL prod (`blackbeltlegacy.com`, apps/web → C5 touch + PNG refactor LIVE) + Mammoth (facet-counts fix).
 
 ## Review wave — verdicts + scores
 
@@ -164,8 +170,89 @@ The "split by deploy unit" plan is **blocked by linear history**: the 0588 branc
 - **0583 scope = all P2 incl. PNG-export extraction.**
 - **D-051 → RESOLVED** (parser already correct); **D-053 opened** (skill-pair hardlink drift — durable-guard fix direction).
 
+## What landed
+
+- **Ran the merged-trunk quality suite** over the 0583–0586 trunk (24 code files) end-to-end and **conformed
+  it into a reusable recipe card** `docs/protocols/recipes/quality-suite.md` (0584 format) — this run = its test case.
+- **3-reviewer wave** (Desi/0583, Doug/0586+0585, Giddy/structural + seed `/rr`): no P1 blockers, all lanes SHIP.
+- **Fixes (6 commits, pushed `63f686c4`):** D-051 closed (parser already correct — verified) + D-053/D-054 opened ·
+  MMB facet-counts refresh-after-save + parity note + 2 P3s · apps/web PNG-export extraction + color-map
+  consolidation + inventory + `@why` + **C5 two-stage touch tap (ratified behavior change)** + re-verify un-export fix.
+- **Verified:** Doug GO · live C5 touch PASS (real Playwright) · delta-neutral apps/web test (1554/3, none in diff)
+  · fallow delta neutral · MMB gates green · build green.
+- **Pushed** (operator "push it") after the 0587 hold cleared → BBL prod + Mammoth deploys fired.
+
+## Files touched (this session's commits)
+
+- `docs/protocols/recipes/quality-suite.md` — NEW recipe card (merged-trunk quality suite).
+- `docs/knowledge/wiki/drift-register.md` — D-051 RESOLVED; NEW D-053 (skill hardlink), D-054 (graph god-component).
+- `docs/knowledge/wiki/custom-component-inventory.md` — 3 technique-graph component rows (Cody).
+- `apps/web/components/web/techniques/graph-png-export.ts` — NEW (extracted PNG-export hook).
+- `apps/web/components/web/techniques/technique-graph.tsx` — color-map consolidation + `@why` + C5 two-stage tap.
+- `clients/mammoth-build-crm/{app/app/page.tsx,app/app/sales/page.tsx,lib/actions.ts,lib/board-store-db.ts,lib/types.ts}` — facet-counts refresh + parity note + P3s.
+- `docs/sprints/SESSION_0588.md` — this record.
+
+## Reflections
+
+- **Verify a reviewer's ledger claim before editing the ledger.** Doug flagged D-051's "Remaining" note as
+  factually wrong; I confirmed against the actual parser (`/^closed/i`) + tests + corpus grep before closing it.
+- **The CRAP-306 assumption was wrong — the delta proved it.** Everyone (Desi, Cody, me) assumed the PNG-export
+  was the 306 mass; the fallow delta showed the export was CRAP-240 and the 306 is the component body itself.
+  A delta measurement is worth more than a plausible pre-assumption. → D-054.
+- **The re-verify caught what the build didn't.** typecheck + build were green, but the fallow delta caught a
+  +1 dead-code (an unused export left by the extraction). Gates ≠ delta-neutral; run the delta.
+- **Synthetic pointer events don't reach React — real touch does.** My `dispatchEvent(PointerEvent)` left the
+  `pointerType` ref stale ("mouse"), producing a false failure; Playwright `hasTouch` + `touchscreen.tap` was
+  the faithful vehicle and confirmed all C5 scenarios. For a ratified interaction change, emulate real input.
+- **Two sessions in one canonical checkout WILL collide.** The parallel 0589 planning session checked out its
+  branch in the shared tree, so my first commit landed on 0589's branch. Worktree isolation is not optional for
+  parallel lanes — I moved 0588 to `../ronin-0588` and the rest was clean. (See memory.)
+
+## Review log
+
+### SESSION_0588_REVIEW_01 — quality-suite review wave (Desi + Doug + Giddy)
+
+- **Range:** the 0583–0586 trunk + the fix diff. **Verdicts:** all SHIP, no P1. Scores — 0583 graph 7.0 /
+  curriculum 7.7 / tooltip 9.0 / utils 9.3; 0586 MMB 8.3 (facet 9.2–9.3); 0585 scripts 9.0. Covers TASK_03/04/05.
+- **Re-verify:** Doug GO (behavior-preservation A–E all PASS); live C5 touch PASS; delta-neutral test; fallow
+  neutral. Unresolved → ledger: D-053 (skill hardlink guard), D-054 (graph render-decomposition). C5 mobile
+  touch-parity was BUILT this session (not deferred). Seed dupe = leave (Giddy `/rr`, ADR 0038).
+
+## ADR / ubiquitous-language check
+
+- **No ADR this session.** ADR 0051 (portfolio taxonomy) landed via the parallel 0589 lane, not here. The
+  quality-suite recipe is a protocol card, not an architectural decision. No new domain terms.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Task log | 5 rows, all done (gate runner PASS). |
+| JETTY/frontmatter sweep | `drift-register.md` bumped `last_agent`→0588; recipe card + inventory carry fresh frontmatter. |
+| Backlinks/index sweep | `quality-suite.md` `pairs_with` page-code-review/review-wave/fallow-fix-loop/code-quality (reciprocal via SOT_Cookbook backlink). No new index rows needed. |
+| Wiki lint | `bun run wiki:lint` → **0 errors / 61 warnings** (all pre-existing R8 in unrelated files; none introduced). |
+| Kaizen reflection | Present (`## Reflections`, 5 notes). |
+| Hostile close review | Giddy structural pass ran IN the wave (PASS, no P1); Doug GO on the fix diff. Not re-run at close. |
+| Code-quality gate (Class-A) | `/code-quality` scored per file in the wave (technique-graph 7.0, etc.) — the session's core deliverable. |
+| Runtime verification (Doug) | Live C5 touch (real Playwright `hasTouch`) PASS; mouse path PASS (Claude_Browser); MMB gates green. |
+| Evidence-artifact URL | n/a — live verification was pass/fail behavioral assertions (no visual artifact worth publishing); screenshots were interim only. |
+| Review & Recommend | Next session written below. |
+| Memory sweep | Appended the parallel-checkout-collision lesson to `adr-0049-session-numbering` memory. |
+| Next session unblock check | Unblocked (follow-ups are ledgered D-053/D-054; not blocking). |
+| Git hygiene | branch `session-0588-quality-suite-review` (merged to origin/main via `HEAD:main`); pushed `63f686c4`; worktree `../ronin-0588` to be removed post-close-docs push. Secret scan clean. |
+| Graphify update | nodes=15190 · edges=33080 · communities=1742 (gate runner). |
+
 ## Next session
 
 ### Goal
 
+Follow-ups from the 0588 quality suite (both ledgered, low-priority — pick when the backlog surfaces them,
+or defer to the 0589-planned pipeline 0590–0596): **D-054** — extract `GraphNodeLayer` from `TechniqueGraph`
+to cut the CRAP-306 god-component (behavior-preserving, re-verify with the C5 touch pass); **D-053** — a durable
+`.agents`↔`.claude` skill-pair byte-identical guard (gate or bootstrap re-link). Neither blocks; the live
+backlog (`board-backlog.ts` / the 0590–0596 stubs) governs the actual next pick.
+
 ### First task
+
+Per the operator's `/goal` or the top board-backlog item at next bow-in. No dedicated stub minted — the
+0589 fan-out already staged 0590–0596; these two follow-ups live as D-053/D-054 in the drift-register.

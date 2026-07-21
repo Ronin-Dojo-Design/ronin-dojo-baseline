@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0588
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
@@ -788,4 +788,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   checkout):** either (a) add a `.agents`↔`.claude` byte-identical check to `wiki:lint` / a gate,
   or (b) a re-link step in `worktree-setup` / bootstrap that `ln -f`s all skill pairs after
   checkout. Decide in a governance/gates lane; canonical checkout can be re-linked locally meanwhile.
+- **Status: OPEN.**
+
+### D-054 — `technique-graph.tsx` `TechniqueGraph` is a god-ish interactive island (CRAP-306)
+
+- **Discovered:** SESSION_0588 (quality suite). After the PNG-export extraction (`graph-png-export.ts`,
+  −108 LOC, findings 9→7), the file's top complexity is **not** the export (that was CRAP-240, now
+  isolated) but the `TechniqueGraph` component body itself (CRAP-306, cyc 17) + `handleNodeLayerKeyDown`
+  (CRAP-210) — the component owns the interaction model (hover/select/C5-two-stage/roving-tabindex) +
+  render + layout in one function. Divergence from the design-system "no god-component" doctrine.
+- **Residual risk:** maintainability tax on the flagship BBL graph surface; every new interaction (like
+  C5) grows the 306 fn. Desi scored the file 7.0 (ship-with-debt), no correctness/leak risk.
+- **Fix direction:** extract the node-layer (the `visibleNodesWithTooltips.map` render + its
+  keyboard-nav + pointer handlers) into a `GraphNodeLayer` sub-component; behavior-preserving, re-verify
+  with the C5 touch pass. A focused refactor lane, NOT a quality-suite inline fix.
 - **Status: OPEN.**
