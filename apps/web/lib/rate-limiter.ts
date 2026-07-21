@@ -125,6 +125,14 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(15, "1 h"), // 15 post-image uploads per hour per member
       }),
+      // @added SESSION_0592 — the admins-only feature-widget idea-dump (`PlanningIntake`). IP-keyed
+      // like `report`/`feedback` (the pinned precedent); generous cap since it's an internal admin
+      // tool, not a public surface.
+      planning_intake: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(20, "1 h"), // 20 intake submits per hour per IP
+      }),
     }
   : null
 

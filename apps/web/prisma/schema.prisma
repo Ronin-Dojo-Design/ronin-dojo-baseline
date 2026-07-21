@@ -123,6 +123,7 @@ model User {
   verifiedItemCompletions    CurriculumItemCompletion[]  @relation("ItemVerifiedBy")
   createdContentAtoms        ContentAtom[]               @relation("AtomCreatedBy")
   assignedContentTasks       ContentTask[]               @relation("TaskAssignee")
+  createdPlanningIntakes     PlanningIntake[]            @relation("PlanningIntakeCreatedBy")
   programEnrollments         ProgramEnrollment[]
   classInstructorAssignments ClassInstructorAssignment[]
   substituteClassSessions    ClassSession[]              @relation("ClassSessionSubstituteInstructor")
@@ -4514,4 +4515,49 @@ model KanbanCard {
 
   @@unique([configId, source, sourceRef])
   @@index([configId, stage, order])
+}
+
+/// The kind of idea captured by `PlanningIntake` — mirrors the widget's category selector.
+enum PlanningIntakeCategory {
+  FEATURE
+  BUG
+  DESIGN
+  NOTE
+}
+
+/// Triage lifecycle for a `PlanningIntake` row. `PROMOTED` is set BY HAND once an admin has
+/// actually authored the corresponding `planning-ledger.md` PL row — this table is never
+/// auto-synced into PL rows (SESSION_0592 pinned decision).
+enum PlanningIntakeStatus {
+  NEW
+  TRIAGED
+  PROMOTED
+  DISMISSED
+}
+
+/// Admins-only front door to the planning ledger (SESSION_0592, SESSION_0589 grill): an
+/// always-available idea-dump widget (`components/web/feature-widget.tsx`) writes raw ideas here;
+/// an admin triage view (`/app/planning-intake`) lists them for review. Promotion into
+/// `planning-ledger.md` PL rows stays a deliberate SESSION step, never automated — the markdown
+/// ledger remains the SoT of *planned* work; this table is only the raw inbox.
+// @added   SESSION_0592 (2026-07-20)
+// @why     Admins-only idea-dump → DB inbox → session-time promotion to PL rows (G-024)
+// @wired   components/web/feature-widget.tsx, server/web/actions/planning-intake.ts, app/app/planning-intake/page.tsx
+model PlanningIntake {
+  id        String                 @id @default(cuid(2))
+  category  PlanningIntakeCategory
+  body      String
+  /// Full uploaded-image URLs — the shared `uploadMedia` R2 seam returns a public URL, not a raw
+  /// object key, matching the `ContentAtom.sourceAssets` convention ("URLs/paths to source media").
+  imageUrls String[]
+  status    PlanningIntakeStatus   @default(NEW)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  createdBy   User?   @relation("PlanningIntakeCreatedBy", fields: [createdById], references: [id])
+  createdById String?
+
+  @@index([status])
+  @@index([category])
+  @@index([createdById])
 }
