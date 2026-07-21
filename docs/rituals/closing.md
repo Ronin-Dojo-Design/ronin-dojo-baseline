@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-07-21
-last_agent: claude-session-0584
+last_agent: claude-session-0604
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -348,6 +348,7 @@ A session surfaces different kinds of findings; each has **one** canonical home 
 | Incomplete/dead wiring, storage gaps, FS-0001 handroll slips, dead plumbing | [`wiring-ledger.md`](../knowledge/wiki/wiring-ledger.md) | `WL-P{0,1,2}-N` |
 | Architectural divergence / two-sources-of-truth / spec-vs-impl drift | [`drift-register.md`](../knowledge/wiki/drift-register.md) | `D-NNN` |
 | SOP/protocol violation + its corrective action | [`failed-steps-log.md`](../protocols/failed-steps-log.md) | `FS-NNNN` |
+| Design / UX consistency, mobile, or accessibility finding (a Desi design pass) | [`desi-design-ledger.md`](../knowledge/wiki/desi-design-ledger.md) | `DES-NNN` |
 | Unclean close / crash / interrupted ritual | [`incidents.md`](../knowledge/wiki/incidents.md) | dated entry |
 | "Smoke pending" / manually-verified boundary the session shifted | [`manual-boundary-registry.md`](../knowledge/wiki/manual-boundary-registry.md) | registry row |
 | A test that broke + how it was fixed | [`test-fail-fix-ledger.md`](../knowledge/wiki/test-fail-fix-ledger.md) | dated entry |

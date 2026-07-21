@@ -38,6 +38,7 @@ here for the live table.
 | Clean up a diff (CRAP / dupes / dead code) | `/fallow-fix-loop` | measured complexity/dup deltas + re-verify |
 | Review a branch / diff for bugs | `/code-review` or `/review` | correctness + standards/spec |
 | Verify a landed build (Doug+Desi+Giddy) | [`seq-review-wave`](../../.claude/skills/seq-review-wave/SKILL.md) or [`recipes/review-wave.md`](recipes/review-wave.md) | parallel distinct-lens review on one commit |
+| Design consistency / mobile / UI-UX review of a surface | Desi + [`recipes/desi-design-review.md`](recipes/desi-design-review.md) · [`mobile`](recipes/mobile-optimization-pass.md) · [`ui-ux`](recipes/ui-ux-pass.md) | the **design** sibling of the code passes → findings to [`desi-design-ledger`](../knowledge/wiki/desi-design-ledger.md) (`DES-NNN`) |
 | Keep open PRs merge-ready | `/pr-fix-loop` ([loop](pr-review-score-fix-loop.md)) | review → score → fix, pause-on-merge |
 | Prove a change actually works | `/verify` + [`qa-runtime-verification`](qa-runtime-verification.md) | runtime evidence, not "it compiles" |
 | Emergency user-blocking prod bug | [`hot-fix-protocol`](hot-fix-protocol.md) | fast within the push gate, not past it |
