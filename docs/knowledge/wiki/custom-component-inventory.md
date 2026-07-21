@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-05-18
 updated: 2026-07-21
-last_agent: cody-session-0588
+last_agent: claude-session-0609
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -647,6 +647,17 @@ in-app feed — never duplicated. Projection-only law: never writes back to a le
 | `StatePanel` (real reference panel) | `apps/web/components/app/state-of-dojo/state-panel.tsx` | The live projection (work board · goal belt-ladders · cross-brand risk-watch + needs-you). Self-fetches via `fetch-state.ts`; maps sessions→`BoardCard`, goals→`LadderRow` (the source-specific glue the kernel stays free of). Mounted at `/app/state` + importable by 0599's `DashboardLanding`. |
 | `{ComponentCatalog,CardCatalog,Cookbook}Panel` (placeholders) | `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog,cookbook}-panel.tsx` | Placeholder-returning at the frozen path/signature so 0599 WS-3 mounts today; WS-B/C replace the body (copy `state-panel.tsx`'s Suspense+async shape). |
 | `fetchStateFeed` | `apps/web/lib/state-of-dojo/fetch-state.ts` | `server-only` runtime feed — lists `docs/sprints/` via the GitHub contents API + reads recent-80 from the raw CDN + reuses `fetchLedgerBacklog` for RISK/PR (mirrors `fetch-ledgers.ts`). Resilient (any source failure → honest empty); `revalidate`-cached 300s. |
+
+### Catalog panels (SESSION_0609 fanout — WS-B/C/D real panels on the frozen contract)
+
+The three placeholder panels replaced by real self-fetching panels, each composing the SAME `_kernel/*`
+(0 kernel edits) — the frozen contract proven reusable by 3 independent Cody lanes.
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `ComponentCatalogPanel` + `CardCatalogPanel` (WS-B) | `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog}-panel.tsx` | Projects the PWCC `/files` specs (`status`/`lifecycle`/`wiring`/`brands`) via `component-catalog-parse.ts` + `fetch-catalog.ts`. Cards = a FACET (`kind === "card"`) of the SAME feed via a shared `buildCatalogPanels` (ADR 0040 — one source, not two). `brands:` added to the `/files` SPEC_TEMPLATE; untagged → `rdd`. `bugs` stubbed until DBS (0596) lands. |
+| `CookbookPanel` (WS-C) | `apps/web/components/app/state-of-dojo/cookbook-panel.tsx` | Projects `SOT_Cookbook.md` router rows + `recipes/*.md` frontmatter via `cookbook-parse.ts` + `fetch-cookbook.ts`, **stage-tagged** (idea/plan/build/review/ship — same vocabulary as the preview artifact). Correctly did NOT force `BrandTabs` (product-lane-typed); reused the L1 `Tabs` primitive filtered by `PipelineStage` (`defaultStage` = first-non-empty). |
+| `TokenCostPanel` + `TokenCostChart`/`TokenCostSessionTable` (WS-D) | `apps/web/components/app/state-of-dojo/token-cost/*` | Reads per-session `telemetry:` frontmatter (`token-cost-parse.ts` + `fetch-token-cost.ts`; schema at `docs/protocols/state-of-dojo-telemetry-schema.md`) → a HAND-ROLLED SVG area chart (tokens-correct, a11y-complete, `role="img"` + accessible table twin — no `dataviz`/chart-lib exists; DES-002 tracks the missing shared primitive). `$/token` rates are labeled estimates. |
 
 ## How to update this file
 

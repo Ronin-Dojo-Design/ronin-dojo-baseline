@@ -2,7 +2,7 @@
 title: "SESSION 0608 — BUILD: State-of-Dojo WS-D — Token-cost tracker"
 slug: session-0608
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0608
