@@ -4,7 +4,7 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0587
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -549,9 +549,11 @@ aggregator reads it with no new parser logic.
 
 ### G-024 — Feature + feedback widgets for all sites (idea-intake program)
 
-- **Status:** planned — PL-001 plan session **ran (SESSION_0589)**; two executable lanes staged
-  (below), stage-for-later (operator dispatches on his word). Was plan-first (0587).
-- **Est:** 2 lanes (L2 wiring + L3 widget); MMB mount = fast-follow after kernel extraction.
+- **Status:** in-progress — **L2 + L3 SHIPPED to prod (SESSION_0597):** L2/0591 ledger-wiring +
+  L3/0592 admins-only `feature-widget`→`PlanningIntake` triage, both on `main`, BBL prod deploy Ready.
+  **Remaining:** MMB mount (kernel extraction), phase-2 changelog widget, and a Desi UX pass on the
+  0592 triage table (queued SESSION_0592). Plan ran 0589; was plan-first (0587).
+- **Est:** 2 lanes (L2 wiring + L3 widget) — **both done**; MMB mount = fast-follow after kernel extraction.
 - **Objective:** ONE platform intake module (RDD kernel law — module × per-product mount, not
   forks). Phase 1: **admins-only "feature-widget"** on the MMB and BBL admin surfaces — an
   idea-dump for Brian / Michael (MMB owner, admin) / Tony (BBL admin): ideas, images, notes,

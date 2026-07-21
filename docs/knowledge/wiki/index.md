@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-19
+updated: 2026-07-21
 author: Brian + Copilot
 last_agent: claude-session-0576
 ---
@@ -728,6 +728,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0576](../../sprints/SESSION_0576.md) | session--implement | closed — MMB vault-only: v1 Obsidian Bases layer over the LLLs (#246 loop 1/3) — cockpit + 4 views over 32 note-per-row projections + additive timesheet frontmatter; evidence for grills #238/#239. (SESSION_0574/0575 = parallel lanes, close separately.) |
 | [SESSION_0577](../../sprints/SESSION_0577.md) | session--implement | closed — MMB G-021 loop 1/3: sanitized CRM tracer slices (lead-sheet ingest preview + dedupe, roster Lead Source, contact-attempt log 1/2/3), scratch-DB live UAT, Doug 9.6/10 (independent re-review 9.3, build re-verified at merge), merged via SESSION_0574 wave. |
 | [SESSION_0578](../../sprints/SESSION_0578.md) | session--plan | closed — G-022 opened (technique graph GA): grappling-arts scope amendment, GA bar incl. Wave 3, progress flip-blocking; Desi AUD2-1..12 audit; 3-lane fan-out (0579 data → 0580 progress → 0581 design/flip) + disjointness proof + paste-ready prompts; `fan-out-session-recipe.md` protocol. |
+| [SESSION_0597](../../sprints/SESSION_0597.md) | session--implement | closed — **Dispatched the SESSION_0589 fan-out to prod.** Reconciled 7 lanes (L1/0590 already done by a sibling → stood down; L2/L3 outstanding; plan-me/Codex routed out). Built L2/0591 (5 intake ledgers → aggregator/guard/router; parser 16/16) + L3/0592 (admins-only feature-widget → `PlanningIntake` table + AdminCollection triage, hand-authored migration, live-smoked via `DEV_LOGIN`) as sonnet Cody lanes; merged L1→L2→L3 (cherry-pick) → main `1b0945d7` → **BBL prod deploy Ready + Neon migrate applied**. Caught a false-green push-gate build (`\| tail` masked exit-1 + stale client). Completed L2's wiring (PL/RLL/YLL/GPTLL/DBS into `ledger-id-next`); new `prodsnap-refresh` recipe card; queued Desi review (0592 triage UX) + **PL-010** (FS-log repeat-offender sweep). Gotchas → memory, not FS. (SESSION_0579–0596 index backfill = pre-existing gap, not this session.) |
 
 ## Protocols
 

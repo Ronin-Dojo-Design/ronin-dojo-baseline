@@ -4,7 +4,7 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0587
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
@@ -283,9 +283,30 @@ plan scope.
     scan→DBS-ledger append format + schedule (cron/launchd) + the L4 component's data contract.
 - **Goal row:** [G-023](goals-ledger.md) (State-of-Dojo host surface).
 
+### PL-010 — Failed-Steps ledger sweep: repeat-offender audit + durable-prevention mechanism — queued · own plan session
+
+- **Origin:** operator observation, SESSION_0597 (2026-07-21): *"that's a lot of Failed Steps… are we
+  just really good at capturing them but not doing anything about it?"* Direct evidence THIS session:
+  the **pipe-masks-exit-code** trap (already captured durably before) **recurred** and produced a
+  false-green build — capture ≠ prevention.
+- **The idea (to grill in the plan session — NOT pre-resolved):**
+  1. **Sweep all FS-NNNN entries for repeat offenders / clusters** — same root cause recurring under
+     different ids (build-gate honesty, migration flow, worktree bootstrap, etc.). Quantify recurrence.
+  2. **Diagnose the gap:** is `failed-steps-log.md` a write-only graveyard? For each mitigation, was it
+     enforced *durably* (a gate/hook/script) or only *documented* (prose a future agent must remember)?
+  3. **Design the capture→prevention promotion path:** which FS misses can become **enforced gates**
+     (e.g. a build-gate wrapper that captures the real `$?`; a bow-out gate that regenerates the Prisma
+     client after a schema lands) vs stay docs-only. A recurring FS is the trigger to promote.
+  4. **Define "the mitigation stuck":** how do we know an FS didn't recur after capture? (a recurrence
+     counter / a periodic self-audit).
+- **Note:** related to the abstraction-ladder doctrine (run → card → skill) — this is the same
+  "prove the fix is durable, don't just log it" instinct applied to the FS log.
+- **Goal row:** none yet (mint a `G-NNN` if it graduates to a program).
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.
+- [Failed-Steps Log](../../protocols/failed-steps-log.md) — the ledger PL-010 audits.
 - [Daily Bug Scan Ledger](daily-bug-scan-ledger.md) — the DBS findings ledger (PL-009).
 - [Petey Plan protocol](../../protocols/petey-plan.md) — the plan-session machinery.
 - [Loop-of-Loops](../../protocols/loop-of-loops-ledger-driven-sessions.md) — ledger-driven
