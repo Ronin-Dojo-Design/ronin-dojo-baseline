@@ -4,8 +4,8 @@ slug: session-0593
 type: session--plan
 status: staged
 created: 2026-07-20
-updated: 2026-07-20
-last_agent: claude-session-0589
+updated: 2026-07-21
+last_agent: claude-session-0588
 sprint: S12
 lane: repo
 recipe: epic-plan
@@ -54,6 +54,12 @@ pre-resolve.
 - Admin-landing composition must conform to the **AdminCollection one-surface law** (State + section
   cards + BBL v2 cards as ONE surface, not a god-page).
 - Ritual wiring: new render (opening) / update (closing) steps + the reusable **`sotd` skill**.
+  **Operator CONFIRMED the intent (SESSION_0588): bow-in renders what's *planned*, bow-out renders
+  what *changed* — grill the HOW, not the WHETHER.** The publish channel now EXISTS — `/preview-artifacts`
+  (landed 0589 wave) is exactly the "agent publishes via the Artifact tool" step the projection protocol
+  prescribes; it was the only missing piece (the render script + protocol shipped 0585, never wired into
+  `opening.md`/`closing.md`). The `sotd` skill is a **rung-3 abstraction** (SOT_Cookbook §"abstraction
+  ladder") — author it AFTER the ritual step runs 2–3 times, not upfront.
 - **GLL_Epic cards** (G-025 / PL-007): Kaizen + Giddy-Lessons render here as a **content type** —
   coordinate with the GLL plan (`session-0594`).
 - **DBS component** (PL-009 / `session-0596`): the Daily Bug Scan findings render as a **visual UI/UX
@@ -61,7 +67,8 @@ pre-resolve.
   Consume the DBS data contract defined by `session-0596`.
 - Token-cost (PL-006): telemetry schema (SESSION `telemetry:` frontmatter seed) · $/token cost model +
   owner · shared component vs two renders · dataviz treatment (`dataviz` skill, semantic-token palette).
-- D-051 parser fix: map legacy `closed-*` statuses → `done` in the state projection parser.
+- ~~D-051 parser fix~~ **RESOLVED SESSION_0588** — the projection parser already maps `closed-*` → `done`
+  (`state-of-project-parse.ts:97` `/^closed/i`, tested + corpus-verified); drift-register D-051 closed. Drop from scope.
 
 ## First task
 
