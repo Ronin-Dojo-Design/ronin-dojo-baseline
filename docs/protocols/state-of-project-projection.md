@@ -38,7 +38,7 @@ same shared parsing idiom).
 
 | Layer | File | What it adds |
 | --- | --- | --- |
-| Pure parse/classify | `scripts/lib/state-of-project-parse.ts` | Frontmatter field reader, session/goal detail types, product (brand-tab) classification, the 4-stage phase bucketer, push-gate/operator-pending/review-signal detectors. Self-contained (no `fs`, no network) — mirrors `apps/web/lib/loop-board/ledger-parse.ts`'s shape. |
+| Pure parse/classify | `apps/web/lib/state-of-dojo/parse.ts` | Frontmatter field reader, session/goal detail types, product (brand-tab) classification, the 4-stage phase bucketer, push-gate/operator-pending/review-signal detectors. Self-contained (no `fs`, no network, no `server-only`, no React) — mirrors `apps/web/lib/loop-board/ledger-parse.ts`'s shape. **ONE core, three consumers** (script feed, HTML renderer, in-app `/app/state` feed — extracted to the shared lib SESSION_0603 WS-A). |
 | Feed CLI | `scripts/ledger-backlog.ts --json` | ADDITIVE `sessions` (frontmatter scan of `docs/sprints/SESSION_*.md`) and `goals` (G-rows from `goals-ledger.md`, reusing the ledger content that aggregator already reads) fields, alongside the pre-existing `items` array. The default (non-JSON) text output is untouched — byte-identical before/after this session. |
 | Renderer | `scripts/state-of-project.ts [outPath]` | Shells to `ledger-backlog.ts --json`, renders one self-contained HTML file (inline CSS + a small vanilla-JS tab switcher, no runtime deps) to `outPath` (default `out/state-of-project.html`, gitignored — **never commit a render**). |
 
@@ -135,8 +135,16 @@ v3-mock note).
   it's historically long done (per `goals-ledger.md` G-004). Backfilling frontmatter across
   ~300 historical session files is out of scope for this slice — named here for whoever does
   that sweep.
-- **`/app/state` (slice 2) is a separate, ledgered build** — this protocol covers the script-only
-  feed + render; nothing here wires an in-app route.
+- **`/app/state` (slice 2) shipped in SESSION_0603 WS-A** — the in-app surface reuses the SAME pure
+  parse core (`apps/web/lib/state-of-dojo/parse.ts`) via a server-side feed
+  (`apps/web/lib/state-of-dojo/fetch-state.ts`) that reads `main` over HTTPS (mirrors
+  `lib/loop-board/fetch-ledgers.ts`), and a React projection kernel at
+  `components/app/state-of-dojo/_kernel/*`. **App-feed boundary (named, not a bug):** the Bun script
+  reads ALL local session files; the in-app feed lists `docs/sprints/` via the GitHub contents API and
+  reads the most-recent **80** from the raw CDN — covering every non-`done` session + the recent `done`
+  head (the same cap the work board's `done` column applies). Any fetch failure degrades that section to
+  an honest empty, never a crash. The 7-brand in-app umbrella stays deferred behind the RDD deploy
+  (SESSION_0598); `/app/state` on `apps/web` classifies into the three lanes the parse core produces.
 
 ## Regenerating
 

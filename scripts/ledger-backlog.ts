@@ -43,7 +43,7 @@ import {
   parseGoalsDetail,
   parseSessionFile,
   type SessionDetail,
-} from "./lib/state-of-project-parse"
+} from "../apps/web/lib/state-of-dojo/parse"
 
 const ROOT = resolve(import.meta.dir, "..")
 const ARGS = process.argv.slice(2)

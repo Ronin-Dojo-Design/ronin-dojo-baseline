@@ -4,7 +4,7 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/opening.md
@@ -297,6 +297,20 @@ the `/10` score (+ any hard-cap triggered) in the `## Full close evidence` table
 gold-standard bar on exactly the custom code the matrix exists to police (the kernel / card / loop-board
 kind of work), not Dirstarter-derived CRUD. Skip with a one-line "no Class-A custom code this session"
 when the diff is docs / config / thin-wrapper only.
+
+### 6d. Optional: render the State-of-Dojo projection (what *changed*)
+
+On-demand, operator-triggered — not a gate. Symmetric to the bow-in render: after the close lands,
+regenerate + publish the projection so the operator sees what *changed* this session (new/closed
+sessions, moved goal ladders, cleared/added risk + needs-you rows):
+
+```bash
+bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)
+```
+
+Publish via **`/preview-artifacts`** (re-publishing under the same Artifact updates the one URL in place).
+The in-app twin `/app/state` reflects `main` on its own `revalidate` window. Projection-only — never edits a
+ledger; if the render surfaces a stale status, fix it through the finding router (§6.7), not the renderer.
 
 ### 6.5. Review & Recommend (stage the next session)
 

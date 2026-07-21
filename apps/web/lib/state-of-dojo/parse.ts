@@ -1,14 +1,16 @@
 /**
- * state-of-project-parse.ts — pure parsing/classification for the "State of the Dojo"
- * projection (SESSION_0585, G-023 child — SOT dashboard slice 1).
+ * state-of-dojo/parse.ts — pure parsing/classification for the "State of the Dojo"
+ * projection (SESSION_0585 slice-1; extracted to the shared lib SESSION_0603 WS-A).
  *
- * Consumed by TWO callers:
- *   - `scripts/ledger-backlog.ts --json`  — additive `sessions` + `goals` fields
- *   - `scripts/state-of-project.ts`       — the HTML renderer
+ * ONE parse/feed/classify core, consumed by BOTH the render script and the app (no duplication):
+ *   - `scripts/ledger-backlog.ts --json`   — additive `sessions` + `goals` feed fields
+ *   - `scripts/state-of-project.ts`        — the standalone HTML renderer (Artifact)
+ *   - `apps/web/lib/state-of-dojo/fetch-state.ts` — the in-app `/app/state` runtime feed
  *
  * SELF-CONTAINED on purpose (mirrors `apps/web/lib/loop-board/ledger-parse.ts`): no `fs`,
- * no network, no React — the caller supplies raw file contents. Projection-only law: this
- * module NEVER writes back to a session file or ledger; docs/sprints + goals-ledger.md stay
+ * no network, no `server-only`, no React — the caller supplies raw file contents, so the same
+ * core runs under Bun (local fs) and in a React Server Component (GitHub-raw fetch). Projection-only
+ * law: this module NEVER writes back to a session file or ledger; docs/sprints + goals-ledger.md stay
  * the single source of truth. See `docs/protocols/state-of-project-projection.md`.
  */
 
@@ -127,7 +129,8 @@ export function detectPushGateHeld(body: string): boolean {
   return PUSH_GATE_RE.test(body)
 }
 
-const OPERATOR_PENDING_RE = /operator[^\n]{0,40}(?:pending|ratif)|(?:pending|ratif)[^\n]{0,40}\(operator\)/i
+const OPERATOR_PENDING_RE =
+  /operator[^\n]{0,40}(?:pending|ratif)|(?:pending|ratif)[^\n]{0,40}\(operator\)/i
 
 /** A row is tagged operator-pending (ratification/decision owed) — the "needs-you" feed's
  * second source. Distinct from `detectReviewSignal`: pending ≠ mid-review. */
@@ -215,7 +218,11 @@ const priFromTag = (s: string): GoalDetail["priority"] =>
 function statusAndPriority(body: string): { status: string; priority: GoalDetail["priority"] } {
   const m = body.match(/\*\*Status:?\*\*\s*([^*\n]+)/i)
   const raw = (m?.[1] ?? "").trim()
-  const status = raw.split(/\s[—–·]\s/)[0]?.trim().replace(/[·\s]+$/, "") || "open"
+  const status =
+    raw
+      .split(/\s[—–·]\s/)[0]
+      ?.trim()
+      .replace(/[·\s]+$/, "") || "open"
   return { status, priority: priFromTag(raw) }
 }
 

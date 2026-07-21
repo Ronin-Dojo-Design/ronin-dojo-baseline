@@ -4,7 +4,7 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: claude-session-0584
 pairs_with:
   - docs/rituals/closing.md
@@ -298,6 +298,21 @@ The opening ritual is done. From here forward, you are operating as Petey or Cod
 ## Optional: brief alignment check
 
 If anything in the previous SESSION file or the program plan looks stale or contradictory, raise it before starting work. Better to spend two minutes confirming than two hours building against the wrong understanding.
+
+## Optional: render the State-of-Dojo projection (what's *planned*)
+
+On-demand, operator-triggered — not a gate. To surface this session's landscape (planned sessions,
+goal ladders, risk-watch, needs-you) as a browsable dashboard, render + publish the projection:
+
+```bash
+bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)
+```
+
+Then publish that file via **`/preview-artifacts`** for one shareable URL (the agent-publishes-the-Artifact
+step). The live in-app twin is **`/app/state`** (mounts the same projection at runtime). Projection-only —
+reading `docs/sprints/*` + `goals-ledger.md`, never writing a ledger. See
+[`state-of-project-projection.md`](../protocols/state-of-project-projection.md). (The reusable `sotd` skill
+is deferred — author it after this step runs 2–3×.)
 
 ## What this ritual is NOT
 

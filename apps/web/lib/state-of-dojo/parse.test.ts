@@ -1,3 +1,4 @@
+// @ts-expect-error - bun:test is a Bun runtime module; @types/bun isn't a repo dep yet.
 import { describe, expect, test } from "bun:test"
 import {
   bucketGoalPhase,
@@ -10,7 +11,7 @@ import {
   frontmatterField,
   parseGoalsDetail,
   parseSessionFile,
-} from "./state-of-project-parse"
+} from "./parse"
 
 describe("frontmatterField", () => {
   const doc = `---\ntitle: "SESSION 0580 — G-022 Lane B"\nstatus: in-progress\nlane: bbl\nempty_field:\n---\n\n# body\n`
@@ -215,9 +216,11 @@ describe("parseGoalsDetail", () => {
   })
 
   test("a middle-dot-separated status (real ledger quirk) still isolates the status word", () => {
-    const dotFixture = ["### G-012 — Fixture-ownership module", "", "- **Status:** landed · P2 · SESSION_0551"].join(
-      "\n",
-    )
+    const dotFixture = [
+      "### G-012 — Fixture-ownership module",
+      "",
+      "- **Status:** landed · P2 · SESSION_0551",
+    ].join("\n")
     const [row] = parseGoalsDetail(dotFixture)
     expect(row).toMatchObject({ status: "landed", priority: "P2" })
   })

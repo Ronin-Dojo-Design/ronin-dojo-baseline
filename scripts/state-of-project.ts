@@ -22,7 +22,7 @@
 import { execFileSync } from "node:child_process"
 import { resolve } from "node:path"
 import type { Item } from "../apps/web/lib/loop-board/ledger-parse"
-import type { GoalDetail, Phase, ProductLane, SessionDetail } from "./lib/state-of-project-parse"
+import type { GoalDetail, Phase, ProductLane, SessionDetail } from "../apps/web/lib/state-of-dojo/parse"
 
 const ROOT = resolve(import.meta.dir, "..")
 const OUT_PATH = resolve(ROOT, process.argv[2] ?? "out/state-of-project.html")
