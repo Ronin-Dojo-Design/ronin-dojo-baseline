@@ -6,6 +6,13 @@ status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0603
+# seed example (SESSION_0608 backfill) — illustrative estimate, not reconciled against a real
+# usage banner; see docs/protocols/state-of-dojo-telemetry-schema.md.
+telemetry:
+  - model: claude-sonnet-5
+    input: 310000
+    output: 42000
+    costUsd: 1.56
 sprint: S12
 lane: repo
 lane_seq: WS-A

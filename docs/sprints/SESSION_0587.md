@@ -7,7 +7,28 @@ created: 2026-07-19
 updated: 2026-07-20
 last_agent: claude-session-0587
 next_session: session-0588
-telemetry: "lanes=Sonnet 5 (4×, ~1.56M subagent tok); orchestrator=Fable 5 → Opus 4.8 (Fable usage-limit mid-Giddy); Giddy rerun + sweep on Opus."
+# orchestrator (Fable 5 → Opus 4.8 mid-session model switch, see Operator note below) has no
+# recorded token count and is deliberately left out of the rows below, not fabricated.
+# Structured telemetry backfilled SESSION_0608 (docs/protocols/state-of-dojo-telemetry-schema.md)
+# from this session's own "What landed" per-lane totals; 90/10 input/output split is an estimate
+# (the original banners recorded only a combined total).
+telemetry:
+  - model: claude-sonnet-5
+    input: 497700
+    output: 55300
+    costUsd: 2.32
+  - model: claude-sonnet-5
+    input: 426600
+    output: 47400
+    costUsd: 1.99
+  - model: claude-sonnet-5
+    input: 230400
+    output: 25600
+    costUsd: 1.08
+  - model: claude-sonnet-5
+    input: 250200
+    output: 27800
+    costUsd: 1.17
 sprint: S12
 lane: repo
 goal_ids: [G-021, G-022, G-023]
