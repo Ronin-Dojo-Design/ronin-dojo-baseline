@@ -4,6 +4,7 @@ slug: <kebab-slug>
 type: file
 status: active
 lifecycle: <PLANNED | WIP | MVP_LIVE | STABLE | DEPRECATED>
+brands: <rdd | bbl | mmb — comma-separated if more than one, e.g. "rdd, bbl"; omit/blank = rdd umbrella>
 created: <YYYY-MM-DD>
 updated: 2026-07-09
 author: Brian + <agent>
