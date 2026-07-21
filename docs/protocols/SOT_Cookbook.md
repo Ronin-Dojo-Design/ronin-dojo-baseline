@@ -46,6 +46,7 @@ here for the live table.
 | Merging/pushing a branch, gate ladder G0→G4 | [`recipes/merge-wave.md`](recipes/merge-wave.md) | absorbs `giddy-merge-strategy.md`'s gates |
 | Research first, recommend, don't build | [`seq-research-recommend`](../../.claude/skills/seq-research-recommend/SKILL.md) + [`review-recommend`](review-recommend.md) | graphify prior-art before proposing anything new |
 | Stand up a new client product | `/new-client-recipe` | own DB + brand, monorepo (ADR 0034/0038) |
+| Stand up a new brand/client app deploy (plan-first) | [`recipes/new-brand-setup.md`](recipes/new-brand-setup.md) → [intake](recipes/new-brand-intake.md) · [onboarding](recipes/new-brand-onboarding.md) · interviews: [design](recipes/new-brand-interview-design.md)/[business](recipes/new-brand-interview-business.md)/[client](recipes/new-brand-interview-client.md) | own DB+deploy+brand; first-party `apps/*` or client `clients/*` (ADR 0034/0038/0051); RDD = exerciser #1 |
 | Turn interviews into mission/motto/brand canon | **Brandon** ([role](../agents/brandon.md)) | separate confirmed truth from recommendations |
 | Repo feels heavy / duplicated / drifting | [`hostile-repo-review`](hostile-repo-review.md) | the repo-wide lean-out |
 
