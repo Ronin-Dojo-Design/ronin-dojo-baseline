@@ -156,6 +156,69 @@ Single source of truth is the frontmatter `status:` field.
 **Gates:** typecheck ✓ · oxlint ✓ · oxfmt (my files) ✓ · `next build` ✓ (exit 0, `/app/state` = `ƒ`) ·
 `wiki-lint` 0 err · parse.test 30/0 · feed data-path smoke ✓ (live GitHub → parse → lanes). **Push HELD.**
 
+## Files touched
+
+| Path | Change |
+| --- | --- |
+| `apps/web/lib/state-of-dojo/parse.ts` + `parse.test.ts` | moved from `scripts/lib/state-of-project-parse.*` (rename-tracked) |
+| `apps/web/lib/state-of-dojo/fetch-state.ts` (new) | server-only runtime feed (GitHub-raw, recent-80, resilient) |
+| `apps/web/components/app/state-of-dojo/_kernel/{contract,phase,projection}.{ts,tsx}` (new) | the projection kernel + frozen contract |
+| `apps/web/components/app/state-of-dojo/state-panel.tsx` (new) | real State panel |
+| `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog,cookbook}-panel.tsx` (new) | placeholder panels at the frozen path |
+| `apps/web/app/app/state/page.tsx` (new) | `/app/state` route |
+| `scripts/{state-of-project,ledger-backlog}.ts` | repoint parse-core import to the moved lib |
+| `docs/rituals/opening.md` · `closing.md` | on-demand render step (planned / changed) |
+| `docs/protocols/state-of-project-projection.md` | parse-core path + app-feed boundary note |
+| `docs/knowledge/wiki/custom-component-inventory.md` · `index.md` | kernel inventory + session row |
+
+## Full close evidence
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS (5 rows, all done) |
+| Typecheck | PASS (`next typegen && tsc --noEmit`) |
+| Lint (oxlint) | PASS (clean on touched dirs) |
+| Format (oxfmt) | PASS (my files; 2 pre-existing technique-graph drift left untouched) |
+| Build | **PASS — `next build` exit 0, `/app/state`=`ƒ`** (run pre-commit; the bow-out gate runner diffs the *working tree*, which is clean post-commit, so it misreports "docs-only" — known `bow-out-gate-runner-diffs-working-tree`) |
+| wiki:lint | 0 err / 65 warn (all pre-existing; my touched docs clean) |
+| Unit test | parse.test 30/0 (single-file); full `bun test` NOT run (live-Resend hazard, unmerged seam guard) — affected test covered |
+| Runtime | feed data-path smoke ✓ (live GitHub contents+raw → parse → lanes rdd 17/bbl 8/mmb 3); RSC compiled by `next build` |
+| Graphify | worktree graph (nodes=15391) — canonical refresh runs post-merge |
+| Git state | branch `session-0603-sotd-kernel-state` (worktree `…-app-0603`) · clean · commit `f910d252` · **HELD at push gate** |
+| Secret scan | PASS (clean) |
+| Custom-component (Class-A) | documented in `custom-component-inventory.md`; self-reviewed (verdict below) |
+
+## Hostile close review
+
+- **Self-review (Class-A kernel + frozen contract).** Verdict: **PASS.** Key risks + mitigations:
+  (1) *Contract ambiguity* → made explicit in `_kernel/contract.ts` (named export, RSC, `{ compact? }`,
+  Suspense-owning) so WS-3/WS-B/C build against one unambiguous surface. (2) *Kernel source-coupling* →
+  kept `_kernel/*` free of `SessionDetail`/`GoalDetail`; source mapping lives in `state-panel.tsx`, so the
+  catalog lanes genuinely reuse it. (3) *Runtime feed rate-limit* → one rate-limited GitHub-API listing call
+  (300s cache = 12/hr ≪ 60/hr floor), raw CDN for bodies, fully resilient. (4) *Lane collision* → own worktree,
+  `app/app/page.tsx` untouched (0599's), no catalog route dirs created (0599 R1 respected).
+- **Recommend** a full Doug + Giddy + Desi `seq-review-wave` on this commit **before** WS-B/C/D build against
+  the contract (available on request; not run here to keep the close lean).
+
+## ADR / ubiquitous-language check
+
+- **No new ADR.** Panel path + projection-framework framing were ratified session-scoped in SESSION_0593
+  (reversible; not ADR-worthy alone). Candidate ubiquitous terms now MATERIALIZED as code — "projection
+  kernel", "panel contract", "brand skin", "phase ladder" — promote to the glossary if WS-B/C reuse them
+  (they will). Inherited ADR 0051 (taxonomy) · ADR 0045 (dashboard≠list) · ADR 0040 (cards are components).
+
+## Reflections
+
+- **Freeze the contract as a FILE, not prose.** The lane's whole point was to unblock three downstream
+  lanes; `_kernel/contract.ts` (a real type + a spec docblock) is a harder, more discoverable freeze than a
+  paragraph in a SESSION doc — the thing 0593's collision taught (cross-lane-contract-by-loose-edit strands).
+- **Reuse-first paid the kernel's rent.** `fetch-state` is a near-clone of `fetch-ledgers`; the panels compose
+  L1 `Card`/`Badge`/`Tabs`; the parse core was already pure. The only genuinely-new code is the projection
+  vocabulary — which is exactly the Class-A surface worth writing by hand.
+- **Source-agnostic is the multiplier.** Keeping `_kernel/*` free of session/goal types is what makes it a
+  *framework* (WS-B/C reuse) instead of a one-off State page. The temptation to reach for `SessionDetail`
+  inside `WorkBoard` was the thing to resist.
+
 ## Next session
 
 ### Goal

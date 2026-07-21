@@ -4,7 +4,7 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-20
+updated: 2026-07-21
 last_agent: cody-session-0588
 pairs_with:
   - docs/sprints/SESSION_0398.md
@@ -629,6 +629,24 @@ subsection for them (the rest of this file is `apps/web`-only).
 | Component | Path | Notable behavior |
 | --- | --- | --- |
 | `LeadSourceFacet` | `clients/mammoth-build-crm/components/crm/LeadSourceFacet.tsx` | Filter-chip row for Lead Source; consumed by `/app/sales` roster + the `/app` pipeline board. Uses the ONE `normalizeLeadSource`/`leadSourceLabel` vocabulary — never a second source-label mapping. |
+
+## State-of-Dojo projection kernel (SESSION_0603, G-023 WS-A — the projection framework)
+
+The reusable "read a docs/ledger source → browsable cards with ONE vocabulary" kernel. **Source-agnostic**:
+`_kernel/*` imports no `SessionDetail`/`GoalDetail` — the source→row mapping lives in each panel, so WS-B
+(catalog) / WS-C (cookbook) compose the SAME kernel over their own source. The panel **contract is frozen**
+(`_kernel/contract.ts`): named export, self-fetching async RSC, placement-agnostic, `{ compact? }`, owns its
+own Suspense + empty. Pure parse core is shared (`lib/state-of-dojo/parse.ts`) across the render script + the
+in-app feed — never duplicated. Projection-only law: never writes back to a ledger/session.
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `ProjectionPanelProps` (frozen contract) | `apps/web/components/app/state-of-dojo/_kernel/contract.ts` | THE mount contract 0599 WS-3 + WS-B/C build against. `{ compact?: boolean }` — do NOT widen per-panel (a panel needing more context self-fetches it). Enumerates the 4 panel paths + their named exports. |
+| phase vocabulary + brand-skin registry | `apps/web/components/app/state-of-dojo/_kernel/phase.ts` | `PHASES`/`PHASE_LABEL`/`BELT_WORD` + `PHASE_STOP_CLASS` (belt colors **brand-INVARIANT** — only the word swaps per skin). `BRAND_SKINS` (PL-005 fixed-hue tint via `--sotd-accent`; 3 lanes today, extensible to the 7-brand umbrella behind the RDD deploy). `MASTHEAD_TITLE` per deploy-skin ("State of the Dojo" / "…Building"). |
+| projection UI (`ProjectionCard`/`WorkBoard`/`PhaseLadder`/`GoalLadders`/`GoalLadderTable`/`BrandTabs`/`ProjectionSection`/`PanelSkeleton`/`PanelPlaceholder`) | `apps/web/components/app/state-of-dojo/_kernel/projection.tsx` | Composes L1 `Card`/`Badge`/`Tabs`/`Skeleton`/`EmptyList`. `BrandTabs` = the only client boundary (the `Tabs` primitive); each tab statically wraps its content in `data-brand` + `--sotd-accent` (no JS for the tint). `WorkBoard` caps the `done` column to 12 (true count in the header). |
+| `StatePanel` (real reference panel) | `apps/web/components/app/state-of-dojo/state-panel.tsx` | The live projection (work board · goal belt-ladders · cross-brand risk-watch + needs-you). Self-fetches via `fetch-state.ts`; maps sessions→`BoardCard`, goals→`LadderRow` (the source-specific glue the kernel stays free of). Mounted at `/app/state` + importable by 0599's `DashboardLanding`. |
+| `{ComponentCatalog,CardCatalog,Cookbook}Panel` (placeholders) | `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog,cookbook}-panel.tsx` | Placeholder-returning at the frozen path/signature so 0599 WS-3 mounts today; WS-B/C replace the body (copy `state-panel.tsx`'s Suspense+async shape). |
+| `fetchStateFeed` | `apps/web/lib/state-of-dojo/fetch-state.ts` | `server-only` runtime feed — lists `docs/sprints/` via the GitHub contents API + reads recent-80 from the raw CDN + reuses `fetchLedgerBacklog` for RISK/PR (mirrors `fetch-ledgers.ts`). Resilient (any source failure → honest empty); `revalidate`-cached 300s. |
 
 ## How to update this file
 
