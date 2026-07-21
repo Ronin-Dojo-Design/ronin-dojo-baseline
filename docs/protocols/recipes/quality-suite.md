@@ -4,8 +4,8 @@ slug: recipe-quality-suite
 type: protocol
 status: active
 created: 2026-07-20
-updated: 2026-07-20
-last_agent: claude-session-0588
+updated: 2026-07-21
+last_agent: claude-session-0609
 pairs_with:
   - docs/protocols/page-code-review.md
   - .claude/skills/fallow-fix-loop/SKILL.md
@@ -64,6 +64,16 @@ deliberate, operator-ratified, logged exception (see Step 4).
 **Fix push is split by deploy unit** on a heterogeneous trunk: non-deploying lanes (docs, scripts) may
 push independently; app-code lanes ride their product's deploy + any standing hold. Never bundle a
 held app-code fix with a free docs fix into one push.
+
+## Fanout overlay — run it per-lane across a merged trio
+
+When N disjoint lanes have just landed (e.g. a `live-fanout-sweep` build trio), run this suite as a
+**per-lane review fanout** rather than one big pass: dispatch one reviewer subagent per lane via
+[`live-fanout-sweep.md`](live-fanout-sweep.md), each running this card's Step sequence (fallow baseline →
+`/code-quality` → `/fallow-fix-loop` → re-verify) on ITS lane's files only, plus a Desi lens (UI lanes) and
+[`hostile-close-review.md`](../hostile-close-review.md) on the merged commit. Findings route to their ledger
+(`desi-design-ledger` for design, `wiring-ledger`/etc. for code). One merge-sweep + one push gate at the end.
+This is the review sibling of the build fanout — same roster, same disjointness gate, same single push.
 
 ## Step sequence
 

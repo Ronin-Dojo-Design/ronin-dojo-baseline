@@ -63,8 +63,35 @@ is an operator-ratified, logged exception** (same contract as the code passes).
 
 ## Entries
 
-_No entries yet — the first design pass (a `desi-design-review` / `mobile-optimization-pass` /
-`ui-ux-pass` run) appends `DES-001` here._
+### DES-001 — WorkBoard grid stuck at 4 cols after the 5-belt change
+
+- **Surface:** `apps/web/components/app/state-of-dojo/_kernel/projection.tsx:92` (`WorkBoard`) — renders through both WS-B catalog boards.
+- **Pass:** review-wave (Desi, WS-B/C/D fanout)
+- **Severity:** P1
+- **Finding:** `held` was added to `PHASES` (5 belts) but the grid stayed `lg:grid-cols-4` and mobile-order covered only 4 phases, so the 5th column wrapped and `held` rendered first on mobile.
+- **Recommendation:** `lg:grid-cols-3 xl:grid-cols-5` + `held → max-sm:order-2` + fix "4-stop" comments.
+- **Status:** resolved
+- **Found in:** SESSION_0609 (fanout review). **Resolved in:** SESSION_0609 (`4edcb1b1`).
+
+### DES-002 — No shared chart / `dataviz` primitive; duplicated projection chassis + table idioms
+
+- **Surface:** `token-cost/token-cost-chart.tsx` (area) vs `components/admin/chart.tsx` (bar); `RecipeCard`/`ProjectionCard` chassis + the raw-`<table>` idiom repeated 2–3×.
+- **Pass:** review-wave (Desi)
+- **Severity:** P3 (YAGNI now — kernel frozen, exports neither)
+- **Finding:** two chart impls (neither an L1), and the card-chassis + plain-table idioms are copied across panels.
+- **Recommendation:** extract shared helpers when a 3rd consumer appears; accept the current hand-rolls (both are tokens-correct + a11y-complete).
+- **Status:** open
+- **Found in:** SESSION_0609. **Resolved in:** —
+
+### DES-003 — WS-B/C/D panel P2s (for the trio code-review session)
+
+- **Surface:** `token-cost-panel.tsx:45,55` · `token-cost-chart.tsx:42,85` · `cookbook-panel.tsx:84-96`.
+- **Pass:** review-wave (Desi)
+- **Severity:** P2
+- **Finding:** (1) token-cost `<ProjectionSection accent>` used with no `--sotd-accent` in scope → border falls back to `currentcolor` (dark foreground, not accent); (2) chart `preserveAspectRatio="none"` distorts the endpoint circle into an ellipse under X-stretch; (3) cookbook `TabsList` (5 triggers + count badges) likely overflows at 375px — needs a live mobile check.
+- **Recommendation:** (1) set `style={{"--sotd-accent":"var(--color-primary)"}}` on the root or drop `accent`; (2) drop the endpoint circle or make it a CSS-positioned dot; (3) scrollable `TabsList` or drop badges below `sm`. Plus P3 microcopy nits (singular/plural "1 components"; raw `(SESSION_0606)` in empty copy; compact-mode ladder parity with `state-panel`).
+- **Status:** open
+- **Found in:** SESSION_0609. **Resolved in:** — (assigned to the WS-B/C/D code-review session).
 
 ## Cross-references
 
