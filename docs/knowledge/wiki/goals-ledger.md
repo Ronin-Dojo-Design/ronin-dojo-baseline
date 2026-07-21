@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-21
-last_agent: claude-session-0587
+last_agent: claude-session-0599
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -590,3 +590,54 @@ aggregator reads it with no new parser logic.
   / PL-003 — cards render there)**, vault-as-site-mirror (PL-008).
 - **Tracked children:** `session-0594-gll-epic-plan` (own `/pp` plan → children + fan-out).
 - **Lane:** rdd (platform governance + agent-learning system).
+
+### G-026 — /app admin-surface consolidation (landing shell + nav + quick-actions + AdminCollection sweep)
+
+- **Status:** in-progress — P1 (planned SESSION_0599; the **interactive/WRITE side** of the `/app`
+  admin surface — the READ side is G-023 slice-2 / SESSION_0593)
+- **Est:** ~6 workstreams (1 spent: 0599 plan) — WS-1 shell · WS-2 nav · WS-3 mount-0593-panels
+  (serial) · WS-4 conformance sweep (5 batches) · WS-5 route hygiene · WS-6 ui-kit extraction (deferred).
+- **Objective:** consolidate the `/app` admin surface. Promote the beta **Command Deck**
+  (`app/app/beta/command-deck`) to the `/app` landing as the grouped launcher over the **existing**
+  7-group `ADMIN_SECTION_GROUPS` SOT (`config/admin-sections.ts`, SESSION_0501/FI-021 — evolve, never
+  fork a parallel taxonomy); build a `DashboardLanding` shell (slot composition, ADR 0045 D4 — the
+  landing is a COMPOSITION, not an AdminCollection) hosting a **quick-action grid + short carousel**
+  (`carousel.tsx`, `link`/`trigger` discriminated-union action contract), a compact loop-board embed,
+  and MOUNTED SESSION_0593 read-projection panels behind a **frozen import-path contract**; a
+  **collapsible desktop sidebar** accordion; and finish the **ADR 0045 conformance sweep** — ~19
+  hand-rolled kit tables in 5 batches (D5's "~29 pages" is **stale**: media/organizations/claims are
+  already conformed).
+- **Boundary (SESSION_0593 sibling — no landing tug-of-war):** 0593 owns the read-projection framework
+  + panels + the mount contract; G-026 owns the shell + nav + quick-actions + route consolidation and
+  **mounts** 0593's panels. **Re-scopes PL-003 point 5** (landing composition → 0599). The
+  shell/quick-action pattern is structured for `packages/ui-kit` extraction so the RDD deploy
+  (SESSION_0598) reuses it with its own action set (deferred WS-6, abstraction-ladder — one consumer
+  today).
+- **Tracked children:**
+  - **WS-1** `session-0600-admin-landing-shell` (staged `recipe: lane` stub): Command Deck promotion +
+    `DashboardLanding` shell + quick-action grid+carousel + landing hierarchy (actions/attention above
+    fold, metrics demoted, first-run empty state) + loop-board compact embed. AdminTODOist = the embed
+    (NO revived personal-todo surface — reviving re-opens ratified G-003).
+  - **WS-2** nav rationalization: collapsible sidebar accordion (`components/app/nav.tsx` →
+    groups collapsed except active) + mobile routes through `/app/sections`; keep `BottomNav` member
+    chrome + `Mab` create-only (no third create affordance). Parallel-safe with WS-1 (disjoint files).
+  - **WS-3** mount 0593 panels — **SERIAL**, gated on 0593 freezing the panel import-path + prop
+    signature (proposed: `components/app/state-of-dojo/{state,component-catalog,card-catalog,cookbook}-panel.tsx`,
+    self-fetching async, placement-agnostic, optional `{ compact? }`).
+  - **WS-4** conformance sweep (sequential, cheapest-first): **A** categories/tags/age-groups/skill-levels
+    (+ the merges: categories+tags→Taxonomy tabs, age-groups+skill-levels→Curriculum-lookups) · **B**
+    content/courses/programs/certificates · **C** subscriptions/subscription-tiers/pricing-plans/entitlements/memberships
+    (Stripe-adjacent — Doug/Desi review) · **D** roles/invites/leads/reports · **E** tournaments (own
+    table + roles/rule-sets subdirs — biggest) / lineage index grid / merch-orders / privacy-requests
+    (each own lane).
+  - **WS-5** route hygiene: retire `/app/beta` **after** Command Deck promotion · `/app/email`
+    demote to a Growth card (Resend pointer, no persistence) · `/app/profile` relocate off `/app`
+    (duplicate mount of `(web)/dashboard/*`) · `/app/events` add missing index.
+  - **WS-6** `packages/ui-kit` extraction — Carousel + QuickAction contract (inline arrow buttons,
+    token CSS — ui-kit has no Button/cx); **deferred** until SESSION_0598/RDD proves the second consumer.
+- **Lane:** repo. **Depends on:** ADR 0045 (frame) · ADR 0051 (kernel→brand→app) · SESSION_0501/FI-021
+  (`ADMIN_SECTION_GROUPS`) · G-003 (loop-board) · SESSION_0593 (mount contract). **Research:**
+  Petey/Giddy/Desi subagents (SESSION_0599).
+- **Why:** the `/app` admin surface is the operator's daily console; ADR 0045 D5's conformance sweep
+  was never given a goal row, and the landing/nav/quick-action shell is the reusable kernel pattern the
+  RDD deploy needs. Consolidation over sprawl — "what would Apple do."

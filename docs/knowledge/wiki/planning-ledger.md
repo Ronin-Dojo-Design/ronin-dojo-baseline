@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-07-20
 updated: 2026-07-21
-last_agent: claude-session-0587
+last_agent: claude-session-0599
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -119,6 +119,14 @@ plan scope.
   5. Compose all of it as the **initial `/app` admin dashboard LANDING** — clicking into the
      admin dashboard shows State of the Dojo **+** the admin section cards **+** BBL's v2 admin
      cards, as ONE admin landing dashboard.
+     - **⚠ AMENDED (SESSION_0599, G-026):** the landing **SHELL/composition** is now owned by the
+       admin-consolidation lane (**G-026 / SESSION_0599**, the WRITE side) — **not** PL-003/0593. 0593
+       delivers each read surface (State-of-Dojo / component-catalog / card-catalog / cookbook) as a
+       **self-fetching async panel behind a frozen import-path contract**
+       (`components/app/state-of-dojo/{…}-panel.tsx`, placement-agnostic, optional `{ compact? }`);
+       G-026's `DashboardLanding` shell **mounts** them. **No landing tug-of-war: 0593 delivers
+       content, 0599 owns the shell.** 0593's remaining scope = the projection framework + panels +
+       the mount contract (freeze the import-path + prop signature for WS-3).
 - **Relationship:** this IS the SOT-dashboard **slice 2** (`/app/state`, ledgered by 0585) PLUS
   admin-landing composition + AdminKanban embed + per-product publish + ritual wiring. Goal row:
   [G-023](goals-ledger.md) (SOT dashboard) — propose G-023 children or a dedicated G-row at plan
