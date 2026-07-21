@@ -2,10 +2,10 @@
 title: "SESSION 0591 — L2: ledger wiring (PL + RLL/YLL/GPTLL → aggregator + router + deferral-guard)"
 slug: session-0591
 type: session--implement
-status: staged
+status: in-progress
 created: 2026-07-20
 updated: 2026-07-20
-last_agent: claude-session-0589
+last_agent: claude-session-0591
 sprint: S12
 lane: repo
 recipe: lane
@@ -27,7 +27,7 @@ backlinks:
 
 ## Date
 
-<fill at adopt>
+2026-07-20
 
 ## Operator
 
@@ -73,9 +73,53 @@ Single source of truth is the frontmatter `status:` field.
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0591_TASK_01 | pending | Add PL/RLL/YLL/GPTLL codes to ledger-backlog lib + aggregator |
-| SESSION_0591_TASK_02 | pending | Extend deferral-guard regex + closing §6.7 router row |
-| SESSION_0591_TASK_03 | pending | Document RLL/YLL/GPTLL → PL/G hydration path + parser test |
+| SESSION_0591_TASK_01 | done | Added PL/RLL/YLL/GPTLL/DBS to `LedgerCode`/`LEDGER_ORDER`/`LEDGER_FILES` in `ledger-parse.ts`; new `parseInlineStatusSectioned` handles the 5 ledgers' "ID — title — status" inline-heading convention (they carry no `- **Status:**` body line, unlike GL/D/FS/TD) |
+| SESSION_0591_TASK_02 | done | Extended `deferral-guard.ts`'s `LEDGER_ID_RE` with `PL-\d{2,4}`/`RLL-\d{2,4}`/`YLL-\d{2,4}`/`GPTLL-\d{2,4}`/`DBS-\d{2,4}`; added 5 finding-router rows to `closing.md` §6.7 |
+| SESSION_0591_TASK_03 | done | Documented the RLL/YLL/GPTLL → PL/G promotion path in closing.md §6.7 (link-ledger row status flips to `routed` + a pointer; `PL`/`G` stays SoT). Extended `apps/web/lib/loop-board/ledger-parse.test.ts` (already existed — mirrored its fixture-driven `describe("parseLedger", …)` pattern rather than creating a new file) with 5 new cases covering all 5 codes |
+
+## What landed
+
+Wired the 5 intake ledgers (created SESSION_0589) into the governance read-path: the
+`ledger-backlog.ts` aggregator, the `deferral-guard.ts` tracked-id regex, and the closing.md §6.7
+finding router now all recognize `PL`/`RLL`/`YLL`/`GPTLL`/`DBS`.
+
+- **Row format discovery:** the 5 new ledgers do NOT follow the GL/D/FS/TD convention (level-3
+  heading + a separate `- **Status:** …` body line). They embed the status inline in the heading
+  itself — `### PL-001 — title — status` — so a new parser branch (`parseInlineStatusSectioned` +
+  `splitHeadingWithInlineStatus`) was added rather than forcing them through the existing
+  `parseSectioned`/`statusOf` path. The split happens on the LAST ` — `/` – ` (space-padded em/en
+  dash) so hyphenated status words (`content-pending`, `fix-made`, `pending-merge`) never get
+  mis-split — verified against real rows (`GPTLL-001`, `DBS-001`).
+- **ID digit width:** all 5 codes use 3-digit ids (`PL-001`, `RLL-001`, `GPTLL-002`, `DBS-003`, …)
+  per each ledger's "Row law" section — confirmed by reading the actual rows (`PL-001`..`PL-009`,
+  `GPTLL-001`/`002`, `DBS-001`..`003`), not assumed from the docs' `0NN` shorthand.
+  `deferral-guard.ts` uses `\d{2,4}` (matching the existing FS/D/FI/MB/TFF/TD pattern) rather than a
+  hard 3-digit width, for the same headroom those codes already get.
+- **Open/closed rule:** a row is closed (dropped from the backlog) when its inline status starts
+  with `✅`, `done`, `resolved`, `fixed`, `rejected`, or `merged` — mirrors the existing `WL`
+  ✅-exclusion convention. Verified live: `PL-004`/`PL-005` (both `✅ RATIFIED`) drop out of the `PL`
+  backlog; `PL-001/002/003/006/007/008/009` (queued/planning/planned) stay in.
+- **`LEDGER_ORDER` placement:** appended all 5 codes after `TD` (the existing last governance code)
+  rather than interspersing — the brief's "e.g. after the existing governance codes" reading, kept
+  simple and behavior-preserving for the 11 pre-existing codes' order/ranking.
+- **Promotion path documented:** closing.md §6.7 now states the `RLL`/`YLL`/`GPTLL` → `PL`/`G`
+  hydration — a captured row flips to `routed` + a pointer once triaged; the link-ledger row is
+  provenance, not a duplicate tracker.
+
+## Files touched
+
+- `apps/web/lib/loop-board/ledger-parse.ts` — 5 new `LedgerCode`s, `LEDGER_ORDER`, `LEDGER_FILES`;
+  `splitHeadingWithInlineStatus` + `isClosedInline` + `parseInlineStatusSectioned` helpers; 5 new
+  `parseLedger` switch cases.
+- `apps/web/lib/loop-board/ledger-parse.test.ts` — 5 new fixtures (`PLANNING`/`REDDIT`/`GPTLL`/`DBS`)
+  + 5 new `it()` cases (16 total, all passing).
+- `scripts/ledger-backlog.ts` — header comment "Ledgers scanned:" list + usage-line `--ledger=` code
+  list. (`LEDGER_FILTER`'s type cast already referenced `LedgerCode` directly, so no separate literal
+  union needed updating there.)
+- `scripts/deferral-guard.ts` — `LEDGER_ID_RE` extended with the 5 new prefixes; comment updated.
+- `docs/rituals/closing.md` — §6.7 finding-router table: 5 new rows + a promotion-path paragraph;
+  §6.8 deferral-guard prose's recognized-prefix list updated.
+- `docs/sprints/SESSION_0591.md` — this file (Date, Task log, What landed, Files touched).
 
 ## Next session
 

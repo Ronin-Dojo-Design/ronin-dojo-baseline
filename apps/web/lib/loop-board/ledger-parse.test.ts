@@ -48,6 +48,42 @@ const GOALS = `
 - **Status:** done — P1
 `
 
+// Fixtures mirror the real ledgers' "### ID — title — status" convention (status inline in the
+// heading, no separate `- **Status:**` body line) — PL/RLL/YLL/GPTLL/DBS (SESSION_0591 wiring).
+const PLANNING = `
+### PL-001 — Feature widgets for all sites (idea-intake surface) — planned (SESSION_0589 → lanes L2+L3)
+
+- **Origin:** operator directive.
+
+### PL-004 — Portfolio taxonomy — ✅ RATIFIED (ADR 0051, SESSION_0589)
+
+- **Origin:** operator directive.
+`
+
+const REDDIT = `
+### RLL-001 — BJJ competition-format thread — captured
+
+- **Link:** https://reddit.com/r/bjj/example
+`
+
+const GPTLL = `
+### GPTLL-001 — Review the 2026-07-19 brainstorm (incl. "Phase 14") — captured · content-pending
+
+- **Origin:** operator directive.
+
+### GPTLL-002 — Already-routed capture — done · routed to PL-010
+
+- **Origin:** operator directive.
+`
+
+const DBS = `
+### DBS-001 — clients-ci.yml runs \`bun run test\` per product → closes WL-P3-56 — fix-made · pending-merge
+
+- **Fix:** something.
+
+### DBS-002 — Already-merged finding — merged
+`
+
 describe("parseLedger", () => {
   it("parses open wiring rows and excludes resolved (✅) ones", () => {
     const items = parseLedger("WL", WL)
@@ -81,6 +117,43 @@ describe("parseLedger", () => {
     expect(items).toHaveLength(1)
     expect(items[0].id).toBe("G-001")
     expect(items[0].priority).toBe("P0")
+  })
+
+  // SESSION_0591 — the 5 intake ledgers (PL/RLL/YLL/GPTLL/DBS) use inline "ID — title — status"
+  // headings (no `- **Status:**` body line); assert each parses without error and drops closed rows.
+  it("parses PL rows and excludes a ✅ RATIFIED (closed) one", () => {
+    const items = parseLedger("PL", PLANNING)
+    expect(items.map(i => i.id)).toEqual(["PL-001"])
+    expect(items[0].ledger).toBe("PL")
+    // status is `clean()`-truncated to 17 chars, same as every other sectioned ledger.
+    expect(items[0].status).toBe("planned (SESSION…")
+    expect(items[0].summary).toBe("Feature widgets for all sites (idea-intake surface)")
+  })
+
+  it("parses RLL rows (link-intake ledger)", () => {
+    const items = parseLedger("RLL", REDDIT)
+    expect(items).toHaveLength(1)
+    expect(items[0].id).toBe("RLL-001")
+    expect(items[0].ledger).toBe("RLL")
+    expect(items[0].status).toBe("captured")
+  })
+
+  it("returns an empty list for a seeded-empty YLL ledger (no rows yet) without crashing", () => {
+    const items = parseLedger("YLL", "\n## Rows\n\n_None yet._\n")
+    expect(items).toEqual([])
+  })
+
+  it("parses GPTLL rows and excludes a done/routed one", () => {
+    const items = parseLedger("GPTLL", GPTLL)
+    expect(items.map(i => i.id)).toEqual(["GPTLL-001"])
+    expect(items[0].status).toBe("captured · conte…")
+  })
+
+  it("parses DBS rows (findings ledger) and excludes a merged one; a hyphenated status word survives the split", () => {
+    const items = parseLedger("DBS", DBS)
+    expect(items.map(i => i.id)).toEqual(["DBS-001"])
+    expect(items[0].status).toBe("fix-made · pendi…")
+    expect(items[0].summary).toBe("clients-ci.yml runs bun run test per product → closes WL-P3-56")
   })
 })
 

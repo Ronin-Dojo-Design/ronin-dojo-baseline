@@ -44,9 +44,10 @@ const ledgerBlob = (Object.keys(LEDGER_FILES) as FileLedgerCode[])
   })
   .join("\n")
 
-// Tracked ledger-id shapes (the unambiguous prefixes) + RISK's `#N`.
+// Tracked ledger-id shapes (the unambiguous prefixes) + RISK's `#N`. PL/RLL/YLL/GPTLL/DBS are the
+// intake ledgers wired in SESSION_0591 — all use 3-digit ids (`PL-001`, `GPTLL-001`, …).
 const LEDGER_ID_RE =
-  /\b(?:WL-P\d+-\d+|FS-\d{2,4}|D-\d{2,4}|FI-\d{2,4}|MB-\d{2,4}|TFF-\d{2,4}|INC-[\w-]+|G-\d{2,4}|TD-\d{2,4})\b|RISK\s*#?\d+/g
+  /\b(?:WL-P\d+-\d+|FS-\d{2,4}|D-\d{2,4}|FI-\d{2,4}|MB-\d{2,4}|TFF-\d{2,4}|INC-[\w-]+|G-\d{2,4}|TD-\d{2,4}|PL-\d{2,4}|RLL-\d{2,4}|YLL-\d{2,4}|GPTLL-\d{2,4}|DBS-\d{2,4})\b|RISK\s*#?\d+/g
 
 // High-signal future-work language (deliberately NOT "out of scope" — that's usually a
 // scope-guard boundary, not a deferred trackable item).

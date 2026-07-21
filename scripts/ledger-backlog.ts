@@ -12,13 +12,14 @@
  * projection (fetches them from the public `main` branch). This file = the fs reader + the
  * terminal formatter; all parsing is delegated.
  *
- * Ledgers scanned: GL · PR · FS · D · WL · FI · MB · TFF · INC · RISK · TD. `PR` is a LIVE source —
- * queried from `gh pr list` (not a file) and parsed by the SAME `parsePullRequests` the loop-board uses
- * (G-007). Open PRs surface as backlog items: red-CI / changes-requested = P1, draft / clean = P2.
+ * Ledgers scanned: GL · PR · FS · D · WL · FI · MB · TFF · INC · RISK · TD · PL · RLL · YLL · GPTLL ·
+ * DBS. `PR` is a LIVE source — queried from `gh pr list` (not a file) and parsed by the SAME
+ * `parsePullRequests` the loop-board uses (G-007). Open PRs surface as backlog items: red-CI /
+ * changes-requested = P1, draft / clean = P2.
  *
  * Usage:
  *   bun scripts/ledger-backlog.ts                 # ranked backlog, all sources (incl. live PRs)
- *   bun scripts/ledger-backlog.ts --ledger=GL     # one source (GL|PR|FS|D|WL|FI|MB|TFF|INC|RISK|TD)
+ *   bun scripts/ledger-backlog.ts --ledger=GL     # one source (GL|PR|FS|D|WL|FI|MB|TFF|INC|RISK|TD|PL|RLL|YLL|GPTLL|DBS)
  *   bun scripts/ledger-backlog.ts --top=20        # cap the rows printed
  *   bun scripts/ledger-backlog.ts --json          # machine-readable JSON
  *   bun scripts/ledger-backlog.ts --no-pr         # skip the live `gh` PR query

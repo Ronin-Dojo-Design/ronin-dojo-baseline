@@ -340,6 +340,18 @@ A session surfaces different kinds of findings; each has **one** canonical home 
 | Feature status / post-launch running list | [`POST_LAUNCH_SOT.md`](../product/black-belt-legacy/POST_LAUNCH_SOT.md) (supersedes `feature-intake-ledger`) | `FI-NNN` |
 | Deferred prod/test data cleanup (leftover test accounts, banked destructive scripts, parked demo data) | [`teardown-ledger.md`](../knowledge/wiki/teardown-ledger.md) | `TD-NNN` |
 | Architectural decision made/changed/rejected | new/updated ADR in [`architecture/decisions/`](../architecture/decisions/) | `ADR NNNN` |
+| Planning/idea intake (feature need, bug fix, design change) not yet plan-sessioned | [`planning-ledger.md`](../knowledge/wiki/planning-ledger.md) | `PL-NNN` |
+| Captured Reddit thread/post shared as planning material | [`reddit-links-ledger.md`](../knowledge/wiki/reddit-links-ledger.md) | `RLL-NNN` |
+| Captured YouTube video shared as planning material | [`youtube-links-ledger.md`](../knowledge/wiki/youtube-links-ledger.md) | `YLL-NNN` |
+| Captured ChatGPT brainstorm output/link shared as planning material | [`chatgpt-links-ledger.md`](../knowledge/wiki/chatgpt-links-ledger.md) | `GPTLL-NNN` |
+| Codex Daily Bug Scan finding (auto-appended, reviewed for merge) | [`daily-bug-scan-ledger.md`](../knowledge/wiki/daily-bug-scan-ledger.md) | `DBS-NNN` |
+
+**Link-ledger → planning-ledger promotion path (SESSION_0589/0591):** a `RLL`/`YLL`/`GPTLL` row is a
+*raw capture*, not yet planning material — it graduates by getting **triaged** (an agent/operator
+reviews the link/thread/video) and **routed**: the row's `status` flips to `routed` and it gets a
+pointer to the `PL-NNN` (or, if the idea is already scoped, directly a `G-NNN`) row it fed. The
+`PL`/`G` row is the SoT going forward; the link-ledger row stays as provenance, not a duplicate
+tracker. Mirrors how a `PL` row itself graduates to a `G-NNN` goal (§6.7 table above).
 
 **ID assignment (FS-0030):** before minting any `<PREFIX>-NNN` id, run
 `bun scripts/ledger-id-next.ts --prefix=<PREFIX>` — it greps the **full** docs ID space (references
@@ -394,7 +406,7 @@ bun scripts/deferral-guard.ts          # newest docs/sprints/SESSION_NNNN.md (or
 
 It scans for deferral-shaped language ("deferred", "follow-up", "TICKET-", "next/later slice", "punt",
 "revisit", …) and flags any whose line doesn't reference a **real ledger id** (WL/FS/D/FI/MB/TFF/INC/
-RISK/GL/TD that actually exists in a ledger file). For each flag: either **route it to a ledger** via
+RISK/GL/TD/PL/RLL/YLL/GPTLL/DBS that actually exists in a ledger file). For each flag: either **route it to a ledger** via
 §6.7 (then it auto-syncs to the board), or **dismiss it** if it's a scope note / a one-off already-done
 action, not trackable future work. Exit 1 = at least one un-ledgered deferral; **do not close until the
 guard is clean or every remaining flag is a justified dismissal.** (It errs toward over-flagging — a
