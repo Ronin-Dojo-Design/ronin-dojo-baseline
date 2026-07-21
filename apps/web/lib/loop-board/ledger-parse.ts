@@ -22,6 +22,11 @@ export type LedgerCode =
   | "INC"
   | "RISK"
   | "TD"
+  | "PL"
+  | "RLL"
+  | "YLL"
+  | "GPTLL"
+  | "DBS"
 
 /** A ledger code that is backed by a markdown file on disk / `main` (everything except live `PR`). */
 export type FileLedgerCode = Exclude<LedgerCode, "PR">
@@ -52,6 +57,13 @@ export const LEDGER_ORDER: LedgerCode[] = [
   "INC",
   "RISK",
   "TD",
+  // Intake ledgers (SESSION_0589/0591) — planning + link-capture + daily-scan findings, appended
+  // after the existing governance codes rather than interspersed (behavior-preserving order).
+  "PL",
+  "RLL",
+  "YLL",
+  "GPTLL",
+  "DBS",
 ]
 
 /**
@@ -72,6 +84,11 @@ export const LEDGER_FILES: Record<FileLedgerCode, string> = {
   INC: "docs/knowledge/wiki/incidents.md",
   RISK: "docs/security/ronin-security-risk-register.md",
   TD: "docs/knowledge/wiki/teardown-ledger.md",
+  PL: "docs/knowledge/wiki/planning-ledger.md",
+  RLL: "docs/knowledge/wiki/reddit-links-ledger.md",
+  YLL: "docs/knowledge/wiki/youtube-links-ledger.md",
+  GPTLL: "docs/knowledge/wiki/chatgpt-links-ledger.md",
+  DBS: "docs/knowledge/wiki/daily-bug-scan-ledger.md",
 }
 
 /** File-backed ledger codes in display order — the disk reader + `main`-branch fetch iterate this. */
@@ -141,6 +158,57 @@ function clean(s: string, max = 96): string {
 
 const priFromTag = (s: string): Priority =>
   /\bP0\b/.test(s) ? "P0" : /\bP1\b/.test(s) ? "P1" : /\bP2\b/.test(s) ? "P2" : "—"
+
+/**
+ * Heading "ID — title — status" (status appended inline, no separate `- **Status:**` body line —
+ * the intake ledgers' convention: PL/RLL/YLL/GPTLL/DBS). Status is everything after the LAST
+ * ` — `/` – ` (em/en dash with surrounding spaces) so hyphenated words in the title/status
+ * ("content-pending", "fix-made") never get mistaken for a separator.
+ */
+function splitHeadingWithInlineStatus(heading: string): {
+  id: string
+  title: string
+  status: string
+} {
+  const m = heading.match(/^([A-Za-z0-9.\-_/]+)\s*[—–-]\s*(.+)$/)
+  if (!m) return { id: heading.split(/\s+/)[0], title: heading, status: "" }
+  const id = m[1]
+  const rest = m[2]
+  const sep = /\s[—–]\s/g
+  let lastIdx = -1
+  let lastLen = 0
+  let hit: RegExpExecArray | null
+  // biome-ignore lint: intentional last-match scan
+  while ((hit = sep.exec(rest))) {
+    lastIdx = hit.index
+    lastLen = hit[0].length
+  }
+  if (lastIdx === -1) return { id, title: rest, status: "" }
+  return { id, title: rest.slice(0, lastIdx).trim(), status: rest.slice(lastIdx + lastLen).trim() }
+}
+
+/** Closed-state prefixes for the inline-status intake ledgers (done/rejected/✅-ratified/merged). */
+const isClosedInline = (status: string): boolean =>
+  /^\s*(✅|done\b|resolved\b|fixed\b|rejected\b|merged\b)/i.test(status)
+
+function parseInlineStatusSectioned(
+  content: string,
+  ledger: LedgerCode,
+  level: number,
+  idRe: RegExp,
+): Item[] {
+  return sections(content, level)
+    .filter(s => idRe.test(s.heading))
+    .map(s => splitHeadingWithInlineStatus(s.heading))
+    .filter(s => !isClosedInline(s.status))
+    .map(s => ({
+      id: s.id,
+      ledger,
+      priority: priFromTag(`${s.status} ${s.title}`),
+      status: clean(s.status || "open", 17),
+      summary: clean(s.title),
+    }))
+}
 
 // --- per-ledger extractors -------------------------------------------------
 
@@ -344,6 +412,16 @@ export function parseLedger(code: FileLedgerCode, content: string): Item[] {
         /^TD-\d/,
         s => /^open\b/i.test(s) || /pending/i.test(s),
       )
+    case "PL":
+      return parseInlineStatusSectioned(content, "PL", 3, /^PL-\d/)
+    case "RLL":
+      return parseInlineStatusSectioned(content, "RLL", 3, /^RLL-\d/)
+    case "YLL":
+      return parseInlineStatusSectioned(content, "YLL", 3, /^YLL-\d/)
+    case "GPTLL":
+      return parseInlineStatusSectioned(content, "GPTLL", 3, /^GPTLL-\d/)
+    case "DBS":
+      return parseInlineStatusSectioned(content, "DBS", 3, /^DBS-\d/)
   }
 }
 
