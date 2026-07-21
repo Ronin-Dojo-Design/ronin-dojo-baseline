@@ -1,7 +1,7 @@
 import { isMimeTypeMatch } from "@dirstack/utils"
 import type { useTranslations } from "next-intl"
 import { z } from "zod"
-import { ReportType } from "~/.generated/prisma/browser"
+import { PlanningIntakeCategory, ReportType } from "~/.generated/prisma/browser"
 
 type TFunction = ReturnType<typeof useTranslations>
 
@@ -74,6 +74,26 @@ export const createFeedbackSchema = (t: TFunction) => {
   return z.object({
     email: z.email({ error: t("invalidEmail") }),
     message: z.string().min(1, { error: t("required") }),
+  })
+}
+
+/** Max image slots the `FeatureWidget` form renders — matches the fixed `ImageFieldUploader` slots. */
+export const PLANNING_INTAKE_MAX_IMAGES = 4
+
+/**
+ * The admins-only feature-widget's idea-dump submission (SESSION_0592, `PlanningIntake`).
+ * `imageUrls` are already-uploaded R2/S3 URLs — each slot upload runs through the shared
+ * `ImageFieldUploader` → `uploadMedia` seam BEFORE this schema ever sees them, exactly like
+ * `createCommunityPostSchema.imageUrl`.
+ */
+export const createPlanningIntakeSchema = (t: TFunction) => {
+  return z.object({
+    category: z.enum(PlanningIntakeCategory),
+    body: z
+      .string()
+      .min(1, { error: t("required") })
+      .max(4000),
+    imageUrls: z.array(z.url()).max(PLANNING_INTAKE_MAX_IMAGES).default([]),
   })
 }
 

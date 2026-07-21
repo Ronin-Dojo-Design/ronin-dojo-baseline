@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import { Brand } from "~/.generated/prisma/client"
 import { Shell } from "~/components/app/shell"
+import { FeatureWidget } from "~/components/web/feature-widget"
 import { MobileShell } from "~/components/web/nav/mobile-shell"
 import { hasAnyLineageGrant, requireUser } from "~/lib/auth-guard"
+import { isAdmin } from "~/lib/authz-predicates"
 import { getCurrentUserAvatar } from "~/server/web/account/current-user-avatar"
 
 export const metadata: Metadata = {
@@ -32,6 +34,11 @@ export default async function ({ children }: LayoutProps<"/app">) {
           MobileShell as the `(web)` layout; all `md:hidden`, so the desktop console sidebar is
           untouched. The `/app` mobile icon rail is demoted (hidden) — this is the ONE mobile nav. */}
       <MobileShell userAvatarUrl={userAvatarUrl} />
+
+      {/* SESSION_0592: the admins-only planning-ledger front door, mounted across every `/app`
+          admin page (not just `/app/planning-intake`) so an idea can be captured wherever it
+          strikes. Admin-gated HERE (server-side) — the component itself has no internal check. */}
+      {isAdmin(user) && <FeatureWidget />}
     </>
   )
 }

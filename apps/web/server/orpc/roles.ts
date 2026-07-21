@@ -143,6 +143,9 @@ export const APP_AREA_PERMISSIONS = {
   merch: "merch.manage",
   organizations: "organizations.manage",
   posts: "posts.manage",
+  // SESSION_0592: the admins-only planning-intake triage view — a new authz NEED maps to a new
+  // KEY in the existing per-area matrix, never a new system (mirrors `loopBoard`).
+  planningIntake: "planning-intake.manage",
   pricingPlans: "pricing-plans.manage",
   privacy: "privacy.manage",
   programs: "programs.manage",
