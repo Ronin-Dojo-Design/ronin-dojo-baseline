@@ -2,10 +2,11 @@
 title: "SESSION 0614 — AM Coffee Merge Review: sweep + merge all open overnight work"
 slug: session-0614
 type: session--review
-status: in-progress
+status: closed
 created: 2026-07-22
 updated: 2026-07-22
 last_agent: claude-session-0614
+next_session: docs/sprints/SESSION_0617.md
 sprint: S12
 lane: repo
 recipe: AM_Coffee_Merge_Review
@@ -148,7 +149,7 @@ Final `main` @ `4632eabf`, 15 commits ahead of `origin/main` (`4c91cb31`).
 format:check ✓ · **`next build` ✓ (exit 0, 348/348 pages)** — closes the Keychain-blocked build gap
 for lanes wl-p3-25 & wl-p3-59. `bun run test`: 1667 pass / 2 fail — the 2 fails are **pre-existing
 flaky `server/admin/*` safe-action hook timeouts** (shared-local-DB contention, non-deterministic
-1→2→17 across runs), **untouched by any of the 7 commits**; CI authoritative. → P2 test-infra follow-up.
+1→2→17 across runs), **untouched by any of the 7 commits**; CI authoritative. → filed **WL-P3-61** (test-infra follow-up).
 
 **Lane-H runtime proof (`/app` attention seam, 375px):** real State-of-the-Dojo panel mounts and
 renders live data (28 goals · 0 open PRs · RDD/BBL/MMB tabs); `bodyScrollWidth === 375`, **no
@@ -161,6 +162,72 @@ at bow-out on operator go.
 **Push gate: HELD.** On "go": one `git push origin main` → deploys app-code batch (0612 SotD +
 0613 panel mount + lane-wl-p3-25 countries). Docs commits (0616/G-029/sweep record) ride but don't
 trigger the prod build (`ignoreCommand`).
+
+## Task log
+
+| ID | Description | Status |
+|---|---|---|
+| SESSION_0614_TASK_01 | Reconcile trunk drift (0616 + G-029 landed since stub) + confirm lane B not superseded | done |
+| SESSION_0614_TASK_02 | Merge 7 lanes B→H onto local `main` (rebase-onto-main → `--ff-only`, linear) | done |
+| SESSION_0614_TASK_03 | Doug authoritative full-gate rerun (normal shell) — closes lanes 3&4 build gap | done |
+| SESSION_0614_TASK_04 | Lane-H runtime proof (`/app` panels @ 375px, no overflow) | done |
+| SESSION_0614_TASK_05 | Push batch to origin/main on operator go (deploys 0612+0613+lane-25) | done |
+| SESSION_0614_TASK_06 | Apply 5 lanes' proposed ledger edits — WL-P3-25/33/40/56/59 crossed off ✅ | done |
+| SESSION_0614_TASK_07 | Worktree/branch cleanup (7 lanes + bc1f discarded) | done |
+
+## Review log
+
+TASK_REVIEW_LOG SESSION_0614 — Doug authoritative gate on merged tree `4632eabf`: typecheck ✓ ·
+lint ✓ · format ✓ · **`next build` ✓ (348/348)** · `bun run test` 1667/2 (2 fails = pre-existing flaky
+`server/admin/*` shared-DB hook timeouts, untouched by the merge; CI authoritative). Lane-H runtime
+proof passed. No launch blockers. Open follow-ups: **D-053** (`.agents/skills/worktree-setup/` format-twin
+relink) and **WL-P3-61** (admin safe-action hook-timeout test-infra flake).
+
+## Reflections
+
+- **Trunk drift is the norm, not the exception.** The stub staged main @ `1b53880f`; reality was
+  `98246d19` (+SESSION_0616 +G-029). Reconciling BEFORE merging — confirming lane B wasn't superseded by
+  0616 via disjoint-file-set + absent-on-main checks — was the load-bearing move. Blindly executing B→H
+  would have been fine here, but only by luck; the check is cheap and the failure (double-apply) is ugly.
+- **The bow-out gate runner + deferral-guard default to the highest-numbered SESSION file**, which was
+  0616 (a parallel state-sweep session), not 0614. On an out-of-order session number, run those tools
+  against the explicit path or their evidence is about the wrong file.
+- **`ledger-parse.ts` only reads a WL row resolved when ✅ is in the ID cell or *starts* the status cell.**
+  Appending "✅ RESOLVED" to the *end* of the status cell does nothing — the backlog keeps showing it open.
+  Marked the ID cells; verified the 5 dropped from `ledger-backlog.ts --ledger=WL`.
+- Rebase-in-worktree → `--ff-only` from canonical kept history perfectly linear across 7 lanes with zero
+  conflicts. Clean pattern for an attended merge wave.
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| Merge sweep | 7 lanes B→H rebased onto main + `--ff-only`, linear, 0 conflicts; final `4632eabf`; pushed `4c91cb31..81e27da4` on operator go |
+| Authoritative gates (Doug) | typecheck ✓ · lint:check ✓ · format:check ✓ · **`next build` ✓ exit 0 (348/348)** · `bun run test` 1667/2 (pre-existing flake, unrelated) |
+| Runtime verification (Doug) | Lane-H `/app` attention seam @ 375px: real SotD panel mounts, live data, `bodyScrollWidth===375` no overflow; console errors = pre-existing analytics-key-missing (local) |
+| Evidence-artifact URL | n/a — runtime proof captured inline during the attended sweep; work already merged+deployed on operator go |
+| wiki:lint | 0 err / 104 warn (pre-existing) |
+| Ledger cross-off | WL-P3-25/33/40/56/59 → ✅ (SESSION_0614); WL-P2-69 kept open (format axis); verified gone from open WL backlog |
+| Graphify | nodes=19693 edges=37612 communities=2681 (gate runner) |
+| Git hygiene | branch=main; 7 lane worktrees+branches removed, bc1f discarded; single docs push — hash reported at bow-out |
+| Memory sweep | no new durable fact — behaviors already covered by [[git-diff-base-skew-moving-trunk]], [[bow-out-gate-runner-diffs-working-tree]], [[parallel-lane-worktree-isolation]] |
+
+## Hostile close review
+
+Docs/merge-owner session — no new Class-A custom code authored here (the app code came from already-reviewed
+lanes 0612/0613/wl-p3-25). Doug's authoritative gate is the hard pass; no Dirstarter layer changed. Verdict:
+clean close.
+
+## ADR / ubiquitous-language check
+
+No architectural decision made or changed. No new domain term. None needed.
+
+## Next session recommendation (outbound → SESSION_0617)
+
+**Goal:** RISK #2 — flip `CSP_ENFORCE` to enforcing (P0). Per [[risk2-csp-status-and-nonce-flip]] the headers +
+Report-Only + report-sink + script-nonce are already shipped; **only the enforce flip + a report-review pass
+remains.** First task: review the CSP violation-report sink for outstanding report volume, then flip
+`CSP_ENFORCE` and verify no legit surface breaks (app-code deploy — run `next build` + affected e2e).
 
 ## Status
 
