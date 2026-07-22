@@ -90,13 +90,16 @@ export function TokenCostChart({ points, className }: { points: CostPoint[]; cla
       </svg>
 
       {/* emphasized endpoint — CSS dot, not an SVG circle, so it stays round under the svg's
-          non-uniform `preserveAspectRatio="none"` stretch */}
+          non-uniform `preserveAspectRatio="none"` stretch. `clamp(6px, …%, calc(100% - 6px))` insets
+          the center by the dot's visual half-radius (4px dot half + 2px ring = 6px) so an extreme
+          point (last.x=WIDTH → 100%, or latest-is-max-cost → last.y=0 → 0%) can't poke the dot past
+          the chart box; interior points are untouched — the clamp only bites at the edges. */}
       <span
         aria-hidden
         className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary ring-2 ring-background"
         style={{
-          left: `${(last.x / WIDTH) * 100}%`,
-          top: `${(last.y / HEIGHT) * 100}%`,
+          left: `clamp(6px, ${(last.x / WIDTH) * 100}%, calc(100% - 6px))`,
+          top: `clamp(6px, ${(last.y / HEIGHT) * 100}%, calc(100% - 6px))`,
           width: 8,
           height: 8,
         }}

@@ -253,3 +253,23 @@ export function buildCookbookEntries(
     })
     .sort((a, b) => a.title.localeCompare(b.title))
 }
+
+// --- group entries by pipeline stage (for the tabbed panel) ------------------------------------
+
+export type StageGroup = { stage: PipelineStage; entries: CookbookEntry[] }
+
+/** Bucket entries into one group per `PipelineStage` (in `PIPELINE_STAGES` display order) and pick
+ * the tab to open by default — the FIRST stage that actually has entries, falling back to the first
+ * stage when every group is empty. Pure/presentation-shaping split out of `CookbookPanelContent` so
+ * the grouping + default-tab logic is unit-testable without rendering the RSC. */
+export function groupEntriesByStage(entries: CookbookEntry[]): {
+  grouped: StageGroup[]
+  defaultStage: PipelineStage
+} {
+  const grouped = PIPELINE_STAGES.map(stage => ({
+    stage,
+    entries: entries.filter(e => e.stage === stage),
+  }))
+  const defaultStage = grouped.find(g => g.entries.length > 0)?.stage ?? PIPELINE_STAGES[0]
+  return { grouped, defaultStage }
+}

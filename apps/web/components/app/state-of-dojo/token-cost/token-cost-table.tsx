@@ -13,11 +13,11 @@ export function TokenCostSessionTable({ sessions }: { sessions: SessionCostDetai
     <div className="overflow-x-auto">
       <table className="w-full min-w-[420px] border-collapse text-xs">
         <thead>
-          <tr className="text-left text-muted-foreground">
-            <th className="border-b p-1.5">Session</th>
-            <th className="border-b p-1.5">Input tok</th>
-            <th className="border-b p-1.5">Output tok</th>
-            <th className="border-b p-1.5">Cost</th>
+          <tr className="text-muted-foreground text-2xs uppercase tracking-wide">
+            <th className="border-b p-1.5 text-left">Session</th>
+            <th className="border-b p-1.5 text-right">Input tok</th>
+            <th className="border-b p-1.5 text-right">Output tok</th>
+            <th className="border-b p-1.5 text-right">Cost</th>
           </tr>
         </thead>
         <tbody>
@@ -26,9 +26,15 @@ export function TokenCostSessionTable({ sessions }: { sessions: SessionCostDetai
               <td className="border-b p-1.5 font-medium">
                 #{s.number} <span className="text-muted-foreground">{s.title}</span>
               </td>
-              <td className="border-b p-1.5">{s.totalInput.toLocaleString()}</td>
-              <td className="border-b p-1.5">{s.totalOutput.toLocaleString()}</td>
-              <td className="border-b p-1.5">${s.totalCostUsd.toFixed(2)}</td>
+              <td className="border-b p-1.5 text-right tabular-nums">
+                {s.totalInput.toLocaleString()}
+              </td>
+              <td className="border-b p-1.5 text-right tabular-nums">
+                {s.totalOutput.toLocaleString()}
+              </td>
+              <td className="border-b p-1.5 text-right tabular-nums">
+                ${s.totalCostUsd.toFixed(2)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -44,20 +50,22 @@ export function TokenCostModelTable({ models }: { models: ModelCostSummary[] }) 
     <div className="overflow-x-auto">
       <table className="w-full min-w-[420px] border-collapse text-xs">
         <thead>
-          <tr className="text-left text-muted-foreground">
-            <th className="border-b p-1.5">Model</th>
-            <th className="border-b p-1.5">Input tok</th>
-            <th className="border-b p-1.5">Output tok</th>
-            <th className="border-b p-1.5">Cost</th>
+          <tr className="text-muted-foreground text-2xs uppercase tracking-wide">
+            <th className="border-b p-1.5 text-left">Model</th>
+            <th className="border-b p-1.5 text-right">Input tok</th>
+            <th className="border-b p-1.5 text-right">Output tok</th>
+            <th className="border-b p-1.5 text-right">Cost</th>
           </tr>
         </thead>
         <tbody>
           {models.map(m => (
             <tr key={m.model}>
               <td className="border-b p-1.5 font-medium">{m.model}</td>
-              <td className="border-b p-1.5">{m.input.toLocaleString()}</td>
-              <td className="border-b p-1.5">{m.output.toLocaleString()}</td>
-              <td className="border-b p-1.5">${m.costUsd.toFixed(2)}</td>
+              <td className="border-b p-1.5 text-right tabular-nums">{m.input.toLocaleString()}</td>
+              <td className="border-b p-1.5 text-right tabular-nums">
+                {m.output.toLocaleString()}
+              </td>
+              <td className="border-b p-1.5 text-right tabular-nums">${m.costUsd.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

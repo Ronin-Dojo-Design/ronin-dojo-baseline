@@ -61,7 +61,13 @@ async function TokenCostPanelContent({ compact }: ProjectionPanelProps) {
 
       <ProjectionSection title="Spend trend" accent>
         {feed.series.length >= 2 ? (
-          <TokenCostChart points={feed.series} />
+          <>
+            <TokenCostChart points={feed.series} />
+            <p className="mt-2 text-2xs text-muted-foreground tabular-nums">
+              peak ${Math.max(...feed.series.map(p => p.costUsd)).toFixed(2)} · latest $
+              {feed.series.at(-1)!.costUsd.toFixed(2)}
+            </p>
+          </>
         ) : (
           <EmptyList className="text-sm">
             Need at least 2 sessions with telemetry for a trend.

@@ -40,7 +40,7 @@ async function CardCatalogPanelContent({ compact }: ProjectionPanelProps) {
         <Heading size="h4">Card catalog</Heading>
         <p className="text-xs text-muted-foreground">
           {cardRows.length} card spec{cardRows.length === 1 ? "" : "s"} — the Cards facet of{" "}
-          {feed.rows.length} total docs/knowledge/wiki/files/ specs
+          {feed.rows.length} total <code>docs/knowledge/wiki/files/</code> specs
           {feed.meta.degraded && " · feed degraded (reading main)"}
         </p>
       </header>

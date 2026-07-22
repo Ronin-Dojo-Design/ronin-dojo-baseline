@@ -20,6 +20,7 @@ import { Heading } from "~/components/common/heading"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/common/tabs"
 import {
   type CookbookEntry,
+  groupEntriesByStage,
   PIPELINE_STAGE_LABEL,
   PIPELINE_STAGES,
   type PipelineStage,
@@ -56,20 +57,15 @@ const STAGE_BADGE_VARIANT: Record<PipelineStage, BadgeVariant> = {
 async function CookbookPanelContent({ compact }: ProjectionPanelProps) {
   const feed = await fetchCookbookFeed()
   const { entries } = feed
-
-  const grouped = PIPELINE_STAGES.map(stage => ({
-    stage,
-    entries: entries.filter(e => e.stage === stage),
-  }))
-  const defaultStage = grouped.find(g => g.entries.length > 0)?.stage ?? PIPELINE_STAGES[0]
+  const { grouped, defaultStage } = groupEntriesByStage(entries)
 
   return (
     <div className="w-full space-y-4">
       <header className="space-y-1">
         <Heading size="h4">Cookbook</Heading>
         <p className="text-xs text-muted-foreground">
-          {entries.length} recipe{entries.length === 1 ? "" : "s"} · SOT_Cookbook router +
-          docs/protocols/recipes
+          {entries.length} recipe{entries.length === 1 ? "" : "s"} · SOT_Cookbook router +{" "}
+          <code>docs/protocols/recipes</code>
           {feed.meta.degraded && " · feed degraded (reading main)"}
         </p>
       </header>
@@ -149,7 +145,7 @@ function RecipeCard({ entry, compact }: { entry: CookbookEntry; compact?: boolea
         <p className="text-xs text-muted-foreground text-pretty">{entry.when}</p>
       )}
       {!compact && entry.why && (
-        <p className="text-2xs text-muted-foreground text-pretty">{entry.why}</p>
+        <p className="text-2xs text-muted-foreground/80 italic text-pretty">{entry.why}</p>
       )}
       {entry.tags.length > 0 && (
         <div className="flex flex-wrap gap-1">

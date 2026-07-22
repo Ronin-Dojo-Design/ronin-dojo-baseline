@@ -5,8 +5,9 @@
  *
  * Conforms to the FROZEN panel contract (`./_kernel/contract.ts`): named export, self-fetching async
  * RSC, placement-agnostic, `{ compact? }`, owns its own `<Suspense>` + empty state. Shape cloned from
- * `state-panel.tsx`; `buildCatalogPanels`/`rowToCard`/`rowToLadderRow` below are shared with
- * `card-catalog-panel.tsx` (same row shape, filtered subset — one mapper, not two).
+ * `state-panel.tsx`. `buildCatalogPanels` below is the ONE shared surface — `card-catalog-panel.tsx`
+ * composes it over its filtered rows; the `rowToCard`/`rowToLadderRow` mappers stay local (used only
+ * inside `buildCatalogPanels` — same row shape, filtered subset, one mapper not two).
  */
 import { Suspense } from "react"
 import { EmptyList } from "~/components/common/empty-list"
@@ -45,9 +46,9 @@ export function ComponentCatalogPanel({ compact }: ProjectionPanelProps) {
  * way; not a general English pluralizer. */
 const countNoun = (noun: string, count: number) => (count === 1 ? noun.replace(/s$/, "") : noun)
 
-// ── mappers (catalog row → kernel row shapes) — shared with card-catalog-panel.tsx ────────────────
+// ── mappers (catalog row → kernel row shapes) — local; used only by `buildCatalogPanels` below ────
 
-export const rowToCard = (r: CatalogRow): BoardCard => ({
+const rowToCard = (r: CatalogRow): BoardCard => ({
   key: r.slug,
   eyebrow: r.pwcc ?? (r.kind === "card" ? "card" : "component"),
   title: r.title,
@@ -55,7 +56,7 @@ export const rowToCard = (r: CatalogRow): BoardCard => ({
   phase: r.phase,
 })
 
-export const rowToLadderRow = (r: CatalogRow): LadderRow => ({
+const rowToLadderRow = (r: CatalogRow): LadderRow => ({
   key: r.slug,
   id: r.pwcc ?? r.slug,
   title: r.title,
@@ -126,7 +127,8 @@ async function ComponentCatalogPanelContent({ compact }: ProjectionPanelProps) {
       <header className="space-y-1">
         <Heading size="h4">Component catalog</Heading>
         <p className="text-xs text-muted-foreground">
-          {rows.length} spec{rows.length === 1 ? "" : "s"} from docs/knowledge/wiki/files/
+          {rows.length} spec{rows.length === 1 ? "" : "s"} from{" "}
+          <code>docs/knowledge/wiki/files/</code>
           {feed.meta.degraded && " · feed degraded (reading main)"}
         </p>
       </header>

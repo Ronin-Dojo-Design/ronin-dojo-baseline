@@ -3,10 +3,13 @@ import { describe, expect, test } from "bun:test"
 import {
   buildCookbookEntries,
   classifyRecipeStage,
+  type CookbookEntry,
   extractRecipePaths,
   frontmatterList,
+  groupEntriesByStage,
   parseRecipeFrontmatter,
   parseRouterRows,
+  type PipelineStage,
 } from "./cookbook-parse"
 
 describe("frontmatterList", () => {
@@ -303,5 +306,48 @@ describe("buildCookbookEntries", () => {
     expect(mergeWave?.when).toBeUndefined()
     expect(mergeWave?.why).toBeUndefined()
     expect(mergeWave?.stage).toBe("ship")
+  })
+})
+
+describe("groupEntriesByStage", () => {
+  const entry = (slug: string, stage: PipelineStage): CookbookEntry => ({
+    path: `docs/protocols/recipes/${slug}.md`,
+    slug,
+    title: slug,
+    tags: [],
+    pairsWith: [],
+    stage,
+  })
+
+  test("empty entries → every group empty, defaultStage falls back to PIPELINE_STAGES[0]", () => {
+    const { grouped, defaultStage } = groupEntriesByStage([])
+    expect(grouped.map(g => g.stage)).toEqual(["idea", "plan", "build", "review", "ship"])
+    expect(grouped.every(g => g.entries.length === 0)).toBe(true)
+    expect(defaultStage).toBe("idea") // PIPELINE_STAGES[0]
+  })
+
+  test("mixed stages → correct grouping, default = first NON-EMPTY stage (not just index 0)", () => {
+    const entries = [entry("a", "build"), entry("b", "ship"), entry("c", "build")]
+    const { grouped, defaultStage } = groupEntriesByStage(entries)
+    const bySlug = (stage: PipelineStage) =>
+      grouped
+        .find(g => g.stage === stage)
+        ?.entries.map(e => e.slug)
+        .sort()
+    expect(bySlug("idea")).toEqual([])
+    expect(bySlug("plan")).toEqual([])
+    expect(bySlug("build")).toEqual(["a", "c"])
+    expect(bySlug("review")).toEqual([])
+    expect(bySlug("ship")).toEqual(["b"])
+    // idea + plan are empty, so the first non-empty stage in display order is build
+    expect(defaultStage).toBe("build")
+  })
+
+  test("single-stage → that stage holds every entry and is the default", () => {
+    const entries = [entry("x", "review"), entry("y", "review")]
+    const { grouped, defaultStage } = groupEntriesByStage(entries)
+    expect(grouped.find(g => g.stage === "review")?.entries.map(e => e.slug)).toEqual(["x", "y"])
+    expect(grouped.filter(g => g.stage !== "review").every(g => g.entries.length === 0)).toBe(true)
+    expect(defaultStage).toBe("review")
   })
 })
