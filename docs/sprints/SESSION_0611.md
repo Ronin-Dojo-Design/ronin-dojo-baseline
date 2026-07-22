@@ -187,8 +187,13 @@ commits' files; no lane edits a shared ledger). Clean serialized rebase, zero co
 **HELD** — local `main` `2804b080` is 4 ahead of `origin/main` `6f93f712`. Awaiting operator's explicit
 word. On push, `apps/web` (0600) deploys to BBL prod; `apps/rdd` (0601) is local-only (no Vercel yet).
 
-### Open for operator
+### Operator grill — 0602 forks RESOLVED (SESSION_0611)
 
-- **0602 fork grill** (F1–F7; F5 = gating) — non-blocking for the merge; gates only S1-stub adoption
-  (a future session). Recommendations recorded in G-028.
+F1 **click-to-sign on S1** (real e-sign now, not typed-name) · F2 **two-archetype split** · F3
+**existing `can(...)`, no 5th authz** · F4 **operator-approver; gate blocks execution/send only** · F5
+**5b — `apps/rdd` now** (own DB; extract the anchors now) · F6 **new `ClientEngagement`, extend/pull
+Mammoth CRM shape (DRY)** · F7 **headless-Chromium HTML→PDF**. Full decisions + the 5b+F6 downstream
+design consequence recorded in G-028. S1-adoption = a future session (blocks on G-027 B1 for the
+`apps/rdd` DB + the anchor extraction).
+
 - Governance follow-ups (P3) captured in G-026 (0600 UI) / G-027 (0601 B1 reminders).

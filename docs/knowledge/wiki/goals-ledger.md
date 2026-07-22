@@ -664,12 +664,20 @@ aggregator reads it with no new parser logic.
 ### G-028 — Branded client-onboarding artifacts + interactive forms (RDD agency)
 
 - **Status:** planned — **SESSION_0602 plan LANDED `2804b080`** (SESSION_0611 fanout; Giddy
-  GO-WITH-NOTE). **7 forks surfaced (F1–F7), un-resolved — pending operator grill:** F1 signature depth ·
-  F2 form-schema shape · F3 entitlement cap · F4 counsel/ESIGN gate · **F5 host app (apps/web-admin vs
-  apps/rdd) = the GATING fork** (the 4 reuse anchors — AdminCollection/`can()`/`lib/media.ts`+`Media`
-  R2 seam/oRPC — are all apps/web-local, none kernel-extracted; 5b forces extraction + kills cross-DB
-  FKs + blocks on 0601) · F6 new `ClientEngagement` record model (not `Lead`) · F7 PDF engine. S1
-  (content+schema) is host/DB-agnostic — safe to adopt on F1/F2 alone; S2 blocks on F5. **Lane:** rdd.
+  GO-WITH-NOTE). **7 forks RESOLVED (operator grill, SESSION_0611):** F1 **click-to-sign on S1** (not
+  typed-name MVP — do the real e-sign now) · F2 **two-archetype split** (contract-core NDA+MSA/SOW vs a
+  separate questionnaire for Initial Meeting) · F3 **existing `can(...)` cap, no 5th authz** · F4
+  **operator is approver for now; gate blocks execution/send only, not generation** · F5 **5b — build in
+  `apps/rdd` now** (own DB; accept kernel-extraction of the anchors now rather than migrate later) · F6
+  **new `ClientEngagement` model, but extend/pull the Mammoth CRM contact/deal SHAPE as far as possible
+  (DRY — don't reinvent)** · F7 **headless-Chromium HTML→PDF**.
+- **S1-adoption open design (consequence of 5b + F6 — resolve at the next plan session, NOT settled by
+  the grill):** `apps/rdd` has its OWN DB (ADR 0038) and Mammoth CRM is a THIRD separate app/DB — so
+  "pull from Mammoth" means reuse the model **SHAPE** (schema definitions) inside `apps/rdd`'s schema,
+  never a cross-DB FK. The reuse anchors (`AdminCollection`, `can()`, `lib/media.ts`+`Media` R2 seam,
+  oRPC) must be **kernel-extracted / shared into `apps/rdd`** (ADR 0040 Option-B) — now larger than the
+  original 4 slices; F1 click-to-sign + F7 PDF-via-`Media` both depend on that extracted R2 seam. **S2+
+  blocks on G-027 B1** (`apps/rdd`'s `rdd_dev` DB). **Lane:** rdd.
 - **Objective:** brand + make interactive forms of the RDD onboarding templates (Initial Client Meeting /
   MSA / NDA) + future ones, reusable across brands/clients; reuse-first (ONE uploader seam, existing form
   primitives, existing entitlement gating — no 5th authz system).
