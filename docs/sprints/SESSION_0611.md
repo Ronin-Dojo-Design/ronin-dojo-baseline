@@ -2,7 +2,7 @@
 title: "SESSION 0611 — ORCHESTRATE: live-fanout-sweep of the 0600/0601/0602 trio"
 slug: session-0611
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0611
@@ -11,6 +11,7 @@ lane: repo
 recipe: live-fanout-sweep
 goal_ids: [G-026, G-027, G-028]
 tickets: []
+next_session: docs/sprints/SESSION_0613.md
 pairs_with:
   - docs/protocols/recipes/live-fanout-sweep.md
   - docs/sprints/SESSION_0600.md
@@ -156,6 +157,14 @@ commit. Merge sweep is serialized (one merge owner = this session).
 - Do NOT adopt 0602's forms-build stub — plan surfaces forks; operator grills first.
 - Do NOT push — one push at close on the operator's explicit word.
 
+## Task log
+
+| ID | Status | Summary |
+| --- | --- | --- |
+| SESSION_0611_TASK_01 | done | Dispatch the trio (Cody×2 build + Petey-sub plan), parallel worktrees → held commits |
+| SESSION_0611_TASK_02 | done | Review wave: Doug (0600+0601), Desi (0600 UI + 375px), Giddy (0602 plan) → GO/GO-WITH-NOTE |
+| SESSION_0611_TASK_03 | done | Merge sweep (serialized rebase→ff onto 6f93f712) + operator fork grill + push gate (pushed `c3c52572`) |
+
 ## What landed
 
 ### Review-wave verdicts
@@ -197,3 +206,98 @@ design consequence recorded in G-028. S1-adoption = a future session (blocks on 
 `apps/rdd` DB + the anchor extraction).
 
 - Governance follow-ups (P3) captured in G-026 (0600 UI) / G-027 (0601 B1 reminders).
+
+## Files touched
+
+- **0600 (merged `628389c6`+`84a11721`):** `apps/web/app/app/page.tsx` · `apps/web/app/app/_landing/**`
+  (10 new) · `apps/web/app/app/beta/command-deck/{command-deck,data,page}.tsx` · `SESSION_0600.md`.
+- **0601 (merged `afbd9213`):** `apps/rdd/**` (9 new) · `.github/workflows/{clients-ci,ci,playwright}.yml`
+  · `bun.lock` · `SESSION_0601.md`.
+- **0602 (merged `2804b080`):** `docs/sprints/SESSION_0602.md` (plan + draft build-stub).
+- **Orchestrator (`13484f58`, `c3c52572`):** `docs/sprints/SESSION_0611.md` (this record) ·
+  `docs/knowledge/wiki/goals-ledger.md` (G-026/027/028 status + ratified fork decisions).
+
+## Decisions resolved
+
+- **Merge coordination:** held the sweep while the operator ran SESSION_0610 in canonical concurrently
+  (trunk moved 2×); merged once 0610 closed+pushed and canonical was free (FS-0035 guard landed).
+- **G-028 7 forks ratified** (operator grill): F1 click-to-sign on S1 · F2 two-archetype split · F3
+  existing `can()` no 5th authz · F4 operator-approver, gate blocks execution/send · F5 **5b (apps/rdd
+  now)** · F6 new `ClientEngagement` extending Mammoth CRM shape (DRY) · F7 headless-Chromium HTML→PDF.
+- **Push authorized + executed** (`c3c52572`); `apps/web` (0600) → BBL prod deploy.
+
+## Reflections
+
+- **Diff base-skew under a moving trunk.** A two-dot `git diff main..HEAD` against a base the operator
+  had advanced showed a *phantom* revert of DES-003 chart code — I nearly mis-read it as 0601
+  contamination. `git show --stat <commit>` (commit-vs-own-parent) is the truth; a two-dot diff against
+  a moved base lies. → new memory.
+- **Co-occupancy is real, now mechanized.** Orchestrator (0611) + operator's 0610 both lived around
+  canonical — the FS-0034 strand hazard. The operator wrote `canonical-claim.sh` (FS-0035) mid-session;
+  holding the merge until canonical was free was correct.
+- **The `.next` build-vs-dev collision bit twice** — I sequenced Desi (dev) before Doug (build) in the
+  shared ronin-0600 worktree; Doug still hit a manifest-404 running build-then-dev himself and wiped
+  `.next`. Never run `next build` and `next dev` over one `.next`.
+- **Deferring ledger edits to the merge owner paid off** — lanes touched no shared ledgers, so the
+  rebases were 100% conflict-free even as the operator appended to the same ledgers on the trunk.
+
+## Hostile close review
+
+Covered by the per-lane review wave on held commits (not a redundant merged-main pass): **Doug GO 9.5**
+(0600 — security spot-check clean: no count/permission leak, defense-in-depth `"use server"` re-assert),
+**Doug GO-WITH-NOTE 9.6** (0601 — Products-CI genuinely gates `apps/rdd`), **Desi GO-WITH-NOTE** (0600 —
+P1 375px overflow fixed + re-verified), **Giddy GO-WITH-NOTE** (0602 plan). Gates green on merged main
+`c3c52572` (`format:check` + `typecheck` + `next build` 344/344). Dirstarter: 0600 conforms to ADR 0045
+D4 (composition, not AdminCollection); 0601 mirrors `apps/baseline` (ADR 0038/0051). No score cap.
+
+## ADR / ubiquitous-language check
+
+- **No new ADR** — 0600 conforms to ADR 0045 D4; 0601 to ADR 0038/0051; 0602 ratified no decision (fork
+  decisions live in G-028). Giddy flagged **F5=5b anchor-extraction as an ADR-0040-Option-B-scale
+  decision** for the S1-adoption session — ADR it then.
+- **New domain terms** (not yet ratified into ubiquitous-language — deferred to their build sessions):
+  `QuickAction` (link/trigger discriminated union, landed) · `ClientEngagement` (proposed, G-028).
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | `SESSION_0611` + `goals-ledger` `last_agent`/`updated` set; lane SESSION files carry own frontmatter (merged) |
+| Backlinks/index sweep | goals-ledger G-026/027/028 updated; sessions register via frontmatter (no manual `docs/sprints/index.md`) |
+| Wiki lint | `bun run wiki:lint` → **0 errors**, 89 warnings (pre-existing, not introduced) |
+| Kaizen reflection | yes — Reflections present |
+| Hostile close review | per-lane review wave (Doug 0600/0601, Desi 0600, Giddy 0602); see section above |
+| Code-quality gate (Class-A) | 0600 landing (Class-A UI shell) Doug 9.5/10; 0601 Doug 9.6/10 — no hard cap |
+| Runtime verification (Doug) | 0600 `/app` probed live @375 authed (overflowX 0, 44px targets, 344/344 build); 0601 hello-route static build + smoke 200 |
+| Evidence-artifact URL | https://claude.ai/code/artifact/7e205a44-c681-462a-b6ee-9b17a9329f26 (375px before/after + desktop) |
+| Review & Recommend | yes — Next session = G-026 WS-3 (SESSION_0613 staged) |
+| Memory sweep | 1 new: diff-base-skew under a moving trunk (`git show --stat` over two-dot diff) |
+| Next session unblock check | unblocked — WS-3 panels exist on main + `AttentionPanelsPlaceholder` seam landed |
+| Git hygiene | branch main; 3 lane worktrees removed + 4 branches deleted; selective-add (no `git add -A`); pushed `c3c52572`; close docs = 2nd docs-only push (free — no deploy) |
+| Graphify update | nodes=19604 edges=37525 communities=2687 (pre-commit, FS-0025) |
+
+## Review log
+
+- SESSION_0611_TASK_01/02/03 executed. Review wave: Doug (0600+0601), Desi (0600), Giddy (0602) — all
+  GO / GO-WITH-NOTE; Desi P1 folded (`84a11721`), P3 follow-ups ledgered (G-026/027). No open blockers.
+
+## Next session
+
+### Goal
+
+**G-026 WS-3** — mount the real SESSION_0593 State-of-Dojo panels
+(`components/app/state-of-dojo/{state,component-catalog,card-catalog,cookbook}-panel.tsx`, now on main)
+into the `/app` landing's `AttentionPanelsPlaceholder` seam that 0600 just built. Serial-after-0600, now
+unblocked. **Operator-redirectable alternatives:** board P0s — RISK #2 (CSP enforce flip) / FI-001
+(Truelson onboarding); or G-028 S1 (onboarding forms — larger; needs F5=5b anchor extraction + G-027 B1
+`rdd_dev` DB first).
+
+### Inputs to read
+
+`SESSION_0600` (the `_landing` seam + `AttentionPanelsPlaceholder` `<Suspense>` contract), the 4 panel
+components, G-026 WS-3 row.
+
+### First task
+
+Replace `AttentionPanelsPlaceholder`'s `<Suspense>` stubs with the real self-fetching panels behind the
+frozen import-path contract; verify 375px (no regression) + `next build`.
