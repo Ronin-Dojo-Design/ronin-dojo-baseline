@@ -2,7 +2,7 @@
 title: "SESSION 0613 — G-026 WS-3: mount real SESSION_0593 State-of-Dojo panels into the /app landing seam"
 slug: session-0613
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-21
 updated: 2026-07-21
 last_agent: claude-session-0611

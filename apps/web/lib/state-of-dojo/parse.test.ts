@@ -122,6 +122,17 @@ describe("detectOperatorPending", () => {
   test("no match on unrelated pending text", () => {
     expect(detectOperatorPending("PR review pending from Doug")).toBe(false)
   })
+
+  test("genuine pending phrasings match", () => {
+    expect(detectOperatorPending("pending operator ratification")).toBe(true)
+    expect(detectOperatorPending("operator ratification pending")).toBe(true)
+    expect(detectOperatorPending("ratification pending")).toBe(true)
+  })
+
+  test("'operator-ratified' (goal is DONE) must NOT match — the G-023 regression", () => {
+    expect(detectOperatorPending("operator-ratified direction, SESSION_0574")).toBe(false)
+    expect(detectOperatorPending("operator-ratified")).toBe(false)
+  })
 })
 
 describe("detectReviewSignal", () => {

@@ -171,6 +171,17 @@ else
   EV_GRAPHIFY="SKIP (absent)"
 fi
 
+# ── Gate 7b — State-of-Dojo render (deterministic; publish is agent-on-ask) ───
+# The live view is /app/state (0 tokens). This just refreshes the static snapshot
+# out/state-of-project.html (gitignored) for a vault copy — never publishes an Artifact
+# (that's an agent step). SESSION_0617 / research-review-state-of-dojo-automation.
+section "Gate 7b — State-of-Dojo render"
+if bun scripts/state-of-project.ts >/dev/null 2>&1; then
+  echo "rendered out/state-of-project.html (cite /app/state for the live view; publish only on operator ask)."
+else
+  echo "SKIP: state-of-project render returned non-zero."
+fi
+
 # ── Gate 8 — Git state (report only, never act) ──────────────────────────────
 section "Gate 8 — Git state"
 G_BRANCH="$(git branch --show-current 2>/dev/null || echo '(detached)')"

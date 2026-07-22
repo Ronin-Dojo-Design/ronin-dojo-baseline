@@ -133,8 +133,12 @@ export function detectPushGateHeld(body: string): boolean {
   return PUSH_GATE_RE.test(body)
 }
 
+// Matches a genuine PENDING signal only — the bare `ratif` alternation was dropped because it
+// false-matched "operator-ratified" (goal is DONE, not pending) and mis-flagged ratified goals
+// (G-020/021/023) as "Ratification pending" in the needs-you feed. Every branch now requires the
+// word "pending", so "operator-ratified" / "ratified by operator" can never match.
 const OPERATOR_PENDING_RE =
-  /operator[^\n]{0,40}(?:pending|ratif)|(?:pending|ratif)[^\n]{0,40}\(operator\)/i
+  /operator[^\n]{0,40}pending|pending[^\n]{0,40}operator|pending ratification|ratification pending/i
 
 /** A row is tagged operator-pending (ratification/decision owed) — the "needs-you" feed's
  * second source. Distinct from `detectReviewSignal`: pending ≠ mid-review. */

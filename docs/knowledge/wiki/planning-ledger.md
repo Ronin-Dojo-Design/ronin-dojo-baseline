@@ -421,6 +421,23 @@ plan scope.
 - **Next step:** `/pp` plan session → recipe card (+ SOT_Cookbook row) → possibly `G-NNN`. Pairs with
   [G-023](goals-ledger.md) (recipe OS) · [G-029](goals-ledger.md) (per-brand vault ritual).
 
+### PL-019 — `Brian_Scott_Master_Vault` consolidation (work + family + personal, one Obsidian Sync master)
+
+- **Status:** in-progress — P2 (operator, 2026-07-22, SESSION_0617). Supersedes/absorbs the vault-consolidation
+  half of [PL-008](#pl-008--vault-consolidation--sot-per-brand-vaults-as-own-repos--per-brand-tooling).
+- **Problem (diagnosed from operator screenshots):** ~7 scattered Obsidian vaults across **two sync mechanisms**
+  — iCloud Drive (`clients`, `RoninDojoObsidian`, `PodsJWT`, `RoninDojoDesign`) vs **Obsidian Sync** (phone
+  `RDD_Master_Vault` ↔ remote **"Baseline"**). No Sync pairing between the iCloud copies and the "Baseline"
+  remote, so the phone master never lands on the Mac (root cause of "State-of-Dojo not on desktop").
+- **Target:** ONE master **`Brian_Scott_Master_Vault`** (work + a family folder + a personal folder), backed by
+  the **"Baseline" Obsidian Sync remote** as the single SoT. Mac local master = renamed `~/Desktop/Baseline_Vault`
+  → `~/Desktop/Brian_Scott_Master_Vault` (done this session).
+- **Plan:** (1) operator connects the Mac master to the "Baseline" Sync remote (UI-only, operator does it).
+  (2) Non-destructive merge script (`vault-merge.sh`) zip-backs-up the master then rsyncs each source's notes+
+  attachments into `_import/<source>/` (excludes `.obsidian`/`.git`/`node_modules`/`.trash`; **no deletes**).
+  Real note volume: Baseline_Vault 3,338 · Ronin_Baseline 210 · RoninDojoDesign 16 · THIS_ONE_VAULT 0.
+  (3) Verify on both devices, then retire the iCloud copies. **Lane:** vault-infra / personal-ops.
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.

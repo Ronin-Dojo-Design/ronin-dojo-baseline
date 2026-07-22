@@ -309,21 +309,21 @@ gold-standard bar on exactly the custom code the matrix exists to police (the ke
 kind of work), not Dirstarter-derived CRUD. Skip with a one-line "no Class-A custom code this session"
 when the diff is docs / config / thin-wrapper only.
 
-### 6d. Render the State-of-Dojo projection (what *changed*) — standing step
+### 6d. State-of-Dojo at bow-out — deterministic render; publish only on ask
 
-**Standing bow-out step (SESSION_0617; PL-003).** Publishing an Artifact is an *agent* step the
-deterministic gate runner structurally can't do — so the agent renders + publishes this every close.
-Symmetric to the bow-in render: after the close lands, regenerate + publish the projection so the operator
-sees what *changed* this session (new/closed sessions, moved goal ladders, cleared/added risk + needs-you
-rows), and paste the Artifact URL into the SESSION file `## Artifacts` table:
+**The zero-token default (SESSION_0617, [`research-review-state-of-dojo-automation`](../architecture/research/research-review-state-of-dojo-automation.md)).**
+The live route **`/app/state`** already reflects `main` on its ~5-min `revalidate` window — the operator sees
+what changed for **0 agent tokens**. So:
 
-```bash
-bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)
-```
+- **The render is a deterministic gate:** `bow-out-gates.sh` runs `bun scripts/state-of-project.ts`
+  (→ `out/state-of-project.html`, gitignored) every close — no agent work.
+- **Petey's bow-out three questions include the publish ask** (symmetric to bow-in): ① did we hit the goal /
+  what landed? ② what's the next lane (stage the stub)? ③ **publish a frozen State-of-Dojo snapshot + push?**
+  Only on a *yes* to (3) does the agent publish an Artifact (`/preview-artifacts`) and paste the URL into
+  `## Artifacts`. Otherwise cite `/app/state`.
 
-Publish via **`/preview-artifacts`** (re-publishing under the same Artifact updates the one URL in place).
-The in-app twin `/app/state` reflects `main` on its own `revalidate` window. Projection-only — never edits a
-ledger; if the render surfaces a stale status, fix it through the finding router (§6.7), not the renderer.
+Projection-only — never edits a ledger; if the render surfaces a stale status, fix it through the finding
+router (§6.7), not the renderer. (The formal bow-out three-questions ritual is G-031 S5, symmetric to bow-in.)
 
 ### 6.5. Review & Recommend (stage the next session)
 

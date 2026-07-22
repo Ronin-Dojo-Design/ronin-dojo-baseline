@@ -282,7 +282,7 @@ function page(feed: Feed): string {
 <body>
 <header class="masthead">
   <div class="eyebrow">Ronin Dojo Design</div>
-  <h1>State of the Dojo <span class="prov">(name pending operator ratification)</span></h1>
+  <h1>State of the Dojo</h1>
   <nav class="tabs" role="tablist">${tabs}</nav>
   <div class="meta">${sessions.length} sessions · ${goals.length} goals · ${prCount} open PR(s) · rendered ${esc(renderedAt)}</div>
 </header>

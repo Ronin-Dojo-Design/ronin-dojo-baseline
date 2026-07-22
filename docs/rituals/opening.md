@@ -321,23 +321,22 @@ The opening ritual is done. From here forward, you are operating as Petey or Cod
 
 If anything in the previous SESSION file or the program plan looks stale or contradictory, raise it before starting work. Better to spend two minutes confirming than two hours building against the wrong understanding.
 
-## Render the State-of-Dojo projection (what's *planned*) — standing step
+## State-of-Dojo at bow-in — cite the live route; publish only on ask
 
-**Standing bow-in step (SESSION_0617; publishing is an agent step, not scriptable — PL-003).** The
-deterministic gate can run the script but cannot publish an Artifact, so the *agent* renders + publishes
-this every bow-in (and bow-out) so the operator always sees the current landscape without asking. Surface
-this session's landscape (planned sessions, goal ladders, risk-watch, needs-you) as a browsable dashboard —
-render + publish the projection, then paste the Artifact URL into the SESSION file `## Artifacts` table:
+**The zero-token default (SESSION_0617, [`research-review-state-of-dojo-automation`](../architecture/research/research-review-state-of-dojo-automation.md)).**
+The always-current State-of-Dojo already lives at the deployed route **`/app/state`** (`StatePanel`
+self-fetches `main`, ~5-min cache) — so the operator sees the landscape for **0 agent tokens** by opening one
+URL. **Do not agent-publish an Artifact every session** (that was the walked-back over-correction). Instead:
 
-```bash
-bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)
-```
+- **Cite `/app/state`** at bow-in (free, live).
+- The **render is deterministic** — `bun scripts/state-of-project.ts` (→ `out/state-of-project.html`) runs in
+  the bow-out gate runner, not as agent work.
+- **Petey's bow-in questions include the publish ask** — as part of the three questions (*what are we doing? /
+  what's queued? / are we pivoting?*), Petey asks **"want a frozen State-of-Dojo snapshot published?"** Only
+  then does the agent publish an Artifact (on-demand, `/preview-artifacts`) and paste the URL into `## Artifacts`.
 
-Then publish that file via **`/preview-artifacts`** for one shareable URL (the agent-publishes-the-Artifact
-step). The live in-app twin is **`/app/state`** (mounts the same projection at runtime). Projection-only —
-reading `docs/sprints/*` + `goals-ledger.md`, never writing a ledger. See
-[`state-of-project-projection.md`](../protocols/state-of-project-projection.md). (The reusable `sotd` skill
-is deferred — author it after this step runs 2–3×.)
+Projection-only (reads `docs/sprints/*` + `goals-ledger.md`, never writes a ledger). See
+[`state-of-project-projection.md`](../protocols/state-of-project-projection.md).
 
 ## What this ritual is NOT
 

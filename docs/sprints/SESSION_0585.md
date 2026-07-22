@@ -2,7 +2,7 @@
 title: "SESSION 0585 — SOT dashboard slice 1: State-of-the-Dojo feed + render"
 slug: session-0585
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-20
 updated: 2026-07-20
 last_agent: claude-session-0585

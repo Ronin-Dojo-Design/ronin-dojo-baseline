@@ -2,7 +2,7 @@
 title: "SESSION 0583 — G-022 Lane A slice S2: neighborhood glow, empty states, difficulty tooltips, WL-P2-65/66"
 slug: session-0583
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-20
 updated: 2026-07-20
 last_agent: claude-session-0583
