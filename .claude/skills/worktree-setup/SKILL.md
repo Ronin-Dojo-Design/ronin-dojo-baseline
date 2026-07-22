@@ -1,12 +1,13 @@
 ---
 name: worktree-setup
-description: Bootstrap a fresh git worktree so gates and the dev server run — installs deps, copies the canonical .env, generates the Prisma client. Use when a worktree has no node_modules / .env / Prisma client, when tsc/oxlint/bun test/next dev fail on module resolution, or when the user says "/worktree-setup", "bootstrap this worktree", or "set up the worktree".
+description: Bootstrap a fresh git worktree so gates and the dev server run — installs deps, copies the canonical apps/web .env, creates a placeholder apps/baseline .env, and generates Prisma clients. Use when a worktree has no node_modules / .env / Prisma client, when tsc/oxlint/bun test/next dev fail on module resolution, or when the user says "/worktree-setup", "bootstrap this worktree", or "set up the worktree".
 ---
 
 A fresh git worktree (a `../ronin-NNNN` created off `main`, not the canonical
 `/Users/brianscott/dev/ronin-dojo-app`) is **not set up**: no `node_modules`, no `apps/web/.env`, no
-generated Prisma client, and `graphify` reads 0 nodes. Run this **before any gate** (`tsc`, `oxlint`,
-`bun test`, `next dev`) — otherwise they fail on module resolution and look like a broken repo.
+`apps/baseline/.env`, no generated Prisma clients, and `graphify` reads 0 nodes. Run this **before any
+gate** (`tsc`, `oxlint`, `bun test`, `next dev`) — otherwise they fail on module resolution and look like a
+broken repo.
 
 Run `.claude/skills/worktree-setup/bootstrap.sh` from the worktree (or follow it manually). It:
 
@@ -16,7 +17,11 @@ Run `.claude/skills/worktree-setup/bootstrap.sh` from the worktree (or follow it
    means the postinstall generates the client in one shot — the documented order installs first and
    hits the `PrismaConfigEnvError: Cannot resolve environment variable: DATABASE_URL` failure.
 2. **`bun install`** from the worktree root (Bun workspace, one root `bun.lock`).
-3. **`bunx prisma generate --no-hints`** if the client is still missing (covers the throwaway-env path).
+3. **Generates `apps/web`'s Prisma client** if the client is still missing (covers the throwaway-env path).
+4. **Ensures `apps/baseline/.env` exists** with a placeholder `DATABASE_URL` only — no real Baseline DB or
+   secret is provisioned by bootstrap.
+5. **Generates `apps/baseline`'s Prisma client** if the client is still missing, using the placeholder
+   `DATABASE_URL` so repo-wide `bun run typecheck` can run in fresh worktrees.
 
 Canonical reference (source of truth):
 [`dev-environment.md` § Fresh worktree bootstrap](../../../docs/runbooks/dev-environment/dev-environment.md#fresh-worktree-bootstrap).
@@ -29,3 +34,5 @@ Canonical reference (source of truth):
   smoke-checks and `bun -e` / scripts for DB pokes.
 - Dev server: `cd apps/web && npx next dev --turbo` (FS-0002). The copied `.env` points at the local
   `ronindojo_prodsnap` DB (needs Postgres.app running).
+- Baseline runtime work still needs a real `apps/baseline/.env` backed by `baseline_dev`; the bootstrap
+  placeholder is only for Prisma client generation and repo-wide gates.

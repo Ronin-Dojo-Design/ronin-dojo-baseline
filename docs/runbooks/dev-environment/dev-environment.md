@@ -44,28 +44,42 @@ section is cross-linked from
 [`opening.md` → "Before Step 0 — Fresh-worktree bootstrap"](../../rituals/opening.md).
 
 > **Shortcut:** run the **`/worktree-setup`** skill, which executes this sequence —
-> but **env-first** (it copies the canonical `.env` *before* `bun install`), so the prisma
-> `postinstall` succeeds in one shot instead of failing on `DATABASE_URL` (step 2 below) and
-> being patched at steps 4–5.
+> but **env-first** (it copies the canonical `apps/web/.env` *before* `bun install`), so the prisma
+> `postinstall` succeeds in one shot instead of failing on `DATABASE_URL`. It also creates a placeholder
+> `apps/baseline/.env` and generates
+> Baseline's Prisma client so repo-wide `bun run typecheck` works in a fresh worktree.
 
 ```bash
 # 1. Create the worktree off main
 git worktree add ../<worktree-name> -b <branch> main
 
-# 2. Install deps from the worktree ROOT (Bun workspace — one root bun.lock)
+# 2. Enter the worktree root
 cd ../<worktree-name>
+
+# 3. Copy apps/web env vars from the canonical main worktree BEFORE install
+cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env apps/web/.env
+
+# 4. Install deps from the worktree ROOT (Bun workspace — one root bun.lock)
 bun install
 
-# 3. Enter the app dir for env + Prisma
+# 5. Generate the web Prisma client if postinstall did not materialize it
 cd apps/web
+bunx prisma generate --no-hints
 
-# 4. Copy env vars from the canonical main worktree
-cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env .env
+# 6. Provision Baseline's placeholder env and generated Prisma client
+cd ../../apps/baseline
+cat > .env <<'EOF'
+# Placeholder env for fresh-worktree bootstrap only.
+# Replace with a real baseline_dev URL before running the Baseline app.
+DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+BETTER_AUTH_SECRET="placeholder-worktree-secret"
+BETTER_AUTH_URL="http://localhost:3100"
+EOF
+DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder" \
+  bunx prisma generate --no-hints
 
-# 5. Generate the Prisma client
-bunx prisma generate --schema prisma/schema.prisma --no-hints
-
-# 6. Verify
+# 7. Verify
+cd ../web
 bun test ./server/web/schedule/
 ```
 
@@ -86,7 +100,14 @@ If the canonical `.env` is unavailable, the worktree needs at minimum:
 - `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` — optional analytics domain override; leave blank to derive from `NEXT_PUBLIC_SITE_URL`.
 - `AI_GATEWAY_API_KEY`, `AI_CHAT_MODEL`, `AI_COMPLETION_MODEL` — optional content automation through Vercel AI Gateway.
 
-### Step 6 detail — pending Prisma migrations (dev only)
+For `apps/baseline`, fresh-worktree bootstrap intentionally writes only placeholder values:
+
+- `DATABASE_URL=postgresql://placeholder:placeholder@localhost:5432/placeholder` — enough for Prisma
+  generate/typecheck, not a runnable Baseline database.
+- `BETTER_AUTH_SECRET=placeholder-worktree-secret` and `BETTER_AUTH_URL=http://localhost:3100` — enough to
+  satisfy local env reads during tooling. Replace them with real local values before running Baseline.
+
+### Step 7 detail — pending Prisma migrations (dev only)
 
 If `bun test ./server/web/...` fails with table-missing errors, first print the parent-shell URL names,
 then inspect Prisma's own datasource banner without exposing credentials:
