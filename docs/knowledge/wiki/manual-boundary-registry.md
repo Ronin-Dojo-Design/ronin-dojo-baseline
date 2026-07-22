@@ -340,6 +340,8 @@ SESSION_0171 update: Gate 5 (public media storage) now advanced significantly. L
 
 This boundary stays `open` until those five steps are verified. SESSION_0031 implementation does not depend on them, but staging/launch sessions do.
 
+**MB-018 — `/app/token-cost` prod-render smoke (WS-D).** Status: `open`. Owner: operator / Doug. The State-of-Dojo token-cost panel (`/app/token-cost`) can't be pixel-verified locally: `/app/*` is auth-gated admin, and the feed reads `docs/sprints/*` `telemetry:` frontmatter via the live GitHub contents API (locally degraded → empty state, so SESSION_0610 + 0612 both saw empty-state locally and deferred). Telemetry sessions 0587 / 0598 / 0603 are inside the `MAX_SESSIONS=80` window, so on prod the chart *should* render 3 points + the `--sotd-accent` border. **Post-deploy check (after the SESSION_0612 push lands on BBL prod):** sign in as admin on `blackbeltlegacy.com`, open `/app/token-cost`, confirm (1) the area chart renders with the endpoint dot fully inside the box at both extremes (SESSION_0612 clamp), (2) the `peak $X · latest $Y` caption reads correctly, (3) the two tables show right-aligned tabular numerics with left-aligned `Session`/`Model` label headers, (4) the accent border is the primary color (not the dark `currentcolor` fallback). Proof = a screenshot. Verified via source + clean `next build` (Doug, SESSION_0612) — the live render is the only open leg.
+
 ### 3. Closure rule
 
 A boundary may only become `verified` when:
