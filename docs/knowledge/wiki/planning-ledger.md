@@ -357,16 +357,23 @@ plan scope.
   build-on-MMB-first then generalize (the CRM pattern) vs RDD-first.
 - **Next step:** own `/pp` plan session → `G-NNN` (or G-021/G-027 children). Feeds PL-013 (asset source).
 
-### PL-015 — Phase 14 RDD lift from the old ronin-dojo-monorepo — queued · ⚠ source doc needed
+### PL-015 — Phase 14 RDD lift from the old ronin-dojo-monorepo — queued · **source doc in hand**
 
-- **Origin:** operator directive, bow-out 2026-07-22 (*"I have the document for that if we don't have it"*).
-- **Coverage check (repo):** `Phase 14` appears in ~6 docs (PL-012 = the Bento Box "RDD phase 14";
-  SESSION_0589 GPTLL-001 noted *"Phase 14 not found in repo graph"*), but **no G-row** and **no lift
-  spec** — the distinct "RDD lift from the old monorepo" migration is unscoped here.
-- **⚠ Blocker:** the Phase-14 source document is **NOT in this repo** — **operator to hand it over** before
-  the plan session (graphify/grep found only passing references).
-- **Next step:** operator provides the doc → `/pp` plan session scopes what "lift" ports (which
-  surfaces/features from the old monorepo → `apps/rdd`) → `G-NNN`. Relates to PL-012 · [G-027](goals-ledger.md).
+- **Origin:** operator directive, bow-out 2026-07-22.
+- **✅ Source doc imported (2026-07-22):** [`phase14-local-deployment-checklist`](../../product/rdd/phase14-local-deployment-checklist.md)
+  (operator-provided from Baseline_Vault; secret-scanned clean). It is a 14-section DirStarter local-deploy
+  + Phase 1–14 port/lift checklist: **§0 app-boundary gate** (Option A `apps/rdd-web` new app —
+  *recommended* — vs Option B tenant), inventory → scaffold → DB/env → design system → **6 bounded epics
+  A–F (`#248`–`#253`, master epic `#247`)** → feature-lift rule ("port behavior, not filenames") → smoke
+  → quality gates → Vercel preview → prod. Carries its **own `/grill-me` decision gate (15 Qs)** + a
+  **recommended first session RDD-0001** (repo-truth + app-boundary ADR; *do not lift feature code until
+  the boundary is decided*).
+- **Coverage check:** overlaps **[G-027](goals-ledger.md)** (RDD umbrella app deploy) + **[G-028](goals-ledger.md)**
+  (already resolved F5 = build in `apps/rdd` now, ADR 0038 own DB) — this checklist is the **full lift
+  program** those goals sit inside. Legacy ref repo = `ronin-dojo-monorepo`.
+- **Next step:** **ready for its `/pp` plan session** (no longer blocked) — run the doc's §0 app-boundary
+  gate + 15-Q grill first, then graduate to `G-NNN` (or G-027 children) with epics `#247`–`#253` as the
+  lane map. Relates to PL-012 · G-027 · G-028.
 
 ### PL-016 — Obsidian Vaults / Admin Dashboards: financial tracking + business planning/vision — queued
 
@@ -395,6 +402,24 @@ plan scope.
   agent-systems-map into an operating org.
 - **Next step:** operator provides Roadmap v1.0 → `/pp` plan session → `G-NNN`. Pairs with PL-016
   (business layer) + [[agent-systems-map]].
+
+### PL-018 — Repo-Refinement-Review recipe / session template — queued
+
+- **Origin:** operator directive, 2026-07-22 (bow-out follow-on).
+- **Coverage check:** the **`state-sweep`** recipe (SESSION_0616 — `docs/protocols/recipes/state-sweep.md`
+  on the `state-sweep-deliverables` branch, lands on `main` via SESSION_0614) is the nearest existing
+  template — assess repo-state + ledger status-flip + autonomous-lane prep. The operator's **Repo-Refinement-Review**
+  is related but broader; **resolve at plan time** whether it *supersedes/renames* `state-sweep` or is a
+  sibling that adds a *refinement* pass (not just assess-and-flip, but actively refine).
+- **The idea:** a durable session-template recipe for a periodic **repo refinement review** — sweep the
+  ledgers + repo state, flip stale, review + refine (dedupe / dead-code / drift / quality), stage follow-ups
+  — a first-class SOT_Cookbook card, **paired with the per-brand SOT-vault update (G-029)** so a refinement
+  review also refreshes the brand/client vault.
+- **Open forks:** name (Repo-Refinement-Review vs keep `state-sweep`) · scope (assess-only vs assess+refine)
+  · cadence (per-sprint / on-demand) · relationship to [`hostile-repo-review`](../../protocols/hostile-repo-review.md)
+  (the repo-wide lean-out) + the 3 design passes.
+- **Next step:** `/pp` plan session → recipe card (+ SOT_Cookbook row) → possibly `G-NNN`. Pairs with
+  [G-023](goals-ledger.md) (recipe OS) · [G-029](goals-ledger.md) (per-brand vault ritual).
 
 ## Cross-references
 

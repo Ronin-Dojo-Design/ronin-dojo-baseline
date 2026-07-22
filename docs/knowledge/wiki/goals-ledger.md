@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-21
-last_agent: claude-session-0599
+updated: 2026-07-22
+last_agent: petey-session-0616
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -683,3 +683,26 @@ aggregator reads it with no new parser logic.
   primitives, existing entitlement gating — no 5th authz system).
 - **Origin:** operator uploads under `docs/product/rdd/assets/`. **Child:** `session-0602-rdd-onboarding-forms-plan`.
 - **Cross-refs:** `new-brand-interview-client.md` + `new-brand-intake.md`; PL-011.
+
+### G-029 — Per-brand/client session overlay → SOT-Vault updates (generalize game-on/off)
+
+- **Status:** queued — new (operator, 2026-07-22, SESSION_0616 follow-on). Spans [G-014](#g-014--obsidian-dashboard-epic--vault-kit--dashboard-designplanning)
+  (Obsidian vault-kit) · [G-023](#g-023--workflow_60-session-recipe-os--sot_cookbook--brand-sot-cards) (session-recipe OS) ·
+  [G-027](#g-027--rdd-umbrella-app-deploy-ronindojodesigncom--new-brand-onboarding-recipe-family) (RDD umbrella);
+  operator OK'd "part of the RDD goal or a new one" → **new goal** (it's cross-cutting).
+- **Objective:** keep **`/bow-in` + `/bow-out` as the canonical repo / master-vault-wide ritual** — every
+  session, regardless of brand/client (game-on/off already *invoke* them, never replace —
+  `.claude/skills/game-{on,off}/SKILL.md` step 1). **Generalize the MMB `/game-on` + `/game-off` lean
+  overlay into a per-brand/client session overlay** so each brand's/client's **SOT Vault** gets its
+  **per-session updates** (closing card · read-only projections · per-brand State-of-Dojo render ·
+  telemetry) the way the Mammoth vault does today — **one parameterized overlay, per-brand vault target,
+  not a fork per brand.**
+- **Why:** only MMB has the game-on/off → vault loop today; BBL · Baseline · WEKAF · ACD · RDD have no
+  per-session SOT-vault update path. As the vault constellation lands ([[obsidian-vault-constellation]] +
+  PL-008 SOT-per-brand vaults), each brand needs the same ritual→vault wiring.
+- **Open forks (plan-time):** overlay parameterization (brand/client arg → vault path) · which vault
+  artifacts update per session · authority split (repo owns code/specs; brand vault owns ops/projections —
+  the MMB rule generalized) · secret-scan-before-vault-commit per brand · tie to the per-brand State-of-Dojo
+  publish (G-023 / PL-003).
+- **Recipe substrate:** PL-018 (Repo-Refinement-Review recipe) + `game-{on,off}`. **Lane:** vault-kit /
+  session-OS.
