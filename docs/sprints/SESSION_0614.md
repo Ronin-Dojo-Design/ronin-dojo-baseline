@@ -101,6 +101,28 @@ Conflict watch: B's `wiring-ledger` flips (modify existing rows) vs any lane tha
 - If a lane errored or produced nothing: read its log, treat as "not landed", carry its ticket forward
   (do NOT merge an empty/failed lane).
 
+## Launch results — overnight run (2026-07-21 22:40–23:43 MDT)
+
+All 5 lanes ran via `codex exec` (sequential, light-first) and **committed 1 commit each, holding push**.
+Ground-truth diffs confirm each stayed in its owned-file set.
+
+| Lane | Branch | Commit | Gate result | Caveat for the sweep |
+|---|---|---|---|---|
+| 5 | `lane-dbs-001` | `90f088e2` | CI YAML: `actionlint` absent → YAML-parse + workflow-step inspection; mammoth dry-run confirms the new step takes the `bun run test` branch. Stayed YAML-only (mammoth pkg untouched). | none |
+| 4 | `lane-wl-p3-59` | `b3a93b51` | Edited SKILL.md + **new `bootstrap.sh`** + runbook. | ⚠ **proof blocked** — `prisma generate` SIGSEGV'd in the sandbox (`SecItemCopyMatching -67674` Keychain), so the disposable-worktree typecheck proof is incomplete. Verify the bootstrap change in a normal shell. Did **not** re-link the `.agents/` twin (D-053) — re-link at merge. |
+| 1 | `lane-wl-p3-33` | `6f70d079` | Focused **4/4**; full suite hit **1 pre-existing** `session-0184-*` zombie-row flake → lane cleaned it → **1671/0** green. | side effect: cleaned zombie rows from the shared local DB (benign). |
+| 2 | `lane-wl-p3-40` | `8b507b0f` | Focused **10/10** · full **1668/0** · typecheck ✓. | none — cleanest lane. |
+| 3 | `lane-wl-p3-25` | `f6912435` | typecheck ✓ · focused **32/0** · full **1670/0**. Registration timeout was **already 30s** (that sub-item was stale). | ⚠ `next build` blocked by the same Keychain SIGSEGV — needs a clean local build. Minted its own **SESSION_0615** on its branch (merge or renumber). |
+
+**Recurring caveat — codex-sandbox macOS Keychain (`SecItemCopyMatching failed -67674`):** an
+*environment* limitation, not a code defect — the sandboxed `prisma generate` (invoked by `next build`)
+can't reach the Keychain, so the **build gate is unverified for lanes 3 & 4**. The sweep's authoritative
+**Doug clean rerun runs `next build` in a normal shell** on the merged tree — that closes the gate. Do
+not treat the in-sandbox build error as a lane failure.
+
+Net: **5/5 lanes landed in-scope, holding push.** Lanes 2 & 5 fully green; lane 1 green after a
+pre-existing-flake cleanup; lanes 3 & 4 green on typecheck/tests but need a clean-shell `next build`.
+
 ## Status
 
 Single source of truth is the frontmatter `status:` field.
