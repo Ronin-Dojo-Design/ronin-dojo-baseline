@@ -4561,3 +4561,30 @@ model PlanningIntake {
   @@index([category])
   @@index([createdById])
 }
+
+/// Durable, deduplicated rollup of CSP violation reports (SESSION_0617, research-review
+/// security-headers Fork 1 → 1B). The public `/api/csp-report` sink upserts one row per DISTINCT
+/// violation shape — keyed on `dedupeHash` (sha256 over `violatedDirective|blockedUri|documentUri`,
+/// all query-scrubbed) — incrementing `count` + bumping `lastSeenAt` on each repeat. Bounding rows to
+/// distinct shapes makes the row-count immune to volume floods, so the Report-Only stream is queryable
+/// ("clean for N days") before the `CSP_ENFORCE` flip. Read via `scripts/csp-violations.ts`.
+/// TODO(G-030-adjacent): a read-only AdminCollection review surface at `/app/csp-violations` is a
+/// nice-to-have follow-up (out of scope for this build — the script covers operator review for now).
+// @added   SESSION_0617 (2026-07-22)
+// @why     Durable, dedup-rolled CSP Report-Only store so "clean for N days" is provable pre-enforce
+// @wired   app/api/csp-report/route.ts, scripts/csp-violations.ts, lib/rate-limiter.ts (csp_report bucket)
+model CspViolationReport {
+  id String @id @default(cuid(2))
+  /// Stable dedup key — sha256 hex of `violatedDirective|blockedUri|documentUri` (query-scrubbed).
+  dedupeHash        String  @unique
+  violatedDirective String?
+  blockedUri        String?
+  documentUri       String?
+  disposition       String?
+  count             Int      @default(1)
+  firstSeenAt       DateTime @default(now())
+  lastSeenAt        DateTime @default(now())
+
+  @@index([count])
+  @@index([lastSeenAt])
+}

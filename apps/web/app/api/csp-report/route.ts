@@ -7,14 +7,23 @@
  *    objects, each `{ type, body: { blockedURL, effectiveDirective, documentURL, … } }`.
  *  - Legacy (`application/csp-report`): a single `{ "csp-report": { "blocked-uri", … } }`.
  *
- * Log-only (no DB / no Redis — locked, SESSION_0536): each violation is emitted as one
- * compact `console.warn` line so it lands in Vercel logs for the Report-Only observation
- * window before the `CSP_ENFORCE` flip. Nothing sensitive is logged.
+ * Emits one compact `console.warn` line per violation (belt-and-suspenders — lands in Vercel
+ * logs) AND upserts a deduplicated rollup row into `CspViolationReport` (SESSION_0617) so the
+ * Report-Only stream is queryable ("clean for N days") before the `CSP_ENFORCE` flip. The upsert
+ * is keyed on a stable `dedupeHash` over `(violatedDirective, blockedUri, documentUri)` — one row
+ * per DISTINCT violation shape, incrementing `count` + bumping `lastSeenAt` — so the row-count is
+ * immune to volume floods. Nothing sensitive is stored (query strings are scrubbed).
  *
- * Hardened against abuse: caps the body at ~64KB and applies a cheap per-instance
- * in-memory throttle so a flood cannot spam the logs. NEVER throws to the client —
- * every path returns 204.
+ * Hardened against abuse: caps the body at ~64KB, applies a cheap per-instance in-memory throttle,
+ * and IP-rate-limits the DB write via the `csp_report` bucket (fail-CLOSED: a limiter error just
+ * SKIPS the upsert). Persistence is best-effort — a DB error is swallowed. NEVER throws to the
+ * client: every path returns 204 (the browser's report POST must never see a non-204 or a 500).
  */
+
+import { tryCatch } from "@dirstack/utils"
+import { createHash } from "node:crypto"
+import { getIP, isRateLimited } from "~/lib/rate-limiter"
+import { db } from "~/services/db"
 
 const MAX_BODY_BYTES = 64 * 1024
 
@@ -100,6 +109,58 @@ const logViolation = (v: NormalizedViolation): void => {
   )
 }
 
+// The query-scrubbed fields we dedupe + persist on. `blockedUri`/`documentUri` are already stripped
+// of query/fragment; `violatedDirective`/`disposition` are pass-through.
+type ScrubbedViolation = {
+  violatedDirective: string | null
+  blockedUri: string | null
+  documentUri: string | null
+  disposition: string | null
+}
+
+export const scrub = (v: NormalizedViolation): ScrubbedViolation => ({
+  violatedDirective: v.violatedDirective ?? null,
+  blockedUri: stripQuery(v.blockedURI),
+  documentUri: stripQuery(v.documentURI),
+  disposition: v.disposition ?? null,
+})
+
+/**
+ * Stable dedup key for a violation shape: sha256 hex over the three dedup dimensions
+ * (`violatedDirective`, `blockedUri`, `documentUri`), each already query-scrubbed. `disposition`
+ * is intentionally NOT part of the key — the same blocked resource under `report` vs `enforce`
+ * is the same shape. Exported (pure) so the dedupe contract is unit-testable without a DB.
+ */
+export const cspDedupeHash = (v: ScrubbedViolation): string =>
+  createHash("sha256")
+    .update(`${v.violatedDirective ?? ""}|${v.blockedUri ?? ""}|${v.documentUri ?? ""}`)
+    .digest("hex")
+
+// Upsert the deduplicated rollup row: insert-or-increment. Best-effort — a DB error is logged and
+// swallowed so persistence can never break the (always-204) report path.
+const persistViolation = async (v: NormalizedViolation): Promise<void> => {
+  const s = scrub(v)
+  const dedupeHash = cspDedupeHash(s)
+  const { error } = await tryCatch(
+    db.cspViolationReport.upsert({
+      where: { dedupeHash },
+      create: {
+        dedupeHash,
+        violatedDirective: s.violatedDirective,
+        blockedUri: s.blockedUri,
+        documentUri: s.documentUri,
+        disposition: s.disposition,
+      },
+      update: {
+        count: { increment: 1 },
+        lastSeenAt: new Date(),
+        disposition: s.disposition,
+      },
+    }),
+  )
+  if (error) console.error("[csp-report] persist failed:", error)
+}
+
 const noContent = (): Response => new Response(null, { status: 204 })
 
 export async function POST(req: Request): Promise<Response> {
@@ -112,9 +173,19 @@ export async function POST(req: Request): Promise<Response> {
     if (raw.length === 0 || raw.length > MAX_BODY_BYTES) return noContent()
 
     const contentType = req.headers.get("content-type") ?? ""
-    for (const violation of parseReports(raw, contentType)) {
+    const violations = parseReports(raw, contentType)
+
+    // Rate-limit the DB-write path only (IP-keyed). Any failure — no request scope (unit tests),
+    // a limiter error on the fail-CLOSED `csp_report` bucket, or the cap being hit — just skips the
+    // upsert; the `console.warn` still fires and we still return 204.
+    const allowDbWrite = await tryCatch(
+      (async () => !(await isRateLimited(`csp-report:${await getIP()}`, "csp_report")))(),
+    ).then(({ data }) => data ?? false)
+
+    for (const violation of violations) {
       if (throttled()) break
       logViolation(violation)
+      if (allowDbWrite) await persistViolation(violation)
     }
   } catch {
     // Malformed body / parse error — swallow. Browsers must never see a non-204 from

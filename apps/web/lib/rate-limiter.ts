@@ -133,6 +133,15 @@ const limiters = redis
         analytics: true,
         limiter: Ratelimit.slidingWindow(20, "1 h"), // 20 intake submits per hour per IP
       }),
+      // @added SESSION_0617 — bounds DB writes from the PUBLIC, UNAUTHENTICATED `/api/csp-report`
+      // sink (RISK #2). IP-keyed; only the persistence path is gated (the browser always still gets
+      // a 204, and the `console.warn` still fires) so a report flood can't spam upserts. Generous
+      // cap — a page can legitimately emit several distinct violations on load.
+      csp_report: new Ratelimit({
+        redis,
+        analytics: true,
+        limiter: Ratelimit.slidingWindow(60, "1 m"), // 60 report POSTs per minute per IP
+      }),
     }
   : null
 
@@ -168,6 +177,8 @@ export const getIP = async () => {
  *  - `teaser_signup`   — public, UNAUTHENTICATED email capture (spam surface)
  *  - `email_notify`    — gates auth-email / notification sends (mail-flood surface)
  *  - `submission` / `report` — public IP-keyed submit/report (spam surface)
+ *  - `csp_report`      — public, UNAUTHENTICATED CSP-report sink (DB-write-flood surface;
+ *                        failing closed just SKIPS the upsert — the browser still gets 204)
  *
  * The authenticated, actor-keyed write buckets (schedule/attendance/enrollment/…)
  * stay fail-OPEN: they're bounded by the session and blocking a legit member's
@@ -187,6 +198,7 @@ const FAIL_CLOSED_BUCKETS: ReadonlySet<string> = new Set([
   "email_notify",
   "submission",
   "report",
+  "csp_report",
 ])
 
 /**

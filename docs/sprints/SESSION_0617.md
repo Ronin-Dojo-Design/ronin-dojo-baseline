@@ -72,11 +72,17 @@ Inputs to read: the `risk2-csp-status-and-nonce-flip` memory + the CSP header/re
   **2B** (lift the header baseline into the kernel `packages/ui-kit`). ③ Sequence: durable sink → observe
   → flip BBL → kernel-lift. ④ Keep as research-review (not wayfinder).
 
-**SESSION_0617_TASK_03 — Durable CSP report sink (build; operator-approved "store CSP warning").**
-- Persist CSP violations (today log-only in `apps/web/app/api/csp-report/route.ts`) to a queryable store
-  so a multi-day Report-Only window is provable before the enforce flip. Must keep the public endpoint's
-  abuse protections (64KB cap + throttle) and add write-abuse guards (public unauthenticated → DB write).
-  App-code → deploys on push; build + verify, hold at the push gate.
+**SESSION_0617_TASK_03 — Durable CSP report sink (build; operator-approved "store CSP warning"). BUILT + VERIFIED.**
+- Persist CSP violations (was log-only) to a **dedup-rollup** `CspViolationReport` model (upsert on
+  `sha256(violatedDirective|blockedUri|documentUri)`, insert-or-increment `count`), rate-limited via a new
+  fail-closed `csp_report` bucket. All prior protections kept (64KB cap, throttle, always-204, never-throw,
+  query-scrub). Additive migration `20260722000000_add_csp_violation_report`. Review: `bun scripts/csp-violations.ts`.
+- **Doug verify:** launch-safe (8.7/10). Confirmed CI runs `migrate deploy` before `bun test` (`ci.yml`), so the
+  new real-DB persist test passes in CI. One mechanical blocker (oxfmt format-red on 2 test files) FIXED.
+  Gates green: typecheck ✓ · oxlint ✓ · format:check ✓ · 16 tests pass.
+- **Residual (P3, not a blocker):** table has no TTL/retention — operator should `TRUNCATE` it after the
+  `CSP_ENFORCE` flip. Path-varying can mint distinct rows but bounded by the 60/min/IP limit (tiny rows).
+- **HELD at push gate** — app-code → deploys on push; awaiting operator "go".
 
 **SESSION_0617_TASK_04 — Queue G-030 (DONE).** Filed the branded doc-rendering system (frontmatter →
 branded artifact for SOPs/rituals/workflows/data-wiring) to the goals ledger as G-030.
