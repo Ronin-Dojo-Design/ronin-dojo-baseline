@@ -3,7 +3,7 @@
 import { useReducedMotion } from "@mantine/hooks"
 import { ChevronRightIcon } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { useMemo, useState } from "react"
+import { type ReactNode, useMemo, useState } from "react"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -49,14 +49,24 @@ const GROUP_TONES = [
   },
 ] as const
 
-type CommandDeckProps = {
+type CommandDeckData = {
   /** Server-filtered reachable hrefs — same permission rules as the sidebar. */
   allowedHrefs: string[]
   /** Live counts keyed by href; missing/null = no badge. */
   counts: Record<string, number | null>
 }
 
-export const CommandDeck = ({ allowedHrefs, counts }: CommandDeckProps) => {
+/**
+ * The reusable grouped launcher — swipeable group pills + a live-count bento tile
+ * grid over the 7-group `ADMIN_SECTION_GROUPS` SOT (no fork). Carries NO page
+ * chrome (no `Wrapper`): the caller frames it. Consumed by the beta route
+ * (`CommandDeck`) AND, promoted, by the `/app` landing (SESSION_0600 WS-1).
+ */
+export const CommandDeckLauncher = ({
+  allowedHrefs,
+  counts,
+  heading,
+}: CommandDeckData & { heading?: ReactNode }) => {
   const reduceMotion = useReducedMotion()
 
   const groups = useMemo(() => {
@@ -74,22 +84,16 @@ export const CommandDeck = ({ allowedHrefs, counts }: CommandDeckProps) => {
 
   if (!active) {
     return (
-      <Wrapper size="lg" gap="xs">
-        <H3>Command Deck</H3>
+      <Stack direction="column" size="sm" className="w-full">
+        {heading}
         <Note>No sections available.</Note>
-      </Wrapper>
+      </Stack>
     )
   }
 
   return (
-    <Wrapper size="lg" gap="xs">
-      <Stack direction="column" size="xs">
-        <H3>Command Deck</H3>
-        <Note>
-          Beta — the expressive console. Swipe a deck, tap a tile. The flat version lives at{" "}
-          <Link href="/app/sections">/app/sections</Link>.
-        </Note>
-      </Stack>
+    <Stack direction="column" size="sm" className="w-full">
+      {heading}
 
       {/* Group pill rail — horizontally swipeable/scrollable, active pill tinted per group. */}
       <Stack
@@ -168,6 +172,27 @@ export const CommandDeck = ({ allowedHrefs, counts }: CommandDeckProps) => {
           })}
         </motion.div>
       </AnimatePresence>
+    </Stack>
+  )
+}
+
+/**
+ * Beta route chrome (`/app/beta/command-deck`) — the expressive console framing
+ * around the shared `CommandDeckLauncher`. The landing (SESSION_0600) frames the
+ * same launcher with its own heading, so this beta copy stays on the beta route.
+ */
+export const CommandDeck = ({ allowedHrefs, counts }: CommandDeckData) => {
+  return (
+    <Wrapper size="lg" gap="xs">
+      <Stack direction="column" size="xs">
+        <H3>Command Deck</H3>
+        <Note>
+          Beta — the expressive console. Swipe a deck, tap a tile. The flat version lives at{" "}
+          <Link href="/app/sections">/app/sections</Link>.
+        </Note>
+      </Stack>
+
+      <CommandDeckLauncher allowedHrefs={allowedHrefs} counts={counts} />
     </Wrapper>
   )
 }
