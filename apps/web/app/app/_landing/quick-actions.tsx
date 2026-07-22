@@ -28,10 +28,10 @@ export function QuickActions({ allowedIds }: { allowedIds: string[] }) {
 
   return (
     <>
-      <div className="sm:hidden">
+      <div className="w-full min-w-0 sm:hidden">
         <QuickActionCarousel actions={actions} />
       </div>
-      <div className="max-sm:hidden">
+      <div className="w-full min-w-0 max-sm:hidden">
         <QuickActionGrid actions={actions} />
       </div>
 

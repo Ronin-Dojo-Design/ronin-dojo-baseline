@@ -61,7 +61,7 @@ export default async function (_props: PageProps<"/app">) {
       <Note>
         {firstRun
           ? "Get started — add your first member or lead below."
-          : `Signed in as ${user.name ?? user.email ?? "admin"}. Your console and today's numbers are below.`}
+          : `Signed in as ${user.name ?? user.email ?? "admin"}. Your console and dojo overview are below.`}
       </Note>
     </Stack>
   )
@@ -78,7 +78,9 @@ export default async function (_props: PageProps<"/app">) {
   const metricsStrip =
     showMetrics && !firstRun ? (
       <Stack direction="column" size="sm" className="w-full">
-        <H4>Today</H4>
+        {/* Lifetime totals, NOT today's numbers (the charts below own "last 30 days") —
+            DES-0600 P2: the label must not imply a daily figure. */}
+        <H4>At a glance</H4>
         <Stack size="md" className="w-full">
           {[
             { label: "Tools", href: "/app/tools", query: db.tool.count() },

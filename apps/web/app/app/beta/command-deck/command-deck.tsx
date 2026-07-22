@@ -119,7 +119,9 @@ export const CommandDeckLauncher = ({
                 setActiveKey(group.key)
               }}
               className={cx(
-                "shrink-0 snap-start rounded-full border",
+                // ≥44px tap target (DES-0600 P2) — the swipeable pill rail is a
+                // primary touch surface; `size="sm"` alone renders 26px.
+                "min-h-11 shrink-0 snap-start rounded-full border",
                 isActive
                   ? group.tone.pill
                   : "border-border text-muted-foreground hover:text-foreground",

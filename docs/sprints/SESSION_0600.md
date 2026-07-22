@@ -159,6 +159,28 @@ Single source of truth is the frontmatter `status:` field.
 
 **Host contention note:** the parallel-lane fanout drove load average to 224→430 during gating. Typecheck + build + runtime all completed GREEN despite it. No gate *flaked*; the only deferral is the live-email unit suite (deliberate, not a flake). Queue a clean `bun run test` on CI at push.
 
+### DES-0600 review fix (Desi GO-WITH-NOTE, post-hold — 2nd commit)
+
+Applied on the same branch, behavior-preserving, within owned files:
+
+- **P1 (merge blocker) — 375px horizontal overflow.** `quick-actions.tsx` — the carousel/grid
+  wrappers were `min-width:auto` flex children of the column `Stack`, expanding to the carousel's
+  intrinsic width and forcing ~361px of page overflow at 375px. Fix: `w-full min-w-0` on both the
+  `sm:hidden` carousel wrapper and the `max-sm:hidden` grid wrapper. **Re-measured (headless chromium
+  @375px): `scrollWidth == clientWidth == 375`, overflowX = 0px** (was 361px).
+- **P2.1 — tap targets ≥44px.** Added `min-h-11` to the 7 Command Deck group pills
+  (`command-deck.tsx`) and the "Open board" CTA (`loop-board-embed.tsx`) — these surfaces only, not
+  the systemic `sm`-button pattern. **Re-measured: all 7 pills = 44px, CTA = 44px** (were 26px).
+- **P2.2 — "Today" microcopy misread lifetime totals.** Renamed the strip header `<H4>Today</H4>` →
+  `<H4>At a glance</H4>` (the counters are lifetime `db.*.count()`, while the charts below honestly
+  say "last 30 days"); softened the greeting from "today's numbers are below" → "dojo overview are
+  below". **Verified rendered.**
+
+Re-gates (post-fix): typecheck **PASS** (exit 0) · oxlint/oxfmt **PASS** (owned files) · `next build`
+**PASS** (`NEXT_BUILD_EXIT=0`, compiled 3.6min, 344/344). Out-of-scope items (onboarding-tour beacon
+overlap, first-run "Soon" suppression, priority-dot tokenization) left for the coordinator's follow-up
+ledger rows per the review note.
+
 ## Files touched (all within the disjoint owned-file contract)
 
 - `apps/web/app/app/page.tsx` (M) — thin auth-gate; gathers server data, composes `DashboardLanding` slots, gates each by permission.

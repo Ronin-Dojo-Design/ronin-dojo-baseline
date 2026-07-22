@@ -56,7 +56,12 @@ export async function LoopBoardEmbed() {
           </Badge>
         </Stack>
 
-        <Button size="sm" variant="secondary" render={<Link href="/app/loop-board" />}>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="min-h-11"
+          render={<Link href="/app/loop-board" />}
+        >
           Open board
         </Button>
       </Stack>
