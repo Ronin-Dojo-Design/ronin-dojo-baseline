@@ -617,7 +617,12 @@ aggregator reads it with no new parser logic.
   - **WS-1** `session-0600-admin-landing-shell` (staged `recipe: lane` stub): Command Deck promotion +
     `DashboardLanding` shell + quick-action grid+carousel + landing hierarchy (actions/attention above
     fold, metrics demoted, first-run empty state) + loop-board compact embed. AdminTODOist = the embed
-    (NO revived personal-todo surface — reviving re-opens ratified G-003).
+    (NO revived personal-todo surface — reviving re-opens ratified G-003). **DONE — BUILT + MERGED
+    `84a11721` (SESSION_0611 fanout, held from push).** `QuickActionCarousel` landed app-local (not in
+    `common/carousel.tsx`) to avoid a domain type in a domain-agnostic primitive. Desi GO-WITH-NOTE
+    (375px carousel-overflow P1 fixed + 44px tap-targets + "At a glance" microcopy); Doug GO 9.5.
+    Follow-ups: zero-access empty-shell copy · add `/app` mobile e2e spec · onboarding-tour beacon
+    overlap @375 · loop-board priority-dot tokenization (`bg-red-500`→`bg-destructive`).
   - **WS-2** nav rationalization: collapsible sidebar accordion (`components/app/nav.tsx` →
     groups collapsed except active) + mobile routes through `/app/sections`; keep `BottomNav` member
     chrome + `Mab` create-only (no third create affordance). Parallel-safe with WS-1 (disjoint files).
@@ -647,14 +652,24 @@ aggregator reads it with no new parser logic.
 - **Status:** in-progress — P1 (planned SESSION_0598). **Lane:** rdd.
 - **Objective:** stand up `apps/rdd` (own DB/deploy/email/env/CI) + generalize the reusable new-brand
   onboarding recipe family (RDD = exerciser #1).
-- **Children:** `session-0601-rdd-scaffold` (Slice A) → B1/B2/B3/C, staged one at a time.
+- **Children:** `session-0601-rdd-scaffold` (Slice A) — **DONE: BUILT + MERGED `afbd9213`**
+  (SESSION_0611 fanout, held from push; Doug GO-WITH-NOTE 9.6 — Products-CI genuinely gates `apps/rdd`
+  via the `find clients apps` discovery glob; BBL gate correctly skips rdd-only changes). **B1 reminders:**
+  `apps/rdd` `typecheck` needs a `db:generate` prefix once B1 lands `schema.prisma` (CI self-heals via
+  `hashFiles`, the local script won't); adopt `lint:check` at B3. → B1/B2/B3/C, staged one at a time.
 - **Cross-refs:** `new-brand-*` recipe cards; hosts the G-023 State surface; reuses the G-026 admin
   shell (deferred WS-6 Carousel/QuickAction ui-kit extraction — RDD = the second consumer); ADR
   0034/0038/0051; PL-005 + G-018 skin. (Minted at SESSION_0598 — G-026 was already taken by 0599.)
 
 ### G-028 — Branded client-onboarding artifacts + interactive forms (RDD agency)
 
-- **Status:** proposed — own plan session (operator directive SESSION_0598). **Lane:** rdd.
+- **Status:** planned — **SESSION_0602 plan LANDED `2804b080`** (SESSION_0611 fanout; Giddy
+  GO-WITH-NOTE). **7 forks surfaced (F1–F7), un-resolved — pending operator grill:** F1 signature depth ·
+  F2 form-schema shape · F3 entitlement cap · F4 counsel/ESIGN gate · **F5 host app (apps/web-admin vs
+  apps/rdd) = the GATING fork** (the 4 reuse anchors — AdminCollection/`can()`/`lib/media.ts`+`Media`
+  R2 seam/oRPC — are all apps/web-local, none kernel-extracted; 5b forces extraction + kills cross-DB
+  FKs + blocks on 0601) · F6 new `ClientEngagement` record model (not `Lead`) · F7 PDF engine. S1
+  (content+schema) is host/DB-agnostic — safe to adopt on F1/F2 alone; S2 blocks on F5. **Lane:** rdd.
 - **Objective:** brand + make interactive forms of the RDD onboarding templates (Initial Client Meeting /
   MSA / NDA) + future ones, reusable across brands/clients; reuse-first (ONE uploader seam, existing form
   primitives, existing entitlement gating — no 5th authz system).
