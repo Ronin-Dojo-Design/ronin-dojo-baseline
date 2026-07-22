@@ -80,7 +80,7 @@ is an operator-ratified, logged exception** (same contract as the code passes).
 - **Severity:** P3 (YAGNI now — kernel frozen, exports neither)
 - **Finding:** two chart impls (neither an L1), and the card-chassis + plain-table idioms are copied across panels.
 - **Recommendation:** extract shared helpers when a 3rd consumer appears; accept the current hand-rolls (both are tokens-correct + a11y-complete).
-- **Status:** open
+- **Status:** open — **SESSION_0610 ratified the YAGNI accept** (kernel frozen, exports neither chart nor a shared table). Row kept open as a **watch**: re-trigger the extraction when a 3rd chart/table consumer lands. No code this session.
 - **Found in:** SESSION_0609. **Resolved in:** —
 
 ### DES-003 — WS-B/C/D panel P2s (for the trio code-review session)
@@ -90,8 +90,12 @@ is an operator-ratified, logged exception** (same contract as the code passes).
 - **Severity:** P2
 - **Finding:** (1) token-cost `<ProjectionSection accent>` used with no `--sotd-accent` in scope → border falls back to `currentcolor` (dark foreground, not accent); (2) chart `preserveAspectRatio="none"` distorts the endpoint circle into an ellipse under X-stretch; (3) cookbook `TabsList` (5 triggers + count badges) likely overflows at 375px — needs a live mobile check.
 - **Recommendation:** (1) set `style={{"--sotd-accent":"var(--color-primary)"}}` on the root or drop `accent`; (2) drop the endpoint circle or make it a CSS-positioned dot; (3) scrollable `TabsList` or drop badges below `sm`. Plus P3 microcopy nits (singular/plural "1 components"; raw `(SESSION_0606)` in empty copy; compact-mode ladder parity with `state-panel`).
-- **Status:** open
-- **Found in:** SESSION_0609. **Resolved in:** — (assigned to the WS-B/C/D code-review session).
+- **Status:** resolved
+- **Found in:** SESSION_0609. **Resolved in:** SESSION_0610 (quality-suite fanout, 3 Cody worktree lanes).
+  - **WS-D** (`5e984163`): (1) `--sotd-accent: var(--color-primary)` scoped on the token-cost panel root; (2) endpoint `<circle>` → CSS-positioned `<span>` dot (stays round under `preserveAspectRatio="none"`), `aria-label` preserved.
+  - **WS-C** (`2beabbbf`): (3) `max-sm:hidden` on each `TabsTrigger` count `Badge` — live-verified at 375px, all 5 stage labels fit, no overflow.
+  - **WS-B** (`e45671e6`): `countNoun()` plural helper (→ "1 component"); stripped raw `(SESSION_0606)` from empty copy; compact-mode ladder parity with `state-panel.tsx:80-83` (keep visual `GoalLadders`, drop only `GoalLadderTable`). Belt-ladder live-verified legible/unclipped at 375px.
+  - **Manual boundary:** WS-D's chart + accent border render only when sessions carry `telemetry:` frontmatter (local env = empty state) — verified by source + clean build; live render is a prod-only smoke item.
 
 ## Cross-references
 
