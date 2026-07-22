@@ -45,6 +45,7 @@ here for the live table.
 | A multi-slice epic that decomposes into disjoint lanes | [`recipes/epic-plan.md`](recipes/epic-plan.md) → [`recipes/orchestrator.md`](recipes/orchestrator.md) → N × [`recipes/lane.md`](recipes/lane.md) | plan once, prove disjointness, fan out |
 | Staging an unattended overnight fan-out | [`recipes/PM_Planning_Lane.md`](recipes/PM_Planning_Lane.md) (evening) → [`recipes/AM_Coffee_Merge_Review.md`](recipes/AM_Coffee_Merge_Review.md) (morning) | pin every fork before launch; sweep + push-gate at coffee |
 | Run N disjoint lanes in ONE attended session (dispatch → review → merge) | Petey (Opus) + [`recipes/live-fanout-sweep.md`](recipes/live-fanout-sweep.md) | persona-subagent fanout + same-session sweep; token-efficient vs N separate sessions (SESSION_0582/0597) |
+| Take stock: assess repo-state, flip stale ledgers, stage an overnight autonomous fan-out | Petey (Opus) + [`recipes/state-sweep.md`](recipes/state-sweep.md) | read-first status sweep + ledger status-correction + launchable lane stubs; the assessment sibling of the planning lane |
 | Merging/pushing a branch, gate ladder G0→G4 | [`recipes/merge-wave.md`](recipes/merge-wave.md) | absorbs `giddy-merge-strategy.md`'s gates |
 | Research first, recommend, don't build | [`seq-research-recommend`](../../.claude/skills/seq-research-recommend/SKILL.md) + [`review-recommend`](review-recommend.md) | graphify prior-art before proposing anything new |
 | Stand up a new client product | `/new-client-recipe` | own DB + brand, monorepo (ADR 0034/0038) |
