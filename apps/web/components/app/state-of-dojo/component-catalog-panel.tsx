@@ -37,6 +37,14 @@ export function ComponentCatalogPanel({ compact }: ProjectionPanelProps) {
   )
 }
 
+// ── helpers ──────────────────────────────────────────────────────────────────────────────────────
+
+/** `noun` is always passed plural ("components"/"cards" — reads right in the always-plural title
+ * strings below); this singularizes it for the one count-prefixed line so "1 components" reads
+ * "1 component" (DES-003). Simple trailing-`s` strip — both nouns this builder sees pluralize that
+ * way; not a general English pluralizer. */
+const countNoun = (noun: string, count: number) => (count === 1 ? noun.replace(/s$/, "") : noun)
+
 // ── mappers (catalog row → kernel row shapes) — shared with card-catalog-panel.tsx ────────────────
 
 export const rowToCard = (r: CatalogRow): BoardCard => ({
@@ -78,7 +86,7 @@ export function buildCatalogPanels(
           <ProjectionSection title={`${skin.label} ${noun}`}>
             <EmptyList className="text-sm">
               No {noun} tagged for the {skin.label} brand tab yet — most specs don't carry a{" "}
-              <code>brands:</code> field yet (SESSION_0606).
+              <code>brands:</code> field yet.
             </EmptyList>
           </ProjectionSection>
         ),
@@ -91,17 +99,15 @@ export function buildCatalogPanels(
       content: (
         <>
           <p className="text-xs text-muted-foreground">
-            {scoped.length} {noun}
+            {scoped.length} {countNoun(noun, scoped.length)}
           </p>
           <ProjectionSection title={`${noun} board`} accent>
             <WorkBoard cards={cards} belts={skin.belts} />
           </ProjectionSection>
-          {!compact && (
-            <ProjectionSection title={`${noun} belt-ladder`} accent>
-              <GoalLadders rows={ladderRows} belts={skin.belts} />
-              <GoalLadderTable rows={ladderRows} belts={skin.belts} />
-            </ProjectionSection>
-          )}
+          <ProjectionSection title={`${noun} belt-ladder`} accent>
+            <GoalLadders rows={ladderRows} belts={skin.belts} />
+            {!compact && <GoalLadderTable rows={ladderRows} belts={skin.belts} />}
+          </ProjectionSection>
         </>
       ),
     }
