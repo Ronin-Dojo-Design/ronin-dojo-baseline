@@ -55,6 +55,7 @@ export const updateDirectoryProfileSchema = z.object({
   // must SURVIVE as undefined — Prisma partial updates skip absent fields, null clears.
   locationCountry: z
     .string()
+    .trim()
     .regex(/^[A-Za-z]{2}$/, "Use a 2-letter country code")
     .or(z.literal(""))
     .nullish()

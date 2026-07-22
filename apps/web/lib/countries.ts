@@ -75,6 +75,19 @@ const CODE_TO_NAME: Record<string, string> = Object.fromEntries(
   COUNTRIES.map(country => [country.code, country.name]),
 )
 
+const COUNTRY_CODES = new Set(COUNTRIES.map(country => country.code))
+
+/**
+ * Normalize a caller-supplied country value to a known ISO 3166-1 alpha-2 code.
+ * Unknown, malformed, or blank values collapse to `undefined`; callers decide
+ * whether that means "skip this optional field" or "reject this submitted value."
+ */
+export function normalizeCountryCode(value: string | null | undefined): string | undefined {
+  const code = value?.trim().toUpperCase()
+  if (!code || !/^[A-Z]{2}$/.test(code)) return undefined
+  return COUNTRY_CODES.has(code) ? code : undefined
+}
+
 /** Look up the display name for an alpha-2 code; returns the code itself if unknown. */
 export function getCountryLabel(code: string | null | undefined): string {
   if (!code) return ""

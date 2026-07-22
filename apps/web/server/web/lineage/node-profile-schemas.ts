@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { normalizeCountryCode } from "~/lib/countries"
 
 /**
  * Zod schemas for approved-claim lineage node profile editing.
@@ -32,9 +33,10 @@ const nullableCountryCode = z
   .string()
   .trim()
   .regex(/^[A-Za-z]{2}$/, "Use a 2-letter country code")
+  .refine(value => normalizeCountryCode(value) !== undefined, "Use a supported country code")
   .or(z.literal(""))
   .nullish()
-  .transform(v => (v ? v.toUpperCase() : v === "" ? null : v))
+  .transform(v => (v ? normalizeCountryCode(v) : v === "" ? null : v))
   // The trailing .optional() marks the KEY optional in the inferred type (same as
   // promotionDate) — callers that don't carry the field must not be forced to send it.
   .optional()

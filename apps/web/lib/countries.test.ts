@@ -1,6 +1,6 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
-import { COUNTRIES, countryFlagEmoji, getCountryLabel } from "./countries"
+import { COUNTRIES, countryFlagEmoji, getCountryLabel, normalizeCountryCode } from "./countries"
 
 describe("COUNTRIES (static ISO 3166-1 alpha-2 list)", () => {
   it("stores alpha-2 codes (exactly two uppercase letters)", () => {
@@ -24,6 +24,21 @@ describe("getCountryLabel", () => {
     expect(getCountryLabel("")).toBe("")
     expect(getCountryLabel(null)).toBe("")
     expect(getCountryLabel(undefined)).toBe("")
+  })
+})
+
+describe("normalizeCountryCode", () => {
+  it("trims, uppercases, and returns known alpha-2 codes", () => {
+    expect(normalizeCountryCode(" us ")).toBe("US")
+    expect(normalizeCountryCode("br")).toBe("BR")
+  })
+
+  it("skips blank, malformed, unknown, and nullish values", () => {
+    expect(normalizeCountryCode("")).toBeUndefined()
+    expect(normalizeCountryCode("USA")).toBeUndefined()
+    expect(normalizeCountryCode("ZQ")).toBeUndefined()
+    expect(normalizeCountryCode(null)).toBeUndefined()
+    expect(normalizeCountryCode(undefined)).toBeUndefined()
   })
 })
 

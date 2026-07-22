@@ -1,5 +1,5 @@
 import { Brand } from "~/.generated/prisma/client"
-import { COUNTRIES } from "~/lib/countries"
+import { normalizeCountryCode } from "~/lib/countries"
 import { db } from "~/services/db"
 
 /**
@@ -20,8 +20,6 @@ import { db } from "~/services/db"
  */
 
 type LeadCountryDb = Pick<typeof db, "lead">
-
-const ALPHA2 = /^[A-Za-z]{2}$/
 
 export async function findJoinLegacyLeadCountry({
   db: dbClient = db,
@@ -48,10 +46,7 @@ export async function findJoinLegacyLeadCountry({
     const raw = (meta as Record<string, unknown>).country
     if (typeof raw !== "string") return null
 
-    const code = raw.trim().toUpperCase()
-    if (!ALPHA2.test(code)) return null
-
-    return COUNTRIES.some(country => country.code === code) ? code : null
+    return normalizeCountryCode(raw) ?? null
   } catch (error) {
     console.error("[identity] join-legacy lead country lookup failed", { error })
     return null

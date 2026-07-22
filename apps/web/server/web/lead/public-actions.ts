@@ -7,7 +7,7 @@ import { z } from "zod"
 import { Brand, type Prisma } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { getRequestOrigin } from "~/lib/brand-context"
-import { COUNTRIES, getCountryLabel } from "~/lib/countries"
+import { getCountryLabel, normalizeCountryCode } from "~/lib/countries"
 import { uploadToS3Storage } from "~/lib/media"
 import { getIP, isRateLimited } from "~/lib/rate-limiter"
 import { BBL_FOUNDER_NODE_SLUG, isLifetimeComp } from "~/lib/lineage/dirty-dozen"
@@ -106,18 +106,6 @@ const legacyInterestSchema = z.object({
 const normalizeOptional = (value: string | undefined) => {
   const trimmed = value?.trim()
   return trimmed ? trimmed : undefined
-}
-
-/**
- * SESSION_0496 pass-2: server-side guard for the wizard's country code — the client
- * CountrySelect only emits known codes, but a direct caller controls the field. Fail-SAFE:
- * anything that isn't a known ISO 3166-1 alpha-2 code collapses to undefined (the lead
- * still submits — a bad country must never reject a legacy intake).
- */
-const normalizeCountryCode = (value: string | undefined) => {
-  const code = value?.trim().toUpperCase()
-  if (!code || !/^[A-Z]{2}$/.test(code)) return undefined
-  return COUNTRIES.some(country => country.code === code) ? code : undefined
 }
 
 const getPublicLeadIp = async () => {

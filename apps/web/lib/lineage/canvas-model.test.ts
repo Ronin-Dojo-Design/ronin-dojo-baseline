@@ -341,6 +341,11 @@ describe("member view-model derivations", () => {
     assert.equal(memberSchool(node), null)
   })
 
+  test("memberSchool: pure placeholder resolves to null", () => {
+    const node = makeNode({ id: "placeholder" })
+    assert.equal(memberSchool(node), null)
+  })
+
   test("memberSchoolLabel prefers current Affiliation (org, then free-text), else Membership, else null", () => {
     const node = makeRichNode()
     // No affiliation → falls back to the active membership org.
