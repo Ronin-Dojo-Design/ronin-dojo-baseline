@@ -18,7 +18,7 @@ import { can } from "~/server/orpc/permissions"
 import { getOnboardingState } from "~/server/web/onboarding/queries"
 import { db } from "~/services/db"
 import { filterAppQuickActions } from "./_landing/app-quick-actions"
-import { AttentionPanelsPlaceholder } from "./_landing/attention-panels-placeholder"
+import { AttentionPanels } from "./_landing/attention-panels"
 import { DashboardLanding } from "./_landing/dashboard-landing"
 import { LoopBoardEmbed } from "./_landing/loop-board-embed"
 import { QuickActions } from "./_landing/quick-actions"
@@ -132,7 +132,7 @@ export default async function (_props: PageProps<"/app">) {
       greeting={greeting}
       quickActions={<QuickActions allowedIds={allowedQuickActionIds} />}
       launcher={launcher}
-      attention={showMetrics ? <AttentionPanelsPlaceholder /> : undefined}
+      attention={showMetrics ? <AttentionPanels /> : undefined}
       metricsStrip={metricsStrip}
       loopBoard={loopBoard}
       charts={charts}
