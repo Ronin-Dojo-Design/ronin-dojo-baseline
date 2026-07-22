@@ -268,9 +268,12 @@ commit) so the term is concrete, not abstract.
   (`.claude/skills/seq-research-recommend/SKILL.md`, SESSION_0584).
   Example: SESSION_0582's /rr found `scripts/auto-session.sh` before anyone rebuilt an overnight
   driver.
-- **/graphify-query · /graphify-explain** — skills wrapping the Graphify-first law: budget-capped
+- **/gq · /gu · /ge** — short-name skills wrapping the Graphify-first law: `/gq` = budget-capped
   graph query instead of repo-wide grep (query the CANONICAL checkout — a worktree graph reads 0
-  nodes by design), and subsystem explanation from graph hubs instead of bulk-reading.
+  nodes by design), `/ge` = subsystem explanation from graph hubs instead of bulk-reading, `/gu` =
+  refresh the graph (`GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .`, the bow-out update half).
+  Renamed from the former `/graphify-query · /graphify-explain` (2-line aliases kept at the old
+  paths).
 - **PM_Planning_Lane / AM_Coffee_Merge_Review** — the two overnight session recipe cards (G-023
   children, planned SESSION_0582): PM = evening grill pins every operator fork, pre-stages a
   staged-stub orchestrator + reservation branches; overnight lanes build commit-local; AM = the
