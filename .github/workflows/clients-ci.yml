@@ -31,12 +31,14 @@ on:
     paths:
       - 'clients/**'
       - 'apps/baseline/**'
+      - 'apps/rdd/**'
       - 'packages/**'
   push:
     branches: [main]
     paths:
       - 'clients/**'
       - 'apps/baseline/**'
+      - 'apps/rdd/**'
       - 'packages/**'
   workflow_dispatch:
 

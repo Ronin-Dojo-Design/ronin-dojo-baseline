@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * RDD — starter brand-token surface (SESSION_0601, Slice A).
+ *
+ * Every color is a CSS variable; tailwind.config.ts maps them onto utility
+ * classes (bg-bg, text-ink, bg-primary, …) so components reference tokens,
+ * never hex. These are the neutral scaffold defaults (mirrors apps/baseline) —
+ * the real RDD skin (PL-005 fixed-hue-brand-tint, seeded from the State-of-Dojo
+ * look) is a later design-interview slice (B3), not this scaffold.
+ *
+ * Dark-mode-first neutral default (slate + one blue accent).
+ */
+:root {
+  /* --- surfaces --- */
+  --bg: #0d0f12;
+  --surface: #15181d;
+  --surface-elevated: #1d2127;
+  --border: #2a2f37;
+
+  /* --- the ONE accent (CTA + focal) --- */
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-deep: #2563eb;
+  --on-primary: #0d0f12;
+
+  /* --- text --- */
+  --text-primary: #f3f5f7;
+  --text-muted: #9aa3ad;
+
+  /* --- type --- */
+  --font-display: "Saira", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /*
+   * Bridge to the shared kernel (@ronin-dojo/ui-kit — m-card, AdminKanban).
+   * The kernel reads ONLY its own --mk-* vars (ADR 0033 D2: tokens in, no brand
+   * identifiers in the component). Re-map them onto RDD's tokens here so any
+   * kernel component (m-card, board) inherits RDD's brand automatically —
+   * re-skin once above, the kernel follows. Add more --mk-* bridges as RDD
+   * adopts more of the kernel (see packages/ui-kit/src/tokens/tokens.css).
+   */
+  --mk-accent: var(--primary);
+  --mk-accent-strong: var(--primary-deep);
+  --mk-on-accent: var(--on-primary);
+  --mk-bg: var(--surface);
+  --mk-page: var(--bg);
+  --mk-surface: var(--surface);
+  --mk-elevated: var(--surface-elevated);
+  --mk-fg: var(--text-primary);
+  --mk-muted: var(--text-muted);
+  --mk-line: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

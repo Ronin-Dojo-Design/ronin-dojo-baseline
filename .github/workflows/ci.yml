@@ -26,6 +26,7 @@ on:
       - '.github/prompts/**'
       - 'clients/**'
       - 'apps/baseline/**'
+      - 'apps/rdd/**'
       - 'scripts/**'
   push:
     branches: [main]
@@ -37,6 +38,7 @@ on:
       - '.github/prompts/**'
       - 'clients/**'
       - 'apps/baseline/**'
+      - 'apps/rdd/**'
       - 'scripts/**'
   workflow_dispatch:
 
