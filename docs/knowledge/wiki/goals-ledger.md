@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-06-27
 updated: 2026-07-22
-last_agent: petey-session-0616
+last_agent: claude-session-0617
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -706,3 +706,23 @@ aggregator reads it with no new parser logic.
   publish (G-023 / PL-003).
 - **Recipe substrate:** PL-018 (Repo-Refinement-Review recipe) + `game-{on,off}`. **Lane:** vault-kit /
   session-OS.
+
+### G-030 — Branded doc-rendering system (frontmatter → branded artifact) for SOPs / rituals / workflows / data-wiring
+
+- **Status:** queued — new (operator, 2026-07-22, SESSION_0617). Surfaced while publishing the
+  [security-headers research-review](../../architecture/research/research-review-security-headers-posture.md)
+  as an artifact — operator: *"we need the same for SOPs and rituals having visually branded pages docs
+  workflows data wiring etc too."*
+- **Objective:** a **reusable renderer** that turns any frontmatter-carrying repo doc (research-reviews,
+  SOPs, rituals, workflows, data-wiring diagrams, session files) into a **consistently brand-styled HTML
+  artifact** with a **metadata header derived from the YAML** (created / created_at / author / session /
+  status / decision), so every published report reads as one system. One theme/token layer, one metadata
+  block, per-doc-genre layout — not a hand-authored page per doc.
+- **Why:** today each artifact is hand-styled per session (proven channel: [[preview-via-published-artifacts]]),
+  so branding + the metadata header are re-derived every time and drift. Frontmatter already exists on every
+  doc (session files, ADRs, research-reviews, rituals) — the render should *consume* it, not restate it
+  ([[readpath-push-vs-pull-audit]]). Pairs with the design-system token layer (`packages/ui-kit` tokens) and
+  the State-of-Dojo projection renderer (`scripts/state-of-project.ts`).
+- **Open forks (plan-time):** static build step (`scripts/render-doc.ts` → artifact) vs an in-app `/docs`
+  route · reuse `ui-kit` tokens for brand parity · per-genre templates (research-review vs SOP vs ritual vs
+  data-wiring) · publish path (Artifact vs in-app). **Lane:** docs / design-system.
