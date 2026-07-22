@@ -127,6 +127,17 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
         working-directory: ${{ matrix.product }}
+      # Test is opt-in per product: run it when the product declares a `test`
+      # script. This closes WL-P3-56 for standalone clients like Mammoth, whose
+      # app-local tests are otherwise invisible to root/product CI.
+      - name: Test (if the product defines test)
+        working-directory: ${{ matrix.product }}
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.test ? 0 : 1)"; then
+            bun run test
+          else
+            echo "No test script in ${{ matrix.product }} — skipping."
+          fi
       # Lint is opt-in per product: run lint:check only if the product defines it
       # (apps/web uses oxlint; a product adopts it when ready). Skipping is loud,
       # not silent — a real lint failure still fails the job.
