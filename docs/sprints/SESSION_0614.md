@@ -2,10 +2,10 @@
 title: "SESSION 0614 — AM Coffee Merge Review: sweep + merge all open overnight work"
 slug: session-0614
 type: session--review
-status: staged
+status: in-progress
 created: 2026-07-22
 updated: 2026-07-22
-last_agent: petey-state-sweep
+last_agent: claude-session-0614
 sprint: S12
 lane: repo
 recipe: AM_Coffee_Merge_Review
@@ -122,6 +122,45 @@ not treat the in-sandbox build error as a lane failure.
 
 Net: **5/5 lanes landed in-scope, holding push.** Lanes 2 & 5 fully green; lane 1 green after a
 pre-existing-flake cleanup; lanes 3 & 4 green on typecheck/tests but need a clean-shell `next build`.
+
+## Sweep executed (session-0614, 2026-07-22)
+
+**Trunk drift reconciled at bow-in:** main had advanced past the staged base (`1b53880f` → `98246d19`)
+with two **docs-only** commits the stub predated — SESSION_0616 (State-Sweep) close + G-029 ledgers.
+Confirmed lane B (`state-sweep-deliverables`) is **not** superseded by 0616 (disjoint file sets; B's
+`state-sweep.md` + `tier1-autonomous-lanes.md` were absent on main). The `bc1f` codex DBS-001 draft
+left unmerged (superseded by lane-dbs-001, per plan).
+
+**All 7 lanes merged linearly (rebase-onto-main → `--ff-only`) in order B→C→D→E→F→G→H.** No conflicts.
+Final `main` @ `4632eabf`, 15 commits ahead of `origin/main` (`4c91cb31`).
+
+| Lane | Branch | Result |
+|---|---|---|
+| B | state-sweep-deliverables | merged (docs) |
+| C | lane-dbs-001 | merged (clients-ci YAML) |
+| D | lane-wl-p3-59 | merged (worktree-setup tooling) |
+| E | lane-wl-p3-33 | merged (people + entitlements tests) |
+| F | lane-wl-p3-40 | merged (community-gate integration test) |
+| G | lane-wl-p3-25 | merged (country-validator consolidation + SESSION_0615.md) |
+| H | session-0613-ws3-mount-panels | merged (WS-3 SotD panel mount) |
+
+**Doug authoritative full-gate rerun (normal shell, merged tree):** typecheck ✓ · lint:check ✓ ·
+format:check ✓ · **`next build` ✓ (exit 0, 348/348 pages)** — closes the Keychain-blocked build gap
+for lanes wl-p3-25 & wl-p3-59. `bun run test`: 1667 pass / 2 fail — the 2 fails are **pre-existing
+flaky `server/admin/*` safe-action hook timeouts** (shared-local-DB contention, non-deterministic
+1→2→17 across runs), **untouched by any of the 7 commits**; CI authoritative. → P2 test-infra follow-up.
+
+**Lane-H runtime proof (`/app` attention seam, 375px):** real State-of-the-Dojo panel mounts and
+renders live data (28 goals · 0 open PRs · RDD/BBL/MMB tabs); `bodyScrollWidth === 375`, **no
+horizontal overflow**. Console errors present are pre-existing analytics-API-key-missing (local env),
+not merge-caused.
+
+**Cleanup:** pruned 4 stale `/T/fallow-audit-*` detached worktrees. Lane worktrees + branches removed
+at bow-out on operator go.
+
+**Push gate: HELD.** On "go": one `git push origin main` → deploys app-code batch (0612 SotD +
+0613 panel mount + lane-wl-p3-25 countries). Docs commits (0616/G-029/sweep record) ride but don't
+trigger the prod build (`ignoreCommand`).
 
 ## Status
 
