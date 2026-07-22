@@ -87,7 +87,7 @@ async function CookbookPanelContent({ compact }: ProjectionPanelProps) {
               return (
                 <TabsTrigger key={stage} value={stage}>
                   {PIPELINE_STAGE_LABEL[stage]}
-                  <Badge variant="soft" size="sm" className="ml-1.5">
+                  <Badge variant="soft" size="sm" className="ml-1.5 max-sm:hidden">
                     {count}
                   </Badge>
                 </TabsTrigger>
