@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-21
-last_agent: claude-session-0584
+updated: 2026-07-22
+last_agent: claude-session-0617
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/WORKFLOW_6.0.md
@@ -321,10 +321,13 @@ The opening ritual is done. From here forward, you are operating as Petey or Cod
 
 If anything in the previous SESSION file or the program plan looks stale or contradictory, raise it before starting work. Better to spend two minutes confirming than two hours building against the wrong understanding.
 
-## Optional: render the State-of-Dojo projection (what's *planned*)
+## Render the State-of-Dojo projection (what's *planned*) — standing step
 
-On-demand, operator-triggered — not a gate. To surface this session's landscape (planned sessions,
-goal ladders, risk-watch, needs-you) as a browsable dashboard, render + publish the projection:
+**Standing bow-in step (SESSION_0617; publishing is an agent step, not scriptable — PL-003).** The
+deterministic gate can run the script but cannot publish an Artifact, so the *agent* renders + publishes
+this every bow-in (and bow-out) so the operator always sees the current landscape without asking. Surface
+this session's landscape (planned sessions, goal ladders, risk-watch, needs-you) as a browsable dashboard —
+render + publish the projection, then paste the Artifact URL into the SESSION file `## Artifacts` table:
 
 ```bash
 bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)

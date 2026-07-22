@@ -240,6 +240,16 @@ Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Pris
 | --- | --- |
 | `<command>` | <result> |
 
+## Artifacts
+
+<!-- Filled at bow-out. Log every Artifact PUBLISHED this session (private claude.ai links) with a status so it
+can be revisited at a future bow-in and discarded or promoted. Status: keep (reference) · discard · promote
+(→ prod/beta). Omit the table (write "None.") if the session published no artifacts. -->
+
+| Artifact | Purpose | Status |
+| --- | --- | --- |
+| [<title>](<url>) | <one-line> | keep / discard / promote |
+
 ## Open decisions / blockers
 
 <!-- Anything carried forward. "None." is valid. Adjacent tech debt that surfaced mid-task lands here. -->

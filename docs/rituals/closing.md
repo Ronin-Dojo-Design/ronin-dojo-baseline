@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-21
-last_agent: claude-session-0604
+updated: 2026-07-22
+last_agent: claude-session-0617
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -67,6 +67,10 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 
 - `What landed` — bullets of completed work
 - `Files touched` — paths + one-line note each
+- `Artifacts` — every Artifact **published** this session (private claude.ai links) logged with a **status**
+  (`keep` / `discard` / `promote` → prod/beta), so it can be revisited at a future bow-in and disposed of
+  deliberately. Write "None." if the session published none. (Convention added SESSION_0617 — the section
+  lives in the SESSION template.)
 - `Decisions resolved` — anything the user signed off on this session
 - `Open decisions / blockers` — anything unblocking the next session
 - `Next session: Goal + Inputs to read + First task`
@@ -305,11 +309,13 @@ gold-standard bar on exactly the custom code the matrix exists to police (the ke
 kind of work), not Dirstarter-derived CRUD. Skip with a one-line "no Class-A custom code this session"
 when the diff is docs / config / thin-wrapper only.
 
-### 6d. Optional: render the State-of-Dojo projection (what *changed*)
+### 6d. Render the State-of-Dojo projection (what *changed*) — standing step
 
-On-demand, operator-triggered — not a gate. Symmetric to the bow-in render: after the close lands,
-regenerate + publish the projection so the operator sees what *changed* this session (new/closed
-sessions, moved goal ladders, cleared/added risk + needs-you rows):
+**Standing bow-out step (SESSION_0617; PL-003).** Publishing an Artifact is an *agent* step the
+deterministic gate runner structurally can't do — so the agent renders + publishes this every close.
+Symmetric to the bow-in render: after the close lands, regenerate + publish the projection so the operator
+sees what *changed* this session (new/closed sessions, moved goal ladders, cleared/added risk + needs-you
+rows), and paste the Artifact URL into the SESSION file `## Artifacts` table:
 
 ```bash
 bun scripts/state-of-project.ts        # writes out/state-of-project.html (gitignored — never commit a render)

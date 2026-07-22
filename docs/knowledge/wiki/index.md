@@ -864,6 +864,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [ChatGPT Links Ledger](chatgpt-links-ledger.md)                                                                   | reference         | active — `GPTLL-NNN` ChatGPT-brainstorm capture inbox → planning-ledger; created SESSION_0589 (GPTLL-001/002); code-wiring deferred to L2 (`session-0591`)                                        |
 | [Daily Bug Scan Ledger](daily-bug-scan-ledger.md)                                                                 | reference         | active — `DBS-NNN` Codex daily-bug-scan findings; created SESSION_0589 (DBS-001 clients-ci fix→WL-P3-56, DBS-002/003 open); pipeline = `session-0596`, code-wiring = L2                            |
 | [Desi Design Ledger](desi-design-ledger.md)                                                                       | protocol          | active — `DES-NNN` design / UX / mobile / a11y findings (the finding-router's design home); created SESSION_0604; fed by the 3 design passes (`desi-design-review`/`mobile-optimization-pass`/`ui-ux-pass`)   |
+| [Skills Index (SSL)](skills-index.md)                                                                             | reference         | active — canonical skills inventory (Built half GENERATED from `.claude/skills/*/SKILL.md` via `bun scripts/skills-index.ts`) + the `SSL-NNN` discussed-not-built backlog; created SESSION_0617; wired into `ledger-backlog.ts` (code `SSL`)                    |
 
 ## Code files (annotated)
 

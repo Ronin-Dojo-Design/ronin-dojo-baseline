@@ -726,3 +726,27 @@ aggregator reads it with no new parser logic.
 - **Open forks (plan-time):** static build step (`scripts/render-doc.ts` → artifact) vs an in-app `/docs`
   route · reuse `ui-kit` tokens for brand parity · per-genre templates (research-review vs SOP vs ritual vs
   data-wiring) · publish path (Artifact vs in-app). **Lane:** docs / design-system.
+
+### G-031 — Lean single-lane, baton-handoff session model (bow-in `/review-refine-refactor`)
+
+- **Status:** in-progress — P1 (operator, 2026-07-22, SESSION_0617). **Grill-with-docs COMPLETE — 9 decisions
+  locked** ([bow-in redesign artifact](https://claude.ai/code/artifact/271d04fb-c263-4bb9-81e0-e1b6aa7c3314)).
+  S1 building this session; S2–S6 staged below.
+- **Objective:** rework `docs/rituals/opening.md` from the "load-everything, all-5-agents" model into a **lean
+  single-lane vertical-slice** model — each session runs ONE lane, loading only its agent + context, with
+  **baton handoff** between lanes (the old `WORKFLOW_4.0`/`BATON.md` planning-window↔execution-window pattern,
+  generalized). Token-efficient by construction.
+- **Decisions (SESSION_0617 grill):** ① ONE `petey-plan` skill, two modes — `/pp`=Parse→Plan, `/ppp`=`/pp
+  --prompt` (baton). ② `lane:` = **pipeline stage**; rename brand axis `lane:`→`brand:`; add `stage:`. ③ **3
+  lanes: Plan · Build · QAR** (Intake folds into Plan; Fix = QAR→Build back-edge). ④ `/ggr` = universal closing
+  gate folded into bow-out, rubric flexes by lane. ⑤ Gate: **≥9.0 clears · 2 auto-retries · hard-caps always
+  loop** · operator gate (accept / try-again / keep-improving). ⑥ Baton = staged-stub + Next-session block;
+  `/app/loop-board` board = the visual. ⑦ SSL = lean generated `skills-index.md` + proposed backlog. ⑧ Bow-in =
+  ONE discover-then-load `/bow-in` (3 questions → classify → load lane pack) + `/intake·/build·/qar` anytime
+  entries; default one lane/session, Plan+Build may fuse when tiny.
+- **Build slices:** **S1** SSL skills-index *(this session)* · **S2** formalize `/pp`·`/ppp` · **S3** create
+  `/ggr` · **S4** facet migration (`lane:`→`brand:` + `stage:` across SESSION frontmatter + `--lane=` filters +
+  ledger/board parser) · **S5** rework `opening.md` (HIGH — own Build+QAR; needs S2·S3·S4) · **S6** ADR (bow-out).
+  S1–S4 disjoint (fan-out candidates). Also fold the **## Artifacts** SESSION-section convention into the
+  template + bow-out ritual. **Lane:** session-OS / governance. **Cross-refs:** [G-023](#g-023--workflow_60-session-recipe-os--sot_cookbook--brand-sot-cards),
+  `petey-plan.md`, `WORKFLOW_6.0`, `opening.md`, `code-quality-matrix.md`.

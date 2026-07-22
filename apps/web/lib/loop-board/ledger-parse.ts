@@ -27,6 +27,7 @@ export type LedgerCode =
   | "YLL"
   | "GPTLL"
   | "DBS"
+  | "SSL"
 
 /** A ledger code that is backed by a markdown file on disk / `main` (everything except live `PR`). */
 export type FileLedgerCode = Exclude<LedgerCode, "PR">
@@ -64,6 +65,9 @@ export const LEDGER_ORDER: LedgerCode[] = [
   "YLL",
   "GPTLL",
   "DBS",
+  // Skills-index proposed/discussed-not-built backlog (SESSION_0617) — the "SSL" ledger:
+  // `### SSL-NNN` rows in the "Proposed" section of skills-index.md (built half is generated).
+  "SSL",
 ]
 
 /**
@@ -89,6 +93,7 @@ export const LEDGER_FILES: Record<FileLedgerCode, string> = {
   YLL: "docs/knowledge/wiki/youtube-links-ledger.md",
   GPTLL: "docs/knowledge/wiki/chatgpt-links-ledger.md",
   DBS: "docs/knowledge/wiki/daily-bug-scan-ledger.md",
+  SSL: "docs/knowledge/wiki/skills-index.md",
 }
 
 /** File-backed ledger codes in display order — the disk reader + `main`-branch fetch iterate this. */
@@ -422,6 +427,16 @@ export function parseLedger(code: FileLedgerCode, content: string): Item[] {
       return parseInlineStatusSectioned(content, "GPTLL", 3, /^GPTLL-\d/)
     case "DBS":
       return parseInlineStatusSectioned(content, "DBS", 3, /^DBS-\d/)
+    case "SSL":
+      // Only the "Proposed" section carries `### SSL-NNN` headings (the generated "Built"
+      // block is a table), so a whole-file sectioned scan surfaces exactly the backlog rows.
+      return parseSectioned(
+        content,
+        "SSL",
+        3,
+        /^SSL-\d/,
+        s => /^(open|in[-\s]?progress|active)\b/i.test(s) || /pending/i.test(s),
+      )
   }
 }
 
