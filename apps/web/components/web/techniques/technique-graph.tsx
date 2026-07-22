@@ -86,19 +86,31 @@ const NODE_TYPE_STYLES: Record<
     dot: "bg-red-500",
     node: "border-red-400 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950 dark:text-red-200",
     edge: "stroke-red-500",
-    exportRgb: { background: "rgb(254 242 242)", border: "rgb(248 113 113)", text: "rgb(153 27 27)" },
+    exportRgb: {
+      background: "rgb(254 242 242)",
+      border: "rgb(248 113 113)",
+      text: "rgb(153 27 27)",
+    },
   },
   transition: {
     dot: "bg-amber-500",
     node: "border-amber-400 bg-amber-50 text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200",
     edge: "stroke-amber-500",
-    exportRgb: { background: "rgb(255 251 235)", border: "rgb(251 191 36)", text: "rgb(120 53 15)" },
+    exportRgb: {
+      background: "rgb(255 251 235)",
+      border: "rgb(251 191 36)",
+      text: "rgb(120 53 15)",
+    },
   },
   counter: {
     dot: "bg-violet-500",
     node: "border-violet-400 bg-violet-50 text-violet-800 dark:border-violet-700 dark:bg-violet-950 dark:text-violet-200",
     edge: "stroke-violet-500",
-    exportRgb: { background: "rgb(245 243 255)", border: "rgb(167 139 250)", text: "rgb(91 33 182)" },
+    exportRgb: {
+      background: "rgb(245 243 255)",
+      border: "rgb(167 139 250)",
+      text: "rgb(91 33 182)",
+    },
   },
 }
 
@@ -700,8 +712,7 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                               // the case where the last pointer press was a touch but this activation
                               // is a keyboard Enter/Space, so keyboard never gets stuck one-tap-short.
                               const isKeyboard = event.detail === 0
-                              const isTouchTap =
-                                !isKeyboard && nodePointerType.current === "touch"
+                              const isTouchTap = !isKeyboard && nodePointerType.current === "touch"
                               if (isTouchTap && selectedNodeId !== node.id) {
                                 setSelectedNodeId(node.id)
                                 return

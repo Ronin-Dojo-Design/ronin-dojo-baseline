@@ -46,7 +46,10 @@ async function TokenCostPanelContent({ compact }: ProjectionPanelProps) {
     // `ProjectionSection accent` reads `--sotd-accent`, which `BrandTabs` normally sets per skin
     // (`_kernel/projection.tsx`). This panel isn't mounted under `BrandTabs`, so scope the var
     // locally to the primary brand color rather than leaving it unset (DES-003).
-    <div className="w-full space-y-4" style={{ "--sotd-accent": "var(--color-primary)" } as CSSProperties}>
+    <div
+      className="w-full space-y-4"
+      style={{ "--sotd-accent": "var(--color-primary)" } as CSSProperties}
+    >
       <header className="space-y-1">
         <Heading size="h4">Token cost</Heading>
         <p className="text-xs text-muted-foreground">
