@@ -47,3 +47,6 @@ docs/posters/
 
 # fallow audit cache
 .fallow/
+
+# Canonical-occupancy guard claim (FS-0035) — never commit
+.canonical-session

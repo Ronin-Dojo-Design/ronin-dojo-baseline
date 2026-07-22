@@ -26,6 +26,13 @@ crashes, and hands the landed set to the [merge sweep](AM_Coffee_Merge_Review.md
 SESSION_0582 (three Sonnet lanes, one mid-flight session-limit crash, `SendMessage` resume,
 zero-conflict merge) and the SESSION_0587 overnight variant (four lanes, one staged stub).
 
+## Precondition — canonical occupancy (FS-0035)
+
+Before dispatching, run `bash scripts/canonical-claim.sh check --session NNNN`. If canonical is held by another
+live session (exit 3), this orchestrator MUST run from its **own worktree**, never the shared canonical checkout
+— two orchestrators in canonical strand each other's uncommitted work (FS-0034, recurred at 0610/0611). And
+never `git add -A` in canonical; stage explicit paths.
+
 ## Persona pack
 
 - **Petey/operator** — the dispatcher. Issues each lane as `Agent(subagent_type: "cody", …)`

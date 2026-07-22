@@ -796,8 +796,41 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Verification:** SESSION_0593 recovered onto its own branch + committed (`dc7ecc01`); per-lane worktrees
   established (`git worktree list` shows 0593/0598/0599 each isolated); land order + append-only discipline
   produced for the merge-wave.
-- **Status:** mitigated (worktrees re-isolated in-session; rule promoted to LR 0018 + this entry). Candidate
-  for PL-010's capture→prevention audit (is worktree isolation an *enforced* gate or only documented?).
+- **Status:** **RECURRED → corrective superseded.** Was "mitigated" (worktrees re-isolated in-session; rule
+  promoted to LR 0018 + this entry), but the corrective was **documentation-only**. The exact open question it
+  flagged — "is worktree isolation an *enforced* gate or only documented?" — was answered by the recurrence at
+  **SESSION_0610/0611**: only documented. Now **mechanized as an enforced bow-in gate** → see **FS-0035**.
+
+### FS-0035 — FS-0034 recurred: canonical-squat corrective was documentation-only, never enforced
+
+- **Session:** SESSION_0610 (Claude) — caught by the operator at close ("the other lane thinks there's an
+  uncommitted SESSION_0610.md"). Same failure class as FS-0034 (SESSION_0593), one recurrence later.
+- **Step failed:** SESSION_0611 (a *planned* `live-fanout-sweep` orchestrator) initialized inside the
+  **canonical checkout** while SESSION_0610 was live there with uncommitted work — writing its
+  `SESSION_0611.md` into the shared tree. 0610's bow-out had to stage **selectively by hand** to keep
+  `git add -A` from sweeping 0611's file into 0610's commit. No work lost (caught pre-commit), but the
+  isolation guarantee held only by manual vigilance.
+- **Which SOP:** [`opening.md`](../rituals/opening.md) (bow-in) + [`live-fanout-sweep.md`](recipes/live-fanout-sweep.md) /
+  [`orchestrator.md`](recipes/orchestrator.md) + the FS-0034 rule (worktree isolation for *any* parallel lane; LR 0018).
+- **Root cause:** the FS-0034 corrective was **prose in three docs** (merge-wave, fan-out-session-recipe, LR 0018)
+  that the bow-in read-path never consumes — "built-not-pointed"
+  ([LR 0007](../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md)). It
+  also only covered *build/plan lanes*; the **attended orchestrator** runs in canonical by default and nothing
+  detected a SECOND orchestrator joining it. FS-0034 named the gap and left it a PL-010 candidate — never mechanized.
+- **Impact:** LOW this time (selective staging saved it), but the hazard is latent in every attended-orchestrator
+  session and already burned a Giddy merge-strategy pass once (FS-0034).
+- **Corrective action:** **mechanized enforcement in the bow-in read-path** — `scripts/canonical-claim.sh`
+  (`check` / `claim` / `release`): a stateless occupancy signal (an uncommitted `docs/sprints/SESSION_MMMM.md`
+  from another number ⇒ another live session in canonical) + a gitignored `.canonical-session` claim covering the
+  pre-SESSION-file bow-in window. Wired into **opening.md** ("Canonical-occupancy guard" — run
+  `check --session NNNN`; if OCCUPIED, bootstrap `../ronin-NNNN` and run the whole session there, never in
+  canonical) and **closing.md** (run `release`; stage explicit paths, **never `git add -A`** in a shared tree).
+  Recipe cards `live-fanout-sweep` / `orchestrator` gain the precondition. Memory: [[canonical-occupancy-guard]].
+- **Verification:** tested against the live collision — `check --session 0610` reported **OCCUPIED by
+  SESSION_0611** (exit 3) while `check --session 0611` read free; `claim`/`release` round-tripped. The guard now
+  trips on exactly the state that strands work, at bow-in, before any edit.
+- **Status:** mitigated → **enforced** (mechanized gate, not prose). Escalate to a hard shell block (like the
+  FS-0024 git guard) if it recurs despite the check.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

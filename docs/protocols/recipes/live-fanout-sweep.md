@@ -70,7 +70,10 @@ disjoint (each owns its own file; shared surfaces are frozen/read-only).
 
 ## Step sequence
 
-0. **Prove disjointness** (epic-plan §1). Write the dispatch record: lane → branch/worktree → prompt → persona/model.
+0. **Canonical-occupancy + disjointness gates.** FIRST `bash scripts/canonical-claim.sh check --session NNNN`
+   — if canonical is held by another live session (exit 3), run THIS orchestrator from its own worktree, never
+   the shared canonical checkout (FS-0035; two orchestrators in canonical strand each other's work). Then prove
+   disjointness (epic-plan §1) and write the dispatch record: lane → branch/worktree → prompt → persona/model.
 1. **Dispatch** all N in one turn (parallel `Agent` calls) — Cody per build lane, Petey per plan lane. Each
    runs its own worktree lane to a **held commit** (never pushes).
 2. **Watch + resume** — a lane that crashes (session-limit) resumes via `SendMessage` with disk-truth-first

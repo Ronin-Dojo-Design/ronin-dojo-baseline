@@ -147,8 +147,15 @@ Before committing:
 3. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
    The gate runner's **Gate 12b secret scan** (key/token/private-key patterns over touched files) is the
    deterministic backstop — a hit blocks commit/push until the value is removed **and rotated**.
+   **Canonical parallel-safety (FS-0035):** if a *sibling* session's file is present in the tree (e.g. an
+   untracked `SESSION_MMMM.md` you don't own), do **NOT** `git add -A` — it would sweep the sibling's
+   uncommitted work into your commit. Stage **explicit paths** (`git add <your files>`) and confirm the sibling
+   file is not staged (`git diff --cached --name-only | grep SESSION_MMMM`) before committing.
 4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
 5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
+6. **Release the canonical claim (FS-0035):** after the push (or if you leave work uncommitted), run
+   `bash scripts/canonical-claim.sh release --session NNNN` so the next session's bow-in occupancy guard sees
+   canonical free. (No-op if this session ran isolated in its own worktree and never claimed canonical.)
 
 If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
 

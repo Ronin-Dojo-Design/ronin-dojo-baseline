@@ -56,6 +56,28 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 > **PATH note:** the sandbox shell has no `curl` / `psql` / `tr` / `timeout` — use `bun` (built-in
 > `fetch`) for HTTP smoke-checks and `bun -e` / scripts for DB pokes.
 
+### Before Step 0b — Canonical-occupancy guard (parallel-session safety, FS-0035)
+
+> **Two interactive sessions must never share the canonical checkout.** A second orchestrator that
+> initializes in canonical while a first session has uncommitted work there strands/clobbers it
+> (FS-0034 @ SESSION_0593, recurred @ 0610/0611). This is the *enforced* gate the old prose-only rule lacked.
+>
+> Once you know (or have minted) your session number **NNNN**, run this before touching anything:
+>
+> ```bash
+> bash scripts/canonical-claim.sh check --session NNNN
+> ```
+>
+> - **✅ free →** `bash scripts/canonical-claim.sh claim --session NNNN`, then work in canonical as normal.
+> - **⛔ OCCUPIED (exit 3) →** another live session owns canonical. **Do NOT work here.** Bootstrap your own
+>   worktree and run the ENTIRE session there — dispatch, merge-sweep into your branch, ff-to-main behind the
+>   merge lock at push: `git worktree add ../ronin-NNNN -b session-NNNN-<lane> main`, then `/worktree-setup`.
+>   Canonical (and `preview_start`, which is canonical-locked) stays the other session's; run your own
+>   `next dev` on an alt port via Bash if you need a live check.
+>
+> **Never `git add -A` in canonical** — a sibling lane's untracked files live in the shared tree; stage explicit
+> paths. Bow-out runs `release` (closing.md §4). Refs: FS-0035, FS-0034, LR 0018.
+
 ### 0. BBL / launch work — read the SoT set FIRST (and nothing else first)
 
 > For any Black Belt Legacy or launch work, the **source-of-truth set is the only thing to open first**,
