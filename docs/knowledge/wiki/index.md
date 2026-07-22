@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-21
+updated: 2026-07-22
 author: Brian + Copilot
 last_agent: claude-session-0599
 ---
@@ -758,6 +758,8 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0608](../../sprints/SESSION_0608.md) | session--implement | closed (landed on main, held) — WS-D: token-cost tracker (`telemetry:` frontmatter → `dataviz` charts). G-023; own worktree; Cody lane. |
 | [SESSION_0610](../../sprints/SESSION_0610.md) | session--review | closed — **`quality-suite` fanout on the WS-B/C/D SotD-catalog trio: 3 Cody worktree lanes applied DES-003 (plural/microcopy + compact-ladder parity · cookbook TabsList 375px · token-cost accent + chart CSS-dot), merge-swept to main, live-375 confirmed, Doug GO-WITH-NOTE 9.4/10.** DES-003 resolved, DES-002 ratified-watch; P3 endpoint-dot clamp filed (`task_5e977adc`). Push gate held → operator-authorized (9-commit stack → BBL prod). Staged 0612 (pass 2). |
 | [SESSION_0612](../../sprints/SESSION_0612.md) | session--review | staged — second `quality-suite` pass on the same SotD-catalog trio: land the WS-D endpoint-dot clamp fast-follow (`task_5e977adc`), WS-D prod-render smoke, and a gold-standard second sweep at the residual inherited debt (CRAP-42 no-coverage; dead-export prune). Reservation `session-0612-quality-suite-2`. |
+| [SESSION_0614](../../sprints/SESSION_0614.md) | session--review | staged — **AM_Coffee_Merge_Review** of the overnight fan-out: merge strategy + open-work inventory (0612 push · 0613 WS-3 · state-sweep docs · 5 tier-1 codex lanes) + actual lane results as the Next-session block. Staged by 0616. |
+| [SESSION_0616](../../sprints/SESSION_0616.md) | session--review | closed — **State-Sweep**: autonomy triage (5 Tier-1 lanes + excluded pile) · Wayfinder status Artifact (maps #218/#228/#237) · `state-sweep` recipe + SOT_Cookbook row · WL-P3-29/30 flips + WL-P3-60 chip · launched 5 codex lanes overnight (5/5 landed, push held) · staged SESSION_0614 · planning intake PL-013..017. |
 | [SESSION_0608](../../sprints/SESSION_0608.md) | session--implement | closed (landed on main, held) — WS-D: token-cost tracker (`telemetry:` frontmatter → `dataviz` charts). G-023; own worktree; Cody lane. |
 
 ## Protocols

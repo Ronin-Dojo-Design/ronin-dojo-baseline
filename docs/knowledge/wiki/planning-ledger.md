@@ -4,8 +4,8 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-21
-last_agent: claude-session-0604
+updated: 2026-07-22
+last_agent: petey-session-0616
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -325,6 +325,76 @@ plan scope.
 - **Research:** Milanote (canvas layout/tech) · sliding-tile puzzle games (mat-swipe behavior) · Beaver Builder (page-builder model).
 - **Relationship:** the create-\* commands + component lifecycle (WS-E) staged in [SESSION_0605](../../sprints/SESSION_0605.md) are this North Star's **tooling substrate** — scope 0605 as a child of PL-012. Look-and-feel North Star = the Ronin Dojo Monorepo.
 - **Graduates to:** its own `G-NNN` at the dedicated plan session. Not yet stubbed — mint the SESSION when grabbed.
+
+### PL-013 — Iggy Agent: social-media automation for all brands — queued
+
+- **Origin:** operator directive, bow-out 2026-07-22.
+- **Coverage check (goals ledger):** **no G-row** covers social-media automation. (`Iggy` appears in ~20
+  docs — confirm at plan time whether Iggy is an already-named agent persona or net-new before scoping.)
+- **The idea:** an **Iggy** agent that automates social-media presence/content across **all brands**
+  (RDD · BBL · Mammoth · Baseline · WEKAF · ACD) — one kernel capability, per-brand voice.
+- **Open forks for the plan (not pre-resolved):** which platforms (IG/X/YT/TikTok/LinkedIn) · content
+  pipeline (source → draft → approve → schedule → post) · **HITL approval gate** (nothing posts
+  unattended — publish-content boundary) · per-brand voice (route through **Brandon** for brand canon) ·
+  asset source (the cross-brand CMS, PL-014) · scheduling/runtime (local agent vs cloud).
+- **Next step:** own `/pp` plan session → `G-NNN`. Relates to [[join-funnel-comp-gate-and-global-modal]]
+  (content → funnel) + PL-014 (asset source).
+
+### PL-014 — Cross-brand CMS (WordPress-Pods-style) in concert with the HubSpot-Pro-replacement CRM — queued
+
+- **Origin:** operator directive, bow-out 2026-07-22.
+- **Coverage check (goals ledger):** **partially covered** — the HubSpot-replacement **CRM core** is
+  [G-021](goals-ledger.md) (Mammoth lean operating shell + sales-cockpit tracer); the **cross-brand
+  "see all brands' assets/state"** view is [G-027](goals-ledger.md) (RDD umbrella app) +
+  [G-023](goals-ledger.md) (State-of-Dojo, per-brand + umbrella). **NEW** = the **Pods-style flexible-
+  content CMS layer spanning all brands**, run in concert with the CRM, surfaced to RDD across every brand.
+- **The idea:** a WordPress-Pods-style CMS (flexible content types) for **all brands**, wired to the MMB
+  CRM, so **RDD sees all brands' assets + state** in one place — the cross-brand visibility we're building
+  toward. (`Pods` in ~50 docs is mostly the BBL `bbl_member` **WordPress-Pods import data**, D-028 — NOT a
+  CMS goal; different sense.)
+- **Open forks:** content model (per-brand DB boundary, ADR 0038, vs one shared CMS) · how RDD aggregates
+  all-brands assets **without cross-product data leak** · relationship to the kernel module library ·
+  build-on-MMB-first then generalize (the CRM pattern) vs RDD-first.
+- **Next step:** own `/pp` plan session → `G-NNN` (or G-021/G-027 children). Feeds PL-013 (asset source).
+
+### PL-015 — Phase 14 RDD lift from the old ronin-dojo-monorepo — queued · ⚠ source doc needed
+
+- **Origin:** operator directive, bow-out 2026-07-22 (*"I have the document for that if we don't have it"*).
+- **Coverage check (repo):** `Phase 14` appears in ~6 docs (PL-012 = the Bento Box "RDD phase 14";
+  SESSION_0589 GPTLL-001 noted *"Phase 14 not found in repo graph"*), but **no G-row** and **no lift
+  spec** — the distinct "RDD lift from the old monorepo" migration is unscoped here.
+- **⚠ Blocker:** the Phase-14 source document is **NOT in this repo** — **operator to hand it over** before
+  the plan session (graphify/grep found only passing references).
+- **Next step:** operator provides the doc → `/pp` plan session scopes what "lift" ports (which
+  surfaces/features from the old monorepo → `apps/rdd`) → `G-NNN`. Relates to PL-012 · [G-027](goals-ledger.md).
+
+### PL-016 — Obsidian Vaults / Admin Dashboards: financial tracking + business planning/vision — queued
+
+- **Origin:** operator directive, bow-out 2026-07-22.
+- **Coverage check (goals ledger):** **partially covered** — [G-014](goals-ledger.md) (Obsidian Dashboard
+  Epic) owns the vault dashboards; **NEW facet** = **financial tracking + business planning/vision**
+  (real business financials, not the token/cost telemetry of [PL-006](#pl-006--token-cost-tracker-visual-component-state-of-the-dojo--session-summary-brief)).
+- **The idea:** the Obsidian vaults + admin dashboards carry **financial tracking** and **business
+  planning/vision** per brand and at the RDD umbrella — a business layer over the State-of-Dojo/vault
+  constellation.
+- **Open forks:** financial data source (where truth lives — a ledger/DB/spreadsheet) · which brands ·
+  vault-note projection vs in-app surface · privacy (financials are sensitive — access boundary).
+- **Next step:** own `/pp` plan session under/with [G-014](goals-ledger.md) → `G-NNN`. Pairs with PL-008
+  (vault consolidation) + PL-017 (RDD-as-company).
+
+### PL-017 — AgentOS: RDD as a company with an org-chart hierarchy (Roadmap v1.0) — queued · ⚠ source doc needed
+
+- **Origin:** operator directive, bow-out 2026-07-22 (from the old-monorepo **Ronin Dojo Roadmap v1.0**).
+- **Coverage check (repo):** **none** — `AgentOS`/`Agent OS`/`Roadmap v1`/`Ronin Dojo Roadmap` return
+  **0 docs**. Relates to the **agent-systems-map** (the 5 pillars, [[agent-systems-map]]) but "AgentOS as a
+  company with an org chart" is a new vision layer.
+- **⚠ Blocker:** the source is the old-monorepo **Ronin Dojo Roadmap v1.0** — **NOT in this repo**;
+  **operator to hand it over** (graphify query found nothing here).
+- **The idea:** model **RDD as a company** — an **AgentOS** with an **org-chart hierarchy** mapping
+  agents/roles to a company structure (who reports to whom, decision authority), extending the
+  agent-systems-map into an operating org.
+- **Next step:** operator provides Roadmap v1.0 → `/pp` plan session → `G-NNN`. Pairs with PL-016
+  (business layer) + [[agent-systems-map]].
 
 ## Cross-references
 

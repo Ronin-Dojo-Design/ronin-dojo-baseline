@@ -37,7 +37,7 @@ Brian + <agent>-session-0614
 
 Merge **all** open work in one attended sweep, drive each lane to G3 (review-ready) on the merged
 tree, and hold at the push gate. Recipe: [`AM_Coffee_Merge_Review`](../protocols/recipes/AM_Coffee_Merge_Review.md)
-+ [`merge-wave`](../protocols/recipes/merge-wave.md) gate ladder (G0 rebase → G4 build/e2e).
+with the [`merge-wave`](../protocols/recipes/merge-wave.md) gate ladder (G0 rebase → G4 build/e2e).
 
 ## Next session
 
