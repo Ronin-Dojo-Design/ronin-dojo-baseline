@@ -88,8 +88,10 @@ This is the review sibling of the build fanout — same roster, same disjointnes
    (e.g. two `seed.ts`) are usually a **ticket**, not an inline merge (consolidation crosses a deploy boundary).
 4. **Re-verify.** Bar = **delta-neutral**: no NEW failing test files vs the trunk's documented baseline
    (a known non-regression fail-class stays as-is — absolute green may be blocked on an out-of-scope
-   fix). Affected e2e for UI-contract changes; repo-wide `format:check` if any file was added; typecheck
-   + oxlint + `bun run test --parallel=1` on the touched set; `clients/*` gates run in-client.
+   fix). Affected e2e for UI-contract changes; typecheck + oxlint + **`format:check`**
+   (`cd apps/web && bun run format:check` — oxfmt; read-only `oxlint` does **not** catch formatting, so run it
+   whenever any `apps/web` file was **touched**, not just added — the SESSION_0610 miss reddened CI's Oxc job) +
+   `bun run test --parallel=1` on the touched set; `clients/*` gates run in-client.
 5. **Prove the delta + log.** Re-run fallow on the same range; prove CRAP/dupes/dead-code down (or
    non-worse, justified). Log baseline→final + `/code-quality` scores in the SESSION file. Push gate:
    HOLD, split by deploy unit.
@@ -99,7 +101,8 @@ This is the review sibling of the build fanout — same roster, same disjointnes
 1. Fallow **baseline → final** table (per scoped file) proving the delta down or justified.
 2. `/code-quality` score per code file, ≥ 8.5 or a documented reason.
 3. Fix list applied (behavior-preserving) vs ticketed (cross-boundary/behavior-changing), each routed.
-4. Re-verify evidence: delta-neutral test result + affected-e2e/format:check as applicable.
+4. Re-verify evidence: delta-neutral test result + **`format:check` green (MANDATORY on any touched `apps/web`
+   file — oxlint does not catch formatting; SESSION_0610)** + affected-e2e as applicable.
 5. Review log entry per lane; unresolved findings → Proposed ledger edits, never silently dropped.
 6. **Verdict** GO / GO-WITH-NOTE → the per-deploy-unit push gate (always waits for the operator's word).
 

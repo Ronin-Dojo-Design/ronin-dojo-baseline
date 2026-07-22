@@ -60,6 +60,7 @@ You are **not** invoked when:
 
 | Test layer | Must prove before score > 9.5 |
 | --- | --- |
+| Static / CI-parity | `tsc --noEmit`, `oxlint`, **`format:check`** (`cd apps/web && bun run format:check` — oxfmt; read-only `oxlint` does NOT catch formatting, so a green oxlint ≠ a green CI Oxc job — SESSION_0610 shipped a format-red `main`), and a clean-env `next build` before any app-code push |
 | Schema + migration | Models migrate cleanly, seed data works, rollback path exists |
 | Permissions | Org, role, household, coach, admin, staff scopes enforced |
 | Billing | Trial→paid, failed payment, refund, cancellation, resubscribe |
