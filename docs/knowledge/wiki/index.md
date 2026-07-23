@@ -768,6 +768,7 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0620](../../sprints/SESSION_0620.md) | session--open | in-progress — Twin-skill/Codex-model work and `/rr` slices; staged `SESSION_0622`. |
 | [SESSION_0622](../../sprints/SESSION_0622.md) | session--implement | closed — Autonomous WL-clearing batch: resolved stale `WL-P3-41`/`WL-P3-46`, stabilized `WL-P3-61`, gates green, next WL chain staged. |
 | [SESSION_0623](../../sprints/SESSION_0623.md) | session--implement | staged — Next autonomous WL-clearing batch. |
+| [SESSION_0631](../../sprints/SESSION_0631.md) | session--implement | closed — Autonomous WL-clearing batch (PR #256; **renumbered from the duplicate SESSION_0622** at the SESSION_0624 coffee merge): resolved `WL-P3-24`/`WL-P3-37`/`WL-P3-55`, plus the merge-time e2e fix-up for the `Row actions` a11y rename. |
 | [SESSION_0608](../../sprints/SESSION_0608.md) | session--implement | closed (landed on main, held) — WS-D: token-cost tracker (`telemetry:` frontmatter → `dataviz` charts). G-023; own worktree; Cody lane. |
 
 ## Protocols

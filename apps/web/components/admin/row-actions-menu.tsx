@@ -28,7 +28,7 @@ export const RowActionsMenu = ({ className, children, ...props }: RowActionsMenu
       <DropdownMenuTrigger
         render={
           <Button
-            aria-label="Open menu"
+            aria-label="Row actions"
             variant="secondary"
             size="sm"
             prefix={<EllipsisIcon />}

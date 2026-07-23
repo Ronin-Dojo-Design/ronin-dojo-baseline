@@ -115,7 +115,7 @@ function InviteRowActions({ invite }: { invite: InviteRow }) {
   }
 
   return (
-    <RowActionsMenu>
+    <RowActionsMenu className="float-right">
       <DropdownMenuItem onClick={copyLink}>
         <CopyIcon className="mr-2 size-4" />
         Copy invite link

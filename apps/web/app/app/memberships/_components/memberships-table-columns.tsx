@@ -139,7 +139,7 @@ function MembershipRowActions({ membership }: { membership: MembershipRow }) {
   }
 
   return (
-    <RowActionsMenu>
+    <RowActionsMenu className="float-right">
       {validTransitions.map(target => (
         <DropdownMenuItem
           key={target}

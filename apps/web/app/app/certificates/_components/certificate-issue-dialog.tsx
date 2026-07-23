@@ -12,6 +12,7 @@
  */
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
+import { PlusIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { toast } from "sonner"
@@ -74,9 +75,16 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
 
   const userOptions = useMemo(() => toRecipientOptions(users), [users])
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    setIsOpen(nextOpen)
+    if (!nextOpen) {
+      form.reset()
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger render={<Button size="sm" variant="primary" />}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogTrigger render={<Button size="sm" variant="primary" prefix={<PlusIcon />} />}>
         Issue certificate
       </DialogTrigger>
 
@@ -130,7 +138,7 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
             />
 
             <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
+              <Button type="button" variant="secondary" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" isPending={action.isPending}>
