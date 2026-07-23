@@ -45,8 +45,8 @@ import {
 } from "~/server/web/techniques/node-tooltip"
 import { type ExportRgb, useGraphPngExport } from "./graph-png-export"
 
-const NODE_WIDTH = 168
-const NODE_HEIGHT = 64
+export const NODE_WIDTH = 168
+export const NODE_HEIGHT = 64
 const CANVAS_PADDING = 96
 const ZOOM_MIN = 0.35
 const ZOOM_MAX = 1.8
