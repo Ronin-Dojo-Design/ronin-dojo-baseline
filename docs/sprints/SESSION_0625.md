@@ -1,11 +1,11 @@
 ---
 title: "SESSION 0625 — MMB Meeting Intake (Michael's notes → grilled, routed)"
 slug: session-0625
-type: session--plan
-status: staged
+type: session--open
+status: in-progress
 created: 2026-07-23
 updated: 2026-07-23
-last_agent: claude-session-0620
+last_agent: claude-session-0625
 sprint: S12
 lane: mmb
 recipe: "Client_Meeting_Intake"
@@ -102,9 +102,58 @@ Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operato
 **Done means:** notes `grilled` + demo-safe; every material ask a routed PRD/STORIES/goal/PL row with an id +
 done-means; north-star + goal #1 elected; follow-on staged or intake explicitly closed. (Recipe `## Done means`.)
 
+## Bow-in
+
+Worktree `../ronin-0625` on `session-0625-mmb-intake` (canonical checked free via
+`canonical-claim.sh` but left to the sibling lanes; `/worktree-setup` bootstrapped). Parallel-lane
+assessment (opening.md §1d): the four first-tasks are **sequential, not disjoint** — task 2 gates
+task 1's preview and tasks 3→4 are read-then-build on the same artifact — so no fan-out; run inline.
+Stub adopted per ADR 0049 (`staged` → `in-progress`), no `cp`.
+
+Petey's three questions asked via `AskUserQuestion` (opening.md §6b). Operator answers: run the
+projection **fix before** the preview · the RDD `.docx` set **is** "the" onboarting form + contract ·
+**stay** on the MMB lane (not the 3 open PRs).
+
+## Next session
+
+**[SESSION_0632](SESSION_0632.md) — client-intake kernel: one module, three brand instances.** Staged
+from the operator's directive ("we need this for RDD but also for MMB for their clients — Metal
+Building Sales"). WS-A extracts the pure core down into `packages/ui-kit` (the standalone Mammoth app
+can reach neither `apps/web`'s L1 primitives nor its `lib/`); WS-B authors the Metal Building Sales
+questionnaire — the first real consumer of the commercial-lane taxonomy this session's intake audit
+found unrouted (GAP-1); WS-C mounts it in `clients/mammoth-build-crm`. WS-A gates B ∥ C. Four forks
+pinned in the stub for the pre-dispatch grill.
+
+**[SESSION_0633](SESSION_0633.md) — RDD + MMB stand-alone deploys (planning wave).** Staged from the
+operator's second directive: separate Vercel deploys for `ronindojodesign.com` (Bluehost) and
+`mammothmb.com` (Michael's Cloudflare), each with its own DB, product folder, gap matrix and cutover
+checklist. `/gq` established ground truth — MMB already has a `vercel.json` **and** its own DB (so it
+is *attach + cutover*), while `apps/rdd` has neither (a real stand-up). Runs as an `/rr` fan-out
+(WS-A/B/D disjoint, WS-C gated on B) and emits **two `/ppp` batons**. Planning only — no infra touched.
+
 ## Task log
 
-<!-- filled at bow-in -->
+| ID | Status | Owner | Outcome |
+| --- | --- | --- | --- |
+| SESSION_0625_TASK_02 | ✅ done | inline Cody | **WL-P2-80** — SotD now projects brand canon. New pure-core `parseProductDocFile` + `bucketProductDocPhase` + `parseArtifactEntry` (`lib/state-of-dojo/parse.ts`), wired into BOTH feeds (`scripts/ledger-backlog.ts` local fs, `lib/state-of-dojo/fetch-state.ts` GitHub-raw). MMB board cards **3 → 10**, BBL **5 → 28**. Frozen kernel (`_kernel/*`, `state-panel.tsx`, `components/common/*`) **untouched** — product docs ride the existing `SessionDetail` shape, so `sessionToCard` renders them unchanged. Stretch landed: "Recently added" strip (25 recipe cards / templates / product assets), renderer-side. 15 new unit tests. |
+| SESSION_0625_TASK_01 | ✅ done | inline Cody | All-brands SotD rendered + published as a frozen Artifact (see `## Artifacts`). Ran **after** task 2 so the MMB tab is populated, per the operator's call. |
+| SESSION_0625_TASK_03 | ✅ done | inline Petey | Reviewed the onboarding form + contract — `docs/product/rdd/assets/` (`Initial_Client_Meeting_Template.docx` = the 15-question discovery agenda · `Master_Service_Agreement_Template.docx` = MSA + Exhibit A SOW · `NDA_Template.docx`). Confirmed Brandon's **de-Tableau flag is real**: the questionnaire still asks about "Tableau dashboards", "data sources", "KPIs". MSA §6.2/6.3 Background-Technology retention = the legal expression of kernel-is-the-moat — keep. Blank boilerplate; counsel + ESIGN gate before any executable instance. |
+| SESSION_0625_TASK_04 | ✅ done | inline Cody | Built `/app/client-intake` — a live-fillable, FeatureWidget-pattern discovery form. The de-Tableau re-scope **lands here**: 15 questions 1:1 with the .docx, re-worded to RDD's software + design agency framing (a test asserts "tableau"/"dashboard"/"data analytics" are gone). **No server action, no DB model, no network call** — answers stay in browser state + `localStorage`, and leave only by Copy-as-Markdown / Download `.md`, in the `Michaels_Notes_Meeting.md` frontmatter shape the recipe already consumes. `contains_real_data` toggle stamps a do-not-commit banner. Reuse-only: every control is an existing L1 primitive. New authz key `clientIntake: "client-intake.manage"` in the existing per-area matrix (never a 5th system). |
+| SESSION_0625_TASK_05 | ⏸️ held | inline Petey | `Client_Meeting_Intake` recipe run on Michael's notes — **capture + coverage audit done, grill held**. The 2026-07-18 intake was already largely routed (0571/0573/0582/0586 — STORIES Epics 8/9/10 say so), so this run is a coverage audit: **14 of 17** note sections routed, **3 genuine gaps** found (commercial-lane taxonomy → 2 drafted STORIES rows; install-vs-sales pipeline → an ADR; consulting-pipeline leave-behind → a PL row) and a **9-item owner-only decision queue**. Notes deliberately left at `captured-needs-grill` — flipping to `grilled` would claim a grill that has not happened. Delta held **out of git** per the session directive. |
+
+## Gates
+
+typecheck ✅ · oxlint ✅ · oxfmt ✅ · `bun run test` **1707 pass / 0 fail** (run with `RESEND_API_KEY`
+stubbed — a live key sits in `.env` and the suite is a known live-send risk; the in-repo
+`[email:test:no-send]` seam held, no mail sent) · `next build` **exit 0**, `/app/client-intake` in the
+route manifest.
+
+**Push gate: HELD** for the operator's explicit word. This touches `apps/web`, so a push fires CI +
+the BBL prod deploy.
+
+## Artifacts
+
+- **State of the Dojo (all brands, MMB populated)** — <https://claude.ai/code/artifact/d0f4a36d-f29c-4f9d-ac2f-39e030555efd>
 
 ## Status
 

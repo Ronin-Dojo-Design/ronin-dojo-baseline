@@ -35,6 +35,13 @@ export type SessionDetail = {
   product: ProductLane
   phase: Phase
   pushGateHeld: boolean
+  /**
+   * Which source produced this board card: a `docs/sprints/SESSION_NNNN.md` file, or a brand's
+   * product canon under `docs/product/<dir>/` (WL-P2-80). Optional so every pre-existing consumer
+   * — including the FROZEN panel kernel — keeps compiling untouched; `undefined` reads as
+   * `"session"`, the historical behavior.
+   */
+  kind?: "session" | "product-doc"
 }
 
 export type GoalDetail = {
@@ -179,6 +186,132 @@ export function parseSessionFile(path: string, content: string): SessionDetail |
     product: classifySessionProduct(lane),
     phase: bucketSessionPhase(status, pushGateHeld),
     pushGateHeld,
+  }
+}
+
+// --- product-doc parsing (WL-P2-80) -----------------------------------------------------------
+
+/**
+ * A brand's canon lives under `docs/product/<dir>/` — PRD, STORIES, brand heartbeat, operating
+ * system, meeting captures. The SotD originally projected ONLY `docs/sprints/*` + `goals-ledger`,
+ * so a brand whose real work lives in its product folder (Mammoth: 3 sprint sessions, but a full
+ * PRD/STORIES/heartbeat/intake set) read as a near-empty tab. Logged as **WL-P2-80** by the
+ * operator ("why isn't MMB on the SotD"); this map is the fix.
+ *
+ * Deliberately a table, not a heuristic: a brand tab only ever shows canon someone explicitly
+ * wired here, so an unrelated `docs/product/*` folder can never leak onto a brand board.
+ */
+const PRODUCT_DIR_LANE: Record<string, ProductLane> = {
+  "mammoth-build": "mmb",
+  "black-belt-legacy": "bbl",
+}
+
+/** `docs/product/<dir>/<name>.md` and `docs/product/<dir>/assets/<name>.md`. */
+const PRODUCT_DOC_RE = /docs\/product\/([^/]+)\/(?:assets\/)?([^/]+)\.md$/
+
+/**
+ * Short board eyebrow for a product doc. `MMB_RECOVERY_MANIFEST` → `RECOVERY`, `BRAND_HEART_BEAT`
+ * → `BRAND-HEART-BEAT`, `Michaels_Notes_Meeting` → `MICHAELS-NOTES-MEETING`. Keeps the card
+ * identifiable at a glance without inventing a fake session number.
+ */
+function productDocTag(basename: string): string {
+  return basename
+    .replace(/^MMB_/, "")
+    .replace(/[_\s]+/g, "-")
+    .toUpperCase()
+}
+
+/**
+ * Product-canon `status:` words are a different vocabulary from a session's — a doc is `draft`
+ * (being written), `active` (living canon), or a capture mid-intake (`captured-needs-grill` →
+ * `grilled`). Mapped onto the SAME 5-belt ladder so one board reads consistently:
+ * needs-grill/proposed = planned · draft/grilled = in flight · review = review · active/ratified = done.
+ */
+export function bucketProductDocPhase(status: string): Phase {
+  const s = status.trim().toLowerCase()
+  if (/^(active|ratified|landed|done|closed)/.test(s)) return "done"
+  if (/review/.test(s)) return "review"
+  if (/^(draft|grilled|in-progress)/.test(s)) return "in-flight"
+  return "planned" // captured-needs-grill | proposed | superseded | unrecognized
+}
+
+/**
+ * Parse one `docs/product/<dir>/**.md` canon doc into a board card for its brand tab.
+ *
+ * Returns a `SessionDetail` on purpose — the frozen panel kernel (`state-panel.tsx`'s
+ * `sessionToCard`) and the render script both already map that shape onto the work board, so a
+ * brand's canon lands on its tab with **zero** changes to the frozen contract. `number` carries
+ * the doc tag rather than a 4-digit id; both consumers sort/label by string, and `kind`
+ * distinguishes the two card sources for anything that needs to tell them apart.
+ *
+ * `null` for a path outside the wired `PRODUCT_DIR_LANE` table, or a non-`.md` file.
+ */
+export function parseProductDocFile(path: string, content: string): SessionDetail | null {
+  const m = path.match(PRODUCT_DOC_RE)
+  if (!m) return null
+  const product = PRODUCT_DIR_LANE[m[1]]
+  if (!product) return null
+  const status = frontmatterField(content, "status") ?? "unknown"
+  return {
+    number: productDocTag(m[2]),
+    title: frontmatterField(content, "title") ?? m[2],
+    status,
+    lane: product,
+    product,
+    phase: bucketProductDocPhase(status),
+    pushGateHeld: detectPushGateHeld(content),
+    kind: "product-doc",
+  }
+}
+
+// --- recently-added strip (WL-P2-80 stretch) ---------------------------------------------------
+
+/**
+ * One newly-added governance/product artifact — a recipe card, a client template, a product asset.
+ * Intake and governance work produces these, and NONE of it showed anywhere on the SotD (a recipe
+ * card is neither a session nor a goal), so a session that shipped three recipes read as idle.
+ */
+export type ArtifactDetail = {
+  /** Repo-relative path — the artifact's identity. */
+  path: string
+  title: string
+  /** What kind of thing it is, for the strip's grouping label. */
+  kind: "recipe" | "template" | "asset" | "doc"
+  /** Frontmatter `created:`/`updated:` (ISO date) when the file carries one; `undefined` for binaries. */
+  date?: string
+  /** Brand tab it belongs to, when the path maps to one; `rdd` (umbrella) otherwise. */
+  product: ProductLane
+}
+
+const ARTIFACT_KIND_RE: [RegExp, ArtifactDetail["kind"]][] = [
+  [/docs\/protocols\/recipes\//, "recipe"],
+  [/_Template\.\w+$|\/templates?\//i, "template"],
+  [/\/assets\//, "asset"],
+]
+
+/** Human title for a binary/asset with no frontmatter: `Master_Service_Agreement_Template.docx`
+ * → `Master Service Agreement Template`. */
+function filenameTitle(path: string): string {
+  const base = path.split("/").pop() ?? path
+  return base.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ")
+}
+
+/**
+ * Classify one artifact path (+ its contents, when it's a readable text file) into an
+ * `ArtifactDetail`. Pure: the caller supplies `content` — `undefined` for a binary it did not read,
+ * which is why title/date fall back to the filename.
+ */
+export function parseArtifactEntry(path: string, content?: string): ArtifactDetail {
+  const kind = ARTIFACT_KIND_RE.find(([re]) => re.test(path))?.[1] ?? "doc"
+  const dirLane = path.match(/docs\/product\/([^/]+)\//)?.[1]
+  return {
+    path,
+    title: (content && frontmatterField(content, "title")) || filenameTitle(path),
+    kind,
+    date: content
+      ? (frontmatterField(content, "updated") ?? frontmatterField(content, "created"))
+      : undefined,
+    product: (dirLane && PRODUCT_DIR_LANE[dirLane]) || "rdd",
   }
 }
 

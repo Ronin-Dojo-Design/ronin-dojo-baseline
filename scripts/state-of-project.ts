@@ -22,12 +22,23 @@
 import { execFileSync } from "node:child_process"
 import { resolve } from "node:path"
 import type { Item } from "../apps/web/lib/loop-board/ledger-parse"
-import type { GoalDetail, Phase, ProductLane, SessionDetail } from "../apps/web/lib/state-of-dojo/parse"
+import type {
+  ArtifactDetail,
+  GoalDetail,
+  Phase,
+  ProductLane,
+  SessionDetail,
+} from "../apps/web/lib/state-of-dojo/parse"
 
 const ROOT = resolve(import.meta.dir, "..")
 const OUT_PATH = resolve(ROOT, process.argv[2] ?? "out/state-of-project.html")
 
-type Feed = { items: Item[]; sessions: SessionDetail[]; goals: GoalDetail[] }
+type Feed = {
+  items: Item[]
+  sessions: SessionDetail[]
+  goals: GoalDetail[]
+  artifacts: ArtifactDetail[]
+}
 
 function loadFeed(): Feed {
   const raw = execFileSync("bun", ["scripts/ledger-backlog.ts", "--json"], {
@@ -71,8 +82,11 @@ function listOrEmpty(rows: string[], emptyText: string): string {
 }
 
 function sessionCard(s: SessionDetail): string {
+  // A product-doc card's id is a word (`PRD`, `STORIES`), not a session number — the `#` prefix
+  // would read as a fake session id, so only numeric sprint sessions get it (WL-P2-80).
+  const eyebrow = s.kind === "product-doc" ? `${esc(s.number)} · canon` : `#${esc(s.number)}`
   return `<li class="card" data-phase="${s.phase}">
-    <span class="card-id">#${esc(s.number)}</span>
+    <span class="card-id">${eyebrow}</span>
     <span class="card-title">${esc(s.title)}</span>
     <span class="pill pill-${s.status.startsWith("closed") ? "good" : s.phase === "review" ? "warn" : "neutral"}">${esc(s.status)}</span>
   </li>`
@@ -86,7 +100,12 @@ const DONE_COLUMN_CAP = 12
 
 function workBoard(sessions: SessionDetail[]): string {
   const cols = PHASES.map(phase => {
-    const inPhase = sessions.filter(s => s.phase === phase).sort((a, b) => Number(b.number) - Number(a.number))
+    // Numeric-aware string compare, not `Number()` — product-doc cards carry word ids (`PRD`),
+    // which `Number()` turns into NaN and an unstable order (WL-P2-80). Mirrors the frozen
+    // kernel's `key.localeCompare(…, { numeric: true })`, so both renderers order identically.
+    const inPhase = sessions
+      .filter(s => s.phase === phase)
+      .sort((a, b) => b.number.localeCompare(a.number, undefined, { numeric: true }))
     const capped = phase === "done" ? inPhase.slice(0, DONE_COLUMN_CAP) : inPhase
     const rows = capped.map(sessionCard)
     const hiddenCount = inPhase.length - capped.length
@@ -146,6 +165,32 @@ function goalsSection(goals: GoalDetail[]): string {
     <h3>Goal ladder table</h3>
     ${goalLadderTable(goals)}
   </section>`
+}
+
+/** How many recently-added artifacts the strip shows before it stops being a "recently" list. */
+const RECENT_ARTIFACT_CAP = 10
+
+/**
+ * Recently added — the WL-P2-80 stretch. Recipe cards, client templates and product assets are
+ * neither sessions nor goals, so a session that shipped three recipe cards and a contract template
+ * showed as idle on every tab. Cross-brand by design (same call as `needsYou`): the operator wants
+ * one "what just landed" list regardless of which tab is open, and each row carries its own brand.
+ */
+function recentlyAdded(artifacts: ArtifactDetail[]): string {
+  const rows = artifacts
+    .slice(0, RECENT_ARTIFACT_CAP)
+    .map(
+      a => `<li class="artifact-row">
+        <span class="pill pill-neutral">${esc(a.kind)}</span>
+        <span class="artifact-title">${esc(a.title)}</span>
+        <span class="muted">${esc(a.product.toUpperCase())} · ${esc(a.date ?? "—")} · <code>${esc(a.path)}</code></span>
+      </li>`,
+    )
+  const hidden = artifacts.length - Math.min(artifacts.length, RECENT_ARTIFACT_CAP)
+  const more = hidden > 0 ? `<li class="more">+${hidden} more artifact(s)</li>` : ""
+  return `<section class="recently-added"><h2>Recently added</h2>
+    <h3>Recipe cards · templates · product assets</h3>
+    <ul>${listOrEmpty(rows, "No artifacts found.")}${more}</ul></section>`
 }
 
 function riskWatch(items: Item[]): string {
@@ -245,6 +290,10 @@ h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .ladder-table th,.ladder-table td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
 .ladder-table .tick{text-align:center;color:var(--muted)}
 .risk-row,.needs-you li{font-size:13px;margin-bottom:6px;list-style:none}
+.recently-added ul{margin:0;padding:0}
+.artifact-row{font-size:13px;margin-bottom:8px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.artifact-title{font-weight:600}
+.artifact-row code{font-size:10px;word-break:break-all}
 .needs-you ul{margin:0;padding:0}
 footer{max-width:1100px;margin:0 auto;padding:16px;font-size:11px;color:var(--muted)}
 footer p{margin:4px 0}
@@ -266,7 +315,7 @@ footer p{margin:4px 0}
 // --- page ------------------------------------------------------------------------------------
 
 function page(feed: Feed): string {
-  const { items, sessions, goals } = feed
+  const { items, sessions, goals, artifacts } = feed
   const prCount = items.filter(i => i.ledger === "PR").length
   const renderedAt = new Date().toISOString()
   const panels = BRANDS.map((b, i) => brandPanel(b.key, i === 0, sessions, goals)).join("")
@@ -288,6 +337,7 @@ function page(feed: Feed): string {
 </header>
 <main>
 ${panels}
+${recentlyAdded(artifacts ?? [])}
 ${riskWatch(items)}
 ${needsYou(sessions, goals)}
 </main>

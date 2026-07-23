@@ -30,9 +30,14 @@
   --text-primary: #f3f5f7;
   --text-muted: #9aa3ad;
 
-  /* --- type --- */
-  --font-display: "Saira", "Bahnschrift", "Arial Narrow", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* --- type ---
+   * `--font-*-loaded` is injected by `next/font/google` in layout.tsx (self-hosted at build time).
+   * The literal names stay as the fallback chain so the tokens still resolve if the loader is ever
+   * removed. */
+  --font-display: var(--font-display-loaded), "Saira", "Bahnschrift", "Arial Narrow", system-ui,
+    sans-serif;
+  --font-sans: var(--font-sans-loaded), "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    sans-serif;
 
   /*
    * Bridge to the shared kernel (@ronin-dojo/ui-kit — m-card, AdminKanban).

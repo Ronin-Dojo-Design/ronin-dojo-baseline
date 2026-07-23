@@ -937,6 +937,45 @@ Read this section at bow-in instead of skimming every individual entry.
   stub propagates its numbering bug once per iteration; fix the copier, not the copy.
 - **Status:** open (pointer + generator mitigations landed SESSION_0624; the bow-in selector fix is the close).
 
+### FS-0039 — `git push origin main` from a worktree published a SIBLING lane's commit
+
+- **Session:** SESSION_0625 (Claude) — **caught by the operator**, who noted it had recurred across
+  "20-30 sessions" and demanded a real fix rather than another writeup.
+- **Step failed:** landing a lane's work on trunk. The agent ran `git checkout main` (which correctly
+  failed — canonical owns that branch), then `git push origin main` anyway.
+- **Root cause — a git property, not carelessness:** a linked worktree cannot *check out* `main`, but
+  `main` still **resolves** there, because every worktree shares ONE ref store. So `git push origin main`
+  from a lane worktree does not push the lane; it pushes whatever the **shared** `main` ref points at —
+  routinely another live session's local commits, past that session's own push gate. The push exits 0 and
+  looks completely normal. Nothing in the previous guard set covered it: `canonical-claim.sh` guards
+  *occupancy*, the shell guards cover the template dir, and `explicit-push-authorization` gates *whether*
+  to push, never *which ref* gets pushed.
+- **Impact (this occurrence):** LOW — one docs-only commit (`SESSION_0624.md`) reached `origin/main` early;
+  verified against `vercel.json`'s real `ignoreCommand` pathspec that **no BBL prod deploy fired**. Not
+  reverted: the commit is the sibling lane's legitimate work, and a revert/force-push would clobber that
+  lane worse than the early publish did. **Impact in the general case is HIGH** — the same command can
+  publish unreviewed app code straight to a live, paid production deploy.
+- **Corrective action — an enforced hook, not prose (the FS-0035/0036/0037 lesson applied):**
+  [`scripts/githooks/pre-push`](../../scripts/githooks/pre-push) blocks any push whose local source ref is
+  **not the branch you are on**, with a worktree-specific message naming this failure and the correct
+  command. It also blocks non-fast-forward pushes to `main`. Installed by
+  [`scripts/githooks/install.sh`](../../scripts/githooks/install.sh) via `core.hooksPath`, which lives in
+  the **shared** `.git/config` — so one install covers canonical *and* every existing and future worktree.
+  Deliberate override stays available as `RONIN_ALLOW_INDIRECT_PUSH=1`. Wired into `/worktree-setup` so a
+  fresh clone gets it.
+- **Verification:** exercised live, all three paths — (1) pushing a branch the session was **not** on
+  blocked with the worktree message; (2) `git push origin HEAD` (the correct move) passed; (3) the
+  documented override let a deliberate indirect push through. The previous `core.hooksPath` held no
+  non-sample hooks, so repointing it disabled nothing.
+- **Lesson:** the correct way to land a worktree lane on trunk is **`git push -u origin HEAD` then a PR** —
+  never a bare `git push origin main`. A guard that only asks *whether* to push cannot catch pushing the
+  *wrong ref*; the ref itself has to be checked.
+- **Id note:** first written as FS-0038 in SESSION_0625; the sibling SESSION_0624 lane had already claimed
+  that id on `main` for an unrelated trap, so this renumbered to FS-0039 at the merge. Ids are append-only
+  and never recycled — the SESSION_0625 commit body and the hook's own header still say FS-0038 and were
+  corrected in a follow-up; treat FS-0039 as canonical.
+- **Status:** mitigated (hook landed + verified live SESSION_0625).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.

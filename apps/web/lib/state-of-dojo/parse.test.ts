@@ -2,6 +2,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   bucketGoalPhase,
+  bucketProductDocPhase,
   bucketSessionPhase,
   classifyGoalProduct,
   classifySessionProduct,
@@ -9,7 +10,9 @@ import {
   detectPushGateHeld,
   detectReviewSignal,
   frontmatterField,
+  parseArtifactEntry,
   parseGoalsDetail,
+  parseProductDocFile,
   parseSessionFile,
 } from "./parse"
 
@@ -279,5 +282,87 @@ describe("parseGoalsDetail", () => {
     const [row] = parseGoalsDetail(inlineFixture)
     expect(row.lane).toBe("Mammoth product.")
     expect(row.product).toBe("mmb")
+  })
+})
+
+// ── WL-P2-80: brand-canon product docs + the recently-added artifact strip ───────────────────────
+
+describe("bucketProductDocPhase", () => {
+  test("product-canon status words map onto the shared 5-belt ladder", () => {
+    expect(bucketProductDocPhase("active")).toBe("done")
+    expect(bucketProductDocPhase("ratified")).toBe("done")
+    expect(bucketProductDocPhase("draft")).toBe("in-flight")
+    expect(bucketProductDocPhase("grilled")).toBe("in-flight")
+    expect(bucketProductDocPhase("in-review")).toBe("review")
+    expect(bucketProductDocPhase("captured-needs-grill")).toBe("planned")
+  })
+
+  test("an unrecognized word defaults to planned, never throws", () => {
+    expect(bucketProductDocPhase("banana")).toBe("planned")
+    expect(bucketProductDocPhase("")).toBe("planned")
+  })
+})
+
+describe("parseProductDocFile", () => {
+  const prd = `---\ntitle: "Mammoth Build CRM PRD"\nstatus: draft\n---\n\n# body\n`
+
+  test("a wired brand dir projects onto that brand's tab as a product-doc card", () => {
+    const card = parseProductDocFile("docs/product/mammoth-build/PRD.md", prd)
+    expect(card).not.toBeNull()
+    expect(card?.product).toBe("mmb")
+    expect(card?.kind).toBe("product-doc")
+    expect(card?.number).toBe("PRD")
+    expect(card?.title).toBe("Mammoth Build CRM PRD")
+    expect(card?.phase).toBe("in-flight")
+  })
+
+  test("reads the assets/ subdir too, and strips the MMB_ prefix from the tag", () => {
+    const notes = `---\ntitle: "Michael's notes"\nstatus: captured-needs-grill\n---\n`
+    expect(
+      parseProductDocFile("docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md", notes)
+        ?.number,
+    ).toBe("MICHAELS-NOTES-MEETING")
+    expect(
+      parseProductDocFile("docs/product/mammoth-build/MMB_RECOVERY_MANIFEST.md", prd)?.number,
+    ).toBe("RECOVERY-MANIFEST")
+  })
+
+  test("an UNWIRED product dir is skipped — canon never leaks onto a brand tab", () => {
+    expect(parseProductDocFile("docs/product/obsidian-dashboard/Epic.md", prd)).toBeNull()
+    expect(parseProductDocFile("docs/sprints/SESSION_0625.md", prd)).toBeNull()
+    expect(parseProductDocFile("docs/product/mammoth-build/files/mockup.html", prd)).toBeNull()
+  })
+
+  test("falls back to the basename when the doc carries no title", () => {
+    expect(
+      parseProductDocFile("docs/product/mammoth-build/STORIES.md", "# no frontmatter\n")?.title,
+    ).toBe("STORIES")
+  })
+})
+
+describe("parseArtifactEntry", () => {
+  test("classifies a recipe card and reads its frontmatter title + date", () => {
+    const recipe = `---\ntitle: "Recipe — Client Meeting Intake"\ncreated: 2026-07-22\nupdated: 2026-07-23\n---\n`
+    const a = parseArtifactEntry("docs/protocols/recipes/Client_Meeting_Intake.md", recipe)
+    expect(a.kind).toBe("recipe")
+    expect(a.title).toBe("Recipe — Client Meeting Intake")
+    expect(a.date).toBe("2026-07-23") // `updated` wins over `created`
+    expect(a.product).toBe("rdd")
+  })
+
+  test("a binary template with no readable content falls back to a filename title", () => {
+    const a = parseArtifactEntry("docs/product/rdd/assets/Master_Service_Agreement_Template.docx")
+    expect(a.kind).toBe("template")
+    expect(a.title).toBe("Master Service Agreement Template")
+    expect(a.date).toBeUndefined()
+  })
+
+  test("an asset under a wired brand dir carries that brand", () => {
+    expect(
+      parseArtifactEntry("docs/product/mammoth-build/assets/MMB_HubSpot_Reference.pdf").product,
+    ).toBe("mmb")
+    expect(
+      parseArtifactEntry("docs/product/mammoth-build/assets/MMB_HubSpot_Reference.pdf").kind,
+    ).toBe("asset")
   })
 })
