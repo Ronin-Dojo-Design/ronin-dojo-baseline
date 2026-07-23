@@ -15,7 +15,7 @@ import { Heading } from "~/components/common/heading"
 import type { CatalogRow } from "~/lib/state-of-dojo/component-catalog-parse"
 import { fetchCatalogFeed } from "~/lib/state-of-dojo/fetch-catalog"
 import type { ProjectionPanelProps } from "./_kernel/contract"
-import { BRAND_SKINS } from "./_kernel/phase"
+import { VISIBLE_BRAND_SKINS } from "./_kernel/phase"
 import {
   type BoardCard,
   BrandTabs,
@@ -78,7 +78,7 @@ export function buildCatalogPanels(
   noun: string,
   compact?: boolean,
 ): BrandTabPanel[] {
-  return BRAND_SKINS.map(skin => {
+  return VISIBLE_BRAND_SKINS.map(skin => {
     const scoped = rows.filter(r => r.brands.includes(skin.key))
     if (scoped.length === 0) {
       return {

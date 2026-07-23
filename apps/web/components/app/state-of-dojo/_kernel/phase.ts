@@ -7,6 +7,7 @@
  * classification the feed already ran (`~/lib/state-of-dojo/parse`).
  */
 import type { badgeVariants } from "~/components/common/badge"
+import { env } from "~/env"
 import type { Phase, ProductLane } from "~/lib/state-of-dojo/parse"
 import type { VariantProps } from "~/lib/utils"
 
@@ -91,6 +92,24 @@ export const BRAND_SKINS: readonly BrandSkin[] = [
   { key: "bbl", label: "BBL", accent: "hsl(1 79% 51%)", belts: true },
   { key: "mmb", label: "MMB", accent: "#ff6a1a", belts: false },
 ] as const
+
+/**
+ * This deploy's own brand key (its `ProductLane`). The BBL flagship = `"bbl"`; the MMB deploy overrides to
+ * `"mmb"`, the RDD umbrella to `"rdd"`. One per-deploy constant, mirroring `CURRENT_DEPLOY_SKIN` below.
+ */
+export const DEPLOY_BRAND_KEY: ProductLane = "bbl"
+
+/**
+ * The brand skins the State-of-Dojo tabs actually render on THIS deploy — the ONE place deploy-scope is
+ * decided (every panel maps this, not raw `BRAND_SKINS`). A single-brand deploy (BBL) shows ONLY its own
+ * brand, so cross-brand dev work never leaks onto a customer deploy (operator, SESSION_0619). The RDD
+ * umbrella deploy (`ronindojodesign.com`) sets `NEXT_PUBLIC_SOTD_ALL_BRANDS=true` to show the full set —
+ * the reusable deploy-scope switch for any cross-brand surface under the RDD-vs-BBL split (G-027).
+ */
+export const VISIBLE_BRAND_SKINS: readonly BrandSkin[] =
+  env.NEXT_PUBLIC_SOTD_ALL_BRANDS === "true"
+    ? BRAND_SKINS
+    : BRAND_SKINS.filter(skin => skin.key === DEPLOY_BRAND_KEY)
 
 /** The word for a phase under a given skin (belt vs neutral). */
 export function phaseWord(phase: Phase, belts: boolean): string {

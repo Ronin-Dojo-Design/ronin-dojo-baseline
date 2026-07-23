@@ -103,6 +103,10 @@ export const env = createEnv({
     // ISO timestamp the BBL countdown ticks toward (display only). Optional —
     // without it the holding page shows "Launching soon" with no clock.
     NEXT_PUBLIC_BBL_LAUNCH_AT: z.string().optional(),
+    // Deploy-scope switch (SESSION_0619). "true" = State-of-Dojo shows ALL brand tabs (the RDD
+    // umbrella deploy, ronindojodesign.com). Unset/anything else = scope to this deploy's own
+    // brand only (BBL). The reusable pattern for any cross-brand surface under the RDD-vs-BBL split.
+    NEXT_PUBLIC_SOTD_ALL_BRANDS: z.string().optional(),
   },
 
   /**
@@ -117,6 +121,7 @@ export const env = createEnv({
     NEXT_PUBLIC_PLAUSIBLE_DOMAIN: process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN,
     NEXT_PUBLIC_MEDIA_BASE_URL: process.env.NEXT_PUBLIC_MEDIA_BASE_URL,
     NEXT_PUBLIC_BBL_LAUNCH_AT: process.env.NEXT_PUBLIC_BBL_LAUNCH_AT,
+    NEXT_PUBLIC_SOTD_ALL_BRANDS: process.env.NEXT_PUBLIC_SOTD_ALL_BRANDS,
   },
 
   /**

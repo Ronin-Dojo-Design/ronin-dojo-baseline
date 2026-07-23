@@ -14,7 +14,7 @@ import type { Item } from "~/lib/loop-board/ledger-parse"
 import type { GoalDetail, SessionDetail } from "~/lib/state-of-dojo/parse"
 import { fetchStateFeed } from "~/lib/state-of-dojo/fetch-state"
 import type { ProjectionPanelProps } from "./_kernel/contract"
-import { BRAND_SKINS, MASTHEAD_TITLE_HERE } from "./_kernel/phase"
+import { MASTHEAD_TITLE_HERE, VISIBLE_BRAND_SKINS } from "./_kernel/phase"
 import {
   type BoardCard,
   BrandTabs,
@@ -63,7 +63,7 @@ async function StatePanelContent({ compact }: ProjectionPanelProps) {
   const feed = await fetchStateFeed()
   const { sessions, goals } = feed
 
-  const panels: BrandTabPanel[] = BRAND_SKINS.map(skin => {
+  const panels: BrandTabPanel[] = VISIBLE_BRAND_SKINS.map(skin => {
     const cards = sessions.filter(s => s.product === skin.key).map(sessionToCard)
     const rows = goals.filter(g => g.product === skin.key).map(goalToRow)
     return {

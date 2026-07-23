@@ -248,6 +248,20 @@ export type BrandTabPanel = { skin: BrandSkin; content: ReactNode }
  */
 export function BrandTabs({ panels }: { panels: BrandTabPanel[] }) {
   if (!panels.length) return null
+  // Single-brand deploy (e.g. BBL scoped to its own brand): render just that brand's content — a lone
+  // one-item tab strip is noise. The multi-brand path (RDD umbrella) is unchanged.
+  if (panels.length === 1) {
+    const { skin, content } = panels[0]
+    return (
+      <div
+        data-brand={skin.key}
+        style={{ "--sotd-accent": skin.accent } as CSSProperties}
+        className="space-y-4"
+      >
+        {content}
+      </div>
+    )
+  }
   return (
     <Tabs defaultValue={panels[0].skin.key}>
       <TabsList>
