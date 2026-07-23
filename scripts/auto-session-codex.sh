@@ -124,6 +124,13 @@ for ((i = 1; i <= N; i++)); do
   last="$(find docs/sprints -name 'SESSION_*.md' | sed -E 's/.*SESSION_([0-9]+)\.md/\1/' | sort -n | tail -1)"
   next="$(printf '%04d' "$((10#$last + 1))")"
   branch="auto/session-${next}"
+  # Skip a branch name already taken on origin or locally (a prior run's PR branch) — the
+  # push would otherwise be rejected non-fast-forward and break the chain.
+  while git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1 \
+     || git show-ref --verify --quiet "refs/heads/${branch}"; do
+    next="$(printf '%04d' "$((10#$next + 1))")"
+    branch="auto/session-${next}"
+  done
 
   echo ""
   echo "════════ codex session ${i}/${N} → ${branch} (stacked on ${base_branch}) ════════"
