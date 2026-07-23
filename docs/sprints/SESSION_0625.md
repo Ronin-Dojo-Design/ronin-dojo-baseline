@@ -48,13 +48,22 @@ Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operato
    ```bash
    NEXT_PUBLIC_SOTD_ALL_BRANDS=true bun scripts/state-of-project.ts   # → out/state-of-project.html (MMB shown)
    ```
-2. **Review the client onboarding form + contract** (recently added): the new-client onboarding process
+2. **Fix the SotD projection so the MMB panel actually POPULATES (WL-P2-80) — do this before Task 1's
+   preview or it shows an empty MMB tab.** Extend `scripts/state-of-project.ts` + `apps/web/lib/state-of-dojo/parse.ts`
+   to project MMB work into the MMB panel: read the **`docs/product/mammoth-build/`** sessions/assets (and any
+   `lane: mmb` sprint sessions like this 0625) + the MMB goals — the SotD currently reads only `docs/sprints/*`
+   + `goals-ledger`, so the MMB tab is empty. **Stretch:** add a small "recently built / added" strip that
+   surfaces new **recipe cards** + **product artifacts** (Client_Meeting_Intake, the onboarding form/contract)
+   so governance/intake work is visible too. Behavior-preserving for the BBL panel; verify headless on
+   `/app/state` (MMB tab now non-empty). This is the *real* fix behind the operator's "why isn't MMB on the
+   SotD" catch — Task 1's preview becomes meaningful once this lands.
+3. **Review the client onboarding form + contract** (recently added): the new-client onboarding process
    ([`research-review-new-client-onboarding.md`](../architecture/research-review-new-client-onboarding.md) +
    [`new-client-runbook.md`](../runbooks/onboarding/new-client-runbook.md)), the onboarding components
    (`apps/web/components/web/onboarding/dashboard-onboarding.tsx`), and the contract model
    (`apps/web/.generated/prisma/models/MembershipContract.ts`). Confirm with the operator which of these is
    "the" client onboarding form + contract to walk Michael through.
-3. **Build the onboarding form as an interactive, live-fillable form** — **FeatureWidget-style**
+4. **Build the onboarding form as an interactive, live-fillable form** — **FeatureWidget-style**
    (`apps/web/components/web/feature-widget.tsx` is the pattern) so the operator can **type Michael's answers
    in live, or Michael can write them in himself**. This IS the interactive *capture* front-end for the
    [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe — its output feeds the grill
