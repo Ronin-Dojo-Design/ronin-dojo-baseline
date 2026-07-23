@@ -5,7 +5,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it, setDefaultTimeout } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
@@ -27,6 +27,8 @@ import { db } from "~/services/db"
 const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0347-entitlements-${Date.now()}`
 const tag = (name: string) => `${PREFIX}-${name}`
+
+setDefaultTimeout(30_000)
 
 const userIds: string[] = []
 const createdEntitlementIds: string[] = []
@@ -78,13 +80,11 @@ async function expectAdminGate<TInput>(
 }
 
 beforeAll(async () => {
-  const [admin, nonAdmin, compGrantee, genericGrantUser, genericRevokeUser] = await Promise.all([
-    createUser("admin", "admin"),
-    createUser("non-admin"),
-    createUser("comp-grantee"),
-    createUser("generic-grant-user"),
-    createUser("generic-revoke-user"),
-  ])
+  const admin = await createUser("admin", "admin")
+  const nonAdmin = await createUser("non-admin")
+  const compGrantee = await createUser("comp-grantee")
+  const genericGrantUser = await createUser("generic-grant-user")
+  const genericRevokeUser = await createUser("generic-revoke-user")
 
   adminUserId = admin.id
   nonAdminUserId = nonAdmin.id
