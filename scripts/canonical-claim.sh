@@ -67,7 +67,9 @@ report_occupied() {  # $1 = who, $2 = source
   echo "   Do NOT work in the canonical checkout. Isolate this session into its own worktree:"
   echo "     git worktree add ../ronin-${SESSION:-NNNN} -b session-${SESSION:-NNNN}-<lane> main"
   echo "     bash .claude/skills/worktree-setup/SKILL.md   # or /worktree-setup"
-  echo "   Run the whole session there; merge-sweep into your branch; ff-to-main behind the merge lock at push."
+  echo "   Run the whole session there; merge-sweep into your branch; then push the branch and land it with a PR."
+  echo "   (ADR 0053 — main is PR-only. Never 'git push origin main' or 'HEAD:main' from a worktree: worktrees"
+  echo "    share one ref store, so 'main' there is the SHARED ref and may hold another lane's work — FS-0039.)"
   echo "   (FS-0035 / FS-0034 / LR 0018 — never share the canonical tree; never 'git add -A' in it.)"
 }
 

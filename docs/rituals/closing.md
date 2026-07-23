@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-22
-last_agent: claude-session-0618
+updated: 2026-07-23
+last_agent: claude-session-0624
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -156,7 +156,17 @@ Before committing:
    uncommitted work into your commit. Stage **explicit paths** (`git add <your files>`) and confirm the sibling
    file is not staged (`git diff --cached --name-only | grep SESSION_MMMM`) before committing.
 4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
-5. **Push**: `git push origin <branch>` — only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file.
+5. **Push + PR**: only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file. **`main` is PR-only (ADR 0053)** — `git push origin main` fails, server-side and locally:
+
+   ```bash
+   git push -u origin HEAD                                    # your session branch, never main
+   gh pr create --fill && gh pr merge --squash --delete-branch
+   ```
+
+   This does **not** change the cost model — `ci.yml`/`playwright.yml` apply `paths-ignore` to
+   `pull_request` as well as `push`, so a **docs-only PR is still free** (no matrix, no deploy). Don't
+   "optimize" the PR away. If the push is rejected because a sibling advanced the branch, **rebase — never
+   force** (`non_fast_forward` is blocked on `main` anyway).
 6. **Release the canonical claim (FS-0035):** after the push (or if you leave work uncommitted), run
    `bash scripts/canonical-claim.sh release --session NNNN` so the next session's bow-in occupancy guard sees
    canonical free. (No-op if this session ran isolated in its own worktree and never claimed canonical.)
@@ -218,9 +228,21 @@ pre-push gate:
    passing run covers every touched spec; it blocks (with the recipe) on missing/stale evidence.
    Override only with a real reason: `bun run e2e:evidence:check --waiver="…"`.
 
-This is **not** an installed git hook (supply-chain caution — persistent hooks need explicit
-operator sign-off). You MAY wire a local `pre-push` hook that calls `bun run e2e:evidence:check`
-yourself; the repo ships the guard, not the hook.
+The e2e-evidence check is **not** wired into a git hook — you MAY call it from one yourself.
+
+> **Amended SESSION_0624.** This paragraph used to say flatly *"the repo ships the guard, not the hook"*,
+> and that is no longer true: the repo **does** ship git hooks, in `scripts/githooks/` (FS-0039/FS-0040,
+> [ADR 0053](../architecture/decisions/0053-main-is-pr-only.md)). The supply-chain rule it was protecting
+> still holds, restated accurately:
+>
+> - Hook **logic lives in `scripts/githooks/`** — tracked, reviewable, and diffable in a PR. Never
+>   hand-written into `.git/hooks/`, which no one reviews.
+> - Hooks are **inert until `bash scripts/githooks/install.sh` runs once per clone.** It writes exactly
+>   one thing: an **absolute** `core.hooksPath`. `/worktree-setup` calls it, and it **must announce what
+>   it did** — installing silently is the thing the original caution was aimed at.
+> - **Hook content changes get reviewed like any code**, in a PR. That is now enforced, not requested.
+> - A session verifies the guards are actually live with **`bash scripts/githooks/doctor.sh`** — because
+>   FS-0040 was a hook that was installed, looked correct, and ran nowhere.
 
 ### 5. Bow-out line
 

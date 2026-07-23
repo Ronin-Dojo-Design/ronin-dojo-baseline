@@ -15,7 +15,15 @@ repo_root="$(git rev-parse --show-toplevel)"
 hooks_dir="$repo_root/scripts/githooks"
 
 chmod +x "$hooks_dir"/pre-push
-git config core.hooksPath "scripts/githooks"
 
-echo "✓ core.hooksPath → scripts/githooks (applies to canonical + every worktree)"
+# ABSOLUTE, not "scripts/githooks" (FS-0040). git resolves a RELATIVE core.hooksPath against the
+# directory git runs in, so a relative value silently means "this worktree's own copy". A lane
+# branched before the hook existed has no such directory — and git skips a missing hooksPath with
+# NO warning and exit 0. The guard was therefore absent from exactly the worktrees it exists to
+# guard. An absolute path pins every worktree to the canonical checkout's copy, on any branch.
+git config core.hooksPath "$hooks_dir"
+
+echo "✓ core.hooksPath → $hooks_dir"
+echo "  (absolute on purpose — covers canonical + every worktree, on any branch. See FS-0040.)"
 echo "  active hooks: $(ls "$hooks_dir" | grep -v '\.sh$' | tr '\n' ' ')"
+echo "  verify any time: bash $hooks_dir/doctor.sh"

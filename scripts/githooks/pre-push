@@ -13,16 +13,24 @@
 # This recurred across many sessions before being guarded. The correct move from a worktree is a PR
 # (or `git push origin HEAD:<branch>`) — never a bare `git push origin main`.
 #
-# THE RULE
+# THE RULES (two — they catch different mistakes; neither subsumes the other)
 # --------
-# You may only push the branch you are actually on. Pushing any OTHER local branch ref is blocked,
-# because that is the accident's exact shape. Branch deletions and non-branch refs (tags) are
-# unaffected. A non-fast-forward push to `main` is blocked outright.
+# RULE A — you may only push the branch you are actually on. Pushing any OTHER local branch ref is
+#   blocked, because that is the cross-lane accident's exact shape (FS-0039).
+# RULE B — `main` is PR-only (ADR 0053). RULE A cannot see this one: `git push origin HEAD:main`
+#   has local_branch == current_branch, so it passes RULE A, and a fast-forward passed the old
+#   non-fast-forward check too. RULE B checks the DESTINATION ref instead. (FS-0040)
 #
-# Escape hatch (deliberate, must be typed): RONIN_ALLOW_INDIRECT_PUSH=1 git push ...
+# Branch deletions and non-branch refs (tags) are unaffected.
 #
-# Installed via `core.hooksPath` — see `scripts/githooks/install.sh`. Lives in `scripts/` so the
-# logic is version-controlled and reviewable, not hidden in `.git/`.
+# THIS HOOK IS THE FAST LOCAL FAILURE, NOT THE ENFORCEMENT. A hook is defeated by not being
+# installed, by a branch that predates it, or by a caller using someone else's credential. The
+# real control is the server-side `main-pr-only` ruleset (ADR 0053). This exists so you find out
+# in 200ms with the right next command, instead of after a round-trip.
+#
+# Installed via `core.hooksPath` — see `scripts/githooks/install.sh`, which MUST write an absolute
+# path (FS-0040). Verify it is actually live from any worktree: `bash scripts/githooks/doctor.sh`.
+# Lives in `scripts/` so the logic is version-controlled and reviewable, not hidden in `.git/`.
 
 set -euo pipefail
 
@@ -40,18 +48,37 @@ fail() {
   shift
   for line in "$@"; do echo "     $line" >&2; done
   echo "" >&2
-  echo "     Override (only if you are certain): RONIN_ALLOW_INDIRECT_PUSH=1 git push …" >&2
+  echo "     Break-glass exists but is deliberately not printed here — an override named in an" >&2
+  echo "     error message is an override that gets pasted reflexively. See ADR 0053 and" >&2
+  echo "     docs/protocols/hot-fix-protocol.md. Note it does NOT bypass the server ruleset." >&2
   echo "" >&2
   exit 1
 }
 
 while read -r local_ref local_sha remote_ref remote_sha; do
-  # Nothing to inspect on a delete, and tags/non-branch refs are out of scope.
+  # Nothing to inspect on a delete (deleting main is blocked by the server ruleset anyway).
   [ "$local_sha" = "$ZERO" ] && continue
-  case "$local_ref" in refs/heads/*) ;; *) continue ;; esac
 
-  local_branch="${local_ref#refs/heads/}"
   remote_branch="${remote_ref#refs/heads/}"
+
+  # RULE B runs FIRST and is keyed ONLY on the destination — deliberately BEFORE the refs/heads/*
+  # filter below. `git push origin HEAD:main` passes local_ref as "HEAD", not "refs/heads/...", so
+  # filtering on the local ref first would `continue` past BOTH rules. That is precisely how the
+  # original hook let the bypass through, and this ordering is the fix — verified in the sandbox
+  # harness (a version of this file with the filter first published lane content to main).
+  if [ "${RONIN_ALLOW_MAIN_PUSH:-}" != "1" ] && [ "$remote_branch" = 'main' ]; then
+    fail "direct push to main — main is PR-only (ADR 0053)." \
+      "Nothing lands on main except through a PR. This is enforced server-side by the" \
+      "'main-pr-only' ruleset; the hook just tells you sooner, with the right next command:" \
+      "" \
+      "  git push -u origin HEAD" \
+      "  gh pr create --fill && gh pr merge --squash --delete-branch"
+  fi
+
+  # RULE A needs a real local branch to compare against HEAD; tags and HEAD-style refs are out of
+  # scope for it (RULE B above already covered the dangerous destination).
+  case "$local_ref" in refs/heads/*) ;; *) continue ;; esac
+  local_branch="${local_ref#refs/heads/}"
 
   if [ "${RONIN_ALLOW_INDIRECT_PUSH:-}" != "1" ] && [ "$local_branch" != "$current_branch" ]; then
     detail="You are on '${current_branch:-(detached HEAD)}' but this push sends local '$local_branch'."
@@ -69,13 +96,6 @@ while read -r local_ref local_sha remote_ref remote_sha; do
       "Push what you are on:  git push -u origin HEAD"
   fi
 
-  # Never rewrite published main. `remote_sha` = ZERO means the branch is new on the remote.
-  if [ "$remote_branch" = 'main' ] && [ "$remote_sha" != "$ZERO" ]; then
-    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
-      fail "non-fast-forward push to main (this would rewrite published history)." \
-        "Rebase onto origin/main and push again — never force-push this repo."
-    fi
-  fi
 done
 
 exit 0
