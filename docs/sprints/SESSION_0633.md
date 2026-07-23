@@ -64,6 +64,46 @@ Produce **two independently-executable batons** — one for RDD (`ronindojodesig
    top-level path**; the file now lives under `docs/runbooks/deploy/`. Graph staleness, not drift —
    a `graphify update .` clears it.
 
+## MMB is a LIVE cutover, not a fresh point (operator screenshots, 2026-07-23)
+
+The operator supplied the live Cloudflare zone. **The domain is `mammoth.build`** — not
+`mammothmb.com` as the directive first said (decision 1 below is answered; see its residue). Mammoth
+**fired their previous developer and hired Brian**, so an incumbent site is serving the business right
+now. Structural shape only is recorded here — **no verification tokens, DKIM keys, or zone export in
+git**; the authoritative record table lives with the operator.
+
+| What the zone shows | Consequence for this lane |
+| --- | --- |
+| Apex `mammoth.build`: **4× A + 4× AAAA** on GitHub Pages' documented apex ranges, **all Proxied** | The public site is **GitHub Pages behind Cloudflare's orange cloud**. Cutover *retires* these, it doesn't add alongside them. |
+| `www.mammoth.build` **CNAME → `mammoth-metal-buildings.github.io`**, Proxied | Same incumbent, `www` side. |
+| `_github-pages-challenge-…` TXT | GitHub Pages domain verification — retire with the A/AAAA set. |
+| `hub.mammoth.build` **CNAME → HubSpot CMS** (`…sites.hscoscdn-na2…`) | HubSpot **hosts a subdomain site**, not just CRM. |
+| `hs1`/`hs2` DKIM CNAMEs + SPF `include:…hubspotemail…` | HubSpot **sends email as this domain**. |
+| MX → `smtp.google.com` + `google._domainkey` + site-verification TXT | Mailboxes are **Google Workspace**. HubSpot sends *on behalf of*. |
+| `_dmarc` → `v=DMARC1; p=none;` | Monitoring only, no enforcement. |
+| 19 of 200 records used, **free plan** | Headroom is fine; plan tier constrains nothing here. |
+
+**Four consequences that were not in the original framing:**
+
+1. **This is a production migration with a rollback path**, not a DNS point-and-shoot. The old records
+   are the rollback — capture them verbatim before the first edit, and stage the cutover so `www` and
+   apex can revert independently.
+2. **Proxy is ON for apex + `www`.** WS-D's Cloudflare gotcha is now concrete and load-bearing: those
+   go **"DNS only" (grey)** for Vercel cert issuance. That also *removes* whatever Cloudflare
+   proxy-layer behavior the site has been getting (caching, WAF, analytics, origin masking) — name what
+   is actually relied on before flipping, rather than discovering it after.
+3. **HubSpot is wired into DNS, and that collides with MMB goal #1 (HubSpot-Pro replacement).** Killing
+   HubSpot is not a CRM-only decision: it takes down `hub.mammoth.build` and breaks domain email auth if
+   the SPF include and DKIM CNAMEs are stripped. **Do not touch the HubSpot or Google records during the
+   site cutover** — sequence them as a separate, later lane with its own deliverability plan.
+4. **Do not touch MX.** Mail is Google Workspace and is out of scope for a website cutover.
+
+**New risk — incumbent repo access.** The live site is served from a GitHub Pages org
+(`mammoth-metal-buildings`). Given the previous developer was let go: **who owns and controls that
+account today?** Until cutover, whoever holds it can change Mammoth's public site. Establish ownership
+(and whether the source is being handed over, or the current site needs archiving as reference) **before**
+the cutover is scheduled — this is an access-continuity question, not a technical one.
+
 ## Work streams
 
 ### WS-A — `/rr`: "how BBL became a separate deploy" → the reusable per-brand pattern
@@ -97,12 +137,17 @@ Produce **two independently-executable batons** — one for RDD (`ronindojodesig
 
 - RDD is on **Bluehost** → the existing runbook already covers it; confirm it still matches the
   Bluehost UI and reuse as-is.
-- MMB is on **Michael's Cloudflare account** → **no documented path exists**. Research and add a
-  Cloudflare section: A/CNAME targets, apex vs `www`, and — the classic failure — **proxy status must
-  be "DNS only" (grey cloud), not proxied (orange), or Vercel cert issuance stalls**. Verify that claim
-  against current Vercel + Cloudflare docs; do not ship it from memory.
+- MMB is on **Michael's Cloudflare account** → **no documented path exists**. Add a Cloudflare section:
+  A/CNAME targets, apex vs `www`, and the **"DNS only" (grey) vs proxied (orange)** requirement for
+  Vercel cert issuance. The zone above confirms apex + `www` are **currently proxied**, so this is a
+  real flip, not a hypothetical. Verify the cert-issuance claim against current Vercel + Cloudflare
+  docs — do not ship it from memory.
+- **Scope it as a cutover, not a setup:** before/after record table, the **rollback** (the incumbent
+  GitHub Pages A/AAAA + `www` CNAME, captured verbatim first), independent apex/`www` staging, and an
+  explicit *do-not-touch* list — **MX, HubSpot DKIM/SPF, `hub.` CNAME, `_dmarc`**.
 - **Third-party-account boundary:** the DNS lives in **Michael's** account. This session produces the
-  record table he (or Brian, with access) applies. **No credentials in the repo, ever.**
+  record table he (or Brian, with access) applies. **No credentials in the repo, ever**, and no
+  verification tokens or DKIM keys committed.
 
 ### Output — `/ppp` × 2 (the deliverable)
 
@@ -116,9 +161,11 @@ Two paste-ready batons, each independently executable in its own worktree:
 
 ## Open decisions — grill these first (`/pp` step 1)
 
-1. **Is `mammothmb.com` confirmed?** Michael's notes name **`Mammoth.build`** as a lead source. Both may
-   be real (one marketing, one app) — but the deploy target must be pinned before any DNS work.
-   Likewise: apex, `www`, or an `app.` subdomain for each brand?
+1. **Domain — ANSWERED: `mammoth.build`** (operator screenshots; the live zone). Residue still open:
+   (a) does **`mammothmb.com`** exist as a real second domain, or was it a mistype? (b) does the new
+   build take the **apex + `www`** the incumbent holds, or land on an **`app.`** subdomain first so the
+   marketing site can be cut over separately? The zone already proves subdomain delegation works here
+   (`hub.` is HubSpot's), so an `app.`-first cutover is genuinely available and far lower-risk.
 2. **MMB Vercel project ownership** — does it live in Brian's Vercel team (RDD bills and operates it) or
    Michael's? This decides billing, access, and what happens at contractual handoff (ADR 0033 D1:
    client-brand apps extract to their own repo on handoff — a project in Brian's team has to migrate).
@@ -130,6 +177,12 @@ Two paste-ready batons, each independently executable in its own worktree:
 5. **Prod-deploy blast radius.** Standing up `apps/rdd` as its own Vercel project means a new
    `ignoreCommand` scope. Confirm a change under `apps/rdd` cannot trigger a **BBL prod** rebuild, and
    vice versa — BBL is live and paid.
+6. **Who controls the `mammoth-metal-buildings` GitHub account?** The previous developer was let go and
+   that org still serves Mammoth's live site. Ownership, and whether the source is handed over or the
+   current site gets archived as reference, must be settled **before** a cutover date is set.
+7. **When does HubSpot actually come out of DNS?** Goal #1 is HubSpot-Pro replacement, but `hub.` and
+   the domain's email auth ride on it. Sequence it as its own lane after the site cutover, with a
+   deliverability plan — not folded into the website move.
 
 ## Boundaries (hard)
 
