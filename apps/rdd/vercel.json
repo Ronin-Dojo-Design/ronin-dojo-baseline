@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && bun install --frozen-lockfile",
+  "buildCommand": "cd ../.. && bun run --filter rdd build",
+  "_comment_deploy_unit": "RDD (apps/rdd) Vercel project config — ADR 0034 per-product deploy unit, ADR 0051 kernel→brand→app. Set the Vercel project's Root Directory to 'apps/rdd'. Mirrors apps/web/vercel.json's workspace shape: install and build both 'cd ../..' because this is a BUN WORKSPACE member (one root bun.lock), unlike clients/* which are standalone and install in place. No db:generate step — RDD has no Prisma schema yet (SESSION_0625; if a DB lands, add it here the way apps/web does). ignoreCommand returns 0 (=skip build) when NONE of these paths changed: scoped to apps/rdd + the shared kernel it consumes (a packages/ui-kit change CAN break RDD, so it must rebuild) + root install/config. Markdown is excluded so a docs-only edit inside those paths does not deploy (same false-positive SESSION_0501 fixed for BBL). Deliberately NOT broadened to apps/*: an apps/web or apps/baseline change must NEVER rebuild RDD, and — the direction that matters — BBL is live and paid, so its own root vercel.json stays scoped to apps/web and cannot be triggered by anything here.",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/rdd packages bun.lock package.json ':(exclude)*.md' ':(exclude)*.mdx'"
+}
