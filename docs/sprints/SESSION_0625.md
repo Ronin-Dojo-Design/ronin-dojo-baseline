@@ -114,6 +114,16 @@ Petey's three questions asked via `AskUserQuestion` (opening.md §6b). Operator 
 projection **fix before** the preview · the RDD `.docx` set **is** "the" onboarting form + contract ·
 **stay** on the MMB lane (not the 3 open PRs).
 
+## Next session
+
+**[SESSION_0632](SESSION_0632.md) — client-intake kernel: one module, three brand instances.** Staged
+from the operator's directive ("we need this for RDD but also for MMB for their clients — Metal
+Building Sales"). WS-A extracts the pure core down into `packages/ui-kit` (the standalone Mammoth app
+can reach neither `apps/web`'s L1 primitives nor its `lib/`); WS-B authors the Metal Building Sales
+questionnaire — the first real consumer of the commercial-lane taxonomy this session's intake audit
+found unrouted (GAP-1); WS-C mounts it in `clients/mammoth-build-crm`. WS-A gates B ∥ C. Four forks
+pinned in the stub for the pre-dispatch grill.
+
 ## Task log
 
 | ID | Status | Owner | Outcome |
