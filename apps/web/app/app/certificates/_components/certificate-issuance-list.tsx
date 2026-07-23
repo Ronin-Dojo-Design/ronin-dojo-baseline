@@ -22,7 +22,7 @@ export function CertificateIssuanceList({ templateId, issuances, users }: Props)
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <H4>Issued Certificates ({issuances.length})</H4>
         <CertificateIssueDialog templateId={templateId} users={users} />
       </div>

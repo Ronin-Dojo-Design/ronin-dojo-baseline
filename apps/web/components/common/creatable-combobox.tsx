@@ -109,11 +109,9 @@ type CreatableComboboxProps = {
   /** Trigger height/radius token. Defaults to `md`; `lg` aligns with `Select`. */
   size?: ButtonProps["size"]
   disabled?: boolean
-  /** Optional id forwarded to the trigger for label association. */
-  id?: string
-  /** Optional description id forwarded to the trigger for accessible live feedback. */
+  /** Legacy description id prop; prefer `aria-describedby` from FormControl slot props. */
   ariaDescribedBy?: string
-}
+} & Pick<ButtonProps, "id" | "aria-describedby" | "aria-invalid">
 
 /**
  * A searchable combobox over registered {@link CreatableOption}s that ALSO
@@ -136,6 +134,8 @@ export function CreatableCombobox({
   size = "lg",
   disabled = false,
   id,
+  "aria-describedby": ariaDescribedByFromSlot,
+  "aria-invalid": ariaInvalid,
   ariaDescribedBy,
 }: CreatableComboboxProps) {
   const [open, setOpen] = useState(false)
@@ -164,7 +164,8 @@ export function CreatableCombobox({
               size={size}
               role="combobox"
               aria-expanded={open}
-              aria-describedby={ariaDescribedBy}
+              aria-describedby={ariaDescribedByFromSlot ?? ariaDescribedBy}
+              aria-invalid={ariaInvalid}
               disabled={disabled}
               className={cx(
                 "w-full justify-between font-normal",

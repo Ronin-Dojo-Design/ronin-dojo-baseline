@@ -4,9 +4,9 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-22
+updated: 2026-07-23
 author: Brian + Copilot
-last_agent: claude-session-0599
+last_agent: codex-session-0622
 ---
 
 # LLM Wiki Index
@@ -763,6 +763,10 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0615](../../sprints/SESSION_0615.md) | session--implement | closed — WL-P3-25 country-validator consolidation (shared `normalizeCountryCode`, node-profile allowlist, passport `.trim()` parity, memberSchool null pin). Authored on the wl-p3-25 codex lane; merged in the 0614 sweep. |
 | [SESSION_0616](../../sprints/SESSION_0616.md) | session--review | closed — **State-Sweep**: autonomy triage (5 Tier-1 lanes + excluded pile) · Wayfinder status Artifact (maps #218/#228/#237) · `state-sweep` recipe + SOT_Cookbook row · WL-P3-29/30 flips + WL-P3-60 chip · launched 5 codex lanes overnight (5/5 landed, push held) · staged SESSION_0614 · planning intake PL-013..017. |
 | [SESSION_0617](../../sprints/SESSION_0617.md) | session--implement | staged — RISK #2: flip `CSP_ENFORCE` to enforcing (headers/Report-Only/report-sink/nonce already shipped; only the enforce flip + report-review remain). Staged by 0614. |
+| [SESSION_0618](../../sprints/SESSION_0618.md) | session--implement | closed — G-031 S2/S3: formalized `/pp` and `/ppp`, created `/ggr`, fixed the canonical-claim clean-tree guard, and mechanized bow-in/bow-out question prompts in the executed skill bodies. |
+| [SESSION_0619](../../sprints/SESSION_0619.md) | session--implement | in-progress — built-not-wired capture lane: mounted TokenCostPanel, scoped State-of-Dojo brands, promoted planning-intake notes, and routed ritual/wiring gaps to WL/PL. |
+| [SESSION_0620](../../sprints/SESSION_0620.md) | session--open | in-progress — resolved skill-twin/Codex-model blockers, launched autonomous Codex lanes, built Gate 12d, and fixed app-wide iOS input zoom plus State-of-Dojo belt colors. |
+| [SESSION_0622](../../sprints/SESSION_0622.md) | session--implement | closed — autonomous WL-clearing lane: resolved WL-P3-24, WL-P3-37, and WL-P3-55 with green typecheck, Oxc, oxfmt, wiki-lint, and build gates; staged SESSION_0623 as the next WL-clearing lane. |
 | [SESSION_0608](../../sprints/SESSION_0608.md) | session--implement | closed (landed on main, held) — WS-D: token-cost tracker (`telemetry:` frontmatter → `dataviz` charts). G-023; own worktree; Cody lane. |
 
 ## Protocols

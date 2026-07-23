@@ -95,6 +95,18 @@ export function WalkInRegistrationDialog({
 
   const userOptions = useMemo(() => toRecipientOptions(users), [users])
 
+  const resetForm = () => {
+    form.reset()
+    setRecipientKind("guest")
+  }
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setIsOpen(nextOpen)
+    if (!nextOpen) {
+      resetForm()
+    }
+  }
+
   // Switch the discriminated-union branch and clear inactive fields so
   // zodResolver doesn't choke on stale values from the other branch.
   const handleKindChange = (next: RecipientKind) => {
@@ -111,7 +123,7 @@ export function WalkInRegistrationDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Create walk-in registration</DialogTitle>
@@ -306,7 +318,7 @@ export function WalkInRegistrationDialog({
             />
 
             <DialogFooter>
-              <Button type="button" variant="secondary" onClick={() => setIsOpen(false)}>
+              <Button type="button" variant="secondary" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
               <Button type="submit" isPending={action.isPending}>
