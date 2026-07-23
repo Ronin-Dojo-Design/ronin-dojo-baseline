@@ -34,15 +34,18 @@ export const BELT_WORD: Record<Phase, string> = {
 
 /**
  * Belt-ladder stop color per phase. **Brand-INVARIANT** (projection protocol): identical across every
- * brand tab — only the accompanying WORD swaps per skin, never the hue. Theme-aware so the white-belt
- * stop never disappears against the paper background in either mode (Desi's v3-mock note: 1px edge).
+ * brand tab — only the accompanying WORD swaps per skin, never the hue. **Theme-INVARIANT** too: a
+ * belt's color is physical, not themed, so the white stop can't invert to dark (nor the black stop to
+ * white) in dark mode. The white stop's `border` keeps it legible against the paper card in either
+ * mode (Desi's v3-mock note: 1px edge); the black stop carries a hairline `border-white/15` so its
+ * near-black fill reads as an edge on a dark card.
  */
 export const PHASE_STOP_CLASS: Record<Phase, string> = {
-  planned: "bg-background text-foreground border border-border",
+  planned: "bg-neutral-100 text-neutral-900 border border-border",
   "in-flight": "bg-blue-700 text-white",
   review: "bg-violet-600 text-white",
-  held: "bg-[#7a5230] text-white dark:bg-[#a9784f]",
-  done: "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900",
+  held: "bg-[#7a5230] text-white",
+  done: "bg-neutral-900 text-white border border-white/15",
 }
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>

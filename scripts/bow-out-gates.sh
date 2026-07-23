@@ -28,6 +28,7 @@ EV_TASKLOG="(n/a)"
 EV_FORMAT="(n/a)"
 EV_WIKILINT="(n/a)"
 EV_BUILD="(n/a)"
+EV_GGR="(n/a)"
 EV_GRAPHIFY="(n/a)"
 EV_GITSTATE="(n/a)"
 
@@ -336,6 +337,36 @@ else
   echo "Full close evidence table not found (or not yet written) in $SESSION_FILE — skip for now."
 fi
 
+# ── Gate 12d — /ggr score for a code-touching session (blocking) ─────────────
+# closing.md §6.5 promises "a code-touching session's close is verified by bow-out-gates
+# Gate 12d looking for [the /ggr composite] in ## Review log" — but that gate never existed
+# (WL-P2-78 / SESSION_0620 /rr A4 finding: the "invoked ≠ executed" gap — the enforcement
+# meant to catch built-not-wired was itself built-not-wired). This IS Gate 12d. Report-style
+# like Gate 12b: prints BLOCKING + sets evidence; the script still exit 0 (the reminder hook
+# + operator act on it). A "code session" = the diff touched shippable product code.
+section "Gate 12d — /ggr score (code session)"
+CODE_SESSION=0
+while IFS= read -r file; do
+  [ -n "$file" ] || continue
+  case "$file" in
+    apps/web/*|clients/*|packages/*) CODE_SESSION=1; break ;;
+  esac
+done <<< "$TOUCHED"
+if [ "$CODE_SESSION" = "1" ]; then
+  if [ -n "$SESSION_FILE" ] && grep -qiE '(^|[^a-z])/?ggr\b|composite[[:space:]]+[~≈]?[0-9]+(\.[0-9]+)?/10|→[[:space:]]*CLEARS' "$SESSION_FILE" 2>/dev/null; then
+    echo "PASS: /ggr score found in $SESSION_FILE (## Review log)."
+    EV_GGR="PASS (score present)"
+  else
+    echo "  → code-touching session (apps/web|clients|packages) but NO /ggr composite in"
+    echo "     $SESSION_FILE ## Review log. Run /ggr and record the composite before close"
+    echo "     (closing.md §6.5, ADR 0052 D4/D5/D6). BLOCKING."
+    EV_GGR="MISSING (code session, no /ggr — BLOCKING)"
+  fi
+else
+  echo "no shippable code touched (apps/web|clients|packages) — /ggr score not required."
+  EV_GGR="n/a (no code touched)"
+fi
+
 # ── Gate 13 — Frontmatter staleness (touched docs, detect-only) ──────────────
 # (surfaced in the remainder checklist below; computed here so it's inline)
 STALE_FM=""
@@ -370,6 +401,7 @@ cat <<EVIDENCE
 | Format-fix (code) | $EV_FORMAT |
 | wiki:lint | $EV_WIKILINT |
 | Build | $EV_BUILD |
+| /ggr (code session) | $EV_GGR |
 | Graphify | $EV_GRAPHIFY |
 | Git state | $EV_GITSTATE |
 | Secret scan | $EV_SECRETS |

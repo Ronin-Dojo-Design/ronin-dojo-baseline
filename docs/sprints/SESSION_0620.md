@@ -115,8 +115,34 @@ Operator elected **generator-first as a Cody subagent while we review in paralle
 | SESSION_0620_TASK_01 | ✅ done | Cody + Petey | Symlink-conform (operator's design, not a generator): all 22 outliers → `.agents` real home + `.claude` symlink. Cody did 14 (10 moved + 4 clean); Petey resolved the 8 diverged pairs (`.claude`-authoritative) + fixed a code-quality broken doc-link. D-053 RESOLVED, WL-P2-77 resolved. 55/55 symlinks, 0 broken, hashes unchanged, skills-index/wiki:lint green. |
 | SESSION_0620_TASK_02 | ✅ done | inline (Petey) | Codex model resolved — `gpt-5.5` pinned in both auto-session-codex scripts; smoke-tested (SMOKE_OK, no 400). Upgrade path documented. |
 | SESSION_0620_TASK_03 | ✅ done | inline | Frozen SotD snapshot published: artifact `0673ebcb…`; URL in `## Artifacts`. |
-| SESSION_0620_TASK_04 | ⏳ queued | Desi (subagent) | `/hallmark` review of `/app` surfaces (PL-020/021/023) → prioritized fix list for Cody. No prod code. |
-| SESSION_0620_TASK_05 | ⏳ queued | Petey/Giddy `/rr` | Sections wiring/consolidation audit + `/rr` slices (A4, B1–B5, WL-P2-75/76) → WL rows, not prose. |
+| SESSION_0620_TASK_04 | ✅ done | Desi (subagent) | `/hallmark` code-grounded audit of `/app` surfaces returned — prioritized Cody fix-list (below). All 3 tickets confirmed rooted in code. No prod code written (review lane). |
+| SESSION_0620_TASK_05 | 🟡 partial | Petey/Giddy `/rr` | Headline finding landed → **WL-P2-78** (Gate 12d documented in closing.md §6.5 but ABSENT from bow-out-gates.sh — the "invoked ≠ executed" gap made concrete). Remaining slices scoped below, routed to existing WL rows (not prose). |
+| SESSION_0620_TASK_06 | 🔄 running | autonomous Codex (worktree) | Lane C smoke test — `auto-session-codex.sh 1` on gpt-5.6-sol proving `/ggr` end-to-end; creates SESSION_0621 + a PR for WL-P3-54. Launched; awaiting completion. |
+| SESSION_0620_TASK_07 | ✅ done | inline (Petey) | **Gate 12d BUILT** (operator: "handle now", not just recommend). `bow-out-gates.sh` now blocks a code-touching session (apps/web\|clients\|packages) that has no `/ggr` composite in `## Review log`. Validated: syntax ✓, matches a real score → PASS, absent → BLOCKS. Closes WL-P2-78. |
+| SESSION_0620_TASK_08 | ✅ done (needs `/ggr` + live-verify) | Cody (subagent) | Two HIGH Desi fixes landed, gates green (typecheck/oxlint/oxfmt). input.tsx `text-base sm:text-[0.8125rem]` (16px mobile→no iOS zoom; textarea inherits); phase.ts belts theme-invariant (dropped `dark:` inversions on white/black/**brown**). **Flag:** brown/held made invariant too (judgment call — 1-line revert `dark:bg-[#a9784f]` if operator wants dark-mode contrast back). apps/web → 0620 is now a code session → **Gate 12d requires a `/ggr` composite before push** (run at close). Live-verify (mobile 16px + dark belts) pending. |
+| SESSION_0620_TASK_09 | 🔄 launching | autonomous Codex (worktree, gpt-5.5) | Lane 2 — batch-clear low-risk WL items (staged SESSION_0622, risk-capped: skip WL-P3-54/77/78, no schema/auth/>60LOC). Cap 3–6 (operator), self-perpetuating chain (each success launches next via harness brake). |
+| SESSION_0620_TASK_10 | ✅ done | inline (Petey) | **Fixed the flaky `courses/queries.integration.test.ts`** (the blocker Lane C surfaced). Root: `beforeAll` 5s default timeout too tight under multi-lane DB contention → undefined IDs → `afterAll` `deleteMany({in:[undefined]})` crash. Fix: 30s fixture timeout + undefined-guarded cleanup. Verified **11/11 pass, 1.73s**. Unblocks the full-suite gate for all autonomous lanes. |
+
+### Desi `/hallmark` findings (TASK_04) — prioritized Cody fix-list, all root-caused in code
+
+**HIGH**
+
+1. **PL-023(a) — iOS input zoom, app-wide root cause.** [`components/common/input.tsx:6`](../../apps/web/components/common/input.tsx) base `text-[0.8125rem]` = **13px** (textarea reuses it); iOS Safari zooms any focused input < 16px → **every form** zooms. Fix: floor mobile to 16px (`text-base sm:text-[0.8125rem]`). One primitive fixes the whole app. *(live-verify iOS)*
+2. **PL-020 — white/black belt invert.** [`_kernel/phase.ts:40-46`](../../apps/web/components/app/state-of-dojo/_kernel/phase.ts): `planned`(white)=`bg-background` darkens in dark mode; `done`(black)=`dark:bg-neutral-100` whitens → belts read backwards on mobile dark. Fix: make belt hues **theme-invariant** (belt color is physical), drop the `dark:` inversions, keep white legible via `border`. *(dark-mode check)*
+3. **PL-021 — no `/app` back/header.** [`app/app/layout.tsx:26-43`](../../apps/web/app/app/layout.tsx) mounts sidebar + bottom-nav but **no top bar / back affordance**; deep pages render bare. Fix: persistent `/app` top bar with contextual back + title (esp. mobile).
+
+**MEDIUM** — PL-021 mobile admin-nav dead-end (`bottom-nav.tsx:51-76` points only at public routes; `sidebar.tsx:201` `max-md:hidden` with no mobile replacement) · PL-020 action-verb labels (`phase.ts:18-33`, needs **Brandon/operator copy** sign-off) · new **`AppPageHeader`** L1 primitive (removes 11 hand-rolled backs) · PL-023(b) `image-field-uploader.tsx:100` `onError` fallback + **Doug live-verify R2 public-serve** for the `planning-intake/` prefix (markup is correct → break is runtime).
+
+**LOW** — board-vs-ladder order mismatch (`projection.tsx:104-110`) · ladder stop legibility at 375px · `/app` footer · two mobile FABs + bottom-nav crowding · heavy 5-panel landing attention strip.
+
+**Cross-cutting:** component reuse is otherwise clean (SotD kernel composes L1 Card/Badge/Tabs; FeatureWidget reuses the R2 uploader seam — no forks); the gap is a *missing* header primitive, not a duplicated one.
+
+### `/rr` findings (TASK_05, recommend-only)
+
+- **A4 → WL-P2-78 (NEW, headline):** `closing.md` §6.5 promises "Gate 12d verifies the `/ggr` composite in `## Review log`," but `bow-out-gates.sh` has **no such gate**. Recommend implementing it (code-diff-triggered grep for a `/ggr` composite line → block if absent). This is the enforcement that makes the ADR-0052 gate real rather than honor-system.
+- **B / WL-P2-73 (wiring-net orphan-detector):** confirmed the right shape — a `bow-out-gates` convention check that every `state-of-dojo/*-panel.tsx` is imported by an aggregator (`attention-panels.tsx` / `buildCatalogPanels`); grep/graph in-degree, routes misses to WL. Reuse `deferral-guard.ts`. Pairs with WL-P2-78 (both are bow-out enforcement).
+- **WL-P2-75 (MBR → Needs-you feed):** recommend — mount open Manual-Boundary-Registry rows into the SotD Needs-you feed via self-fetch (mirror the existing Risk-watch feed). Small once the read-shape is confirmed.
+- **WL-P2-76 (docs-nav → SotD) + WL-P2-71 (Wayfinder):** recommend the **lighter** mechanism for both (operator's token-efficiency ask) — a persistent **link card** to the on-demand `docs:nav` / `wayfinder:map` output, NOT a live self-fetching SotD panel. A panel adds per-render cost + a new orphan-risk surface for a discovery aid that changes rarely.
 
 ## Artifacts
 
@@ -140,6 +166,26 @@ Operator elected **generator-first as a Cody subagent while we review in paralle
 - **Interim step recorded:** first pinned `gpt-5.5` (worked on 0.135.0) before the operator opted to upgrade;
   now superseded by the 0.145.0 + gpt-5.6-sol end state. The global `config.toml` (`model = "gpt-5.6-sol"`) now
   matches the working CLI — interactive `codex` works again too.
+
+## Review log
+
+**`/ggr` gate — SESSION_0620 code diff (dogfoods the Gate 12d built this session).** Primary unit = the
+shippable-code changes: the two Desi UI fixes (`input.tsx` mobile-16px floor; `phase.ts` theme-invariant belt
+hues) + the `courses/queries.integration.test.ts` robustness fix. **Class A/B** (design-system CSS + test
+infra). Metric-backed (not eyeballed — `fallow audit --changed-since 1ee6ad14` run):
+- **Objective:** maintainability **90.6 (good)**, avg cyclomatic 1.5; the diff introduces **no new
+  complexity, no new clones, no new dead code**. Gates green: typecheck ✓ · oxlint 0 err ✓ · oxfmt ✓
+  (Cody) · courses test **11/11 pass, 1.73s** (verified) · wiki:lint 0 err.
+- **D1 9** (behavior-preserving — CSS-class-only UI + test-cleanup guard; `text-base`=16px & no-`dark:` belts
+  are deterministic) · **D2 9** (no authz/exposed-surface change) · **D3 9** (minimal diffs; `present()` is a
+  clean 1-line guard) · **D4 9** (doc comments updated to match; guard documents its SESSION_0620 why) ·
+  **D5 9** (test made *more* robust) · **D6 9** (30s timeout absorbs multi-lane DB contention) · **D7 9**
+  (reuses `inputVariants` / existing belt classes; no new component).
+- **No hard caps** (no regression, no Dirstarter bypass, no new god-component). **Composite ≈ 9.2/10 → CLEARS.**
+- **Inherited (surfaced by fallow, NOT introduced this session, NOT adopted):** `phaseBadgeVariant` CRAP-30
+  (untouched — I edited `PHASE_STOP_CLASS` strings, a different symbol) · test↔source clone families (73 lines,
+  `queries.integration.test.ts` mirrors `queries.ts` — inherent test pattern). Logged as pre-existing, not this
+  session's debt.
 
 ## Status
 

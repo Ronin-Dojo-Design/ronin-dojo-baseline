@@ -3,7 +3,7 @@ import { boxVariants } from "~/components/common/box"
 import { cva, cx, type VariantProps } from "~/lib/utils"
 
 const inputVariants = cva({
-  base: "appearance-none min-h-0 w-full self-stretch bg-background text-foreground text-[0.8125rem]/tight break-words transition duration-150 disabled:text-secondary-foreground/50",
+  base: "appearance-none min-h-0 w-full self-stretch bg-background text-foreground text-base/tight sm:text-[0.8125rem]/tight break-words transition duration-150 disabled:text-secondary-foreground/50",
 
   variants: {
     size: {

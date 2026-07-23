@@ -70,6 +70,12 @@ and Doug (verify), doing the work inline (Codex has no subagents). SKIP any
 operator-only browser/device smoke — flag it as operator-side, do NOT block on it.
 Implement only the next automatable code slice.
 
+TOKEN EFFICIENCY (/caveman): communicate your reasoning and working narration in
+/caveman terseness — nobody reads a background lane's live output, so drop filler,
+articles, and pleasantries. BUT keep every DURABLE ARTIFACT in normal readable prose:
+the SESSION file body, commit messages, ledger rows, and the PR body are read by humans
+later and must stay clear. Terseness applies to your thinking-out-loud, never the record.
+
 Before any UI, schema, or backend edits, write the SESSION Petey plan and Task log
 IDs, then complete the relevant Cody pre-flight. For lineage/petey-plan-0305 work,
 run Graphify queries over the lane terms from the latest SESSION handoff before

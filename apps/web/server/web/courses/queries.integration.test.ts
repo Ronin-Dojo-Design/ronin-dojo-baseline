@@ -283,32 +283,34 @@ beforeAll(async () => {
     },
   })
   regularMembershipId = ownerMembership.id
-})
+}, 30_000)
 
 afterAll(async () => {
-  // Clean up in reverse dependency order
-  await db.membershipRoleAssignment.deleteMany({
-    where: {
-      membershipId: { in: [instructorMembershipId, instructor2MembershipId, regularMembershipId] },
-    },
-  })
-  await db.programCourse.deleteMany({ where: { programId } })
-  await db.program.deleteMany({ where: { id: programId } })
-  await db.course.deleteMany({ where: { id: { in: [courseAId, courseBId, courseCId] } } })
-  await db.membership.deleteMany({
-    where: { id: { in: [instructorMembershipId, instructor2MembershipId, regularMembershipId] } },
-  })
-  await db.organization.deleteMany({ where: { id: orgId } })
-  for (const uid of [ownerId, instructorUserId, instructor2UserId]) {
+  // Clean up in reverse dependency order. Every id is guarded: a partial beforeAll
+  // (e.g. a fixture-creation timeout under DB contention) leaves some ids `undefined`,
+  // and passing `undefined` into a Prisma `{ in: [...] }` throws — which masks the real
+  // failure and aborts the whole suite. That is exactly what blocked the first autonomous
+  // Codex session (SESSION_0620): an unrelated timeout here failed every downstream lane.
+  const present = <T>(...xs: (T | undefined | null)[]): T[] => xs.filter((x): x is T => x != null)
+  const membershipIds = present(instructorMembershipId, instructor2MembershipId, regularMembershipId)
+  const courseIds = present(courseAId, courseBId, courseCId)
+  const userIds = present(ownerId, instructorUserId, instructor2UserId)
+  if (membershipIds.length)
+    await db.membershipRoleAssignment.deleteMany({ where: { membershipId: { in: membershipIds } } })
+  if (programId) await db.programCourse.deleteMany({ where: { programId } })
+  if (programId) await db.program.deleteMany({ where: { id: programId } })
+  if (courseIds.length) await db.course.deleteMany({ where: { id: { in: courseIds } } })
+  if (membershipIds.length)
+    await db.membership.deleteMany({ where: { id: { in: membershipIds } } })
+  if (orgId) await db.organization.deleteMany({ where: { id: orgId } })
+  for (const uid of userIds) {
     await db.passport.deleteMany({ where: { userId: uid } })
     await db.directoryProfile.deleteMany({ where: { passport: { userId: uid } } })
     await db.account.deleteMany({ where: { userId: uid } })
     await db.session.deleteMany({ where: { userId: uid } })
   }
-  await db.user.deleteMany({
-    where: { id: { in: [ownerId, instructorUserId, instructor2UserId] } },
-  })
-})
+  if (userIds.length) await db.user.deleteMany({ where: { id: { in: userIds } } })
+}, 30_000)
 
 // --- Tests ---
 
