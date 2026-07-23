@@ -124,6 +124,13 @@ questionnaire — the first real consumer of the commercial-lane taxonomy this s
 found unrouted (GAP-1); WS-C mounts it in `clients/mammoth-build-crm`. WS-A gates B ∥ C. Four forks
 pinned in the stub for the pre-dispatch grill.
 
+**[SESSION_0633](SESSION_0633.md) — RDD + MMB stand-alone deploys (planning wave).** Staged from the
+operator's second directive: separate Vercel deploys for `ronindojodesign.com` (Bluehost) and
+`mammothmb.com` (Michael's Cloudflare), each with its own DB, product folder, gap matrix and cutover
+checklist. `/gq` established ground truth — MMB already has a `vercel.json` **and** its own DB (so it
+is *attach + cutover*), while `apps/rdd` has neither (a real stand-up). Runs as an `/rr` fan-out
+(WS-A/B/D disjoint, WS-C gated on B) and emits **two `/ppp` batons**. Planning only — no infra touched.
+
 ## Task log
 
 | ID | Status | Owner | Outcome |
