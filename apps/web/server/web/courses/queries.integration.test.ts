@@ -292,7 +292,11 @@ afterAll(async () => {
   // failure and aborts the whole suite. That is exactly what blocked the first autonomous
   // Codex session (SESSION_0620): an unrelated timeout here failed every downstream lane.
   const present = <T>(...xs: (T | undefined | null)[]): T[] => xs.filter((x): x is T => x != null)
-  const membershipIds = present(instructorMembershipId, instructor2MembershipId, regularMembershipId)
+  const membershipIds = present(
+    instructorMembershipId,
+    instructor2MembershipId,
+    regularMembershipId,
+  )
   const courseIds = present(courseAId, courseBId, courseCId)
   const userIds = present(ownerId, instructorUserId, instructor2UserId)
   if (membershipIds.length)
@@ -300,8 +304,7 @@ afterAll(async () => {
   if (programId) await db.programCourse.deleteMany({ where: { programId } })
   if (programId) await db.program.deleteMany({ where: { id: programId } })
   if (courseIds.length) await db.course.deleteMany({ where: { id: { in: courseIds } } })
-  if (membershipIds.length)
-    await db.membership.deleteMany({ where: { id: { in: membershipIds } } })
+  if (membershipIds.length) await db.membership.deleteMany({ where: { id: { in: membershipIds } } })
   if (orgId) await db.organization.deleteMany({ where: { id: orgId } })
   for (const uid of userIds) {
     await db.passport.deleteMany({ where: { userId: uid } })
