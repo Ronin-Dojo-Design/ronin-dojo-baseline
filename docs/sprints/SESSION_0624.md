@@ -347,6 +347,75 @@ for a proof-strength distinction, not proposed as canon.
   after all 3 PRs merged (397 sessions), redeployed to the same URL, so the link reflects final trunk. The
   always-current view is free at `/app/state`.
 
+## Post-close addendum — the push guard was hardened after this session closed
+
+This session closed at `f60c2f91`. The operator then asked for the cross-lane push accident to be made
+impossible ("make it foolproof, I'm tired of this"), so the work below happened **after** the close and is
+recorded here rather than in a new session. It landed as **PR #259** (`a9905acf`).
+
+**What prompted it.** The push rejection this session hit was not a fluke: **git worktrees share one ref
+store**, so `refs/heads/main` is the *same ref* in canonical and in every `../ronin-NNNN` lane. A sibling
+lane pushed `main` from its own worktree and thereby published this session's unpushed close commit. The
+existing worktree-isolation rules do not cover it — they govern the **working tree**, not the **ref store**,
+so a lane can be perfectly isolated and still do it. Logged by the 0625 lane as FS-0039.
+
+**What we found (Giddy, verified by sandbox rather than by reading).** The FS-0039 `pre-push` hook that
+merged in PR #258 **did not work**, on two independent counts:
+
+1. `install.sh` wrote a **relative** `core.hooksPath` while its own output announced it "applies to
+   canonical + every worktree." Git resolves a relative hooksPath per working directory, so it meant
+   "*this* worktree's copy" — and a lane branched before the hook has no such directory. **Git skips a
+   missing hooksPath silently, exit 0.** `../ronin-wl-lane` was verifiably running with zero hooks.
+2. The hook never blocked `git push origin HEAD:main`. Its only `main` rule was a *non-fast-forward* check
+   (a fast-forward is the normal case), and the loop filtered `local_ref` to `refs/heads/*` **before** any
+   rule ran — `HEAD:main` passes `HEAD`, so it skipped both rules. That is the move `opening.md` used to
+   *instruct*.
+
+Recorded as **FS-0040**, the fourth in the repo's most persistent failure shape (FS-0035 rule-as-prose →
+FS-0036 silent-no-op → FS-0037 unreachable-step → FS-0040 hook-absent-where-it-guards). Every one **passed
+silently while broken.**
+
+**What landed ([ADR 0053](../architecture/decisions/0053-main-is-pr-only.md)) — `main` is PR-only.**
+
+| Layer | What it does | Why it is not sufficient alone |
+| --- | --- | --- |
+| **GitHub ruleset `main-pr-only`** (empty bypass, 0 approvals, no required checks) | The actual enforcement. Server-side. | — this is the one that holds |
+| `pre-push` RULE B, keyed on the **destination** ref, ordered **above** the `refs/heads/*` filter | Fast local failure naming the right next command | A hook is defeated by not being installed, by a branch predating it, or by a caller holding the operator's credential |
+| `scripts/githooks/doctor.sh`, wired into the bow-in read-path | Makes the guards **prove** they are live, from a lane worktree | Detects, does not prevent |
+| Absolute `core.hooksPath` | Pins every worktree to canonical's copy on any branch | Local config; a fresh clone still needs `install.sh` |
+
+Three ruleset parameters are load-bearing traps: **0 approvals** (a solo seat cannot self-approve, so ≥1
+makes `main` permanently unmergeable), **empty bypass** (agents use the operator's credential, so an
+admin exemption exempts every agent), **no required status checks** (`paths-ignore` covers `pull_request`,
+so a docs-only PR never reports `ci` and a required check would hang forever).
+
+**Verification — what was and wasn't proven.** Offline sandbox reproducing the original accident:
+`push origin main`, `push origin HEAD:main`, and `push --all` all blocked with `main` provably unmoved;
+`push -u origin HEAD` succeeds. The *installed* hook was then fed the real refs directly: blocks both attack
+shapes, allows the lane push. `doctor.sh` exits 1 against the pre-fix config naming the bug, 0 after —
+including from `ronin-wl-lane`, the worktree that had no hooks directory. **Not proven end-to-end:** the
+server ruleset was verified via `gh api .../rules/branches/main`, not by attempting a real blocked push.
+
+**Two honest notes.**
+
+- **My first fix was also wrong.** I added RULE B *below* the `refs/heads/*` filter, and the sandbox showed
+  lane content still landing on `main`. Reading it would have passed it. The ordering is the fix.
+- **An earlier "live test" proved nothing** — `git push origin main` against the real repo returned
+  `Everything up-to-date`, and git never invokes `pre-push` when there is nothing to push. A guard that is
+  never invoked cannot block, and a green from it is a false green.
+
+**A hazard this does NOT close — the checkout shape (routed as WL-P3-65).** Immediately after #259 merged, I
+ran `git checkout -b` while the shell's working directory was still inside `../ronin-wl-lane` (the Bash tool
+persists cwd across calls), which **redirected that sibling worktree's HEAD onto my branch.** Caught within
+one command, reverted, nothing committed, no work lost — the worktree was clean. But it is the same
+shared-ref-store family as FS-0039 in a shape the new guard cannot see: **`pre-push` fires on push, and this
+was a checkout.** The `adr-0049-session-numbering` memory already records the 0588 version of this (a lane's
+`git checkout` redirected the shared HEAD and a sibling's commit landed on the wrong branch). The durable
+fix is the same discipline the ruleset just made unavoidable for pushes: **verify `pwd` and
+`git branch --show-current` before any branch-mutating git command**, because in an agent shell the cwd is
+sticky and invisible.
+
 ## Status
 
-Single source of truth is the frontmatter `status:` field.
+Single source of truth is the frontmatter `status:` field. (Closed at `f60c2f91`; the addendum above
+records post-close work that landed as PR #259 / `a9905acf`.)
