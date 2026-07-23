@@ -65,37 +65,29 @@ more effectively and token-efficiently. Recommend, don't build (except a tiny pr
 
 ## Next session
 
-**Thread 1 — Desi design review (`/hallmark` + `/grill`):** run `/hallmark` audit + `/grill-me` /
-`/grill-with-docs` (Desi-led) on the `/app` admin screens. Anchor on the operator's dogfood tickets:
-**PL-020** (SotD belt-ladder → action words + order + inverted white/black), **PL-021** (admin app-shell
-nav: no back button, no nav/footer shell), **PL-023** (mobile input zoom + FeatureWidget img preview).
-Return a prioritized fix list for Cody — do not write production code in this lane.
+> **This block is the autonomous-Codex smoke-test lane's task (SESSION_0620 operator-directed).** After the
+> twin-symlink + Codex-model fixes landed, the operator launched **one attended `auto-session-codex.sh 1`
+> lane** (isolated worktree, gpt-5.6-sol on CLI 0.145.0) to prove an autonomous Codex session runs `/ggr`
+> end-to-end. It creates SESSION_0621 and executes the single automatable slice below. (The Desi `/hallmark`
+> + `/rr` review is **this** session's foreground work — see Petey plan Lane B / TASK_04-05 — not next.)
 
-**Thread 1b — Sections wiring/consolidation audit (operator ask, SESSION_0619).** Audit which
-State-of-Dojo / `/app`-landing sections and SESSION-file sections **could/should be wired, backlinked to
-ledgers, automated, or consolidated** — the operator's concern that planned work sits undiscoverable in
-session prose instead of in ledgers. Concrete known items to fold in: **MBR → Needs-you feed** (WL-P2-75),
-**docs-navigator → SotD** (WL-P2-76), the panel-import orphan invariant (WL-P2-73). Output: a prioritized
-wire/consolidate/automate list → WL rows (not prose). Reuse the finding-router; don't add per-session sections.
+**Task — WL-P3-54: promote the AABB-overlap invariant to a co-located unit test (test-only, self-contained).**
 
-**Thread 2 — Petey + Giddy `/rr` (research-recommend, don't build):**
-1. **Wire the rituals (WL-P2-74):** `/ggr` into `closing.md` §6.5 + the bow-out skill body (absorb/replace the
-   old `hostile-close-review` call so the ADR 0052 gate policy actually fires); point `opening.md` step 4 at
-   `/pp`·`/ppp`; add a `bow-out-gates` check that a `/ggr` score exists for a code session; surface NEW
-   `PlanningIntake` count at bow-in (WL-P2-72).
-2. **Wiring-net automation (WL-P2-73):** design the built-not-wired orphan-detector (graph in-degree /
-   convention check e.g. "every `state-of-dojo/*-panel.tsx` imported by `attention-panels.tsx`") as a
-   `bow-out-gates` gate that routes to WL. Reuse `deferral-guard.ts` + finding-router §6.7.
-3. **Wayfinder (WL-P2-71):** live State-of-Dojo Wayfinder panel (self-fetch `gh` `wayfinder:map`) vs. a
-   persistent link card — recommend.
-4. **Token-efficiency lens:** where the ledgers/rituals cost tokens without proportional effectiveness, propose
-   the lighter mechanism (the operator's standing efficiency ask).
-
-Inputs: `docs/rituals/{opening,closing}.md` · `.claude/skills/{bow-in,bow-out,ggr,pp,ppp}/SKILL.md` ·
-`scripts/bow-out-gates.sh` · `scripts/deferral-guard.ts` · [WL-P2-71/73/74](../knowledge/wiki/wiring-ledger.md) ·
-[PL-020…023](../knowledge/wiki/planning-ledger.md) · [G-031 S5](../knowledge/wiki/goals-ledger.md).
-
-**Then:** fold the `/rr` recommendations into G-031 **S5** (ritual rework, own Build+QAR) → S4 (facet migration).
+- **Context:** the technique-graph zero-AABB-overlap invariant (node box `168×64`, fixed in `5c7e6574`, 67→0
+  overlapping pairs) currently lives only in a throwaway scratchpad detector — so `apps/web/prisma/data/bbl-bjj-graph.json`
+  node coordinates and the `technique-graph.tsx` constants can silently drift back into overlap.
+- **Do:** export `NODE_WIDTH` (168) + `NODE_HEIGHT` (64) from
+  [`apps/web/components/web/techniques/technique-graph.tsx`](../../apps/web/components/web/techniques/technique-graph.tsx) (lines 48–49),
+  then add a co-located unit test (mirror the `apps/web/server/web/techniques/*.test.ts` convention) that
+  loads `bbl-bjj-graph.json`, computes every node-pair AABB using the **exported** constants, and asserts **zero
+  overlap**. The test must FAIL on any future coordinate/constant drift.
+- **Done means:** `bun run test` (the new test passes), `bun run typecheck`, and the read-only Oxc gates
+  `(cd apps/web && bun run lint:check && bun run format:check)` all green; `/ggr` scores the diff ≥9.0 (or
+  auto-loops per the gate); WL-P3-54 flipped to resolved. Behavior-preserving (only exports 2 constants +
+  adds a test) — no runtime change, no schema, no migration.
+- **Inputs:** `technique-graph.tsx`, `apps/web/prisma/data/bbl-bjj-graph.json`,
+  `apps/web/server/web/techniques/graph-belt-level.test.ts` (nearest test pattern),
+  [WL-P3-54](../knowledge/wiki/wiring-ledger.md).
 
 ## Petey plan (executed — pivot order)
 
@@ -110,20 +102,44 @@ Operator elected **generator-first as a Cody subagent while we review in paralle
 - **Lane B (inline/Desi/Giddy, foreground while A runs) — review.** Publish frozen SotD Artifact; Desi
   `/hallmark` on `/app` (PL-020/021/023); sections wiring/consolidation audit + `/rr` slices (A4, B1–B5,
   MBR→Needs-you WL-P2-75, docs-nav→SotD WL-P2-76). Recommend, don't build.
+- **Lane C (autonomous Codex, background worktree) — the /ggr smoke test.** After A + A′ landed, the operator
+  authorized pushing the 0620 core and launching **one `auto-session-codex.sh 1`** lane (isolated worktree off
+  clean `main`, gpt-5.6-sol/CLI 0.145.0) to prove an autonomous Codex session runs `/ggr` end-to-end. Its task =
+  the WL-P3-54 slice in `## Next session`; it creates SESSION_0621 + opens a reviewable PR (not auto-merged).
+  Numbering safety: I do **not** bow-out 0620 (mint 0622) until Lane C's 0621 is done — sequential closers.
 
 ## Task log
 
 | Task | Status | Owner | Done means |
 | --- | --- | --- | --- |
-| SESSION_0620_TASK_01 | ⏳ in-progress | Cody (subagent) | Twin generator script: full-tree mirror + `--check`; 10 twins minted; `--check` wired into a gate. D-053 + WL-P2-77 closed. Gates green. |
-| SESSION_0620_TASK_02 | ⏳ in-progress | inline (Petey) | Codex model resolved — a supported model pinned in `auto-session-codex.sh` (or CLI-upgrade recommendation), with evidence it doesn't 400. |
-| SESSION_0620_TASK_03 | ⏳ in-progress | inline | Frozen State-of-Dojo snapshot published as an Artifact; URL in `## Artifacts`. |
+| SESSION_0620_TASK_01 | ✅ done | Cody + Petey | Symlink-conform (operator's design, not a generator): all 22 outliers → `.agents` real home + `.claude` symlink. Cody did 14 (10 moved + 4 clean); Petey resolved the 8 diverged pairs (`.claude`-authoritative) + fixed a code-quality broken doc-link. D-053 RESOLVED, WL-P2-77 resolved. 55/55 symlinks, 0 broken, hashes unchanged, skills-index/wiki:lint green. |
+| SESSION_0620_TASK_02 | ✅ done | inline (Petey) | Codex model resolved — `gpt-5.5` pinned in both auto-session-codex scripts; smoke-tested (SMOKE_OK, no 400). Upgrade path documented. |
+| SESSION_0620_TASK_03 | ✅ done | inline | Frozen SotD snapshot published: artifact `0673ebcb…`; URL in `## Artifacts`. |
 | SESSION_0620_TASK_04 | ⏳ queued | Desi (subagent) | `/hallmark` review of `/app` surfaces (PL-020/021/023) → prioritized fix list for Cody. No prod code. |
 | SESSION_0620_TASK_05 | ⏳ queued | Petey/Giddy `/rr` | Sections wiring/consolidation audit + `/rr` slices (A4, B1–B5, WL-P2-75/76) → WL rows, not prose. |
 
 ## Artifacts
 
-<!-- SotD Artifact URL — filled by TASK_03 -->
+- **Frozen State-of-Dojo snapshot (bow-in, 2026-07-22):**
+  <https://claude.ai/code/artifact/0673ebcb-62db-4d97-9aef-04d0e4732d7a> — deterministic projection of
+  `docs/sprints/*` + `goals-ledger` (390 sessions, 31 goals) via `bun scripts/state-of-project.ts`, published
+  body-fragment through `/preview-artifacts`. Live always-current equivalent: `/app/state`.
+
+## Codex model resolution (TASK_02 — evidence)
+
+- **Root cause confirmed:** `~/.codex/config.toml` sets `model = "gpt-5.6-sol"`; the 0.144.0 models cache shows
+  the 5.6 line carries newer-protocol keys (`tool_mode`, `multi_agent_version`) the installed **CLI 0.135.0**
+  can't speak → **API 400**, which silently killed the launched lanes (zero commits). Auth is `auth_mode=chatgpt`
+  (no API key), so the ChatGPT-account model set applies.
+- **Fix (operator asked to update the CLI):** **upgraded `@openai/codex` 0.135.0 → 0.145.0** (`npm i -g
+  @openai/codex@0.145.0 --prefix ~/.local`; reversible). Re-verified the three flags the harness uses survive
+  (`-m`, `--dangerously-bypass-approvals-and-sandbox`, `-C/--cd`). **`gpt-5.6-sol` then smoke-tested clean**
+  (`SMOKE_OK`, exit 0, no 400; the prior `unknown variant 'max'` cache error is also gone). Pinned
+  **`gpt-5.6-sol`** explicitly as the harness default in both `auto-session-codex*.sh`
+  (`CODEX_MODEL="${CODEX_MODEL:-gpt-5.6-sol}"` + `-m`; env-overridable, e.g. `CODEX_MODEL=gpt-5.5`).
+- **Interim step recorded:** first pinned `gpt-5.5` (worked on 0.135.0) before the operator opted to upgrade;
+  now superseded by the 0.145.0 + gpt-5.6-sol end state. The global `config.toml` (`model = "gpt-5.6-sol"`) now
+  matches the working CLI — interactive `codex` works again too.
 
 ## Status
 

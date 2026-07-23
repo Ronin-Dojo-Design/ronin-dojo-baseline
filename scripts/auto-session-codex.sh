@@ -16,8 +16,8 @@
 # lives in the SESSION files + git, not in a conversation.
 #
 # Usage:
-#   scripts/auto-session-codex.sh [N]      # N = how many sessions (default 1)
-#   CODEX_MODEL=gpt-5-codex scripts/auto-session-codex.sh 3   # pin a model
+#   scripts/auto-session-codex.sh [N]      # N sessions (default 1); model pinned to gpt-5.5
+#   CODEX_MODEL=gpt-5.6-sol scripts/auto-session-codex.sh 3   # override the model pin
 #
 # PERMISSIONS: a headless `codex exec` cannot answer approval prompts. Codex has
 # no per-command allowlist like Claude's settings.json, and its workspace-write
@@ -97,8 +97,17 @@ push + PR. Run the FS-0024 pwd/remote guard before committing. If a REAL gate fa
 tree UNCOMMITTED. The root `bun run lint` is NOT a gate (known-broken) — do not block on it.
 PROMPT
 
-MODEL_ARGS=()
-[[ -n "${CODEX_MODEL:-}" ]] && MODEL_ARGS=(-m "$CODEX_MODEL")
+# Model pin (SESSION_0620 — WL-P2-77 secondary blocker, resolved). History: on
+# CLI 0.135.0 the config default gpt-5.6-sol 400'd (its newer tool protocol —
+# tool_mode / multi_agent_version — wasn't understood by that CLI), silently
+# killing the launched lanes at zero commits. **Fixed by upgrading the CLI to
+# 0.145.0** (SESSION_0620): gpt-5.6-sol then smoke-tested clean (no 400), and the
+# three flags below (-m / --dangerously-bypass-approvals-and-sandbox / --cd) were
+# re-verified present. We pin gpt-5.6-sol explicitly (self-documenting; not reliant
+# on the global config.toml). Override via env: CODEX_MODEL=gpt-5.5 (the 0.135.0
+# fallback) or any slug from the models cache. Requires codex CLI ≥0.144.0.
+CODEX_MODEL="${CODEX_MODEL:-gpt-5.6-sol}"
+MODEL_ARGS=(-m "$CODEX_MODEL")
 
 base_branch="$START_BASE"
 

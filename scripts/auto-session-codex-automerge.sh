@@ -105,8 +105,12 @@ Do not push and do not open a PR — the wrapper handles that. If a real gate
 fails, leave the tree uncommitted and stop.
 PROMPT
 
-MODEL_ARGS=()
-[[ -n "${CODEX_MODEL:-}" ]] && MODEL_ARGS=(-m "$CODEX_MODEL")
+# Model pin — see auto-session-codex.sh for the full rationale (SESSION_0620,
+# WL-P2-77). Short version: CLI upgraded to 0.145.0 so gpt-5.6-sol works (was a
+# 400 on 0.135.0); smoke-tested clean. `-m` overrides config; env-overridable.
+# Requires codex CLI ≥0.144.0.
+CODEX_MODEL="${CODEX_MODEL:-gpt-5.6-sol}"
+MODEL_ARGS=(-m "$CODEX_MODEL")
 
 for ((i = 1; i <= N; i++)); do
   last="$(find docs/sprints -name 'SESSION_*.md' | sed -E 's/.*SESSION_([0-9]+)\.md/\1/' | sort -n | tail -1)"

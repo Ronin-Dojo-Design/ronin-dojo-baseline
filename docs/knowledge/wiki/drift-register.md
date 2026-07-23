@@ -788,7 +788,37 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   checkout):** either (a) add a `.agents`↔`.claude` byte-identical check to `wiki:lint` / a gate,
   or (b) a re-link step in `worktree-setup` / bootstrap that `ln -f`s all skill pairs after
   checkout. Decide in a governance/gates lane; canonical checkout can be re-linked locally meanwhile.
-- **Status: OPEN.**
+- **Root-cause correction (SESSION_0620):** the discovered framing ("hardlinks aren't git-stored")
+  was **imprecise**. The 33 shared skills (matt-pocock + authored-in-`.agents`) were already committed
+  as **symlinks** — `.claude/skills/X` → `../../.agents/skills/X`, git mode `120000` — which git **does**
+  store and which **never** drift (one inode). The real drift surface was only the outliers that had
+  never been conformed to that symlink law: **12 hand-copied real-dir pairs** (two inodes) + **10
+  `.claude`-only real dirs** absent from `.agents` (WL-P2-77 — Codex couldn't see them). So neither a
+  content-equality gate nor a re-link/generator was needed — the fix was to **conform the outliers to
+  the existing symlink convention**.
+- **Fix shipped (SESSION_0620):** conformed **14 of the 22 outliers** — the 10 `.claude`-only dirs were
+  moved to `.agents` + symlinked back, and the 4 **byte-identical** pairs (`game-off`, `seq-lane-build`,
+  `seq-research-recommend`, `seq-review-wave`) were collapsed to symlinks. Zero `SKILL.md` content changed
+  (55/55 content hashes preserved); all 7 `.agents/*/agents/openai.yaml` runtime files intact.
+- **Diverged remainder — the latent risk had already materialized (SESSION_0620, Petey resolved):** the
+  other **8 of 12 pairs had genuinely diverged content**, confirming "identical content today" was already
+  stale: `bow-in`, `bow-out`, `code-quality`, `fallow-fix-loop`, `game-on`, `graphify-explain`,
+  `graphify-query`, `pr-fix-loop`. **Canonical-source decision: `.claude`-authoritative for all 8** — it is
+  the actively-edited side in Claude Code, and per the twin invariant `SKILL.md` must be one identical source
+  (runtime-specific content belongs in `agents/openai.yaml`, not `SKILL.md`). Evidence: `bow-in`/`bow-out`
+  `.claude` were 24/28-line supersets vs stale 6-line `.agents` stubs (gate-runner + `/ggr` + FS-0037
+  additions); `graphify-explain`/`graphify-query` `.claude` were the post-rename redirect stubs (→`/ge`/`/gq`)
+  vs stale pre-rename bodies; `game-on`/`code-quality`/`fallow-fix-loop`/`pr-fix-loop` `.claude` were the
+  larger + newer-mtime rewrites. Conformed all 8 (copy `.claude` `SKILL.md` → `.agents`, preserve
+  `game-on/agents/openai.yaml`, symlink `.claude`). **Bug fixed in passing:** `code-quality`'s `.claude` body
+  carried a broken doc link `../../docs/…` (2 levels — resolves to `.claude/docs`, nonexistent); adopted the
+  correct `../../../docs/…` (3 levels to root, which `.agents` already had). Verified: 55/55 `.claude/skills`
+  now symlinks (0 real dirs, 0 broken), 55/55 `SKILL.md` hashes unchanged from source, `openai.yaml`=7,
+  `skills-index --check` exit 0, `wiki:lint` 0 errors.
+- **Status: RESOLVED (SESSION_0620)** — all 22 outliers conformed to the existing `.claude`→`.agents` symlink
+  law (14 by Cody, 8 by Petey). Every skill is now **one inode** (`.agents` real home + `.claude` symlink,
+  git mode `120000`), so cross-runtime drift is **structurally impossible** — no generator, no gate, no
+  re-link step needed. `brandon` stays intentionally `.agents`-only.
 
 ### D-054 — `technique-graph.tsx` `TechniqueGraph` is a god-ish interactive island (CRAP-306)
 
