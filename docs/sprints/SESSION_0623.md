@@ -70,6 +70,18 @@ composite for a code session).
 row), `/ggr` composite recorded, zero broken gates, no SKIP-list item touched, and (unless WL debt is
 exhausted) the next WL-clearing session staged.
 
+**First task:** run `bun scripts/ledger-backlog.ts --ledger=WL --top=50`, then **verify current source for
+each candidate before editing** — several WL rows are already satisfied in code and only need the row
+flipped, not a change. (Restored at SESSION_0624: the duplicate stub this one collided with carried this
+line and this one didn't. Because the chain perpetuates by verbatim copy, the omission would have
+propagated to every future link — and "check the source before believing the row" is exactly the guidance
+that produced the correct WL-P3-41/46 stale-row cross-offs.)
+
+**Numbering (FS-0038):** mint the perpetuation stub's number with
+`bun scripts/ledger-id-next.ts --prefix=SESSION`, **not** by incrementing this file's number locally.
+Local increment is what produced the duplicate `SESSION_0622` that SESSION_0624 had to untangle: two
+sibling lanes both numbered their stubs off the same base without consulting the cross-branch mint.
+
 ## Task log
 
 <!-- filled at bow-in -->

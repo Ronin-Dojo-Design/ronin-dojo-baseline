@@ -6,7 +6,7 @@ status: active
 created: 2026-04-26
 updated: 2026-07-23
 author: Brian + Copilot
-last_agent: codex-session-0622
+last_agent: claude-session-0624
 ---
 
 # LLM Wiki Index
@@ -765,9 +765,13 @@ maintenance rule: [`docs/learning/ddd/learning-records/README.md`](../../learnin
 | [SESSION_0617](../../sprints/SESSION_0617.md) | session--implement | staged — RISK #2: flip `CSP_ENFORCE` to enforcing (headers/Report-Only/report-sink/nonce already shipped; only the enforce flip + report-review remain). Staged by 0614. |
 | [SESSION_0618](../../sprints/SESSION_0618.md) | session--implement | closed — G-031 S2/S3 formalized `/pp`/`/ppp` and created `/ggr`. |
 | [SESSION_0619](../../sprints/SESSION_0619.md) | session--implement | in-progress — Wiring net session captured built-not-wired gaps and queued follow-up surface work. |
-| [SESSION_0620](../../sprints/SESSION_0620.md) | session--open | in-progress — Twin-skill/Codex-model work and `/rr` slices; staged `SESSION_0622`. |
-| [SESSION_0622](../../sprints/SESSION_0622.md) | session--implement | closed — Autonomous WL-clearing batch: resolved stale `WL-P3-41`/`WL-P3-46`, stabilized `WL-P3-61`, gates green, next WL chain staged. |
+| [SESSION_0620](../../sprints/SESSION_0620.md) | session--open | closed — Twin-skill/Codex-model work and `/rr` slices; launched the autonomous Codex lanes, built Gate 12d, fixed app-wide iOS input zoom + State-of-Dojo belt colors; staged the `SESSION_0624`/`SESSION_0625` pair. |
+| [SESSION_0621](../../sprints/SESSION_0621.md) | session--open | closed — Technique-graph AABB-overlap invariant (PR #255): exported `NODE_WIDTH`/`NODE_HEIGHT` + new `graph-layout.test.ts` over `bbl-bjj-graph.json`; `WL-P3-54` ✅. Record backfilled + closed at the SESSION_0624 merge gate. |
+| [SESSION_0622](../../sprints/SESSION_0622.md) | session--implement | closed — Autonomous WL-clearing batch (PR #257): resolved stale `WL-P3-41`/`WL-P3-46`, stabilized `WL-P3-61`, gates green, next WL chain staged. |
 | [SESSION_0623](../../sprints/SESSION_0623.md) | session--implement | staged — Next autonomous WL-clearing batch. |
+| [SESSION_0624](../../sprints/SESSION_0624.md) | session--review | closed — **AM_Coffee_Merge_Review**: merged all 3 WL-clearing PRs (#255/#257 clean; #256 held on a **real** chromium red — the `Row actions` a11y rename orphaned 2 e2e locators — then fixed and merged). Banked 7 WL items; resolved the `SESSION_0622` duplicate (→ `SESSION_0631`); routed FS-0038. |
+| [SESSION_0625](../../sprints/SESSION_0625.md) | session--plan | staged — MMB Meeting Intake: Michael Flores notes → grilled → routed to MMB canon. The parallel pair to SESSION_0624; being closed out in its own lane. |
+| [SESSION_0634](../../sprints/SESSION_0634.md) | session--plan | staged — **CRM as a kernel feature-module** (brand-agnostic, all brands, ADR 0051). Operator-directed at the 0624 bow-out. **This is the next lane.** First decision: no kernel CRM goal row exists — mint one (proposed G-032), extend G-021, or park it. |
 | [SESSION_0631](../../sprints/SESSION_0631.md) | session--implement | closed — Autonomous WL-clearing batch (PR #256; **renumbered from the duplicate SESSION_0622** at the SESSION_0624 coffee merge): resolved `WL-P3-24`/`WL-P3-37`/`WL-P3-55`, plus the merge-time e2e fix-up for the `Row actions` a11y rename. |
 | [SESSION_0608](../../sprints/SESSION_0608.md) | session--implement | closed (landed on main, held) — WS-D: token-cost tracker (`telemetry:` frontmatter → `dataviz` charts). G-023; own worktree; Cody lane. |
 

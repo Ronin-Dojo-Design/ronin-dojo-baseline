@@ -2,7 +2,7 @@
 title: "SESSION 0621 — Technique graph AABB overlap invariant"
 slug: session-0621
 type: session--open
-status: in-progress
+status: closed
 created: 2026-07-23
 updated: 2026-07-23
 last_agent: codex-session-0621
@@ -209,22 +209,42 @@ None. SESSION 0620 locked the constants, data source, test location convention, 
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0621_TASK_01 | pending | Export graph dimensions and add the canonical zero-overlap unit test. |
-| SESSION_0621_TASK_02 | pending | Review geometry semantics, run gates, resolve WL-P3-54, and close the session. |
+| SESSION_0621_TASK_01 | done | Export graph dimensions and add the canonical zero-overlap unit test. |
+| SESSION_0621_TASK_02 | done | Review geometry semantics, run gates, resolve WL-P3-54, and close the session. |
+
+> **Closed out at the merge gate by [SESSION_0624](SESSION_0624.md).** This lane's PR
+> ([#255](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/255)) merged at `17edc63f` with all
+> checks green, but the record shipped with `status: in-progress`, `What landed: Pending`, and no
+> `wiki/index.md` row. The AM-coffee merge review backfilled the three from the merged diff rather than
+> leave a landed lane looking unfinished. Nothing here is a fresh claim — it is the diff, described.
 
 ## What landed
 
-Pending.
+- `NODE_WIDTH` / `NODE_HEIGHT` promoted from module-private to **exported** in
+  `apps/web/components/web/techniques/technique-graph.tsx`, so the layout invariant has a single source of
+  truth instead of a constant duplicated into a throwaway detector script.
+- New `apps/web/server/web/techniques/graph-layout.test.ts` asserts **zero AABB overlap across every node
+  pair** in `prisma/data/bbl-bjj-graph.json` at the real rendered dimensions — the invariant that was fixed
+  at 168×64 (67 overlapping pairs → 0) but until now was only ever checked by hand.
+- **WL-P3-54 flipped ✅** in the wiring ledger.
+
+**Why it matters:** the JSON pitch and the component constants could previously drift apart silently and
+re-introduce the 67-overlap layout. The test fails on any future coordinate *or* constant change, which is
+what the ledger row asked for.
 
 ## Decisions resolved
 
-Pending.
+- The invariant lives as a **unit test over the committed graph JSON**, not a runtime guard — the overlap
+  check is a data-authoring concern, not a render-path cost.
 
 ## Files touched
 
 | File | Change |
 | --- | --- |
-| `docs/sprints/SESSION_0621.md` | Created the session plan and audit record. |
+| `apps/web/components/web/techniques/technique-graph.tsx` | Exported `NODE_WIDTH` / `NODE_HEIGHT`. |
+| `apps/web/server/web/techniques/graph-layout.test.ts` | **New** — zero-AABB-overlap invariant test. |
+| `docs/knowledge/wiki/wiring-ledger.md` | WL-P3-54 → ✅. |
+| `docs/sprints/SESSION_0621.md` | Created the session plan and audit record; closed at the 0624 merge gate. |
 
 ## Verification
 

@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-22
-last_agent: claude-session-0618
+updated: 2026-07-23
+last_agent: claude-session-0624
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -890,6 +890,52 @@ Read this section at bow-in instead of skimming every individual entry.
   FS-0037 (governance step as unreachable prose) are one pattern — **a rule only fires from the read-path that
   actually executes.** Put mandatory asks in the skill body, not in doc prose the numbered steps run past.
 - **Status:** mitigated (both-halves fix landed + verified live SESSION_0618).
+
+### FS-0038 — "highest-numbered SESSION file = the current session" breaks when a merge lands a higher-numbered *closed* record
+
+- **Session:** SESSION_0624 (Claude) — surfaced by the agent at close, not by a failure in the wild.
+- **Step failed:** none yet — this is a **latent** trap armed by this session, logged before it fires.
+- **Which SOP:** [`opening.md`](../rituals/opening.md) step 1 ("Find the highest-numbered file in
+  `docs/sprints/`. That's the previous session.") + the ADR 0049 staged-stub rule ("if the highest-numbered
+  file has `status: staged`, it is the pre-staged stub for **this** session").
+- **What happened:** two sibling Codex lanes each adopted the same staged `SESSION_0622` stub, so PRs #256 and
+  #257 both carried `SESSION_0622.md` + `SESSION_0623.md`. Resolving the duplicate meant renumbering #256's
+  record to the next free number — **`SESSION_0631`**. `ledger-id-next` mints `max(all claims)+1` across
+  checkout ∪ worktrees ∪ `session-*` refs, and the highest live claim was `SESSION_0630` (staged in the
+  `ronin-wl-lane` worktree hours earlier), so 0631 was genuinely next-free. (Precisely: 0623/0625/0630 were
+  *claimed*; 0626–0629 are **burned gaps**, not claims — ADR 0049 burns gaps either way, so the answer is the
+  same, but "0623–0630 are all claimed" overstates it.) That is the correct ADR 0049 answer, but it
+  leaves the **highest-numbered file on `main` as a `closed` record that is 7 numbers ahead of the actual
+  session**, and it is neither the previous session nor a staged stub.
+- **Root cause (downstream symptom):** the bow-in heuristic conflates *numerically highest* with *most
+  recent*. That holds while numbers are minted in execution order; it breaks the moment a number is minted
+  for **collision avoidance** rather than sequence — which is exactly what a dup-resolution renumber does.
+  Three stubs (`SESSION_0605`, `SESSION_0623`, `SESSION_0625`) sit staged *below* the highest number and are
+  invisible to the rule.
+- **Root cause (upstream — the actual generator; Giddy, 0624 review):** the **auto-lane harness numbers its
+  perpetuation stubs locally** (`SESSION_<thisNumber+1>`) instead of minting via
+  `bun scripts/ledger-id-next.ts --prefix=SESSION`. Two sibling Codex lanes therefore both numbered off the
+  same base and both emitted `SESSION_0622` + `SESSION_0623` — while a third lane (`wl-lane-base`) had
+  already staged `SESSION_0630` hours earlier. Local increment cannot see sibling branches; the mint can
+  (it scans checkout ∪ worktrees ∪ `session-*` refs). **The renumber trap is the consequence; unminted
+  stub numbering is the cause.** Fixing only the bow-in selector would leave the collisions coming.
+- **Impact:** MEDIUM if unmitigated — the next bow-in reads a closed 0631 as "the previous session," finds no
+  `Next session` thread it owns, and silently skips three genuinely-queued lanes (including `SESSION_0625`,
+  the staged MMB pair to this very session).
+- **Corrective action (landed this session):** (1) `SESSION_0624`'s frontmatter sets
+  `next_session: docs/sprints/SESSION_0625.md` and its `## Next session` block names 0625 as the follow-on
+  with an explicit "do not use highest-numbered" warning — the inherited stub's own task block was renamed
+  to `## This session's task` so the two can't be confused; (2) `SESSION_0623`'s perpetuation step now says
+  to **mint** the next number rather than increment locally, which stops the generator inside the
+  self-copying chain.
+- **Corrective action (NOT yet built — the real close):** bow-in step 1 should select the current session by
+  **`status: staged` first** (highest staged number wins), falling back to highest-numbered only when no
+  stub is staged. Not done here: it edits the ritual that every live sibling lane (0593/0598/0599/0600-02/
+  0610/0611/0612/0620) is mid-flight against, and this session is an attended merge lane, not a ritual lane.
+- **Lesson:** a renumber for collision-avoidance is not a renumber for sequence — any rule that infers
+  *recency* from an ID must state what happens when IDs are minted out of order. And a self-perpetuating
+  stub propagates its numbering bug once per iteration; fix the copier, not the copy.
+- **Status:** open (pointer + generator mitigations landed SESSION_0624; the bow-in selector fix is the close).
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
