@@ -250,7 +250,7 @@ skill-selection. Classify this task against the router, then
 **dispatch the matched flow as real sub-agents** via the `Agent` tool's `subagent_type` (the roster lives in
 `.claude/agents/*.md`):
 
-- **Unclear / multi-part / open decisions →** dispatch [`petey`](../agents/petey.md) ([Petey Plan protocol](../protocols/petey-plan.md)) to plan and **grill the open forks first**, then Petey dispatches `cody` (build) → `doug` (verify) per the plan's `Parallelism` section.
+- **Unclear / multi-part / open decisions →** run **[`/pp`](../../.claude/skills/pp/SKILL.md)** (plan only) or **[`/ppp`](../../.claude/skills/ppp/SKILL.md)** (plan + the paste-ready baton) — the `petey-plan` entrypoints (ADR 0052 D1) — to **grill the open forks first** and emit the plan block, then dispatch `cody` (build) → **[`/ggr`](../../.claude/skills/ggr/SKILL.md)** (the QAR gate — runs the Doug/Desi/Giddy review wave + scores) per the plan's `Parallelism` section.
 - **Clear build →** dispatch [`cody`](../agents/cody.md) to execute — **Cody completes the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code** — then [`doug`](../agents/doug.md) to verify the diff.
 - **Other lanes** (bug → `/diagnose`, review → `/code-review`, cleanup → `/fallow-fix-loop`, new client → `/new-client-recipe`, …) → run the router's matched skill/loop.
 

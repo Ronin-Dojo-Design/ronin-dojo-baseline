@@ -42,6 +42,13 @@ more effectively and token-efficiently. Recommend, don't build (except a tiny pr
 nav: no back button, no nav/footer shell), **PL-023** (mobile input zoom + FeatureWidget img preview).
 Return a prioritized fix list for Cody — do not write production code in this lane.
 
+**Thread 1b — Sections wiring/consolidation audit (operator ask, SESSION_0619).** Audit which
+State-of-Dojo / `/app`-landing sections and SESSION-file sections **could/should be wired, backlinked to
+ledgers, automated, or consolidated** — the operator's concern that planned work sits undiscoverable in
+session prose instead of in ledgers. Concrete known items to fold in: **MBR → Needs-you feed** (WL-P2-75),
+**docs-navigator → SotD** (WL-P2-76), the panel-import orphan invariant (WL-P2-73). Output: a prioritized
+wire/consolidate/automate list → WL rows (not prose). Reuse the finding-router; don't add per-session sections.
+
 **Thread 2 — Petey + Giddy `/rr` (research-recommend, don't build):**
 1. **Wire the rituals (WL-P2-74):** `/ggr` into `closing.md` §6.5 + the bow-out skill body (absorb/replace the
    old `hostile-close-review` call so the ADR 0052 gate policy actually fires); point `opening.md` step 4 at

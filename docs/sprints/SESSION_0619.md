@@ -86,6 +86,27 @@ systemic net (`## Yet to be wired` template section), triage the operator's 4 do
 | SESSION_0619_TASK_04 | ✅ done | inline Cody | Lane B: brand-scope (NEXT_PUBLIC_SOTD_ALL_BRANDS) + mount TokenCostPanel (WL-P2-70) + remove Attention — typecheck/lint/format green, headless-verified on /app + /app/state |
 | SESSION_0619_TASK_05 | ✅ done | inline | Ritual built-not-wired sweep (operator ask) → WL-P2-74 (/ggr not wired · /pp·/ppp not in step 4 · hostile trigger-only · intake count invisible) |
 
+## Also landed (late-session, operator-directed)
+
+- **`/rr` (Petey/Giddy research-recommend)** dispatched + returned → [research-review-ggr-wiring-and-code-doc-annotation](../architecture/research/research-review-ggr-wiring-and-code-doc-annotation.md).
+- **Slice ① built** (A1–A3, per the /rr): `/ggr` now wraps hostile-close-review in `closing.md` §6.5, the
+  `bow-out` skill body carries the executed `/ggr` step, `opening.md` step 4 points at `/pp`·`/ppp`. Closes
+  WL-P2-74 a/b. (A4 = `bow-out-gates` Gate 12d, drafted, next.) The ADR-0052 gate now fires at bow-out.
+- **WL-P2-75/76** captured (MBR → Needs-you feed; docs-navigator → SotD). Sections-audit folded into Desi 0620 (Thread 1b).
+
+## Review log
+
+**`/ggr` gate — SESSION_0619 (dogfooded — the wiring built this session ran on this session's close).**
+Primary unit = Lane B (State-of-Dojo BBL-scope + token-cost mount + de-Attention). **Class B** (custom
+State-of-Dojo kernel). D1 9 (behavior headless-verified, no regression — multi-brand path unchanged) · D2 9
+(no exposed-surface change; read-only client flag) · D3 9 (ONE `VISIBLE_BRAND_SKINS` source, DRY; shared
+`buildCatalogPanels` covers both catalogs) · D4 9 (clear JSDoc, mirrors `CURRENT_DEPLOY_SKIN`) · D5 9 (single
+scoping point) · D6 9 (module-const, no per-request work) · D7 8 (reuses BrandTabs/contract; new flag +
+`DEPLOY_BRAND_KEY` minimal + documented — but the touched kernel files still carry no `@doc`/JETTY, the exact
+Thread-B gap, logged as WL-P2-74/B4 not buried). **Weighted ≈ 8.9 · no hard caps (no regression; no Dirstarter
+bypass; new pattern documented) · Composite 9.0/10 → CLEARS** (ship with the one follow-up logged). Slice ①
+(docs/skill) = behavior-preserving governance, no score cap.
+
 ## Status
 
 Single source of truth is the frontmatter `status:` field.

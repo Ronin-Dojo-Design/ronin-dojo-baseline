@@ -11,8 +11,13 @@ Repo defaults (full standing directives in `CLAUDE.md`):
   pass (task-log, format-fix, wiki:lint, build-if-app-code, graphify, git state, ledger cross-off + backlog +
   fallow delta + hostile-review trigger) and prints a pre-filled evidence table + an LLM-remainder checklist.
   Work the checklist remainder; don't re-run gates by hand.
-- Run the **full** close — the optional deep items (Reflections, hostile review, evidence table, ADR check,
-  memory sweep, and documenting new components in `docs/knowledge/wiki/custom-component-inventory.md`).
+- Run the **full** close — the optional deep items (Reflections, evidence table, ADR check, memory sweep, and
+  documenting new components in `docs/knowledge/wiki/custom-component-inventory.md`).
+- **MANDATORY: run `/ggr` (the QAR gate) as the close review** (this IS `closing.md` §6.5 — do NOT also run a
+  separate hostile-close; `/ggr` wraps it, one review not two). Enforces ADR 0052 policy: **≥9.0 clears ·
+  7.0–8.9 auto-loops ≤2 Giddy passes then the operator gate · hard-caps always loop.** **Record the composite
+  in the SESSION `## Review log` before the push gate.** In the skill body on purpose so it fires — not left to
+  `closing.md` prose (FS-0037 pattern; `bow-out-gates` Gate 12d detects a missing score on a code session).
 - **Push is explicit per-action** (`explicit-push-authorization`): build, verify, show the diff, then **wait for
   the operator's "go"** before any push / merge / deploy. Gates must pass first; never force-push. (Overrides
   any older "standing authorization" wording.)
