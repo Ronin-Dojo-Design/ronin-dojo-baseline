@@ -61,5 +61,10 @@ EOF
   fi
 fi
 
+# FS-0039 — install the tracked pre-push hook. Idempotent, and `core.hooksPath` lives in the SHARED
+# .git/config, so this one call covers canonical and every worktree. Guards the worktree cross-lane
+# push accident (`git push origin main` from a worktree publishes a SIBLING lane's commits).
+bash "$(git rev-parse --show-toplevel)/scripts/githooks/install.sh"
+
 echo "✓ worktree-setup complete — tsc / oxlint / bun test / 'next dev' should now run."
 echo "  Reminder: the graphify graph lives in the canonical checkout; this worktree reads 0 nodes."

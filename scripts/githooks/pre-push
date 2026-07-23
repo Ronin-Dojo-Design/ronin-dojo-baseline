@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# pre-push — block the worktree cross-lane push accident (FS-0039).
+#
+# THE BUG THIS EXISTS TO STOP
+# --------------------------
+# A git worktree cannot check out `main` (the canonical checkout owns it). But `main` still RESOLVES
+# there, because every worktree shares one ref store. So running `git push origin main` from a lane
+# worktree does NOT push your work — it pushes whatever commit the SHARED `main` ref happens to point
+# at, which is routinely another session's uncommitted-to-remote work. The push succeeds, looks
+# normal, and silently publishes a sibling lane's commits past their own push gate.
+#
+# This recurred across many sessions before being guarded. The correct move from a worktree is a PR
+# (or `git push origin HEAD:<branch>`) — never a bare `git push origin main`.
+#
+# THE RULE
+# --------
+# You may only push the branch you are actually on. Pushing any OTHER local branch ref is blocked,
+# because that is the accident's exact shape. Branch deletions and non-branch refs (tags) are
+# unaffected. A non-fast-forward push to `main` is blocked outright.
+#
+# Escape hatch (deliberate, must be typed): RONIN_ALLOW_INDIRECT_PUSH=1 git push ...
+#
+# Installed via `core.hooksPath` — see `scripts/githooks/install.sh`. Lives in `scripts/` so the
+# logic is version-controlled and reviewable, not hidden in `.git/`.
+
+set -euo pipefail
+
+ZERO='0000000000000000000000000000000000000000'
+current_branch="$(git symbolic-ref -q --short HEAD || echo '')"
+git_dir="$(git rev-parse --git-dir)"
+common_dir="$(git rev-parse --git-common-dir)"
+# A linked worktree's own git dir differs from the shared common dir; canonical's are the same.
+in_worktree='no'
+[ "$(cd "$git_dir" && pwd)" != "$(cd "$common_dir" && pwd)" ] && in_worktree='yes'
+
+fail() {
+  echo "" >&2
+  echo "  ⛔ pre-push BLOCKED — $1" >&2
+  shift
+  for line in "$@"; do echo "     $line" >&2; done
+  echo "" >&2
+  echo "     Override (only if you are certain): RONIN_ALLOW_INDIRECT_PUSH=1 git push …" >&2
+  echo "" >&2
+  exit 1
+}
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # Nothing to inspect on a delete, and tags/non-branch refs are out of scope.
+  [ "$local_sha" = "$ZERO" ] && continue
+  case "$local_ref" in refs/heads/*) ;; *) continue ;; esac
+
+  local_branch="${local_ref#refs/heads/}"
+  remote_branch="${remote_ref#refs/heads/}"
+
+  if [ "${RONIN_ALLOW_INDIRECT_PUSH:-}" != "1" ] && [ "$local_branch" != "$current_branch" ]; then
+    detail="You are on '${current_branch:-(detached HEAD)}' but this push sends local '$local_branch'."
+    if [ "$in_worktree" = 'yes' ]; then
+      fail "pushing a branch you are not on, from a WORKTREE." \
+        "$detail" \
+        "In a worktree, '$local_branch' is the SHARED ref — it may point at another lane's commits." \
+        "This is the accident FS-0039 exists to stop: you would publish someone else's work." \
+        "" \
+        "Push your own work instead:   git push -u origin HEAD" \
+        "Then land it with a PR:       gh pr create --fill && gh pr merge --squash"
+    fi
+    fail "pushing a branch you are not on." \
+      "$detail" \
+      "Push what you are on:  git push -u origin HEAD"
+  fi
+
+  # Never rewrite published main. `remote_sha` = ZERO means the branch is new on the remote.
+  if [ "$remote_branch" = 'main' ] && [ "$remote_sha" != "$ZERO" ]; then
+    if ! git merge-base --is-ancestor "$remote_sha" "$local_sha" 2>/dev/null; then
+      fail "non-fast-forward push to main (this would rewrite published history)." \
+        "Rebase onto origin/main and push again — never force-push this repo."
+    fi
+  fi
+done
+
+exit 0
