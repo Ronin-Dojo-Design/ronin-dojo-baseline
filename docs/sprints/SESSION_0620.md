@@ -2,7 +2,8 @@
 title: "SESSION 0620 — Twin generator (D-053/WL-P2-77) + Codex model + Desi review + /rr slices"
 slug: session-0620
 type: session--open
-status: in-progress
+status: closed
+next_session: docs/sprints/SESSION_0624.md
 created: 2026-07-22
 updated: 2026-07-22
 last_agent: claude-session-0620
@@ -150,6 +151,9 @@ Operator elected **generator-first as a Cody subagent while we review in paralle
   <https://claude.ai/code/artifact/0673ebcb-62db-4d97-9aef-04d0e4732d7a> — deterministic projection of
   `docs/sprints/*` + `goals-ledger` (390 sessions, 31 goals) via `bun scripts/state-of-project.ts`, published
   body-fragment through `/preview-artifacts`. Live always-current equivalent: `/app/state`.
+- **Frozen State-of-Dojo snapshot (bow-out, 2026-07-23):**
+  <https://claude.ai/code/artifact/04ee930d-0f16-417e-a897-9d7f39d1c7cc> — end-of-session projection
+  (19,789 graph nodes) via the bow-out gate runner's Gate 7b render.
 
 ## Codex model resolution (TASK_02 — evidence)
 
@@ -166,6 +170,69 @@ Operator elected **generator-first as a Cody subagent while we review in paralle
 - **Interim step recorded:** first pinned `gpt-5.5` (worked on 0.135.0) before the operator opted to upgrade;
   now superseded by the 0.145.0 + gpt-5.6-sol end state. The global `config.toml` (`model = "gpt-5.6-sol"`) now
   matches the working CLI — interactive `codex` works again too.
+
+## Overnight watch (active goal — SESSION_0620)
+
+**`/goal`: clean green Codex sessions for the AM coffee merge-review.** Petey watches both autonomous
+lanes and drives them to green PRs the operator reviews in the morning. **Protocol per lane completion/exit:**
+
+- **Success (clean PR):** record the PR # for the AM review; the Lane 2 chain self-perpetuates.
+- **Gate failure (brake trip, dirty tree):** read the lane log, **diagnose → fix the blocker in canonical →
+  commit + push `main` → reset the worktree to new `main` → relaunch**. (First instance: flaky `courses`
+  test → fixed in `5c3f80ac`.)
+- **Codex usage/rate-limit early-exit (operator ask):** do NOT just relaunch — **pick up the remainder and
+  land it myself** (finish the in-flight task, run gates, commit to the lane branch, push, open/update the
+  PR) so the session lands green.
+
+Lanes: **Lane C** `../ronin-codex-smoke` (gpt-5.6-sol) · **Lane 2 chain** `../ronin-wl-lane` (gpt-5.5, N=3
+self-perpetuating). Each background process's completion notifies Petey (covers gate-fail / limit-exit /
+success); a long fallback wakeup guards a true hang.
+
+**Watch log:**
+
+- **Cycle 1 (both lanes) — gate fail, self-inflicted → fixed + relaunched.** Both lanes did *sound* work
+  (Lane C: WL-P3-54, full suite **1,689/1,689** — the courses-timeout fix WORKS; Lane 2: WL-P3-37 +
+  WL-P3-41/46 stale-ledger cleanup, typecheck/lint green) but **both stopped on the same blocker: my
+  SESSION_0620 courses-test fix wasn't oxfmt-formatted** (Vercel skips `format:check`, so it slipped to
+  main in `5c3f80ac`). Fix: `oxfmt` the file → `414a433f` (cosmetic line-wrap; test still 11/11). Both
+  worktrees reset to `414a433f` + relaunched. **Lesson:** run `format:check`, not just typecheck/lint, on
+  any hand-edited file before push — Vercel is not an oxfmt gate.
+- **Cycle 2 (both lanes again) — systemic format gate → root-fixed + Lane C landed.** Both relaunched lanes
+  stopped again on `format:check`, this time on **their OWN new files** — the harness prompt made agents
+  *check* formatting but forbade *all* write-mode formatting, so an agent that wrote a not-oxfmt-perfect
+  file couldn't fix it. **Root fix (`fbf2d5d9`):** the prompt now requires scoped `bunx oxfmt <changed
+  files>` on the agent's own diff before `format:check` (only the repo-wide format script stays forbidden).
+  **Lane C landed → [PR #255](https://github.com/Ronin-Dojo-Design/ronin-dojo-baseline/pull/255)**
+  (WL-P3-54; the agent's work, scoped-formatted + gates-verified + rebased by Petey — done 2× already, so
+  landed rather than redone a 3rd time). Lane 2 chain still running on the old prompt; will relaunch it with
+  the fixed prompt (self-completing) when it stops. **AM review queue: PR #255.**
+- **Cycles 3–7 (morning, operator awake) — 3 PRs delivered, then diminishing returns → banked.** Landed
+  **PR #256** (WL-P3-24/37/55) + **PR #257** (WL-P3-41/46/61); Lane C's WL-P3-54 = **PR #255**. Total **3
+  clean PRs, ~7 WL items**, all gates green, opened-not-merged. Along the way, **6 harness fixes** hardened
+  `auto-session-codex.sh` (self-format · courses flaky test · PR-base fallback · ≥1-commit · branch-collision
+  skip · dropped flaky `ls-remote`). Then hit an **undiagnosed empty-log early-exit** on repeated relaunch
+  that isn't reproducible (codex smoke-passes, pre-session logic passes by hand) → **operator banked the 3
+  PRs** rather than keep whack-a-moling. Follow-up: **WL-P2-79** (live-debug the relaunch; consider a leaner
+  codex-exec path). **Lesson:** the harness wasn't built for repeated fresh relaunches off a staging base;
+  overnight/background is the wrong place to debug an intermittent early-exit — needs a live foreground session.
+
+## What landed (SESSION_0620)
+
+A very large mixed session — build + review + governance + an autonomous-lane saga:
+
+- **D-053 RESOLVED** — all 22 skill-twin outliers conformed to the git-stored symlink law (`.agents`=one real
+  home, `.claude` symlinks in); Codex reads `ggr`/`pp`/`ppp` + current rituals. Chosen over a copy-generator
+  after finding 33 skills already symlinked. Fixed a `code-quality` broken doc-link in passing.
+- **Codex model resolved** — upgraded CLI `0.135.0 → 0.145.0`, pinned + smoke-tested `gpt-5.6-sol`.
+- **Gate 12d built** (WL-P2-78) — `bow-out-gates.sh` blocks a code session with no `/ggr` composite.
+- **Flaky `courses` integration test fixed** — 30s fixture timeout + undefined-guarded cleanup (11/11).
+- **2 Desi UI fixes SHIPPED to BBL prod** — belt theme-invariance + 16px mobile input (kills iOS zoom).
+- **`/caveman` wired** into the auto-lanes; **6 harness robustness fixes** on `main`.
+- **3 autonomous WL-clearing PRs** (#255/#256/#257, ~7 items) banked for the AM review.
+- **`Client_Meeting_Intake` recipe card synthesized** (generalized from the MMB/Michael-notes pattern).
+- **Desi `/hallmark`** + **`/rr`** reviews captured (fix-lists → PL/WL rows, not prose).
+- **SotD Artifact** published (bow-in).
+- **Staged the parallel next pair:** SESSION_0624 (AM merge) + SESSION_0625 (MMB intake).
 
 ## Review log
 
