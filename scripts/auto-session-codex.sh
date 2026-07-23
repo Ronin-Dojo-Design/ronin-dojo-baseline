@@ -90,10 +90,13 @@ unless the schema pre-flight explicitly proves they are insufficient.
 Then bow out per docs/rituals/closing.md as a FULL close: fill the SESSION file
 (set last_agent: codex-session-NNNN), sweep wiki index/log + component inventory, run
 `bun run wiki:lint` (it MUST report 0 errors), run `bun run typecheck`, and run the
-read-only Oxc gates `(cd apps/web && bun run lint:check && bun run format:check)`. DO NOT
-run the root `bun run lint` or the apps/web `lint`/`format` scripts — those use `--fix`/write
-and MUTATE files (the old FS-0017 `biome` PATH gap is moot post-Oxc migration, SESSION_0360);
-the real gate is "oxlint + oxfmt check + typecheck". Then write the hostile close review
+read-only Oxc gates `(cd apps/web && bun run lint:check && bun run format:check)`. If
+format:check flags files YOU changed, auto-format just those: `(cd apps/web && bunx oxfmt
+<your changed apps/web files>)` — write mode, SCOPED to your own diff — then re-run
+format:check; it MUST pass before you commit. DO NOT run the repo-wide `bun run lint`/`format`
+or the apps/web `lint`/`format` scripts — those write across ALL files and would mutate files
+you did not touch. Scope oxfmt to your changed paths only. The real gate is "oxlint + oxfmt
+check + typecheck", and your own new/edited files must be oxfmt-clean. Then write the hostile close review
 and run `graphify update` BEFORE the commit (FS-0025 single-push order).
 
 IMPORTANT OVERRIDE: COMMIT your close to the CURRENT branch with a conventional
