@@ -130,6 +130,11 @@ export const APP_AREA_PERMISSIONS = {
   categories: "categories.manage",
   certificates: "certificates.manage",
   claims: "claims.manage",
+  // SESSION_0625: the staff-only live discovery-call capture surface (`/app/client-intake`). A
+  // filled draft carries a real client's terms, so it is NOT a signed-in-member surface — a new
+  // authz NEED maps to a new KEY in the existing per-area matrix, never a new system (mirrors
+  // `planningIntake`/`loopBoard`). admin `"*"` covers it; no grant plumbing.
+  clientIntake: "client-intake.manage",
   content: "content.manage",
   courses: "courses.manage",
   email: "email.manage",

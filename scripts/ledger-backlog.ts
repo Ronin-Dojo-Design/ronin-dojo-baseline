@@ -26,8 +26,8 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { relative, resolve } from "node:path";
 import {
   aggregateFromContents,
   FILE_LEDGER_ORDER,
@@ -39,8 +39,11 @@ import {
   type PullRequestJson,
 } from "../apps/web/lib/loop-board/ledger-parse";
 import {
+  type ArtifactDetail,
   type GoalDetail,
+  parseArtifactEntry,
   parseGoalsDetail,
+  parseProductDocFile,
   parseSessionFile,
   type SessionDetail,
 } from "../apps/web/lib/state-of-dojo/parse";
@@ -124,12 +127,76 @@ function readSessionsDetail(): SessionDetail[] {
     .sort((a, b) => Number(a.number) - Number(b.number));
 }
 
+/**
+ * WL-P2-80 — the brand-canon half of the sessions feed. A brand whose work lives in its product
+ * folder rather than in `docs/sprints/` (Mammoth: 3 sprint sessions vs a full PRD/STORIES/
+ * heartbeat/intake set) projected as a near-empty tab. Reads each wired `docs/product/<dir>/`
+ * (top level + `assets/`) and returns board cards on the SAME `SessionDetail` shape, so the frozen
+ * panel kernel renders them unchanged. Which dirs are wired is decided by the pure core's
+ * `PRODUCT_DIR_LANE` table — `parseProductDocFile` returns `null` for anything else.
+ */
+function readProductDocsDetail(): SessionDetail[] {
+  const root = resolve(ROOT, "docs/product");
+  if (!existsSync(root)) return [];
+  const out: SessionDetail[] = [];
+  for (const brandDir of readdirSync(root)) {
+    for (const sub of ["", "assets"]) {
+      const dir = resolve(root, brandDir, sub);
+      // `docs/product/` holds loose `.md` files alongside the brand dirs — skip non-directories.
+      if (!existsSync(dir) || !statSync(dir).isDirectory()) continue;
+      for (const f of readdirSync(dir)) {
+        if (!f.endsWith(".md")) continue;
+        const p = resolve(dir, f);
+        const rel = relative(ROOT, p);
+        const card = parseProductDocFile(rel, readFileSync(p, "utf-8"));
+        if (card) out.push(card);
+      }
+    }
+  }
+  return out.sort((a, b) => a.number.localeCompare(b.number));
+}
+
+/**
+ * WL-P2-80 stretch — the "recently added" feed. Recipe cards and client templates are neither
+ * sessions nor goals, so governance/intake work was invisible on the SotD entirely. Scans the
+ * recipe folder + every product `assets/` dir (including binaries — a `.docx` contract template is
+ * exactly the kind of artifact the operator wants surfaced) and dates each from frontmatter when
+ * present, filesystem mtime otherwise.
+ */
+function readArtifactsDetail(): ArtifactDetail[] {
+  const out: ArtifactDetail[] = [];
+  const scan = (dir: string) => {
+    const abs = resolve(ROOT, dir);
+    if (!existsSync(abs) || !statSync(abs).isDirectory()) return;
+    for (const f of readdirSync(abs)) {
+      const p = resolve(abs, f);
+      if (!statSync(p).isFile() || f.startsWith(".") || f === "README.md") continue;
+      const rel = relative(ROOT, p);
+      const text = /\.(md|txt)$/.test(f) ? readFileSync(p, "utf-8") : undefined;
+      const entry = parseArtifactEntry(rel, text);
+      out.push({
+        ...entry,
+        date: entry.date ?? statSync(p).mtime.toISOString().slice(0, 10),
+      });
+    }
+  };
+  scan("docs/protocols/recipes");
+  const productRoot = resolve(ROOT, "docs/product");
+  if (existsSync(productRoot))
+    for (const brandDir of readdirSync(productRoot)) scan(`docs/product/${brandDir}/assets`);
+  return out.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+}
+
 // --- output ----------------------------------------------------------------
 
 if (JSON_OUT) {
-  const sessions = readSessionsDetail();
+  // Sprint sessions + brand-canon product docs land in ONE `sessions` array (WL-P2-80): both are
+  // board cards, the frozen panel maps them identically, and each already carries `product` +
+  // `kind` for any consumer that needs to split them again.
+  const sessions = [...readSessionsDetail(), ...readProductDocsDetail()];
   const goals: GoalDetail[] = contents.GL ? parseGoalsDetail(contents.GL) : [];
-  console.log(JSON.stringify({ items, sessions, goals }, null, 2));
+  const artifacts = readArtifactsDetail();
+  console.log(JSON.stringify({ items, sessions, goals, artifacts }, null, 2));
   process.exit(0);
 }
 

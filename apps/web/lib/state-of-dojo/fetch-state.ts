@@ -23,7 +23,13 @@
 import "server-only"
 import type { Item } from "~/lib/loop-board/ledger-parse"
 import { fetchLedgerBacklog } from "~/lib/loop-board/fetch-ledgers"
-import { type GoalDetail, parseGoalsDetail, parseSessionFile, type SessionDetail } from "./parse"
+import {
+  type GoalDetail,
+  parseGoalsDetail,
+  parseProductDocFile,
+  parseSessionFile,
+  type SessionDetail,
+} from "./parse"
 
 const LEDGER_REPO = process.env.LOOP_BOARD_LEDGER_REPO ?? "Ronin-Dojo-Design/ronin-dojo-baseline"
 const LEDGER_BRANCH = process.env.LOOP_BOARD_LEDGER_BRANCH ?? "main"
@@ -32,6 +38,21 @@ const API_BASE = `https://api.github.com/repos/${LEDGER_REPO}`
 
 const GOALS_LEDGER_PATH = "docs/knowledge/wiki/goals-ledger.md"
 const SPRINTS_DIR = "docs/sprints"
+
+/**
+ * Brand-canon dirs projected onto the work board alongside sprint sessions (WL-P2-80). A brand
+ * whose work lives in its product folder rather than in `docs/sprints/` — Mammoth has 3 sprint
+ * sessions but a full PRD/STORIES/heartbeat/intake set — otherwise read as a near-empty tab.
+ *
+ * An explicit path list, not a recursive crawl: each entry costs ONE GitHub contents call on top
+ * of the existing sprints listing, and the pure core's `PRODUCT_DIR_LANE` table is the authority
+ * on which of them actually maps to a brand (`parseProductDocFile` returns `null` otherwise).
+ */
+const PRODUCT_CANON_DIRS = [
+  "docs/product/mammoth-build",
+  "docs/product/mammoth-build/assets",
+  "docs/product/black-belt-legacy",
+]
 
 /** Sessions/goals change far less often than the loop board's ~60s cadence — a longer window also keeps
  * the single rate-limited GitHub-API listing call well under the unauthenticated 60/hr ceiling. */
@@ -59,11 +80,11 @@ type ContentsEntry = { name: string; type: string }
 
 const SESSION_FILE_RE = /^SESSION_(\d{4})\.md$/
 
-/** List `docs/sprints/` via the GitHub contents API and return the most-recent-N session filenames
- * (highest number first). Resilient: any non-200 / error → `[]` (panel shows an honest empty board). */
-async function listRecentSessionFiles(): Promise<string[]> {
+/** List one directory via the GitHub contents API. Resilient: any non-200 / error / unexpected
+ * body → `[]`, so a failed listing degrades that source to an honest empty, never a crash. */
+async function listDirFiles(dir: string): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/contents/${SPRINTS_DIR}?ref=${LEDGER_BRANCH}`, {
+    const res = await fetch(`${API_BASE}/contents/${dir}?ref=${LEDGER_BRANCH}`, {
       headers: {
         Accept: "application/vnd.github+json",
         ...(GH_TOKEN ? { Authorization: `Bearer ${GH_TOKEN}` } : {}),
@@ -73,17 +94,37 @@ async function listRecentSessionFiles(): Promise<string[]> {
     if (!res.ok) return []
     const entries = (await res.json()) as ContentsEntry[]
     if (!Array.isArray(entries)) return []
-    return entries
-      .filter(e => e.type === "file" && SESSION_FILE_RE.test(e.name))
-      .sort(
-        (a, b) =>
-          Number(b.name.match(SESSION_FILE_RE)?.[1]) - Number(a.name.match(SESSION_FILE_RE)?.[1]),
-      )
-      .slice(0, MAX_SESSIONS)
-      .map(e => e.name)
+    return entries.filter(e => e.type === "file").map(e => e.name)
   } catch {
     return []
   }
+}
+
+/** The most-recent-N session filenames from `docs/sprints/` (highest number first). */
+async function listRecentSessionFiles(): Promise<string[]> {
+  return (await listDirFiles(SPRINTS_DIR))
+    .filter(name => SESSION_FILE_RE.test(name))
+    .sort((a, b) => Number(b.match(SESSION_FILE_RE)?.[1]) - Number(a.match(SESSION_FILE_RE)?.[1]))
+    .slice(0, MAX_SESSIONS)
+}
+
+/** Fetch + parse every brand-canon `.md` under `PRODUCT_CANON_DIRS` into board cards (WL-P2-80).
+ * Unmapped dirs yield nothing — `parseProductDocFile` gates on the pure core's lane table. */
+async function fetchProductDocCards(): Promise<SessionDetail[]> {
+  const perDir = await Promise.all(
+    PRODUCT_CANON_DIRS.map(async dir => {
+      const names = (await listDirFiles(dir)).filter(n => n.endsWith(".md"))
+      const cards = await Promise.all(
+        names.map(async name => {
+          const path = `${dir}/${name}`
+          const content = await fetchRaw(path)
+          return content ? parseProductDocFile(path, content) : null
+        }),
+      )
+      return cards.filter((c): c is SessionDetail => c !== null)
+    }),
+  )
+  return perDir.flat()
 }
 
 /** Fetch one raw file from `main`; `null` on any failure (caller filters). */
@@ -101,8 +142,9 @@ async function fetchRaw(path: string): Promise<string | null> {
 /** Build the `/app/state` feed from `main`. Every source is independently resilient — a failure in one
  * degrades that section to an honest empty, never the whole panel. */
 export async function fetchStateFeed(): Promise<StateFeed> {
-  const [sessionFiles, goalsRaw, backlog] = await Promise.all([
+  const [sessionFiles, productCards, goalsRaw, backlog] = await Promise.all([
     listRecentSessionFiles(),
+    fetchProductDocCards(),
     fetchRaw(GOALS_LEDGER_PATH),
     // Reuse the proven loop-board backlog fetch for RISK rows + the token-gated open-PR count.
     fetchLedgerBacklog().catch(() => null),
@@ -114,7 +156,12 @@ export async function fetchStateFeed(): Promise<StateFeed> {
       return content ? parseSessionFile(`${SPRINTS_DIR}/${name}`, content) : null
     }),
   )
-  const sessions = sessionContents.filter((s): s is SessionDetail => s !== null)
+  // Sprint sessions + brand canon in ONE array — both are board cards and the frozen panel maps
+  // them identically; `kind` keeps them distinguishable for any consumer that needs the split.
+  const sessions = [
+    ...sessionContents.filter((s): s is SessionDetail => s !== null),
+    ...productCards,
+  ]
 
   const goals = goalsRaw ? parseGoalsDetail(goalsRaw) : []
   const items = backlog?.items ?? []
