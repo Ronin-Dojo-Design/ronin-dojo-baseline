@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-19
-last_agent: claude-session-0575
+updated: 2026-07-22
+last_agent: claude-session-0618
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -831,6 +831,65 @@ Read this section at bow-in instead of skimming every individual entry.
   trips on exactly the state that strands work, at bow-in, before any edit.
 - **Status:** mitigated → **enforced** (mechanized gate, not prose). Escalate to a hard shell block (like the
   FS-0024 git guard) if it recurs despite the check.
+
+### FS-0036 — the FS-0035 guard was a silent no-op on a clean tree (enforced-but-broken)
+
+- **Session:** SESSION_0618 (Claude) — found at bow-in running the FS-0035 step: `check --session 0618`
+  exited **1 with no output** on a clean working tree.
+- **Step failed:** [`opening.md`](../rituals/opening.md) "Canonical-occupancy guard" — `bash
+  scripts/canonical-claim.sh check|claim --session NNNN`. On a **clean tree** (no matching SESSION file — the
+  normal bow-in state) it silently exited 1 and, for `claim`, **never wrote `.canonical-session`**. So the
+  gate that FS-0035 mechanized to *enforce* isolation did nothing on the exact path most sessions hit.
+- **Which SOP:** [`opening.md`](../rituals/opening.md) bow-in guard; `scripts/canonical-claim.sh` (FS-0035 corrective).
+- **Root cause:** `occ_git="$(other_uncommitted_sessions | head -1)"` under `set -euo pipefail`. When the
+  tree is clean the function's first `grep -oE 'SESSION_…'` matches nothing and exits 1; `pipefail`
+  propagates it and `set -e` aborts the command-substitution assignment **before** the `✅ free` echo / the
+  claim-file write. The FS-0035 verification only ever exercised the **occupied** path (a live collision with
+  an uncommitted SESSION file), so the empty-match free path was never tested — the guard was verified in the
+  one state it *didn't* break.
+- **Impact:** LOW (no work stranded — the free case is benign, and it fails safe rather than falsely claiming
+  free), but the enforced gate provided **zero protection on its most common path**: a real second-session
+  collision would not have been blocked because `claim` never persisted the claim file.
+- **Corrective action:** made `other_uncommitted_sessions()` tolerant of the no-match case (trailing `|| true`
+  on its pipeline), so "no other sessions" reads as the free case (exit 0) instead of a fatal pipeline error —
+  fixed at the function so both `check` and `claim` (and any future caller) benefit.
+- **Verification:** on a clean tree, `check --session 0618` → `✅ canonical is free` (exit 0); `claim
+  --session 0618` → writes `.canonical-session` (exit 0); occupancy still fires — `check --session 9999`
+  against the uncommitted `SESSION_0618.md` → **OCCUPIED by SESSION_0618** (exit 3). All three paths proven.
+- **Lesson:** a mechanized gate's verification must exercise the **default/negative path** (nothing found),
+  not only the positive trigger — "tested" against the occupied state hid a break in the free state. Sibling
+  of the "built-not-pointed" thread (LR 0007): here it's *enforced-but-broken*.
+- **Status:** mitigated (fix landed + all paths verified SESSION_0618).
+
+### FS-0037 — the bow-in "three Petey questions + State-of-Dojo ask" was skipped the session after it was added
+
+- **Session:** SESSION_0618 (Claude) — **caught by the operator** ("where is the SotD build question? Didn't we
+  wire in the three Petey questions in opening and closing last session, and already it didn't work?").
+- **Step failed:** [`opening.md`](../rituals/opening.md) State-of-Dojo bow-in ask — cite `/app/state` + ask
+  Petey's three questions (*what are we doing? / what's queued? / are we pivoting?*) **+ the "publish a frozen
+  State-of-Dojo snapshot?" ask** — via `AskUserQuestion` before "Begin work." The agent ran steps 0–7,
+  proceeded straight into the build, and never asked; the operator had to prompt for it.
+- **Which SOP:** `opening.md` (bow-in) "State-of-Dojo at bow-in" + `closing.md` §6d — both **added SESSION_0617**.
+- **Root cause:** the step lived **only as trailing prose** — `opening.md`'s "State-of-Dojo at bow-in" section
+  sits *after* step 7 ("Begin work") and the "What this ritual is NOT" tail, and it was **not in the executed
+  `.claude/skills/bow-in/SKILL.md` body**. An agent executing the numbered steps finishes at step 7 and never
+  reaches it. Identical mechanism to FS-0035 (guard was prose) and LR 0007 "built-not-pointed": a step the
+  executed read-path doesn't traverse does not fire — proven here by failing at the **very next session** after
+  it was authored.
+- **Impact:** LOW (no work lost; the operator caught it), but it defeated a deliberately-added governance
+  loop on its first live run and would silently recur every session.
+- **Corrective action (both halves):** (1) added a **MANDATORY `AskUserQuestion` step to the `/bow-in` and
+  `/bow-out` skill bodies** — the executed path — enumerating the three questions + the SotD publish ask; (2)
+  **promoted the prose to a numbered step** — `opening.md` **step 6b** (before "Begin work") and strengthened
+  `closing.md` §6d to point at the skill-body enforcement. The trailing prose is now rationale-only, pointing
+  at 6b, so the two can't drift.
+- **Verification:** exercised live this session — after the operator's prompt, the ask ran via `AskUserQuestion`
+  (SotD publish = yes → Artifact published + logged in `## Artifacts`; mechanization approach elected). The
+  skill-body step is now what a fresh `/bow-in` loads and executes.
+- **Lesson (meta, 3× this session):** FS-0035 (prose→script), FS-0036 (script broken on the default path), and
+  FS-0037 (governance step as unreachable prose) are one pattern — **a rule only fires from the read-path that
+  actually executes.** Put mandatory asks in the skill body, not in doc prose the numbered steps run past.
+- **Status:** mitigated (both-halves fix landed + verified live SESSION_0618).
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

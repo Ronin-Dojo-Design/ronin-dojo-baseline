@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-07-22
-last_agent: claude-session-0617
+last_agent: claude-session-0618
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/WORKFLOW_6.0.md
@@ -313,6 +313,25 @@ sugar only.
 
 If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
 
+### 6b. Petey's three bow-in questions + the State-of-Dojo ask (MANDATORY — ask before Begin work)
+
+Before step 7, **ask the operator these via `AskUserQuestion`** — a hard step, not optional prose. Petey may
+answer ①–③ from the context already loaded, but the ask is what surfaces a course-correction and forces the
+SotD decision to be the operator's:
+
+1. **What are we doing?** — the elected lane for this session (one sentence).
+2. **What's queued?** — the ledger/board backlog (step 1b) + the prior `Next session` block.
+3. **Are we pivoting?** — is the elected lane still right, or has the operator changed direction?
+
+**Plus the State-of-Dojo publish ask:** cite the live, zero-token route **`/app/state`** (see the section
+below for why) and ask **"want a frozen State-of-Dojo snapshot published?"** Only on a *yes* do you publish an
+Artifact (`/preview-artifacts`) and paste the URL into the SESSION `## Artifacts` section.
+
+> **Why this is a numbered step and also in the skill body:** it lived *only* as the trailing "State-of-Dojo
+> at bow-in" section (after step 7) and was skipped the very next session after it was added — prose the
+> executed read-path never reaches does not fire (FS-0037, the sibling of FS-0035/0036's "enforced-but-broken"
+> / LR 0007 "built-not-pointed"). The `/bow-in` skill body carries the same ask so it can't be missed.
+
 ### 7. Begin work
 
 The opening ritual is done. From here forward, you are operating as Petey or Cody (or both, sequentially) for the duration of the session.
@@ -331,9 +350,9 @@ URL. **Do not agent-publish an Artifact every session** (that was the walked-bac
 - **Cite `/app/state`** at bow-in (free, live).
 - The **render is deterministic** — `bun scripts/state-of-project.ts` (→ `out/state-of-project.html`) runs in
   the bow-out gate runner, not as agent work.
-- **Petey's bow-in questions include the publish ask** — as part of the three questions (*what are we doing? /
-  what's queued? / are we pivoting?*), Petey asks **"want a frozen State-of-Dojo snapshot published?"** Only
-  then does the agent publish an Artifact (on-demand, `/preview-artifacts`) and paste the URL into `## Artifacts`.
+- **The publish ask is owned by step 6b** — a mandatory `AskUserQuestion` in the numbered ritual **and** in the
+  executed `/bow-in` skill body, *not* this prose (which is why it now fires — FS-0037). This section is the
+  *why*; step 6b is the *ask*.
 
 Projection-only (reads `docs/sprints/*` + `goals-ledger.md`, never writes a ledger). See
 [`state-of-project-projection.md`](../protocols/state-of-project-projection.md).

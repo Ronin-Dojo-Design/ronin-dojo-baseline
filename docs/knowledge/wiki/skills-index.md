@@ -5,7 +5,7 @@ type: reference
 status: active
 created: 2026-07-22
 updated: 2026-07-22
-last_agent: claude-session-0617
+last_agent: claude-session-0618
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -45,6 +45,7 @@ Two halves, deliberately split by drift risk:
 | `/game-off` | Close a lean Mammoth (MMB) work session. Use when the operator says /game-off, finishes MMB/client-ops work, or wants the token-lean closing overlay that routes repo-touch work through the canonical bow-out ritual. | — |
 | `/game-on` | Start a lean Mammoth (MMB) work session. Use when the operator says /game-on, starts MMB/client-ops work, or wants the token-lean opening overlay that routes repo-touch work through the canonical bow-in ritual. | — |
 | `/ge` | Explain a subsystem/domain from the repo graph — communities, hubs, and the exact file set — instead of bulk-reading or grepping to build a mental map. Use for "explain how X works", "map the Y subsystem", onboarding a lane onto unfamiliar territory, or pre-plan recon. Aliases the former /graphify-explain. | — |
+| `/ggr` | Giddy Gate Review — the universal QAR closing gate. Score the lane's output against the lane-appropriate rubric (Build → code-quality-matrix /10; Plan → plan-quality; Intake → framing), then gate — ≥9.0 clears · 7.0–8.9 auto-loops ≤2 Giddy passes then the operator gate · hard caps always loop. Uses /fallow-fix-loop for the objective metrics and as the loop's fix executor. Use when the operator says "/ggr", "giddy gate", "gate review", "QAR", "is this good enough to ship/close", or at bow-out as the closing gate. | — |
 | `/git-guardrails-claude-code` | Set up Claude Code hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset in Claude Code. | — |
 | `/gq` | Graphify-first discovery — budget-capped graph query instead of repo-wide grep/find/ls. Use before any cross-area code/doc search, when asked "what relates to X", or when a lane needs discovery in a fresh worktree (worktree graph is empty — query the canonical checkout). Aliases the former /graphify-query. | — |
 | `/graphify-explain` | Renamed to /ge. Explain a subsystem/domain from the repo graph instead of bulk-reading. See .claude/skills/ge/SKILL.md. | `/ge` |
@@ -59,6 +60,8 @@ Two halves, deliberately split by drift risk:
 | `/migrate-to-shoehorn` | Migrate test files from `as` type assertions to @total-typescript/shoehorn. Use when user mentions shoehorn, wants to replace `as` in tests, or needs partial test data. | — |
 | `/new-client-recipe` | Stand up a new client product inside the monorepo with its own database. Use when the user says "/new-client-recipe", "new client", "onboard a client", "set up <name> as a new product/app", or wants to scaffold a new app under clients/* with a separate DB. Runs the repeatable new-client onboarding recipe (ADR 0034 + 0038). | — |
 | `/obsidian-vault` | Search, create, and manage notes in the Obsidian vault with wikilinks and index notes. Use when user wants to find, create, or organize notes in Obsidian. | — |
+| `/pp` | Petey Plan (Parse → Plan). Produce a session/lane plan from the current request + latest SESSION file + the live ledgers, grilling the open forks first — plan only, no dispatch. Use when the operator says "/pp", "petey plan", "plan this", "parse and plan", or a bow-in/bow-out task is unclear or multi-part. For the plan PLUS the paste-ready baton, use /ppp. | — |
+| `/ppp` | /pp + Prompt — run the Petey plan, THEN emit the paste-ready baton (the handoff prompt a fresh session/agent/Cody adopts to execute the lane without re-deriving the plan). Use when the operator says "/ppp", "plan and prompt", "plan + baton", "stage the next session", or wants a plan they can hand straight to a builder. For plan-only, use /pp. | — |
 | `/pr-fix-loop` | On-call PR review→score→fix loop. Run via /loop to keep open PRs merge-ready — a goal-driven loop that triages open PRs, runs the pr-review-score-fix loop on each as tracked tasks, fixes mechanical blockers on the branch, and reports verdicts. Pause-on-merge. Use when the user says "go on call", "babysit the PRs", "/pr-fix-loop", or runs it under /loop. | — |
 | `/preview-artifacts` | Publish a visual review as ONE self-contained HTML Artifact — screenshot gallery, live design mock, or before/after comparison — and return the private link. Inline widgets and file attachments do NOT render in the operator's client; the published artifact is the proven operator-review channel (SESSION_0539). Use when the user says "/preview-artifacts", "publish a preview", "artifact gallery", "show me the screenshots", asks for a before/after or design-mock review, or when any lane (especially autonomous) needs operator sign-off on visual work. | — |
 | `/prototype` | Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like. | — |
@@ -95,17 +98,8 @@ priority). Closed rows (resolved/built) drop out of the backlog scan. When a ski
 gets built, its SKILL.md lands in `.claude/skills/` and it appears in the generated table
 above — retire its `SSL-NNN` row at that point.
 
-### SSL-001 — /pp — Petey Plan (Parse→Plan)
-
-- **Status:** in-progress — P1 (approved this session; build slice S2)
-
-### SSL-002 — /ppp — /pp + Prompt (emit the baton)
-
-- **Status:** in-progress — P1 (approved this session; build slice S2)
-
-### SSL-003 — /ggr — Giddy Gate Review (universal QAR closing gate: ≥9.0 · 2-retry · hard-caps)
-
-- **Status:** open — P1 (build slice S3)
+<!-- SSL-001 (/pp), SSL-002 (/ppp), SSL-003 (/ggr) retired SESSION_0618 — built; now in the generated
+     table above. G-031 slices S2/S3 landed. -->
 
 ### SSL-004 — /car — discussed in 11 past sessions, never built; purpose needs triage
 

@@ -42,9 +42,13 @@ done
 
 # Session numbers with an UNCOMMITTED SESSION file in canonical, excluding $SESSION.
 other_uncommitted_sessions() {
+  # A clean tree (no matching SESSION files) makes the first `grep` exit 1, which under
+  # `set -euo pipefail` propagates and kills the caller's `occ_git="$(...)"` assignment BEFORE it
+  # can report/claim — the exact clean-tree bow-in state (FS-0036). The trailing `|| true` makes
+  # "no other sessions" (the free case) a success, so an empty result reads as free, not as an error.
   git -C "$ROOT" status --porcelain -- 'docs/sprints/SESSION_*.md' 2>/dev/null \
     | grep -oE 'SESSION_[0-9]{4}\.md' | grep -oE '[0-9]{4}' | sort -u \
-    | { if [ -n "$SESSION" ]; then grep -vx "$SESSION" || true; else cat; fi; }
+    | { if [ -n "$SESSION" ]; then grep -vx "$SESSION" || true; else cat; fi; } || true
 }
 
 claim_is_stale() {  # 0 = stale/absent, 1 = live

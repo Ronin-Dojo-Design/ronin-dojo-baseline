@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-07-22
-last_agent: claude-session-0617
+last_agent: claude-session-0618
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -323,7 +323,9 @@ what changed for **0 agent tokens**. So:
   `## Artifacts`. Otherwise cite `/app/state`.
 
 Projection-only — never edits a ledger; if the render surfaces a stale status, fix it through the finding
-router (§6.7), not the renderer. (The formal bow-out three-questions ritual is G-031 S5, symmetric to bow-in.)
+router (§6.7), not the renderer. **The three-questions ask is enforced in the executed `/bow-out` skill body**
+(not this prose alone) so it can't be skipped — the both-halves fix after the bow-in version was skipped the
+session after it was added (FS-0037, SESSION_0618; symmetric to opening.md step 6b).
 
 ### 6.5. Review & Recommend (stage the next session)
 

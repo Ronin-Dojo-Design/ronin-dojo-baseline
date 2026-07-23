@@ -731,7 +731,8 @@ aggregator reads it with no new parser logic.
 
 - **Status:** in-progress — P1 (operator, 2026-07-22, SESSION_0617). **Grill-with-docs COMPLETE — 9 decisions
   locked** ([bow-in redesign artifact](https://claude.ai/code/artifact/271d04fb-c263-4bb9-81e0-e1b6aa7c3314)).
-  S1 building this session; S2–S6 staged below.
+  **S1 done (0617); S2 (`/pp`·`/ppp`) + S3 (`/ggr`) done (0618)**; the bow-in/bow-out 3-questions + SotD-ask
+  mechanization (a slice of S5) also done 0618 (FS-0037). **Remaining: S4, S5-remainder, S6.**
 - **Objective:** rework `docs/rituals/opening.md` from the "load-everything, all-5-agents" model into a **lean
   single-lane vertical-slice** model — each session runs ONE lane, loading only its agent + context, with
   **baton handoff** between lanes (the old `WORKFLOW_4.0`/`BATON.md` planning-window↔execution-window pattern,

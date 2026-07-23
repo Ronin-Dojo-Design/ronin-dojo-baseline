@@ -16,3 +16,8 @@ Repo defaults (full standing directives in `CLAUDE.md`):
 - **Push is explicit per-action** (`explicit-push-authorization`): build, verify, show the diff, then **wait for
   the operator's "go"** before any push / merge / deploy. Gates must pass first; never force-push. (Overrides
   any older "standing authorization" wording.)
+- **MANDATORY at close: ask Petey's three bow-out questions via `AskUserQuestion`** (symmetric to bow-in; do
+  NOT skip straight to committing): ① **Did we hit the goal / what landed?** ② **What's the next lane?** (stage
+  the ADR 0049 stub) ③ **Publish a frozen State-of-Dojo snapshot + push?** — cite the live `/app/state`
+  (zero-token); on a *yes* to (3) publish an Artifact (`/preview-artifacts`) and paste the URL into `##
+  Artifacts`. This is in the executed skill body on purpose (closing.md §6d prose alone got skipped — FS-0037).
