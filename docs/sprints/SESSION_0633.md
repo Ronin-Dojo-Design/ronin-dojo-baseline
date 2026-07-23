@@ -64,13 +64,24 @@ Produce **two independently-executable batons** — one for RDD (`ronindojodesig
    top-level path**; the file now lives under `docs/runbooks/deploy/`. Graph staleness, not drift —
    a `graphify update .` clears it.
 
-## MMB is a LIVE cutover, not a fresh point (operator screenshots, 2026-07-23)
+## Two MMB domains — the target is NOT the incumbent (operator, 2026-07-23)
 
-The operator supplied the live Cloudflare zone. **The domain is `mammoth.build`** — not
-`mammothmb.com` as the directive first said (decision 1 below is answered; see its residue). Mammoth
-**fired their previous developer and hired Brian**, so an incumbent site is serving the business right
-now. Structural shape only is recorded here — **no verification tokens, DKIM keys, or zone export in
-git**; the authoritative record table lives with the operator.
+| Domain | Role | Implication |
+| --- | --- | --- |
+| **`mammothmb.com`** | **The TARGET** — where the new build goes live | Greenfield point-at-Vercel. **Additive, no cutover, no rollback drama.** |
+| `mammoth.build` | The **incumbent** — the previous developer's live GitHub Pages site | Keeps serving. **Out of scope for the MVP**; migrating or retiring it is a later, separate decision. |
+
+**This inverts the risk profile.** Standing MMB up is *not* a production migration — nothing the
+business currently depends on is touched. The `mammoth.build` zone intel below stays recorded because
+it governs the *eventual* question, and because it reveals HubSpot/email entanglement that shapes goal
+#1 — but **none of it is on the MVP path.**
+
+### `mammoth.build` zone intel (reference only — NOT the MVP path)
+
+The operator supplied this zone from Michael's Cloudflare. Mammoth **fired their previous developer and
+hired Brian**, so this incumbent is serving the business right now. Structural shape only is recorded
+here — **no verification tokens, DKIM keys, or zone export in git**; the authoritative record table
+lives with the operator.
 
 | What the zone shows | Consequence for this lane |
 | --- | --- |
@@ -83,26 +94,20 @@ git**; the authoritative record table lives with the operator.
 | `_dmarc` → `v=DMARC1; p=none;` | Monitoring only, no enforcement. |
 | 19 of 200 records used, **free plan** | Headroom is fine; plan tier constrains nothing here. |
 
-**Four consequences that were not in the original framing:**
+**What it tells us (none of it blocks the MVP):**
 
-1. **This is a production migration with a rollback path**, not a DNS point-and-shoot. The old records
-   are the rollback — capture them verbatim before the first edit, and stage the cutover so `www` and
-   apex can revert independently.
-2. **Proxy is ON for apex + `www`.** WS-D's Cloudflare gotcha is now concrete and load-bearing: those
-   go **"DNS only" (grey)** for Vercel cert issuance. That also *removes* whatever Cloudflare
-   proxy-layer behavior the site has been getting (caching, WAF, analytics, origin masking) — name what
-   is actually relied on before flipping, rather than discovering it after.
-3. **HubSpot is wired into DNS, and that collides with MMB goal #1 (HubSpot-Pro replacement).** Killing
+1. **HubSpot is wired into DNS, and that collides with goal #1 (full HubSpot-Pro replacement).** Killing
    HubSpot is not a CRM-only decision: it takes down `hub.mammoth.build` and breaks domain email auth if
-   the SPF include and DKIM CNAMEs are stripped. **Do not touch the HubSpot or Google records during the
-   site cutover** — sequence them as a separate, later lane with its own deliverability plan.
-4. **Do not touch MX.** Mail is Google Workspace and is out of scope for a website cutover.
-
-**New risk — incumbent repo access.** The live site is served from a GitHub Pages org
-(`mammoth-metal-buildings`). Given the previous developer was let go: **who owns and controls that
-account today?** Until cutover, whoever holds it can change Mammoth's public site. Establish ownership
-(and whether the source is being handed over, or the current site needs archiving as reference) **before**
-the cutover is scheduled — this is an access-continuity question, not a technical one.
+   the SPF include and DKIM CNAMEs are stripped. Its own later lane, with a deliverability plan.
+2. **Mail is Google Workspace** (MX → `smtp.google.com`). Do-not-touch, on either domain.
+3. **Proxy is ON** for `mammoth.build` apex + `www`. Whenever that domain *does* move, those go
+   **"DNS only" (grey)** for Vercel cert issuance — and that removes whatever proxy-layer behavior
+   (caching, WAF, analytics, origin masking) the site has been getting. Name what is relied on first.
+4. **Incumbent repo access is an open risk.** The live site is served from a GitHub Pages org
+   (`mammoth-metal-buildings`). The previous developer was let go — **who controls that account today?**
+   Whoever holds it can change Mammoth's public site. Settle ownership (and whether source is handed
+   over, or the site gets archived as reference) before any `mammoth.build` migration is scheduled.
+   This is access-continuity, not a technical question.
 
 ## Work streams
 
@@ -161,11 +166,10 @@ Two paste-ready batons, each independently executable in its own worktree:
 
 ## Open decisions — grill these first (`/pp` step 1)
 
-1. **Domain — ANSWERED: `mammoth.build`** (operator screenshots; the live zone). Residue still open:
-   (a) does **`mammothmb.com`** exist as a real second domain, or was it a mistype? (b) does the new
-   build take the **apex + `www`** the incumbent holds, or land on an **`app.`** subdomain first so the
-   marketing site can be cut over separately? The zone already proves subdomain delegation works here
-   (`hub.` is HubSpot's), so an `app.`-first cutover is genuinely available and far lower-risk.
+1. **Domain — ANSWERED: `mammothmb.com` is the target**; `mammoth.build` is the incumbent and stays put.
+   Residue: **is `mammothmb.com` registered, and is its zone in the same Cloudflare account?** If yes,
+   this is one CNAME/A pair away from live. If it is registered elsewhere (or not yet), that is the
+   first blocking step, not a detail.
 2. **MMB Vercel project ownership** — does it live in Brian's Vercel team (RDD bills and operates it) or
    Michael's? This decides billing, access, and what happens at contractual handoff (ADR 0033 D1:
    client-brand apps extract to their own repo on handoff — a project in Brian's team has to migrate).
