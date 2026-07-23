@@ -438,6 +438,39 @@ plan scope.
   Real note volume: Baseline_Vault 3,338 · Ronin_Baseline 210 · RoninDojoDesign 16 · THIS_ONE_VAULT 0.
   (3) Verify on both devices, then retire the iCloud copies. **Lane:** vault-infra / personal-ops.
 
+> **PL-020…023 — promoted from `PlanningIntake` (FeatureWidget dogfood, SESSION_0619).** The operator
+> logged these via the in-app widget on `blackbeltlegacy.com`; they sat as `NEW` rows at `/app/planning-intake`
+> until hand-promoted here (the manual-promotion gap = [WL-P2-72](wiring-ledger.md)). Queued for the Desi
+> `/hallmark` design review + Petey/Giddy `/rr` next session.
+
+### PL-020 — State-of-Dojo belt-ladder: action words + order + inverted white/black — queued
+
+- **Status:** open — P2 (operator dogfood, 2026-07-22, SESSION_0619; intake BUG).
+- **Problem:** the SotD belt ladders show belt-COLOR names (White/Blue/Purple/Brown/Black, `BELT_WORD` in
+  `state-of-dojo/_kernel/phase.ts`) where the operator wants **action words** like MMB (plan/build/inflight/
+  held/done — the `PHASE_LABEL` vocabulary). Vertical-ladder order is wrong (should read white→blue→purple→
+  brown→black) and the **white-belt and black-belt stops appear inverted**. **Lane:** State-of-Dojo (G-023).
+
+### PL-021 — Admin app-shell nav: no back button, no nav/footer shell — queued
+
+- **Status:** open — P1 (operator dogfood, 2026-07-22, SESSION_0619; intake FEATURE+BUG).
+- **Problem:** moving between `/app/*` admin pages has **no back-button / app-shell feel**, and there is **no
+  nav menu or footer shell** on admin screens. Ties directly to **G-026** (/app admin-surface consolidation —
+  landing shell + nav). **Lane:** admin shell (G-026).
+
+### PL-022 — Family-Tree profiles not in belt order (highest→lowest) — queued
+
+- **Status:** open — P2 (operator dogfood, 2026-07-22, SESSION_0619; intake BUG).
+- **Problem:** profiles on the **Family Trees** render in an unclear order; the operator wants them **highest→
+  lowest rank (red down to white)**. Ties to the lineage rank model (`memberTopRank`). **Lane:** lineage.
+
+### PL-023 — Mobile zoom-on-focus + FeatureWidget broken image preview — queued
+
+- **Status:** open — P2 (operator dogfood, 2026-07-22, SESSION_0619; intake BUG).
+- **Problem:** on mobile the **photo uploader zooms weird / doesn't fit** and **text inputs zoom on focus**
+  (classic iOS <16px font-size zoom) — including the FeatureWidget idea input. Also the FeatureWidget **image
+  preview shows a broken-link "?"**. **Lane:** mobile input polish / uploader (Desi `/hallmark`).
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.

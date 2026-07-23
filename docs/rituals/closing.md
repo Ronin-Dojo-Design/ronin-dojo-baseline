@@ -390,7 +390,7 @@ one place. Never number by tail-reading the nearest table block — that is exac
 
 The SESSION file's `### Findings (severity ≥ medium)` block stays **session-scoped** and should backlink the canonical ledger row — never duplicate a cross-session severity list into the SESSION file (it rots; see `wiki/log.md`).
 
-**Wiring-ledger sweep:** if the session surfaced or resolved wiring debt, append rows with stable `WL-P{0,1,2}-N` IDs (or flip resolved rows to ✅/fixed). Skip if no wiring debt changed.
+**Wiring-ledger sweep (includes the built-not-wired class):** if the session surfaced or resolved wiring debt, append rows with stable `WL-P{0,1,2}-N` IDs (or flip resolved rows to ✅/fixed). **Explicitly sweep for "built-but-not-wired"** — anything you *built* this session that compiles and is reachable but is **not mounted/linked/promoted where it's consumed** (an orphaned component not in its aggregator, a route with no nav link, an intake note not promoted, a surface behind an unset flag). It won't read as "dead wiring," so name it here or it escapes (SESSION_0619: token-cost panel orphaned from `attention-panels.tsx` = WL-P2-70; the operator had to find it). One WL row per gap — the WL is the single home, no per-session section. Skip only if nothing was built or everything built is wired.
 
 **Ledger cross-off sweep (the inbound/outbound symmetry).** The finding-router above *adds* findings to the
 ledgers (outbound). Its mirror: for every ledger item this session **resolved**, flip the row to ✅/done with the

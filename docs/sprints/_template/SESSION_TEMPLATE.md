@@ -218,7 +218,10 @@ Live docs checked during planning: <Content, Blog, Media, Storage, Theming, Pris
 
 ## What landed
 
-<!-- Filled at bow-out. Bullet list of concrete outcomes. -->
+<!-- Filled at bow-out. Bullet list of concrete outcomes. Anything BUILT but NOT yet wired to its
+consumer (orphaned component, unlinked route, un-promoted intake, surface behind an unset flag) does
+NOT get its own section here — route it to a wiring-ledger (WL) row via the bow-out finding-router
+(closing.md §6.7 "built-not-wired sweep"). The WL is the single home; per-session duplication rots. -->
 
 ## Decisions resolved
 
