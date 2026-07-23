@@ -4,8 +4,8 @@ slug: hot-fix-protocol
 type: protocol
 status: active
 created: 2026-06-20
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-23
+last_agent: claude-session-0624
 pairs_with:
   - docs/protocols/merge-to-main.md
   - docs/protocols/recipes/merge-wave.md
@@ -93,8 +93,25 @@ push (per-action push authorization, [[explicit-push-authorization]] / `recipes/
 G4), then:
 
 ```bash
-git push origin main
+git push -u origin HEAD                                  # your fix branch — never `main` (ADR 0053)
+gh pr create --fill && gh pr merge --squash --delete-branch
 ```
+
+**`main` is PR-only (ADR 0053).** `git push origin main` now fails — server-side ruleset `main-pr-only`
+plus the local pre-push hook. For a hot fix this costs one extra command and still deploys on merge.
+
+**True break-glass** (the remote is down on review, or the PR path itself is broken — *not* "the PR is
+slow"): disable the ruleset, push, re-enable. Explicit and auditable by design:
+
+```bash
+RS=$(gh api repos/Ronin-Dojo-Design/ronin-dojo-baseline/rulesets --jq '.[]|select(.name=="main-pr-only").id')
+gh api -X PUT repos/Ronin-Dojo-Design/ronin-dojo-baseline/rulesets/$RS -f enforcement=disabled
+RONIN_ALLOW_MAIN_PUSH=1 git push origin main             # the env var alone does NOT bypass the server
+gh api -X PUT repos/Ronin-Dojo-Design/ronin-dojo-baseline/rulesets/$RS -f enforcement=active   # ALWAYS re-enable
+```
+
+Re-enabling is not optional — leaving it disabled silently restores the FS-0039 exposure. Verify with
+`bash scripts/githooks/doctor.sh`, which fails if the ruleset is not active.
 
 There is no separate deploy step — **Vercel builds on push**. Note `vercel.json`'s
 `ignoreCommand` only triggers a **prod build** when `apps/web` / `pnpm-lock.yaml` /

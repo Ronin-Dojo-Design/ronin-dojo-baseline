@@ -45,7 +45,9 @@ into context each session; detailed rules live in referenced docs, read on deman
   unclean close→`incidents`, smoke boundary→`manual-boundary-registry`, decision→ADR.
 - **Push policy: explicit per-push authorization.** Stage + commit (conventional message) on
   completion, but **wait for the operator's "go" before any push / PR merge / deploy** — build,
-  verify, show, then push on the word. Trunk-based flow (commits land on `main`); gates
+  verify, show, then push on the word. Trunk-based flow — **one trunk (`main`), but every change lands via
+  PR; direct pushes to `main` are blocked server-side** (ADR 0053: `git push -u origin HEAD` →
+  `gh pr create --fill` → `gh pr merge --squash --delete-branch`); gates
   (typecheck / oxlint / oxfmt / tests / wiki-lint) must pass first; never force-push; run the
   FS-0024 git guard. (Operator standing preference — see the `explicit-push-authorization` memory.)
 - **Push cadence:** one push per session at close — don't push mid-session. Production

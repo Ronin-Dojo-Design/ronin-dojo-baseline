@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-22
-last_agent: claude-session-0618
+updated: 2026-07-23
+last_agent: claude-session-0624
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/WORKFLOW_6.0.md
@@ -66,12 +66,20 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 >
 > ```bash
 > bash scripts/canonical-claim.sh check --session NNNN
+> bash scripts/githooks/doctor.sh        # ADR 0053 — prove the push guards are live BEFORE you work
 > ```
+>
+> `doctor.sh` is here, not at bow-out, on purpose: it verifies `core.hooksPath` is absolute, that the
+> `pre-push` hook is present and carries RULE B, and that the server ruleset `main-pr-only` is active. Run it
+> **from whatever worktree you are actually in** — FS-0040 was a hook that was installed, looked correct, and
+> ran in no worktree at all. Non-zero exit prints the one command that fixes it.
 >
 > - **✅ free →** `bash scripts/canonical-claim.sh claim --session NNNN`, then work in canonical as normal.
 > - **⛔ OCCUPIED (exit 3) →** another live session owns canonical. **Do NOT work here.** Bootstrap your own
->   worktree and run the ENTIRE session there — dispatch, merge-sweep into your branch, ff-to-main behind the
->   merge lock at push: `git worktree add ../ronin-NNNN -b session-NNNN-<lane> main`, then `/worktree-setup`.
+>   worktree and run the ENTIRE session there — dispatch, merge-sweep into your branch, then **push your
+>   branch and land it with a PR** (ADR 0053 — `main` is PR-only; the old "ff-to-main behind the merge lock"
+>   move is exactly the `HEAD:main` push that is now blocked, server-side and by the pre-push hook):
+>   `git worktree add ../ronin-NNNN -b session-NNNN-<lane> main`, then `/worktree-setup`.
 >   Canonical (and `preview_start`, which is canonical-locked) stays the other session's; run your own
 >   `next dev` on an alt port via Bash if you need a live check.
 >

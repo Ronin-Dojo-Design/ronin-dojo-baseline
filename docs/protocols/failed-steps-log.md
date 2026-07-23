@@ -974,7 +974,51 @@ Read this section at bow-in instead of skimming every individual entry.
   that id on `main` for an unrelated trap, so this renumbered to FS-0039 at the merge. Ids are append-only
   and never recycled — the SESSION_0625 commit body and the hook's own header still say FS-0038 and were
   corrected in a follow-up; treat FS-0039 as canonical.
-- **Status:** mitigated (hook landed + verified live SESSION_0625).
+- **Status:** mitigated (hook) — **coverage hole found + closed by FS-0040**; enforcement moved server-side.
+
+### FS-0040 — the FS-0039 push guard did not run in the worktrees it existed to guard
+
+- **Session:** SESSION_0624 (Claude), immediately after the FS-0039 hook merged (PR #258, `f3659f01`).
+  Found by *testing* the guard in a throwaway sandbox rather than reading it — reading it looks correct.
+- **Step failed:** the FS-0039 corrective itself. Two independent defects, either one fatal:
+  1. **`install.sh` wrote a RELATIVE `core.hooksPath`** (`git config core.hooksPath "scripts/githooks"`)
+     while its own output announced it "applies to canonical + every worktree." Git resolves a relative
+     hooksPath **per working directory**, so it means "*this* worktree's own copy." A lane branched before
+     the hook existed has no such directory — and **git skips a missing hooksPath silently, exit 0, no
+     warning.** Verified live: `../ronin-wl-lane` has no `scripts/githooks/` on its branch and was running
+     with **zero** hooks while the config looked correct.
+  2. **The hook never blocked `git push origin HEAD:main`.** Its only `main` rule was a *non-fast-forward*
+     check, and a fast-forward is the normal case. Worse, the loop filtered `local_ref` to `refs/heads/*`
+     **before** any rule ran — and `HEAD:main` passes `HEAD` as the local ref, so the filter `continue`d
+     past *both* rules. Reproduced in the sandbox: a lane published its commit to `main` with the guard
+     installed and "working."
+- **Which SOP:** `scripts/githooks/{install.sh,pre-push}` (landed SESSION_0625); `closing.md` §4c.
+- **Root cause:** the guard was verified only from the one worktree that happened to contain it, against
+  the one command that happened to be blocked. Neither the *absence* case nor the *bypass* case was
+  exercised. A guard tested only where it works is untested.
+- **Impact:** HIGH-ceiling, zero realized. For the window between `f3659f01` and this fix, the repo
+  believed it was protected and was not: any lane could publish app code to `main`, which auto-deploys BBL
+  production. Nothing actually leaked.
+- **Corrective action:** (1) `install.sh` now writes the **absolute** hooks dir, so every worktree is pinned
+  to canonical's copy on any branch; (2) **RULE B** — `main` is PR-only — evaluated on the **destination**
+  ref and moved **above** the `refs/heads/*` filter, which is the ordering the bypass exploited; (3) **new
+  `scripts/githooks/doctor.sh`**, which a session runs to make the guard *prove* it is live and which fails
+  loudly with the fix command; (4) **the real enforcement moved server-side** — GitHub ruleset
+  `main-pr-only`, empty bypass list ([ADR 0053](../architecture/decisions/0053-main-is-pr-only.md)). A hook
+  is defeated by not being installed, by a branch that predates it, or by a caller holding the operator's
+  credential. The remote is immune to all three; the hook is now just the fast local failure.
+- **Verification:** offline sandbox reproducing the original accident — `git push origin main`,
+  `git push origin HEAD:main`, and `git push --all` all blocked (exit 1) with `main` provably unmoved,
+  while `git push -u origin HEAD` succeeds. `doctor.sh` returns **exit 1** against the pre-fix relative
+  config (naming the bug) and **exit 0** after, including from `../ronin-wl-lane`, the worktree that had
+  no hooks directory at all.
+- **Lesson (4th occurrence — this is the repo's most persistent failure shape):** FS-0035 (rule was prose)
+  → FS-0036 (script was a silent no-op on the default path) → FS-0037 (step sat outside the executed
+  read-path) → FS-0040 (hook absent from the environment it guards). Every one **passed silently while
+  broken**. The rule this yields: **a guard must prove it is live from the environment it guards, and be
+  tested against the bypass, not the happy path.** `doctor.sh` is that principle made executable — and the
+  reason enforcement now lives on a server that cannot be silently uninstalled.
+- **Status:** mitigated (absolute hooksPath + RULE B + doctor.sh + server ruleset; all four verified).
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
