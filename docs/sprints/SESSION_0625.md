@@ -37,6 +37,40 @@ Absorb the **Michael Flores meeting notes** into MMB canon: grill → synthesize
 commercial lanes, next actions) → **route to ledgers/PRD/STORIES/goals**, not prose. Follows the
 `MMB_Initial_Intake` → `MMB_Meeting_Intake` line and the recent codex "Michael notes" capture.
 
+## First tasks (game-on for Michael — operator-directed, run these first)
+
+Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operator can work *with* Michael:
+
+1. **SotD artifacts preview — ALL BRANDS (show Michael builds on the spot).** Render + publish a frozen
+   State-of-Dojo Artifact **with `NEXT_PUBLIC_SOTD_ALL_BRANDS=true`** so the **MMB panel is visible** (the live
+   `/app/state` is BBL-scoped and *hides* MMB — see the note below). Republish after any on-the-spot build so
+   Michael sees the MMB work land in real time. Use `/preview-artifacts`.
+   ```bash
+   NEXT_PUBLIC_SOTD_ALL_BRANDS=true bun scripts/state-of-project.ts   # → out/state-of-project.html (MMB shown)
+   ```
+2. **Review the client onboarding form + contract** (recently added): the new-client onboarding process
+   ([`research-review-new-client-onboarding.md`](../architecture/research-review-new-client-onboarding.md) +
+   [`new-client-runbook.md`](../runbooks/onboarding/new-client-runbook.md)), the onboarding components
+   (`apps/web/components/web/onboarding/dashboard-onboarding.tsx`), and the contract model
+   (`apps/web/.generated/prisma/models/MembershipContract.ts`). Confirm with the operator which of these is
+   "the" client onboarding form + contract to walk Michael through.
+3. **Build the onboarding form as an interactive, live-fillable form** — **FeatureWidget-style**
+   (`apps/web/components/web/feature-widget.tsx` is the pattern) so the operator can **type Michael's answers
+   in live, or Michael can write them in himself**. This IS the interactive *capture* front-end for the
+   [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe — its output feeds the grill
+   → synthesize → route flow below. Demo-safe (no secrets/PII); reuse the uploader/R2 seam if it takes files.
+
+> **SotD ↔ MMB wiring note (operator caught this — real gap, SESSION_0620).** The MMB tab **is** correctly
+> wired (parser `classifySessionProduct` maps `lane: mmb` → the MMB panel). It reads **empty** because the
+> SotD projects only `docs/sprints/*` + `goals-ledger`, and **only 3 sprint sessions are MMB** (0582, 0586,
+> this 0625). The real MMB work — sales-cockpit build, Michael's meeting, MMB epic — lives in the **Mammoth
+> vault (`MMB_SESSION_NNNN`) + `docs/product/mammoth-build/`**, which the SotD **does not read**. Plus recipe
+> cards + product artifacts (onboarding form, contract) aren't projected at all. **Logged as WL-P2-80.**
+> **To make MMB show for Michael:** either project the MMB vault / `docs/product/mammoth-build/` + MMB goals
+> into the SotD (the real fix), or, short-term, keep MMB sessions as `lane: mmb` stubs in `docs/sprints/` (like
+> 0625) so they at least populate the planned column. Task 1 still uses `ALL_BRANDS=true` to guarantee the tab
+> renders.
+
 ## Next session
 
 **Task — run the [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe on MMB.**
