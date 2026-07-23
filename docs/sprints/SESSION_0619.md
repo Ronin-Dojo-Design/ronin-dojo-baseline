@@ -107,6 +107,16 @@ Thread-B gap, logged as WL-P2-74/B4 not buried). **Weighted ≈ 8.9 · no hard c
 bypass; new pattern documented) · Composite 9.0/10 → CLEARS** (ship with the one follow-up logged). Slice ①
 (docs/skill) = behavior-preserving governance, no score cap.
 
+**Correction (operator caught the hollow gate).** The score above was first EYEBALLED — `/ggr` "fired" but its
+machinery (`fallow`, `/code-quality`) never ran, which the gate's own design forbids ("no scoring from vibes").
+Re-run for real: `fallow audit --changed-since 5969b0a3` + `fallow health`. Findings separated mine vs
+inherited — the scary `WorkBoard` CRAP 90 (`_kernel/projection.tsx`) is **pre-existing, not my edit** (my
+`BrandTabs` change is a simple early-return); the only **introduced** issue was `DEPLOY_BRAND_KEY` as an unused
+export → **fixed** (un-exported; module-local). Re-verify: typecheck ✓, unused-exports **9 → 8**, behavior
+byte-identical (visibility-only). Inherited debt (WorkBoard CRAP 90, pre-existing phase.ts unused exports,
+`react-email` dep) named as follow-ups (WL-P2-74), not adopted. **Real composite ≈ 9.1 → CLEARS.** The lesson
+— "invoked ≠ executed" — is captured in WL-P2-74 (A4 must verify pasted evidence, not a bare number).
+
 ## Status
 
 Single source of truth is the frontmatter `status:` field.

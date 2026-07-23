@@ -94,10 +94,11 @@ export const BRAND_SKINS: readonly BrandSkin[] = [
 ] as const
 
 /**
- * This deploy's own brand key (its `ProductLane`). The BBL flagship = `"bbl"`; the MMB deploy overrides to
- * `"mmb"`, the RDD umbrella to `"rdd"`. One per-deploy constant, mirroring `CURRENT_DEPLOY_SKIN` below.
+ * This deploy's own brand key (its `ProductLane`). The BBL flagship = `"bbl"`; a future MMB deploy overrides
+ * to `"mmb"`, the RDD umbrella to `"rdd"`. Module-local — only `VISIBLE_BRAND_SKINS` reads it; export it if a
+ * second consumer ever needs the "which brand is this deploy" knob.
  */
-export const DEPLOY_BRAND_KEY: ProductLane = "bbl"
+const DEPLOY_BRAND_KEY: ProductLane = "bbl"
 
 /**
  * The brand skins the State-of-Dojo tabs actually render on THIS deploy — the ONE place deploy-scope is
