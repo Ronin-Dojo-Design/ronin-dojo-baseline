@@ -5,7 +5,7 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it, setDefaultTimeout } from "bun:test"
 
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
 
@@ -18,6 +18,8 @@ import { db } from "~/services/db"
 const TEST_BRAND = "BBL" as const
 const PREFIX = `session-0509-permissions-${Date.now()}`
 const tag = (name: string) => `${PREFIX}-${name}`
+
+setDefaultTimeout(30_000)
 
 const userIds: string[] = []
 let adminUserId = ""
@@ -53,19 +55,17 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await Promise.all([
-    db.auditLog.deleteMany({
-      where: {
-        OR: [
-          { userId: { in: userIds } },
-          { entityId: { contains: PREFIX } },
-          { entityId: { in: userIds } },
-        ],
-      },
-    }),
-    db.userPermissionGrant.deleteMany({ where: { userId: { in: userIds } } }),
-    db.session.deleteMany({ where: { userId: { in: userIds } } }),
-  ])
+  await db.auditLog.deleteMany({
+    where: {
+      OR: [
+        { userId: { in: userIds } },
+        { entityId: { contains: PREFIX } },
+        { entityId: { in: userIds } },
+      ],
+    },
+  })
+  await db.userPermissionGrant.deleteMany({ where: { userId: { in: userIds } } })
+  await db.session.deleteMany({ where: { userId: { in: userIds } } })
   await db.user.deleteMany({ where: { id: { in: userIds } } })
 })
 

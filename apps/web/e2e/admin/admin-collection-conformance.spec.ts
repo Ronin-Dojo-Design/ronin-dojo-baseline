@@ -145,7 +145,7 @@ test.describe("AdminCollection conformance smoke", () => {
       })
 
       // Open the row's kebab: Edit + View menu items render.
-      await page.getByRole("button", { name: "Open menu" }).first().click()
+      await page.getByRole("button", { name: "Row actions" }).first().click()
       await expect(page.getByRole("menuitem", { name: "Edit" })).toBeVisible()
       await expect(page.getByRole("menuitem", { name: "View" })).toBeVisible()
       // Dismiss the menu so its positioner doesn't intercept the trash click.

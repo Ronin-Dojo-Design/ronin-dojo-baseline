@@ -124,6 +124,13 @@ for ((i = 1; i <= N; i++)); do
   last="$(find docs/sprints -name 'SESSION_*.md' | sed -E 's/.*SESSION_([0-9]+)\.md/\1/' | sort -n | tail -1)"
   next="$(printf '%04d' "$((10#$last + 1))")"
   branch="auto/session-${next}"
+  # Skip a branch name already present locally (a prior run's branch) so `git switch -c`
+  # can't fail. (A remote-only collision is avoided upstream by staging a unique session
+  # number; a network `ls-remote` here proved flaky under the headless/background shell.)
+  while git show-ref --verify --quiet "refs/heads/${branch}"; do
+    next="$(printf '%04d' "$((10#$next + 1))")"
+    branch="auto/session-${next}"
+  done
 
   echo ""
   echo "════════ codex session ${i}/${N} → ${branch} (stacked on ${base_branch}) ════════"
@@ -144,18 +151,22 @@ for ((i = 1; i <= N; i++)); do
   fi
   # Brake 2: the session must have produced exactly one new commit.
   new_commit_count="$(git rev-list --count "${base_branch}..HEAD")"
-  if [[ "$new_commit_count" -ne 1 ]]; then
-    if [[ "$new_commit_count" -eq 0 ]]; then
-      echo "✗ no new commit on ${branch} — session produced nothing. Stopping." >&2
-    else
-      echo "✗ ${branch} produced ${new_commit_count} commits; expected exactly one. Stopping." >&2
-    fi
+  # A clean session produces >=1 commit. (A batch lane e.g. WL-clearing legitimately
+  # commits one-per-item; only ZERO commits = "produced nothing / didn't close".)
+  if [[ "$new_commit_count" -eq 0 ]]; then
+    echo "✗ no new commit on ${branch} — session produced nothing. Stopping." >&2
     exit 1
   fi
 
   git push -u origin "$branch"
-  gh pr create --base "$base_branch" --head "$branch" --fill \
-    --title "auto(codex): SESSION_${next} — lineage epic (stacked on ${base_branch})"
+  # PR base: `gh pr create --fill` diffs origin/<base>, so the base MUST be pushed. A
+  # local-only staging START_BASE (e.g. a `wl-lane-base` created just to hold a stub) isn't
+  # on origin → target main instead. Stacked sessions target their parent branch, which the
+  # previous iteration already pushed, so this check passes through for them.
+  pr_base="$base_branch"
+  if ! git ls-remote --exit-code --heads origin "$pr_base" >/dev/null 2>&1; then pr_base="main"; fi
+  gh pr create --base "$pr_base" --head "$branch" --fill \
+    --title "auto(codex): SESSION_${next} (base ${pr_base})"
 
   base_branch="$branch"   # next session stacks on this one
 done
