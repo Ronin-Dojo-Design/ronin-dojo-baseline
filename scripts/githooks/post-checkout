@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# post-checkout — LAST-RESORT DETECTION for the WL-P3-65 checkout hazard.
+#
+# WHAT THIS IS NOT: prevention. Git has no `pre-checkout` hook, and `post-checkout`
+# cannot abort — HEAD has already moved by the time this runs. Prevention lives in the
+# sourced shell guard (`.claude/shell-guards/ronin-cwd-guard.sh`), which sees the real
+# $PWD and can refuse. This exists for the runtimes that never source it — a Codex
+# sandbox, a raw `sh -c`, a fresh terminal — so the accident is at least LOUD and
+# instantly reversible instead of silent and discovered three commands later.
+#
+# THE HAZARD: worktrees share one ref store and each linked worktree has its own HEAD.
+# A HEAD-moving git command run with a stale cwd retargets a SIBLING lane's worktree.
+# Seen at SESSION_0588 (a sibling's commit landed on the wrong branch) and SESSION_0624.
+#
+# Args: $1 = previous HEAD, $2 = new HEAD, $3 = 1 for a branch checkout / 0 for a file checkout.
+
+prev="$1"; new="$2"; is_branch="${3:-0}"
+
+# File checkouts (`git checkout -- path`) don't move HEAD — nothing to report.
+[ "$is_branch" = "1" ] || exit 0
+
+# Do NOT gate on `prev != new`. `git checkout -b <new>` creates the branch AT THE CURRENT
+# COMMIT, so the two SHAs are identical while the BRANCH — the thing that gets hijacked —
+# has changed. An earlier version of this hook compared SHAs and silently missed exactly
+# the SESSION_0624 case it was written for. What matters is that HEAD's ref moved, which
+# `is_branch = 1` already tells us.
+
+# `git worktree add` performs a branch checkout in the brand-new worktree, reporting a
+# null previous HEAD. That is worktree CREATION, not a hijack — the supported way to start
+# a lane. Suppress it, or every `worktree add` cries wolf and the real warning gets ignored.
+case "$prev" in
+  *[!0]*) ;;          # has a non-zero char: a real previous HEAD
+  *) exit 0 ;;        # all zeros (or empty): new worktree
+esac
+
+git_dir="$(cd "$(git rev-parse --git-dir)" 2>/dev/null && pwd)" || exit 0
+common_dir="$(cd "$(git rev-parse --git-common-dir)" 2>/dev/null && pwd)" || exit 0
+
+# Only linked worktrees carry this hazard; canonical branch work is normal and expected.
+[ "$git_dir" != "$common_dir" ] || exit 0
+
+worktree="$(git rev-parse --show-toplevel 2>/dev/null)"
+branch="$(git symbolic-ref -q --short HEAD 2>/dev/null || echo '(detached)')"
+canonical="$(cd "$common_dir/.." 2>/dev/null && pwd)"
+
+cat >&2 <<EOF
+
+  ⚠  WL-P3-65 — HEAD MOVED INSIDE A LINKED WORKTREE
+
+     worktree:  $worktree
+     now on:    $branch
+     was at:    $(git rev-parse --short "$prev" 2>/dev/null)
+     canonical: $canonical
+
+     If this worktree belongs to a SIBLING lane, you have just retargeted their
+     checkout. Worktrees share one ref store; an agent shell's cwd persists between
+     calls, which is how this happens without anyone intending it.
+
+     Undo (nothing is lost — the old ref is still there):
+       git -C $worktree checkout -
+
+     Meant to act on canonical? Be explicit rather than trusting cwd:
+       git -C $canonical <your command>
+
+     Prevention is the sourced shell guard; this hook only reports. If you are seeing
+     this, the guard was NOT active in that shell — check: bash scripts/githooks/doctor.sh
+
+EOF
+exit 0

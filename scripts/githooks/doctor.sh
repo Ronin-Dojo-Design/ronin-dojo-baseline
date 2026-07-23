@@ -83,6 +83,47 @@ if [ -n "$hp" ]; then
   fi
 fi
 
+# ---- 2b. the WL-P3-65 checkout guards ---------------------------------------------------------
+# Prevention is the sourced shell guard (it sees the real $PWD; git has no pre-checkout hook).
+# post-checkout is only the detection backstop for shells that never source the guard.
+if [ -n "${hp:-}" ] && [ -x "$resolved/post-checkout" ] 2>/dev/null; then
+  ok "post-checkout present (WL-P3-65 detection backstop)"
+else
+  bad "post-checkout missing from $resolved — a linked-worktree HEAD move would go unreported." \
+      "fix: restore scripts/githooks/post-checkout from main, then chmod +x it."
+fi
+
+guard="$canonical/.claude/shell-guards/ronin-cwd-guard.sh"
+if [ ! -f "$guard" ]; then
+  bad "shell guard missing: $guard" "fix: restore it from main."
+elif ! grep -q '_ronin_moves_head' "$guard" 2>/dev/null; then
+  bad "shell guard predates the WL-P3-65 branch-mutation rule." \
+      "A stale-cwd 'git checkout -b' can still hijack a sibling worktree's HEAD." \
+      "fix: update .claude/shell-guards/ronin-cwd-guard.sh from main and re-source your shell."
+else
+  ok "shell guard file carries the WL-P3-65 branch-mutation rule"
+  grep -q '_ronin_stash_is_foreign' "$guard" 2>/dev/null \
+    && ok "shell guard carries the WL-P3-67 shared-stash rule" \
+    || bad "shell guard predates the WL-P3-67 shared-stash rule." \
+           "refs/stash is SHARED across worktrees — a 'stash pop' here can destroy a sibling" \
+           "lane's uncommitted work, which is the one thing git cannot recover." \
+           "fix: update .claude/shell-guards/ronin-cwd-guard.sh from main."
+  # Check the ACTIVE git wrapper, not merely that the helper function exists — those differ.
+  # Claude Code replays a SHELL SNAPSHOT captured at session start, so a guard updated
+  # mid-session has its helpers present while the snapshot's OLDER git() still shadows the
+  # wrapper. `type _ronin_moves_head` returns yes and prevention is nonetheless inactive.
+  # That false green is exactly the FS-0036/FS-0040 shape, so it is checked properly here.
+  if declare -f git >/dev/null 2>&1 && declare -f git | grep -q '_ronin_moves_head'; then
+    ok "active git wrapper enforces the branch-mutation rule (this shell)"
+  else
+    warn "the git wrapper in THIS shell does NOT route through the rule — prevention is inactive here." \
+         "The guard file is correct, so any NEW shell or session picks it up; a long-running agent" \
+         "session replaying a stale snapshot does not. Check your own shell with:" \
+         "    type git      # should NOT resolve to ~/.claude/shell-snapshots/..." \
+         "Until then post-checkout still REPORTS the hijack (it cannot prevent it)."
+  fi
+fi
+
 # ---- 3. nothing shadowing via the legacy hooks dir ---------------------------------------------
 if [ -x "$(cd "$common_dir" && pwd)/hooks/pre-push" ]; then
   warn "a legacy .git/hooks/pre-push also exists." \
