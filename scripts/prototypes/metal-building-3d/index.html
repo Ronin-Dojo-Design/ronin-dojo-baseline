@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Metal Building 3D Prototype</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #111827;
+      }
+
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .controls {
+        position: fixed;
+        top: 16px;
+        left: 16px;
+        z-index: 10;
+        width: min(320px, calc(100vw - 32px));
+        padding: 18px;
+        border: 1px solid rgb(255 255 255 / 14%);
+        border-radius: 12px;
+        background: rgb(17 24 39 / 92%);
+        box-shadow: 0 16px 40px rgb(0 0 0 / 28%);
+        backdrop-filter: blur(10px);
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+
+      .hint {
+        margin: 0 0 16px;
+        color: #9ca3af;
+        font-size: 12px;
+      }
+
+      .field {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 12px;
+        margin-top: 12px;
+      }
+
+      label {
+        color: #e5e7eb;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      output {
+        color: #93c5fd;
+        font-size: 13px;
+        font-variant-numeric: tabular-nums;
+      }
+
+      input[type="range"] {
+        grid-column: 1 / -1;
+        width: 100%;
+        accent-color: #60a5fa;
+      }
+
+      input[type="color"] {
+        width: 44px;
+        height: 28px;
+        padding: 2px;
+        border: 1px solid #4b5563;
+        border-radius: 6px;
+        background: transparent;
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/vendor/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <aside class="controls" aria-label="Building dimensions">
+      <h1>Metal Building</h1>
+      <p class="hint">Drag to orbit · scroll to zoom · right-drag to pan</p>
+
+      <div class="field">
+        <label for="width">Width</label>
+        <output id="width-value" for="width"></output>
+        <input id="width" type="range" min="20" max="100" value="40" step="1" />
+      </div>
+
+      <div class="field">
+        <label for="length">Length</label>
+        <output id="length-value" for="length"></output>
+        <input
+          id="length"
+          type="range"
+          min="30"
+          max="200"
+          value="80"
+          step="1"
+        />
+      </div>
+
+      <div class="field">
+        <label for="eave-height">Eave height</label>
+        <output id="eave-height-value" for="eave-height"></output>
+        <input
+          id="eave-height"
+          type="range"
+          min="10"
+          max="24"
+          value="14"
+          step="1"
+        />
+      </div>
+
+      <div class="field">
+        <label for="roof-pitch">Roof pitch</label>
+        <output id="roof-pitch-value" for="roof-pitch"></output>
+        <input
+          id="roof-pitch"
+          type="range"
+          min="0.5"
+          max="4"
+          value="2"
+          step="0.5"
+        />
+      </div>
+
+      <div class="field">
+        <label for="wall-color">Wall-panel color</label>
+        <input id="wall-color" type="color" value="#8da1b9" />
+      </div>
+    </aside>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
