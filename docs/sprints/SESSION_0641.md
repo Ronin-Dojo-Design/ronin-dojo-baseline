@@ -149,6 +149,20 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   checklist for a Michael yes (delegation mechanisms named, TCPA consent flagged)
 > · 0666 (Fable) `auto/session-0666-bbl-approval-queue` — social-flywheel approval-queue build-ready
 >   spec (consent gate hard precondition, export-only v1, 0660-pattern format)
+>
+> **Waves 7+8 RESULTS (6/6 — FINAL grand total: 28 autonomous lanes / 8 waves / PRs #264–#294):**
+> · #289 (0665) kickoff checklist (delegation mechanisms, TCPA flag; mammothmb.com marked confirm-first)
+> · #290 (0661) RDD OG image + icon — orchestrator build gate REAL_EXIT=0 (**merge deploys prod RDD**)
+> · #291 (0664) handle audit — recommend full `ronin<niche>design` form everywhere; niche .coms
+>   available; YouTube open; IG/FB/X/TikTok login-walled=uncertain; USPTO 87300933 needs a human look
+> · #292 (0663) bbl-og-cards v1.1 — **MERGE-AFTER #288**; AM runs rasterize.ts + eyeballs 5 samples
+> · #293 (0662) MMB OG image + icon (best-effort client build at merge)
+> · #294 (0666) approval-queue build-ready spec — real find: `Technique.isPublished` has NO runtime
+>   writer (seed-only). **RATIFY pre-build: `Passport.allowSocialCelebration` opt-in, default OFF**
+>   (the lane held at the PR gate out of caution; orchestrator opened the PR under the standing
+>   dispatch authorization — pattern worked as designed)
+> Orchestrator is NOW QUIET — this is the final table. Decision batch adds: the consent default +
+> the trademark check. All codex-sol lanes completed on sol across both waves; salvage never needed.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
