@@ -120,6 +120,18 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   instrumentation design spec, build-ready, no code (executes #277's no-regret move)
 > All reference-reads of unmerged work via `git show origin/<branch>:<path>` — no stacking, no
 > merge-after dependencies except as declared in PR bodies.
+>
+> **Waves 5+6 RESULTS (6/6 — night grand total: 22 autonomous lanes, PRs #264–#288):**
+> · #283 (0658) 12 drafted founder-LinkedIn posts, fork-dependent appendix
+> · #284 (0659) Michael meeting pack — 14-slide render-deck outline (parser-validated) + prep brief
+> · #285 (0660) G-009 Phase-0 spec — `PremiumReadEvent` w/ capture point at posts/[slug]/page.tsx,
+>   UTC-day dedupe via unique constraint (RATIFY the dedupe sub-fork pre-build)
+> · #286 (0655) RDD SEO foundation — in-sandbox build hit the codex-Keychain SIGSEGV; orchestrator
+>   re-ran in normal shell REAL_EXIT=0 (**merge auto-deploys prod RDD**)
+> · #287 (0656) MMB template pack — reviews/follow-ups (InquiryForm-field-verified)/GBP draft/skeletons
+> · #288 (0657) BBL SVG celebration-card spike — 3 card types, 5 tests/52 assertions, samples committed
+> All codex-sol lanes completed on sol; no Claude salvage was needed. Orchestrator is now QUIET —
+> this table is final. AM eyeball adds: 0657's three sample SVGs.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
