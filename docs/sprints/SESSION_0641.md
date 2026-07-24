@@ -88,6 +88,19 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   queue-first posture) + internal flywheel draft
 > Codex-limit salvage rule stands (Claude same-worktree pickup). After wave 4: orchestrator goes
 > quiet; everything below is this AM session's queue.
+>
+> **Wave 4 RESULTS (night complete — 16 lanes / 4 waves / PRs #264–#282, all open, nothing merged):**
+> · #280 (0652 RDD): LinkedIn-founder-first (~5–8× engagement evidence) · Metricool-vs-selfhost
+>   tooling matrix · reserve RBD handles now, post after work-product exists · 6 forks open.
+> · #281 (0654 BBL): 7-event content flywheel (claims, promotions w/ Rank.colorHex, teasers,
+>   milestones, "Legacy Wrapped") · approval-queue-first, consent gating = THE blocker for
+>   person-centric posts · 6 forks open.
+> · #282 (0653 MMB): **mammoth.build has NO Google Business Profile** (~90%+ contractor discovery
+>   via Google, 81% decide on reviews) → GBP-first + CRM-keyed review engine (kernel-module play
+>   over a $299–599/mo Podium-class sub) · cost-per-customer framing vs his ~$2.50/lead baseline ·
+>   client playbook draft branded Ronin Building Design · 6 forks open.
+> Operator fork-decision batch for the morning: 18 open forks across #277/#280/#281/#282 + the
+> #274 deploy gate + the 0645 PMBA→MBMA confirmation.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
