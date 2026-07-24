@@ -166,7 +166,7 @@ export function LineageTreeCanvas({
             !editMode && "touch-pan-x touch-pan-y",
           )}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_hsl(var(--muted))_0,_transparent_32rem)] opacity-70" />
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--color-muted)_0,_transparent_32rem)] opacity-70" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-primary/10 to-transparent" />
 
           <div
