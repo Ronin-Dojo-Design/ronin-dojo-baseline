@@ -1,14 +1,14 @@
 ---
 title: "SESSION 0635 — RDD go-live: ronindojodesign.com serves apps/rdd"
 slug: session-0635
-type: session--open
+type: session--implement
 status: in-progress
 created: 2026-07-23
-updated: 2026-07-23
+updated: 2026-07-24
 last_agent: claude-session-0635
 sprint: S12
 lane: rdd
-goal_ids: []
+goal_ids: [G-027, G-033]
 tickets: []
 next_session:
 pairs_with:
@@ -214,6 +214,11 @@ commit after all three lanes land. -->
   cache).
 - **PR #261 reviewed (9.5/10) and merged** on the operator's explicit word; 0632/0633 wave PRs
   deliberately left for the AM-coffee merge owner.
+- **G-033 minted at bow-out (operator-directed):** admin-dashboard inbox for all brands (Resend
+  receiving → conformed AdminCollection surface) appended to the goals ledger. This is an explicit
+  operator override of the wave's in-lane ledger freeze — id minted via `ledger-id-next` (G-033), rides
+  this lane's PR #264; merge owner should verify no sibling minted the same id.
+- Memory sweep: `resend-inbound-receiving-live` + `rdd-golive-vercel-facts` written + indexed.
 
 ## Decisions resolved
 
@@ -338,6 +343,9 @@ no opening this time.
 | --- | --- |
 | Session record complete | this file — plan, task log, verification, findings, reviews |
 | Gates | rdd build: Vercel prod build exit 0 (attempt 2) — local gates n/a (unbootstrapped worktree, zero app-code diff; stated in REVIEW_01) |
+| bow-out-gates.sh | ran, but against CANONICAL (graded SESSION_0634, branch=main — the known gate-runner caveat); its FAIL rows are misreads. Hand-verified for THIS lane: task log 6 rows ✓ · secret scan clean (DKIM value is a public DNS record) ✓ · docs-only diff → no build gate ✓ |
+| Ledger cross-off | G-027 (RDD deploy) substantially delivered by this session — flip left to the merge owner (wave rule); G-033 ADDED on operator direction |
+| Memory sweep | 2 memories written + MEMORY.md indexed |
 | /ggr | explicitly skipped-with-reason; inline score 9.3/10 recorded above |
 | Git hygiene | explicit-path commit on `session-0635-rdd-golive` (hash in chat); push/PR HELD for the operator's word |
 | Graphify update | n/a in-lane (worktree graph not built; canonical update belongs to the merge owner's close) |
