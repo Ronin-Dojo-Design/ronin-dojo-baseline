@@ -60,9 +60,25 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 > scripts/prototypes/metal-building-3d/serve.js` → :4173. 0645's PMBA conclusion needs operator
 > confirmation. Ronin Building Design niche-brand family is canon (memory `rdd-niche-brand-variants`)
 > — consider a goals-ledger row at the ledger-apply step.
-> **Wave 3 (operator-authorized):** the orchestrator session plans + launches a continuation wave
-> after wave 2 lands (same policy) — if it ran overnight, its lanes appear in `gh pr list` beyond
-> this table; sweep them into the same merge queue.
+> **Wave 3 (launched — continuation wave, all Claude):**
+> · 0649 `auto/session-0649-curriculum-journey` — E1 CurriculumJourney on /curriculum (the 0642
+>   escalation; G-022 Wave-3 GA bar; additive above the untouched browser; techniques-import ban)
+> · 0650 `auto/session-0650-render-deck` — standalone markdown→branded-HTML slide-deck CLI
+>   (G-030-adjacent; deliberate token-duplication debt vs frozen #268, consolidation queued)
+> · 0651 `auto/session-0651-rr-creator-payout` — /rr G-009 Stripe-Connect payout research,
+>   ALL FORKS LEFT OPEN for the operator (split %, threshold, Express-vs-Standard, attribution, tax)
+> Petey's wave-3 rejections (stacking/frozen-file collisions) are documented in the orchestrator
+> transcript; zero codex lanes (budget). Wave-2/-3 stale-ledger corrections to fold at ledger-apply:
+> G-013 superseded by G-022 (0642 finding) · 5 stale WL rows (0636) · graph Wave-2 already landed
+> (0637/0642 double-verified).
+>
+> **Wave 4 (operator-pinned, launches after wave 3 lands — LAST wave):** 3 lanes, ALL FABLE,
+> Claude-only (codex budget low), /rr research-recommend on structurewebworks-style social-media
+> automation setup: one lane each for RDD (agency presence + packageable client offering), MMB
+> (project-photo pipeline / before-after content / review engine / cadence + tooling), BBL
+> (lineage/technique content flywheel from platform assets). No builds. If any run dies on limits:
+> Claude same-worktree salvage ("reassess disk state first, disk truth over memory") — standing
+> operator rule.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
