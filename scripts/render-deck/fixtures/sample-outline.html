@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ronin Dojo Design — Q3 Overview</title>
+<style>
+:root{
+  --bg:#0d0f12;
+  --surface:#15181d;
+  --surface-elevated:#1d2127;
+  --border:#2a2f37;
+  --primary:#3b82f6;
+  --primary-hover:#60a5fa;
+  --primary-deep:#2563eb;
+  --ink:#f3f5f7;
+  --muted:#9aa3ad;
+  --muted-deep:#6b7280;
+  --font-display:"SF Compact Display", system-ui, sans-serif;
+  --font-sans:-apple-system, "Segoe UI", system-ui, Roboto, Helvetica, Arial, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:var(--bg);}
+body{font-family:var(--font-sans);color:var(--ink);-webkit-font-smoothing:antialiased;overflow:hidden;}
+.deck{position:relative;width:100vw;height:100vh;}
+.slide{position:fixed;inset:0;display:none;flex-direction:column;justify-content:center;padding:6.5vh 8.5vw 11vh;overflow-y:auto;aspect-ratio:16/9;}
+.slide.is-active{display:flex;}
+.inner{max-width:74rem;width:100%;margin:0 auto;}
+.eyebrow{font-family:var(--font-display);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:.74rem;color:var(--primary);margin:0 0 .85rem;}
+h1.title,h2.title{font-family:var(--font-display);font-weight:800;line-height:1.05;margin:0 0 1.15rem;color:var(--ink);}
+h1.title{font-size:clamp(2.3rem,5.6vw,4.3rem);}
+h2.title{font-size:clamp(1.7rem,3.6vw,2.65rem);}
+.lede{font-size:clamp(1rem,1.25vw,1.18rem);color:var(--muted);max-width:46rem;line-height:1.62;margin:0 0 1rem;}
+.fine{font-size:.85rem;color:var(--muted-deep);line-height:1.55;}
+ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.75rem;}
+ul.list li{position:relative;padding-left:1.6rem;font-size:1rem;line-height:1.55;color:var(--ink);}
+ul.list li::before{content:"\2022";position:absolute;left:0;top:0;color:var(--primary);font-weight:700;}
+blockquote{margin:0 0 1rem;padding:0 0 0 1.2rem;border-left:3px solid var(--primary);color:var(--muted);font-size:1.05rem;line-height:1.6;}
+code{background:var(--surface-elevated);border:1px solid var(--border);border-radius:4px;padding:.1rem .35rem;font-size:.9em;}
+.slide.statement .inner{text-align:center;}
+.statement-text{font-family:var(--font-display);font-weight:800;font-size:clamp(1.8rem,4.4vw,3.4rem);line-height:1.2;color:var(--ink);}
+.notes{display:none;}
+.chrome-footer{position:fixed;left:0;right:0;bottom:0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.6rem;background:linear-gradient(to top, #0d0f12, transparent);z-index:50;}
+.nav-cluster{display:flex;align-items:center;gap:.7rem;}
+.nav-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--ink);cursor:pointer;font-size:1rem;line-height:1;}
+.nav-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+.nav-btn:disabled{opacity:.32;cursor:default;}
+.counter{font-family:var(--font-display);font-size:.78rem;letter-spacing:.06em;color:var(--muted);min-width:4.5rem;text-align:center;}
+.progress-track{position:fixed;top:0;left:0;right:0;height:3px;background:var(--border);z-index:60;}
+.progress-fill{height:100%;background:var(--primary);width:0%;transition:width .2s ease;}
+@media print{
+  .chrome-footer,.progress-track{display:none;}
+  .slide{position:static;display:flex !important;page-break-after:always;height:100vh;}
+  body{overflow:visible;}
+}
+</style>
+</head>
+<body>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+<div class="deck" id="deck">
+<section class="slide is-active" data-index="0" data-title="Title">
+  <div class="inner">
+    <p class="eyebrow">Ronin Dojo Design</p>
+    <h1 class="title">Ronin Dojo Design — Q3 Overview</h1>
+    <p class="lede">A tight, brand-consistent slide deck rendered from plain markdown</p>
+    <p class="fine">Ronin Dojo Design · 2026-07-24</p>
+  </div>
+</section>
+<section class="slide" data-index="1" data-title="What we&#39;re building">
+  <div class="inner">
+    <h2 class="title">What we&#39;re building</h2>
+    <ul class="list"><li>A markdown-outline to branded HTML slide-deck renderer</li><li>Zero external assets — one self-contained HTML file</li><li>16:9 slides with keyboard and click navigation</li></ul>
+  </div>
+  <aside class="notes" hidden aria-hidden="true">Emphasize that this is standalone tooling, not a dependency on render-doc.</aside>
+</section>
+<section class="slide statement" data-index="2" data-title="Why it matters">
+  <div class="inner">
+    <p class="statement-text">Good tools compound. A deck you can write in a text editor and ship in one file beats a slide app you have to fight.</p>
+  </div>
+</section>
+<section class="slide" data-index="3" data-title="What&#39;s next">
+  <div class="inner">
+    <h2 class="title">What&#39;s next</h2>
+    <ul class="list"><li>Wire brand tokens for every RDD portfolio brand</li><li>Add a print stylesheet for one-slide-per-page PDF export</li><li>Land golden-fixture tests before merge</li></ul>
+  </div>
+</section>
+</div>
+<div class="chrome-footer">
+  <span class="fine">Ronin Dojo Design — Q3 Overview</span>
+  <div class="nav-cluster">
+    <button class="nav-btn" id="prevBtn" aria-label="Previous slide">&lsaquo;</button>
+    <span class="counter" id="counter">01 / 04</span>
+    <button class="nav-btn" id="nextBtn" aria-label="Next slide">&rsaquo;</button>
+  </div>
+</div>
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var counterEl = document.getElementById("counter");
+  var progressEl = document.getElementById("progressFill");
+  var prevBtn = document.getElementById("prevBtn");
+  var nextBtn = document.getElementById("nextBtn");
+  var idx = 0;
+
+  function pad(n) { return n < 10 ? "0" + n : String(n); }
+
+  function render() {
+    slides.forEach(function (slide, i) {
+      slide.classList.toggle("is-active", i === idx);
+    });
+    counterEl.textContent = pad(idx + 1) + " / " + pad(slides.length);
+    progressEl.style.width = ((idx + 1) / slides.length) * 100 + "%";
+    prevBtn.disabled = idx === 0;
+    nextBtn.disabled = idx === slides.length - 1;
+  }
+
+  function go(delta) {
+    idx = Math.min(Math.max(idx + delta, 0), slides.length - 1);
+    render();
+  }
+
+  prevBtn.addEventListener("click", function (e) { e.stopPropagation(); go(-1); });
+  nextBtn.addEventListener("click", function (e) { e.stopPropagation(); go(1); });
+
+  document.addEventListener("click", function (e) {
+    if (e.target.closest(".nav-btn")) return;
+    go(1);
+  });
+
+  window.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight" || e.key === " ") go(1);
+    if (e.key === "ArrowLeft") go(-1);
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
