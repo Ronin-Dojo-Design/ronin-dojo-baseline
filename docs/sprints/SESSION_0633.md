@@ -2,7 +2,7 @@
 title: "SESSION 0633 — RDD + MMB stand-alone deploys: /rr wave → two /ppp batons (WS-A/B/C/D)"
 slug: session-0633
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-07-23
 updated: 2026-07-23
 last_agent: claude-session-0633
@@ -404,7 +404,7 @@ untouched, findings routed via your SESSION file.
 ## Artifacts
 
 - Frozen State-of-Dojo snapshot @ bow-in (429 sessions, 31 goals; operator-requested):
-  <https://claude.ai/code/artifact/82d86f8c-6008-4313-b367-4e9d9bf8b579>
+  <https://claude.ai/code/artifact/82d86f8c-6008-4313-b367-4e9d9bf8b579> — **keep** (bow-in record)
 
 ## Findings to route
 
@@ -434,6 +434,68 @@ untouched, findings routed via your SESSION file.
 - NOTE (WS-C): RDD `GAP_MATRIX.md` marks own-DB as conditional ("if intake persists leads") but the session's pinned decision is unconditional — checklist follows the pin; tighten the matrix row at merge.
 - NOTE (WS-C): `phase14-local-deployment-checklist.md` still carries unchecked project-name/DNS items (PL-015, epic #247) and is superseded at the cloud boundary by the RDD cutover checklist — wants a pointer-back edit post-merge (outside this lane's write scope).
 - FS: `core.hooksPath` is a shared-config singleton across all worktrees — at bow-in it pointed into the **ronin-0632 sibling worktree** (its bootstrap ran last); my bootstrap re-pointed it to ronin-0633. Whichever worktree "owns" the path at any moment, removing that worktree at bow-out dangles the hooks for canonical + every sibling until the next bootstrap/doctor run. Doctor passes today; the hazard is worktree *removal*, not present state. Suggest: bow-out ritual (or `canonical-claim.sh release`) re-points hooksPath to the **canonical** checkout's `scripts/githooks` before a worktree is pruned.
+
+## What landed
+
+- The reusable per-brand deploy pattern: `docs/runbooks/deploy/per-brand-deploy-pattern.md` (8 ingredients, both `ignoreCommand` shapes, CI matrix trap, blast-radius proof, 10-step stand-up).
+- `docs/runbooks/deploy/vercel-domain-setup-runbook.md` extended to Cloudflare (C0–C7), grey-cloud rule verified against current vendor docs (cited + dated); Bluehost content intact.
+- GAP_MATRIX + CUTOVER_CHECKLIST for RDD and MMB (BBL baseline re-verified; MMB pre-flip blockers B1–B4 + a DNS-authority pre-check added after the NS discovery).
+- Two paste-ready batons (`## Batons`); decisions 1–7 answered/routed; /ggr 9.5 CLEARS.
+- Out-of-lane but surfaced: BBL prod outage (Neon compute quota) detected, root-caused, operator-resolved, recovery verified; `mammothmb.com` Wix NS delegation discovered.
+- Pushed on operator go: PR **#263** (merge held for the wave's merge-owner sweep).
+
+## Files touched
+
+| Path | Note |
+| --- | --- |
+| `docs/runbooks/deploy/per-brand-deploy-pattern.md` | new — WS-A runbook |
+| `docs/runbooks/deploy/vercel-domain-setup-runbook.md` | extended — WS-D Cloudflare section |
+| `docs/product/rdd/GAP_MATRIX.md` · `docs/product/rdd/CUTOVER_CHECKLIST.md` | new — WS-B/WS-C |
+| `docs/product/mammoth-build/GAP_MATRIX.md` · `docs/product/mammoth-build/CUTOVER_CHECKLIST.md` | new — WS-B/WS-C |
+| `docs/sprints/SESSION_0633.md` | this file — plan, batons, findings, close |
+
+## Decisions resolved
+
+Decisions 1–7 (see `### Open decisions — resolved at bow-in grill`). No new ADR needed: D2/D3 apply existing ADR 0033/0038 frameworks; recorded here + in the batons. No new domain terms (ubiquitous-language: no change needed).
+
+## Open decisions / blockers
+
+- **Merge of #261/#262/#263 + finding-routing = the merge-owner sweep** — blocked on SESSION_0635 landing its PR. Ledger cross-off candidates the gate runner detected (G-021/G-027 et al.) also belong to that sweep — shared ledgers untouched in-lane by wave rule.
+- `mammothmb.com` NS delegation (Wix → Cloudflare) is a client-side action gating Baton 2's DNS rows.
+
+## Next session
+
+- **Goal:** merge-owner sweep — land the three wave PRs, assign ids to and route all id-less findings (16 here + siblings'), add the runbooks-hub link, fix the root `vercel.json` stale comment, refresh canonical graphify.
+- **Inputs to read:** the three PR descriptions; each SESSION file's `## Findings to route`.
+- **First task:** `gh pr list` → confirm 0635's PR exists → merge in dispatch order → one findings-routing commit.
+- **ADR 0049 stub NOT pre-staged, deliberately:** minting SESSION numbers in-lane is forbidden this wave (FS-0038 collision class); the merge owner stages next stubs.
+
+## Reflections
+
+- **The gate that earned its keep:** Giddy's "verify the dispatch say-so" finding turned a free NS lookup into the session's one materially new fact (Wix delegation). Cheap verification of premises > trusting even a same-day dispatch brief.
+- **Live verification pays twice:** WS-B's "re-verify against the live app" rule — inherited from BBL's stale matrix lesson — is what caught the prod outage. A rule written to prevent stale docs ended up functioning as uptime monitoring; a real probe (ntfy uptime check) should make that accidental detection deliberate.
+- **Stale-on-arrival is the parallel-wave failure shape:** three artifacts in one wave cross-referenced each other ("forthcoming" pointer, stub ground-truth row, my own brief to WS-B) and all drifted within hours. Batons now carry re-verify-at-execution steps for exactly this reason.
+- **The runner-grades-the-wrong-file gotcha recurred** (graded staged SESSION_0634, not 0633) — known memory, verified by hand; worth fixing the script to accept a `--session` arg (queued as a finding-router candidate for the merge owner: script improvement, not a ledger row).
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | 6 docs touched; all carry frontmatter with `updated: 2026-07-23`, `last_agent: claude-session-0633` (agents mirrored existing shapes; runner: no stale frontmatter) |
+| Backlinks/index sweep | wiki `index.md` + runbooks hub are SHARED files — forbidden in-lane; hub link + session row routed to merge owner (`## Findings to route`) |
+| Wiki lint | gate runner: `wiki:lint` 0 err / 113 warn — all pre-existing, none introduced |
+| Kaizen reflection | yes — `## Reflections` above |
+| Hostile close review | wrapped by /ggr (plan lane): 9.5/10 composite, zero caps, real-Giddy dispatch — `## Review log` |
+| Code-quality gate (Class-A) | no Class-A custom code — docs-only session |
+| Runtime verification (Doug) | no runtime surface touched (probes of blackbeltlegacy.com were incident triage, not this diff) |
+| Evidence-artifact URL | n/a — no runtime surface touched; SotD snapshot in `## Artifacts` |
+| Review & Recommend | yes — `## Next session` above (stub deliberately not minted; wave rule) |
+| Memory sweep | `mammoth-crm-tracer-lane.md` corrected (clients-CI test/lint claim stale since WL-P3-56); no other durable-fact changes |
+| Next session unblock check | merge sweep BLOCKED on SESSION_0635's PR only; everything else ready |
+| Git hygiene | branch `session-0633-brand-deploys`, tree clean, explicit-path staging throughout, single close push on operator go; hash reported in chat |
+| Graphify update | runner (this worktree): nodes=15887 · edges=34653 · communities=1769; canonical refresh = merge-owner/0624 (clears stale claim #2) |
+| Gate-runner caveat | runner graded staged `SESSION_0634.md` (highest-numbered) — 0633 gates re-verified by hand: task log 5 rows PASS, diff 7 files/1069 insertions |
+| Deferral guard | 4 flags, all justified dismissals: 3 are done-task/fix summaries (not deferrals), 1 is a finding already queued for merge-owner id-assignment — id-less by wave design |
 
 ## Review log
 
