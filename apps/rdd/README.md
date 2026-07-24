@@ -20,7 +20,11 @@ unknown keys, even though git-triggered builds tolerate them):
 - **`ignoreCommand`:** returns 0 (= skip build) when NONE of these paths changed — scoped to
   `apps/rdd` + the shared kernel it consumes (a `packages/ui-kit` change CAN break RDD, so it must
   rebuild) + root install/config. Markdown is excluded so a docs-only edit inside those paths does
-  not deploy (the same false-positive SESSION_0501 fixed for BBL).
+  not deploy (the same false-positive SESSION_0501 fixed for BBL). It inspects the **tip commit's
+  own changed files** via `git diff-tree ... HEAD` (present in Vercel's shallow clone) — NOT
+  `git diff HEAD^ HEAD`, which silently evaluated to "no change" on Vercel and skipped every RDD
+  build, so `/clients` never deployed until this was fixed (SESSION_0641, FS candidate). Squash-
+  merge flow makes the tip commit carry the whole PR's file set, so the diff-tree check is exact.
 - **Deliberately NOT broadened to `apps/*`:** an `apps/web` or `apps/baseline` change must NEVER
   rebuild RDD, and — the direction that matters — BBL is live and paid, so its own root
   `vercel.json` stays scoped to `apps/web` and cannot be triggered by anything here.
