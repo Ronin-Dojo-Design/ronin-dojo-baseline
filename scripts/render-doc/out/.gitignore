@@ -1,0 +1,4 @@
+# Self-contained: on-demand renders land here and are never committed.
+# (Root .gitignore is out of scope for this lane — this file is the whole rule.)
+*
+!.gitignore
