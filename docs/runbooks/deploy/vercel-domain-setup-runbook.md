@@ -1,11 +1,11 @@
 ---
-title: Vercel Domain Setup Runbook (Bluehost DNS)
+title: Vercel Domain Setup Runbook (Bluehost + Cloudflare DNS)
 slug: vercel-domain-setup-runbook
 type: runbook
 status: active
 created: 2026-05-13
-updated: 2026-06-27
-last_agent: claude-session-0454
+updated: 2026-07-23
+last_agent: claude-session-0633
 pairs_with:
   - docs/sprints/SESSION_0159.md
   - docs/runbooks/resend-setup-runbook.md
@@ -21,6 +21,7 @@ backlinks:
 tags:
   - vercel
   - bluehost
+  - cloudflare
   - dns
   - domain
   - resend
@@ -28,11 +29,20 @@ tags:
   - infrastructure
 ---
 
-# Vercel Domain Setup Runbook (Bluehost DNS)
+# Vercel Domain Setup Runbook (Bluehost + Cloudflare DNS)
 
-Step-by-step operator guide for attaching a new custom domain to a Vercel project while keeping Bluehost as the DNS registrar/host (per ADR 0015). Covers the Vercel attachment, Bluehost record edits, Resend transactional-email record alignment (parallel records share the same zone), verification, and the production-build-readiness gate that's easy to miss.
+Step-by-step operator guide for attaching a new custom domain to a Vercel project. The original
+(and still primary) path keeps Bluehost as the DNS registrar/host (per ADR 0015): Vercel
+attachment, Bluehost record edits, Resend transactional-email record alignment (parallel records
+share the same zone), verification, and the production-build-readiness gate that's easy to miss.
 
 Codifies the SESSION_0159 procedure for `baselinemartialarts.com` so the remaining three brand domains (`ronindojodesign.com`, `wekafusa.com`, `blackbeltlegacy.com`) reach a verified `https://` serve state without rediscovering the same pitfalls.
+
+A second path — **Cloudflare-managed zones** (added SESSION_0633, driving case `mammothmb.com` in
+the client's own Cloudflare account) — is covered in
+["Cloudflare DNS (third-party zone) → Vercel"](#cloudflare-dns-third-party-zone--vercel) below.
+Steps 1–2 (attach in Vercel) and the Production Build Readiness gate apply to both paths; only the
+record-editing and verification mechanics differ.
 
 ## Prerequisites
 
@@ -363,6 +373,201 @@ Repeat steps 1–8 for each remaining brand domain as it goes live:
 - `blackbeltlegacy.com` → attach to `bbl` Vercel project
 
 Each brand needs its own Resend domain entry and its own dedicated DKIM key — DKIM keys are per-domain by design. Step 3 has to be re-run against each brand's Resend Records page; the SPF and DMARC TXT values are identical across brands but live in each brand's own zone.
+
+## Cloudflare DNS (third-party zone) → Vercel
+
+Added SESSION_0633. How to point a domain whose DNS lives in a **Cloudflare** zone at a Vercel
+project. Driving case: `mammothmb.com` — registered and zoned in the client Michael's Cloudflare
+account (a **third-party account**). All vendor facts below were verified against current primary
+docs on **2026-07-23**; the per-domain values shown in the Vercel dashboard always win over
+anything printed here.
+
+### C0. Third-party-account boundary (read first)
+
+The Cloudflare zone belongs to the client, not to us. Operating model:
+
+- **This repo only ever produces a record table** (the before/after pattern in C2). Someone with
+  zone access — the client, or a member they've invited — applies it in their own dashboard.
+- **Never request the client's Cloudflare credentials**, API tokens, or a zone export. If ongoing
+  access is genuinely needed, the correct mechanism is the client inviting a member from their own
+  account (Manage Account → Members) with DNS-scoped permissions — their action, their audit trail.
+- Never paste verification tokens, DKIM keys, or zone exports into this repo. The record table
+  carries placeholders plus where-to-copy-from pointers, never live secret values.
+
+### C1. Prerequisites
+
+- The Vercel project exists and has a successful **production** deployment (same gate as Step 1
+  above — perfect DNS over no prod deploy still serves `404 DEPLOYMENT_NOT_FOUND`).
+- Someone with access to the Cloudflare zone is on-call to apply the record table and, if needed,
+  flip proxy status (C3).
+- The domain is attached (or about to be) on the **project** Domains page — that page mints the
+  per-domain record values the table needs.
+- Optional locally: `dig` or `nslookup` for DNS checks. This repo's sandbox shell has **no
+  `curl`** — HTTP checks run via `bun -e "fetch(...)"` (C5).
+
+### C2. The record table pattern
+
+Vercel's dashboard now surfaces **per-project record values** — "you'll find the precise `CNAME`
+or `A` record values tailored to your project and plan" in Project Settings → Domains
+([vercel.com/docs/domains/troubleshooting](https://vercel.com/docs/domains/troubleshooting),
+retrieved 2026-07-23). Current general values, confirmed 2026-07-23:
+
+- **Apex A record: `216.198.79.1`** — the value the dashboard currently surfaces (and what
+  SESSION_0159 observed live). The older `76.76.21.21` anycast IP still works but is the legacy
+  value ([community.vercel.com/t/dns-change-required/23343](https://community.vercel.com/t/dns-change-required/23343),
+  retrieved 2026-07-23). Always copy the dashboard's per-domain value.
+- **Subdomain CNAME: a per-project target** like `<hash>.vercel-dns-017.com` — "Each project has a
+  unique CNAME record e.g. `d1d4fc829fe7bc7c.vercel-dns-017.com`"
+  ([vercel.com/docs/domains/working-with-domains/add-a-domain](https://vercel.com/docs/domains/working-with-domains/add-a-domain),
+  retrieved 2026-07-23). Legacy `cname.vercel-dns.com` still works. Copy the value exactly,
+  **including the trailing dot** (troubleshooting doc, "Absolute CNAME records").
+- **No AAAA record** — "IPv6 is not supported on Vercel"
+  ([vercel.com/docs/domains/working-with-dns](https://vercel.com/docs/domains/working-with-dns),
+  retrieved 2026-07-23). Don't add one; delete is not required if none exists.
+
+The deliverable is a table in this shape (`mammothmb.com` example — placeholders, copy real values
+from the Vercel project Domains page):
+
+| # | Host | Type | Before (incumbent) | After (target) | Proxy status | Action |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | `@` (`mammothmb.com`) | A | *(record what the zone serves today, before editing)* | `216.198.79.1` *(confirm in dashboard)* | **DNS only** (grey) | Edit / Add |
+| 2 | `www` | CNAME | *(record incumbent)* | `<project-hash>.vercel-dns-0xx.com.` *(copy exact from dashboard)* | **DNS only** (grey) | Edit / Add |
+| — | everything else (MX, TXT, other CNAMEs) | — | *(as-is)* | *(unchanged)* | *(unchanged)* | **Do not touch** (C6) |
+
+Fill the "Before" column from the zone's DNS page *before* proposing edits — it doubles as the
+rollback state (C7).
+
+**Apex handling:** use the plain **A record**. Cloudflare can technically host a CNAME at the apex
+via CNAME flattening (it resolves the chain and returns the final IP instead of the CNAME —
+[developers.cloudflare.com/dns/cname-flattening/](https://developers.cloudflare.com/dns/cname-flattening/),
+retrieved 2026-07-23), but Vercel's instruction for apex domains is an A record (RFC 1034: no other
+data may coexist with a CNAME at a node — troubleshooting doc, "Working with Apex domain"), and
+flattening adds a failure mode (dangling target → empty NODATA answer). Plain A keeps the client's
+zone boring.
+
+### C3. Proxy status — DNS only (grey) vs Proxied (orange) — verified 2026-07-23
+
+**Claim checked:** "Cloudflare records for a Vercel domain must be DNS-only (grey) or Vercel cert
+issuance stalls." **Verdict: directionally right as the operating rule, but overstated as an
+absolute.** What the vendors actually say:
+
+- Vercel's position on the orange cloud is **"we do not recommend this approach"** / "proceed with
+  caution" — not-recommended, not impossible
+  ([vercel.com/kb/guide/cloudflare-with-vercel](https://vercel.com/kb/guide/cloudflare-with-vercel)
+  and [vercel.com/kb/guide/can-i-use-a-proxy-on-top-of-my-vercel-deployment](https://vercel.com/kb/guide/can-i-use-a-proxy-on-top-of-my-vercel-deployment),
+  both retrieved 2026-07-23).
+- The stall mechanism is real and specific: Vercel issues Let's Encrypt certs via the **HTTP-01
+  challenge** — a plain-HTTP request to `http://<domain>/.well-known/acme-challenge/*`, plus
+  platform traffic to `/.well-known/vercel/*`, with the Host header forwarded intact. A proxy that
+  redirects HTTP→HTTPS, caches, or blocks those paths can "prevent our Let's Encrypt SSL
+  certificates from being provisioned" (proxy KB above, retrieved 2026-07-23). Cloudflare's common
+  defaults (Always Use HTTPS; Flexible SSL) do exactly that — so an out-of-the-box orange cloud
+  **does** stall issuance in practice, and a wrong SSL mode adds 526 (Invalid SSL) / 524 (timeout)
+  errors on live traffic.
+- A proxied setup *can* be made to work: SSL/TLS encryption mode **Full (strict)** — "Cloudflare
+  strongly recommends using Full or Full (strict) modes"
+  ([developers.cloudflare.com/ssl/origin-configuration/ssl-modes/](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/),
+  retrieved 2026-07-23); **never Flexible** (HTTP to an HTTPS-forcing origin = redirect loop) —
+  plus rules exempting `/.well-known/*` from HTTPS-redirect and caching. Even then, Vercel staff's
+  current answer to "Invalid Configuration with the proxy enabled" is still *switch the record to
+  DNS-only*
+  ([community.vercel.com/t/how-to-fix-vercel-invalid-configuration-error-with-cloudflare-proxy-enabled/37446](https://community.vercel.com/t/how-to-fix-vercel-invalid-configuration-error-with-cloudflare-proxy-enabled/37446),
+  April 2026, retrieved 2026-07-23), and double-proxying costs two cache layers, extra latency,
+  and degraded Vercel Firewall / bot-protection signal.
+
+**Runbook rule:** ship both rows **DNS only (grey)**. If the host is already proxied in the
+client's zone, the flip procedure:
+
+1. Cloudflare dashboard → the zone → **DNS → Records** → the row's orange-cloud toggle → **DNS
+   only** → Save. Per-record and instant at the Cloudflare edge; downstream resolvers catch up
+   within the record TTL (Cloudflare defaults are low — minutes).
+2. **Name the trade for the client** — grey-clouding that hostname removes Cloudflare's
+   **caching/CDN**, **WAF + DDoS mitigation**, **analytics**, and **origin-IP masking** ("DNS
+   queries for these will resolve to the record's actual origin IP address" —
+   [developers.cloudflare.com/dns/proxy-status/](https://developers.cloudflare.com/dns/proxy-status/),
+   retrieved 2026-07-23) for that hostname only. The rest of the zone is untouched.
+3. Then say why the trade is cheap here: the "origin" being exposed is Vercel's shared anycast
+   edge, not a private server, and Vercel supplies its own CDN, DDoS mitigation, and firewall on
+   that edge. In effect only Cloudflare-side analytics for the hostname go dark.
+
+If the client has a hard requirement for the orange cloud (their WAF/analytics standard), don't
+fight it in their zone: record the requirement, and run the Full-(strict) + `/.well-known/*`
+exemption configuration above with eyes open — or, on Vercel Enterprise, a Cloudflare Origin CA
+certificate uploaded to Vercel (cloudflare-with-vercel KB above).
+
+### C4. Staging order
+
+1. **Attach in Vercel first** (project → Settings → Domains → Add Domain: the apex, accept the
+   `www` prompt, choose the redirect direction). Attaching is what mints the per-domain record
+   values *and* starts the async verifier — records applied before attach verify against nothing.
+2. Produce the C2 table from the dashboard values and hand it to the zone-holder.
+3. Apply the **`www` row first** if a soft launch is wanted — `www` and apex verify
+   **independently**, so `www` can go green while the apex still points at the incumbent site (or
+   vice versa). Otherwise apply both rows in one save.
+4. Watch verification (C5); the refresh button on the domain row forces an immediate recheck.
+
+### C5. Verification
+
+- Authoritative status = the **project Domains page**: **Valid Configuration** (green) = DNS
+  verified + cert issued. Same CLI caveat as the Bluehost flow: `vercel domains inspect <domain>`
+  prints a hardcoded `[recommended] A 76.76.21.21` line regardless of the dashboard's per-domain
+  value — trust the dashboard.
+- **Timing:** plain A/CNAME record changes "typically propagate quicker" than nameserver changes
+  (which can take 24–48 h) — with Cloudflare's low default TTLs expect minutes
+  ([vercel.com/docs/domains/troubleshooting](https://vercel.com/docs/domains/troubleshooting),
+  retrieved 2026-07-23). Cert issuance follows verification automatically (HTTP-01, handled by
+  Vercel); observed green→cert in past sessions is ~30 s–5 min. If issuance hangs: check the zone
+  for **CAA records** (if any exist, one must allow `letsencrypt.org`) and stale
+  `_acme-challenge` TXT rows — both covered in the same troubleshooting doc.
+- Checks runnable from this repo's sandbox (**no `curl`** in the sandbox shell — use
+  `bun -e "fetch(...)"`; `dig`/`nslookup` only if available):
+
+```bash
+# DNS (only if dig is available)
+dig +short mammothmb.com A          # expect the dashboard A value, e.g. 216.198.79.1
+dig +short www.mammothmb.com CNAME  # expect <hash>.vercel-dns-0xx.com.
+# NOTE: while a row is PROXIED these return Cloudflare anycast IPs (and no CNAME) —
+# the grey-cloud flip is directly visible in this output.
+
+# HTTP/HTTPS (sandbox-safe, no curl)
+bun -e "fetch('https://mammothmb.com',{redirect:'manual'}).then(r=>console.log(r.status,r.headers.get('server')))"
+# expect: 200 (or 307/308 for a www/apex redirect) + server: Vercel
+bun -e "fetch('http://mammothmb.com',{redirect:'manual'}).then(r=>console.log(r.status,r.headers.get('server')))"
+```
+
+`server: cloudflare` in the response = the host is still proxied; `Vercel` = traffic terminates at
+Vercel's edge.
+
+### C6. Do-not-touch list for client zones
+
+A greenfield Vercel attach only ever adds/edits the two rows in C2. Everything else in a client
+zone is live infrastructure. For the Mammoth zones specifically (**both Mammoth domains run Google
+Workspace mail**):
+
+| Leave alone | What it is | Why one wrong edit hurts |
+| --- | --- | --- |
+| `MX` rows (`smtp.google.com` / `aspmx.l.google.com` shapes) | Google Workspace inbound mail | Mail delivery breaks silently |
+| `TXT @ "v=spf1 …"` (Google + HubSpot includes) | SPF mail auth | Mail spam-folders/rejects silently |
+| `*._domainkey` TXT/CNAME rows (Google + HubSpot DKIM) | DKIM signing keys | Mail auth breaks silently |
+| `_dmarc` TXT | DMARC policy + reporting | Enforcement/reporting stops silently |
+| `hub.` CNAME | HubSpot-hosted hub surface | Live marketing surface 404s |
+| `google-site-verification` / other site-verification TXTs | Ownership proofs (Search Console etc.) | Console access + dependent services drop |
+
+The theme: **mail-auth records fail silently.** Nothing errors at edit time — mail just starts
+landing in spam or bouncing days later, long after anyone remembers the DNS edit. When in doubt:
+add rows, never delete, and never "clean up" a client zone as a side quest.
+
+### C7. Rollback
+
+The attach is purely additive, so rollback is symmetric:
+
+1. **Cloudflare:** delete the added apex A and `www` CNAME rows — or re-point them to the "Before"
+   column captured in the C2 table. Restore the original proxy status if it was flipped.
+2. **Vercel:** remove the domain from the project Domains page (optional — a domain left attached
+   with no matching records just sits at Invalid Configuration; removing it stops the
+   verification noise).
+3. Nothing else to undo: the incumbent zone rows were never touched (C6), so mail, HubSpot, and
+   site verifications ran unaffected throughout — including during any failed attempt.
 
 ## Cross-References
 
