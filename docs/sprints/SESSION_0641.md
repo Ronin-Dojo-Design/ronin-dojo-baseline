@@ -45,6 +45,24 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 | 0638 | auto/session-0638-mmb-landing | claude Sonnet | G-019 Mammoth landing port | PR open |
 | 0639 | auto/session-0639-inbox-module | claude Fable | G-033 slice 1 (InboundEmail + /app/inbox) | **DRAFT** PR (migration unapplied) |
 | 0640 | auto/session-0640-doc-renderer | claude Sonnet | G-030 v1 doc renderer | PR open |
+| 0642 | auto/session-0642-curriculum-wave3 | claude Sonnet | G-013 Wave-3 (B3/C3/G2 + E1 stretch, verify-first) | PR open (wave 2) |
+| 0643 | auto/session-0643-mmb-engagement-pack | claude Sonnet | MMB engagement doc pack (G-028 content layer) | PR open (wave 2) |
+| 0644 | auto/session-0644-mmb-seo | codex | MMB SEO/metadata foundation (mammothmb.com) | local commit → orchestrator pushes → PR |
+| 0645 | auto/session-0645-rr-mmb-pricing | claude Fable | /rr pricing research + Michael one-pager (father-notes anchors: $8–10K site, $100–200/hr, retainer-then-hourly, change-control doctrine, PMBA resolve) | PR open (wave 2) |
+| 0646 | auto/session-0646-mmb-pitch-deck | claude Sonnet | "Ronin Building Design" pitch deck (structurewebworks + yt-short refs, infographic slide) | PR open (wave 2) |
+| 0647 | auto/session-0647-3d-prototype | codex | three.js metal-building 3D prototype | local commit → orchestrator pushes → PR |
+| 0648 | auto/session-0648-rdd-industries | claude Sonnet | RDD /industries pages (structurewebworks pattern, Ronin Building Design page) | PR open (wave 2) — **⚠ merge auto-deploys live ronindojodesign.com; Desi pass + operator copy sign-off first** |
+
+> **Wave-2 additions to the checklist:** merge order per Petey — #269 (0639) first, then 0642 (same
+> app, rebase after), then codex 0644/0647 (orchestrator-pushed; full build gate in a normal shell),
+> then docs lanes 0643/0645/0646 any order, then 0648 LAST (deploys prod RDD — Desi pass + operator
+> copy approval are its merge gates). 0647 morning smoke: `bun
+> scripts/prototypes/metal-building-3d/serve.js` → :4173. 0645's PMBA conclusion needs operator
+> confirmation. Ronin Building Design niche-brand family is canon (memory `rdd-niche-brand-variants`)
+> — consider a goals-ledger row at the ledger-apply step.
+> **Wave 3 (operator-authorized):** the orchestrator session plans + launches a continuation wave
+> after wave 2 lands (same policy) — if it ran overnight, its lanes appear in `gh pr list` beyond
+> this table; sweep them into the same merge queue.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
