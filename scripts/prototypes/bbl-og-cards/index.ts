@@ -4,11 +4,18 @@ import { fileURLToPath } from "node:url";
 
 import {
   renderClaimVerifiedCard,
+  renderLegacyWrappedCard,
   renderMilestoneCard,
   renderPromotionCard,
+  renderTechniquePreviewCard,
 } from "./cards";
 
-type CardType = "promotion" | "claim-verified" | "milestone";
+type CardType =
+  | "promotion"
+  | "claim-verified"
+  | "milestone"
+  | "technique-preview"
+  | "legacy-wrapped";
 
 const DEMO_RENDERERS: Record<CardType, () => string> = {
   promotion: () =>
@@ -30,12 +37,29 @@ const DEMO_RENDERERS: Record<CardType, () => string> = {
       statLine: "1,000",
       contextLine: "verified lineage connections",
     }),
+  "technique-preview": () =>
+    renderTechniquePreviewCard({
+      techniqueName: "Triangle Choke",
+      disciplineLabel: "Brazilian Jiu-Jitsu",
+      freePreview: true,
+    }),
+  "legacy-wrapped": () =>
+    renderLegacyWrappedCard({
+      year: 2026,
+      statLines: [
+        "12 promotions",
+        "48 training sessions",
+        "3 lineage connections",
+        "1 unforgettable year",
+      ],
+      name: "Jane Doe",
+    }),
 };
 
 function usage(): string {
   return [
     "Usage:",
-    "  bun scripts/prototypes/bbl-og-cards/index.ts <promotion|claim-verified|milestone> [--out file.svg]",
+    "  bun scripts/prototypes/bbl-og-cards/index.ts <promotion|claim-verified|milestone|technique-preview|legacy-wrapped> [--out file.svg]",
   ].join("\n");
 }
 

@@ -2,8 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import {
   renderClaimVerifiedCard,
+  renderLegacyWrappedCard,
   renderMilestoneCard,
   renderPromotionCard,
+  renderTechniquePreviewCard,
 } from "./cards";
 import { parseArgs } from "./index";
 
@@ -77,8 +79,77 @@ describe("BBL celebration-card SVG renderers", () => {
     expect(svg).not.toContain("undefined");
   });
 
+  test("technique-preview renders an escaped OG-sized SVG with a free badge", () => {
+    const svg = renderTechniquePreviewCard({
+      techniqueName: HOSTILE_TEXT,
+      disciplineLabel: HOSTILE_TEXT,
+      freePreview: true,
+    });
+
+    expectValidShape(svg);
+    expectEscaped(svg);
+    expect(svg).toContain("Watch the breakdown");
+    expect(svg).toContain("FREE PREVIEW");
+    expect(svg).toContain("technique preview, free preview");
+    expect(svg).not.toContain("undefined");
+  });
+
+  test("technique-preview omits the free badge when the preview is not free", () => {
+    const svg = renderTechniquePreviewCard({
+      techniqueName: "Triangle Choke",
+      disciplineLabel: "Brazilian Jiu-Jitsu",
+      freePreview: false,
+    });
+
+    expectValidShape(svg);
+    expect(svg).not.toContain("FREE PREVIEW");
+    expect(svg).not.toContain("technique preview, free preview");
+    expect(svg).not.toContain("undefined");
+  });
+
+  test("legacy-wrapped renders an escaped OG-sized SVG without an optional name", () => {
+    const svg = renderLegacyWrappedCard({
+      year: 2026,
+      statLines: [HOSTILE_TEXT],
+    });
+
+    expectValidShape(svg);
+    expectEscaped(svg);
+    expect(svg).toContain("LEGACY WRAPPED");
+    expect(svg).not.toContain("undefined");
+  });
+
+  test("legacy-wrapped renders no more than four stat lines", () => {
+    const svg = renderLegacyWrappedCard({
+      year: 2026,
+      statLines: ["STAT_ONE", "STAT_TWO", "STAT_THREE", "STAT_FOUR", "STAT_FIVE"],
+      name: "Jane Doe",
+    });
+
+    expectValidShape(svg);
+    for (const includedLine of [
+      "STAT_ONE",
+      "STAT_TWO",
+      "STAT_THREE",
+      "STAT_FOUR",
+    ]) {
+      expect(svg).toContain(includedLine);
+    }
+    expect(svg).not.toContain("STAT_FIVE");
+    expect(svg).not.toContain("undefined");
+  });
+
   test("CLI parsing rejects inherited object keys as card types", () => {
     expect(() => parseArgs(["toString"])).toThrow("Unknown or missing card type");
     expect(parseArgs(["promotion"])).toEqual({ type: "promotion" });
+  });
+
+  test("CLI parsing accepts the v1.1 card types", () => {
+    expect(parseArgs(["technique-preview"])).toEqual({
+      type: "technique-preview",
+    });
+    expect(parseArgs(["legacy-wrapped"])).toEqual({
+      type: "legacy-wrapped",
+    });
   });
 });
