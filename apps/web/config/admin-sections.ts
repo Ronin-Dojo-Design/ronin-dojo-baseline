@@ -14,6 +14,7 @@ import {
   GraduationCapIcon,
   IdCardIcon,
   ImageIcon,
+  InboxIcon,
   KeyIcon,
   Layers2Icon,
   LayoutGridIcon,
@@ -245,6 +246,15 @@ export const ADMIN_SECTION_GROUPS: AdminSectionGroup[] = [
         title: "Email",
         href: "/app/email",
         icon: MailIcon,
+        permission: APP_AREA_PERMISSIONS.email,
+      },
+      {
+        // Inbound-email triage (G-033 slice 1, SESSION_0639) — REUSES the `email.manage` gate:
+        // the inbox is the receive side of the same email admin area (route gate matches:
+        // app/app/inbox/page.tsx `requirePermission(APP_AREA_PERMISSIONS.email)`).
+        title: "Inbox",
+        href: "/app/inbox",
+        icon: InboxIcon,
         permission: APP_AREA_PERMISSIONS.email,
       },
       {
