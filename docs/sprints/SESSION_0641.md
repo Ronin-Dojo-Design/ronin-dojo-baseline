@@ -224,3 +224,20 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 ### Goal
 
 ### First task
+
+> **Waves 9+10 RESULTS (5/5 — RUN COMPLETE: 10 waves / 33 autonomous lanes / PRs #264–#299):**
+> · #298 (0667, PRIORITY) **MMB billing pack** — tracker FOUND (Mammoth_Vault iCloud frontmatter,
+>   6.95h tracked / ~22.95h evidence total); invoice bills the operator's 20h × $100 F&F,
+>   −$2,000 discount visible, **$2,000.00 due**; State of the Building (18 area cards); reusable
+>   RDD_Client_Invoice template (the remembered "BBL invoice template" does NOT exist — designed
+>   fresh, provenance recorded)
+> · #296 (0668) BBL internal-reference invoice — README baseline ~1,400h (2026-06-19) → updated
+>   ≈1,672h → $334,400 std / $167,200 F&F, era-itemized, BBL-only-haircut flag
+> · #299 (0669) Client-Invoice fillable prototype (Playwright-verified) + **deck bug ROOT CAUSE:
+>   iPadOS Safari edge-swipe zone claims the flush-bezel tap targets** — CSS fix diff ready in
+>   SESSION_0669 ## Findings, apply to #276 at the sweep
+> · #295 (0670) Cowork /rr captured + annotated (red-prod finding STALE — prod verified green)
+> · #297 (0671) deploy watchdog shipped — 13/13 tests, live dry-run: both prods READY; AM loads
+>   the plist
+> **AM morning-critical order:** review #298's numbers BEFORE the Michael meeting · the deck fix
+> for #276 · then the merge queue as tabled above. THE ORCHESTRATOR IS DONE.
