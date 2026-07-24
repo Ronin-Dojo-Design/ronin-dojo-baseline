@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ronin Building Design × Mammoth Build — Pitch Deck (DRAFT v0.1)</title>
+<meta name="description" content="Starter high-level pitch deck: how Ronin Building Design proposes to improve the Mammoth Build web presence." />
+<style>
+  :root{
+    --bg:#0d0e10;
+    --surface:#16181b;
+    --surface2:#1c1f23;
+    --border:#2a2e33;
+    --primary:#ff6a1a;
+    --primary-hover:#ff8338;
+    --primary-deep:#c24e12;
+    --ink:#f4f5f6;
+    --muted:#9ba1a8;
+    --muted2:#6f7680;
+    --font-display:"Bahnschrift","SF Compact Display","Arial Narrow",system-ui,sans-serif;
+    --font-sans:-apple-system,"Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--bg);}
+  body{
+    font-family:var(--font-sans);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  .deck{position:relative;width:100vw;height:100vh;}
+
+  /* ---- slide shell ---- */
+  .slide{
+    position:fixed;
+    inset:0;
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    padding:6.5vh 8.5vw 11vh;
+    overflow-y:auto;
+  }
+  .slide.is-active{display:flex;}
+  .slide::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    background:
+      radial-gradient(circle at 88% -8%, rgba(255,106,26,.15), transparent 55%),
+      radial-gradient(circle at -10% 108%, rgba(255,106,26,.08), transparent 45%);
+    pointer-events:none;
+  }
+  .inner{max-width:74rem;width:100%;margin:0 auto;}
+  .eyebrow{
+    font-family:var(--font-display);
+    font-weight:700;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    font-size:.74rem;
+    color:var(--primary);
+    margin:0 0 .85rem;
+  }
+  h1.title, h2.title{
+    font-family:var(--font-display);
+    font-weight:800;
+    line-height:1.05;
+    letter-spacing:.005em;
+    margin:0 0 1.15rem;
+    color:var(--ink);
+  }
+  h1.title{font-size:clamp(2.3rem,5.6vw,4.3rem);}
+  h2.title{font-size:clamp(1.7rem,3.6vw,2.65rem);}
+  .lede{
+    font-size:clamp(1rem,1.25vw,1.18rem);
+    color:var(--muted);
+    max-width:46rem;
+    line-height:1.62;
+    margin:0 0 1.6rem;
+  }
+  .fine{font-size:.85rem;color:var(--muted2);line-height:1.55;}
+
+  /* ---- lists ---- */
+  ul.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.75rem;}
+  ul.list li{
+    position:relative;
+    padding-left:1.6rem;
+    font-size:1rem;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  ul.list.check li::before{
+    content:"✓";
+    position:absolute;left:0;top:0;
+    color:var(--primary);
+    font-weight:700;
+  }
+  ul.list.gap li::before{
+    content:"–";
+    position:absolute;left:0;top:0;
+    color:var(--muted2);
+    font-weight:700;
+  }
+  ul.list.num{counter-reset:n;}
+  ul.list.num li{counter-increment:n;}
+  ul.list.num li::before{
+    content:counter(n);
+    position:absolute;left:0;top:-.05rem;
+    color:var(--primary);
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:.85rem;
+  }
+
+  /* ---- cards / columns ---- */
+  .cols{display:grid;gap:1.9rem;}
+  .cols.two{grid-template-columns:1fr 1fr;}
+  .cols.three{grid-template-columns:repeat(3,1fr);}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:1.55rem 1.75rem;
+  }
+  .card h3{
+    font-family:var(--font-display);
+    font-size:1.02rem;
+    font-weight:700;
+    margin:0 0 .8rem;
+    color:var(--ink);
+  }
+  .card .kicker{
+    font-family:var(--font-display);
+    font-size:.68rem;
+    font-weight:700;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--muted2);
+    display:block;
+    margin-bottom:.5rem;
+  }
+  .card p{margin:0;font-size:.94rem;line-height:1.6;color:var(--muted);}
+  .card p.ink{color:var(--ink);}
+
+  /* ---- placeholder chip ---- */
+  .placeholder{
+    display:inline-flex;
+    align-items:center;
+    gap:.35rem;
+    border:1px dashed var(--primary);
+    color:var(--primary);
+    background:rgba(255,106,26,.09);
+    border-radius:6px;
+    padding:.06rem .55rem;
+    font-size:.88em;
+    white-space:nowrap;
+  }
+  .placeholder::before{content:"◆";font-size:.62em;}
+
+  /* ---- simple flow row ---- */
+  .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:.5rem;margin:1.6rem 0 .4rem;}
+  .flow .step{
+    flex:1 1 9rem;
+    min-width:8rem;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:.9rem 1rem;
+    text-align:center;
+  }
+  .flow .step .n{
+    font-family:var(--font-display);
+    font-size:.68rem;
+    letter-spacing:.12em;
+    color:var(--primary);
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:.3rem;
+  }
+  .flow .step .t{font-size:.9rem;color:var(--ink);font-weight:600;}
+  .flow .arrow{
+    align-self:center;
+    color:var(--primary);
+    font-size:1.3rem;
+    flex:0 0 auto;
+    padding:0 .1rem;
+  }
+
+  /* ---- title slide specifics ---- */
+  .badge{
+    display:inline-flex;align-items:center;gap:.5rem;
+    border:1px solid var(--border);
+    border-radius:999px;
+    padding:.32rem .9rem;
+    font-family:var(--font-display);
+    font-size:.72rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:1.6rem;
+  }
+  .badge .dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--primary);}
+  .wordmark{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:1.05rem;
+    letter-spacing:.02em;
+    color:var(--ink);
+  }
+  .wordmark .x{color:var(--muted2);font-weight:400;margin:0 .5rem;}
+  .wordmark .mmb{color:var(--primary);}
+  .family-note{
+    margin-top:2.6rem;
+    font-size:.82rem;
+    color:var(--muted2);
+    max-width:32rem;
+    line-height:1.5;
+    border-top:1px solid var(--border);
+    padding-top:1.1rem;
+  }
+  .recipient{margin-top:.4rem;font-size:.95rem;color:var(--muted);}
+
+  /* ---- chrome: progress / footer / nav ---- */
+  .progress-track{
+    position:fixed;top:0;left:0;right:0;height:3px;
+    background:var(--border);
+    z-index:60;
+  }
+  .progress-fill{
+    height:100%;
+    background:var(--primary);
+    width:7%;
+    transition:width .25s ease;
+  }
+  .chrome-footer{
+    position:fixed;left:0;right:0;bottom:0;height:60px;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 1.6rem;
+    background:linear-gradient(to top, rgba(13,14,16,.94), rgba(13,14,16,0));
+    z-index:50;
+    pointer-events:none;
+  }
+  .chrome-footer .brand{
+    font-size:.76rem;
+    color:var(--muted2);
+    pointer-events:auto;
+  }
+  .chrome-footer .brand strong{color:var(--muted);font-weight:600;}
+  .nav-cluster{display:flex;align-items:center;gap:.7rem;pointer-events:auto;}
+  .nav-btn{
+    width:34px;height:34px;border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--surface);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    font-size:1rem;
+    line-height:1;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .nav-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+  .nav-btn:disabled{opacity:.32;cursor:default;}
+  .counter{
+    font-family:var(--font-display);
+    font-size:.78rem;
+    letter-spacing:.06em;
+    color:var(--muted2);
+    min-width:4.6rem;
+    text-align:center;
+  }
+  .edge-zone{
+    position:fixed;top:0;bottom:60px;width:64px;
+    z-index:40;cursor:pointer;
+    background:transparent;
+    border:none;
+    padding:0;
+  }
+  .edge-zone.left{left:0;}
+  .edge-zone.right{right:0;}
+  .edge-zone:focus-visible{outline:2px solid var(--primary);outline-offset:-2px;}
+
+  /* ---- SVG infographic slide ---- */
+  .infoflow{width:100%;max-width:78rem;margin:0 auto;}
+  .infoflow svg{width:100%;height:auto;display:block;}
+  .infoflow-caption{
+    text-align:center;
+    font-size:.82rem;
+    color:var(--muted2);
+    margin-top:.4rem;
+  }
+
+  @media (max-width:900px){
+    .cols.two, .cols.three{grid-template-columns:1fr;}
+    .slide{padding:7vh 6.5vw 12vh;}
+  }
+</style>
+</head>
+<body>
+
+<div class="deck">
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <!-- 1 — TITLE -->
+  <section class="slide is-active" data-title="Title">
+    <div class="inner">
+      <span class="badge"><span class="dot"></span> Draft · v0.1</span>
+      <p class="eyebrow">Ronin Building Design</p>
+      <h1 class="title">Built all the way through — online, too.</h1>
+      <p class="lede">
+        A starter proposal for the Mammoth Build web presence — from Ronin Building Design, the
+        construction-industry arm of Ronin Dojo Design.
+      </p>
+      <p class="recipient">Prepared for Michael Flores &amp; the Mammoth Metal Buildings team.</p>
+      <div class="wordmark">
+        Ronin Building Design <span class="x">×</span> <span class="mmb">Mammoth Build</span>
+      </div>
+      <p class="family-note">
+        Ronin Building Design is the first industry-niche variant of Ronin Dojo Design — one kernel,
+        reshaped for a brand. More are coming: Ronin Plumbing Design, Ronin Landscape Design, and
+        others as the studio's niche-agency family grows.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 — WHERE MAMMOTH.BUILD STANDS TODAY -->
+  <section class="slide" data-title="Starting point">
+    <div class="inner">
+      <p class="eyebrow">Starting point</p>
+      <h2 class="title">mammoth.build already has real bones.</h2>
+      <p class="lede">
+        Reviewed live at mammoth.build — everything below is something we actually observed on the
+        page, not a guess.
+      </p>
+      <div class="cols two">
+        <div class="card">
+          <span class="kicker">What's already working</span>
+          <ul class="list check">
+            <li>A confident dark hero with a direct headline and two clear CTAs above the fold — &ldquo;Start a Successful Project&rdquo; and &ldquo;See Recent Builds.&rdquo;</li>
+            <li>Live contact channels already wired — real <code>tel:</code> and <code>mailto:</code> links, not just text.</li>
+            <li>A real content engine already shipping: blog posts plus a &ldquo;Planning Guides&rdquo; pillar-guide format with read-time labels.</li>
+            <li>Structured data (schema.org) present, one <code>&lt;h1&gt;</code> per page, clean mobile reflow.</li>
+            <li>A lean technical foundation (Astro, WebP images, CDN) — not a bloated page-builder template.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="kicker">Where the gaps are</span>
+          <ul class="list gap">
+            <li>6 of 18 homepage images ship with no alt text — accessibility and image search left on the table.</li>
+            <li>The title tag reads &ldquo;Sales, Project Management, Installs&rdquo; — no city or state, under-using local search relevance for a Colorado/Wyoming-heavy project list.</li>
+            <li>No testimonials, reviews, or third-party proof anywhere on the page — a large-scale buying decision usually wants more than &ldquo;trust us.&rdquo;</li>
+            <li>On mobile, the live-chat bubble sits directly over the secondary CTA button, partially covering it.</li>
+            <li>The contact form appears to be one-way — no visible sign the inquiry becomes a tracked, owned record afterward.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 — THE OPPORTUNITY -->
+  <section class="slide" data-title="The opportunity">
+    <div class="inner">
+      <p class="eyebrow">The opportunity</p>
+      <h2 class="title">What is a converted lead actually worth here?</h2>
+      <p class="lede">
+        Most website advice treats every visitor the same way — more traffic, lower cost-per-click,
+        done. That math was built for a $40 checkout. It doesn't hold for a barn, a shop, or a
+        commercial building.
+      </p>
+      <ul class="list check">
+        <li>A Mammoth inquiry isn't an impulse buy — it's the front door to a project worth <span class="placeholder">insert average project value</span>.</li>
+        <li>If one converted lead is worth that much, a small lift in how many visitors become tracked, owned conversations is worth more here than in almost any other industry.</li>
+        <li>That reframes the whole conversation: not &ldquo;how do we get more traffic,&rdquo; but &ldquo;how do we make sure the right traffic never falls through a crack.&rdquo;</li>
+      </ul>
+      <div class="flow">
+        <div class="step"><span class="n">01</span><span class="t">Visitor</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">02</span><span class="t">Inquiry</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">03</span><span class="t">Qualified conversation</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">04</span><span class="t">Signed project</span><br/><span class="placeholder" style="margin-top:.4rem;">value TBD</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 — SITE REFRESH: WHY -->
+  <section class="slide" data-title="Site refresh — why">
+    <div class="inner">
+      <p class="eyebrow">Site refresh — why</p>
+      <h2 class="title">From a good static site to a lead-owning front door.</h2>
+      <div class="cols two">
+        <div class="card">
+          <span class="kicker">Today</span>
+          <p class="ink">Informational, confident, well-built — and still fundamentally a brochure.</p>
+          <p style="margin-top:.8rem;">A visitor reads the page, then emails or calls. What happens after that is invisible to the site itself.</p>
+        </div>
+        <div class="card">
+          <span class="kicker">The shift</span>
+          <p class="ink">Same voice, same confidence — plus a front door built to convert and to remember.</p>
+          <p style="margin-top:.8rem;">Faster, mobile-first by design, and every inquiry becomes an owned record instead of an email sitting in an inbox.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 — SITE REFRESH: THE LIST -->
+  <section class="slide" data-title="Site refresh — the list">
+    <div class="inner">
+      <p class="eyebrow">Site refresh — the list</p>
+      <h2 class="title">The concrete list.</h2>
+      <ul class="list num">
+        <li>Add descriptive alt text across the site — the 6 unlabeled homepage images first.</li>
+        <li>Bring city and region into title tags and headings (&ldquo;Metal Buildings in <span class="placeholder">City</span>, Colorado&rdquo; pattern) instead of the brand name alone.</li>
+        <li>Move the mobile primary CTA out from under the chat widget, so it's always reachable with one thumb.</li>
+        <li>Keep the lean Astro foundation — audit before adding anything that isn't earning its weight in load time.</li>
+        <li>Replace the one-way contact form with a single lead form that creates an owned record, not just an email.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 6 — AUTOMATION: THE FLOW -->
+  <section class="slide" data-title="Automation — the flow">
+    <div class="inner">
+      <p class="eyebrow">Automation — the flow</p>
+      <h2 class="title">Every inquiry becomes an owned Next Action, not an email.</h2>
+      <p class="lede">
+        Mammoth already has the beginning of this: a purpose-built CRM and intake system scoped in
+        Ronin's own build shop (see the Mammoth Build CRM PRD). Nothing here is a promise beyond
+        what's already documented — it's the direction already under construction.
+      </p>
+      <div class="flow">
+        <div class="step"><span class="n">01</span><span class="t">Inquiry submitted</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">02</span><span class="t">Lead record created</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">03</span><span class="t">Routed to an owner</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">04</span><span class="t">Next Action assigned</span></div>
+        <div class="arrow">→</div>
+        <div class="step"><span class="n">05</span><span class="t">Follow-up scheduled</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 — AUTOMATION: WHY IT MATTERS -->
+  <section class="slide" data-title="Automation — why it matters">
+    <div class="inner">
+      <p class="eyebrow">Automation — why it matters</p>
+      <h2 class="title">Speed to first response is a conversion lever, not a nice-to-have.</h2>
+      <ul class="list check">
+        <li>No inquiry drops silently — every open opportunity carries an owned Next Action or gets flagged.</li>
+        <li>No re-keying between a contact form, an inbox, and a spreadsheet.</li>
+        <li>Ties straight back to the earlier math: if a lead is worth <span class="placeholder">insert average project value</span>, a missed follow-up is not a small loss.</li>
+        <li>This isn't a hypothetical add-on — it's the same direction already scoped for Mammoth's own CRM.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 8 — SEO: FOUNDATION -->
+  <section class="slide" data-title="SEO — foundation">
+    <div class="inner">
+      <p class="eyebrow">SEO — foundation</p>
+      <h2 class="title">Best practice, not black magic.</h2>
+      <ul class="list check">
+        <li>Local + niche keyword targeting — city/region paired with building type, not just brand terms.</li>
+        <li>Technical basics done right: descriptive title tags, image alt text, schema markup, a clean sitemap, Core Web Vitals.</li>
+        <li>No invented rankings or promised positions on this deck — this is the foundation search engines reward, not a guarantee of where it lands. Results vary by market and competition.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9 — SEO: CONTENT PLAN -->
+  <section class="slide" data-title="SEO — content plan">
+    <div class="inner">
+      <p class="eyebrow">SEO — content plan</p>
+      <h2 class="title">Build on what's already working.</h2>
+      <p class="lede">The Planning Guides and blog format already live on mammoth.build — that's the right instinct, already in motion.</p>
+      <ul class="list check">
+        <li>Expand the pillar-guide cadence already established.</li>
+        <li>Add location + building-type landing pages that guides can cross-link into.</li>
+        <li>Feed the photo pipeline (next section) back into content instead of starting from zero every post.</li>
+        <li>Same caveat as always: content compounds over time — results vary, no promised timeline.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 10 — SOCIAL + MARKETING: PIPELINE -->
+  <section class="slide" data-title="Social + marketing — pipeline">
+    <div class="inner">
+      <p class="eyebrow">Social + marketing — the pipeline</p>
+      <h2 class="title">The proof already exists on every job site.</h2>
+      <p class="lede">Options, not commitments — each of these can be picked up independently.</p>
+      <ul class="list check">
+        <li>A before/during/after photo pipeline (the same BuildPhoto concept already scoped in the CRM PRD) turns routine job-site documentation into ready-made content.</li>
+        <li>Finished projects become project-story posts, matching the &ldquo;Featured Projects&rdquo; format already live on the site.</li>
+        <li>Nothing here requires new equipment — just capturing what's already happening and routing it somewhere.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 11 — SOCIAL + MARKETING: REVIEW ENGINE -->
+  <section class="slide" data-title="Social + marketing — proof">
+    <div class="inner">
+      <p class="eyebrow">Social + marketing — proof</p>
+      <h2 class="title">Turn a Satisfied Installation into visible proof.</h2>
+      <ul class="list check">
+        <li>A review-request flow tied to the CRM's own &ldquo;Satisfied Installation&rdquo; milestone — ask at the moment satisfaction is confirmed, not months later.</li>
+        <li>Short social clips sourced from the same photo pipeline.</li>
+        <li>Distribution is an open question (which platforms, what cadence) — deliberately left as options, not a plan. Results vary; no guarantees.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 12 — INFOGRAPHIC -->
+  <section class="slide" data-title="The shape of it">
+    <div class="inner">
+      <p class="eyebrow">The shape of it</p>
+      <h2 class="title">Lead → site → CRM → follow-up → signed build.</h2>
+      <div class="infoflow">
+        <svg viewBox="0 0 1400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Process flow diagram: Lead, Site, CRM, Follow-up, Signed Build, with a dashed re-owned loop from Follow-up back to CRM.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ff6a1a"></path>
+            </marker>
+            <marker id="arrowMuted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#9ba1a8"></path>
+            </marker>
+          </defs>
+
+          <!-- connectors -->
+          <line x1="204" y1="130" x2="383" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow)"></line>
+          <line x1="491" y1="130" x2="670" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow)"></line>
+          <line x1="778" y1="130" x2="957" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow)"></line>
+          <line x1="1065" y1="130" x2="1244" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow)"></line>
+
+          <!-- loop-back: Follow-up -> CRM (drop-proofing) -->
+          <path d="M 1011,300 C 1011,352 724,352 724,300" fill="none" stroke="#9ba1a8" stroke-width="2" stroke-dasharray="5 5" marker-end="url(#arrowMuted)"></path>
+          <text x="867" y="378" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" font-style="italic" fill="#7b828b">no response → re-owned automatically</text>
+
+          <!-- stage: LEAD -->
+          <g>
+            <rect x="80" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="150" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">01 · LEAD</text>
+            <circle cx="150" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+              <path d="M 130,110 h44 a8,8 0 0 1 8,8 v14 a8,8 0 0 1 -8,8 h-26 l-10,10 v-10 h-8 a8,8 0 0 1 -8,-8 v-14 a8,8 0 0 1 8,-8 z"></path>
+            </g>
+            <circle cx="141" cy="128" r="2.2" fill="#ff6a1a"></circle>
+            <circle cx="150" cy="128" r="2.2" fill="#ff6a1a"></circle>
+            <circle cx="159" cy="128" r="2.2" fill="#ff6a1a"></circle>
+            <text x="150" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Lead</text>
+            <text x="150" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">A visitor asks a</text>
+            <text x="150" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">real question</text>
+          </g>
+
+          <!-- stage: SITE -->
+          <g>
+            <rect x="367" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="437" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">02 · SITE</text>
+            <circle cx="437" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round">
+              <polyline points="415,124 437,102 459,124"></polyline>
+              <line x1="422" y1="124" x2="422" y2="150"></line>
+              <line x1="452" y1="124" x2="452" y2="150"></line>
+              <line x1="422" y1="150" x2="452" y2="150"></line>
+              <rect x="432" y="134" width="10" height="16"></rect>
+            </g>
+            <text x="437" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Site</text>
+            <text x="437" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">Fast, mobile-first,</text>
+            <text x="437" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">one clear next step</text>
+          </g>
+
+          <!-- stage: CRM -->
+          <g>
+            <rect x="654" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="724" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">03 · CRM</text>
+            <circle cx="724" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round">
+              <rect x="702" y="106" width="44" height="9" rx="4"></rect>
+              <rect x="702" y="122" width="44" height="9" rx="4"></rect>
+              <rect x="702" y="138" width="44" height="9" rx="4"></rect>
+            </g>
+            <text x="724" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">CRM</text>
+            <text x="724" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">Every inquiry becomes</text>
+            <text x="724" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">an owned record</text>
+          </g>
+
+          <!-- stage: FOLLOW-UP -->
+          <g>
+            <rect x="931" y="14" width="160" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="1011" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">04 · FOLLOW-UP</text>
+            <circle cx="1011" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round">
+              <circle cx="1011" cy="130" r="22" stroke-width="3"></circle>
+              <line x1="1011" y1="130" x2="1011" y2="116"></line>
+              <line x1="1011" y1="130" x2="1021" y2="137"></line>
+            </g>
+            <text x="1011" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Follow-up</text>
+            <text x="1011" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">Next Action never</text>
+            <text x="1011" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">goes unowned</text>
+          </g>
+
+          <!-- stage: SIGNED BUILD -->
+          <g>
+            <rect x="1198" y="14" width="164" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="1280" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">05 · SIGNED BUILD</text>
+            <circle cx="1280" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 1258,130 L 1272,144 L 1304,110"></path>
+            </g>
+            <text x="1280" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Signed Build</text>
+            <text x="1280" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">Confirmed order,</text>
+            <text x="1280" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">built all the way through</text>
+          </g>
+        </svg>
+        <p class="infoflow-caption">Illustrative — a process shape, not a committed feature list.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 — ENGAGEMENT OPTIONS -->
+  <section class="slide" data-title="Working together">
+    <div class="inner">
+      <p class="eyebrow">Working together</p>
+      <h2 class="title">Three lanes. Pick where to start.</h2>
+      <div class="cols three">
+        <div class="card">
+          <h3>Site Refresh</h3>
+          <p>Fix what's costing conversions today: speed, mobile CTAs, alt text, and a lead form that creates a record instead of an email.</p>
+        </div>
+        <div class="card">
+          <h3>Automation &amp; CRM</h3>
+          <p>Build on the CRM foundation already scoped — inquiry to owned Next Action, with nothing silently dropped.</p>
+        </div>
+        <div class="card">
+          <h3>Growth (SEO + Social)</h3>
+          <p>Local + niche SEO, an expanded content cadence, and a photo/review pipeline sourced from real job sites.</p>
+        </div>
+      </div>
+      <div class="card" style="margin-top:1.6rem;">
+        <p class="ink">No numbers on this deck by design — see the <strong>Pricing options one-pager</strong> for the numbers.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 — NEXT STEPS -->
+  <section class="slide" data-title="Next steps">
+    <div class="inner">
+      <p class="eyebrow">Next steps</p>
+      <h2 class="title">Let's pick one lane and start.</h2>
+      <ul class="list num">
+        <li>Review this deck together and flag anything that doesn't sound like Mammoth.</li>
+        <li>Walk through the CRM/intake direction already in build.</li>
+        <li>Pick one lane from the Pricing options one-pager and start there.</li>
+      </ul>
+      <p class="lede" style="margin-top:1.8rem;">Built all the way through — for the business, not just the build.</p>
+      <p class="fine">
+        Ronin Building Design · reachable for now via
+        <a href="mailto:welcome@ronindojodesign.com?subject=Mammoth%20Build%20pitch%20deck" style="color:var(--primary);">welcome@ronindojodesign.com</a>
+      </p>
+    </div>
+  </section>
+
+  <div class="chrome-footer">
+    <div class="brand"><strong>Ronin Building Design</strong> — a Ronin Dojo Design company</div>
+    <div class="nav-cluster">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous slide">‹</button>
+      <span class="counter" id="counter">01 / 14</span>
+      <button class="nav-btn" id="nextBtn" aria-label="Next slide">›</button>
+    </div>
+  </div>
+  <button class="edge-zone left" id="edgeLeft" aria-label="Previous slide"></button>
+  <button class="edge-zone right" id="edgeRight" aria-label="Next slide"></button>
+</div>
+
+<script>
+  (function () {
+    var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    var total = slides.length;
+    var idx = 0;
+
+    var counterEl = document.getElementById('counter');
+    var progressEl = document.getElementById('progressFill');
+    var prevBtn = document.getElementById('prevBtn');
+    var nextBtn = document.getElementById('nextBtn');
+    var edgeLeft = document.getElementById('edgeLeft');
+    var edgeRight = document.getElementById('edgeRight');
+
+    function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function render() {
+      slides.forEach(function (s, i) {
+        s.classList.toggle('is-active', i === idx);
+      });
+      counterEl.textContent = pad(idx + 1) + ' / ' + pad(total);
+      progressEl.style.width = (((idx + 1) / total) * 100) + '%';
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === total - 1;
+    }
+
+    function next() { if (idx < total - 1) { idx++; render(); } }
+    function prev() { if (idx > 0) { idx--; render(); } }
+    function goFirst() { idx = 0; render(); }
+    function goLast() { idx = total - 1; render(); }
+
+    window.addEventListener('keydown', function (e) {
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].indexOf(e.key) !== -1) {
+        e.preventDefault(); next();
+      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].indexOf(e.key) !== -1) {
+        e.preventDefault(); prev();
+      } else if (e.key === 'Home') {
+        e.preventDefault(); goFirst();
+      } else if (e.key === 'End') {
+        e.preventDefault(); goLast();
+      }
+    });
+
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+    edgeLeft.addEventListener('click', prev);
+    edgeRight.addEventListener('click', next);
+
+    render();
+  })();
+</script>
+</body>
+</html>
