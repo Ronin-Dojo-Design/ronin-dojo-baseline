@@ -52,6 +52,9 @@ const ZOOM_MIN = 0.35
 const ZOOM_MAX = 1.8
 const ZOOM_STEP = 0.12
 const PAN_STEP = 48
+// B3: caps the per-curriculum-item hover peek the same way `node-tooltip.ts`'s KEY_POINT_CAP caps
+// the node tooltip — a `notes`-authored list can run long; the peek stays a peek, not the full text.
+const CURRICULUM_KEY_POINT_PEEK_CAP = 3
 // WL-P2-67: the interactive ZOOM_MIN (0.35) is a legibility floor for manual zoom (wheel/buttons/
 // pinch) — it deliberately stays put. `fitToView` needs its OWN floor: at 375px the zoom required
 // to frame every node is ~0.17-0.24 (below 0.35), so a fixed clamp there clips nodes off-screen.
@@ -870,16 +873,44 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
                   <p className="text-sm font-medium">Curriculum links</p>
                   <Stack direction="column" size="xs">
                     {dialogNode.curriculumItems.map(item => (
-                      <Link
-                        key={item.id}
-                        href={`/courses/${item.courseSlug}`}
-                        className="rounded-md border bg-card px-3 py-2 text-sm transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        <span className="font-medium">{item.title}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {item.courseTitle}
-                        </span>
-                      </Link>
+                      // B3: a hover/focus "peek" at that curriculum item's parsed key points
+                      // (`keyPointsFromNotes` — TEXT ONLY, same no-media contract as the B1/B2
+                      // tooltips). This data already reached the client for the B1 node-tooltip
+                      // fallback path but was never itself surfaced here — a real content gap, not
+                      // a rebuild of the do-not-touch B1 tooltip contract. `disabled` skips the
+                      // trigger entirely for items with no authored key points.
+                      <Tooltip key={item.id} disabled={item.keyPoints.length === 0}>
+                        <TooltipTrigger
+                          render={
+                            <Link
+                              href={`/courses/${item.courseSlug}`}
+                              className="rounded-md border bg-card px-3 py-2 text-sm transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            >
+                              <span className="font-medium">{item.title}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {item.courseTitle}
+                              </span>
+                            </Link>
+                          }
+                        />
+                        <TooltipContent
+                          side="top"
+                          size="md"
+                          className="flex-col items-start gap-1 text-left"
+                        >
+                          <span className="text-[0.625rem] font-medium uppercase tracking-wide opacity-70">
+                            Key points
+                          </span>
+                          <ul className="list-disc space-y-0.5 pl-4 opacity-90">
+                            {item.keyPoints
+                              .slice(0, CURRICULUM_KEY_POINT_PEEK_CAP)
+                              .map((point, index) => (
+                                // Index-safe key: notes-authored key points can repeat (same as B1).
+                                <li key={`${item.id}-${index}`}>{point}</li>
+                              ))}
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </Stack>
                 </div>
