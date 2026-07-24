@@ -2,7 +2,10 @@
 
 import {
   DownloadIcon,
+  EllipsisIcon,
+  ExternalLinkIcon,
   FocusIcon,
+  LinkIcon,
   MinusIcon,
   PlusIcon,
   RotateCcwIcon,
@@ -11,6 +14,7 @@ import {
 import { motion, useReducedMotion } from "motion/react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -22,6 +26,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "~/components/common/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/common/dropdown-menu"
 import { EmptyList } from "~/components/common/empty-list"
 import { Prose } from "~/components/common/prose"
 import { Stack } from "~/components/common/stack"
@@ -917,8 +927,52 @@ export function TechniqueGraph({ graph }: { graph: BjjTechniqueGraph }) {
               )}
 
               <DialogFooter>
+                {/* G2 (folds AUD2-12): the overflow actions live behind an ellipsis menu, same
+                    shell idiom as `community-share-menu.tsx` — freeing "Technique Detail" to be
+                    the ONE primary CTA below instead of sharing top billing with a secondary
+                    style it never earned. */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        prefix={<EllipsisIcon />}
+                        aria-label="More technique actions"
+                      />
+                    }
+                  />
+                  <DropdownMenuContent align="start" sideOffset={8}>
+                    <DropdownMenuItem
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(
+                            `${window.location.origin}${dialogNode.href}`,
+                          )
+                          toast.success("Link copied")
+                        } catch {
+                          toast.error("Couldn't copy the link")
+                        }
+                      }}
+                    >
+                      <LinkIcon /> Copy link
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        window.open(
+                          `${window.location.origin}${dialogNode.href}`,
+                          "_blank",
+                          "noopener,noreferrer",
+                        )
+                      }
+                    >
+                      <ExternalLinkIcon /> Open in new tab
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
                 <Button
-                  variant="secondary"
+                  variant="primary"
                   render={<Link href={dialogNode.href} />}
                   onClick={() => {
                     setDialogNodeId(null)
