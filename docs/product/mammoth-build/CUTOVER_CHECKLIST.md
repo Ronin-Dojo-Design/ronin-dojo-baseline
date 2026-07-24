@@ -51,6 +51,16 @@ account); feature status in [`GAP_MATRIX.md`](GAP_MATRIX.md). This doc only **se
 
 ### Attach sequence
 
+> **DNS-authority pre-check (verified 2026-07-23 at SESSION_0633 close, `node:dns` NS lookup):**
+> `mammothmb.com`'s live nameservers are **`ns12/ns13.wixdns.net` (Wix), NOT Cloudflare** (apex A
+> `198.185.159.144` — a site-builder parking/landing target). Whatever zone exists in Michael's
+> Cloudflare account is **not authoritative yet**. Before rows 7–8 mean anything, the delegation
+> must be settled — either (a) move the domain's NS to the Cloudflare zone (registrar-side change,
+> client-applied; Cloudflare shows the assigned NS pair on the zone's Overview), or (b) decide the
+> records get applied at the actual authority instead. Re-run the NS check at execution time; treat
+> this row as an **OPERATOR GATE** with the client. (Mirrors the BBL checklist's "DNS source of
+> truth" row 0 lesson — settle authority before writing records.)
+
 | # | Item | State | Rollback |
 | --- | --- | --- | --- |
 | 0 | Config baseline: `clients/mammoth-build-crm/vercel.json` committed — standalone shape (in-dir install, `db:generate && build`, whole-dir `ignoreCommand`); `prisma.config.ts` normalizes the Neon pooler for migrate. | ✅ committed (pattern §2–3, §6 reference impl) | n/a |

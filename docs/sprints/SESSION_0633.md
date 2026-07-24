@@ -372,9 +372,13 @@ READ FIRST (verified ground truth — consume, don't re-derive):
 4. docs/runbooks/deploy/vercel-domain-setup-runbook.md §Cloudflare (C0–C7) — record-table
    pattern, grey-cloud rule (verified 2026-07-23), do-not-touch list.
 
-FRAMING (binding): GREENFIELD ATTACH, not a cutover. mammothmb.com is the target (registered, in
-the client Michael's Cloudflare — a THIRD-PARTY account: produce the C2 record table for Michael/
-Brian to apply; NEVER request credentials or edit the zone). mammoth.build (incumbent GitHub Pages
+FRAMING (binding): GREENFIELD ATTACH, not a cutover. mammothmb.com is the target (registered; a
+zone exists in the client Michael's Cloudflare — a THIRD-PARTY account: produce the C2 record
+table for Michael/Brian to apply; NEVER request credentials or edit the zone). DELEGATION CAVEAT
+(verified 2026-07-23): the domain's LIVE nameservers are ns12/ns13.wixdns.net (Wix) — the
+Cloudflare zone is NOT authoritative yet. The checklist's DNS-authority pre-check (an operator+
+client gate) must settle NS delegation BEFORE the record-table rows; re-run the NS lookup at
+execution time. mammoth.build (incumbent GitHub Pages
 site) stays put — out of scope. DO-NOT-TOUCH on both domains: Google Workspace MX, HubSpot
 DKIM/SPF + hub. CNAME, _dmarc. HubSpot's DNS exit is a separate later lane. Vercel project lives
 in BRIAN'S team (SESSION_0633 decision 2; migrates at ADR 0033 D1 contractual handoff).
@@ -406,7 +410,16 @@ untouched, findings routed via your SESSION file.
 
 <!-- ids assigned by the merge owner after all three lanes land — do not mint ids in-lane -->
 
-- **INC (URGENT, surfaced live to operator + spawn-task chip): BBL prod outage 2026-07-24 03:17Z→ongoing.** blackbeltlegacy.com 500 site-wide; root cause diagnosed via Vercel runtime errors: Neon compute-time quota exhausted (Postgres XX000 "exceeded the compute time quota" through the Prisma driver adapter, 145+ hits, 34 users, all DB-backed routes + Better Auth sessions). NOT a bad deploy — remediation is Neon-console plan/quota action (operator-only). Discovered by WS-B's live-app verification; chip `task_cea09fae` carries recovery-verification + incident-ledger + prevention work.
+- **FS (Baton-2-shaping): mammothmb.com NS delegation is Wix, not Cloudflare.** Live NS =
+  `ns12/ns13.wixdns.net`, apex A `198.185.159.144` (verified 2026-07-23, `node:dns`). The dispatch
+  key-fact "in Michael's Cloudflare" holds at the account layer but NOT at the authority layer —
+  the Cloudflare zone is not delegated. Recorded as a DNS-authority pre-check gate in the MMB
+  cutover checklist + Baton 2. Lesson: a claimed zone location is verifiable for free with one NS
+  lookup — check before it becomes a baton premise (Giddy finding 4, confirmed real).
+- NOTE (stub stale claim #2, closing the WS-A done-means gap): the graph still indexes the domain
+  runbook at its old pre-move top-level path — graph staleness, not doc drift; cleared by the next
+  canonical `graphify update .` at a bow-out. No doc edit needed; recorded so the claim isn't lost.
+- **INC (URGENT, surfaced live to operator + spawn-task chip — RESOLVED 2026-07-24 ~04:5x UTC): BBL prod outage 2026-07-24 03:17Z.** blackbeltlegacy.com 500 site-wide; root cause diagnosed via Vercel runtime errors: Neon compute-time quota exhausted (Postgres XX000 "exceeded the compute time quota" through the Prisma driver adapter, 145+ hits, 34 users, all DB-backed routes + Better Auth sessions). NOT a bad deploy — remediation is Neon-console plan/quota action (operator-only). Discovered by WS-B's live-app verification; chip `task_cea09fae` carries the incident-ledger + prevention work. **Resolved:** operator upgraded the Neon plan mid-session; recovery verified from this session (`/`, `/blog`, `/directory`, `/lineage` all 200, 2026-07-24 ~04:5x UTC).
 - NOTE (from the outage logs, separate bug): `/api/og` throws "Can't load image `https://baselinemartialarts.comhttps://d1th1bjp9wz9c3.cloudfront.net/...`" — malformed base-URL concatenation in OG image generation (~6 hits). Route to a fix lane.
 - DRIFT (WS-A): root `/vercel.json` comment claims `apps/baseline/vercel.json` exists ("SESSION_0463 stands it up") — verified absent; Baseline cloud deploy deferred @0598, `baselinemartialarts.com` rides the BBL project @0617. Comment fix is merge-owner's (file outside this lane's owned paths; it's also in BBL's deploy-trigger set).
 - DRIFT (WS-A): SESSION_0633 stub ground-truth said `apps/rdd/vercel.json` absent — it EXISTS (landed @0625). Corrected in this file's table with a dated strike-through.
@@ -421,6 +434,19 @@ untouched, findings routed via your SESSION file.
 - NOTE (WS-C): RDD `GAP_MATRIX.md` marks own-DB as conditional ("if intake persists leads") but the session's pinned decision is unconditional — checklist follows the pin; tighten the matrix row at merge.
 - NOTE (WS-C): `phase14-local-deployment-checklist.md` still carries unchecked project-name/DNS items (PL-015, epic #247) and is superseded at the cloud boundary by the RDD cutover checklist — wants a pointer-back edit post-merge (outside this lane's write scope).
 - FS: `core.hooksPath` is a shared-config singleton across all worktrees — at bow-in it pointed into the **ronin-0632 sibling worktree** (its bootstrap ran last); my bootstrap re-pointed it to ronin-0633. Whichever worktree "owns" the path at any moment, removing that worktree at bow-out dangles the hooks for canonical + every sibling until the next bootstrap/doctor run. Doctor passes today; the hazard is worktree *removal*, not present state. Suggest: bow-out ritual (or `canonical-claim.sh release`) re-points hooksPath to the **canonical** checkout's `scripts/githooks` before a worktree is pruned.
+
+## Review log
+
+- **/ggr (Giddy, real sub-agent dispatch, plan-quality rubric) @ cded4858:** composite **9.5/10 —
+  CLEARS** (≥9.0), zero hard caps. D1 9.5 · D2 9.0 · D3 9.5 · D4 10 (diff = exactly the 7 owned
+  files, lanes pairwise-disjoint) · D5 9.5 (baton spot-checks all matched) · D6 9.0 · D7 10 (no
+  ledger writes, no minted ids, no PII/tokens, zero infra).
+- **Post-gate fixes applied in-lane (same session, follow-up commit):** Giddy F1 — the runbook's
+  "Cloudflare section forthcoming" pointer was stale-on-arrival → corrected to cite C0–C7. F3 —
+  RDD GAP_MATRIX DB row tightened to the unconditional pinned decision. F2 — stub stale claim #2
+  (old graph node) recorded in Findings to route. F4 — decision-1 residue actually verified: NS
+  lookup revealed **mammothmb.com delegates to Wix, not Cloudflare** → DNS-authority pre-check
+  added to the MMB checklist + Baton 2 (the one materially new fact the gate surfaced).
 
 ## Status
 

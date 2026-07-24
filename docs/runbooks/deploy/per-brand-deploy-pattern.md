@@ -206,9 +206,9 @@ every *other* app's DB byte-identical before/after. Full procedure:
 Follow `docs/runbooks/deploy/vercel-domain-setup-runbook.md`: confirm a production deployment
 exists → attach the domain to the brand's project → apply DNS in one batch → verify at
 authoritative + cache layers → confirm SSL + `Server: Vercel` → Resend records if the brand sends
-mail. That runbook is **Bluehost-specific** today (covers RDD's `ronindojodesign.com`); a
-**Cloudflare section is forthcoming** from a sibling SESSION_0633 lane (MMB's `mammothmb.com`
-lives in the client's Cloudflare) — do not duplicate it here.
+mail. That runbook covers **Bluehost** (RDD's `ronindojodesign.com`) and, as of SESSION_0633, a
+**Cloudflare third-party-zone section (C0–C7)** for MMB's `mammothmb.com` — do not duplicate
+either path here.
 
 ## 8. Blast-radius proof — why a brand commit cannot rebuild BBL
 
