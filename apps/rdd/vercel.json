@@ -3,5 +3,5 @@
   "framework": "nextjs",
   "installCommand": "cd ../.. && bun install --frozen-lockfile",
   "buildCommand": "cd ../.. && bun run --filter rdd build",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/rdd packages bun.lock package.json ':(exclude)*.md' ':(exclude)*.mdx'"
+  "ignoreCommand": "bash -c '! git diff-tree --no-commit-id --name-only -r HEAD | grep -vE \"[.]mdx?$\" | grep -qE \"^(apps/rdd/|packages/|bun[.]lock|package[.]json)\"'"
 }
