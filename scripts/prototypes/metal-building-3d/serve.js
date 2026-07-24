@@ -1,11 +1,16 @@
 import { join } from "node:path";
+import { existsSync } from "node:fs";
 
 const port = 4173;
 const prototypeDir = import.meta.dir;
-const threeRoot = join(
-  prototypeDir,
-  "../../../apps/web/node_modules/three",
-);
+// bun hoists workspace deps to the repo-root node_modules; older layouts nest under apps/web.
+const threeRootCandidates = [
+  join(prototypeDir, "../../../node_modules/three"),
+  join(prototypeDir, "../../../apps/web/node_modules/three"),
+];
+const threeRoot =
+  threeRootCandidates.find((candidate) => existsSync(candidate)) ??
+  threeRootCandidates[0];
 const threeModulePath = join(threeRoot, "build/three.module.js");
 const orbitControlsPath = join(
   threeRoot,
