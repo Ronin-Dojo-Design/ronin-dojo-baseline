@@ -4588,3 +4588,34 @@ model CspViolationReport {
   @@index([count])
   @@index([lastSeenAt])
 }
+
+/// Inbound-email capture (G-033 slice 1, SESSION_0639): one row per email received on a
+/// Resend-hosted receiving domain (BBL + RDD live as of SESSION_0635). Written ONLY by the
+/// `email.received` webhook (`app/api/resend/webhooks/route.ts`, svix-verified, idempotent on
+/// `resendEmailId`); read/triaged via the `/app/inbox` AdminCollection (oRPC `inbox` router,
+/// `email.manage`-gated). `rawPayload` always stores the full webhook body so parsing gaps are
+/// recoverable. `triageStatus` is a plain string (UNREAD|READ|ARCHIVED) by design — no new enum.
+/// `brand` is resolved server-side from the recipient domain (`server/inbox/resend-payload.ts`);
+/// null = unrecognized recipient domain.
+// @added   SESSION_0639 (2026-07-24)
+// @why     Resend receiving is live with no in-app consumer — capture inbound mail + admin triage
+// @wired   app/api/resend/webhooks/route.ts, server/orpc/routers/inbox.ts, app/app/inbox/page.tsx
+model InboundEmail {
+  id            String   @id @default(cuid(2))
+  /// Resend's id for the received email — the idempotency key (webhook deliveries retry).
+  resendEmailId String   @unique
+  fromAddress   String
+  toAddress     String
+  subject       String
+  textBody      String?
+  htmlBody      String?
+  rawPayload    Json
+  brand         Brand?
+  receivedAt    DateTime
+  triageStatus  String   @default("UNREAD")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([receivedAt])
+  @@index([triageStatus])
+}
