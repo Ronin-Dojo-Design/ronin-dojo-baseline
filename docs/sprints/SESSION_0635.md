@@ -2,7 +2,7 @@
 title: "SESSION 0635 — RDD go-live: ronindojodesign.com serves apps/rdd"
 slug: session-0635
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-23
 updated: 2026-07-24
 last_agent: claude-session-0635
@@ -169,6 +169,7 @@ fix becomes necessary, run the pre-flight then.
 | SESSION_0635_TASK_04 | in-progress | Operator GO (no real mailboxes on Bluehost mail). Repo RESEND_API_KEY is sending-restricted (401 on /domains) → dashboard add is Brian's; record table mirrors live BBL + inbound cutover |
 | SESSION_0635_TASK_05 | landed | PR #261 reviewed (MERGE-READY 9.5/10 — 0625 close record + `.vercel` gitignore line this session validated) and MERGED on the operator's explicit word (04:54Z, squash). 0632/0633 wave PRs deliberately left for AM coffee merge-owner review |
 | SESSION_0635_TASK_06 | landed | Operator-added post-push: **BBL inbound cutover** (admin@ + welcome@ via Resend receiving). Risk surfaced first (existing welcome@ flow moves into Resend — operator accepted); apex MX swapped to `inbound-smtp.us-east-1.amazonaws.com` (authoritatively verified, single record); Enable Receiving toggled. BBL sending path untouched (`send` subdomain). Resend receiving is domain-wide — admin@ needed no per-address setup |
+| SESSION_0635_TASK_10 | landed | **Waves 9–14** (operator-directed day extension): billing pack (#296/#298/#299) · Cowork /rr operationalized (#295/#297) · QuickBooks /rr (#300) · Larry+Iggy (#301) · intake→billing spec (#302) · /app/state/bbl zero-frozen-edits (#303) · deck v0.2 (#304) · orchestrator canon + Ronin bots (#305) · /clients v0 (#306) · portal spec (#307) · /process page (#308). Grand total 14 waves / 42 lanes. /game-off noted (MMB-heavy day; repo-touch closes via this canonical bow-out) |
 | SESSION_0635_TASK_09 | landed | **Waves 3+4 pipeline** (operator-directed). Wave 2 landed 7/7 (#270–#276; orchestrator fixup on 0647's serve.js — bun hoists three to root node_modules, HTTP-smoke verified; browser smoke deferred, pane was owned by the 0648 lane). Wave 3 launched: 0649 E1 journey · 0650 render-deck · 0651 G-009 payout /rr (forks open). Wave 4 queued (LAST): 3× Fable /rr social-media automation (RDD/MMB/BBL), fires on wave-3 completion. Standing rules added: codex-limit → Claude same-worktree salvage; Claude-first while codex budget low |
 | SESSION_0635_TASK_08 | landed | **Wave 2 dispatch** (operator-directed while wave 1 finished; 5/5 wave-1 lanes landed as PRs #265–#269). Petey plan → 7 lanes 0642–0648: G-013 Wave-3 verify-first · MMB engagement pack · MMB SEO (codex) · /rr pricing research w/ operator father-notes anchors + PMBA resolve (Fable) · Ronin Building Design pitch deck w/ structurewebworks + yt refs · three.js building prototype (codex) · RDD /industries pages (deploy-gated). Same standing policy: own-branch pushes + PRs only. Operator amendments folded: Ronin Building Design branding (niche family → memory `rdd-niche-brand-variants`), $8–10K/change-control pricing doctrine, structurewebworks references |
 | SESSION_0635_TASK_07 | landed | Operator-directed at bow-out: **overnight 5-lane autonomous dispatch** (approved with standing branch-push/PR authorization; no merges/deploys/main). Petey research pass → 10-guard postmortem of the 0622/0623/0631 automation failures → lanes 0636 (codex, WL-P3-58 tokens) · 0637 (codex, graph Wave-2 C5/D3/B2) · 0638 (Sonnet, G-019 MMB landing) · 0639 (Fable, G-033 inbox slice 1, draft PR) · 0640 (Sonnet, G-030 doc renderer). Numbers minted serially post-FS-0038 guard; worktrees bootstrapped with RESEND_API_KEY stripped; codex lanes commit-only (orchestrator pushes — Keychain boundary); AM merge stub staged as SESSION_0641. NOTE: first mint-loop attempt had a parse bug that briefly clobbered THIS file (restored from e5803af6) and created 5 stray branches (deleted via deliberate WL-P3-65 bypass) — fixed parse + sanity guards before the real run |
@@ -261,6 +262,7 @@ commit after all three lanes land. -->
 | Artifact | Purpose | Status |
 | --- | --- | --- |
 | [State of the Dojo — SESSION_0635 snapshot](https://claude.ai/code/artifact/0fe85599-3829-4a07-96e6-0e957f23d025) | Frozen SotD projection at bow-in (430 sessions · 31 goals), per operator yes at the step-6b ask | keep |
+| [State of the Dojo — SESSION_0635 close (gold run)](https://claude.ai/code/artifact/3a4313ca-6364-44c3-9560-b0c2fc97f5f4) | Frozen SotD at close — after the 14-wave/42-lane run (432 sessions · 31 goals), per operator yes at bow-out ③ | keep |
 
 ## Open decisions / blockers
 
@@ -274,19 +276,41 @@ commit after all three lanes land. -->
 
 ## Next session
 
-### Goal
+**TWO parallel sessions (operator-directed at close), launched from Dispatch, mutually aware:**
 
-**[SESSION_0641](SESSION_0641.md) (staged) — AM Coffee Merge Review:** merge the full wave (attended
-0632/0633/0635 + overnight 0636–0640) under ONE merge owner, apply every lane's "Proposed ledger
-edits" + this file's `## Findings to route` in one canonical commit.
+### Goal A — [SESSION_0641](SESSION_0641.md) (staged): AM Coffee Merge Review
+
+The ONE merge owner. Its stub carries the complete 14-wave inventory (PRs #264–#308), merge order,
+deploy-gate batch (#274/#286/#290/#306/#308 — one Desi + copy pass), the ledger apply (all
+"Proposed ledger edits" + this file's `## Findings to route` + 0679's 4 paste-ready blocks in ONE
+canonical commit), and the ~35-fork decision batch.
+
+### Goal B — [SESSION_0681](SESSION_0681.md) (staged): gold-standard standby orchestrator
+
+The daytime twin of this session: launch → verify → STANDBY; dispatches waves only on the
+operator's pop-in direction (driving / Michael-meeting day). Never merges — 0641 owns merges;
+coordinates via `gh pr list` + 0641's session file before any dispatch. Numbers 0682+.
 
 ### First task
 
-Adopt the SESSION_0641 stub — its merge-owner checklist is the ordered work list (G0 recon →
-per-lane rebase+full gates → 0639 migration apply + Resend webhook secret → Desi pass on 0637 →
-ledger apply → worktree/branch cleanup + graphify).
+Launch both from Dispatch with the batons provided in the 0635 close (chat transcript); 0641 adopts
+its stub and starts the merge queue; 0681 bows in, verifies, reports READY, and waits.
 
 ## Review log
+
+### SESSION_0635_REVIEW_02 — full-session close (/ggr inline composite; tooling loop n/a for an orchestration session, stated)
+
+- **Scope:** the entire extended session — RDD go-live + mail cutovers + 14 waves / 42 autonomous
+  lanes (PRs #264–#308) + the billing pack + pattern canonization.
+- **Verdict:** orchestration discipline held end-to-end: zero lane collisions across 42 lanes, zero
+  unauthorized merges/deploys, zero shared-ledger writes, every wave's outcomes fed the next wave's
+  plan. Both real incidents (the mint-parse clobber of this file; the Browser-pane contention with
+  lane 0648) were caught in-flight, fixed, and canonized as failure modes in the PR #305 recipe.
+  Lanes independently holding at the PR gate when the authorization hook fired was the safety
+  system working, not friction. Weakness: /ggr's objective-metrics loop cannot run on an
+  orchestration diff (docs + dispatch records); scored inline instead — not a clean n/a.
+- **Composite: 9.5/10 — CLEARS** (orchestration quality 10, incident handling 9.5, evidence
+  discipline 9.5, objective-tooling coverage 8.5).
 
 ### SESSION_0635_REVIEW_01 — lane close review (inline Giddy; /ggr tooling skipped, explicitly)
 
