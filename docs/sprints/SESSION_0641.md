@@ -72,13 +72,22 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 > G-013 superseded by G-022 (0642 finding) · 5 stale WL rows (0636) · graph Wave-2 already landed
 > (0637/0642 double-verified).
 >
-> **Wave 4 (operator-pinned, launches after wave 3 lands — LAST wave):** 3 lanes, ALL FABLE,
-> Claude-only (codex budget low), /rr research-recommend on structurewebworks-style social-media
-> automation setup: one lane each for RDD (agency presence + packageable client offering), MMB
-> (project-photo pipeline / before-after content / review engine / cadence + tooling), BBL
-> (lineage/technique content flywheel from platform assets). No builds. If any run dies on limits:
-> Claude same-worktree salvage ("reassess disk state first, disk truth over memory") — standing
-> operator rule.
+> **Wave 3 RESULTS:** #277 (0651 G-009 payout /rr — found unwired StripeAccount/PayoutSplit models +
+> no CommunityPost view tracking; Phase-0-first recommendation, 7 forks open) · #278 (0650
+> render-deck CLI, 44 tests) · #279 (0649 E1 CurriculumJourney — code gates green; runtime smoke
+> blocked by a PRE-EXISTING seed gap: local DB has zero bjj-level courses so /curriculum 404s for
+> everyone today; static-markup proof substituted; AM: run `prisma/import-bbl-bjj-curriculum.ts`
+> then re-smoke).
+>
+> **Wave 4 (LAUNCHED — final wave):** 3× Fable /rr, forks open, no builds:
+> · 0652 `auto/session-0652-rr-rdd-social` — RDD agency social + packageable client offering
+>   (deliverable confined to docs/architecture/research/ — docs/product/rdd is frozen)
+> · 0653 `auto/session-0653-rr-mmb-social` — MMB photo-pipeline/review-engine/cadence + a
+>   Ronin-Building-Design-branded client playbook draft
+> · 0654 `auto/session-0654-rr-bbl-social` — BBL event→content flywheel (consent-gated, approval-
+>   queue-first posture) + internal flywheel draft
+> Codex-limit salvage rule stands (Claude same-worktree pickup). After wave 4: orchestrator goes
+> quiet; everything below is this AM session's queue.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
