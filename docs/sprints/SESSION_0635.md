@@ -10,7 +10,7 @@ sprint: S12
 lane: rdd
 goal_ids: [G-027, G-033]
 tickets: []
-next_session:
+next_session: docs/sprints/SESSION_0641.md
 pairs_with:
   - docs/sprints/SESSION_0625.md
   - docs/sprints/SESSION_0633.md
@@ -169,6 +169,7 @@ fix becomes necessary, run the pre-flight then.
 | SESSION_0635_TASK_04 | in-progress | Operator GO (no real mailboxes on Bluehost mail). Repo RESEND_API_KEY is sending-restricted (401 on /domains) → dashboard add is Brian's; record table mirrors live BBL + inbound cutover |
 | SESSION_0635_TASK_05 | landed | PR #261 reviewed (MERGE-READY 9.5/10 — 0625 close record + `.vercel` gitignore line this session validated) and MERGED on the operator's explicit word (04:54Z, squash). 0632/0633 wave PRs deliberately left for AM coffee merge-owner review |
 | SESSION_0635_TASK_06 | landed | Operator-added post-push: **BBL inbound cutover** (admin@ + welcome@ via Resend receiving). Risk surfaced first (existing welcome@ flow moves into Resend — operator accepted); apex MX swapped to `inbound-smtp.us-east-1.amazonaws.com` (authoritatively verified, single record); Enable Receiving toggled. BBL sending path untouched (`send` subdomain). Resend receiving is domain-wide — admin@ needed no per-address setup |
+| SESSION_0635_TASK_07 | landed | Operator-directed at bow-out: **overnight 5-lane autonomous dispatch** (approved with standing branch-push/PR authorization; no merges/deploys/main). Petey research pass → 10-guard postmortem of the 0622/0623/0631 automation failures → lanes 0636 (codex, WL-P3-58 tokens) · 0637 (codex, graph Wave-2 C5/D3/B2) · 0638 (Sonnet, G-019 MMB landing) · 0639 (Fable, G-033 inbox slice 1, draft PR) · 0640 (Sonnet, G-030 doc renderer). Numbers minted serially post-FS-0038 guard; worktrees bootstrapped with RESEND_API_KEY stripped; codex lanes commit-only (orchestrator pushes — Keychain boundary); AM merge stub staged as SESSION_0641. NOTE: first mint-loop attempt had a parse bug that briefly clobbered THIS file (restored from e5803af6) and created 5 stray branches (deleted via deliberate WL-P3-65 bypass) — fixed parse + sanity guards before the real run |
 
 ## Findings to route
 
@@ -273,16 +274,15 @@ commit after all three lanes land. -->
 
 ### Goal
 
-AM-coffee merge wave: land 0632/0633 + this lane's PR under ONE merge owner, then route every
-`## Findings to route` row from all three lanes' SESSION files to canonical ledgers in one commit.
+**[SESSION_0641](SESSION_0641.md) (staged) — AM Coffee Merge Review:** merge the full wave (attended
+0632/0633/0635 + overnight 0636–0640) under ONE merge owner, apply every lane's "Proposed ledger
+edits" + this file's `## Findings to route` in one canonical commit.
 
 ### First task
 
-Merge-owner sweep per `docs/protocols/recipes/merge-wave.md` (G0→G4): review + merge the three lane PRs
-(0632 intake kernel, 0633 deploy planning, 0635 this one — its merge doubles as the first git-triggered
-RDD deploy proof), then assign FS/D/WL/GOAL ids to the pooled findings (two runbook corrections, the
-PL pipe-masking recurrence, the vercel.json `_comment` FS-candidate) and confirm the Resend inbound
-retest.
+Adopt the SESSION_0641 stub — its merge-owner checklist is the ordered work list (G0 recon →
+per-lane rebase+full gates → 0639 migration apply + Resend webhook secret → Desi pass on 0637 →
+ledger apply → worktree/branch cleanup + graphify).
 
 ## Review log
 
