@@ -2,10 +2,10 @@
 title: "SESSION 0632 — Client-intake kernel: one module, three brand instances (WS-A/B/C)"
 slug: session-0632
 type: session--open
-status: staged
+status: in-progress
 created: 2026-07-23
 updated: 2026-07-23
-last_agent: claude-session-0625
+last_agent: claude-session-0632
 sprint: S12
 lane: repo
 goal_ids: ["G-021", "G-027"]
@@ -125,9 +125,55 @@ real two-lane fan-out — separate worktrees, disjoint file sets, one merge owne
   explicitly deferred with a reason.
 - Decisions 1–4 above are answered and recorded (ADR where they are architectural).
 
+## Bow-in (executed)
+
+- Canonical occupied by SESSION_0624 → whole session in worktree `../ronin-0632` on the pre-minted
+  `session-0632-intake-kernel` (ff'd to `origin/main` @ 417a7be9 — branch had no unique commits and
+  predated the #259 hook doctor). `githooks/doctor.sh`: **all checks passed**.
+- **Fork outcomes (operator, AskUserQuestion at bow-in):** ① persist — pre-pinned. ② RDD instance
+  **stays in `apps/web`**; mirror-into-`apps/rdd` routed below (apps/rdd is the 0633/0635 lanes'
+  territory). ③ brand-brief §7 `[REUSE]` row: yes it qualifies, but the file is outside this lane's
+  owned paths → routed below for the merge owner. ④ MMB intake **omits** the `contains_real_data`
+  toggle; its Markdown export hardcodes `contains_real_data: true`.
+- SotD snapshot: requested and published (see Artifacts).
+- Parallelism deviation: stub said dispatch WS-B ∥ WS-C as a two-lane fan-out; run inline instead —
+  WS-B (pure content) was faster to author than a dispatch costs, and WS-C then had no sibling to
+  parallel against; WS-C also *imports* WS-B's export, so they were never fully disjoint.
+
 ## Task log
 
-<!-- filled at bow-in -->
+| ID | Task | Status | Evidence |
+| --- | --- | --- | --- |
+| SESSION_0632_TASK_01 | WS-A — extract intake kernel to `packages/ui-kit/src/intake`, retarget `apps/web` | ✅ | 10 extraction tests pass UNCHANGED; ui-kit 36→41 pass; apps/web typegen+tsc clean |
+| SESSION_0632_TASK_02 | WS-B — `METAL_BUILDING_SALES` questionnaire + content tests | ✅ | 4 commercial lanes, Installation Path (both canon values), spec/site/permits/delivery/budget/decision-maker; 5 tests |
+| SESSION_0632_TASK_03 | WS-C — `/app/intake` on Mammoth CRM + `commitIntakeCapture` persist | ✅ | 47 client tests pass, tsc exit 0; Playwright: 0 console errors, 0px overflow (both viewports), unauth commit rejected, localStorage survives reload |
+| SESSION_0632_TASK_04 | Shell fix — mobile nav overflow (pre-existing, all `/app` pages) | ✅ | 109px → 0px @390px after nav flex-wrap |
+
+## Artifacts
+
+- State-of-Dojo snapshot (bow-in): <https://claude.ai/code/artifact/e62b00f2-cf25-4741-a040-b98711c6556f>
+- WS-C review gallery (verification table + mobile/desktop screenshots):
+  <https://claude.ai/code/artifact/503ac434-8374-47cc-ad86-2c4762bba725>
+
+## Findings to route (merge owner assigns ids — none minted in-lane)
+
+- GOAL/WL: add **Client intake** as a `[REUSE]` row to `docs/product/rdd/brand-brief.md` §7
+  (fork 3 — file outside this lane's owned paths; kernel module now exists at
+  `@ronin-dojo/ui-kit/intake`).
+- NEXT: mirror the RDD intake instance into `apps/rdd` once that app is real (fork 2 — deferred to
+  the RDD lanes; `apps/web` route keeps working off the kernel meanwhile).
+- SMOKE BOUNDARY: the **authenticated** intake commit write was not exercised live (needs
+  fixture-login + scratch-DB UAT); planning is unit-tested and the transaction mirrors
+  `commitLeadSheet`. Candidate for `manual-boundary-registry`.
+- DEFERRED (GAP-1): `MB-LANE-001/002` routing of the commercial-lane taxonomy into MMB canon
+  (`docs/product/mammoth-build/CONTEXT.md`) — outside owned paths this wave; the questionnaire is
+  the taxonomy's first real consumer, the canon edit belongs to an MMB lane.
+- NOTE: pre-existing mobile nav overflow (109px @390px) affected every `mammoth-build-crm` `/app`
+  page, not just the new one — fixed in-lane via shell `flex-wrap` (within owned paths).
+
+## Review log
+
+<!-- /ggr composite recorded before the push gate -->
 
 ## Status
 
