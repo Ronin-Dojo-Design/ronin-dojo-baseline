@@ -8,10 +8,33 @@ import "@ronin-dojo/ui-kit/card.css";
 import "@ronin-dojo/ui-kit/m-card.css";
 import "./globals.css";
 
+const siteUrl = new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://mammothmb.com");
+const description =
+  "Most metal-building companies hand off a kit and vanish. Mammoth stays in the whole project — design, fabrication, sequenced delivery, and construction — with proof at every step.";
+
 export const metadata: Metadata = {
-  title: "Mammoth Build CRM",
-  description:
-    "Mammoth Metal Buildings — lead to order, with proof at every step. MVP (frontend-only).",
+  metadataBase: siteUrl,
+  title: {
+    default: "Mammoth Build",
+    template: "%s | Mammoth Build",
+  },
+  description,
+  openGraph: {
+    title: "Mammoth Build",
+    description,
+    url: siteUrl,
+    siteName: "Mammoth Build",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mammoth Build",
+    description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
