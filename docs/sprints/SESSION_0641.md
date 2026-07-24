@@ -101,6 +101,25 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   client playbook draft branded Ronin Building Design · 6 forks open.
 > Operator fork-decision batch for the morning: 18 open forks across #277/#280/#281/#282 + the
 > #274 deploy gate + the 0645 PMBA→MBMA confirmation.
+>
+> **Waves 5+6 (operator-directed continuations of waves 3+4, launched together — 6 disjoint lanes):**
+> Wave 5, codex `gpt-5.6-sol` (commit-only, orchestrator pushes; Claude same-worktree salvage if
+> codex usage is out):
+> · 0655 `auto/session-0655-rdd-seo` — RDD SEO foundation (layout metadata/robots/sitemap/manifest;
+>   sitemap "/"-only until #274 merges; **merge auto-deploys prod RDD**)
+> · 0656 `auto/session-0656-mmb-templates` — docs/product/mammoth-build/templates/: review-request
+>   + follow-up sequences, GBP listing draft, posting skeletons (executes #282's findings)
+> · 0657 `auto/session-0657-bbl-og-cards` — scripts/prototypes/bbl-og-cards/: dependency-free SVG
+>   celebration-card renderer spike (informs #281's F4 build-vs-buy)
+> Wave 6, Claude:
+> · 0658 (Sonnet) `auto/session-0658-rdd-content-calendar` — 10-12 fully drafted founder-LinkedIn
+>   posts, 4 weeks, brand-rule-clean (continues #280; lives in research/ pending rdd-docs unfreeze)
+> · 0659 (Sonnet) `auto/session-0659-mmb-meeting-pack` — pitch-deck outline in render-deck format +
+>   Michael meeting-prep brief (distills #276/#271/#282; renders after #278 merges)
+> · 0660 (Fable) `auto/session-0660-bbl-payout-phase0` — G-009 Phase-0 entitled-read
+>   instrumentation design spec, build-ready, no code (executes #277's no-regret move)
+> All reference-reads of unmerged work via `git show origin/<branch>:<path>` — no stacking, no
+> merge-after dependencies except as declared in PR bodies.
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
