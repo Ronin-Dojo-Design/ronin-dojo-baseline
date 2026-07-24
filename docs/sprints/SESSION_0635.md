@@ -168,6 +168,7 @@ fix becomes necessary, run the pre-flight then.
 | SESSION_0635_TASK_03 | landed | LIVE: pinned HTTP 308→HTTPS (Server: Vercel) + HTTPS 200 w/ validated cert on apex AND www; authoritative + 1.1.1.1 serve only 216.150.1.1; normal fetch 200 + RDD content; operator eyeballed it live |
 | SESSION_0635_TASK_04 | in-progress | Operator GO (no real mailboxes on Bluehost mail). Repo RESEND_API_KEY is sending-restricted (401 on /domains) → dashboard add is Brian's; record table mirrors live BBL + inbound cutover |
 | SESSION_0635_TASK_05 | landed | PR #261 reviewed (MERGE-READY 9.5/10 — 0625 close record + `.vercel` gitignore line this session validated) and MERGED on the operator's explicit word (04:54Z, squash). 0632/0633 wave PRs deliberately left for AM coffee merge-owner review |
+| SESSION_0635_TASK_06 | landed | Operator-added post-push: **BBL inbound cutover** (admin@ + welcome@ via Resend receiving). Risk surfaced first (existing welcome@ flow moves into Resend — operator accepted); apex MX swapped to `inbound-smtp.us-east-1.amazonaws.com` (authoritatively verified, single record); Enable Receiving toggled. BBL sending path untouched (`send` subdomain). Resend receiving is domain-wide — admin@ needed no per-address setup |
 
 ## Findings to route
 
@@ -243,6 +244,8 @@ commit after all three lanes land. -->
 | Cloudflare DoH: apex A / NS / www | A = {162.241.224.173 OLD Bluehost, 216.150.1.1 NEW} round-robin · NS = ns1/ns2.bluehost.com (ADR 0015 ✓) · www = CNAME → apex (pre-existing) |
 | Pinned checks vs 216.150.1.1 (Host header / SNI) | apex + www: HTTP 308 → HTTPS (`server: Vercel`) · HTTPS 200, TLS validated (`rejectUnauthorized: true`), RDD content present |
 | Final: authoritative NS + 1.1.1.1 + normal fetch | Only `216.150.1.1` served · `https://ronindojodesign.com` → 200 · `server: Vercel` · RDD content ✓ — **GO-LIVE COMPLETE** |
+| RDD mail (authoritative): six Resend records | inbound MX + send MX + send SPF + DKIM (218ch) + DMARC live; Resend shows verified; **inbound e2e PROVEN** (operator received test at welcome@) |
+| BBL mail cutover (authoritative) | `MX @ blackbeltlegacy.com` → single `inbound-smtp.us-east-1.amazonaws.com`; old `mail.` record gone; receiving enabled (TASK_06) |
 | `vercel domains inspect ronindojodesign.com` | Both hosts attached to project; dashboard nags to delegate NS to Vercel — ignored per ADR 0015 (matches BBL) |
 
 ## Artifacts
