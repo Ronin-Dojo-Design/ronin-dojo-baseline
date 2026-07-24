@@ -2,10 +2,10 @@
 title: "SESSION 0633 — RDD + MMB stand-alone deploys: /rr wave → two /ppp batons (WS-A/B/C/D)"
 slug: session-0633
 type: session--plan
-status: staged
+status: closed
 created: 2026-07-23
 updated: 2026-07-23
-last_agent: claude-session-0625
+last_agent: claude-session-0633
 sprint: S12
 lane: repo
 goal_ids: ["G-021", "G-027"]
@@ -47,7 +47,7 @@ Produce **two independently-executable batons** — one for RDD (`ronindojodesig
 | Per-app deploy pattern | ✅ established — root `vercel.json` **is** the BBL/`apps/web` project; `ignoreCommand` scopes the build trigger to `apps/web packages bun.lock package.json vercel.json` with `*.md`/`*.mdx` excluded (SESSION_0501) |
 | `clients/mammoth-build-crm/vercel.json` | ✅ **exists** — `ignoreCommand: git diff --quiet HEAD^ HEAD -- .` (whole-dir scope, standalone app) |
 | MMB database | ✅ **exists** — own `prisma/` + `prisma.config.ts`; `Contact`/`Company`/`Project`/`Activity`/`Quote`/`Invoice` models (ADR 0038) |
-| `apps/rdd/vercel.json` | ❌ **absent** — RDD's deploy is not stood up |
+| `apps/rdd/vercel.json` | ~~❌ absent~~ → **✅ EXISTS** (WS-A correction, 2026-07-23: landed with SESSION_0625's RDD commit — workspace shape, ignoreCommand `apps/rdd packages bun.lock package.json` + md/mdx excludes). What's missing is the Vercel *project* + DB, not the config. |
 | RDD database | ❌ **absent** — no `prisma/` under `apps/rdd` |
 | `apps/rdd` app | ⚠️ skeleton only — `app/{globals.css,layout.tsx,page.tsx}`, consumes `@ronin-dojo/ui-kit` via `workspace:*` |
 | Product folders | ✅ both exist — `docs/product/rdd/` (brand-brief, phase-14 checklist, `assets/`) and `docs/product/mammoth-build/` |
@@ -211,9 +211,304 @@ four land, so each baton can cite the finished runbook, gap matrix, and cutover 
 - Decisions 1–5 answered and recorded (ADR where architectural).
 - **Zero** infrastructure mutated by this session.
 
+## Petey plan
+
+### Goal
+
+Produce the reusable per-brand deploy pattern + gap matrix and cutover checklist for each of RDD and
+MMB, then emit two independently-executable batons — zero infrastructure mutated.
+
+#### SESSION_0633_TASK_01 — WS-A: per-brand deploy-pattern runbook
+
+- **Agent:** general-purpose (Giddy lens: architecture + Git/deploy strategy)
+- **What:** ONE runbook, `docs/runbooks/deploy/per-brand-deploy-pattern.md` — what exactly makes a
+  brand a separate deploy unit (project + root dir, `ignoreCommand` scoping path-scoped vs whole-dir,
+  install/build commands, env/secret blocks, CI workflow, DB separation per ADR 0038, domain attach).
+- **Done means:** runbook exists; the two stale claims are *documented as corrected reality* in it.
+  The root `vercel.json` comment fix and the runbooks-hub link are **outside owned paths** → routed to
+  the merge owner via `## Findings to route`, not edited in-lane.
+- **Depends on:** —
+
+#### SESSION_0633_TASK_02 — WS-B: gap matrices vs BBL
+
+- **Agent:** general-purpose (Doug lens: verify against live app + repo, never copy stale rows)
+- **What:** `docs/product/rdd/GAP_MATRIX.md` + `docs/product/mammoth-build/GAP_MATRIX.md`, mirroring
+  BBL's axis set but with every BBL row re-verified (repo routes + live `blackbeltlegacy.com` spot-checks).
+- **Done means:** both files exist, rows dated "as of main@417a7be9", RDD rows flagged as
+  point-in-time (SESSION_0635 is mutating `apps/rdd` in parallel).
+- **Depends on:** —
+
+#### SESSION_0633_TASK_03 — WS-D: Cloudflare extension of the domain runbook
+
+- **Agent:** general-purpose (research + author; WebFetch/WebSearch against CURRENT Vercel + Cloudflare docs)
+- **What:** extend `docs/runbooks/deploy/vercel-domain-setup-runbook.md` with a Cloudflare section:
+  A/CNAME targets, apex vs `www`, and the proxied-vs-DNS-only requirement for Vercel cert issuance —
+  **verified against current vendor docs, not memory**. Generic Cloudflare path + MMB-zone cautions
+  (do-not-touch: MX/Google Workspace on both domains, HubSpot DKIM/SPF + `hub.` CNAME, `_dmarc`).
+- **Done means:** Bluehost section intact; Cloudflare section sourced (links + retrieved dates); the
+  grey-cloud claim confirmed, corrected, or nuanced per current docs.
+- **Depends on:** —
+
+#### SESSION_0633_TASK_04 — WS-C: cutover checklists
+
+- **Agent:** general-purpose (Cody lens: author from WS-B output + BBL's 3-layer shape)
+- **What:** `docs/product/rdd/CUTOVER_CHECKLIST.md` + `docs/product/mammoth-build/CUTOVER_CHECKLIST.md`
+  mirroring BBL's layers (Deploy/DNS → Features/GAP_MATRIX → Tests/verification). MMB Layer 1 is
+  **greenfield attach** (mammothmb.com), not a cutover — no rollback drama, incumbent untouched.
+- **Done means:** both files exist; Layer 2 consumes the WS-B matrices by reference.
+- **Depends on:** TASK_02 (+ TASK_03 for the DNS layer's Cloudflare specifics).
+
+#### SESSION_0633_TASK_05 — /ppp × 2: the batons
+
+- **Agent:** Petey (inline — this session lead)
+- **What:** two paste-ready batons in this file (`## Batons`): Baton 1 RDD (own Vercel project +
+  `apps/rdd/vercel.json` + own Neon DB per D3 + intake mount per D4, Bluehost DNS) · Baton 2 MMB
+  (attach existing `clients/mammoth-build-crm` to a Vercel project in Brian's team per D2, Cloudflare
+  DNS for mammothmb.com). **No new SESSION stubs minted in-lane** (id-collision rule) — the merge
+  owner stages stubs from the batons.
+- **Done means:** each baton executable without re-deriving WS-A/B/C/D; every infra action inside
+  them operator-gated.
+- **Depends on:** TASK_01–04.
+
+### Parallelism
+
+TASK_01 ∥ TASK_02 ∥ TASK_03 (disjoint files, one dispatch wave) → TASK_04 → TASK_05 inline.
+
+### Open decisions — resolved at bow-in grill (2026-07-23)
+
+1. mammothmb.com registered + zoned in Michael's Cloudflare — **pre-answered by dispatch key-fact**.
+2. MMB Vercel project ownership — **Brian's team**; migrates at ADR 0033 D1 contractual handoff.
+3. RDD own DB — **yes, in Baton 1** (operator directive "their own DBs"); provisioning operator-gated.
+4. Intake → apps/rdd — **yes**, RDD is the 0632 intake module's first mount; baton plans schema/env.
+5. Blast radius — technical verification inside TASK_01 (ignoreCommand scoping proof), not a fork.
+6. `mammoth-metal-buildings` GitHub ownership — recorded risk in Baton 2; not an MVP blocker.
+7. HubSpot DNS exit — its own later lane; recorded in Baton 2's do-not-touch + sequencing note.
+
+### Risks
+
+- SESSION_0635 mutates `apps/rdd` while WS-B snapshots it → RDD matrix rows dated; merge owner reconciles.
+- BBL `GAP_MATRIX.md` known-stale → axis reuse only, zero row copying.
+- Browser MCPs may be profile-locked by sibling sessions → agents use WebFetch (no browser dependency).
+- `core.hooksPath` singleton points at whichever worktree bootstrapped last → finding routed below.
+
+### Scope guard
+
+Planning only. No Vercel/DNS/DB/deploy mutations; no `apps/rdd/**` edits (0635 owns it); no shared-ledger
+writes; no files outside the owned-path list; batons stay in this SESSION file.
+
 ## Task log
 
-<!-- filled at bow-in -->
+- `SESSION_0633_TASK_01` — WS-A `/rr`: per-brand deploy-pattern runbook (`docs/runbooks/deploy/`), correcting the two recorded stale claims. — **done** (`per-brand-deploy-pattern.md`: 8-ingredient pattern, both ignoreCommand shapes, CI discover→matrix trap, blast-radius matrix + 10-step stand-up checklist. Baseline reality documented: NO vercel.json, cloud deferred @0598, domain rides BBL project @0617. Root-vercel.json comment fix + hub link routed to merge owner.)
+- `SESSION_0633_TASK_02` — WS-B `/rr`: gap matrices vs BBL → `docs/product/rdd/GAP_MATRIX.md` + `docs/product/mammoth-build/GAP_MATRIX.md` (re-verified, not copied from BBL's stale matrix). — **done** (RDD: 3 hard + 2 conditional launch blockers — Vercel project+DNS attach, SEO/app-shell basics, intake pending 0632; homepage already shipped @0625. MMB: 4 launch blockers — deploy attach, missing `migrate deploy` in buildCommand, read-side auth gap exposing CRM data publicly, inquiry form dead-ends in localStorage. BBL rows code-verified only — live site was DOWN during verification, see incident finding.)
+- `SESSION_0633_TASK_03` — WS-D `/rr`: extend `vercel-domain-setup-runbook.md` to Cloudflare; verify grey-cloud/cert-issuance claim against current Vercel + Cloudflare docs. — **done** (grey-cloud rule confirmed-with-nuance: HTTP-01 challenge blocked by default orange-cloud behavior, Vercel's fix is still DNS-only; Full-(strict)+well-known-exempt documented as the eyes-open alternative. Current targets verified: apex A `216.198.79.1`, per-project CNAMEs, no AAAA/IPv6; dashboard values authoritative.)
+- `SESSION_0633_TASK_04` — WS-C: `CUTOVER_CHECKLIST.md` per brand (3-layer BBL shape), consuming WS-B. Depends on TASK_02. — **done** (RDD: 10-row Layer 1, 6 operator gates, Resend deferred to intake mount. MMB: pre-flip blocker table B1–B4 — migrate-deploy, read-side auth gate, InquiryForm persistence, password-reset recorded — then 10-row greenfield attach, 6 operator gates, C2 record table as rollback state. Relative links verified.)
+- `SESSION_0633_TASK_05` — `/ppp` × 2: RDD baton + MMB baton, written last, citing TASK_01–04 outputs. — **done** (`## Batons` above: both paste-ready, consume-not-re-derive, no ids minted; RDD baton opens with a SESSION_0635 reconcile step; MMB baton opens with B1–B3 hard gates before any infra.)
+
+## Bow-in (SESSION_0633, 2026-07-23)
+
+- Canonical-occupancy check: **OCCUPIED by SESSION_0624** → session runs entirely in `../ronin-0633` (worktree on pre-existing branch `session-0633-brand-deploys`, fast-forwarded from stale 7355fa24 to main 417a7be9; branch had zero unique commits).
+- `githooks/doctor.sh` from this worktree: **all checks passed** (pre-push RULE B live, server ruleset `main-pr-only` active).
+- `/worktree-setup` bootstrap: complete (env, deps, Prisma clients).
+- Parallel-lane assessment (opening.md §1d): fan-out shape pre-decided by the SESSION_0625 dispatch — WS-A ∥ WS-B ∥ WS-D disjoint `/rr` lanes, WS-C after WS-B, batons last.
+- PR backlog at bow-in: 1 open (#261, clean/draft) — lane pinned by dispatch, so no `/pr-fix-loop` pickup.
+
+## Batons (the /ppp deliverable — paste-ready, one per brand)
+
+> Each baton is independently executable in a fresh session/worktree. The knowledge lives in the four
+> session artifacts — the baton makes the executor CONSUME them, not re-derive them. No SESSION
+> numbers are minted here (id-collision rule): the merge owner stages stubs from these blocks.
+
+### Baton 1 — RDD go-live deploy (`ronindojodesign.com`)
+
+```text
+You are executing the RDD stand-alone deploy lane, planned by SESSION_0633. Repo
+/Users/brianscott/dev/ronin-dojo-app (remote Ronin-Dojo-Design/ronin-dojo-baseline). Run
+`bash scripts/canonical-claim.sh check --session NNNN` at bow-in; work in your own worktree
+(`git worktree add ../ronin-NNNN -b session-NNNN-rdd-deploy main` + /worktree-setup); main is
+PR-only (ADR 0053); every push/merge/deploy waits for Brian's explicit word.
+
+READ FIRST (in order — they carry the verified ground truth, do not re-derive):
+1. docs/runbooks/deploy/per-brand-deploy-pattern.md — the 8-ingredient pattern; §9 is your spine.
+2. docs/product/rdd/CUTOVER_CHECKLIST.md — your execution sequence (Layer 1 rows 0–9; 6 OPERATOR
+   GATE rows). Layer 2/3 define feature + verification scope.
+3. docs/product/rdd/GAP_MATRIX.md — launch-blocker detail (as of main@417a7be9; re-verify rows).
+4. docs/runbooks/deploy/vercel-domain-setup-runbook.md — Bluehost section for the DNS batch.
+
+PINNED DECISIONS (SESSION_0633 grill, 2026-07-23 — binding): RDD gets its OWN Neon DB (ADR 0038);
+apps/rdd is the FIRST MOUNT of the SESSION_0632 intake module; apps/rdd/vercel.json already EXISTS
+(landed SESSION_0625) — you create the Vercel PROJECT + DB + domain attach, not the config.
+
+STEP 0 — RECONCILE: SESSION_0635 (rdd-golive) ran in parallel with the planning wave. Diff the
+checklist's row states against what actually landed (apps/rdd tree + Vercel dashboard + any
+SESSION_0635 close notes) before executing anything; flip rows to ✅-with-evidence, don't redo them.
+
+SEQUENCE: follow CUTOVER_CHECKLIST Layer 1 in row order. Every OPERATOR GATE row (DB provision,
+project+env, first deploy, domain attach, Bluehost DNS batch, Resend) = build/verify/show, then
+STOP for Brian's explicit go. Use dashboard-minted record values (apex A 216.198.79.1 current;
+cname.vercel-dns.com legacy-but-working). Capture prior Bluehost records verbatim as rollback
+BEFORE the batch. Blast-radius proof (pattern §8): confirm the first deploy did NOT trigger a BBL
+rebuild. Layer 3 gates: local build → Products CI green → bun -e fetch smoke (no curl in sandbox).
+
+DONE MEANS: ronindojodesign.com serves apps/rdd on its own Vercel project + own DB, BBL untouched,
+checklist rows flipped with evidence, findings routed via your SESSION file (no shared-ledger writes
+if parallel lanes are live).
+```
+
+### Baton 2 — MMB greenfield attach (`mammothmb.com`)
+
+```text
+You are executing the MMB (Mammoth Metal Buildings) deploy-attach lane, planned by SESSION_0633.
+Repo /Users/brianscott/dev/ronin-dojo-app (remote Ronin-Dojo-Design/ronin-dojo-baseline). Run
+`bash scripts/canonical-claim.sh check --session NNNN` at bow-in; work in your own worktree; main
+is PR-only (ADR 0053); every push/merge/deploy/DNS handoff waits for Brian's explicit word.
+
+READ FIRST (verified ground truth — consume, don't re-derive):
+1. docs/product/mammoth-build/CUTOVER_CHECKLIST.md — your spine: pre-flip blockers B1–B4, THEN
+   attach rows 0–9 (6 OPERATOR GATE rows). B-rows come first, in-repo, before any infra.
+2. docs/product/mammoth-build/GAP_MATRIX.md — blocker detail (as of main@417a7be9).
+3. docs/runbooks/deploy/per-brand-deploy-pattern.md — pattern; MMB uses the whole-dir
+   ignoreCommand shape (known tradeoff: ui-kit changes never auto-redeploy MMB — confirm
+   keep/change with Brian at project creation).
+4. docs/runbooks/deploy/vercel-domain-setup-runbook.md §Cloudflare (C0–C7) — record-table
+   pattern, grey-cloud rule (verified 2026-07-23), do-not-touch list.
+
+FRAMING (binding): GREENFIELD ATTACH, not a cutover. mammothmb.com is the target (registered; a
+zone exists in the client Michael's Cloudflare — a THIRD-PARTY account: produce the C2 record
+table for Michael/Brian to apply; NEVER request credentials or edit the zone). DELEGATION CAVEAT
+(verified 2026-07-23): the domain's LIVE nameservers are ns12/ns13.wixdns.net (Wix) — the
+Cloudflare zone is NOT authoritative yet. The checklist's DNS-authority pre-check (an operator+
+client gate) must settle NS delegation BEFORE the record-table rows; re-run the NS lookup at
+execution time. mammoth.build (incumbent GitHub Pages
+site) stays put — out of scope. DO-NOT-TOUCH on both domains: Google Workspace MX, HubSpot
+DKIM/SPF + hub. CNAME, _dmarc. HubSpot's DNS exit is a separate later lane. Vercel project lives
+in BRIAN'S team (SESSION_0633 decision 2; migrates at ADR 0033 D1 contractual handoff).
+
+HARD PRE-FLIP GATES (from B-table — the app must not go public without them): B1 add
+`migrate deploy` to the deploy path (mirror BBL's prebuild pattern); B2 CLOSE THE READ-SIDE AUTH
+GAP — /app/* has no session check; a public deploy today exposes ALL CRM data anonymously — and
+verify sign-up-closed in lib/auth.ts; B3 wire InquiryForm to persist (localStorage dead-end today).
+B4 no-password-reset is recorded, not blocking. NO REAL CLIENT PII IN GIT (Michael Flores' data
+stays out).
+
+SEQUENCE: B1–B3 as normal PR'd code changes with tests → then attach rows 0–9 in order, STOPPING
+at every OPERATOR GATE (DB provision, project+env in Brian's team, manual migrate until B1 lands,
+first deploy, domain attach, client-applied Cloudflare records — DNS-only/grey per C-section).
+Layer 3: 6 unit suites in Products CI + scratch-DB/fixture-login/in-page-fetch UAT proving B2+B3 +
+bun -e fetch post-attach smoke.
+
+DONE MEANS: mammothmb.com serves the CRM from its own Vercel project + existing own DB, auth-gated
+reads proven, inquiries persist, incumbent zone untouched except the two added records, BBL
+untouched, findings routed via your SESSION file.
+```
+
+## Artifacts
+
+- Frozen State-of-Dojo snapshot @ bow-in (429 sessions, 31 goals; operator-requested):
+  <https://claude.ai/code/artifact/82d86f8c-6008-4313-b367-4e9d9bf8b579> — **keep** (bow-in record)
+
+## Findings to route
+
+<!-- ids assigned by the merge owner after all three lanes land — do not mint ids in-lane -->
+
+- **FS (Baton-2-shaping): mammothmb.com NS delegation is Wix, not Cloudflare.** Live NS =
+  `ns12/ns13.wixdns.net`, apex A `198.185.159.144` (verified 2026-07-23, `node:dns`). The dispatch
+  key-fact "in Michael's Cloudflare" holds at the account layer but NOT at the authority layer —
+  the Cloudflare zone is not delegated. Recorded as a DNS-authority pre-check gate in the MMB
+  cutover checklist + Baton 2. Lesson: a claimed zone location is verifiable for free with one NS
+  lookup — check before it becomes a baton premise (Giddy finding 4, confirmed real).
+- NOTE (stub stale claim #2, closing the WS-A done-means gap): the graph still indexes the domain
+  runbook at its old pre-move top-level path — graph staleness, not doc drift; cleared by the next
+  canonical `graphify update .` at a bow-out. No doc edit needed; recorded so the claim isn't lost.
+- **INC (URGENT, surfaced live to operator + spawn-task chip — RESOLVED 2026-07-24 ~04:5x UTC): BBL prod outage 2026-07-24 03:17Z.** blackbeltlegacy.com 500 site-wide; root cause diagnosed via Vercel runtime errors: Neon compute-time quota exhausted (Postgres XX000 "exceeded the compute time quota" through the Prisma driver adapter, 145+ hits, 34 users, all DB-backed routes + Better Auth sessions). NOT a bad deploy — remediation is Neon-console plan/quota action (operator-only). Discovered by WS-B's live-app verification; chip `task_cea09fae` carries the incident-ledger + prevention work. **Resolved:** operator upgraded the Neon plan mid-session; recovery verified from this session (`/`, `/blog`, `/directory`, `/lineage` all 200, 2026-07-24 ~04:5x UTC).
+- NOTE (from the outage logs, separate bug): `/api/og` throws "Can't load image `https://baselinemartialarts.comhttps://d1th1bjp9wz9c3.cloudfront.net/...`" — malformed base-URL concatenation in OG image generation (~6 hits). Route to a fix lane.
+- DRIFT (WS-A): root `/vercel.json` comment claims `apps/baseline/vercel.json` exists ("SESSION_0463 stands it up") — verified absent; Baseline cloud deploy deferred @0598, `baselinemartialarts.com` rides the BBL project @0617. Comment fix is merge-owner's (file outside this lane's owned paths; it's also in BBL's deploy-trigger set).
+- DRIFT (WS-A): SESSION_0633 stub ground-truth said `apps/rdd/vercel.json` absent — it EXISTS (landed @0625). Corrected in this file's table with a dated strike-through.
+- DRIFT (WS-B): "clients-ci.yml = typecheck only" is stale — Products CI runs opt-in `test` + `lint:check` since WL-P3-56; MMB's 6 unit suites gate PRs; `apps/rdd` is in its trigger paths. Update the `mammoth-crm-tracer-lane` memory + any docs asserting typecheck-only.
+- NOTE (WS-B): BBL `GAP_MATRIX.md` rows BBL-LINEAGE-001 + BBL-RANK-002 proven stale — they describe `selectedRankAward`, removed @0475 (RankEntry collapse). Epic-4 rows untrustworthy; matrix predates the collapse.
+- NOTE (WS-A): runbooks-hub link for `per-brand-deploy-pattern.md` (docs/runbooks/README.md) — merge owner adds at merge (outside owned paths).
+- NOTE (WS-A): MMB's whole-dir ignoreCommand means `packages/ui-kit` changes never redeploy MMB — accepted tradeoff documented in the runbook; make it a conscious keep/change decision when the MMB Vercel project is created.
+- NOTE (WS-A): `vercel-deploy.md` calls the root `vercel.json` "historical/root fallback" while it carries BBL's live ignoreCommand — phrasing invites deletion of a load-bearing file; one-line correction suggested.
+- NOTE (WS-D): Vercel CNAME targets moved to per-project values (`<hash>.vercel-dns-0NN.com`; apex A now `216.198.79.1`, `76.76.21.21` legacy-but-working; no IPv6/AAAA). Bluehost-section rows citing `cname.vercel-dns.com` are legacy-but-working — refresh per-domain from the dashboard on next Bluehost pass.
+- NOTE (WS-D): `dns-verification-spec.md` + ADR 0015 are Bluehost-only framings; add a one-line pointer to the runbook's new Cloudflare section.
+- NOTE (WS-B): MMB has no password-reset path by construction (password auth, zero email infra) — acceptable for a two-role internal tool; carried into the MMB cutover checklist.
+- NOTE (WS-C): RDD `GAP_MATRIX.md` marks own-DB as conditional ("if intake persists leads") but the session's pinned decision is unconditional — checklist follows the pin; tighten the matrix row at merge.
+- NOTE (WS-C): `phase14-local-deployment-checklist.md` still carries unchecked project-name/DNS items (PL-015, epic #247) and is superseded at the cloud boundary by the RDD cutover checklist — wants a pointer-back edit post-merge (outside this lane's write scope).
+- FS: `core.hooksPath` is a shared-config singleton across all worktrees — at bow-in it pointed into the **ronin-0632 sibling worktree** (its bootstrap ran last); my bootstrap re-pointed it to ronin-0633. Whichever worktree "owns" the path at any moment, removing that worktree at bow-out dangles the hooks for canonical + every sibling until the next bootstrap/doctor run. Doctor passes today; the hazard is worktree *removal*, not present state. Suggest: bow-out ritual (or `canonical-claim.sh release`) re-points hooksPath to the **canonical** checkout's `scripts/githooks` before a worktree is pruned.
+
+## What landed
+
+- The reusable per-brand deploy pattern: `docs/runbooks/deploy/per-brand-deploy-pattern.md` (8 ingredients, both `ignoreCommand` shapes, CI matrix trap, blast-radius proof, 10-step stand-up).
+- `docs/runbooks/deploy/vercel-domain-setup-runbook.md` extended to Cloudflare (C0–C7), grey-cloud rule verified against current vendor docs (cited + dated); Bluehost content intact.
+- GAP_MATRIX + CUTOVER_CHECKLIST for RDD and MMB (BBL baseline re-verified; MMB pre-flip blockers B1–B4 + a DNS-authority pre-check added after the NS discovery).
+- Two paste-ready batons (`## Batons`); decisions 1–7 answered/routed; /ggr 9.5 CLEARS.
+- Out-of-lane but surfaced: BBL prod outage (Neon compute quota) detected, root-caused, operator-resolved, recovery verified; `mammothmb.com` Wix NS delegation discovered.
+- Pushed on operator go: PR **#263** (merge held for the wave's merge-owner sweep).
+
+## Files touched
+
+| Path | Note |
+| --- | --- |
+| `docs/runbooks/deploy/per-brand-deploy-pattern.md` | new — WS-A runbook |
+| `docs/runbooks/deploy/vercel-domain-setup-runbook.md` | extended — WS-D Cloudflare section |
+| `docs/product/rdd/GAP_MATRIX.md` · `docs/product/rdd/CUTOVER_CHECKLIST.md` | new — WS-B/WS-C |
+| `docs/product/mammoth-build/GAP_MATRIX.md` · `docs/product/mammoth-build/CUTOVER_CHECKLIST.md` | new — WS-B/WS-C |
+| `docs/sprints/SESSION_0633.md` | this file — plan, batons, findings, close |
+
+## Decisions resolved
+
+Decisions 1–7 (see `### Open decisions — resolved at bow-in grill`). No new ADR needed: D2/D3 apply existing ADR 0033/0038 frameworks; recorded here + in the batons. No new domain terms (ubiquitous-language: no change needed).
+
+## Open decisions / blockers
+
+- **Merge of #261/#262/#263 + finding-routing = the merge-owner sweep** — blocked on SESSION_0635 landing its PR. Ledger cross-off candidates the gate runner detected (G-021/G-027 et al.) also belong to that sweep — shared ledgers untouched in-lane by wave rule.
+- `mammothmb.com` NS delegation (Wix → Cloudflare) is a client-side action gating Baton 2's DNS rows.
+
+## Next session
+
+- **Goal:** merge-owner sweep — land the three wave PRs, assign ids to and route all id-less findings (16 here + siblings'), add the runbooks-hub link, fix the root `vercel.json` stale comment, refresh canonical graphify.
+- **Inputs to read:** the three PR descriptions; each SESSION file's `## Findings to route`.
+- **First task:** `gh pr list` → confirm 0635's PR exists → merge in dispatch order → one findings-routing commit.
+- **ADR 0049 stub NOT pre-staged, deliberately:** minting SESSION numbers in-lane is forbidden this wave (FS-0038 collision class); the merge owner stages next stubs.
+
+## Reflections
+
+- **The gate that earned its keep:** Giddy's "verify the dispatch say-so" finding turned a free NS lookup into the session's one materially new fact (Wix delegation). Cheap verification of premises > trusting even a same-day dispatch brief.
+- **Live verification pays twice:** WS-B's "re-verify against the live app" rule — inherited from BBL's stale matrix lesson — is what caught the prod outage. A rule written to prevent stale docs ended up functioning as uptime monitoring; a real probe (ntfy uptime check) should make that accidental detection deliberate.
+- **Stale-on-arrival is the parallel-wave failure shape:** three artifacts in one wave cross-referenced each other ("forthcoming" pointer, stub ground-truth row, my own brief to WS-B) and all drifted within hours. Batons now carry re-verify-at-execution steps for exactly this reason.
+- **The runner-grades-the-wrong-file gotcha recurred** (graded staged SESSION_0634, not 0633) — known memory, verified by hand; worth fixing the script to accept a `--session` arg (queued as a finding-router candidate for the merge owner: script improvement, not a ledger row).
+
+## Full close evidence
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | 6 docs touched; all carry frontmatter with `updated: 2026-07-23`, `last_agent: claude-session-0633` (agents mirrored existing shapes; runner: no stale frontmatter) |
+| Backlinks/index sweep | wiki `index.md` + runbooks hub are SHARED files — forbidden in-lane; hub link + session row routed to merge owner (`## Findings to route`) |
+| Wiki lint | gate runner: `wiki:lint` 0 err / 113 warn — all pre-existing, none introduced |
+| Kaizen reflection | yes — `## Reflections` above |
+| Hostile close review | wrapped by /ggr (plan lane): 9.5/10 composite, zero caps, real-Giddy dispatch — `## Review log` |
+| Code-quality gate (Class-A) | no Class-A custom code — docs-only session |
+| Runtime verification (Doug) | no runtime surface touched (probes of blackbeltlegacy.com were incident triage, not this diff) |
+| Evidence-artifact URL | n/a — no runtime surface touched; SotD snapshot in `## Artifacts` |
+| Review & Recommend | yes — `## Next session` above (stub deliberately not minted; wave rule) |
+| Memory sweep | `mammoth-crm-tracer-lane.md` corrected (clients-CI test/lint claim stale since WL-P3-56); no other durable-fact changes |
+| Next session unblock check | merge sweep BLOCKED on SESSION_0635's PR only; everything else ready |
+| Git hygiene | branch `session-0633-brand-deploys`, tree clean, explicit-path staging throughout, single close push on operator go; hash reported in chat |
+| Graphify update | runner (this worktree): nodes=15887 · edges=34653 · communities=1769; canonical refresh = merge-owner/0624 (clears stale claim #2) |
+| Gate-runner caveat | runner graded staged `SESSION_0634.md` (highest-numbered) — 0633 gates re-verified by hand: task log 5 rows PASS, diff 7 files/1069 insertions |
+| Deferral guard | 4 flags, all justified dismissals: 3 are done-task/fix summaries (not deferrals), 1 is a finding already queued for merge-owner id-assignment — id-less by wave design |
+
+## Review log
+
+- **/ggr (Giddy, real sub-agent dispatch, plan-quality rubric) @ cded4858:** composite **9.5/10 —
+  CLEARS** (≥9.0), zero hard caps. D1 9.5 · D2 9.0 · D3 9.5 · D4 10 (diff = exactly the 7 owned
+  files, lanes pairwise-disjoint) · D5 9.5 (baton spot-checks all matched) · D6 9.0 · D7 10 (no
+  ledger writes, no minted ids, no PII/tokens, zero infra).
+- **Post-gate fixes applied in-lane (same session, follow-up commit):** Giddy F1 — the runbook's
+  "Cloudflare section forthcoming" pointer was stale-on-arrival → corrected to cite C0–C7. F3 —
+  RDD GAP_MATRIX DB row tightened to the unconditional pinned decision. F2 — stub stale claim #2
+  (old graph node) recorded in Findings to route. F4 — decision-1 residue actually verified: NS
+  lookup revealed **mammothmb.com delegates to Wix, not Cloudflare** → DNS-authority pre-check
+  added to the MMB checklist + Baton 2 (the one materially new fact the gate surfaced).
 
 ## Status
 
