@@ -1,10 +1,10 @@
 ---
 title: "SESSION 0632 — Client-intake kernel: one module, three brand instances (WS-A/B/C)"
 slug: session-0632
-type: session--open
-status: in-progress
+type: session--implement
+status: done
 created: 2026-07-23
-updated: 2026-07-23
+updated: 2026-07-24
 last_agent: claude-session-0632
 sprint: S12
 lane: repo
@@ -230,6 +230,61 @@ LAUNCH-SAFE 9.4. Residuals: authed-commit scratch-DB smoke (routed) + Desi P2/P3
 batched pass; fallow before/after deltas recorded above. `fallow health` baseline was NOT taken
 before implementation (memory rule missed) — before/after complexity is reconstructed from the
 audit's changed-since view instead.*
+
+### Post-score delta (TASK_05)
+
+Commits `89f11d4b` + `705faca0` (login page · session-aware nav) landed AFTER the 9.0 composite.
+Not re-waved: small surface, sibling-idiom UI, and verified harder than the review bar — full
+headless E2E (sign-up → session → authed intake commit → sign-out round-trip), typecheck green,
+fixtures deleted. Named debt: open sign-up posture on `/login` mirrors the server's existing
+config; revisit before any public deploy (routed below).
+
+## Full close evidence (hand-corrected — gate runner graded SESSION_0634 and diffed the clean tree)
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS — 5 rows above (runner's FAIL was the sibling stub) |
+| Format-fix (code) | oxfmt clean on ui-kit (6 files fixed in-lane); client matches house style |
+| wiki:lint | 0 err / 112 warn (pre-existing) |
+| Build | apps/web typegen+tsc ✓ · ui-kit tsc ✓ · client tsc ✓ · root tests 1708/0 · Vercel preview ✓ (post-Neon-upgrade) |
+| /ggr | **9.0 composite recorded** (§Review log) + TASK_05 delta note |
+| Graphify | worktree graph stale by design (canonical owns it; refresh at merge — wave rule) |
+| Git state | branch=session-0632-intake-kernel · clean · 4 commits pushed · PR #262 |
+| Secret scan | PASS (runner) |
+| Evidence artifact | <https://claude.ai/code/artifact/503ac434-8374-47cc-ad86-2c4762bba725> |
+| Touched | 24 files (+~1,690/−~326) across packages/ui-kit · apps/web · clients/mammoth-build-crm · docs |
+
+## Reflections
+
+- **The extraction proof discipline paid for itself twice** — "10 tests pass unchanged" made WS-A
+  unarguable, and Doug could then prove serializer byte-identity mechanically instead of by review.
+- **The intake surfaced real product debt nobody had hit**: an "authenticated MVP" with no login
+  page, and a local DB missing its auth migrations. Operator-as-first-user found it in minutes —
+  argument for demo-driving every new surface at close, not just headless checks.
+- **Two near-misses were environment, not code**: the turn-boundary cwd reset put a push in
+  canonical (no-op, caught), and a cwd assumption ran the full root suite (live-Resend hazard).
+  Both argue for the same reflex — absolute `cd` + guard in the SAME command as any state-changing
+  call.
+- **Cross-lane check pollution is real**: the sibling `ronindojodesign` Vercel project reds every
+  PR until it gets its ADR 0034 `ignoreCommand`; a lane can go fully green and still wear a red X.
+
+## Next session
+
+**Lane: the merge-owner routing pass** (operator-elected at bow-out; no stub staged — number
+minting stays out of this lane per the wave's FS-0038 rule). The pass: land the wave's PRs
+(#262 + siblings), then ONE routing commit that mints ids and lands every lane's
+`## Findings to route` — this file carries: the mammoth.build lift **GOAL + PLAN drafts**, two
+FS rows (root-suite Resend run · turn-boundary cwd reset), the intake-module
+custom-component-inventory row (text ready), brand-brief §7 `[REUSE]` row, the ui-kit
+double-"intake" naming drift, the Desi polish bundle, the `/login` open-sign-up posture
+(pre-public-deploy check), and G-021/G-027 cross-off updates. Plus the wave-wide chore: the
+`ronindojodesign` Vercel project needs its ADR 0034 `ignoreCommand` — it reds every PR until then.
+
+## Ledger cross-off (deferred — wave lock)
+
+Runner surfaced candidates (G-021 · G-027 · G-005 adjacency). Shared ledgers are locked in-lane
+this wave; the merge owner crosses off / updates rows in the single routing commit, using
+`## Findings to route` above.
 
 ## Status
 
