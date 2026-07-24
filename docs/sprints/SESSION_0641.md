@@ -130,8 +130,25 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   re-ran in normal shell REAL_EXIT=0 (**merge auto-deploys prod RDD**)
 > · #287 (0656) MMB template pack — reviews/follow-ups (InquiryForm-field-verified)/GBP draft/skeletons
 > · #288 (0657) BBL SVG celebration-card spike — 3 card types, 5 tests/52 assertions, samples committed
-> All codex-sol lanes completed on sol; no Claude salvage was needed. Orchestrator is now QUIET —
-> this table is final. AM eyeball adds: 0657's three sample SVGs.
+> All codex-sol lanes completed on sol; no Claude salvage was needed. AM eyeball adds: 0657's three
+> sample SVGs.
+>
+> **Waves 7+8 (operator-directed continuations of waves 5+6, launched together):**
+> Wave 7, codex `gpt-5.6-sol` (commit-only, orchestrator pushes + runs build gates; Claude salvage
+> rule stands):
+> · 0661 `auto/session-0661-rdd-og-image` — apps/rdd opengraph-image.tsx + icon.tsx (closes #286
+>   residual; orchestrator build gate REQUIRED pre-push; **merge auto-deploys prod RDD**)
+> · 0662 `auto/session-0662-mmb-og-image` — client-app OG image + icon (closes #270 residual)
+> · 0663 `auto/session-0663-bbl-og-cards-v2` — **DECLARED STACK on #288** (branched from its head):
+>   technique-preview + Legacy Wrapped cards + host-run qlmanage rasterize helper. MERGE-AFTER #288.
+> Wave 8, Claude:
+> · 0664 (Sonnet, network) `auto/session-0664-rdd-handle-audit` — passive niche-handle availability
+>   matrix (Ronin Building/Plumbing/Landscape Design; NO accounts created) → operator reservation
+>   checklist (#280 F5)
+> · 0665 (Sonnet) `auto/session-0665-mmb-kickoff-checklist` — day-1 access/assets/decisions
+>   checklist for a Michael yes (delegation mechanisms named, TCPA consent flagged)
+> · 0666 (Fable) `auto/session-0666-bbl-approval-queue` — social-flywheel approval-queue build-ready
+>   spec (consent gate hard precondition, export-only v1, 0660-pattern format)
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
