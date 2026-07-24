@@ -161,8 +161,28 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   writer (seed-only). **RATIFY pre-build: `Passport.allowSocialCelebration` opt-in, default OFF**
 >   (the lane held at the PR gate out of caution; orchestrator opened the PR under the standing
 >   dispatch authorization — pattern worked as designed)
-> Orchestrator is NOW QUIET — this is the final table. Decision batch adds: the consent default +
-> the trademark check. All codex-sol lanes completed on sol across both waves; salvage never needed.
+> Decision batch adds: the consent default + the trademark check. All codex-sol lanes completed on
+> sol across waves 5-8; salvage never needed.
+>
+> **Waves 9+10 (operator-directed FINAL PAIR — morning-deadline billing + Cowork operationalization,
+> all Claude):**
+> · 0667 (Fable, PRIORITY) `auto/session-0667-mmb-billing` — **MMB billing pack for the Michael
+>   meeting THIS MORNING**: State of the Building (MMB-only SotD analogue, HTML) + hours worksheet
+>   (time-tracker hunt: /gq + Mammoth_Vault via mdfind; evidence-or-estimate, never fabricated) +
+>   invoice draft (~20h × $100 F&F vs $200 standard shown) + the reusable RDD_Client_Invoice
+>   email-composer template (relocates to docs/product/rdd post-unfreeze)
+> · 0668 (Sonnet) — BBL INTERNAL-REFERENCE invoice: README hours baseline quoted + dated, updated
+>   estimate with transparent method, itemized by era (Bob Bass nominal, NOT for sending)
+> · 0669 (Sonnet) — Client-Invoice fillable HTML prototype (Desi lens, family-consistent, print CSS)
+>   + READ-ONLY diagnosis of the #276 pitch-deck's broken nav buttons (operator report; fix snippet
+>   for the AM sweep, deck untouched)
+> · 0670 (Sonnet) — Cowork /rr captured to research/ with annotations: **the red-prod finding is
+>   STALE — orchestrator verified Production ● Ready tonight** (self-healed via #261's build);
+>   phone-side action checklist distilled
+> · 0671 (Sonnet) — `scripts/deploy-watchdog/`: notify-only Vercel prod watchdog (ntfy stack
+>   conventions, launchd template, dry-run verified) — the repo-side half of Cowork rec #1
+> AM note: 0667's numbers are operator-review-before-send; 0669's prototype expects a tweak round
+> after coffee (operator-stated).
 
 ## Merge-owner checklist (from the 0635 dispatch — do IN ORDER)
 
