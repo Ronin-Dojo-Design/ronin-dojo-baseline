@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/landing/SiteHeader";
 import { MirrorVisual } from "@/components/landing/MirrorVisual";
 import { BuildingTypesGrid } from "@/components/landing/BuildingTypesGrid";
+import { CrmPreview } from "@/components/landing/CrmPreview";
 import { InquiryForm } from "@/components/landing/InquiryForm";
 import { Reveal } from "@/components/Reveal";
 import { CONTEXT_BAND, DIFFERENTIATOR, HERO, PROCESS_STEPS } from "@/lib/content";
@@ -79,6 +80,22 @@ export default function LandingPage() {
           <p className="mt-2 text-muted">Save the types you're interested in — it pre-fills your inquiry.</p>
           <div className="mt-8">
             <BuildingTypesGrid />
+          </div>
+        </div>
+      </section>
+
+      {/* CRM preview */}
+      <section id="crm" className="px-5 py-16">
+        <div className="mx-auto max-w-6xl">
+          <h2 className="font-display text-3xl font-bold">
+            One record, lead to order — with proof at every step.
+          </h2>
+          <p className="mt-2 max-w-2xl text-muted">
+            The custom Mammoth Build CRM: a project moves through every stage, and a build can&apos;t
+            be dropped or marked done before it&apos;s a real order.
+          </p>
+          <div className="mt-8">
+            <CrmPreview />
           </div>
         </div>
       </section>
