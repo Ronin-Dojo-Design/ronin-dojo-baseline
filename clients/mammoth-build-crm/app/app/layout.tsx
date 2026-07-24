@@ -27,9 +27,14 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </nav>
           </div>
-          <Link href="/" className="text-sm text-muted transition-colors hover:text-ink">
-            ← Site
-          </Link>
+          <div className="flex items-center gap-5 text-sm">
+            <Link href="/login" className="text-muted transition-colors hover:text-ink">
+              Sign in
+            </Link>
+            <Link href="/" className="text-muted transition-colors hover:text-ink">
+              ← Site
+            </Link>
+          </div>
         </div>
       </header>
       <div className="mx-auto max-w-6xl px-5 py-7">{children}</div>
