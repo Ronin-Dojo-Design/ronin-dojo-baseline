@@ -27,10 +27,10 @@ const DESCRIPTION =
   "Ronin Dojo Design is a product studio that builds one durable software kernel and reskins it into a portfolio of brands — so small operators get a real platform, not a template.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ronindojodesign.com"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://ronindojodesign.com"),
   title: {
     default: "Ronin Dojo Design — One kernel. Many brands. Built to last.",
-    template: "%s · Ronin Dojo Design",
+    template: "%s | Ronin Dojo Design",
   },
   description: DESCRIPTION,
   openGraph: {
@@ -41,6 +41,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: { card: "summary_large_image", title: "Ronin Dojo Design", description: DESCRIPTION },
+  robots: { index: true, follow: true },
   alternates: { canonical: "/" },
 };
 
