@@ -280,3 +280,17 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   Ronin-bots concept doc (/gq'd from the old dojo-bots idea)
 > · 0680 (Sonnet) /process agent-OS showcase page (pipeline SVG, roster + your-brand-your-bots,
 >   no-numbers law enforced; **deploy gate + operator copy sign-off**)
+
+> **Waves 13+14 RESULTS (4/4 — GRAND TOTAL: 14 waves / 42 autonomous lanes / PRs #264–#308):**
+> · #305 (0679) overnight-orchestrator recipe card + Ronin-bots concept — **"DojoBots" already live
+>   in prod** (BBL feature-request toast, SESSION_0422); 4 paste-ready ledger blocks staged
+> · #306 (0678) v0 /clients preview — fail-closed basic-auth middleware, noindex, full smoke matrix;
+>   **set CLIENT_PREVIEW_USER/PASS in Vercel env BEFORE merge** (deploy gate)
+> · #307 (0677) client-portal 4-phase spec — Phase-1 default: own magic-link Better Auth + own rdd
+>   Neon DB (ADR 0038, MMB-CRM shape); catches: inbound webhooks lack attachments (API fetch
+>   needed); ronindojodesign-scoped Resend SENDING key = Phase-1 gate item; 9 forks open
+> · #308 (0680) /process agent-OS showcase — pipeline visual w/ Human-approval emphasis, roster,
+>   no-numbers law held; deploy gate + copy sign-off + Desi pass; nav link follows #274
+> Deploy-gated RDD PR set now: #274 · #286 · #290 · #306 · #308 (each merge redeploys prod RDD —
+> batch them under one Desi + copy pass). THE ORCHESTRATOR IS DONE — 42 lanes, zero merges, zero
+> deploys, zero shared-ledger writes, all evidence in this stub.
