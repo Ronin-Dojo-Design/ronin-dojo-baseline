@@ -2,10 +2,10 @@
 title: "SESSION 0641 — AM Coffee Merge Review: overnight 5-lane wave + 0632/0633/0635 sweep"
 slug: session-0641
 type: session--open
-status: staged
+status: done
 created: 2026-07-24
 updated: 2026-07-24
-last_agent: staged-session-0641
+last_agent: session-0641-bowout
 sprint: S12
 lane: repo
 recipe: "AM_Coffee_Merge_Review"
@@ -209,21 +209,81 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 
 | ID | Status | Summary |
 | --- | --- | --- |
-| SESSION_0641_TASK_01 | pending | G0 recon + quarantine check |
-| SESSION_0641_TASK_02 | pending | per-lane rebase + full gates + merges |
-| SESSION_0641_TASK_03 | pending | 0639 migration apply + smoke + draft flip |
-| SESSION_0641_TASK_04 | pending | ledger apply (ONE commit) |
-| SESSION_0641_TASK_05 | pending | worktree/branch cleanup + graphify |
+| SESSION_0641_TASK_01 | done | G0 recon (gh pr list + #264 CLEAN) — done; full per-lane quarantine deferred with the wave |
+| SESSION_0641_TASK_02 | partial | merged #264 · #265 · #306 (+ #309 fix); **wave #266–#308 deferred** — session pivoted to the client demo |
+| SESSION_0641_TASK_03 | deferred | 0639 (#269) migration + draft-flip — not reached (deferred with the wave) |
+| SESSION_0641_TASK_04 | done | ledger apply — PL-024 · FS-0041 · G-033 · SESSION_0682 stub (this bow-out PR) |
+| SESSION_0641_TASK_05 | done | fix worktree removed; `/clients` deploy verified; canonical claim released at close |
+| SESSION_0641_TASK_06 | done | **CLIENT SECURED** + client-meeting demos shipped (deck · site · CRM) — the session's real outcome |
 
 ## What landed
 
+> **The headline: the client closed mid-session.** Michael Flores signed **$5K for a fully-functioning
+> Mammoth Build website in 2 weeks (MVP due 2026-08-07).** The session pivoted from pure merge-sweep to
+> producing live demos for the client meeting. Full intake → **PL-024** (planning-ledger, P0 top).
+
+- **Merged to `main` (4 PRs):** #264 (RDD go-live + this stub + the 0635/0641/0681 records), #265
+  (G-019 Mammoth landing port + SiteHeader/CrmPreview), #306 (v0 `/clients` preview area on apps/rdd),
+  **#309 (RDD ignore-gate fix — FS-0041).** All squash-merged.
+- **`ronindojodesign.com/clients/*` LIVE:** `/clients`, `/clients/mammoth`, `/clients/bbl` behind HTTP
+  Basic Auth (env `CLIENT_PREVIEW_USER=mammoth` / `CLIENT_PREVIEW_PASS=ronin2026` set on the
+  `ronindojodesign` Vercel Production project), noindexed. Verified 401→200, homepage untouched.
+- **Client-meeting demos** (Artifacts below) — self-contained hosted pages because the operator was
+  remote and couldn't reach localhost: iPad-fixed pitch deck (#304 v0.2), rebuilt Mammoth marketing
+  site (#265), and a two-tab **Mammoth CRM demo** (populated Sales Pipeline + working Lead-intake
+  preview/dedupe). Seeded `mammoth_dev` + a demo CRM member to render the auth-gated pipeline.
+- **Root-caused + fixed FS-0041:** RDD's `git diff HEAD^ HEAD` ignoreCommand silently skipped every
+  Vercel build (all deploys "Canceled" at 5s) → `/clients` 404'd; replaced with a tip-commit
+  `diff-tree` check (#309); deploy went **Ready**.
+- **Ledgers (this bow-out):** PL-024 (Mammoth MVP, P0) · FS-0041 · G-033 (admin-inbox goal, prior WIP
+  folded in) · SESSION_0682 stub · `.claude/launch.json` mmb-dev config.
+
 ## Open decisions / blockers
+
+- **Merge queue NOT swept:** the overnight wave's remaining ~35 PRs (#266–#308) were deprioritized when
+  the session pivoted to the client demo. They stay open + mergeable-pending; a future merge-owner
+  session resumes the wave (the Lane inventory above is still the map).
+- **`/clients/mammoth` is a status/portfolio page**, not the live CRM; the CRM Artifact is a hosted
+  snapshot, not a clickable backend. A truly-live clickable CRM needs an MMB deploy (blocked on the
+  monorepo `ui-kit` symlink + a hosted DB) or a tunnel — parked.
+- **Demo creds** `mammoth`/`ronin2026` are placeholders on the `ronindojodesign` Vercel Production env —
+  rotate when convenient.
+- Other per-app `vercel.json` gates still use the fragile `HEAD^ HEAD` shape (FS-0041 watch).
+
+## Review log
+
+- **/ggr (QAR close gate) — composite 9.1 / 10, CLEARS (≥9.0), no hard caps.** Scored the code
+  deliverable **#309** (RDD ignore-gate fix) against `code-quality-matrix`: D1 correctness 9.5
+  (root-caused from the live Vercel build log, validated `sh -c` Vercel-style, verified live
+  401→200), D2 security 9.0, D3 simplicity 8.5 (dense one-liner, justified + README-documented),
+  D4 readability 8.5, D5 maintainability 9.0 (FS-0041 + README rationale), D6 scalability 8.5.
+  No behavior regression (prod-verified) → no cap; new gate pattern is documented → no
+  undocumented-pattern cap. Bow-out ledger docs follow formats and route the finding.
+  **Follow-up (logged, not buried):** audit the other per-app `vercel.json` gates still using the
+  fragile `HEAD^ HEAD` shape (FS-0041 watch-line).
+
+## Artifacts
+
+- **Pitch deck** (iPad-fixed v0.2): https://claude.ai/code/artifact/7ac4f902-c8ed-41df-97a2-821a74247ca5
+- **Mammoth marketing site** (rebuilt landing): https://claude.ai/code/artifact/95cdb282-0c50-4b26-8e1b-db3ee69be770
+- **Mammoth CRM demo** (Pipeline + Lead intake tabs): https://claude.ai/code/artifact/5568cfbf-8e5e-401b-940e-3f40a1092dad
+- **State-of-Dojo snapshot** (2026-07-24): https://claude.ai/code/artifact/77e0c4f4-6a24-477e-8098-ff6b41126683
 
 ## Next session
 
 ### Goal
 
+**Mammoth Build MVP — plan session (PL-024 → G-034).** Turn the client-meeting intake (PL-024) into an
+executable MVP plan for a fully-functioning Mammoth website, **due 2026-08-07**. Staged as SESSION_0682.
+
 ### First task
+
+Read PL-024 in `planning-ledger.md`; run `/pp` to produce the MVP plan + fan-out lanes (site rebuild +
+legacy-Tim detangle, CRM/intake wiring, brand-heartbeat PRD, content, pricing), pinning the Aug-7
+deadline. Mint **G-034** for the engagement; cross-link PL-024 → G-034. Stage the post-launch arc
+(business + social automation, Michael→Obsidian vault game-on/off, FeatureWidget on his admin
+dashboard — G-024). Grill the commercial forks (one-time vs T&M, honest-hours vs flat-rate) —
+they resolve post-MVP.
 
 > **Waves 9+10 RESULTS (5/5 — RUN COMPLETE: 10 waves / 33 autonomous lanes / PRs #264–#299):**
 > · #298 (0667, PRIORITY) **MMB billing pack** — tracker FOUND (Mammoth_Vault iCloud frontmatter,

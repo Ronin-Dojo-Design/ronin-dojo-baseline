@@ -751,3 +751,20 @@ aggregator reads it with no new parser logic.
   S1–S4 disjoint (fan-out candidates). Also fold the **## Artifacts** SESSION-section convention into the
   template + bow-out ritual. **Lane:** session-OS / governance. **Cross-refs:** [G-023](#g-023--workflow_60-session-recipe-os--sot_cookbook--brand-sot-cards),
   `petey-plan.md`, `WORKFLOW_6.0`, `opening.md`, `code-quality-matrix.md`.
+
+### G-033 — Admin-dashboard inbox for all brands (Resend receiving → in-app surface)
+
+- **Status:** open — P1
+- **Objective:** ONE kernel feature-module (ADR 0051 — brand-agnostic, lives with the module library)
+  that surfaces Resend inbound mail as an **Inbox panel in each brand app's admin dashboard** — consume
+  the `email.received` webhook (or Resend API poll) per domain, render as a conformed AdminCollection
+  data-table (the one-surface admin law), with read/triage state. First consumers: BBL
+  (`admin@`/`welcome@blackbeltlegacy.com`) and RDD (`welcome@ronindojodesign.com`); Baseline/MMB attach
+  as their domains wire into Resend receiving.
+- **Why:** SESSION_0635 cut inbound mail over to Resend for `blackbeltlegacy.com` and
+  `ronindojodesign.com` (both proven receiving) — but the ONLY reader is the Resend dashboard. The
+  brands' contact addresses now carry the live funnel with no in-app consumer, no triage, no
+  notification. This module closes that gap once, for every brand.
+- **Lane:** kernel feature-module / admin surface. **Born:** SESSION_0635 bow-out (operator-directed).
+- **Cross-refs:** SESSION_0635 (`## Findings to route` — inbound-no-consumer blocker note),
+  `admin-collection-one-surface-law`, ADR 0051, `docs/runbooks/resend-setup-runbook.md`.
