@@ -261,3 +261,22 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 > · 0676 (Sonnet) `auto/session-0676-agent-promotion-larry-iggy` — Larry (legal) + Iggy (social)
 >   assessed + ported from the READ-ONLY old monorepo into .claude/agents/ (found-or-designed-fresh
 >   stated honestly); agent-systems-map addition proposed, not applied
+
+> **Waves 11+12 RESULTS:** #300 (0672) QuickBooks /rr — **official Intuit Claude connector is LIVE**
+> (confirm-before-write); QBO has no draft-invoice state (EmailStatus:NotSet pattern); RDD invoice =
+> a Bill in Mammoth's books (Essentials+); recommended: zero-integration this week → official
+> connector pilot · #301 (0676) Larry ported (review-only legal); Iggy = fresh design (old-monorepo
+> Iggy was a workflow integrator, not social — honest provenance) · #302 (0675) intake→billing spec
+> (structural no-send, feature-request.create key, G-024 slice) · #303 (0674) **/app/state/bbl BUILT
+> zero-frozen-edits** — Tony's BBL-only link; AM: Tony account + prod env-flag verify · 0673 deck
+> v0.2 still running (stack on #276).
+>
+> **Waves 13+14 (operator-directed, launched):**
+> · 0677 (Fable) /rr + spec — RDD client portal (Michael+BBL accounts, billing surface, previews,
+>   SOP uploads via R2/email-in; structurewebworks comp)
+> · 0678 (Sonnet) v0 /clients preview area on apps/rdd (env-gated basic-auth middleware, 404-safe
+>   without env; **deploy gate + set CLIENT_PREVIEW_USER/PASS pre-merge**)
+> · 0679 (Fable) overnight-orchestrator recipe card (this run canonized, failure modes included) +
+>   Ronin-bots concept doc (/gq'd from the old dojo-bots idea)
+> · 0680 (Sonnet) /process agent-OS showcase page (pipeline SVG, roster + your-brand-your-bots,
+>   no-numbers law enforced; **deploy gate + operator copy sign-off**)
