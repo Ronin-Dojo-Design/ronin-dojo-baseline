@@ -37,3 +37,7 @@ export type {
 export { BBL_DARK, BBL_LIGHT, brandTokenCss, FONTS, type BrandTokenBlock } from "./tokens/tokens";
 
 export * from "./kanban";
+
+// Prefer the `@ronin-dojo/ui-kit/intake` sub-path — it is zero-React (pure data + serializer), so
+// standalone bun clients can import it without touching the React peer surface this root pulls in.
+export * from "./intake";
