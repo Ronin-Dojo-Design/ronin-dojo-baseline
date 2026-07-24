@@ -148,6 +148,7 @@ real two-lane fan-out — separate worktrees, disjoint file sets, one merge owne
 | SESSION_0632_TASK_02 | WS-B — `METAL_BUILDING_SALES` questionnaire + content tests | ✅ | 4 commercial lanes, Installation Path (both canon values), spec/site/permits/delivery/budget/decision-maker; 5 tests |
 | SESSION_0632_TASK_03 | WS-C — `/app/intake` on Mammoth CRM + `commitIntakeCapture` persist | ✅ | 47 client tests pass, tsc exit 0; Playwright: 0 console errors, 0px overflow (both viewports), unauth commit rejected, localStorage survives reload |
 | SESSION_0632_TASK_04 | Shell fix — mobile nav overflow (pre-existing, all `/app` pages) | ✅ | 109px → 0px @390px after nav flex-wrap |
+| SESSION_0632_TASK_05 | `/login` — the missing auth UI + local `mammoth_dev` auth migrations + session-aware nav (Sign in ↔ Sign out) | ✅ | operator-reported gap; headless E2E: sign-up → session → **authed intake commit wrote Contact + lead Project** (smoke boundary CLOSED); sign-out 415 fixed (Better Auth needs JSON content-type); fixtures deleted; operator tested the CRM live |
 
 ## Artifacts
 
@@ -188,6 +189,17 @@ real two-lane fan-out — separate worktrees, disjoint file sets, one merge owne
   label disambiguation; `aria-describedby` for question hints. Deferred from the close-time fix
   pass — converging legacy sibling pages unreviewed at close risks visual regressions outside this
   session's verified scope.
+
+- GOAL (operator, 2026-07-23 — draft for `goals-ledger`, id minted by merge owner): **Recreate/lift
+  the existing mammoth.build site into the monorepo** — scrape the live site's articles, assets,
+  and page inventory; scaffold the existing pages in `clients/mammoth-build-crm` (or the MMB web
+  app the plan elects) so the current content survives the platform move. Not this session; needs
+  its own plan lane.
+- PLAN (operator, 2026-07-23 — draft row for `planning-ledger`): plan the mammoth.build lift —
+  scope the scrape (articles/assets/pages inventory), decide target surface + routing, then
+  build lanes. Pairs with the GOAL row above.
+- SMOKE BOUNDARY — **CLOSED at TASK_05**: the authed intake commit was exercised end-to-end
+  locally (fixture sign-up → session → commit wrote Contact + lead Project → rows deleted).
 
 ## Review log
 

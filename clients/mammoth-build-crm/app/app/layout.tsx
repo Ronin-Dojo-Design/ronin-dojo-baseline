@@ -1,6 +1,9 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
+import { getServerSession } from "@/lib/auth";
 
-export default function CrmLayout({ children }: { children: React.ReactNode }) {
+export default async function CrmLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession();
   return (
     <div className="min-h-screen">
       <header className="border-b border-border bg-surface">
@@ -28,9 +31,13 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="flex items-center gap-5 text-sm">
-            <Link href="/login" className="text-muted transition-colors hover:text-ink">
-              Sign in
-            </Link>
+            {session ? (
+              <SignOutButton name={session.user.name || session.user.email} />
+            ) : (
+              <Link href="/login" className="text-muted transition-colors hover:text-ink">
+                Sign in
+              </Link>
+            )}
             <Link href="/" className="text-muted transition-colors hover:text-ink">
               ← Site
             </Link>
