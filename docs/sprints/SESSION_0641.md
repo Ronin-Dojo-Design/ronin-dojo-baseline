@@ -241,3 +241,23 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 >   the plist
 > **AM morning-critical order:** review #298's numbers BEFORE the Michael meeting · the deck fix
 > for #276 · then the merge queue as tabled above. THE ORCHESTRATOR IS DONE.
+
+> **Waves 11+12 (operator-directed, launched — all Claude):**
+> · 0672 (Fable, net) `auto/session-0672-mmb-quickbooks-rr` — /rr QuickBooks: Julie's bookkeeping
+>   workflow, QBO API + Claude-connector landscape, invoice-pipeline handoff options; forks open;
+>   NOTHING auto-sends without operator approval (hard rule threaded through)
+> · 0673 (Sonnet) `auto/session-0673-mmb-deck-v2` — **STACK on #276, MERGE-AFTER**: deck v0.2 —
+>   applies the 0669 iPad edge-zone fix + visible nav buttons, feature-roster slides (CRM, CMS,
+>   automations, QuickBooks-planned, 3D configurator), cutover step-visual (from CUTOVER_CHECKLIST,
+>   client framing), closing slide "Built by Ronin Building Design. / Built for Mammoth. / Built
+>   for family. / Built for success." (operator confirms wording at review; #284 outline now lags —
+>   AM annotates)
+> · 0674 (Fable) `auto/session-0674-state-brand-scoping` — SotD=BBL-only view for Tony Hua +
+>   MMB-only state posture; FROZEN-KERNEL decision tree: builds ONLY if zero frozen files change,
+>   else escalation spec (frozen law honored)
+> · 0675 (Fable) `auto/session-0675-feature-intake-billing` — feature-widget → triage → per-feature
+>   hours estimate → Client-Invoice pipeline spec (G-024 slice); approval gates at EVERY send point;
+>   static-artifact stopgap = prefilled mailto
+> · 0676 (Sonnet) `auto/session-0676-agent-promotion-larry-iggy` — Larry (legal) + Iggy (social)
+>   assessed + ported from the READ-ONLY old monorepo into .claude/agents/ (found-or-designed-fresh
+>   stated honestly); agent-systems-map addition proposed, not applied
