@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Button } from "~/components/common/button"
 import { BjjCurriculumBrowser } from "~/components/web/curriculum/bjj-curriculum-browser"
+import { CurriculumJourney } from "~/components/web/curriculum/curriculum-journey/curriculum-journey-sequence"
 import { BrandTypography, bblHeadingScopeClass } from "~/components/web/ui/brand-typography"
 import { Breadcrumbs } from "~/components/web/ui/breadcrumbs"
 import { Intro, IntroDescription, IntroTitle } from "~/components/web/ui/intro"
@@ -41,6 +42,8 @@ export default async function CurriculumPage() {
           Technique Graph
         </Button>
       </Intro>
+
+      <CurriculumJourney levels={levels} />
 
       <Section className="md:block">
         <Section.Content className="md:col-span-3">
