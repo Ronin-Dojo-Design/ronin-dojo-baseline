@@ -2,10 +2,10 @@
 title: "SESSION 0633 — RDD + MMB stand-alone deploys: /rr wave → two /ppp batons (WS-A/B/C/D)"
 slug: session-0633
 type: session--plan
-status: staged
+status: in-progress
 created: 2026-07-23
 updated: 2026-07-23
-last_agent: claude-session-0625
+last_agent: claude-session-0633
 sprint: S12
 lane: repo
 goal_ids: ["G-021", "G-027"]
@@ -211,9 +211,117 @@ four land, so each baton can cite the finished runbook, gap matrix, and cutover 
 - Decisions 1–5 answered and recorded (ADR where architectural).
 - **Zero** infrastructure mutated by this session.
 
+## Petey plan
+
+### Goal
+
+Produce the reusable per-brand deploy pattern + gap matrix and cutover checklist for each of RDD and
+MMB, then emit two independently-executable batons — zero infrastructure mutated.
+
+#### SESSION_0633_TASK_01 — WS-A: per-brand deploy-pattern runbook
+
+- **Agent:** general-purpose (Giddy lens: architecture + Git/deploy strategy)
+- **What:** ONE runbook, `docs/runbooks/deploy/per-brand-deploy-pattern.md` — what exactly makes a
+  brand a separate deploy unit (project + root dir, `ignoreCommand` scoping path-scoped vs whole-dir,
+  install/build commands, env/secret blocks, CI workflow, DB separation per ADR 0038, domain attach).
+- **Done means:** runbook exists; the two stale claims are *documented as corrected reality* in it.
+  The root `vercel.json` comment fix and the runbooks-hub link are **outside owned paths** → routed to
+  the merge owner via `## Findings to route`, not edited in-lane.
+- **Depends on:** —
+
+#### SESSION_0633_TASK_02 — WS-B: gap matrices vs BBL
+
+- **Agent:** general-purpose (Doug lens: verify against live app + repo, never copy stale rows)
+- **What:** `docs/product/rdd/GAP_MATRIX.md` + `docs/product/mammoth-build/GAP_MATRIX.md`, mirroring
+  BBL's axis set but with every BBL row re-verified (repo routes + live `blackbeltlegacy.com` spot-checks).
+- **Done means:** both files exist, rows dated "as of main@417a7be9", RDD rows flagged as
+  point-in-time (SESSION_0635 is mutating `apps/rdd` in parallel).
+- **Depends on:** —
+
+#### SESSION_0633_TASK_03 — WS-D: Cloudflare extension of the domain runbook
+
+- **Agent:** general-purpose (research + author; WebFetch/WebSearch against CURRENT Vercel + Cloudflare docs)
+- **What:** extend `docs/runbooks/deploy/vercel-domain-setup-runbook.md` with a Cloudflare section:
+  A/CNAME targets, apex vs `www`, and the proxied-vs-DNS-only requirement for Vercel cert issuance —
+  **verified against current vendor docs, not memory**. Generic Cloudflare path + MMB-zone cautions
+  (do-not-touch: MX/Google Workspace on both domains, HubSpot DKIM/SPF + `hub.` CNAME, `_dmarc`).
+- **Done means:** Bluehost section intact; Cloudflare section sourced (links + retrieved dates); the
+  grey-cloud claim confirmed, corrected, or nuanced per current docs.
+- **Depends on:** —
+
+#### SESSION_0633_TASK_04 — WS-C: cutover checklists
+
+- **Agent:** general-purpose (Cody lens: author from WS-B output + BBL's 3-layer shape)
+- **What:** `docs/product/rdd/CUTOVER_CHECKLIST.md` + `docs/product/mammoth-build/CUTOVER_CHECKLIST.md`
+  mirroring BBL's layers (Deploy/DNS → Features/GAP_MATRIX → Tests/verification). MMB Layer 1 is
+  **greenfield attach** (mammothmb.com), not a cutover — no rollback drama, incumbent untouched.
+- **Done means:** both files exist; Layer 2 consumes the WS-B matrices by reference.
+- **Depends on:** TASK_02 (+ TASK_03 for the DNS layer's Cloudflare specifics).
+
+#### SESSION_0633_TASK_05 — /ppp × 2: the batons
+
+- **Agent:** Petey (inline — this session lead)
+- **What:** two paste-ready batons in this file (`## Batons`): Baton 1 RDD (own Vercel project +
+  `apps/rdd/vercel.json` + own Neon DB per D3 + intake mount per D4, Bluehost DNS) · Baton 2 MMB
+  (attach existing `clients/mammoth-build-crm` to a Vercel project in Brian's team per D2, Cloudflare
+  DNS for mammothmb.com). **No new SESSION stubs minted in-lane** (id-collision rule) — the merge
+  owner stages stubs from the batons.
+- **Done means:** each baton executable without re-deriving WS-A/B/C/D; every infra action inside
+  them operator-gated.
+- **Depends on:** TASK_01–04.
+
+### Parallelism
+
+TASK_01 ∥ TASK_02 ∥ TASK_03 (disjoint files, one dispatch wave) → TASK_04 → TASK_05 inline.
+
+### Open decisions — resolved at bow-in grill (2026-07-23)
+
+1. mammothmb.com registered + zoned in Michael's Cloudflare — **pre-answered by dispatch key-fact**.
+2. MMB Vercel project ownership — **Brian's team**; migrates at ADR 0033 D1 contractual handoff.
+3. RDD own DB — **yes, in Baton 1** (operator directive "their own DBs"); provisioning operator-gated.
+4. Intake → apps/rdd — **yes**, RDD is the 0632 intake module's first mount; baton plans schema/env.
+5. Blast radius — technical verification inside TASK_01 (ignoreCommand scoping proof), not a fork.
+6. `mammoth-metal-buildings` GitHub ownership — recorded risk in Baton 2; not an MVP blocker.
+7. HubSpot DNS exit — its own later lane; recorded in Baton 2's do-not-touch + sequencing note.
+
+### Risks
+
+- SESSION_0635 mutates `apps/rdd` while WS-B snapshots it → RDD matrix rows dated; merge owner reconciles.
+- BBL `GAP_MATRIX.md` known-stale → axis reuse only, zero row copying.
+- Browser MCPs may be profile-locked by sibling sessions → agents use WebFetch (no browser dependency).
+- `core.hooksPath` singleton points at whichever worktree bootstrapped last → finding routed below.
+
+### Scope guard
+
+Planning only. No Vercel/DNS/DB/deploy mutations; no `apps/rdd/**` edits (0635 owns it); no shared-ledger
+writes; no files outside the owned-path list; batons stay in this SESSION file.
+
 ## Task log
 
-<!-- filled at bow-in -->
+- `SESSION_0633_TASK_01` — WS-A `/rr`: per-brand deploy-pattern runbook (`docs/runbooks/deploy/`), correcting the two recorded stale claims. — **pending**
+- `SESSION_0633_TASK_02` — WS-B `/rr`: gap matrices vs BBL → `docs/product/rdd/GAP_MATRIX.md` + `docs/product/mammoth-build/GAP_MATRIX.md` (re-verified, not copied from BBL's stale matrix). — **pending**
+- `SESSION_0633_TASK_03` — WS-D `/rr`: extend `vercel-domain-setup-runbook.md` to Cloudflare; verify grey-cloud/cert-issuance claim against current Vercel + Cloudflare docs. — **pending**
+- `SESSION_0633_TASK_04` — WS-C: `CUTOVER_CHECKLIST.md` per brand (3-layer BBL shape), consuming WS-B. Depends on TASK_02. — **pending**
+- `SESSION_0633_TASK_05` — `/ppp` × 2: RDD baton + MMB baton, written last, citing TASK_01–04 outputs. — **pending**
+
+## Bow-in (SESSION_0633, 2026-07-23)
+
+- Canonical-occupancy check: **OCCUPIED by SESSION_0624** → session runs entirely in `../ronin-0633` (worktree on pre-existing branch `session-0633-brand-deploys`, fast-forwarded from stale 7355fa24 to main 417a7be9; branch had zero unique commits).
+- `githooks/doctor.sh` from this worktree: **all checks passed** (pre-push RULE B live, server ruleset `main-pr-only` active).
+- `/worktree-setup` bootstrap: complete (env, deps, Prisma clients).
+- Parallel-lane assessment (opening.md §1d): fan-out shape pre-decided by the SESSION_0625 dispatch — WS-A ∥ WS-B ∥ WS-D disjoint `/rr` lanes, WS-C after WS-B, batons last.
+- PR backlog at bow-in: 1 open (#261, clean/draft) — lane pinned by dispatch, so no `/pr-fix-loop` pickup.
+
+## Artifacts
+
+- Frozen State-of-Dojo snapshot @ bow-in (429 sessions, 31 goals; operator-requested):
+  <https://claude.ai/code/artifact/82d86f8c-6008-4313-b367-4e9d9bf8b579>
+
+## Findings to route
+
+<!-- ids assigned by the merge owner after all three lanes land — do not mint ids in-lane -->
+
+- FS: `core.hooksPath` is a shared-config singleton across all worktrees — at bow-in it pointed into the **ronin-0632 sibling worktree** (its bootstrap ran last); my bootstrap re-pointed it to ronin-0633. Whichever worktree "owns" the path at any moment, removing that worktree at bow-out dangles the hooks for canonical + every sibling until the next bootstrap/doctor run. Doctor passes today; the hazard is worktree *removal*, not present state. Suggest: bow-out ritual (or `canonical-claim.sh release`) re-points hooksPath to the **canonical** checkout's `scripts/githooks` before a worktree is pruned.
 
 ## Status
 
