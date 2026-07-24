@@ -170,10 +170,54 @@ real two-lane fan-out — separate worktrees, disjoint file sets, one merge owne
   the taxonomy's first real consumer, the canon edit belongs to an MMB lane.
 - NOTE: pre-existing mobile nav overflow (109px @390px) affected every `mammoth-build-crm` `/app`
   page, not just the new one — fixed in-lane via shell `flex-wrap` (within owned paths).
+- FS: ran the FULL root `bun run test` unintentionally at the /ggr fix pass (cwd was the worktree
+  root, not `clients/mammoth-build-crm`) with a live `RESEND_API_KEY` in the copied `.env` — the
+  known live-Resend-send hazard (0551 seam guard still unmerged at last record). Suite green
+  (1708/0), but possible real emails fired. Mitigation candidates: neuter `RESEND_API_KEY` in
+  worktree bootstrap copies; land the seam guard.
+- WL: add the intake kernel module to `docs/knowledge/wiki/custom-component-inventory.md`
+  (Giddy cap-adjacent flag). Proposed row: *`@ronin-dojo/ui-kit/intake` — zero-React kernel
+  feature-module: `Questionnaire` core + per-brand `questionnaires/*` + per-app adapter; consumers:
+  apps/web `/app/client-intake`, mammoth-build-crm `/app/intake` (SESSION_0632).*
+- D: semantic name collision inside ui-kit — `src/kanban/intake.ts` (board lead-intake) vs
+  `src/intake/` (questionnaire intake). Pre-existing name; rename candidate `kanban/lead-intake.ts`
+  next kanban lane (Giddy).
+- FOLLOW-UP (Desi P2/P3 bundle, mammoth-build-crm): extract shared `components/crm/` form module
+  (`fieldClass` ×3 copies + button classes + `Field`) and converge the three label idioms
+  (intake/new/sales); sticky global progress; nav `aria-current` + "Import leads"/"Discovery call"
+  label disambiguation; `aria-describedby` for question hints. Deferred from the close-time fix
+  pass — converging legacy sibling pages unreviewed at close risks visual regressions outside this
+  session's verified scope.
 
 ## Review log
 
-<!-- /ggr composite recorded before the push gate -->
+### /ggr — Giddy Gate Review (Build lane, code-quality-matrix)
+
+**Wave:** Doug (verify) · Desi (UI) · Giddy (structure) on e137db44 + fallow audit; batched fix
+pass followed (dup kill via `PlannedLeadCreate` reuse · forged-payload guard · Desi P1/P2 ·
+`CommitPanel` split), then delta re-verify (headless: 0 overflow, 0 console errors, gating +
+captions + persistence proven; all suites re-green).
+
+**Class:** B (custom extension; refs ADR 0051/0040-B/0033 D1 + the `lead-commit` precedent).
+
+| Dim | Score | Evidence |
+| --- | ---: | --- |
+| D1 Correctness | 9.5 | 10 extraction tests unchanged; serializer byte-identity proven mechanically (Doug); 48+41 suites; root 1708 green; headless interaction proofs ×2 |
+| D2 Security | 9.0 | owner-gate + server re-validation + fail-closed forged-payload guard; no enrich/overwrite (zero `update` calls); retention law holds; dedupe not DB-constraint-backed (pre-existing tracer posture, P3) |
+| D3 Simplicity | 8.5 | clone group eliminated (0 remain); page 15→6 cyclo / 22→4 cognitive; CommitPanel 13/15 named debt |
+| D4 Readability | 9.5 | idiom-consistent; JSDoc carries why; Desi-praised microcopy |
+| D5 Maintainability | 9.0 | MI 85.7 (good); pure kernel + pure plan modules; CommitPanel size noted |
+| D6 Scalability | 9.0 | ≤3 queries in tx; phone-scan matcher O(contacts) — shared pre-existing tradeoff, documented |
+| D7 Convention/reuse | 8.5 | ONE matcher + ONE serializer preserved; sub-path export story right (Giddy PASS); inventory row out-of-path → routed (cap-adjacent, judged not tripped: pattern documented here) |
+
+**Weighted:** 9.02 · **Caps:** none tripped (runtime verified headless; no regression — byte-identity
+proven; inventory-row cap judged adjacent, row routed) · **Composite: 9.0 / 10 — CLEARS** (≥9.0),
+ship with the named follow-ups logged (see Findings to route). Doug's independent verdict:
+LAUNCH-SAFE 9.4. Residuals: authed-commit scratch-DB smoke (routed) + Desi P2/P3 bundle (routed).
+*Deviation note: `/fallow-fix-loop` used as rubric+metrics only — fixes were applied inline as the
+batched pass; fallow before/after deltas recorded above. `fallow health` baseline was NOT taken
+before implementation (memory rule missed) — before/after complexity is reconstructed from the
+audit's changed-since view instead.*
 
 ## Status
 

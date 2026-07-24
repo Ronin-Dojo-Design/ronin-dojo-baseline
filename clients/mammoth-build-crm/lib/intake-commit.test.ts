@@ -33,6 +33,20 @@ describe("planIntakeCommit", () => {
     expect(planIntakeCommit(INTAKE_QUESTIONNAIRE, { ...input, answers: {} }).ok).toBe(false);
   });
 
+  test("refuses a malformed payload with a report, not a throw (forged action calls fail closed)", () => {
+    const garbage = [
+      { ...input, answers: null },
+      { ...input, answers: [1, 2] },
+      { ...input, answers: { commercial_lanes: 42 } },
+      { ...input, client: 7 },
+    ] as unknown as IntakeCaptureInput[];
+    for (const bad of garbage) {
+      const plan = planIntakeCommit(INTAKE_QUESTIONNAIRE, bad);
+      expect(plan.ok).toBe(false);
+      if (!plan.ok) expect(plan.error).toContain("Malformed");
+    }
+  });
+
   test("refuses a bad meeting date and an unknown source (client shapes are never trusted)", () => {
     expect(planIntakeCommit(INTAKE_QUESTIONNAIRE, { ...input, meetingDate: "7/23/26" }).ok).toBe(
       false,

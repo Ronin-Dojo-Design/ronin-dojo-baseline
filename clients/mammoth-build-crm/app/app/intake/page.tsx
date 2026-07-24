@@ -13,12 +13,13 @@
  */
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   answeredCount,
   flatQuestions,
   toMarkdown,
   type IntakeHeader,
+  type QuestionnaireSection,
 } from "@ronin-dojo/ui-kit/intake";
 import { commitIntakeCapture } from "@/lib/actions";
 import { emailKey, phoneKey } from "@/lib/contact-match";
@@ -68,6 +69,126 @@ type CommitState =
 
 const QUESTION_TOTAL = flatQuestions(INTAKE_QUESTIONNAIRE).length;
 
+const sectionAnswered = (section: QuestionnaireSection, answers: Record<string, string>): number =>
+  section.questions.filter((q) => (answers[q.id] ?? "").trim().length > 0).length;
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="text-sm">
+      <span className="mb-1 block text-xs font-semibold text-muted">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function CommitPanel({
+  answered,
+  blockers,
+  commit,
+  commitName,
+  copyFailed,
+  onArm,
+  onCommit,
+  onCopy,
+  onDownload,
+  onStartNew,
+  copied,
+}: {
+  answered: number;
+  blockers: string[];
+  commit: CommitState;
+  commitName: string;
+  copied: boolean;
+  copyFailed: boolean;
+  onArm: () => void;
+  onCommit: () => void;
+  onCopy: () => void;
+  onDownload: () => void;
+  onStartNew: () => void;
+}) {
+  const doneHeadingRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (commit.phase === "done") {
+      doneHeadingRef.current?.focus();
+    }
+  }, [commit.phase]);
+
+  if (commit.phase === "done") {
+    return (
+      <div className="mt-3" role="status">
+        <p ref={doneHeadingRef} tabIndex={-1} className="text-sm outline-none">
+          Lead committed:{" "}
+          <Link
+            href={`/app/project/${commit.report.projectId}`}
+            className="font-semibold text-primary hover:underline"
+          >
+            {commit.report.projectName}
+          </Link>{" "}
+          {commit.report.contactMatched
+            ? "— attached to a contact already in the CRM (nothing on it was changed)."
+            : "— new contact created."}
+        </p>
+        <button type="button" onClick={onStartNew} className={`mt-3 ${secondaryButtonClass}`}>
+          Start a new capture
+        </button>
+      </div>
+    );
+  }
+
+  const armed = commit.phase === "confirm" || commit.phase === "committing";
+  return (
+    <>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" onClick={onCopy} className={secondaryButtonClass}>
+          {copied ? "Copied ✓" : "Copy Markdown"}
+        </button>
+        <button type="button" onClick={onDownload} className={secondaryButtonClass}>
+          Download .md
+        </button>
+        {armed ? (
+          <button
+            type="button"
+            onClick={onCommit}
+            disabled={commit.phase === "committing"}
+            className={primaryButtonClass}
+          >
+            {commit.phase === "committing" ? "Committing…" : `Confirm — write ${commitName} to the CRM`}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onArm}
+            disabled={blockers.length > 0}
+            className={primaryButtonClass}
+          >
+            Commit to CRM…
+          </button>
+        )}
+      </div>
+      {blockers.length > 0 ? (
+        <p className="mt-2 text-xs text-muted">To commit: {blockers.join("; ")}.</p>
+      ) : null}
+      {armed && commit.phase === "confirm" ? (
+        <p className="mt-2 text-xs text-muted">
+          Writes one contact + one lead-stage project ({answered} answer
+          {answered === 1 ? "" : "s"} in the notes). If the contact is already in the CRM, the lead
+          attaches to it — nothing on the existing contact is changed.
+        </p>
+      ) : null}
+      {copyFailed ? (
+        <p role="alert" className="mt-2 text-sm text-primary-hover">
+          Copy failed — the browser blocked clipboard access. Use Download .md instead.
+        </p>
+      ) : null}
+      {commit.phase === "error" ? (
+        <p role="alert" className="mt-2 text-sm text-primary-hover">
+          {commit.message}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 export default function DiscoveryIntakePage() {
   const [capture, setCapture, hydrated] = useLocalStorage<Capture>(
     `mmb-intake:${INTAKE_QUESTIONNAIRE.id}`,
@@ -75,6 +196,7 @@ export default function DiscoveryIntakePage() {
   );
   const [commit, setCommit] = useState<CommitState>({ phase: "idle" });
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
   // Default the meeting date to today AFTER hydration — a render-time `new Date()` would make the
   // server and first client paint disagree.
@@ -86,7 +208,13 @@ export default function DiscoveryIntakePage() {
   }, [hydrated]);
 
   const answered = answeredCount(INTAKE_QUESTIONNAIRE, capture.answers);
-  const hasDedupeKey = emailKey(capture.email) !== null || phoneKey(capture.phone) !== null;
+  const blockers: string[] = [];
+  if (emailKey(capture.email) === null && phoneKey(capture.phone) === null) {
+    blockers.push("add a valid email or phone (without one the lead can't be deduped)");
+  }
+  if (answered === 0) {
+    blockers.push("answer at least one question");
+  }
 
   const setField =
     (field: "client" | "contactName" | "email" | "phone" | "meetingDate") => (value: string) => {
@@ -116,11 +244,16 @@ export default function DiscoveryIntakePage() {
   };
 
   const onCopy = async () => {
-    await navigator.clipboard.writeText(
-      toMarkdown(INTAKE_QUESTIONNAIRE, exportHeader, capture.answers),
-    );
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setCopyFailed(false);
+    try {
+      await navigator.clipboard.writeText(
+        toMarkdown(INTAKE_QUESTIONNAIRE, exportHeader, capture.answers),
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopyFailed(true);
+    }
   };
 
   const onDownload = () => {
@@ -159,6 +292,7 @@ export default function DiscoveryIntakePage() {
   const onStartNew = () => {
     setCapture({ ...EMPTY_CAPTURE, meetingDate: new Date().toISOString().slice(0, 10) });
     setCommit({ phase: "idle" });
+    window.scrollTo({ top: 0 });
   };
 
   return (
@@ -184,51 +318,49 @@ export default function DiscoveryIntakePage() {
           Who&apos;s on the call
         </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Company / client</span>
+          <Field label="Company / client">
             <input
               className={fieldClass}
+              autoComplete="organization"
               value={capture.client}
               onChange={(event) => setField("client")(event.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Contact name</span>
+          </Field>
+          <Field label="Contact name">
             <input
               className={fieldClass}
+              autoComplete="name"
               value={capture.contactName}
               onChange={(event) => setField("contactName")(event.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Email</span>
+          </Field>
+          <Field label="Email">
             <input
               className={fieldClass}
               type="email"
+              autoComplete="email"
               value={capture.email}
               onChange={(event) => setField("email")(event.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Phone</span>
+          </Field>
+          <Field label="Phone">
             <input
               className={fieldClass}
               type="tel"
+              autoComplete="tel"
               value={capture.phone}
               onChange={(event) => setField("phone")(event.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Meeting date</span>
+          </Field>
+          <Field label="Meeting date">
             <input
               className={fieldClass}
               type="date"
               value={capture.meetingDate}
               onChange={(event) => setField("meetingDate")(event.target.value)}
             />
-          </label>
-          <label className="text-sm">
-            <span className="mb-1 block text-xs font-semibold text-muted">Lead source</span>
+          </Field>
+          <Field label="Lead source">
             <select
               className={fieldClass}
               value={capture.source}
@@ -240,14 +372,8 @@ export default function DiscoveryIntakePage() {
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
         </div>
-        {!hasDedupeKey ? (
-          <p className="mt-3 text-xs text-muted">
-            Add a valid email or phone — without one the lead can&apos;t be deduped, so it
-            can&apos;t be committed.
-          </p>
-        ) : null}
       </section>
 
       {INTAKE_QUESTIONNAIRE.sections.map((section) => (
@@ -256,7 +382,12 @@ export default function DiscoveryIntakePage() {
           aria-label={section.title}
           className="rounded-lg border border-border bg-surface p-5"
         >
-          <h2 className="font-display text-lg font-bold">{section.title}</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-lg font-bold">{section.title}</h2>
+            <span className="text-xs text-muted">
+              {sectionAnswered(section, capture.answers)}/{section.questions.length}
+            </span>
+          </div>
           <div className="mt-3 flex flex-col gap-4">
             {section.questions.map((question) => (
               <label key={question.id} className="block text-sm">
@@ -281,70 +412,19 @@ export default function DiscoveryIntakePage() {
         <h2 id="intake-commit-heading" className="font-display text-lg font-bold">
           Finish the capture
         </h2>
-
-        {commit.phase === "done" ? (
-          <div className="mt-3">
-            <p className="text-sm">
-              Lead committed:{" "}
-              <Link
-                href={`/app/project/${commit.report.projectId}`}
-                className="font-semibold text-primary hover:underline"
-              >
-                {commit.report.projectName}
-              </Link>{" "}
-              {commit.report.contactMatched
-                ? "— attached to a contact already in the CRM (nothing on it was changed)."
-                : "— new contact created."}
-            </p>
-            <button type="button" onClick={onStartNew} className={`mt-3 ${secondaryButtonClass}`}>
-              Start a new capture
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button type="button" onClick={() => void onCopy()} className={secondaryButtonClass}>
-                {copied ? "Copied ✓" : "Copy Markdown"}
-              </button>
-              <button type="button" onClick={onDownload} className={secondaryButtonClass}>
-                Download .md
-              </button>
-              {commit.phase === "confirm" || commit.phase === "committing" ? (
-                <button
-                  type="button"
-                  onClick={() => void onCommit()}
-                  disabled={commit.phase === "committing"}
-                  className={primaryButtonClass}
-                >
-                  {commit.phase === "committing"
-                    ? "Committing…"
-                    : `Confirm — write ${capture.contactName.trim() || capture.client.trim() || "this lead"} to the CRM`}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setCommit({ phase: "confirm" })}
-                  disabled={!hasDedupeKey || answered === 0}
-                  className={primaryButtonClass}
-                >
-                  Commit to CRM…
-                </button>
-              )}
-            </div>
-            {commit.phase === "confirm" ? (
-              <p className="mt-2 text-xs text-muted">
-                Writes one contact + one lead-stage project ({answered} answer
-                {answered === 1 ? "" : "s"} in the notes). If the contact is already in the CRM,
-                the lead attaches to it — nothing on the existing contact is changed.
-              </p>
-            ) : null}
-            {commit.phase === "error" ? (
-              <p role="alert" className="mt-2 text-sm text-primary-hover">
-                {commit.message}
-              </p>
-            ) : null}
-          </>
-        )}
+        <CommitPanel
+          answered={answered}
+          blockers={blockers}
+          commit={commit}
+          commitName={capture.contactName.trim() || capture.client.trim() || "this lead"}
+          copied={copied}
+          copyFailed={copyFailed}
+          onArm={() => setCommit({ phase: "confirm" })}
+          onCommit={() => void onCommit()}
+          onCopy={() => void onCopy()}
+          onDownload={onDownload}
+          onStartNew={onStartNew}
+        />
       </section>
     </main>
   );
