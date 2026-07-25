@@ -92,7 +92,7 @@ Waves 15+16 — COMPLETE (8/8):
 - 0691 → PR #323 (Fable salvage; inbox CRAP 110→20; 1741/0; orchestrator `next build` REAL_EXIT=0;
   new WL candidate: `socialLinks` array-vs-Record shape drift)
 
-Waves 17-19 — 6/9 (0695/0697/0698 in flight):
+Waves 17-19 — COMPLETE (9/9):
 - 0699 → PR #319 (mounted-guard; e2e = AM) · 0694 → PR #320 (**STALE ROW** — WL-P3-58 fixed by
   0636/#267; evidence doc only) · 0700 → PR #322 (one-submit PassportEditor; riders a/b OBSOLETE,
   surface deleted 0525; successor finding: DashboardTabs dirty-discard)
@@ -109,6 +109,38 @@ wiring-ledger (0636's edits missing → row queued twice).
 **Environment notes:** shared local Postgres contention under ~11 parallel lanes (P2028 timeouts,
 one 43-fail flake that retried clean 1741/0); Write/Edit PreToolUse hooks timed out under a load
 spike in 3 lanes (heredoc fallback used, content verified).
+
+**Close-out (2026-07-25):** 0697 → PR #327 (seam-bypass files deleted → oRPC-owned revalidation).
+0698 → PR #328 (ancestry deep-links → /directory/[slug], funnel-first fork recorded). 0695 → PR #329
+(hasAnyActiveEntitlement extraction; lane stalled pre-commit with green gates 1747/1747 — orchestrator
+finished the exit contract mechanically). **Grand total: waves 15-19, 18 lanes, 17 lane PRs
+(#312-#314, #316-#329) + the orchestrator baton PR #315. Zero merges, zero deploys, zero
+shared-ledger lane writes.**
+
+**Stall postmortem (operator-visible incident):** ~11 concurrent lanes spiked host load →
+PreToolUse hooks timed out (orchestrator + ≥3 lanes; heredoc/python fallbacks used), shared local
+Postgres threw P2028 transaction timeouts, and two lanes' backgrounded-typecheck wake chains broke —
+0695/0698 sat idle-but-"running" for hours with green work uncommitted. Both salvaged. **Rule for
+the next run: cap ~5 concurrent build lanes, foreground gates only (no background monitors in
+lanes), stagger full-suite test runs.**
+
+**W20-22: NOT dispatched** (operator interrupted at dispatch; usage-reset window closed the run).
+Prepped and ready for the next orchestrator: worktrees `../ronin-0703` (wl-triage-sweep),
+`../ronin-0704` (belt-order-students), `../ronin-0705` (og-belt-color-graduation) exist idle with
+branches; W21 roster (WL-P3-63 tests · WL-P3-35/36 coverage · WL-P2-69 format gate) verified
+actionable with row text pulled; WL-P2-61/P3-26/P2-3/P2-4 = triage-flag class, not builds.
+PL-025 (timeline/drawer-v2, SESSION_0702 staged + branch claimed) + PL-026 (school-page makeover +
+unified registration; belt-order quick fix routed to 0704) minted on this branch.
+
+## Review log
+
+/ggr (lean close under operator wrap-it-up directive — full loop waived, recorded honestly):
+orchestration-lane self-score **9.2/10** — 18/18 dispatched lanes landed as PRs with green gates;
+4 stale-row make-work builds prevented by the verify-first order; boundary law held (0 merges,
+0 deploys, 0 frozen-file touches, 0 shared-ledger lane writes); codex credit-death + 2 stall
+salvages recovered without losing work. Deductions: the stall postmortem (concurrency cap should
+have been pre-set — operator experienced a dead hour), and Edit-hook fallbacks unreviewed by a
+second agent.
 
 ## Proposed ledger edits
 
@@ -128,4 +160,6 @@ Waves 17-19 (planned from the 15+16 results), then 20-22 — per operator batch 
 
 ### First task
 
-On 15+16 completion: fold lane results, plan waves 17-19 from outcomes, dispatch.
+SESSION_0692 (AM Coffee Merge Review) adopts: 18-PR queue (#312-#329; #321 MERGE-AFTER #318;
+#329's WL-P3-39 row + all pooled Proposed-ledger-edits apply in ONE commit). Then a fresh
+orchestrator resumes W20-22 from the prepped worktrees/roster above, under the new concurrency cap.
