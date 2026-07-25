@@ -19,9 +19,9 @@ export function getColumnPinningStyle<TData>({
   return {
     boxShadow: withBorder
       ? isLastLeftPinnedColumn
-        ? "-4px 0 4px -4px hsl(var(--border)) inset"
+        ? "-4px 0 4px -4px var(--color-border) inset"
         : isFirstRightPinnedColumn
-          ? "4px 0 4px -4px hsl(var(--border)) inset"
+          ? "4px 0 4px -4px var(--color-border) inset"
           : undefined
       : undefined,
     left: isPinned === "left" ? `${column.getStart("left")}px` : undefined,

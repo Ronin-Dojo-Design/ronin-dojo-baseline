@@ -23,7 +23,7 @@ export function BeltPreview({
     ? {
         boxShadow: `0 0 0 3px ${colorHex}, 0 0 0 5px color-mix(in srgb, ${colorHex} 20%, transparent)`,
       }
-    : { boxShadow: "0 0 0 2px hsl(var(--border))" }
+    : { boxShadow: "0 0 0 2px var(--color-border)" }
 
   const sizeClasses = size === "lg" ? "size-28" : "size-20"
   const innerClasses = size === "lg" ? "size-24" : "size-16"

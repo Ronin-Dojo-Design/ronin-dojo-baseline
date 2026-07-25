@@ -11,6 +11,7 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./intake": "./src/intake/index.ts",
     "./kanban": "./src/kanban/index.ts",
     "./tokens.css": "./src/tokens/tokens.css",
     "./card.css": "./src/card/card.css",

@@ -471,6 +471,31 @@ plan scope.
   (classic iOS <16px font-size zoom) — including the FeatureWidget idea input. Also the FeatureWidget **image
   preview shows a broken-link "?"**. **Lane:** mobile input polish / uploader (Desi `/hallmark`).
 
+### PL-024 — Mammoth Build MVP website — CLIENT SECURED ($5K / 2wk, MVP due 2026-08-07) — **P0, TOP OF LEDGER**
+
+- **Status:** queued — **P0 (top priority; work this before every other PL row).** Operator intake
+  2026-07-24 (SESSION_0641), straight out of the client meeting at Michael's. **Graduates next via a
+  full `/pp` plan session — staged as SESSION_0682.**
+- **The deal:** Michael Flores signed **$5,000 for a fully-functioning website in two weeks** — an MVP
+  for the existing Mammoth Build, **hard deadline 2026-08-07**. Team aligned (Amy, Brian, Michael,
+  Julie). This is the first paid RDD client engagement off the pitch.
+- **MVP scope to plan (client-meeting intake — incorporate at the plan session):**
+  - Pricing ideas / the pricing framing carried from the meeting.
+  - **Brand Heartbeat PRD** for Mammoth (mirror the BBL BHB).
+  - Client stories / customer stories; social-media ideas.
+  - **Integrate with / migrate off the existing site — detangle old developer Tim's legacy spaghetti.**
+    Understand the real needs and the value of cutting hours out of that mess.
+- **Post-MVP-launch arc (mirror BBL's post-launch estimations):**
+  - Business-automation + social-media-automation estimations.
+  - **Michael into the Obsidian vault** ("the Mammoth vault") — his own **game-on/game-off**, *scoped to
+    what he did / researched / accomplished*; wire his needs from the **FeatureWidget on his own admin
+    dashboard** (ties [G-024](goals-ledger.md)). "Dashboards on dashboards on dashboards."
+- **Commercial / RDD (Renee) negotiation — POST-MVP:** packaging models to decide *after* launch —
+  **one-time payment vs. time-&-materials**, **honest-hours vs. fixed flat-rate at a higher rate.**
+- **Lane:** client — Mammoth Build (RDD engagement). **Cross-refs:** SESSION_0682 (the plan session),
+  [G-024](goals-ledger.md), `clients/mammoth-build-crm`, apps/rdd `/clients/mammoth`, ADR 0051
+  (kernel→brand→app), ADR 0038 (per-product DB). **⏰ Deadline 2026-08-07.**
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.

@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Opening Ritual</title>
+<style>
+:root{--mk-accent:#3B82F6;--mk-accent-strong:#2563EB;--mk-on-accent:#0D0F12;--mk-bg:#15181D;--mk-page:#0D0F12;--mk-surface:#15181D;--mk-elevated:#1D2127;--mk-fg:#F3F5F7;--mk-muted:#9AA3AD;--mk-line:#2A2F37;--mk-font-head:"Saira","Bahnschrift","Arial Narrow",system-ui,sans-serif;--mk-font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mk-font-mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--mk-page);color:var(--mk-fg);font-family:var(--mk-font-body);line-height:1.6}
+.wrap{max-width:840px;margin:0 auto;padding:48px 24px 96px}
+.genre-badge{display:inline-block;font-family:var(--mk-font-head);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mk-on-accent);background:var(--mk-accent);border-radius:var(--mk-r-pill);padding:4px 12px;margin-bottom:16px}
+h1{font-family:var(--mk-font-head);font-size:32px;line-height:1.2;margin:0 0 16px;color:var(--mk-fg)}
+h2{font-family:var(--mk-font-head);font-size:22px;margin:40px 0 12px;border-bottom:1px solid var(--mk-line);padding-bottom:8px}
+h3{font-size:18px;margin:28px 0 8px}
+h4,h5,h6{font-size:15px;margin:20px 0 6px}
+p{margin:0 0 14px}
+a{color:var(--mk-accent)}
+code{font-family:var(--mk-font-mono);background:var(--mk-surface);border-radius:4px;padding:2px 5px;font-size:.9em}
+pre{background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:var(--mk-r-card);padding:16px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{margin:0 0 16px;padding:4px 16px;border-left:3px solid var(--mk-accent);background:var(--mk-surface);border-radius:0 var(--mk-r-inner) var(--mk-r-inner) 0;color:var(--mk-muted)}
+table{width:100%;border-collapse:collapse;margin:0 0 20px;font-size:14px}
+th,td{border:1px solid var(--mk-line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--mk-surface);font-family:var(--mk-font-head);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+ul,ol{margin:0 0 14px;padding-left:24px}
+li{margin:4px 0}
+hr{border:none;border-top:1px solid var(--mk-line);margin:32px 0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 24px;margin:0 0 12px;padding:16px;background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:var(--mk-r-card)}
+.meta-row{display:flex;flex-direction:column}
+.meta-row dt{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mk-muted);margin:0}
+.meta-row dd{margin:2px 0 0;font-size:14px}
+.meta-decision{margin:0 0 32px;padding:12px 16px;border:1px solid var(--mk-accent);border-radius:var(--mk-r-card);background:var(--mk-accent-tint,transparent);font-size:14px}
+.source-path{font-size:12px;color:var(--mk-muted);margin:0 0 32px;font-family:var(--mk-font-mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<span class="genre-badge">SOP / Ritual</span>
+<h1>Opening Ritual</h1>
+<dl class="meta"><div class="meta-row"><dt>Status</dt><dd>active</dd></div><div class="meta-row"><dt>Created</dt><dd>2026-04-25</dd></div><div class="meta-row"><dt>Updated</dt><dd>2026-07-23</dd></div><div class="meta-row"><dt>Author</dt><dd>claude-session-0624</dd></div><div class="meta-row"><dt>Session</dt><dd>opening</dd></div></dl>
+<p class="source-path">Source: docs/rituals/opening.md</p>
+<hr>
+<h1>Opening ritual — bow in</h1>
+<p>Run this at the start of every session, before any code is touched.</p>
+<blockquote>
+<p>v5.0 refresh of the legacy <code>opening_v4.5.md</code>. Heavy machinery (JETTY metadata, multi-tier auto-load packs, session-numbered handoff packets) has been dropped. What remains is the operational core: load just enough context to act, then commit to one task.</p>
+</blockquote>
+<h2>Agent-agnostic</h2>
+<p>This ritual is the source of truth for any agent that opens a session: Claude, Copilot, Codex, or otherwise. The ritual itself never depends on a specific LLM, IDE, or CLI. The trigger may differ per environment (Claude Code: <code>/bow-in</code> skill; Copilot/Codex chat: the words &quot;bow in&quot;; CLI script: a make target), but the steps below are identical and binding.</p>
+<p>Convention for the <code>last_agent</code> SESSION-file field is <code>&lt;agent&gt;-session-NNNN</code> where <code>&lt;agent&gt;</code> names the LLM/runtime that ran the session (e.g., <code>claude-session-0031</code>, <code>copilot-session-0028</code>, <code>codex-session-0030</code>). Past sessions in this repo use whichever agent actually executed; do not rewrite history, only record yours accurately on the new SESSION file.</p>
+<h2>Trigger</h2>
+<p>Any of: &quot;Bow in&quot; / starting a fresh session / opening a new chat / picking up after a break.</p>
+<h2>Steps</h2>
+<h3>Before Step 0 — Fresh-worktree bootstrap (environment readiness)</h3>
+<blockquote>
+<p>If this session runs in a <strong>fresh git worktree</strong> (a <code>../ronin-NNNN</code> created off <code>main</code>, not the
+canonical <code>/Users/brianscott/dev/ronin-dojo-app</code>), it is <strong>not set up</strong>: no <code>node_modules</code>, no
+<code>apps/web/.env</code>, no generated Prisma client, and <strong><code>graphify</code> returns 0 nodes</strong> (the graph lives in
+the canonical checkout). Every gate — <code>tsc</code>, <code>oxlint</code>, <code>bun test</code>, <code>next dev</code> — fails on module
+resolution until you bootstrap, and &quot;graphify-first discovery&quot; silently no-ops. <strong>Do NOT read these
+as code errors or a broken repo — bootstrap first.</strong> (This is the &quot;built-not-pointed&quot; failure from
+SESSION_0468 LR 0007: the bootstrap was always documented but never in the bow-in read-path.)</p>
+<p><strong>Detect:</strong> if <code>apps/web/node_modules</code> is absent → bootstrap before any gate. Run <strong><code>/worktree-setup</code></strong>
+(it executes the sequence), or follow the canonical
+<a href="../runbooks/dev-environment/dev-environment.md#fresh-worktree-bootstrap"><code>dev-environment.md</code> § Fresh worktree bootstrap</a>.
+In short: <code>bun install</code> (its prisma <code>postinstall</code> needs a <code>DATABASE_URL</code> — copy the canonical
+<code>apps/web/.env</code> first, or export a throwaway one) → <code>bunx prisma generate --no-hints</code>.</p>
+<p><strong>Graphify caveat:</strong> an empty <code>graphify stats</code>/<code>query</code> in a worktree means &quot;graph not built here,&quot; NOT
+&quot;no matches&quot; — never assert a negative from it.</p>
+<p><strong>PATH note:</strong> the sandbox shell has no <code>curl</code> / <code>psql</code> / <code>tr</code> / <code>timeout</code> — use <code>bun</code> (built-in
+<code>fetch</code>) for HTTP smoke-checks and <code>bun -e</code> / scripts for DB pokes.</p>
+</blockquote>
+<h3>Before Step 0b — Canonical-occupancy guard (parallel-session safety, FS-0035)</h3>
+<blockquote>
+<p><strong>Two interactive sessions must never share the canonical checkout.</strong> A second orchestrator that
+initializes in canonical while a first session has uncommitted work there strands/clobbers it
+(FS-0034 @ SESSION_0593, recurred @ 0610/0611). This is the <em>enforced</em> gate the old prose-only rule lacked.</p>
+<p>Once you know (or have minted) your session number <strong>NNNN</strong>, run this before touching anything:</p>
+<pre><code class="language-bash">bash scripts/canonical-claim.sh check --session NNNN
+bash scripts/githooks/doctor.sh        # ADR 0053 — prove the push guards are live BEFORE you work
+</code></pre>
+<p><code>doctor.sh</code> is here, not at bow-out, on purpose: it verifies <code>core.hooksPath</code> is absolute, that the
+<code>pre-push</code> hook is present and carries RULE B, and that the server ruleset <code>main-pr-only</code> is active. Run it
+<strong>from whatever worktree you are actually in</strong> — FS-0040 was a hook that was installed, looked correct, and
+ran in no worktree at all. Non-zero exit prints the one command that fixes it.</p>
+<ul>
+<li><strong>✅ free →</strong> <code>bash scripts/canonical-claim.sh claim --session NNNN</code>, then work in canonical as normal.</li>
+<li><strong>⛔ OCCUPIED (exit 3) →</strong> another live session owns canonical. <strong>Do NOT work here.</strong> Bootstrap your own
+worktree and run the ENTIRE session there — dispatch, merge-sweep into your branch, then <strong>push your
+branch and land it with a PR</strong> (ADR 0053 — <code>main</code> is PR-only; the old &quot;ff-to-main behind the merge lock&quot;
+move is exactly the <code>HEAD:main</code> push that is now blocked, server-side and by the pre-push hook):
+<code>git worktree add ../ronin-NNNN -b session-NNNN-&lt;lane&gt; main</code>, then <code>/worktree-setup</code>.
+Canonical (and <code>preview_start</code>, which is canonical-locked) stays the other session&#39;s; run your own
+<code>next dev</code> on an alt port via Bash if you need a live check.</li>
+</ul>
+<p><strong>Never <code>git add -A</code> in canonical</strong> — a sibling lane&#39;s untracked files live in the shared tree; stage explicit
+paths. Bow-out runs <code>release</code> (closing.md §4). Refs: FS-0035, FS-0034, LR 0018.</p>
+</blockquote>
+<h3>0. BBL / launch work — read the SoT set FIRST (and nothing else first)</h3>
+<blockquote>
+<p>For any Black Belt Legacy or launch work, the <strong>source-of-truth set is the only thing to open first</strong>,
+in this order — do <strong>not</strong> go hunting the wider wiki (that re-discovery loop is the problem this set fixes):</p>
+<ol>
+<li><a href="../product/black-belt-legacy/BBL-SOT-Spec.md"><code>BBL-SOT-Spec.md</code></a> — the build blueprint: phases 0–7, exact files, done-means, session roadmap.</li>
+<li><a href="../product/black-belt-legacy/SOT-ADR.md"><code>SOT-ADR.md</code></a> — consolidated decisions D1–D7 (<strong>supersedes</strong> the scattered ADRs; those are historical).</li>
+<li><a href="../product/black-belt-legacy/PRD.md"><code>PRD.md</code></a> · 4. <a href="../product/black-belt-legacy/STORIES.md"><code>STORIES.md</code></a> · 5. <a href="../product/black-belt-legacy/CUTOVER_CHECKLIST.md"><code>CUTOVER_CHECKLIST.md</code></a> · 6. <a href="../product/black-belt-legacy/GAP_MATRIX.md"><code>GAP_MATRIX.md</code></a> (<strong>re-verify against the live app — known stale</strong>).</li>
+</ol>
+<p>If any other doc contradicts the SoT set, <strong>the SoT set + the live app win.</strong> The steps below still run
+(latest SESSION file, branch check, new SESSION file), but the SoT set is your task context.</p>
+</blockquote>
+<h3>1. Read the latest SESSION file</h3>
+<p>Find the highest-numbered file in <code>docs/sprints/</code>. That&#39;s the previous session.</p>
+<blockquote>
+<p><strong>ADR 0049 — staged stubs + number minting.</strong> If the highest-numbered file has
+<code>status: staged</code>, it is the pre-staged stub for <strong>this</strong> session: adopt it (flip <code>staged</code> →
+<code>in-progress</code>; skip the step-6 <code>cp</code>) and treat the next-highest closed file as the previous
+session. Mint/verify your number with <code>bun scripts/ledger-id-next.ts --prefix=SESSION</code> — it
+scans canonical sprints ∪ every worktree&#39;s sprints ∪ <code>session-*</code> branch refs, so parallel
+claims are visible pre-merge. On a parallel lane, create <code>session-NNNN-&lt;lane-slug&gt;</code> at bow-in
+to claim the number. Gaps stay burned — never recycle a leaked number.</p>
+</blockquote>
+<p>Read at minimum:</p>
+<ul>
+<li>The previous session&#39;s <code>Goal</code> (was it achieved?)</li>
+<li><code>Open decisions / blockers</code> (any block today?)</li>
+<li><code>Next session: Goal</code> and <code>First task</code> (likely your starting point)</li>
+</ul>
+<h3>1b. Scan the open ledgers — bundle 3–5 coherent items (inbound loop)</h3>
+<p>The ledgers ARE the backlog. After reading the prior SESSION&#39;s <code>Next session</code> block, pull the open
+ledger items and bundle <strong>3–5 coherent ones</strong> into this session&#39;s Petey plan — per
+<a href="../protocols/loop-of-loops-ledger-driven-sessions.md"><code>loop-of-loops-ledger-driven-sessions.md</code></a>.</p>
+<p>Run the aggregator instead of hand-scanning eight files:</p>
+<pre><code class="language-bash">bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK/TD
+bun scripts/ledger-backlog.ts --ledger=WL   # one ledger · --top=N to cap · --json for tooling
+( cd apps/web &amp;&amp; bun scripts/board-backlog.ts --top=10 )  # the operator&#39;s PRIORITIZED board — open KanbanCards in board order
+</code></pre>
+<p>The <strong>board-backlog</strong> line is the inbound half of the DB Kanban loop (SESSION_0476): it reads the operator&#39;s
+<code>/app/loop-board</code> prioritization back out (<code>KanbanCard</code>, <code>stage != done</code>, in board <code>order</code>), so <strong>the
+operator&#39;s drag-to-prioritize sets this session&#39;s candidate order</strong> — not just the raw ledger rank. It must run
+from <code>apps/web</code> (needs <code>.env</code> + a reachable DB); in a fresh worktree with no DB it prints a clean one-liner and
+is safely skipped. When the board and the ledger scan disagree, the <strong>board wins</strong> (it encodes the operator&#39;s
+explicit ordering); fall back to the ledger rank when the board is empty/unreachable.</p>
+<p>Then <strong>bundle on one coherence axis</strong> so the session is one reviewable lane, not a grab-bag:</p>
+<ul>
+<li><strong>By domain hub</strong> — all lineage, or all directory/org items (reuse one mental model + one hub read).</li>
+<li><strong>By risk class</strong> — all authz/public-surface (one PR, one security pass), or all docs-only (one free push).</li>
+<li><strong>By deploy unit</strong> — all <code>apps/web</code> app-code (one CI matrix), or all governance/docs (no deploy).</li>
+</ul>
+<p>Why <strong>3–5</strong>: one coherent lane fits one close&#39;s review + one PR, and stays under the ~120K &quot;dumb zone&quot;.
+Fewer = under-utilized; more = the close can&#39;t honestly verify them all.</p>
+<p><strong>Precedence:</strong> the operator&#39;s <code>/goal</code> and the prior <code>Next session</code> block win. The ledger scan
+<em>supplements</em> them (fills the session, surfaces what&#39;s overdue) — it does not override an operator
+directive. The symmetric bow-out <strong>cross-off sweep</strong> (closing.md) flips resolved rows to done.</p>
+<h3>1c. Open PRs are a live backlog source — route to <code>/pr-fix-loop</code> (G-007)</h3>
+<p>The aggregator&#39;s <code>PR</code> rows are <strong>live state</strong>, not a markdown ledger: <code>scripts/ledger-backlog.ts</code> queries
+<code>gh pr list --state open</code> and emits each open PR as a backlog item (red-CI / changes-requested = <strong>P1</strong>,
+draft / clean = <strong>P2</strong>, then oldest-first). So the bow-in scan already surfaces open PRs alongside ledger
+debt (and <code>/app/loop-board</code> projects them when a GitHub token is configured).</p>
+<p><strong>If open PRs exist and the operator hasn&#39;t pinned a different lane, the default lane is <code>/pr-fix-loop</code></strong> —
+keep the open-PR queue merge-ready before opening new build work. Run one pass (review → score → fix the
+mechanical blockers on each PR branch → verdict), pause-on-merge. Bundle the PRs as the session&#39;s coherent
+lane (one risk class: &quot;open PRs&quot;). This is the outbound half of the Loop-of-Loops: inbound ledger debt and
+outbound open-PR review become one auto-surfaced backlog. See the <a href="../../.claude/skills/pr-fix-loop/SKILL.md"><code>pr-fix-loop</code></a>
+skill (worktree fan-out) and <a href="../protocols/pr-review-score-fix-loop.md"><code>pr-review-score-fix-loop.md</code></a>.</p>
+<p>Precedence is unchanged: an operator <code>/goal</code> or the prior <code>Next session</code> block still wins; PR-pickup is the
+default <em>only when nothing else is pinned</em>.</p>
+<h3>1d. Parallel-lane assessment (additive, G-023)</h3>
+<p>Once steps 1b/1c have surfaced this session&#39;s candidate work, before committing to a single lane:
+<strong>scan whether 2+ of those candidates are genuinely disjoint</strong> (distinct file sets, each
+independently reviewable — the same test <a href="../protocols/fan-out-session-recipe.md"><code>fan-out-session-recipe.md</code></a>
+§1 uses for a full fan-out). If they are, that&#39;s a signal to route to
+<a href="../protocols/recipes/epic-plan.md"><code>recipes/epic-plan.md</code></a> (prove disjointness, write paste-ready
+prompts, dispatch as a fan-out) instead of picking just one and leaving provably-parallel work
+queued. If nothing surfaces 2+ disjoint candidates, proceed with the single elected lane as normal
+— this step is a cheap check, not a mandate to always fan out. Cross-note the assessment
+(ran / found N disjoint candidates / found none) in the SESSION file&#39;s Bow-in section.</p>
+<h3>2. Read WORKFLOW 6.0 + SOT_Cookbook</h3>
+<p><a href="../protocols/WORKFLOW_6.0.md"><code>docs/protocols/WORKFLOW_6.0.md</code></a> is the governing operating system
+for SESSION_0584 forward (supersedes 5.0 — its rituals-read is dead canon, don&#39;t read it here).
+Read the hard rules once if you haven&#39;t recently; then use
+<a href="../protocols/SOT_Cookbook.md"><code>SOT_Cookbook.md</code></a>&#39;s task→workflow router to pick today&#39;s
+skill/loop. There is no session calendar or fixed worktree map to confirm anymore — the
+<a href="../knowledge/wiki/goals-ledger.md">goals ledger</a> + <code>ledger-backlog.ts</code>/<code>board-backlog.ts</code> (step 1b)
+are the live backlog, and each lane gets its own <code>../ronin-NNNN</code> worktree
+(<a href="../../.claude/skills/seq-lane-build/SKILL.md"><code>seq-lane-build</code></a>) rather than a fixed map entry.
+Dirstarter-alignment is a build-time gate, not a bow-in table — <a href="../protocols/cody-preflight.md"><code>cody-preflight.md</code></a>
+owns it when the task actually touches an L1 area.</p>
+<p>Then skim <a href="../architecture/program-plan.md"><code>docs/architecture/program-plan.md</code></a> for broader context (partially superseded but layered architecture and brand sequencing sections remain valid).</p>
+<h3>3. Skim relevant cross-references on demand</h3>
+<p>Only the ones that bear on today&#39;s task:</p>
+<ul>
+<li><a href="../architecture/plan-vs-current.md"><code>docs/architecture/plan-vs-current.md</code></a> — if the task touches schema or data behavior.</li>
+<li><a href="../architecture/decisions/"><code>docs/architecture/decisions/</code></a> — if the task touches an architectural choice.</li>
+<li><strong>Identity canon</strong> — if the task touches people, rank, schools, or lineage, read these <em>before</em> re-deriving the model: <a href="../knowledge/wiki/concepts/passport-and-shells.md"><code>passport-and-shells</code></a> (Passport = identity SoT), <a href="../knowledge/wiki/ronin-project-context.md"><code>ronin-project-context</code></a>, the <a href="../product/black-belt-legacy/lineage-data-wiring-flow.md">lineage SOP</a>, and the <a href="../knowledge/wiki/repo-truth-index.md">repo-truth-index canonical-entity layer</a> (entity → source-of-truth table). Ratified in <a href="../architecture/decisions/0025-passport-identity-source-of-truth.md">ADR 0025</a>.</li>
+<li><a href="../runbooks/"><code>docs/runbooks/</code></a> — if the task involves the database, deploys, or environment.</li>
+<li><a href="../knowledge/wiki/dirstarter-docs-inventory.md"><code>docs/knowledge/wiki/dirstarter-docs-inventory.md</code></a> — <strong>Alignment URLs section.</strong> If the task touches any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting), check alignment before proceeding.</li>
+</ul>
+<p>Don&#39;t bulk-read. Reach for these as the work surfaces a need.</p>
+<h3>3b. Check FAILED_STEPS log + Drift Register + recent Learning Records / ADRs</h3>
+<p>Read <a href="../protocols/failed-steps-log.md"><code>docs/protocols/failed-steps-log.md</code></a>. Check for any <code>open</code> or <code>mitigated</code> entries in the area you&#39;re about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.</p>
+<p>Also skim <a href="../knowledge/wiki/drift-register.md"><code>docs/knowledge/wiki/drift-register.md</code></a> for open drift entries relevant to today&#39;s lane. If a drift item directly affects the task, note it in the SESSION file.</p>
+<p>Then skim the <strong>Giddy learning records</strong> (<a href="../learning/ddd/learning-records/README.md"><code>docs/learning/ddd/learning-records/</code></a>) and recent <strong>ADRs</strong> (<a href="../architecture/decisions/"><code>docs/architecture/decisions/</code></a>) for any entry that touches today&#39;s lane — quick surface: <code>ls -t docs/learning/ddd/learning-records/ docs/architecture/decisions/ | head</code>. A learning record encodes the <em>lesson</em> of a past session (why a fix took the shape it did); an ADR encodes a ratified decision. This is the <strong>anti-rediscovery layer</strong>: skipping the record that touches your lane re-incurs the lesson it was written to prevent — <a href="../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md">LR 0007</a> is literally about this &quot;built-not-pointed&quot; failure. Read the one(s) on your lane; don&#39;t bulk-read.</p>
+<h3>3c. Graphify-first discovery for search-heavy lanes</h3>
+<p>Use <a href="../runbooks/dev-environment/graphify-repo-memory.md"><code>docs/runbooks/graphify-repo-memory.md</code></a> when today&#39;s task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, old-monorepo mapping, or any lane where the agent would otherwise &quot;search everything.&quot;</p>
+<p>For those lanes, run Graphify before any repo-wide text search:</p>
+<pre><code class="language-bash">graphify stats
+graphify query &quot;&lt;lane nouns and domain terms&gt;&quot; --budget 2000
+</code></pre>
+<p>Then open the exact files Graphify identifies and verify them by direct source/doc inspection. Do not use repo-wide <code>grep</code>, <code>rg</code>, or <code>find</code> for task planning before the graph query. If a path is already known, open that exact file directly.</p>
+<p><strong>Doc discovery aids (optional, not gates):</strong> when a task touches an operational area, start from the <a href="../runbooks/README.md">runbooks domain hub</a> and jump to the relevant module instead of guessing filenames. For doc-only, full-text lookup, regenerate and search the navigator: <code>bun run docs:nav</code> then open <code>docs/index.html</code>. Division of labor — Graphify answers &quot;what <em>code</em> relates to X&quot;; the navigator answers &quot;what <em>docs</em> exist about X.&quot;</p>
+<p><strong>Make a cheap query the default — not only for search-heavy lanes:</strong> for <em>any</em> lane touching a named domain or entity, run one budget-capped <code>graphify query &quot;&lt;lane nouns&gt;&quot; --budget 1500</code> before planning. Graphify indexes the <strong>docs</strong> too — ledger rows, ADRs, and learning records surface as nodes, not just code (proven: a query for a drift topic returns the <code>D-NNN</code> rows themselves) — so this is the cheapest way to pull captured knowledge you&#39;d otherwise have to already know to name. Record the query and selected files in the SESSION file if it changes what you open. Skip only for a truly trivial single-file edit. Graphify is a navigation aid, not proof.</p>
+<h3>3d. Domain-hub-first for feature lanes (read before grilling/planning)</h3>
+<p>When today&#39;s task touches a <strong>feature domain that has a domain hub</strong>, read it <strong>before</strong> you grill or plan — in this order: <strong>domain hub → the SOP/ADR it points to → the route inventory</strong> in the hub. The hub is a surface-index that prevents re-discovering capability that already exists (the SESSION_0356 &quot;are we querying in the right workflow timeline?&quot; fix; FINDING_02). Querying Graphify by a narrow task noun <em>after</em> you know the surface beats guessing the surface from the noun.</p>
+<p>Current domain hubs (<code>docs/runbooks/domain-features/</code>):</p>
+<ul>
+<li><a href="../runbooks/domain-features/lineage-hub.md">Lineage Domain Hub</a> — promotion provenance, trees, canvas, claim.</li>
+<li><a href="../runbooks/domain-features/directory-org-profile-hub.md">Directory / Organization / Profile Domain Hub</a> — discovery, org/school/person profiles, the register vs claim funnels.</li>
+</ul>
+<p>If the lane touches a domain with <strong>no</strong> hub yet, that is a signal to build one as part of the work (mirror an existing hub). <strong>Never assert a capability is missing from an errored/empty search</strong> — confirm against the hub + route inventory first.</p>
+<h3>4. Identify ONE task for this session</h3>
+<p>State the task in chat (or in your notes) before you start. Be explicit:</p>
+<ul>
+<li>What is the task?</li>
+<li>Why this task now? (one sentence connecting to program plan or user request)</li>
+<li>What does &quot;done&quot; look like?</li>
+</ul>
+<p><strong>Classify, then dispatch — don&#39;t role-play the roster.</strong> First do a <strong>named read</strong> of
+<a href="../protocols/SOT_Cookbook.md"><code>SOT_Cookbook.md</code></a>&#39;s <strong>task → workflow router</strong> and the
+<strong>allowed-vs-never table</strong> (§4) in <a href="../knowledge/wiki/agent-systems-map.md"><code>agent-systems-map</code></a> —
+a read, not a pointer: these are session-wide routing + trust-boundary rules, not just
+skill-selection. Classify this task against the router, then
+<strong>dispatch the matched flow as real sub-agents</strong> via the <code>Agent</code> tool&#39;s <code>subagent_type</code> (the roster lives in
+<code>.claude/agents/*.md</code>):</p>
+<ul>
+<li><strong>Unclear / multi-part / open decisions →</strong> run <strong><a href="../../.claude/skills/pp/SKILL.md"><code>/pp</code></a></strong> (plan only) or <strong><a href="../../.claude/skills/ppp/SKILL.md"><code>/ppp</code></a></strong> (plan + the paste-ready baton) — the <code>petey-plan</code> entrypoints (ADR 0052 D1) — to <strong>grill the open forks first</strong> and emit the plan block, then dispatch <code>cody</code> (build) → <strong><a href="../../.claude/skills/ggr/SKILL.md"><code>/ggr</code></a></strong> (the QAR gate — runs the Doug/Desi/Giddy review wave + scores) per the plan&#39;s <code>Parallelism</code> section.</li>
+<li><strong>Clear build →</strong> dispatch <a href="../agents/cody.md"><code>cody</code></a> to execute — <strong>Cody completes the <a href="../protocols/cody-preflight.md">pre-flight protocol</a> before writing any code</strong> — then <a href="../agents/doug.md"><code>doug</code></a> to verify the diff.</li>
+<li><strong>Other lanes</strong> (bug → <code>/diagnose</code>, review → <code>/code-review</code>, cleanup → <code>/fallow-fix-loop</code>, new client → <code>/new-client-recipe</code>, …) → run the router&#39;s matched skill/loop.</li>
+</ul>
+<p>Reserve fan-out for genuinely-disjoint work; a one-file change is a single inline Cody, not a fleet (CLAUDE.md
+rule). <strong>Dispatch builds and verifies — it never pushes/merges/deploys</strong>; hold at the push gate for the
+operator&#39;s explicit word (explicit-push-authorization). The lead may still act inline for a single coherent
+change, but the roster is now a real dispatch layer, not a set of hats.</p>
+<h3>4b. Number tasks in the SESSION file</h3>
+<p>For every task in the session plan, add or update an entry in the current SESSION file&#39;s <code>## Petey plan</code> and <code>## Task log</code> sections before implementation starts.</p>
+<p>Use stable IDs:</p>
+<pre><code class="language-text">SESSION_NNNN_TASK_01
+SESSION_NNNN_TASK_02
+SESSION_NNNN_TASK_03
+</code></pre>
+<p>The SESSION file is now the canonical audit ledger that lets Giddy/Doug verify ownership, done criteria, status, and review coverage. The legacy cross-session <code>project-log.md</code> ledger was retired at SESSION_0228; the historical archive lives at <a href="../_archive/project-log/"><code>docs/_archive/project-log/</code></a> and is read-only.</p>
+<h3>5. Branch check</h3>
+<p>Verify the current git branch (<code>git branch --show-current</code>) and working tree status (<code>git status --short</code>).</p>
+<ul>
+<li>If on <code>main</code> and that&#39;s expected: proceed.</li>
+<li>If uncommitted changes from a previous session exist: raise them before starting new work.</li>
+<li>If on a stale feature branch: discuss with the user whether to merge/rebase/abandon before starting.</li>
+</ul>
+<h3>6. Create the new SESSION file</h3>
+<p>Copy the template — do NOT generate from scratch:</p>
+<pre><code class="language-bash">cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md
+</code></pre>
+<p>Then fill in every <code>&lt;placeholder&gt;</code> and delete the HTML comment blocks. The template is the source of truth for section order, frontmatter shape, and lint compliance. See <a href="../sprints/_template/SESSION_TEMPLATE.md"><code>docs/sprints/_template/SESSION_TEMPLATE.md</code></a>.</p>
+<p><strong>Session type values (SESSION_0139+):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>When to use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>session--open</code></td>
+<td><strong>Default at bow-in.</strong> Use when the session scope isn&#39;t clear yet, or when it ends up being a mix of planning, implementation, and review. Stays as-is at bow-out if the session was mixed.</td>
+</tr>
+<tr>
+<td><code>session--plan</code></td>
+<td>Petey-led planning, gap analysis, task staging — no code written. Set at bow-out if the session was purely planning.</td>
+</tr>
+<tr>
+<td><code>session--implement</code></td>
+<td>Cody-led code execution against an existing plan. Set at bow-out.</td>
+</tr>
+<tr>
+<td><code>session--review</code></td>
+<td>Doug/Giddy-led QA, hostile review, test-only sessions. Set at bow-out.</td>
+</tr>
+<tr>
+<td><code>session</code></td>
+<td>Legacy (pre-0139). Do not use for new sessions.</td>
+</tr>
+</tbody></table>
+<p>Refine <code>type</code> at bow-out: if the session was clearly one mode, narrow it. If it was mixed, leave it <code>session--open</code>. No backfill needed — old sessions stay <code>type: session</code>.</p>
+<p>Then fill in <code>Date</code>, <code>Operator</code>, <code>Goal</code>. Set frontmatter <code>status: in-progress</code>. The rest gets filled during/at end of session.</p>
+<p><strong>ADR 0049:</strong> if bow-in found a <code>status: staged</code> stub (step 1), this step is just the flip
+<code>staged</code> → <code>in-progress</code> — no <code>cp</code>. Either way, fill the lane facet keys: <code>lane</code>
+(<code>repo | rdd | mmb | bbl | bma | usa</code>), optional <code>lane_seq</code> / <code>vault_session</code> / <code>goal_ids</code> /
+<code>tickets</code>. Frontmatter is the cross-ref source of truth; section-header wikilinks are human
+sugar only.</p>
+<p>If you skip this step, you&#39;ve also skipped the bow-out — the closing ritual depends on this file already existing.</p>
+<h3>6b. Petey&#39;s three bow-in questions + the State-of-Dojo ask (MANDATORY — ask before Begin work)</h3>
+<p>Before step 7, <strong>ask the operator these via <code>AskUserQuestion</code></strong> — a hard step, not optional prose. Petey may
+answer ①–③ from the context already loaded, but the ask is what surfaces a course-correction and forces the
+SotD decision to be the operator&#39;s:</p>
+<ol>
+<li><strong>What are we doing?</strong> — the elected lane for this session (one sentence).</li>
+<li><strong>What&#39;s queued?</strong> — the ledger/board backlog (step 1b) + the prior <code>Next session</code> block.</li>
+<li><strong>Are we pivoting?</strong> — is the elected lane still right, or has the operator changed direction?</li>
+</ol>
+<p><strong>Plus the State-of-Dojo publish ask:</strong> cite the live, zero-token route <strong><code>/app/state</code></strong> (see the section
+below for why) and ask <strong>&quot;want a frozen State-of-Dojo snapshot published?&quot;</strong> Only on a <em>yes</em> do you publish an
+Artifact (<code>/preview-artifacts</code>) and paste the URL into the SESSION <code>## Artifacts</code> section.</p>
+<blockquote>
+<p><strong>Why this is a numbered step and also in the skill body:</strong> it lived <em>only</em> as the trailing &quot;State-of-Dojo
+at bow-in&quot; section (after step 7) and was skipped the very next session after it was added — prose the
+executed read-path never reaches does not fire (FS-0037, the sibling of FS-0035/0036&#39;s &quot;enforced-but-broken&quot;
+/ LR 0007 &quot;built-not-pointed&quot;). The <code>/bow-in</code> skill body carries the same ask so it can&#39;t be missed.</p>
+</blockquote>
+<h3>7. Begin work</h3>
+<p>The opening ritual is done. From here forward, you are operating as Petey or Cody (or both, sequentially) for the duration of the session.</p>
+<h2>Optional: brief alignment check</h2>
+<p>If anything in the previous SESSION file or the program plan looks stale or contradictory, raise it before starting work. Better to spend two minutes confirming than two hours building against the wrong understanding.</p>
+<h2>State-of-Dojo at bow-in — cite the live route; publish only on ask</h2>
+<p><strong>The zero-token default (SESSION_0617, <a href="../architecture/research/research-review-state-of-dojo-automation.md"><code>research-review-state-of-dojo-automation</code></a>).</strong>
+The always-current State-of-Dojo already lives at the deployed route <strong><code>/app/state</code></strong> (<code>StatePanel</code>
+self-fetches <code>main</code>, ~5-min cache) — so the operator sees the landscape for <strong>0 agent tokens</strong> by opening one
+URL. <strong>Do not agent-publish an Artifact every session</strong> (that was the walked-back over-correction). Instead:</p>
+<ul>
+<li><strong>Cite <code>/app/state</code></strong> at bow-in (free, live).</li>
+<li>The <strong>render is deterministic</strong> — <code>bun scripts/state-of-project.ts</code> (→ <code>out/state-of-project.html</code>) runs in
+the bow-out gate runner, not as agent work.</li>
+<li><strong>The publish ask is owned by step 6b</strong> — a mandatory <code>AskUserQuestion</code> in the numbered ritual <strong>and</strong> in the
+executed <code>/bow-in</code> skill body, <em>not</em> this prose (which is why it now fires — FS-0037). This section is the
+<em>why</em>; step 6b is the <em>ask</em>.</li>
+</ul>
+<p>Projection-only (reads <code>docs/sprints/*</code> + <code>goals-ledger.md</code>, never writes a ledger). See
+<a href="../protocols/state-of-project-projection.md"><code>state-of-project-projection.md</code></a>.</p>
+<h2>What this ritual is NOT</h2>
+<ul>
+<li>Not a context dump. You&#39;re not loading every file in the repo.</li>
+<li>Not a meta-philosophical exercise. Operator-side memory holds the philosophy; this ritual is just operational.</li>
+<li>Not a checklist for the user. The user can ask &quot;are we ready to work&quot; — that&#39;s a fine substitute for steps 1–3 if they trust the operator.</li>
+</ul>
+<h2>Cross-references</h2>
+<ul>
+<li><a href="closing.md">Closing ritual</a> — pairs with this; ends the session.</li>
+<li><a href="../protocols/WORKFLOW_6.0.md">WORKFLOW 6.0</a> — governing operating system for SESSION_0584+ (supersedes 5.0).</li>
+<li><a href="../protocols/SOT_Cookbook.md">SOT_Cookbook</a> — the task→workflow router.</li>
+<li><a href="../protocols/chat-handoff.md">Chat handoff protocol</a> — describes the SESSION file format.</li>
+<li><a href="../protocols/next-session-loading-order.md">Next Session Loading Order</a> — explicit tier-1/2/3 file load order at bow-in.</li>
+<li><a href="../protocols/cody-preflight.md">Cody Pre-flight Protocol</a> — enforceable checklist before writing any new component.</li>
+<li><a href="../protocols/failed-steps-log.md">FAILED_STEPS Log</a> — append-only record of SOP violations and corrective actions.</li>
+<li><a href="../runbooks/dev-environment/graphify-repo-memory.md">Graphify Repo Memory Runbook</a> — optional graph check for search-heavy lanes.</li>
+<li><a href="../protocols/petey-plan.md">Petey Plan protocol</a> — structured planning when the task is unclear or multi-part.</li>
+<li><a href="../knowledge/wiki/repo-truth-index.md">Repo Truth Index</a> — authoritative source map; consult when you&#39;re unsure which file to trust.</li>
+<li><a href="../agents/petey.md">Petey</a>, <a href="../agents/cody.md">Cody</a> — the roles you&#39;ll play next.</li>
+</ul>
+
+</div>
+</body>
+</html>

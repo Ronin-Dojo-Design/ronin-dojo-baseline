@@ -1,11 +1,11 @@
 ---
 title: "SESSION 0632 — Client-intake kernel: one module, three brand instances (WS-A/B/C)"
 slug: session-0632
-type: session--open
-status: staged
+type: session--implement
+status: done
 created: 2026-07-23
-updated: 2026-07-23
-last_agent: claude-session-0625
+updated: 2026-07-24
+last_agent: claude-session-0632
 sprint: S12
 lane: repo
 goal_ids: ["G-021", "G-027"]
@@ -125,9 +125,166 @@ real two-lane fan-out — separate worktrees, disjoint file sets, one merge owne
   explicitly deferred with a reason.
 - Decisions 1–4 above are answered and recorded (ADR where they are architectural).
 
+## Bow-in (executed)
+
+- Canonical occupied by SESSION_0624 → whole session in worktree `../ronin-0632` on the pre-minted
+  `session-0632-intake-kernel` (ff'd to `origin/main` @ 417a7be9 — branch had no unique commits and
+  predated the #259 hook doctor). `githooks/doctor.sh`: **all checks passed**.
+- **Fork outcomes (operator, AskUserQuestion at bow-in):** ① persist — pre-pinned. ② RDD instance
+  **stays in `apps/web`**; mirror-into-`apps/rdd` routed below (apps/rdd is the 0633/0635 lanes'
+  territory). ③ brand-brief §7 `[REUSE]` row: yes it qualifies, but the file is outside this lane's
+  owned paths → routed below for the merge owner. ④ MMB intake **omits** the `contains_real_data`
+  toggle; its Markdown export hardcodes `contains_real_data: true`.
+- SotD snapshot: requested and published (see Artifacts).
+- Parallelism deviation: stub said dispatch WS-B ∥ WS-C as a two-lane fan-out; run inline instead —
+  WS-B (pure content) was faster to author than a dispatch costs, and WS-C then had no sibling to
+  parallel against; WS-C also *imports* WS-B's export, so they were never fully disjoint.
+
 ## Task log
 
-<!-- filled at bow-in -->
+| ID | Task | Status | Evidence |
+| --- | --- | --- | --- |
+| SESSION_0632_TASK_01 | WS-A — extract intake kernel to `packages/ui-kit/src/intake`, retarget `apps/web` | ✅ | 10 extraction tests pass UNCHANGED; ui-kit 36→41 pass; apps/web typegen+tsc clean |
+| SESSION_0632_TASK_02 | WS-B — `METAL_BUILDING_SALES` questionnaire + content tests | ✅ | 4 commercial lanes, Installation Path (both canon values), spec/site/permits/delivery/budget/decision-maker; 5 tests |
+| SESSION_0632_TASK_03 | WS-C — `/app/intake` on Mammoth CRM + `commitIntakeCapture` persist | ✅ | 47 client tests pass, tsc exit 0; Playwright: 0 console errors, 0px overflow (both viewports), unauth commit rejected, localStorage survives reload |
+| SESSION_0632_TASK_04 | Shell fix — mobile nav overflow (pre-existing, all `/app` pages) | ✅ | 109px → 0px @390px after nav flex-wrap |
+| SESSION_0632_TASK_05 | `/login` — the missing auth UI + local `mammoth_dev` auth migrations + session-aware nav (Sign in ↔ Sign out) | ✅ | operator-reported gap; headless E2E: sign-up → session → **authed intake commit wrote Contact + lead Project** (smoke boundary CLOSED); sign-out 415 fixed (Better Auth needs JSON content-type); fixtures deleted; operator tested the CRM live |
+
+## Artifacts
+
+- State-of-Dojo snapshot (bow-in): <https://claude.ai/code/artifact/e62b00f2-cf25-4741-a040-b98711c6556f>
+- WS-C review gallery (verification table + mobile/desktop screenshots):
+  <https://claude.ai/code/artifact/503ac434-8374-47cc-ad86-2c4762bba725>
+
+## Findings to route (merge owner assigns ids — none minted in-lane)
+
+- GOAL/WL: add **Client intake** as a `[REUSE]` row to `docs/product/rdd/brand-brief.md` §7
+  (fork 3 — file outside this lane's owned paths; kernel module now exists at
+  `@ronin-dojo/ui-kit/intake`).
+- NEXT: mirror the RDD intake instance into `apps/rdd` once that app is real (fork 2 — deferred to
+  the RDD lanes; `apps/web` route keeps working off the kernel meanwhile).
+- SMOKE BOUNDARY: the **authenticated** intake commit write was not exercised live (needs
+  fixture-login + scratch-DB UAT); planning is unit-tested and the transaction mirrors
+  `commitLeadSheet`. Candidate for `manual-boundary-registry`.
+- DEFERRED (GAP-1): `MB-LANE-001/002` routing of the commercial-lane taxonomy into MMB canon
+  (`docs/product/mammoth-build/CONTEXT.md`) — outside owned paths this wave; the questionnaire is
+  the taxonomy's first real consumer, the canon edit belongs to an MMB lane.
+- NOTE: pre-existing mobile nav overflow (109px @390px) affected every `mammoth-build-crm` `/app`
+  page, not just the new one — fixed in-lane via shell `flex-wrap` (within owned paths).
+- FS: ran the FULL root `bun run test` unintentionally at the /ggr fix pass (cwd was the worktree
+  root, not `clients/mammoth-build-crm`) with a live `RESEND_API_KEY` in the copied `.env` — the
+  known live-Resend-send hazard (0551 seam guard still unmerged at last record). Suite green
+  (1708/0), but possible real emails fired. Mitigation candidates: neuter `RESEND_API_KEY` in
+  worktree bootstrap copies; land the seam guard.
+- WL: add the intake kernel module to `docs/knowledge/wiki/custom-component-inventory.md`
+  (Giddy cap-adjacent flag). Proposed row: *`@ronin-dojo/ui-kit/intake` — zero-React kernel
+  feature-module: `Questionnaire` core + per-brand `questionnaires/*` + per-app adapter; consumers:
+  apps/web `/app/client-intake`, mammoth-build-crm `/app/intake` (SESSION_0632).*
+- D: semantic name collision inside ui-kit — `src/kanban/intake.ts` (board lead-intake) vs
+  `src/intake/` (questionnaire intake). Pre-existing name; rename candidate `kanban/lead-intake.ts`
+  next kanban lane (Giddy).
+- FOLLOW-UP (Desi P2/P3 bundle, mammoth-build-crm): extract shared `components/crm/` form module
+  (`fieldClass` ×3 copies + button classes + `Field`) and converge the three label idioms
+  (intake/new/sales); sticky global progress; nav `aria-current` + "Import leads"/"Discovery call"
+  label disambiguation; `aria-describedby` for question hints. Deferred from the close-time fix
+  pass — converging legacy sibling pages unreviewed at close risks visual regressions outside this
+  session's verified scope.
+
+- GOAL (operator, 2026-07-23 — draft for `goals-ledger`, id minted by merge owner): **Recreate/lift
+  the existing mammoth.build site into the monorepo** — scrape the live site's articles, assets,
+  and page inventory; scaffold the existing pages in `clients/mammoth-build-crm` (or the MMB web
+  app the plan elects) so the current content survives the platform move. Not this session; needs
+  its own plan lane.
+- PLAN (operator, 2026-07-23 — draft row for `planning-ledger`): plan the mammoth.build lift —
+  scope the scrape (articles/assets/pages inventory), decide target surface + routing, then
+  build lanes. Pairs with the GOAL row above.
+- SMOKE BOUNDARY — **CLOSED at TASK_05**: the authed intake commit was exercised end-to-end
+  locally (fixture sign-up → session → commit wrote Contact + lead Project → rows deleted).
+
+## Review log
+
+### /ggr — Giddy Gate Review (Build lane, code-quality-matrix)
+
+**Wave:** Doug (verify) · Desi (UI) · Giddy (structure) on e137db44 + fallow audit; batched fix
+pass followed (dup kill via `PlannedLeadCreate` reuse · forged-payload guard · Desi P1/P2 ·
+`CommitPanel` split), then delta re-verify (headless: 0 overflow, 0 console errors, gating +
+captions + persistence proven; all suites re-green).
+
+**Class:** B (custom extension; refs ADR 0051/0040-B/0033 D1 + the `lead-commit` precedent).
+
+| Dim | Score | Evidence |
+| --- | ---: | --- |
+| D1 Correctness | 9.5 | 10 extraction tests unchanged; serializer byte-identity proven mechanically (Doug); 48+41 suites; root 1708 green; headless interaction proofs ×2 |
+| D2 Security | 9.0 | owner-gate + server re-validation + fail-closed forged-payload guard; no enrich/overwrite (zero `update` calls); retention law holds; dedupe not DB-constraint-backed (pre-existing tracer posture, P3) |
+| D3 Simplicity | 8.5 | clone group eliminated (0 remain); page 15→6 cyclo / 22→4 cognitive; CommitPanel 13/15 named debt |
+| D4 Readability | 9.5 | idiom-consistent; JSDoc carries why; Desi-praised microcopy |
+| D5 Maintainability | 9.0 | MI 85.7 (good); pure kernel + pure plan modules; CommitPanel size noted |
+| D6 Scalability | 9.0 | ≤3 queries in tx; phone-scan matcher O(contacts) — shared pre-existing tradeoff, documented |
+| D7 Convention/reuse | 8.5 | ONE matcher + ONE serializer preserved; sub-path export story right (Giddy PASS); inventory row out-of-path → routed (cap-adjacent, judged not tripped: pattern documented here) |
+
+**Weighted:** 9.02 · **Caps:** none tripped (runtime verified headless; no regression — byte-identity
+proven; inventory-row cap judged adjacent, row routed) · **Composite: 9.0 / 10 — CLEARS** (≥9.0),
+ship with the named follow-ups logged (see Findings to route). Doug's independent verdict:
+LAUNCH-SAFE 9.4. Residuals: authed-commit scratch-DB smoke (routed) + Desi P2/P3 bundle (routed).
+*Deviation note: `/fallow-fix-loop` used as rubric+metrics only — fixes were applied inline as the
+batched pass; fallow before/after deltas recorded above. `fallow health` baseline was NOT taken
+before implementation (memory rule missed) — before/after complexity is reconstructed from the
+audit's changed-since view instead.*
+
+### Post-score delta (TASK_05)
+
+Commits `89f11d4b` + `705faca0` (login page · session-aware nav) landed AFTER the 9.0 composite.
+Not re-waved: small surface, sibling-idiom UI, and verified harder than the review bar — full
+headless E2E (sign-up → session → authed intake commit → sign-out round-trip), typecheck green,
+fixtures deleted. Named debt: open sign-up posture on `/login` mirrors the server's existing
+config; revisit before any public deploy (routed below).
+
+## Full close evidence (hand-corrected — gate runner graded SESSION_0634 and diffed the clean tree)
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS — 5 rows above (runner's FAIL was the sibling stub) |
+| Format-fix (code) | oxfmt clean on ui-kit (6 files fixed in-lane); client matches house style |
+| wiki:lint | 0 err / 112 warn (pre-existing) |
+| Build | apps/web typegen+tsc ✓ · ui-kit tsc ✓ · client tsc ✓ · root tests 1708/0 · Vercel preview ✓ (post-Neon-upgrade) |
+| /ggr | **9.0 composite recorded** (§Review log) + TASK_05 delta note |
+| Graphify | worktree graph stale by design (canonical owns it; refresh at merge — wave rule) |
+| Git state | branch=session-0632-intake-kernel · clean · 4 commits pushed · PR #262 |
+| Secret scan | PASS (runner) |
+| Evidence artifact | <https://claude.ai/code/artifact/503ac434-8374-47cc-ad86-2c4762bba725> |
+| Touched | 24 files (+~1,690/−~326) across packages/ui-kit · apps/web · clients/mammoth-build-crm · docs |
+
+## Reflections
+
+- **The extraction proof discipline paid for itself twice** — "10 tests pass unchanged" made WS-A
+  unarguable, and Doug could then prove serializer byte-identity mechanically instead of by review.
+- **The intake surfaced real product debt nobody had hit**: an "authenticated MVP" with no login
+  page, and a local DB missing its auth migrations. Operator-as-first-user found it in minutes —
+  argument for demo-driving every new surface at close, not just headless checks.
+- **Two near-misses were environment, not code**: the turn-boundary cwd reset put a push in
+  canonical (no-op, caught), and a cwd assumption ran the full root suite (live-Resend hazard).
+  Both argue for the same reflex — absolute `cd` + guard in the SAME command as any state-changing
+  call.
+- **Cross-lane check pollution is real**: the sibling `ronindojodesign` Vercel project reds every
+  PR until it gets its ADR 0034 `ignoreCommand`; a lane can go fully green and still wear a red X.
+
+## Next session
+
+**Lane: the merge-owner routing pass** (operator-elected at bow-out; no stub staged — number
+minting stays out of this lane per the wave's FS-0038 rule). The pass: land the wave's PRs
+(#262 + siblings), then ONE routing commit that mints ids and lands every lane's
+`## Findings to route` — this file carries: the mammoth.build lift **GOAL + PLAN drafts**, two
+FS rows (root-suite Resend run · turn-boundary cwd reset), the intake-module
+custom-component-inventory row (text ready), brand-brief §7 `[REUSE]` row, the ui-kit
+double-"intake" naming drift, the Desi polish bundle, the `/login` open-sign-up posture
+(pre-public-deploy check), and G-021/G-027 cross-off updates. Plus the wave-wide chore: the
+`ronindojodesign` Vercel project needs its ADR 0034 `ignoreCommand` — it reds every PR until then.
+
+## Ledger cross-off (deferred — wave lock)
+
+Runner surfaced candidates (G-021 · G-027 · G-005 adjacency). Shared ledgers are locked in-lane
+this wave; the merge owner crosses off / updates rows in the single routing commit, using
+`## Findings to route` above.
 
 ## Status
 
