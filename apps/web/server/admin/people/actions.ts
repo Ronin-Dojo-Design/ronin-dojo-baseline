@@ -3,8 +3,10 @@
 import { adminActionClient } from "~/lib/safe-actions"
 import {
   updateDirectoryProfileAsAdminSchema,
+  updatePassportAndProfileAsAdminSchema,
   updatePassportAsAdminSchema,
 } from "~/server/admin/people/schemas"
+import { splitPassportAndProfileInput } from "~/server/web/passport/schemas"
 
 // ---------------------------------------------------------------------------
 // Admin Passport / DirectoryProfile editors (WL-P2-35, ADR 0045 D3, ADR 0025)
@@ -60,4 +62,47 @@ export const updateDirectoryProfileAsAdmin = adminActionClient
 
     revalidate({ paths: ["/app/users", `/app/users/${passportId}`] })
     return profile
+  })
+
+/**
+ * Combined admin twin (WL-P2-45, SESSION_0700) — one submit from the admin-mode
+ * PassportEditor persists both halves atomically ($transaction: partial failure
+ * rolls back the whole write). Keyed by the explicit `passportId` like the granular
+ * admin actions above; keeps their upsert semantics for accountless placeholders
+ * that never got a DirectoryProfile.
+ */
+export const updatePassportAndProfileAsAdmin = adminActionClient
+  .inputSchema(updatePassportAndProfileAsAdminSchema)
+  .action(async ({ parsedInput: { passportId, ...data }, ctx: { db, revalidate } }) => {
+    const { passport: passportData, directoryProfile: profileData } =
+      splitPassportAndProfileInput(data)
+
+    const result = await db.$transaction(async tx => {
+      const passport = await tx.passport.update({
+        where: { id: passportId },
+        data: passportData,
+      })
+      const directoryProfile = await tx.directoryProfile.upsert({
+        where: { passportId },
+        update: profileData,
+        create: {
+          passportId,
+          slug: profileData.slug ?? undefined,
+          visibility: profileData.visibility ?? undefined,
+          locationCity: profileData.locationCity ?? undefined,
+          locationRegion: profileData.locationRegion ?? undefined,
+          locationCountry: profileData.locationCountry ?? undefined,
+          showEmail: profileData.showEmail ?? undefined,
+          showPhone: profileData.showPhone ?? undefined,
+          showOrgs: profileData.showOrgs ?? undefined,
+          showRanks: profileData.showRanks ?? undefined,
+          coverPhotoUrl: profileData.coverPhotoUrl ?? undefined,
+          videoIntroUrl: profileData.videoIntroUrl ?? undefined,
+        },
+      })
+      return { passport, directoryProfile }
+    })
+
+    revalidate({ paths: ["/app/users", `/app/users/${passportId}`] })
+    return result
   })
