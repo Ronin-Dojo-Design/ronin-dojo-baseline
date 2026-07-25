@@ -10,7 +10,7 @@ import {
 } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "~/components/common/link"
 import { NavSheet } from "~/components/web/nav/nav-sheet"
 import { haptics } from "~/lib/haptics"
@@ -89,9 +89,17 @@ export const BottomNav = ({ userAvatarUrl }: BottomNavProps) => {
   const { data: session } = useSession()
   const [isMoreOpen, setMoreOpen] = useState(false)
 
+  // Hydration-stable (WL-P2-51): SSR always renders unauthenticated (no bar), but a
+  // cookie-cached client session can resolve truthy on the very first client paint —
+  // before hydration reconciles — mismatching the SSR tree. Mirrors the mounted guard
+  // `Mab`/`Header`/`UserMenu` already use: render nothing until the mount effect fires,
+  // then let `session` decide.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   // Member chrome: the bottom nav is logged-in-only. Logged-out visitors get the normal
   // public header, no bar (v2, SESSION_0500 operator).
-  if (!session?.user) return null
+  if (!mounted || !session?.user) return null
 
   return (
     <>
