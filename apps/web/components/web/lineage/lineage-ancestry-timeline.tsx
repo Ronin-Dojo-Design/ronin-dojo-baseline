@@ -3,6 +3,7 @@
 import { useReducedMotion } from "@mantine/hooks"
 import { motion } from "motion/react"
 import { Badge } from "~/components/common/badge"
+import { Link } from "~/components/common/link"
 import { Stack } from "~/components/common/stack"
 import type { LineageAncestryEntry } from "~/server/web/lineage/ancestry"
 import { cx } from "~/lib/utils"
@@ -79,39 +80,60 @@ function TimelineEntry({
   isOwner: boolean
   reduceMotion: boolean
 }) {
+  // Deep-link an ancestor's row to their public profile (WL-P2-23, claim-loop feeder):
+  // `/directory/[slug]` — where the profile drawer opens for EVERYONE (free viewer →
+  // claim CTA, the resolved lineage-drawer tier-gate), so ancestor discovery funnels
+  // straight into the claim loop (BBL north star). The owner is the profile you're
+  // already on (no self-link); slug-less imported placeholders have no target, so they
+  // stay non-link — no dead hrefs.
+  const href = !isOwner && entry.slug ? `/directory/${entry.slug}` : null
+
+  const row = (
+    <>
+      <AncestryAvatar
+        entry={entry}
+        className={cx("relative size-14 rounded-full", avatarRingClass(isOwner))}
+      />
+
+      <Stack size="xs" direction="column" wrap={false} className="min-w-0">
+        <Stack size="sm" direction="row" wrap className="items-center">
+          {/* White member names (operator, SESSION_0525) — `text-foreground` reads white on the
+              dark BBL profile (and dark on light), replacing the brand-red/pinkish name hue.
+              `group-hover:underline` fires ONLY under the linked wrapper (no `.group` ancestor on
+              a non-link row → inert), so the operator's white name is untouched off-hover. */}
+          <span className="truncate font-bold text-foreground italic underline-offset-4 [font-family:var(--font-bbl-heading),system-ui,sans-serif] group-hover:underline">
+            {entry.displayName}
+          </span>
+          {isOwner && (
+            <Badge variant="primary" size="sm">
+              This member
+            </Badge>
+          )}
+        </Stack>
+
+        <RankByline entry={entry} mutedClass="text-muted-foreground" />
+      </Stack>
+    </>
+  )
+
   return (
     <li className="flex flex-col gap-6">
       {index > 0 && entry.narrative && (
         <p className="pl-[4.5rem] text-muted-foreground text-sm italic">{entry.narrative}</p>
       )}
 
-      <motion.div
-        initial={false}
-        viewport={{ once: true }}
-        {...entranceMotion(reduceMotion, index)}
-        className="flex items-center gap-4"
-      >
-        <AncestryAvatar
-          entry={entry}
-          className={cx("relative size-14 rounded-full", avatarRingClass(isOwner))}
-        />
-
-        <Stack size="xs" direction="column" wrap={false} className="min-w-0">
-          <Stack size="sm" direction="row" wrap className="items-center">
-            {/* White member names (operator, SESSION_0525) — `text-foreground` reads white on the
-                dark BBL profile (and dark on light), replacing the brand-red/pinkish name hue. */}
-            <span className="truncate font-bold text-foreground italic [font-family:var(--font-bbl-heading),system-ui,sans-serif]">
-              {entry.displayName}
-            </span>
-            {isOwner && (
-              <Badge variant="primary" size="sm">
-                This member
-              </Badge>
-            )}
-          </Stack>
-
-          <RankByline entry={entry} mutedClass="text-muted-foreground" />
-        </Stack>
+      <motion.div initial={false} viewport={{ once: true }} {...entranceMotion(reduceMotion, index)}>
+        {href ? (
+          <Link
+            href={href}
+            aria-label={`View ${entry.displayName}'s lineage profile`}
+            className="group flex items-center gap-4 rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          >
+            {row}
+          </Link>
+        ) : (
+          <div className="flex items-center gap-4">{row}</div>
+        )}
       </motion.div>
     </li>
   )
