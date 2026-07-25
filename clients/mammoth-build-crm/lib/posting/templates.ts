@@ -186,10 +186,6 @@ export const POSTING_TEMPLATES: readonly PostingTemplateDefinition[] = [
   },
 ] as const;
 
-export const POSTING_TEMPLATE_KEYS: readonly PostingTemplateKey[] = POSTING_TEMPLATES.map(
-  (t) => t.key,
-);
-
 const TEMPLATE_BY_KEY = new Map<PostingTemplateKey, PostingTemplateDefinition>(
   POSTING_TEMPLATES.map((t) => [t.key, t]),
 );

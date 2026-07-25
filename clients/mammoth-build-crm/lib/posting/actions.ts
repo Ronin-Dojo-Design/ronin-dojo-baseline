@@ -18,6 +18,7 @@
  * `requireOwner` once both lanes land.
  */
 
+import type { PostingDraft } from "../../.generated/prisma/client";
 import { db } from "../db";
 import { getServerSession } from "../auth";
 import { extractPlaceholders, renderPostingTemplate } from "./generator";
@@ -73,21 +74,7 @@ async function requireOwner(): Promise<string> {
   return created.id;
 }
 
-type DbPostingDraft = {
-  id: string;
-  projectId: string | null;
-  platform: string;
-  templateKey: string;
-  body: string;
-  status: string;
-  scheduledFor: Date | null;
-  approvedAt: Date | null;
-  postedAt: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-function toRecord(row: DbPostingDraft): PostingDraftRecord {
+function toRecord(row: PostingDraft): PostingDraftRecord {
   return {
     approvedAt: row.approvedAt?.toISOString() ?? null,
     body: row.body,
@@ -106,11 +93,11 @@ function toRecord(row: DbPostingDraft): PostingDraftRecord {
   };
 }
 
-/** Owner-scoped drafts, newest first. */
+/** Owner-gated drafts, newest first. */
 export async function listPostingDrafts(): Promise<PostingDraftRecord[]> {
   await requireOwner();
   const rows = await db.postingDraft.findMany({ orderBy: { createdAt: "desc" } });
-  return rows.map((r) => toRecord(r as unknown as DbPostingDraft));
+  return rows.map((r) => toRecord(r));
 }
 
 /**
@@ -133,7 +120,7 @@ export async function generatePostingDraft(
       templateKey: input.templateKey,
     },
   });
-  return toRecord(row as unknown as DbPostingDraft);
+  return toRecord(row);
 }
 
 /**
@@ -151,9 +138,25 @@ export async function approvePostingDraft(id: string): Promise<PostingDraftRecor
   if (!plan.ok) {
     throw new Error(plan.reason);
   }
-  const row = await db.postingDraft.update({
-    where: { id },
+  // Guarded write: `status: "draft"` in the WHERE closes the read→plan→write race (TOCTOU) — a
+  // concurrent approve/delete between the read above and this update can no longer double-apply.
+  const updated = await db.postingDraft.updateMany({
+    where: { id, status: "draft" },
     data: { approvedAt: plan.approvedAt, approvedById: ownerId, status: plan.status },
   });
-  return toRecord(row as unknown as DbPostingDraft);
+  if (updated.count === 0) {
+    // Lost the race — re-read and surface the SAME outcome the pre-check above produces:
+    // not-found if the row vanished, otherwise the plan's refusal reason for the row's CURRENT
+    // state.
+    const current = await db.postingDraft.findUniqueOrThrow({ where: { id } });
+    const replan = planApprovePostingDraft({
+      body: current.body,
+      status: current.status as PostingStatus,
+    });
+    throw new Error(
+      replan.ok ? `Draft "${id}" changed while approving — retry.` : replan.reason,
+    );
+  }
+  const row = await db.postingDraft.findUniqueOrThrow({ where: { id } });
+  return toRecord(row);
 }
