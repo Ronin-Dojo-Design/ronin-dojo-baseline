@@ -31,14 +31,11 @@ import { ProfileHero } from "~/components/web/profile/profile-hero"
 import { AvatarUploader } from "~/components/web/uploader"
 import { ImageFieldUploader } from "~/components/web/uploader/image-field-uploader"
 import { initialsOf } from "~/lib/directory/facet-result"
-import { updateDirectoryProfileAsAdmin, updatePassportAsAdmin } from "~/server/admin/people/actions"
-import {
-  updateDirectoryProfileAsAdminSchema,
-  updatePassportAsAdminSchema,
-} from "~/server/admin/people/schemas"
-import { updateDirectoryProfile, updatePassport } from "~/server/web/passport/actions"
+import { updatePassportAndProfileAsAdmin } from "~/server/admin/people/actions"
+import { updatePassportAndProfileAsAdminSchema } from "~/server/admin/people/schemas"
+import { updatePassportAndProfile } from "~/server/web/passport/actions"
 import type { DirectoryProfileOne, PassportOne } from "~/server/web/passport/payloads"
-import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
+import { updatePassportAndProfileSchema } from "~/server/web/passport/schemas"
 import { SocialLinksEditor } from "./social-links-editor"
 
 /** Coerce null/undefined to empty string for HTML inputs */
@@ -52,7 +49,7 @@ const PRIVACY_TOGGLES = [
   { name: "showRanks", label: "Show belt ranks" },
 ] as const
 
-/** Initial `react-hook-form` values for the Passport (identity) form. */
+/** Initial `react-hook-form` values for the Passport (identity) half. */
 function passportFormValues(passport: PassportOne) {
   return {
     displayName: str(passport.displayName),
@@ -71,7 +68,7 @@ function passportFormValues(passport: PassportOne) {
   }
 }
 
-/** Initial `react-hook-form` values for the DirectoryProfile (presentation) form. */
+/** Initial `react-hook-form` values for the DirectoryProfile (presentation) half. */
 function directoryFormValues(directoryProfile: DirectoryProfileOne) {
   return {
     slug: str(directoryProfile.slug),
@@ -88,6 +85,11 @@ function directoryFormValues(directoryProfile: DirectoryProfileOne) {
   }
 }
 
+/** Merged initial values — the ONE form's value shape (flat, collision-free). */
+function editorFormValues(passport: PassportOne, directoryProfile: DirectoryProfileOne) {
+  return { ...passportFormValues(passport), ...directoryFormValues(directoryProfile) }
+}
+
 type Props = {
   passport: PassportOne
   directoryProfile: DirectoryProfileOne
@@ -95,10 +97,10 @@ type Props = {
   canUploadVideo: boolean
   /**
    * Admin mode (WL-P2-35, ADR 0045 D3): when a `passportId` is supplied, the editor
-   * writes through the admin-gated `updatePassportAsAdmin` / `updateDirectoryProfileAsAdmin`
-   * actions (keyed `where: { id: passportId }`) instead of the self-serve owner actions
-   * (keyed `where: { userId: session.user.id }`). Omit it for the `/me` + `/app/profile`
-   * owner-edit paths — those keep writing through the self-serve twins unchanged.
+   * writes through the admin-gated `updatePassportAndProfileAsAdmin` action (keyed
+   * `where: { id: passportId }`) instead of the self-serve owner action (keyed
+   * `where: { userId: session.user.id }`). Omit it for the `/app/profile` owner-edit
+   * path — that keeps writing through the self-serve twin unchanged.
    */
   adminPassportId?: string
 }
@@ -106,17 +108,30 @@ type Props = {
 /**
  * The ONE canonical Passport + DirectoryProfile editor (SESSION_0398, ADR 0025).
  *
- * Rendered by the owner-edit entry points — `/me` (MePage) and the `/app/profile`
- * Profile tab (DashboardProfileTab) — AND (WL-P2-35) the admin People detail
- * `/app/users/[id]`, where an admin edits another person's Passport. Passport is the
- * identity SoT; DirectoryProfile is its presentation/privacy view. Both forms hoist to
- * this parent so a single live `ProfileHero` can mirror name/avatar/location across both
- * as the editor types.
+ * Rendered by the owner-edit entry point — the `/app/profile` Profile tab
+ * (DashboardProfileTab) — AND (WL-P2-35) the admin People detail `/app/users/[id]`,
+ * where an admin edits another person's Passport. Passport is the identity SoT;
+ * DirectoryProfile is its presentation/privacy view.
  *
- * The self-serve vs admin split is a prop, not a fork: `adminPassportId` swaps the two
- * server actions + their schemas (owner-keyed → admin-keyed) and injects the target
- * `passportId` into each form's submitted values. Everything else — the fields, the hero,
- * the media paths — is identical, so there is exactly ONE editor to maintain.
+ * WL-P2-45 (SESSION_0700): ONE form, ONE Save. The former two hoisted forms (Identity
+ * → `updatePassport`, Directory Profile → `updateDirectoryProfile`, each with its own
+ * Save button) collapsed into a single RHF form over the flat-merged
+ * `updatePassportAndProfileSchema`; a single submit drives the combined
+ * `updatePassportAndProfile` action, which persists both halves in one transaction
+ * (partial failure rolls back — never a half-saved identity). The granular actions
+ * remain as the granular API. The Identity / Directory Profile section headings are
+ * presentation only now.
+ *
+ * The self-serve vs admin split is a prop, not a fork: `adminPassportId` swaps the
+ * combined server action + schema (owner-keyed → admin-keyed) and injects the target
+ * `passportId` into the submitted values. Everything else — the fields, the hero, the
+ * media paths — is identical, so there is exactly ONE editor to maintain.
+ *
+ * Save-semantics note (WL-P2-45 rider c, Giddy P3): the owner-mode profile photo does
+ * NOT wait for Save — `AvatarUploader` persists it instantly through
+ * `uploadAndPromotePassportAvatar` ("Save photo"). The hint under the uploader makes
+ * that third semantics explicit. Admin mode is unaffected (its `ImageFieldUploader`
+ * URL rides the form submit).
  *
  * SESSION_0400 (D-023): the plain text/date/avatar fields render via the shared
  * `components/common/fields` primitives so this editor and the lineage-node profile
@@ -134,53 +149,35 @@ export function PassportEditor({
 
   // Admin mode swaps BOTH the action (owner-keyed → admin-keyed) and the schema
   // (adds `passportId`), and injects the target id into the submitted values. The admin
-  // schemas are a superset of the base schemas, so the base-schema value shape is the
+  // schema is a superset of the base schema, so the base-schema value shape is the
   // common type; `passportId` is the one extra runtime key. RHF's `values` prop is typed
   // against the (self-schema) union, so cast just that merged object — the key still rides
   // through to the admin action, which is the only consumer that reads it.
-  const passportValues = (
+  const values = (
     isAdmin
-      ? { ...passportFormValues(passport), passportId: adminPassportId }
-      : passportFormValues(passport)
-  ) as ReturnType<typeof passportFormValues>
+      ? { ...editorFormValues(passport, directoryProfile), passportId: adminPassportId }
+      : editorFormValues(passport, directoryProfile)
+  ) as ReturnType<typeof editorFormValues>
 
-  const passportForm = useHookFormAction(
-    isAdmin ? updatePassportAsAdmin : updatePassport,
-    zodResolver(isAdmin ? updatePassportAsAdminSchema : updatePassportSchema),
+  const { form, handleSubmitWithAction } = useHookFormAction(
+    isAdmin ? updatePassportAndProfileAsAdmin : updatePassportAndProfile,
+    zodResolver(isAdmin ? updatePassportAndProfileAsAdminSchema : updatePassportAndProfileSchema),
     {
-      formProps: { values: passportValues },
+      formProps: { values },
       actionProps: {
-        onSuccess: () => toast.success("Passport updated."),
-        onError: () => toast.error("Failed to update passport."),
-      },
-    },
-  )
-
-  const directoryValues = (
-    isAdmin
-      ? { ...directoryFormValues(directoryProfile), passportId: adminPassportId }
-      : directoryFormValues(directoryProfile)
-  ) as ReturnType<typeof directoryFormValues>
-
-  const directoryForm = useHookFormAction(
-    isAdmin ? updateDirectoryProfileAsAdmin : updateDirectoryProfile,
-    zodResolver(isAdmin ? updateDirectoryProfileAsAdminSchema : updateDirectoryProfileSchema),
-    {
-      formProps: { values: directoryValues },
-      actionProps: {
-        onSuccess: () => toast.success("Directory profile updated."),
-        onError: () => toast.error("Failed to update directory profile."),
+        onSuccess: () => toast.success("Profile updated."),
+        onError: () => toast.error("Failed to update profile."),
       },
     },
   )
 
   // Live preview — mirrors form state into the same hero the public profile and
   // claim teaser use, so the owner sees their profile forming as they type.
-  const previewName = useWatch({ control: passportForm.form.control, name: "displayName" })
-  const previewAvatar = useWatch({ control: passportForm.form.control, name: "avatarUrl" })
-  const previewCity = useWatch({ control: directoryForm.form.control, name: "locationCity" })
-  const previewRegion = useWatch({ control: directoryForm.form.control, name: "locationRegion" })
-  const previewCover = useWatch({ control: directoryForm.form.control, name: "coverPhotoUrl" })
+  const previewName = useWatch({ control: form.control, name: "displayName" })
+  const previewAvatar = useWatch({ control: form.control, name: "avatarUrl" })
+  const previewCity = useWatch({ control: form.control, name: "locationCity" })
+  const previewRegion = useWatch({ control: form.control, name: "locationRegion" })
+  const previewCover = useWatch({ control: form.control, name: "coverPhotoUrl" })
 
   return (
     <div className="flex flex-col gap-10">
@@ -192,34 +189,32 @@ export function PassportEditor({
         initials={initialsOf(previewName)}
       />
 
-      <PassportForm
-        form={passportForm.form}
-        onSubmit={passportForm.handleSubmitWithAction}
-        isAdmin={isAdmin}
-        adminPassportId={adminPassportId}
-      />
-      <DirectoryProfileForm
-        form={directoryForm.form}
-        onSubmit={directoryForm.handleSubmitWithAction}
-        userId={userId}
-        canUploadVideo={canUploadVideo}
-      />
+      <Form {...form}>
+        <form onSubmit={handleSubmitWithAction} className="flex flex-col gap-10" noValidate>
+          <PassportFields form={form} isAdmin={isAdmin} adminPassportId={adminPassportId} />
+          <DirectoryProfileFields form={form} userId={userId} canUploadVideo={canUploadVideo} />
+
+          <div>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? "Saving…" : "Save profile"}
+            </Button>
+          </div>
+        </form>
+      </Form>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Passport form
+// Passport (identity) fields
 // ---------------------------------------------------------------------------
 
-function PassportForm({
+function PassportFields({
   form,
-  onSubmit,
   isAdmin,
   adminPassportId,
 }: {
   form: UseFormReturn<any>
-  onSubmit: React.FormEventHandler<HTMLFormElement>
   isAdmin: boolean
   adminPassportId?: string
 }) {
@@ -227,143 +222,142 @@ function PassportForm({
     <section>
       <H2>Identity</H2>
 
-      <Form {...form}>
-        <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
-          <TextField
-            control={form.control}
-            name="displayName"
-            label="Display name"
-            placeholder="How you appear to others"
-          />
+      <div className="mt-4 grid gap-4 @md:grid-cols-2">
+        <TextField
+          control={form.control}
+          name="displayName"
+          label="Display name"
+          placeholder="How you appear to others"
+        />
 
-          <TextField control={form.control} name="legalFirstName" label="First name" />
+        <TextField control={form.control} name="legalFirstName" label="First name" />
 
-          <TextField control={form.control} name="legalLastName" label="Last name" />
+        <TextField control={form.control} name="legalLastName" label="Last name" />
 
-          <DateField control={form.control} name="dob" label="Date of birth" clearTo="undefined" />
+        <DateField control={form.control} name="dob" label="Date of birth" clearTo="undefined" />
 
-          <FormField
-            control={form.control}
-            name="gender"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Gender</FormLabel>
-                <Select
-                  value={field.value ?? ""}
-                  onValueChange={v => field.onChange(v || undefined)}
-                  items={{
-                    MALE: "Male",
-                    FEMALE: "Female",
-                    NONBINARY: "Non-binary",
-                    PREFER_NOT_TO_SAY: "Prefer not to say",
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="MALE">Male</SelectItem>
-                    <SelectItem value="FEMALE">Female</SelectItem>
-                    <SelectItem value="NONBINARY">Non-binary</SelectItem>
-                    <SelectItem value="PREFER_NOT_TO_SAY">Prefer not to say</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="gender"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Gender</FormLabel>
+              <Select
+                value={field.value ?? ""}
+                onValueChange={v => field.onChange(v || undefined)}
+                items={{
+                  MALE: "Male",
+                  FEMALE: "Female",
+                  NONBINARY: "Non-binary",
+                  PREFER_NOT_TO_SAY: "Prefer not to say",
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="MALE">Male</SelectItem>
+                  <SelectItem value="FEMALE">Female</SelectItem>
+                  <SelectItem value="NONBINARY">Non-binary</SelectItem>
+                  <SelectItem value="PREFER_NOT_TO_SAY">Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <TextField
-            control={form.control}
-            name="phoneE164"
-            label="Phone"
-            type="tel"
-            placeholder="+1 555 123 4567"
-          />
+        <TextField
+          control={form.control}
+          name="phoneE164"
+          label="Phone"
+          type="tel"
+          placeholder="+1 555 123 4567"
+        />
 
-          <TextField
-            control={form.control}
-            name="emergencyContactName"
-            label="Emergency contact"
-            placeholder="Name"
-          />
+        <TextField
+          control={form.control}
+          name="emergencyContactName"
+          label="Emergency contact"
+          placeholder="Name"
+        />
 
-          <TextField
-            control={form.control}
-            name="emergencyContactPhoneE164"
-            label="Emergency phone"
-            type="tel"
-          />
+        <TextField
+          control={form.control}
+          name="emergencyContactPhoneE164"
+          label="Emergency phone"
+          type="tel"
+        />
 
-          {/* H2 (FI-024): the avatar is an uploader, never a URL text field. Owner mode uses the
-              belt-ringed `AvatarUploader` (free-tier `uploadAndPromotePassportAvatar`, keyed to the
-              session user). Admin mode CANNOT use that action (it promotes the ADMIN's own avatar),
-              so it uses `ImageFieldUploader` through the admin-bypassing `uploadMedia` seam — the
-              cropped URL then rides the admin passport form's submit to the target Passport. */}
-          <FormField
-            control={form.control}
-            name="avatarUrl"
-            render={({ field }) => (
-              <FormItem className="@md:col-span-2">
-                <FormLabel>Profile photo</FormLabel>
-                {isAdmin ? (
-                  <ImageFieldUploader
-                    value={field.value || null}
-                    onChange={url => field.onChange(url ?? "")}
-                    uploadPathPrefix={`passports/${adminPassportId}/avatar`}
-                    presets={["circle", "square"]}
-                    defaultPreset="circle"
-                    cropTitle="Crop the profile photo"
-                  />
-                ) : (
+        {/* H2 (FI-024): the avatar is an uploader, never a URL text field. Owner mode uses the
+            belt-ringed `AvatarUploader` (free-tier `uploadAndPromotePassportAvatar`, keyed to the
+            session user). Admin mode CANNOT use that action (it promotes the ADMIN's own avatar),
+            so it uses `ImageFieldUploader` through the admin-bypassing `uploadMedia` seam — the
+            cropped URL then rides the admin passport form's submit to the target Passport. */}
+        <FormField
+          control={form.control}
+          name="avatarUrl"
+          render={({ field }) => (
+            <FormItem className="@md:col-span-2">
+              <FormLabel>Profile photo</FormLabel>
+              {isAdmin ? (
+                <ImageFieldUploader
+                  value={field.value || null}
+                  onChange={url => field.onChange(url ?? "")}
+                  uploadPathPrefix={`passports/${adminPassportId}/avatar`}
+                  presets={["circle", "square"]}
+                  defaultPreset="circle"
+                  cropTitle="Crop the profile photo"
+                />
+              ) : (
+                <>
                   <AvatarUploader
                     initialAvatarUrl={field.value || null}
                     onAvatarUrl={url => field.onChange(url)}
                   />
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                  {/* WL-P2-45 rider c (Giddy P3): the photo has a THIRD save-semantics — it
+                      persists the moment "Save photo" completes, independent of the form's
+                      Save button. Say so explicitly instead of letting owners wonder. */}
+                  <Hint>
+                    Your photo saves immediately when uploaded — all other fields save when you
+                    press “Save profile”.
+                  </Hint>
+                </>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <TextAreaField
-            control={form.control}
-            name="bio"
-            label="Bio"
-            rows={4}
-            placeholder="Tell us about your martial arts journey…"
-            className="@md:col-span-2"
-          />
+        <TextAreaField
+          control={form.control}
+          name="bio"
+          label="Bio"
+          rows={4}
+          placeholder="Tell us about your martial arts journey…"
+          className="@md:col-span-2"
+        />
 
-          <div className="@md:col-span-2">
-            <SocialLinksEditor form={form} />
-          </div>
-
-          <div className="@md:col-span-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving…" : "Save passport"}
-            </Button>
-          </div>
-        </form>
-      </Form>
+        <div className="@md:col-span-2">
+          <SocialLinksEditor form={form} />
+        </div>
+      </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Directory profile form
+// Directory profile (presentation) fields
 // ---------------------------------------------------------------------------
 
-function DirectoryProfileForm({
+function DirectoryProfileFields({
   form,
-  onSubmit,
   userId,
   canUploadVideo,
 }: {
   form: UseFormReturn<any>
-  onSubmit: React.FormEventHandler<HTMLFormElement>
   userId: string
   canUploadVideo: boolean
 }) {
@@ -371,140 +365,132 @@ function DirectoryProfileForm({
     <section>
       <H2>Directory Profile</H2>
 
-      <Form {...form}>
-        <form onSubmit={onSubmit} className="mt-4 grid gap-4 @md:grid-cols-2" noValidate>
-          <TextField
-            control={form.control}
-            name="slug"
-            label="Profile slug"
-            placeholder="your-name"
-          />
+      <div className="mt-4 grid gap-4 @md:grid-cols-2">
+        <TextField
+          control={form.control}
+          name="slug"
+          label="Profile slug"
+          placeholder="your-name"
+        />
 
-          <FormField
-            control={form.control}
-            name="visibility"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Profile visibility</FormLabel>
-                <Select
-                  value={field.value}
-                  onValueChange={field.onChange}
-                  items={{
-                    HIDDEN: "Hidden",
-                    MEMBERS_ONLY: "Members only",
-                    PUBLIC: "Public",
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select visibility" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="HIDDEN">Hidden</SelectItem>
-                    <SelectItem value="MEMBERS_ONLY">Members only</SelectItem>
-                    <SelectItem value="PUBLIC">Public</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Hint>
-                  Public shows your profile in the directory to everyone; Members only limits it to
-                  signed-in members; Hidden keeps it off the directory entirely.
-                </Hint>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="visibility"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Profile visibility</FormLabel>
+              <Select
+                value={field.value}
+                onValueChange={field.onChange}
+                items={{
+                  HIDDEN: "Hidden",
+                  MEMBERS_ONLY: "Members only",
+                  PUBLIC: "Public",
+                }}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select visibility" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="HIDDEN">Hidden</SelectItem>
+                  <SelectItem value="MEMBERS_ONLY">Members only</SelectItem>
+                  <SelectItem value="PUBLIC">Public</SelectItem>
+                </SelectContent>
+              </Select>
+              <Hint>
+                Public shows your profile in the directory to everyone; Members only limits it to
+                signed-in members; Hidden keeps it off the directory entirely.
+              </Hint>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <TextField control={form.control} name="locationCity" label="City" />
+        <TextField control={form.control} name="locationCity" label="City" />
 
-          <TextField control={form.control} name="locationRegion" label="State / Region" />
+        <TextField control={form.control} name="locationRegion" label="State / Region" />
 
-          <CountryField control={form.control} name="locationCountry" label="Country" />
+        <CountryField control={form.control} name="locationCountry" label="Country" />
 
-          {/* H2 (FI-024): the cover is an uploader (wide crop preset), never a URL text field. The
-              same entitlement-gated `uploadMedia` seam the old `FormMedia` upload button used —
-              only the confusing dual URL input is gone. */}
-          <FormField
-            control={form.control}
-            name="coverPhotoUrl"
-            render={({ field }) => (
-              <FormItem className="@md:col-span-2">
-                <FormLabel>Cover photo</FormLabel>
-                <ImageFieldUploader
-                  value={field.value || null}
-                  onChange={url => field.onChange(url ?? "")}
-                  uploadPathPrefix={`profiles/${userId}/cover`}
-                  presets={["wide"]}
-                  defaultPreset="wide"
-                  cropTitle="Crop your cover photo"
-                />
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        {/* H2 (FI-024): the cover is an uploader (wide crop preset), never a URL text field. The
+            same entitlement-gated `uploadMedia` seam the old `FormMedia` upload button used —
+            only the confusing dual URL input is gone. */}
+        <FormField
+          control={form.control}
+          name="coverPhotoUrl"
+          render={({ field }) => (
+            <FormItem className="@md:col-span-2">
+              <FormLabel>Cover photo</FormLabel>
+              <ImageFieldUploader
+                value={field.value || null}
+                onChange={url => field.onChange(url ?? "")}
+                uploadPathPrefix={`profiles/${userId}/cover`}
+                presets={["wide"]}
+                defaultPreset="wide"
+                cropTitle="Crop your cover photo"
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="videoIntroUrl"
-            render={({ field }) => (
-              <FormItem className="@md:col-span-2">
-                <FormLabel>Video intro</FormLabel>
-                {canUploadVideo ? (
-                  <FormMedia form={form} field={field} path={`profiles/${userId}/video`}>
-                    {field.value && (
-                      <p className="text-muted-foreground text-sm truncate">{field.value}</p>
-                    )}
-                  </FormMedia>
-                ) : (
-                  <FormControl>
-                    <Input
-                      type="url"
-                      placeholder="YouTube or Vimeo URL"
-                      {...field}
-                      value={str(field.value)}
-                    />
-                  </FormControl>
-                )}
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="@md:col-span-2 flex flex-col gap-3">
-            <div>
-              <H3 size="h5">Privacy</H3>
-              <Hint>Choose which details appear on your public profile.</Hint>
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-3">
-              {PRIVACY_TOGGLES.map(({ name, label }) => (
-                <FormField
-                  key={name}
-                  control={form.control}
-                  name={name}
-                  render={({ field }) => (
-                    <FormItem className="flex items-center gap-2">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          aria-label={label}
-                        />
-                      </FormControl>
-                      <FormLabel className="mt-0!">{label}</FormLabel>
-                    </FormItem>
+        <FormField
+          control={form.control}
+          name="videoIntroUrl"
+          render={({ field }) => (
+            <FormItem className="@md:col-span-2">
+              <FormLabel>Video intro</FormLabel>
+              {canUploadVideo ? (
+                <FormMedia form={form} field={field} path={`profiles/${userId}/video`}>
+                  {field.value && (
+                    <p className="text-muted-foreground text-sm truncate">{field.value}</p>
                   )}
-                />
-              ))}
-            </div>
-          </div>
+                </FormMedia>
+              ) : (
+                <FormControl>
+                  <Input
+                    type="url"
+                    placeholder="YouTube or Vimeo URL"
+                    {...field}
+                    value={str(field.value)}
+                  />
+                </FormControl>
+              )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <div className="@md:col-span-2">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Saving…" : "Save directory profile"}
-            </Button>
+        <div className="@md:col-span-2 flex flex-col gap-3">
+          <div>
+            <H3 size="h5">Privacy</H3>
+            <Hint>Choose which details appear on your public profile.</Hint>
           </div>
-        </form>
-      </Form>
+          <div className="flex flex-wrap gap-x-6 gap-y-3">
+            {PRIVACY_TOGGLES.map(({ name, label }) => (
+              <FormField
+                key={name}
+                control={form.control}
+                name={name}
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-label={label}
+                      />
+                    </FormControl>
+                    <FormLabel className="mt-0!">{label}</FormLabel>
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </section>
   )
 }

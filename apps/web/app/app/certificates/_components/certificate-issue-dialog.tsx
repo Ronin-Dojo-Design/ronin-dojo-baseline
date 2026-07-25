@@ -2,20 +2,24 @@
 
 /**
  * Issue-certificate dialog — the affordance that drives the previously-orphaned
- * `issueCertificate` action (FI-022): recipient picker (User id-space via
+ * issue-certificate mutation (FI-022): recipient picker (User id-space via
  * `findActiveUsers`/`toRecipientOptions`) + optional expiry, on the template
  * detail page's issuance list.
  *
  * @added SESSION_0520 — cloned from the walk-in-registration-dialog pattern
  *   (the repo's admin create-dialog idiom); shared formatting lives in
  *   components/admin/recipient-options.ts.
+ * @updated SESSION_0697 (WL-P2-43) — writes through the oRPC
+ *   `certificates.issue` procedure (full-oRPC direction; the layout-typed
+ *   revalidation now lives in the procedure, not a safe-action seam bypass).
  */
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { PlusIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
+import type { z } from "zod/v4"
 import { Button } from "~/components/common/button"
 import { ComboboxSelector } from "~/components/common/combobox-selector"
 import {
@@ -36,7 +40,7 @@ import {
 } from "~/components/common/form"
 import { type ActiveUser, toRecipientOptions } from "~/components/admin/recipient-options"
 import { Input } from "~/components/common/input"
-import { issueCertificate } from "~/server/admin/certificates/issuance-actions"
+import { client } from "~/lib/orpc-client"
 import { issueCertificateSchema } from "~/server/admin/certificates/schema"
 
 type CertificateIssueDialogProps = {
@@ -48,30 +52,31 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(
-    issueCertificate,
-    zodResolver(issueCertificateSchema),
-    {
-      formProps: {
-        defaultValues: {
-          certificateTemplateId: templateId,
-          userId: "",
-          expiresAt: "",
-        },
-      },
-      actionProps: {
-        onSuccess: () => {
-          toast.success("Certificate issued")
-          form.reset()
-          setIsOpen(false)
-          router.refresh()
-        },
-        onError: ({ error }) => {
-          toast.error(error.serverError ?? "Failed to issue certificate")
-        },
-      },
+  const form = useForm<z.infer<typeof issueCertificateSchema>>({
+    resolver: zodResolver(issueCertificateSchema),
+    defaultValues: {
+      certificateTemplateId: templateId,
+      userId: "",
+      expiresAt: "",
     },
-  )
+  })
+
+  const handleSubmitWithAction = form.handleSubmit(async values => {
+    try {
+      await client.certificates.issue(values)
+      toast.success("Certificate issued")
+      form.reset()
+      setIsOpen(false)
+      // The procedure's layout-typed revalidation completed before the awaited call
+      // returned, so this refresh renders the fresh issuance list (no race).
+      router.refresh()
+    } catch (error) {
+      // Surface the real oRPC message (NOT_FOUND / FORBIDDEN carry user-safe copy).
+      toast.error(
+        error instanceof Error && error.message ? error.message : "Failed to issue certificate",
+      )
+    }
+  })
 
   const userOptions = useMemo(() => toRecipientOptions(users), [users])
 
@@ -141,7 +146,7 @@ export function CertificateIssueDialog({ templateId, users }: CertificateIssueDi
               <Button type="button" variant="secondary" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit" isPending={action.isPending}>
+              <Button type="submit" isPending={form.formState.isSubmitting}>
                 Issue certificate
               </Button>
             </DialogFooter>

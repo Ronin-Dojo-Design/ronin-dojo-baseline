@@ -1,5 +1,9 @@
 import { z } from "zod"
-import { updateDirectoryProfileSchema, updatePassportSchema } from "~/server/web/passport/schemas"
+import {
+  updateDirectoryProfileSchema,
+  updatePassportAndProfileSchema,
+  updatePassportSchema,
+} from "~/server/web/passport/schemas"
 
 // ---------------------------------------------------------------------------
 // Admin Passport / DirectoryProfile schemas (WL-P2-35, ADR 0045 D3, ADR 0025)
@@ -18,5 +22,13 @@ export const updatePassportAsAdminSchema = updatePassportSchema.extend({
 
 /** Admin schema = the self-serve DirectoryProfile schema + the target `passportId`. */
 export const updateDirectoryProfileAsAdminSchema = updateDirectoryProfileSchema.extend({
+  passportId: z.string().min(1),
+})
+
+/**
+ * Admin schema = the combined Passport + DirectoryProfile schema (WL-P2-45) + the
+ * target `passportId` — the admin-mode twin of the editor's ONE-Save payload.
+ */
+export const updatePassportAndProfileAsAdminSchema = updatePassportAndProfileSchema.extend({
   passportId: z.string().min(1),
 })

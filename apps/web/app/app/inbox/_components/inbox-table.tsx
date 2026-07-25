@@ -7,6 +7,8 @@ import { DataSelect } from "~/components/common/data-select"
 import {
   INBOX_BRAND_LABELS,
   INBOX_BRANDS,
+  INBOX_TRIAGE_STATUS_LABELS,
+  INBOX_TRIAGE_STATUSES,
   type InboxEmailRow,
   type InboxListResult,
   type InboxTableSchema,
@@ -20,10 +22,20 @@ type InboxTableProps = {
 }
 
 const STATUS_OPTIONS: { value: InboxTableSchema["status"]; label: string }[] = [
-  { value: "UNREAD", label: "Unread" },
-  { value: "READ", label: "Read" },
-  { value: "ARCHIVED", label: "Archived" },
+  ...INBOX_TRIAGE_STATUSES.map(status => ({
+    value: status,
+    label: INBOX_TRIAGE_STATUS_LABELS[status],
+  })),
   { value: "all", label: "All" },
+]
+
+const FILTER_FIELDS: DataTableFilterField<InboxEmailRow>[] = [
+  { id: "fromAddress", label: "From", placeholder: "Filter by sender..." },
+  {
+    id: "brand",
+    label: "Brand",
+    options: INBOX_BRANDS.map(brand => ({ label: INBOX_BRAND_LABELS[brand], value: brand })),
+  },
 ]
 
 /**
@@ -41,15 +53,6 @@ export function InboxTable({ rowsPromise }: InboxTableProps) {
 
   const columns = useMemo(() => getColumns(), [])
 
-  const filterFields: DataTableFilterField<InboxEmailRow>[] = [
-    { id: "fromAddress", label: "From", placeholder: "Filter by sender..." },
-    {
-      id: "brand",
-      label: "Brand",
-      options: INBOX_BRANDS.map(brand => ({ label: INBOX_BRAND_LABELS[brand], value: brand })),
-    },
-  ]
-
   return (
     <AdminCollection
       title="Inbox"
@@ -59,7 +62,7 @@ export function InboxTable({ rowsPromise }: InboxTableProps) {
       pageCount={pageCount}
       sorting={sort}
       pageSize={perPage}
-      filterFields={filterFields}
+      filterFields={FILTER_FIELDS}
       emptyState="No inbound emails match this view."
       getRowId={originalRow => originalRow.id}
     >

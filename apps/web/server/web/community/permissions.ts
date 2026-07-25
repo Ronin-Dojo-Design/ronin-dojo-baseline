@@ -4,6 +4,7 @@ import { LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS } from "~/lib/entitlements/lineag
 import type { SessionUser } from "~/server/orpc/context"
 import { can } from "~/server/orpc/permissions"
 import { APP_AREA_PERMISSIONS } from "~/server/orpc/roles"
+import { hasAnyActiveEntitlement } from "~/server/web/entitlements/active-entitlement"
 import { db as appDb } from "~/services/db"
 
 type AppDb = typeof appDb
@@ -49,21 +50,15 @@ export const canCreateCommunityPostForUser = cache(
       return true
     }
 
-    const now = new Date()
-
-    const tierGrant = await database.userEntitlement.findFirst({
-      where: {
-        userId: user.id,
-        status: "ACTIVE",
-        entitlement: {
-          brand,
-          key: { in: [...LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS] },
-        },
-        OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-      },
-      select: { id: true },
-    })
-    if (tierGrant) {
+    // WL-P3-39 (SESSION_0535 FI-028): the shared active-tier-entitlement `where` (dedup'd out of a
+    // 3rd inline copy here).
+    const hasTierGrant = await hasAnyActiveEntitlement(
+      user.id,
+      LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS,
+      brand,
+      database,
+    )
+    if (hasTierGrant) {
       return true
     }
 

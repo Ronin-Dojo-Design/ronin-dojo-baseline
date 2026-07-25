@@ -221,18 +221,23 @@ enum InvoiceStatus {
 /// owner record on first authenticated action (auto-provisioned in lib/actions).
 /// Ownership scoping (the IDOR gate) keys off this record's id (`Project.ownerId`).
 model TeamMember {
-  id              String     @id @default(cuid())
+  id                    String          @id @default(cuid())
   /// The login account this owner acts as (Better Auth User). Null = no login yet.
-  user            User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId          String?    @unique
-  name            String
-  email           String     @unique
-  role            String?
-  active          Boolean    @default(true)
-  ownedProjects   Project[]
-  ownedActivities Activity[]
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  user                  User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId                String?         @unique
+  name                  String
+  email                 String          @unique
+  role                  String?
+  active                Boolean         @default(true)
+  ownedProjects         Project[]
+  ownedActivities       Activity[]
+  /// Review requests this owner has approved (SESSION_0685 review-request engine).
+  approvedReviews       ReviewRequest[]
+  /// Posting drafts this owner approved (SESSION_0687 — lib/posting/**). Back-relation only; the
+  /// posting pipeline stops at `approved` and never sets `posted`.
+  approvedPostingDrafts PostingDraft[]  @relation("PostingDraftApprovedBy")
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 
   @@index([userId])
 }
@@ -248,10 +253,15 @@ model Contact {
   source     LeadSource       @default(web_form)
   lifecycle  ContactLifecycle @default(lead)
   notes      String           @default("")
+  /// Explicit prior-express-written consent to receive SMS (TCPA), captured at
+  /// intake — never inferred. Gates the review-request engine's SMS channel
+  /// (SESSION_0685); default false, so silence never implies consent.
+  smsConsent Boolean          @default(false)
   company    Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
   companyId  String?
   projects   Project[]
   activities Activity[]
+  reviews    ReviewRequest[]
   createdAt  DateTime         @default(now())
   updatedAt  DateTime         @updatedAt
 
@@ -278,61 +288,64 @@ model Company {
 /// A PEMB project — the central record (HubSpot Deal). Collapses the lead →
 /// order lifecycle onto one object with its artifacts attached (brief §2).
 model Project {
-  id             String       @id @default(cuid())
+  id            String     @id @default(cuid())
   /// Short human label, e.g. "Flores — 60x100 Auto Service".
-  name           String
-  stage          StageId      @default(lead)
-  source         LeadSource   @default(web_form)
+  name          String
+  stage         StageId    @default(lead)
+  source        LeadSource @default(web_form)
   /// Estimated deal value in whole USD (MVP).
-  dealValue      Int?
-  expectedClose  DateTime?
+  dealValue     Int?
+  expectedClose DateTime?
 
   // Primary contact + account (HubSpot deal associations).
-  contact        Contact      @relation(fields: [contactId], references: [id], onDelete: Restrict)
-  contactId      String
-  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
-  companyId      String?
-  owner          TeamMember?  @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  ownerId        String?
+  contact   Contact     @relation(fields: [contactId], references: [id], onDelete: Restrict)
+  contactId String
+  company   Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  companyId String?
+  owner     TeamMember? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  ownerId   String?
 
   // PEMB custom properties (brief §5) — high-value inputs as columns so the
   // pipeline can gate/filter; the long-tail engineering envelope is Json.
-  buildingType   String
-  use            String
-  region         String
-  width          Int?
-  length         Int?
-  eaveHeight     Int?
-  roofPitch      String?
-  baySpacing     Int?
-  groundSnowLoad Int?
-  windSpeed      Int?
-  seismicCategory String?
-  governingCode  String?
+  buildingType     String
+  use              String
+  region           String
+  width            Int?
+  length           Int?
+  eaveHeight       Int?
+  roofPitch        String?
+  baySpacing       Int?
+  groundSnowLoad   Int?
+  windSpeed        Int?
+  seismicCategory  String?
+  governingCode    String?
   /// PE-stamp state — must match the erection state (brief Stage 6 gate).
-  peStampState   String?
+  peStampState     String?
   /// Deflection limits + any other engineering envelope detail (HubSpot custom-property bag).
   engineeringSpecs Json?
 
   // Anti-drop guardrails (brief §3a.2).
   /// "Can't drop a project": an open project always carries a next step.
   nextTask       String
-  orderConfirmed Boolean      @default(false)
+  orderConfirmed Boolean @default(false)
   /// Stamped when the project becomes an actual order (brief §3a.1). A business key — unique
   /// (app-side allocation also collision-checks); Postgres allows many NULLs (pre-order projects).
-  orderNumber    String?      @unique
+  orderNumber    String? @unique
   /// Required to close-lost — kills silent drops.
   lostReason     String?
 
-  notes          String       @default("")
+  notes String @default("")
 
   activities     Activity[]
   quotes         Quote[]
   invoices       Invoice[]
   photos         BuildPhoto[]
+  reviewRequests ReviewRequest[]
+  /// Rendered social-post drafts drawn from this project's facts (SESSION_0687 — lib/posting/**).
+  postingDrafts  PostingDraft[]
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([stage])
   @@index([contactId])
@@ -459,5 +472,149 @@ model BuildPhoto {
   takenAt   DateTime
   createdAt DateTime   @default(now())
 
+  @@index([projectId])
+}
+
+// ---------------------------------------------------------------------------
+// Review-request engine (SESSION_0685) — consented review asks, DRAFT/APPROVAL
+// only. See docs/product/mammoth-build/templates/review-request-sequences.md
+// (the copy this renders) and docs/architecture/research/research-review-mmb-
+// social-automation.md (fork 4 — the CRM-native review engine argument).
+// ---------------------------------------------------------------------------
+
+/// Review-request lifecycle. `sent` is a terminal state this schema reserves
+/// but this codebase never writes — the actual send is a later wired step +
+/// operator action (HOLD EXTERNAL ACTIONS, SESSION_0685); this lane only ever
+/// transitions draft → approved.
+enum ReviewRequestStatus {
+  draft
+  approved
+  sent
+}
+
+/// Delivery channel. `email` is the safe default; `sms` requires
+/// `Contact.smsConsent === true` — enforced by `lib/reviews/consent.ts`
+/// before a request may even be approved, not just before it would send.
+enum ReviewChannel {
+  email
+  sms
+}
+
+/// Which step of the two-touch sequence
+/// (review-request-sequences.md "First touch" / "One polite follow-up") this
+/// request renders.
+enum ReviewSequenceStep {
+  first_touch
+  follow_up
+}
+
+/// Which branch the generator selected per the sequence doc's "Routing rules".
+/// `private_recovery` suppresses the Google-review ask entirely when a
+/// project has an open Resolution Task.
+enum ReviewRequestRoute {
+  google_request
+  private_recovery
+}
+
+/// The documented legal basis for this specific request, recorded per-row so
+/// an audit never has to re-derive consent from Contact state after the fact.
+enum ReviewConsentBasis {
+  /// Established business relationship + transactional context; every email
+  /// carries a working unsubscribe link (CAN-SPAM, not TCPA).
+  email_business_relationship
+  /// `Contact.smsConsent === true` at generation time — TCPA prior express
+  /// written consent, re-checked live (not this snapshot) before approval.
+  sms_prior_express_written_consent
+}
+
+/// A drafted review-request message (review-request-sequences.md rendered for
+/// one Contact/Project). Trigger = a Project reaching `complete`
+/// (Satisfied Installation). Lifecycle is draft → approved ONLY in this
+/// codebase — sending is a later wired step the operator runs outside this
+/// engine; nothing here ever calls a live email/SMS provider.
+model ReviewRequest {
+  id           String              @id @default(cuid())
+  project      Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId    String
+  contact      Contact             @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId    String
+  route        ReviewRequestRoute
+  sequenceStep ReviewSequenceStep
+  channel      ReviewChannel
+  status       ReviewRequestStatus @default(draft)
+  consentBasis ReviewConsentBasis
+  /// `Contact.smsConsent` snapshotted at generation time (audit trail only —
+  /// `lib/reviews/consent.ts` re-checks the LIVE value before approval).
+  smsConsent   Boolean             @default(false)
+  /// Recorded when this specific request's contact opts out (e.g. an SMS
+  /// "STOP" reply) — blocks approval even if consent was present at draft time.
+  optOut       Boolean             @default(false)
+  optOutAt     DateTime?
+  /// Email only; null for sms.
+  subject      String?
+  body         String              @db.Text
+  /// The opt-out copy this request carries ("Reply STOP to opt out." for sms,
+  /// the unsubscribe link for email) — every message carries one, no exceptions.
+  optOutNotice String
+  approver     TeamMember?         @relation(fields: [approvedBy], references: [id], onDelete: SetNull)
+  approvedBy   String?
+  approvedAt   DateTime?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Posting pipeline (SESSION_0687) — templates → DRAFT → APPROVAL, never auto-post
+// ---------------------------------------------------------------------------
+//
+// Mirrors the BBL approval-queue posture: every rendered post starts at `draft` and this pipeline
+// STOPS at `approved`. Publishing to a platform is a later wired step + an explicit operator
+// action — nothing in lib/posting/** (the generator, the status rules, or these actions) ever
+// writes status `posted`. Owned subtree: lib/posting/**, app/posting/**.
+// docs/product/mammoth-build/templates/posting-templates.md is the copy source of truth.
+
+enum PostingPlatform {
+  facebook
+  instagram
+  google_business_profile
+}
+
+/// `draft` = rendered, awaiting human review. `approved` = a human confirmed accuracy/publication
+/// rights — still NOT posted. `posted` = published externally; no write path in this app sets it.
+enum PostingStatus {
+  draft
+  approved
+  posted
+}
+
+/// A rendered social post generated from a posting template, held for human review before
+/// scheduling (posting-templates.md's "Scheduling checklist": "A human approves the rendered post
+/// before scheduling").
+model PostingDraft {
+  id           String          @id @default(cuid())
+  /// The CRM Project the copy is drawn from ("verify facts against the CRM Project record").
+  /// Optional — a draft can exist without one (e.g. a generic FAQ post).
+  project      Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId    String?
+  platform     PostingPlatform
+  /// Which lib/posting/templates.ts entry this was rendered from (e.g. "before_after").
+  templateKey  String
+  /// The rendered copy. May still contain literal `[PLACEHOLDER]` tokens the generator could not
+  /// fill — approval is refused while any remain (lib/posting/status.ts).
+  body         String          @db.Text
+  status       PostingStatus   @default(draft)
+  scheduledFor DateTime?
+  approvedAt   DateTime?
+  approvedBy   TeamMember?     @relation("PostingDraftApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedById String?
+  /// Stamped only by a later wired publish step — never by this pipeline.
+  postedAt     DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([status])
   @@index([projectId])
 }

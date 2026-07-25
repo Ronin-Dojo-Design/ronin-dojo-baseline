@@ -10,6 +10,7 @@ import { CommunityPostActions } from "~/components/web/community/community-post-
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
 import { ListingCard } from "~/components/web/listing/listing-card"
 import { Author } from "~/components/web/ui/author"
+import { UPGRADE_HREF } from "~/lib/entitlements/routes"
 import { toVideoThumbnailUrl } from "~/lib/video-embed"
 import type { CommunityPostView } from "~/server/web/community/post-gate"
 
@@ -28,9 +29,6 @@ type CommunityPostCardProps = {
   /** Server-batched saved-state (D6). `undefined` → the Save button self-checks on mount. */
   initialSaved?: boolean
 }
-
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
 
 export const CommunityPostCard = ({
   view,
