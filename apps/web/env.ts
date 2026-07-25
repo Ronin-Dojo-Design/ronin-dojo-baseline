@@ -54,6 +54,11 @@ export const env = createEnv({
     // unset in PROD = the route rejects deliveries (fail closed — see the route).
     RESEND_WEBHOOK_SECRET: z.string().optional(),
     EMAIL_LIFECYCLE_DRYRUN: z.enum(["0", "1", "false", "true"]).default("1"),
+    // Non-prod send gate (SESSION_0692): with a live RESEND key in the env, dev servers,
+    // e2e runs, and the dev-login magic-link trigger otherwise fire REAL sends (the
+    // "login link on every push" inbox noise). Default "1" = dry-run outside production;
+    // set "0" to deliberately exercise live sends locally.
+    EMAIL_DEV_DRYRUN: z.enum(["0", "1", "false", "true"]).default("1"),
     S3_ENDPOINT: z.string().optional(),
     S3_REGION: z.string().optional(),
     S3_BUCKET: z.string().optional(),
