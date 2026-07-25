@@ -3,9 +3,9 @@ import { assertConsentToSend, ConsentGuardError } from "./consent";
 
 describe("assertConsentToSend (the consent/TCPA guard)", () => {
   test("blocks SMS without prior express written consent on file", () => {
-    expect(() =>
-      assertConsentToSend({ channel: "sms", smsConsent: false, optOut: false }),
-    ).toThrow(ConsentGuardError);
+    expect(() => assertConsentToSend({ channel: "sms", smsConsent: false, optOut: false })).toThrow(
+      ConsentGuardError,
+    );
   });
 
   test("allows SMS when consent is present and no opt-out is recorded", () => {
@@ -30,8 +30,8 @@ describe("assertConsentToSend (the consent/TCPA guard)", () => {
   });
 
   test("opt-out is checked before the consent check (fails on the opt-out message)", () => {
-    expect(() =>
-      assertConsentToSend({ channel: "sms", smsConsent: false, optOut: true }),
-    ).toThrow(/opted out/);
+    expect(() => assertConsentToSend({ channel: "sms", smsConsent: false, optOut: true })).toThrow(
+      /opted out/,
+    );
   });
 });

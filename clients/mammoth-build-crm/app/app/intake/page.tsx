@@ -152,7 +152,9 @@ function CommitPanel({
             disabled={commit.phase === "committing"}
             className={primaryButtonClass}
           >
-            {commit.phase === "committing" ? "Committing…" : `Confirm — write ${commitName} to the CRM`}
+            {commit.phase === "committing"
+              ? "Committing…"
+              : `Confirm — write ${commitName} to the CRM`}
           </button>
         ) : (
           <button

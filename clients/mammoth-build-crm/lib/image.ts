@@ -5,11 +5,7 @@
  * localStorage quota for the MVP. Full-resolution originals belong in object
  * storage (S3) once the backend exists — see the architecture sketch.
  */
-export function fileToThumbnail(
-  file: File,
-  maxDim = 900,
-  quality = 0.72,
-): Promise<string> {
+export function fileToThumbnail(file: File, maxDim = 900, quality = 0.72): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(new Error("Could not read file"));

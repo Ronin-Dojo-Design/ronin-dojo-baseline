@@ -21,13 +21,13 @@ npm run typecheck
 
 ## What's in the MVP
 
-| Route | What it is |
-|---|---|
-| `/` | Landing / marketing page — recreated + polished (mirror hero, micro-animations, save-interest, inquiry draft). Per Desi's design spec. |
-| `/app` | **Pipeline board** — projects moving Lead → Order, with confirmed-order and at-risk counts. |
-| `/app/sales` | **Sales cockpit tracer** — due queue → roster → contact workspace → manual Contact Attempt → exactly one owned Next Action. |
-| `/app/new` | **Job order form** — start of job; creates a project. |
-| `/app/project/[id]` | **Project detail** + **build documentation** (before / during / after photos), stage gates, and the next-step "can't-drop" guardrail. |
+| Route               | What it is                                                                                                                             |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                 | Landing / marketing page — recreated + polished (mirror hero, micro-animations, save-interest, inquiry draft). Per Desi's design spec. |
+| `/app`              | **Pipeline board** — projects moving Lead → Order, with confirmed-order and at-risk counts.                                            |
+| `/app/sales`        | **Sales cockpit tracer** — due queue → roster → contact workspace → manual Contact Attempt → exactly one owned Next Action.            |
+| `/app/new`          | **Job order form** — start of job; creates a project.                                                                                  |
+| `/app/project/[id]` | **Project detail** + **build documentation** (before / during / after photos), stage gates, and the next-step "can't-drop" guardrail.  |
 
 ## Design decisions
 

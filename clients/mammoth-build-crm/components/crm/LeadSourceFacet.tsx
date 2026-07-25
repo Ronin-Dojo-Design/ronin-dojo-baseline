@@ -23,7 +23,12 @@ export function LeadSourceFacet({
 }) {
   return (
     <div role="group" aria-label="Filter by Lead Source" className="flex flex-wrap gap-2">
-      <FacetChip label="All" count={total} active={selected === null} onClick={() => onSelect(null)} />
+      <FacetChip
+        label="All"
+        count={total}
+        active={selected === null}
+        onClick={() => onSelect(null)}
+      />
       {LEAD_SOURCES.map((value) => (
         <FacetChip
           key={value}

@@ -334,7 +334,11 @@ function classifyRow(row: LeadSheetRow, index: DedupeIndex): DedupedLeadRow {
 
   const priorRowNumber = findPriorSheetRow(index, byEmail, byPhone);
   if (priorRowNumber !== undefined) {
-    return { ...row, match: { kind: "sheet", rowNumber: priorRowNumber }, status: "duplicate_in_sheet" };
+    return {
+      ...row,
+      match: { kind: "sheet", rowNumber: priorRowNumber },
+      status: "duplicate_in_sheet",
+    };
   }
 
   if (byEmail) index.sheetByKey.set(`e:${byEmail}`, row.rowNumber);

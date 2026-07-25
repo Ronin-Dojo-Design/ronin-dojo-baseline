@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { countLeadSources, LEAD_SOURCES, leadSourceLabel, normalizeLeadSource } from "./lead-source";
+import {
+  countLeadSources,
+  LEAD_SOURCES,
+  leadSourceLabel,
+  normalizeLeadSource,
+} from "./lead-source";
 
 describe("countLeadSources", () => {
   test("tallies canonical values by bucket", () => {

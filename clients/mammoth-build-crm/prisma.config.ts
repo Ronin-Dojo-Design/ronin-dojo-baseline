@@ -1,6 +1,6 @@
-import "dotenv/config"
-import path from "node:path"
-import { defineConfig, env } from "prisma/config"
+import "dotenv/config";
+import path from "node:path";
+import { defineConfig, env } from "prisma/config";
 
 // Mammoth Build CRM — Prisma config (ADR 0038: one database per product).
 //
@@ -12,25 +12,25 @@ import { defineConfig, env } from "prisma/config"
 // prefer DIRECT_URL, strip Neon's "-pooler" host suffix + the pgbouncer flag.
 // The RUNTIME client (lib/db.ts) still uses the pooled DATABASE_URL.
 const isVercelDeploy =
-  process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "production"
+  process.env.VERCEL_ENV === "preview" || process.env.VERCEL_ENV === "production";
 
 const toNeonDirectUrl = (connectionString: string | undefined) => {
   if (!connectionString) {
-    return undefined
+    return undefined;
   }
   try {
-    const url = new URL(connectionString)
-    url.hostname = url.hostname.replace("-pooler", "")
-    url.searchParams.delete("pgbouncer")
-    return url.toString()
+    const url = new URL(connectionString);
+    url.hostname = url.hostname.replace("-pooler", "");
+    url.searchParams.delete("pgbouncer");
+    return url.toString();
   } catch {
-    return connectionString.replace("-pooler", "")
+    return connectionString.replace("-pooler", "");
   }
-}
+};
 
 const prismaCliDatabaseUrl = isVercelDeploy
   ? (toNeonDirectUrl(process.env.DIRECT_URL) ?? toNeonDirectUrl(process.env.DATABASE_URL))
-  : (process.env.DIRECT_URL ?? env("DATABASE_URL"))
+  : (process.env.DIRECT_URL ?? env("DATABASE_URL"));
 
 export default defineConfig({
   schema: path.join("prisma", "schema.prisma"),
@@ -48,4 +48,4 @@ export default defineConfig({
       shadowDatabaseUrl: env("SHADOW_DATABASE_URL"),
     }),
   },
-})
+});

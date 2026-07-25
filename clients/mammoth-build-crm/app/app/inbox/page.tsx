@@ -19,8 +19,8 @@ export default function InboxPage() {
       </p>
       <h1 className="font-display text-2xl font-bold">Inbox</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Inbound email to your Mammoth addresses will land here automatically — read/unread
-        triage, searchable, owned in the CRM instead of lost in a personal inbox.
+        Inbound email to your Mammoth addresses will land here automatically — read/unread triage,
+        searchable, owned in the CRM instead of lost in a personal inbox.
       </p>
 
       {/* Setup-gate banner — prominent, non-blocking */}
@@ -46,8 +46,8 @@ export default function InboxPage() {
       <div className="mt-6 rounded-lg border border-dashed border-border bg-surface px-5 py-10 text-center">
         <p className="font-display text-base font-semibold text-ink">No messages yet</p>
         <p className="mx-auto mt-1 max-w-md text-sm text-muted">
-          Connect Resend to start receiving. Delivered messages will show sender, subject,
-          received time, and a read/unread triage state.
+          Connect Resend to start receiving. Delivered messages will show sender, subject, received
+          time, and a read/unread triage state.
         </p>
       </div>
     </div>

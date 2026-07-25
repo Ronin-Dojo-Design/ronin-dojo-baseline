@@ -122,18 +122,19 @@ export default function SalesCockpitPage() {
   if (loading && !model) return <LoadingState />;
 
   if (loadError && !model) {
-    return (
-      <ErrorState message={loadError} onRetry={() => void load()} />
-    );
+    return <ErrorState message={loadError} onRetry={() => void load()} />;
   }
 
   if (!model || model.roster.length === 0) {
     return (
       <section className="rounded-lg border border-border bg-surface p-8 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Sales cockpit</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          Sales cockpit
+        </p>
         <h1 className="mt-2 font-display text-2xl font-bold">No active Opportunities</h1>
         <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
-          Add a sanitized lead or job order first. The queue will appear after its first owned Next Action is set.
+          Add a sanitized lead or job order first. The queue will appear after its first owned Next
+          Action is set.
         </p>
         <a
           href="/app/new"
@@ -149,7 +150,9 @@ export default function SalesCockpitPage() {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Manual tracer</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            Manual tracer
+          </p>
           <h1 className="font-display text-2xl font-bold">Sales cockpit</h1>
           <p className="mt-1 text-sm text-muted">
             Today queue → lead roster → contact workspace → Contact Attempt → Next Action.
@@ -166,7 +169,10 @@ export default function SalesCockpitPage() {
       </div>
 
       {loadError ? (
-        <div role="alert" className="mt-4 rounded-md border border-primary/60 bg-surface p-3 text-sm">
+        <div
+          role="alert"
+          className="mt-4 rounded-md border border-primary/60 bg-surface p-3 text-sm"
+        >
           Refresh failed: {loadError} The last successful view remains visible.
         </div>
       ) : null}
@@ -359,11 +365,15 @@ function ContactWorkspace(props: WorkspaceProps) {
             Channel
             <select
               value={props.channel}
-              onChange={(event) => props.onChannelChange(event.target.value as ContactAttemptChannel)}
+              onChange={(event) =>
+                props.onChannelChange(event.target.value as ContactAttemptChannel)
+              }
               className={`mt-1 ${fieldClass}`}
             >
               {CONTACT_ATTEMPT_CHANNELS.map((value) => (
-                <option key={value} value={value}>{CONTACT_ATTEMPT_CHANNEL_LABELS[value]}</option>
+                <option key={value} value={value}>
+                  {CONTACT_ATTEMPT_CHANNEL_LABELS[value]}
+                </option>
               ))}
             </select>
           </label>
@@ -371,11 +381,15 @@ function ContactWorkspace(props: WorkspaceProps) {
             Provisional outcome
             <select
               value={props.outcome}
-              onChange={(event) => props.onOutcomeChange(event.target.value as ContactAttemptOutcome)}
+              onChange={(event) =>
+                props.onOutcomeChange(event.target.value as ContactAttemptOutcome)
+              }
               className={`mt-1 ${fieldClass}`}
             >
               {CONTACT_ATTEMPT_OUTCOMES.map((value) => (
-                <option key={value} value={value}>{CONTACT_ATTEMPT_OUTCOME_LABELS[value]}</option>
+                <option key={value} value={value}>
+                  {CONTACT_ATTEMPT_OUTCOME_LABELS[value]}
+                </option>
               ))}
             </select>
           </label>
@@ -410,8 +424,16 @@ function ContactWorkspace(props: WorkspaceProps) {
               className={`mt-1 ${fieldClass}`}
             />
           </label>
-          {props.saveError ? <p role="alert" className="text-sm text-primary-hover">{props.saveError}</p> : null}
-          {props.confirmation ? <p aria-live="polite" className="text-sm text-ink">{props.confirmation}</p> : null}
+          {props.saveError ? (
+            <p role="alert" className="text-sm text-primary-hover">
+              {props.saveError}
+            </p>
+          ) : null}
+          {props.confirmation ? (
+            <p aria-live="polite" className="text-sm text-ink">
+              {props.confirmation}
+            </p>
+          ) : null}
           <button
             type="submit"
             className="w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
@@ -482,7 +504,9 @@ function LoadingState() {
     <div role="status" aria-label="Loading sales cockpit" className="animate-pulse space-y-4">
       <div className="h-8 w-56 rounded bg-elevated" />
       <div className="grid gap-6 md:grid-cols-3">
-        {[0, 1, 2].map((value) => <div key={value} className="h-72 rounded-lg bg-surface" />)}
+        {[0, 1, 2].map((value) => (
+          <div key={value} className="h-72 rounded-lg bg-surface" />
+        ))}
       </div>
       <span className="sr-only">Loading sales cockpit…</span>
     </div>

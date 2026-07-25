@@ -31,7 +31,12 @@ function BeforeAfterSlider() {
   return (
     <div className="relative mx-auto mt-4 max-w-xl select-none overflow-hidden rounded-xl border border-border">
       {/* BEFORE: empty lot */}
-      <svg viewBox="0 0 640 360" className="block w-full" role="img" aria-label="Empty site, day zero">
+      <svg
+        viewBox="0 0 640 360"
+        className="block w-full"
+        role="img"
+        aria-label="Empty site, day zero"
+      >
         <rect width="640" height="360" fill="#1a1d21" />
         <rect y="250" width="640" height="110" fill="#23272d" />
         <rect y="250" width="640" height="4" fill="#2a2e33" />
@@ -53,7 +58,15 @@ function BeforeAfterSlider() {
           <rect y="250" width="640" height="110" fill="#23272d" />
           <polygon points="120,150 320,70 520,150 520,170 320,92 120,170" fill="var(--primary)" />
           <rect x="120" y="166" width="400" height="92" fill="#2b3036" />
-          <rect x="300" y="200" width="60" height="58" fill="#15171a" stroke="var(--primary)" strokeWidth="2" />
+          <rect
+            x="300"
+            y="200"
+            width="60"
+            height="58"
+            fill="#15171a"
+            stroke="var(--primary)"
+            strokeWidth="2"
+          />
           <text x="24" y="300" fontFamily="sans-serif" fontSize="13" fill="#f4f5f6">
             Finished build · delivered
           </text>
@@ -122,8 +135,8 @@ export function CrmPreview() {
       </h3>
       <BeforeAfterSlider />
       <p className="mt-3 inline-block rounded-md border border-dashed border-border px-2.5 py-1 text-xs text-muted">
-        Demo proof slider — in the live CRM these are the crew&apos;s real before/during/after photos on
-        the project record.
+        Demo proof slider — in the live CRM these are the crew&apos;s real before/during/after
+        photos on the project record.
       </p>
     </div>
   );

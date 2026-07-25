@@ -24,7 +24,9 @@ export function SiteHeader() {
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-colors duration-200 ${
-        scrolled ? "border-b border-border bg-surface/95 backdrop-blur" : "border-b border-transparent"
+        scrolled
+          ? "border-b border-border bg-surface/95 backdrop-blur"
+          : "border-b border-transparent"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">

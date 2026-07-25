@@ -8,9 +8,7 @@ export function BuildingTypesGrid() {
   const [interests, setInterests] = useLocalStorage<string[]>("mammoth:interests", []);
 
   const toggle = (id: string) => {
-    setInterests((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setInterests((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
   return (

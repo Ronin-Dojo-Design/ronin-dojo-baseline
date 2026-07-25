@@ -148,7 +148,8 @@ export const POSTING_TEMPLATES: readonly PostingTemplateDefinition[] = [
   {
     key: "faq_answer",
     title: "FAQ / educational answer",
-    usageNote: "Answer one real buyer question with canon-approved language and one clear next action.",
+    usageNote:
+      "Answer one real buyer question with canon-approved language and one clear next action.",
     asset: "[FAQ_GRAPHIC_OR_RELEVANT_PROJECT_PHOTO]",
     copy: {
       facebook:

@@ -20,10 +20,7 @@ import {
   type LeadDedupeReport,
   type LeadSheetParseResult,
 } from "@/lib/lead-ingest";
-import {
-  SANITIZED_LEAD_SHEET_CSV,
-  SANITIZED_LEAD_SHEET_JSON,
-} from "@/lib/lead-ingest.fixtures";
+import { SANITIZED_LEAD_SHEET_CSV, SANITIZED_LEAD_SHEET_JSON } from "@/lib/lead-ingest.fixtures";
 import { leadSourceLabel } from "@/lib/lead-source";
 
 const fieldClass =
@@ -71,9 +68,7 @@ export default function LeadIntakePage() {
       .catch((error: unknown) => {
         if (!cancelled) {
           setIndexError(
-            error instanceof Error
-              ? error.message
-              : "The CRM contact index could not be loaded.",
+            error instanceof Error ? error.message : "The CRM contact index could not be loaded.",
           );
         }
       });
@@ -84,7 +79,8 @@ export default function LeadIntakePage() {
 
   const contactIndexNote = useMemo(() => {
     if (existing) return `Deduping against ${existing.length} CRM contacts.`;
-    if (indexError) return `CRM contact index unavailable — deduping within the sheet only. (${indexError})`;
+    if (indexError)
+      return `CRM contact index unavailable — deduping within the sheet only. (${indexError})`;
     return "Loading the CRM contact index…";
   }, [existing, indexError]);
 
@@ -146,8 +142,8 @@ export default function LeadIntakePage() {
       <h1 className="font-display text-2xl font-bold">Lead intake — preview, dedupe, import</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
         Paste or upload a CSV/JSON lead sheet to preview how it would land: column mapping, Lead
-        Source, and duplicates (within the sheet and against the CRM). Nothing is written until
-        you explicitly confirm the import below the preview.
+        Source, and duplicates (within the sheet and against the CRM). Nothing is written until you
+        explicitly confirm the import below the preview.
       </p>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -235,7 +231,10 @@ function PreviewReport({
   return (
     <div className="mt-3 space-y-4">
       {parse.errors.length > 0 ? (
-        <ul role="alert" className="space-y-1 rounded-md border border-primary/60 bg-surface p-3 text-sm">
+        <ul
+          role="alert"
+          className="space-y-1 rounded-md border border-primary/60 bg-surface p-3 text-sm"
+        >
           {parse.errors.map((error) => (
             <li key={error}>{error}</li>
           ))}
@@ -254,14 +253,30 @@ function PreviewReport({
             <table className="w-full min-w-[52rem] text-left text-sm">
               <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
                 <tr>
-                  <th scope="col" className="px-3 py-2">#</th>
-                  <th scope="col" className="px-3 py-2">Name</th>
-                  <th scope="col" className="px-3 py-2">Email</th>
-                  <th scope="col" className="px-3 py-2">Phone</th>
-                  <th scope="col" className="px-3 py-2">Company</th>
-                  <th scope="col" className="px-3 py-2">Lead Source</th>
-                  <th scope="col" className="px-3 py-2">Status</th>
-                  <th scope="col" className="px-3 py-2">Issues</th>
+                  <th scope="col" className="px-3 py-2">
+                    #
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Name
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Email
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Phone
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Company
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Lead Source
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Status
+                  </th>
+                  <th scope="col" className="px-3 py-2">
+                    Issues
+                  </th>
                 </tr>
               </thead>
               <tbody>
