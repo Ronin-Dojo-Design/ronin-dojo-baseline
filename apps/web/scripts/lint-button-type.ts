@@ -17,7 +17,7 @@
  * every PR. Regression test: `scripts/lint-button-type.test.ts`.
  */
 
-import { readdirSync, readFileSync, statSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { join, relative } from "node:path"
 import ts from "typescript"
 
@@ -37,13 +37,13 @@ export type Violation = {
 }
 
 const collectTsxFiles = (dir: string, out: string[] = []): string[] => {
-  for (const entry of readdirSync(dir)) {
-    if (SKIP_DIRS.has(entry)) continue
-    const full = join(dir, entry)
-    const stat = statSync(full)
-    if (stat.isDirectory()) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (SKIP_DIRS.has(entry.name)) continue
+    if (entry.isSymbolicLink()) continue
+    const full = join(dir, entry.name)
+    if (entry.isDirectory()) {
       collectTsxFiles(full, out)
-    } else if (entry.endsWith(".tsx")) {
+    } else if (entry.isFile() && entry.name.endsWith(".tsx")) {
       out.push(full)
     }
   }
