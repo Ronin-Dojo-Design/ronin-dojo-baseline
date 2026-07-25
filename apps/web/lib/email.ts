@@ -136,9 +136,22 @@ export const sendEmail = async (email: EmailParams): Promise<CreateEmailResponse
     return undefined
   }
 
+  // Non-prod dry-run gate, default ON (SESSION_0692). Test env is exempt — its guard
+  // above has its own semantics (mocked sends must still reach the mock). Opt back into
+  // real local sends deliberately with EMAIL_DEV_DRYRUN=0.
+  if (
+    !isProd &&
+    env.NODE_ENV !== "test" &&
+    env.EMAIL_DEV_DRYRUN !== "0" &&
+    env.EMAIL_DEV_DRYRUN !== "false"
+  ) {
+    console.log("[email:dev:dry-run]", email.to, email.subject)
+    return undefined
+  }
+
   const payload = await prepareEmail(email)
 
-  // Log payload in dev for debugging, but still send
+  // Dev with EMAIL_DEV_DRYRUN=0: log the payload for debugging, then really send.
   if (!isProd) {
     console.log("📧 Sending email:", payload.to, payload.subject)
   }
