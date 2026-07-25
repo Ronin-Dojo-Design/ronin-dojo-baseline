@@ -17,7 +17,12 @@ import { cleanupTestUser, createAuthenticatedUser } from "../helpers/auth"
 
 let testUserId: string
 
+// Serialized (WL-P3-35): all 3 tests mutate the singleton `BrandSettings` row, so under
+// `fullyParallel: true` (`workers: undefined` off-CI) a worker's `/` read can race another
+// worker's just-written theme. Not a WL-P2-36 regression — latent flake surfaced when that
+// diff's e2e was first run in parallel (SESSION_0512).
 test.describe("Admin brand-settings E2E", () => {
+  test.describe.configure({ mode: "serial" })
   test.setTimeout(120_000)
 
   test.afterAll(async () => {
