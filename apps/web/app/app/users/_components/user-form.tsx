@@ -61,9 +61,7 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
       router.refresh()
     } catch (error) {
       // Surface the real oRPC message (FORBIDDEN carries the self-role-change copy).
-      toast.error(
-        error instanceof Error && error.message ? error.message : "Failed to update user",
-      )
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to update user")
     }
   })
 

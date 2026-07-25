@@ -178,96 +178,101 @@ const remove = usersProcedure.input(idsSchema).handler(async ({ input, context }
  * @added SESSION_0358 — Passport-centric consolidation (TASK_01). See passport-and-shells.md +
  *   ADR 0016. Migrated to oRPC at SESSION_0697 (WL-P2-43).
  */
-const createPerson = usersProcedure.input(createPersonSchema).handler(async ({ input, context }) => {
-  const {
-    name,
-    displayName,
-    rankId,
-    organizationId,
-    schoolName,
-    affiliationRole,
-    treeId,
-    parentMemberId,
-  } = input
+const createPerson = usersProcedure
+  .input(createPersonSchema)
+  .handler(async ({ input, context }) => {
+    const {
+      name,
+      displayName,
+      rankId,
+      organizationId,
+      schoolName,
+      affiliationRole,
+      treeId,
+      parentMemberId,
+    } = input
 
-  const trimmedSchool = schoolName?.trim()
+    const trimmedSchool = schoolName?.trim()
 
-  const created = await db.$transaction(async tx => {
-    // Phase 3c (SOT-ADR D1): a placeholder person is an ACCOUNTLESS Passport (no synthetic User /
-    // @placeholder.invalid email). It is claimable precisely because it has no attached account.
-    const passport = await createPassport({ displayName: displayName?.trim() || name }, tx as AppDb)
+    const created = await db.$transaction(async tx => {
+      // Phase 3c (SOT-ADR D1): a placeholder person is an ACCOUNTLESS Passport (no synthetic User /
+      // @placeholder.invalid email). It is claimable precisely because it has no attached account.
+      const passport = await createPassport(
+        { displayName: displayName?.trim() || name },
+        tx as AppDb,
+      )
 
-    const award = await tx.rankAward.create({
-      data: {
-        passportId: passport.id,
-        rankId,
-        source: RankAwardSource.STATED,
-        verificationStatus: RankAwardVerificationStatus.UNVERIFIED,
-        ...(organizationId ? { organizationId } : {}),
-      },
-      select: { id: true },
-    })
-    await syncRankEntryFromAward(tx, award.id)
-
-    if (organizationId || trimmedSchool) {
-      await tx.affiliation.create({
+      const award = await tx.rankAward.create({
         data: {
           passportId: passport.id,
-          role: affiliationRole,
-          isCurrent: true,
+          rankId,
+          source: RankAwardSource.STATED,
+          verificationStatus: RankAwardVerificationStatus.UNVERIFIED,
           ...(organizationId ? { organizationId } : {}),
-          ...(trimmedSchool ? { schoolName: trimmedSchool } : {}),
+        },
+        select: { id: true },
+      })
+      await syncRankEntryFromAward(tx, award.id)
+
+      if (organizationId || trimmedSchool) {
+        await tx.affiliation.create({
+          data: {
+            passportId: passport.id,
+            role: affiliationRole,
+            isCurrent: true,
+            ...(organizationId ? { organizationId } : {}),
+            ...(trimmedSchool ? { schoolName: trimmedSchool } : {}),
+          },
+        })
+      }
+
+      // Optional lineage placement — the visibility hook. Runs in the SAME transaction so
+      // add-person stays one action. createLineageMember is the first runtime member-create.
+      const placement = treeId
+        ? await createLineageMember({
+            db: tx as AppDb,
+            brand: context.brand,
+            actorUserId: context.user.id,
+            memberPassportId: passport.id,
+            treeId,
+            parentMemberId: parentMemberId || null,
+            rankAwardId: award.id,
+          })
+        : null
+
+      await tx.auditLog.create({
+        data: {
+          brand: context.brand,
+          action: "user.person.created",
+          entityType: "Passport",
+          entityId: passport.id,
+          userId: context.user.id,
+          after: {
+            name,
+            rankId,
+            rankAwardId: award.id,
+            isPlaceholder: true,
+            organizationId: organizationId || null,
+            schoolName: trimmedSchool || null,
+            treeId: treeId || null,
+            lineageMemberId: placement?.memberId ?? null,
+          },
         },
       })
-    }
 
-    // Optional lineage placement — the visibility hook. Runs in the SAME transaction so
-    // add-person stays one action. createLineageMember is the first runtime member-create.
-    const placement = treeId
-      ? await createLineageMember({
-          db: tx as AppDb,
-          brand: context.brand,
-          actorUserId: context.user.id,
-          memberPassportId: passport.id,
-          treeId,
-          parentMemberId: parentMemberId || null,
-          rankAwardId: award.id,
-        })
-      : null
-
-    await tx.auditLog.create({
-      data: {
-        brand: context.brand,
-        action: "user.person.created",
-        entityType: "Passport",
-        entityId: passport.id,
-        userId: context.user.id,
-        after: {
-          name,
-          rankId,
-          rankAwardId: award.id,
-          isPlaceholder: true,
-          organizationId: organizationId || null,
-          schoolName: trimmedSchool || null,
-          treeId: treeId || null,
-          lineageMemberId: placement?.memberId ?? null,
-        },
-      },
+      return {
+        id: passport.id,
+        rankAwardId: award.id,
+        lineageMemberId: placement?.memberId ?? null,
+      }
     })
 
-    return {
-      id: passport.id,
-      rankAwardId: award.id,
-      lineageMemberId: placement?.memberId ?? null,
-    }
+    // Layout-typed for consistency with update/updateRole: create redirects into the
+    // dynamic /app/users/[id] subtree, which plain path revalidation doesn't bust.
+    revalidateUsersSubtree()
+
+    return created
   })
-
-  // Layout-typed for consistency with update/updateRole: create redirects into the
-  // dynamic /app/users/[id] subtree, which plain path revalidation doesn't bust.
-  revalidateUsersSubtree()
-
-  return created
-})
 
 const updateRole = usersProcedure
   .input(userSchema.pick({ id: true, role: true }))
