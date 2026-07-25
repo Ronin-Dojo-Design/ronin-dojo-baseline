@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research-Review — Security-Header &amp; CSP posture across RDD apps</title>
+<style>
+:root{--mk-accent:#3B82F6;--mk-accent-strong:#2563EB;--mk-on-accent:#0D0F12;--mk-bg:#15181D;--mk-page:#0D0F12;--mk-surface:#15181D;--mk-elevated:#1D2127;--mk-fg:#F3F5F7;--mk-muted:#9AA3AD;--mk-line:#2A2F37;--mk-font-head:"Saira","Bahnschrift","Arial Narrow",system-ui,sans-serif;--mk-font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mk-font-mono:ui-monospace,SFMono-Regular,Menlo,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--mk-page);color:var(--mk-fg);font-family:var(--mk-font-body);line-height:1.6}
+.wrap{max-width:840px;margin:0 auto;padding:48px 24px 96px}
+.genre-badge{display:inline-block;font-family:var(--mk-font-head);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mk-on-accent);background:var(--mk-accent);border-radius:var(--mk-r-pill);padding:4px 12px;margin-bottom:16px}
+h1{font-family:var(--mk-font-head);font-size:32px;line-height:1.2;margin:0 0 16px;color:var(--mk-fg)}
+h2{font-family:var(--mk-font-head);font-size:22px;margin:40px 0 12px;border-bottom:1px solid var(--mk-line);padding-bottom:8px}
+h3{font-size:18px;margin:28px 0 8px}
+h4,h5,h6{font-size:15px;margin:20px 0 6px}
+p{margin:0 0 14px}
+a{color:var(--mk-accent)}
+code{font-family:var(--mk-font-mono);background:var(--mk-surface);border-radius:4px;padding:2px 5px;font-size:.9em}
+pre{background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:var(--mk-r-card);padding:16px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{margin:0 0 16px;padding:4px 16px;border-left:3px solid var(--mk-accent);background:var(--mk-surface);border-radius:0 var(--mk-r-inner) var(--mk-r-inner) 0;color:var(--mk-muted)}
+table{width:100%;border-collapse:collapse;margin:0 0 20px;font-size:14px}
+th,td{border:1px solid var(--mk-line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--mk-surface);font-family:var(--mk-font-head);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+ul,ol{margin:0 0 14px;padding-left:24px}
+li{margin:4px 0}
+hr{border:none;border-top:1px solid var(--mk-line);margin:32px 0}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px 24px;margin:0 0 12px;padding:16px;background:var(--mk-surface);border:1px solid var(--mk-line);border-radius:var(--mk-r-card)}
+.meta-row{display:flex;flex-direction:column}
+.meta-row dt{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mk-muted);margin:0}
+.meta-row dd{margin:2px 0 0;font-size:14px}
+.meta-decision{margin:0 0 32px;padding:12px 16px;border:1px solid var(--mk-accent);border-radius:var(--mk-r-card);background:var(--mk-accent-tint,transparent);font-size:14px}
+.source-path{font-size:12px;color:var(--mk-muted);margin:0 0 32px;font-family:var(--mk-font-mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<span class="genre-badge">Research Review</span>
+<h1>Research-Review — Security-Header &amp; CSP posture across RDD apps</h1>
+<dl class="meta"><div class="meta-row"><dt>Status</dt><dd>active</dd></div><div class="meta-row"><dt>Created</dt><dd>2026-07-22</dd></div><div class="meta-row"><dt>Updated</dt><dd>2026-07-22</dd></div><div class="meta-row"><dt>Author</dt><dd>Claude (Opus 4.8) — Petey lane</dd></div><div class="meta-row"><dt>Session</dt><dd>SESSION_0617</dd></div></dl><div class="meta-decision"><strong>Decision:</strong> operator-accepted 2026-07-22 — 1B (durable sink first) · store CSP warnings · 2B (lift baseline into kernel) · keep as research-review (not wayfinder)</div>
+<p class="source-path">Source: docs/architecture/research/research-review-security-headers-posture.md</p>
+<hr>
+<h1>Research-Review — Security-Header &amp; CSP posture across the RDD apps</h1>
+<blockquote>
+<p><strong>What this document is.</strong> A read-only assessment (no code was changed) that grounds one
+architectural question in the <em>actual</em> state of the repo, prices the options, and lands a
+recommendation for the operator to accept or reject. It is a decision brief, not a build.
+It was written because RISK #2 (the &quot;flip CSP to enforcing&quot; task) turned out to sit on top of
+a bigger, unasked question: <strong>what is our security posture across <em>all</em> the RDD apps, not just BBL?</strong></p>
+</blockquote>
+<hr>
+<h2>TL;DR (read this first)</h2>
+<ol>
+<li><p><strong>Only one app has any security headers at all.</strong> <code>apps/web</code> (which serves Black Belt Legacy)
+ships a full set of protective HTTP headers plus a &quot;watch-but-don&#39;t-block&quot; Content-Security-Policy.
+The other three apps in the repo — <code>apps/baseline</code>, <code>apps/rdd</code>, <code>clients/mammoth-build-crm</code> —
+ship <strong>nothing</strong>: no CSP, no clickjacking protection, no HTTPS-pinning header. They aren&#39;t live
+yet, so this is a <strong>launch-gate</strong>, not a live hole — but every one of them will go live naked
+unless we fix the pattern.</p>
+</li>
+<li><p><strong>The immediate &quot;flip&quot; (RISK #2) is low-risk and only touches BBL.</strong> Turning the CSP from
+&quot;watch&quot; to &quot;block&quot; is a single environment-variable change. Because the other apps aren&#39;t
+deployed and the Baseline domain just redirects to BBL, the blast radius is <strong>one live site</strong>,
+not two. It was already tested clean in July.</p>
+</li>
+<li><p><strong>There is one real snag before we flip anything: we can&#39;t <em>prove</em> it&#39;s safe.</strong> The system that
+records CSP warnings from real users only writes them to disposable server logs — nothing is
+stored. So we can watch for problems live, but we can&#39;t look back and say &quot;zero issues for a
+week.&quot; That gap applies to every app, not just this flip.</p>
+</li>
+<li><p><strong>The strategic fork is &quot;copy vs. kernel.&quot;</strong> As Baseline, RDD, and Mammoth become their own
+live sites, do we <strong>copy</strong> the security setup into each one (today&#39;s model), or <strong>lift it into
+the shared kernel</strong> (<code>packages/ui-kit</code>) so every app inherits it automatically and correctly?</p>
+</li>
+</ol>
+<p><strong>Recommendation in one line:</strong> don&#39;t flip blind and don&#39;t copy-paste four times — <strong>make the CSP
+report sink durable, flip BBL behind that evidence, and lift the header baseline into the kernel so
+new brands inherit it.</strong> Details and the exact decisions you need to make are at the bottom.</p>
+<hr>
+<h2>Decisions — operator-accepted (Brian, 2026-07-22, SESSION_0617)</h2>
+<p>All four open questions were resolved by the operator; this section is the record (the recommendations
+below became decisions):</p>
+<ol>
+<li><strong>Observability first (Fork 1 → 1B).</strong> Make the CSP report sink <strong>durable</strong> (store the violations)
+before flipping BBL. Accepted: <em>&quot;yes store CSP warning.&quot;</em></li>
+<li><strong>Copy vs. kernel (Fork 2 → 2B).</strong> <strong>Lift the security-header baseline into the shared kernel</strong>
+(<code>packages/ui-kit</code>) so Baseline / RDD / Mammoth inherit it. Accepted: <em>&quot;lift into kernel for question 2.&quot;</em></li>
+<li><strong>Sequence.</strong> Durable sink → observe → flip BBL&#39;s <code>CSP_ENFORCE</code> behind evidence → kernel-lift as
+launch-prep for the other apps. (Per recommendation.)</li>
+<li><strong>Right-sized tool.</strong> Keep this as a <strong>research-review</strong>, not a <code>/wayfinder</code> epic. (Per recommendation.)</li>
+</ol>
+<p><strong>Also queued (not part of this lane):</strong> a repo-wide <em>branded doc-rendering system</em> — render frontmatter-
+carrying docs (research-reviews, SOPs, rituals, workflows, data-wiring) as consistently branded HTML
+artifacts with a metadata header (created / author / session / status) derived from the YAML. Filed to
+the goals ledger as <strong>G-030</strong>.</p>
+<hr>
+<h2>Plain-English primer (skip if this is old hat)</h2>
+<ul>
+<li><strong>HTTP headers</strong> are little instructions a website sends the browser alongside every page. Some
+of them are <em>security</em> instructions: &quot;never let another site put me in a frame&quot; (anti-clickjacking),
+&quot;always use HTTPS&quot; (HSTS), &quot;don&#39;t guess file types&quot; (nosniff).</li>
+<li><strong>CSP = Content-Security-Policy.</strong> The strongest of these headers. It&#39;s an allow-list that tells
+the browser <em>exactly</em> which scripts, styles, images, and connections are allowed to run on the
+page. If a hacker injects a <code>&lt;script&gt;</code> from evil.com, a good CSP means the browser refuses to run
+it. It&#39;s the single best defense against a whole class of attacks (cross-site scripting / XSS).</li>
+<li><strong>The catch with CSP:</strong> it&#39;s easy to write one that accidentally blocks something <em>legitimate</em>
+(your own analytics, a YouTube embed, an animation library). If you get it wrong in &quot;block&quot; mode,
+real features silently break for real users. So the standard playbook is <strong>two phases</strong>:<ol>
+<li><strong>Report-Only (&quot;watch&quot;) mode</strong> — the browser <em>reports</em> what the policy <em>would</em> have blocked,
+but blocks nothing. You collect those reports, confirm they&#39;re all noise (not real features),
+and only then…</li>
+<li><strong>Enforcing (&quot;block&quot;) mode</strong> — flip the switch; now the policy actually blocks.</li>
+</ol>
+</li>
+<li><strong>RISK #2 / &quot;the flip&quot;</strong> is exactly step 2 above, for BBL. Everything is already built and running
+in &quot;watch&quot; mode. The only thing left is to decide it&#39;s safe and turn on &quot;block.&quot;</li>
+</ul>
+<hr>
+<h2>The question this resolves</h2>
+<blockquote>
+<p>Before we flip BBL&#39;s CSP to enforcing, and as we prepare Baseline / RDD / Mammoth for launch:
+<strong>what security-header posture do we want across all RDD apps, and how should it be structured so
+it&#39;s applied consistently instead of one-app-at-a-time?</strong></p>
+</blockquote>
+<hr>
+<h2>Grounded current state (what&#39;s actually true in the repo today)</h2>
+<h3>The apps</h3>
+<table>
+<thead>
+<tr>
+<th>App / folder</th>
+<th>What it is</th>
+<th>Live in production?</th>
+<th>Security headers</th>
+<th>CSP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>apps/web</code></strong></td>
+<td>Black Belt Legacy flagship (also answers the Baseline domain)</td>
+<td>✅ <strong>Yes</strong> — <code>blackbeltlegacy.com</code>; <code>baselinemartialarts.com</code> redirects here</td>
+<td>✅ Full set, enforced</td>
+<td>⚠️ <strong>Report-Only (watch)</strong></td>
+</tr>
+<tr>
+<td><strong><code>apps/baseline</code></strong></td>
+<td>The White-Labeled Dojo product</td>
+<td>❌ Not deployed</td>
+<td>❌ None</td>
+<td>❌ None</td>
+</tr>
+<tr>
+<td><strong><code>apps/rdd</code></strong></td>
+<td>RDD umbrella site (<code>ronindojodesign.com</code>, goal G-027)</td>
+<td>❌ Not deployed</td>
+<td>❌ None</td>
+<td>❌ None</td>
+</tr>
+<tr>
+<td><strong><code>clients/mammoth-build-crm</code></strong></td>
+<td>Mammoth CRM (goal G-021)</td>
+<td>❌ Not deployed</td>
+<td>❌ None</td>
+<td>❌ None</td>
+</tr>
+</tbody></table>
+<p><em>Verification:</em> one Vercel project exists (<code>ronin-dojo-baseline</code>); the other three apps aren&#39;t linked
+to any Vercel project. The security-header code (<code>apps/web/config/security-headers.ts</code>) is imported by
+<strong><code>apps/web</code> only</strong> — confirmed by a repo-wide search. The other three apps have no middleware and no
+header configuration of any kind.</p>
+<h3>What BBL actually ships (the good citizen)</h3>
+<ul>
+<li><strong>Enforced hardening headers</strong> (live now, no risk): anti-clickjacking (<code>X-Frame-Options: DENY</code>),
+HTTPS-pinning (<code>HSTS</code>, 2 years), no-MIME-sniff, referrer policy, a locked-down permissions policy,
+and cross-origin isolation.</li>
+<li><strong>A Report-Only (&quot;watch&quot;) CSP</strong> on essentially every page (everything except static files and the
+auth API). Confirmed live: <code>blackbeltlegacy.com</code> returns a <code>content-security-policy-report-only</code>
+header today.</li>
+<li><strong>A per-request nonce system</strong> so inline scripts are individually signed and <code>&#39;unsafe-inline&#39;</code>
+could be dropped from scripts. (Styles deliberately keep <code>&#39;unsafe-inline&#39;</code> — a nonce can&#39;t cover
+the inline <code>style={{…}}</code> attributes used in 46 files + the animation library; blocking those would
+break animations for near-zero security gain.)</li>
+<li><strong>A CSP report sink</strong> at <code>/api/csp-report</code> — the endpoint browsers send violation reports to.</li>
+</ul>
+<h3>The design intent that never happened (the drift)</h3>
+<p>The header code was <strong>deliberately written to be app-agnostic</strong> — the comments and ADR 0034 say each
+new product app is supposed to call the same builder from its own config, so &quot;the posture lives
+per-app.&quot; That&#39;s a reasonable plan. <strong>But it was only ever wired into <code>apps/web</code>.</strong> Nobody replicated
+it into <code>apps/baseline</code>, <code>apps/rdd</code>, or <code>mammoth</code>. This is the classic <em>&quot;built but not pointed-to&quot;</em>
+failure: the capability exists, the instruction to reuse it exists, but the reuse never happened, and
+nothing enforces it. Left alone, each new brand launches with zero security headers.</p>
+<hr>
+<h2>Fork 1 — The immediate decision: flip BBL&#39;s CSP to enforcing (RISK #2)</h2>
+<h3>What &quot;flip&quot; means, concretely</h3>
+<p>Set one environment variable in Vercel — <code>CSP_ENFORCE=1</code> — and redeploy. That single flag promotes
+BBL&#39;s existing, already-live CSP from the <code>-Report-Only</code> header name to the enforcing one. <strong>No code
+changes.</strong> The policy string is byte-for-byte identical in both modes.</p>
+<h3>Blast radius (smaller than it first looks)</h3>
+<ul>
+<li>Only <strong><code>apps/web</code></strong> is live, so only <strong>BBL</strong> is affected.</li>
+<li><code>baselinemartialarts.com</code> 307-redirects to BBL, so it doesn&#39;t independently serve app pages — the
+redirect isn&#39;t affected.</li>
+<li>The other three apps have no CSP, so they can&#39;t be affected.</li>
+<li>Verified clean in <strong>SESSION_0536</strong>: 21 unit tests, a browser console audit with <strong>0 violations</strong>
+(including a live YouTube embed), Report-Only confirmed on every surface, smoke tests 3/3.</li>
+</ul>
+<h3>The one genuine risk</h3>
+<p>If the July audit missed a page — or a page added <em>since</em> July introduces a new script/style/embed —
+&quot;block&quot; mode would silently break it for real users. The mitigation is <em>observation</em>: watch the
+violation reports from real production traffic before flipping. Which brings us to the snag…</p>
+<h3>The snag — we can&#39;t prove &quot;clean&quot;</h3>
+<p>The report sink is <strong>log-only</strong>. It writes each violation to a <code>console.warn</code> line that lands in
+Vercel&#39;s runtime logs and then ages out. Nothing is stored in a database. So:</p>
+<ul>
+<li>We <strong>cannot</strong> query &quot;how many violations in the last 7 days, and from which pages?&quot; after the fact.</li>
+<li>We can only <strong>live-watch</strong> the logs for a window, which is weaker evidence.</li>
+</ul>
+<p>This is a real gap and it&#39;s the thing standing between &quot;the code is ready&quot; and &quot;we can flip with
+confidence.&quot; It also applies to <em>every</em> future app&#39;s flip, not just this one — so it&#39;s worth fixing
+once, properly.</p>
+<h3>Options for Fork 1</h3>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>What we do</th>
+<th>Pro</th>
+<th>Con</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>1A — Flip on the July evidence</strong></td>
+<td>Trust the 0536 audit, flip now, watch live, roll back fast if needed</td>
+<td>Fastest; closes RISK #2 today</td>
+<td>No fresh multi-day proof; a page added since July could break</td>
+</tr>
+<tr>
+<td><strong>1B — Make the sink durable first, observe, then flip</strong> <em>(recommended)</em></td>
+<td>Add lightweight storage to the report sink (a DB table or a log drain), collect a few days of real traffic, confirm clean, then flip</td>
+<td>Real evidence; reusable for every future app</td>
+<td>~half a day of work before the flip; small schema/infra add</td>
+</tr>
+<tr>
+<td><strong>1C — Defer indefinitely</strong></td>
+<td>Leave it in watch mode</td>
+<td>Zero risk</td>
+<td>RISK #2 stays open forever; watch-mode blocks nothing, so we get the reporting but none of the protection</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>Fork 2 — The strategic decision: how should the posture live across RDD? (&quot;copy vs. kernel&quot;)</h2>
+<p>Right now the header baseline is a ~190-line file in <code>apps/web</code> plus a ~90-line nonce routine in its
+middleware. As Baseline, RDD, and Mammoth become their own live sites, each needs the same protection.
+Two ways to get there:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>What we do</th>
+<th>Pro</th>
+<th>Con</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>2A — Copy per app</strong> (today&#39;s stated model, ADR 0034)</td>
+<td>Each app gets its own copy of the header file + middleware</td>
+<td>Simple; each app can diverge if it truly needs to; matches the &quot;posture lives per-app&quot; wording</td>
+<td>Four copies drift over time; a fix to one doesn&#39;t reach the others; <strong>easy to simply forget</strong> (which is exactly what happened — 3 of 4 apps have nothing)</td>
+</tr>
+<tr>
+<td><strong>2B — Lift into the kernel</strong> (<code>packages/ui-kit</code>) <em>(recommended)</em></td>
+<td>Move the header builder + nonce helper into the shared kernel; every app imports and calls it in ~3 lines</td>
+<td>One source of truth; a hardening fix reaches all brands at once; a new brand is secure by default</td>
+<td>The kernel today only exports UI components/CSS — this adds a new &quot;config helpers&quot; category to it; needs a small, clean export surface</td>
+</tr>
+<tr>
+<td><strong>2C — Hybrid</strong></td>
+<td>Kernel owns the <em>baseline</em>; each app supplies only its own allow-list additions (e.g. Mammoth&#39;s own analytics domain)</td>
+<td>Best of both — shared floor, per-brand extension</td>
+<td>Slightly more design work to define the extension seam</td>
+</tr>
+</tbody></table>
+<p>The reason 2A already failed once is the strongest argument against it: &quot;remember to copy the security
+config into every new app&quot; is a human checklist, and human checklists silently rot. Putting it in the
+kernel makes <em>secure</em> the default and <em>insecure</em> the deviation.</p>
+<hr>
+<h2>Is this worth a formal research-review at all? (honesty check)</h2>
+<p>Yes. The two forks above are cheap to get wrong and expensive to unwind (a broken CSP breaks a live
+paying site; a per-app copy model quietly ships naked apps). But it is <strong>not</strong> a giant multi-session
+epic — it&#39;s one or two decisions plus a modest build. So this document (a single research-review), not
+a full <code>/wayfinder</code> map, is the right-sized tool. If, once you read it, you feel it fractures into many
+independent per-brand decisions across the launch timeline, <em>that&#39;s</em> the signal to promote it into a
+wayfinder map — and this doc becomes that map&#39;s opening evidence.</p>
+<hr>
+<h2>Recommendation</h2>
+<ol>
+<li><strong>Fork 1 → Option 1B.</strong> Add durable storage to the CSP report sink first (a small table or a Vercel
+log drain), observe real production traffic for a few days, confirm the violations are all noise,
+then flip <code>CSP_ENFORCE=1</code> for BBL behind that evidence. Never enforce blind on a live paying site.</li>
+<li><strong>Fork 2 → Option 2B (or 2C).</strong> Lift the header baseline into <code>packages/ui-kit</code> so Baseline, RDD,
+and Mammoth inherit it in a few lines and can&#39;t launch naked. Do this <em>before</em> those apps go live,
+not after.</li>
+<li><strong>Sequence:</strong> the observability fix (1B) is the shared prerequisite — it makes <em>every</em> app&#39;s
+eventual flip provable — so do it first, use it to close BBL&#39;s RISK #2, then generalize the
+baseline into the kernel as the launch-prep for the other brands.</li>
+</ol>
+<h3>Canonical rule (so this is never re-litigated)</h3>
+<blockquote>
+<p><strong>Every RDD app that serves HTML to the public wires the shared security-header baseline, and ships
+its CSP in Report-Only until its own violation stream is observed clean, then enforcing. The baseline
+lives in the kernel; an app may <em>extend</em> the allow-list, never <em>skip</em> the baseline.</strong></p>
+</blockquote>
+<hr>
+<h2>Open questions for Brian (this is what I need from you)</h2>
+<ol>
+<li><strong>Observability before flipping:</strong> do you agree we should make the report sink durable (store the
+violations) <em>before</em> flipping BBL — even though it delays closing RISK #2 by ~half a day — so we
+have real proof instead of a live-glance? (Fork 1: 1B vs 1A.)</li>
+<li><strong>Copy vs. kernel:</strong> do you want the security baseline lifted into the shared kernel so new brands
+inherit it automatically (2B/2C), or do you specifically want each app to own its own copy (2A)?</li>
+<li><strong>Scope of this session:</strong> should SESSION_0617 stay narrow (just decide + prep the BBL flip), or do
+you want to widen it to include the kernel-lift now, since the other apps are pre-launch?</li>
+<li><strong>Wayfinder or not:</strong> having read the above — does this feel like &quot;one or two decisions + a small
+build&quot; (keep it as this research-review), or does it feel big and foggy enough to chart as a
+multi-session <code>/wayfinder</code> map?</li>
+</ol>
+
+</div>
+</body>
+</html>
