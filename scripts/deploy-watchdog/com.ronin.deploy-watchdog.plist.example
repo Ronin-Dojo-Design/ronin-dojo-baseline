@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  com.ronin.deploy-watchdog.plist.example
+
+  launchd agent template for scripts/deploy-watchdog/watchdog.ts. NOT installed
+  by any automated lane — copy, edit the placeholders, and load it yourself
+  (see scripts/deploy-watchdog/README.md "Install"). Follows the same naming
+  and log-path convention as the existing com.ronin.* monitors documented in
+  docs/runbooks/dev-environment/ntfy-pushover-telegram.md (SESSION_0334).
+
+  Placeholders to replace before loading:
+    __BUN_PATH__     absolute path to the bun binary — run `which bun`
+    __REPO_PATH__    absolute path to the canonical ronin-dojo-app checkout
+    __HOME__         your home directory (macOS won't expand ~ in a plist)
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ronin.deploy-watchdog</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__BUN_PATH__</string>
+        <string>__REPO_PATH__/scripts/deploy-watchdog/watchdog.ts</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO_PATH__</string>
+
+    <!-- 20 minutes, per the SESSION_0671 spec -->
+    <key>StartInterval</key>
+    <integer>1200</integer>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- VERCEL_TOKEN is optional here — if unset, watchdog.ts falls back to the
+         Vercel CLI's auth.json. Uncomment and set only if you want the watchdog
+         to run under a token independent of your interactive CLI session. -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+        <!--
+        <key>VERCEL_TOKEN</key>
+        <string>REPLACE_ME</string>
+        <key>NTFY_TOPIC</key>
+        <string>REPLACE_ME</string>
+        -->
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/ronin-alerts/deploy-watchdog.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/ronin-alerts/deploy-watchdog.err.log</string>
+</dict>
+</plist>
