@@ -13,9 +13,9 @@ const asUser = (role: string) => ({ role }) as SessionUser
 const allItems = ADMIN_SECTION_GROUPS.flatMap(group => group.items)
 
 describe("admin sections config shape", () => {
-  it("covers all 37 managed areas with unique hrefs", () => {
-    expect(allItems.length).toBe(37)
-    expect(new Set(allItems.map(item => item.href)).size).toBe(37)
+  it("covers all 38 managed areas with unique hrefs", () => {
+    expect(allItems.length).toBe(38)
+    expect(new Set(allItems.map(item => item.href)).size).toBe(38)
   })
 
   it("gives every item a DISTINCT icon (the FI-021 dedupe)", () => {
@@ -48,9 +48,13 @@ describe("admin sections config shape", () => {
     expect(byTitle.get("Lineage")?.permission).toBe(APP_AREA_PERMISSIONS.lineage)
     expect(byTitle.get("Lineage")?.lineage).toBe(true)
 
+    // Inbox (G-033, SESSION_0639) REUSES the email.manage gate — the receive side of the
+    // email admin area shares its area key with `/app/email`.
+    expect(byTitle.get("Inbox")?.permission).toBe(APP_AREA_PERMISSIONS.email)
+
     // Every other item is permission-gated.
     const gated = allItems.filter(item => item.permission != null)
-    expect(gated.length).toBe(36)
+    expect(gated.length).toBe(37)
   })
 })
 
@@ -58,7 +62,7 @@ describe("filterAdminSectionGroups", () => {
   it("admin sees every group and item", () => {
     const groups = filterAdminSectionGroups(asUser("admin"), false)
     expect(groups.length).toBe(ADMIN_SECTION_GROUPS.length)
-    expect(groups.flatMap(group => group.items).length).toBe(37)
+    expect(groups.flatMap(group => group.items).length).toBe(38)
   })
 
   it("guest (null user) sees only the ungated items, empty groups dropped", () => {
