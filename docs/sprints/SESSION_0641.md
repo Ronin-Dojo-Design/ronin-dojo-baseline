@@ -210,8 +210,8 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 | ID | Status | Summary |
 | --- | --- | --- |
 | SESSION_0641_TASK_01 | done | G0 recon (gh pr list + #264 CLEAN) — done; full per-lane quarantine deferred with the wave |
-| SESSION_0641_TASK_02 | partial | merged #264 · #265 · #306 (+ #309 fix); **wave #266–#308 deferred** — session pivoted to the client demo |
-| SESSION_0641_TASK_03 | deferred | 0639 (#269) migration + draft-flip — not reached (deferred with the wave) |
+| SESSION_0641_TASK_02 | done | **full sweep complete** — all 43 PRs merged (42-lane wave + #292/#304 stacked-conflict resolves + RDD deploy set); 0 open |
+| SESSION_0641_TASK_03 | done | #269 (0639 inbox) — Giddy gate PASS 9.6, draft flipped, additive migration merged; activation gated on `RESEND_WEBHOOK_SECRET` |
 | SESSION_0641_TASK_04 | done | ledger apply — PL-024 · FS-0041 · G-033 · SESSION_0682 stub (this bow-out PR) |
 | SESSION_0641_TASK_05 | done | fix worktree removed; `/clients` deploy verified; canonical claim released at close |
 | SESSION_0641_TASK_06 | done | **CLIENT SECURED** + client-meeting demos shipped (deck · site · CRM) — the session's real outcome |
@@ -240,9 +240,12 @@ canonical commit. Gate ladder: `docs/protocols/recipes/merge-wave.md` (G0→G4).
 
 ## Open decisions / blockers
 
-- **Merge queue NOT swept:** the overnight wave's remaining ~35 PRs (#266–#308) were deprioritized when
-  the session pivoted to the client demo. They stay open + mergeable-pending; a future merge-owner
-  session resumes the wave (the Lane inventory above is still the map).
+- **Merge queue SWEPT — COMPLETE (post-demo, operator-directed "get it all to main"):** all 43 open PRs
+  landed on `main` — the 42-lane wave + the 2 stacked PRs (#304 deck v0.2 add/add resolved to ours,
+  #292 og-cards v1.1 4-file add/add resolved to ours), the deploy-gated RDD set (#274/#286/#290/#308,
+  operator Desi/copy sign-off), and **#269** (Giddy-gated 9.6, additive `InboundEmail` migration applied
+  to prod Neon). 0 open PRs; BBL + RDD prod verified 200 after ~45 deploys. **G-033 activation is the one
+  open item** (see goals-ledger G-033 checklist: set `RESEND_WEBHOOK_SECRET` + register the webhook).
 - **`/clients/mammoth` is a status/portfolio page**, not the live CRM; the CRM Artifact is a hosted
   snapshot, not a clickable backend. A truly-live clickable CRM needs an MMB deploy (blocked on the
   monorepo `ui-kit` symlink + a hosted DB) or a tunnel — parked.

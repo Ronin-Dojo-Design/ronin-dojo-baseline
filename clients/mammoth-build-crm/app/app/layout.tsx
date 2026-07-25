@@ -28,6 +28,9 @@ export default async function CrmLayout({ children }: { children: React.ReactNod
               <Link href="/app/new" className="text-muted transition-colors hover:text-ink">
                 New Job Order
               </Link>
+              <Link href="/app/inbox" className="text-muted transition-colors hover:text-ink">
+                Inbox
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-5 text-sm">

@@ -766,5 +766,19 @@ aggregator reads it with no new parser logic.
   brands' contact addresses now carry the live funnel with no in-app consumer, no triage, no
   notification. This module closes that gap once, for every brand.
 - **Lane:** kernel feature-module / admin surface. **Born:** SESSION_0635 bow-out (operator-directed).
-- **Cross-refs:** SESSION_0635 (`## Findings to route` — inbound-no-consumer blocker note),
-  `admin-collection-one-surface-law`, ADR 0051, `docs/runbooks/resend-setup-runbook.md`.
+- **Slice 1 LANDED (SESSION_0641, PR #269, Giddy gate 9.6):** BBL (`apps/web`) — `InboundEmail` model +
+  svix-verified `/api/resend/webhooks` endpoint + AdminCollection `/app/inbox` + oRPC router, all on
+  `main`, migration applied to prod Neon. **Built dark by design.** MMB (`clients/mammoth-build-crm`) has
+  a surface-first `/app/inbox` page with a "pending Resend setup" gate banner (SESSION_0641 — no MMB
+  Resend account yet; not rushing per operator).
+- **⚙️ ACTIVATION CHECKLIST (operator — to light up the inbox per brand):**
+  1. Create a webhook in the brand's **Resend** account → endpoint `https://<brand-app>/api/resend/webhooks`.
+  2. Copy the `whsec_…` signing secret → set **`RESEND_WEBHOOK_SECRET`** in that brand app's Vercel
+     Production env. (Secret is operator-set — not agent-set; it's a credential.) Until set, prod requests
+     `401` (fail-closed) and `/app/inbox` renders empty — correct.
+  3. **Verify the real inbound event `type` on the first live send** (Giddy P3 / WL): the module keys on
+     `"email.received"`; if Resend's actual inbound type differs, mail is 200-and-ignored (no crash) — confirm
+     and adjust the constant. **Multi-account note:** the module holds ONE `RESEND_WEBHOOK_SECRET`; brands in
+     SEPARATE Resend accounts (BBL vs Baseline are) need a per-account secret — slice-2 follow-up.
+- **Cross-refs:** SESSION_0635 (`## Findings to route` — inbound-no-consumer blocker note), SESSION_0641
+  (slice 1 + activation), `admin-collection-one-surface-law`, ADR 0051, `docs/runbooks/resend-setup-runbook.md`.
