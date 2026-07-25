@@ -60,7 +60,11 @@ const ackOrRejectNonEmailEvent = (
   return NextResponse.json({ received: true })
 }
 
-const upsertInboundEmail = async (email: ParsedInboundEmail, payload: unknown, svixId: string | null) => {
+const upsertInboundEmail = async (
+  email: ParsedInboundEmail,
+  payload: unknown,
+  svixId: string | null,
+) => {
   // Idempotency key: Resend's email id, falling back to the svix delivery id (stable across
   // redelivery retries), then a random id as the store-anyway last resort — rawPayload is always
   // captured, so mail is never dropped for a shape gap.
