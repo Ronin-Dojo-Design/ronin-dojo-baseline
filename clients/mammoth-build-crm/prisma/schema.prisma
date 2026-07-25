@@ -231,6 +231,9 @@ model TeamMember {
   active          Boolean    @default(true)
   ownedProjects   Project[]
   ownedActivities Activity[]
+  /// Posting drafts this owner approved (SESSION_0687 — lib/posting/**). Back-relation only; the
+  /// posting pipeline stops at `approved` and never sets `posted`.
+  approvedPostingDrafts PostingDraft[] @relation("PostingDraftApprovedBy")
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
 
@@ -330,6 +333,8 @@ model Project {
   quotes         Quote[]
   invoices       Invoice[]
   photos         BuildPhoto[]
+  /// Rendered social-post drafts drawn from this project's facts (SESSION_0687 — lib/posting/**).
+  postingDrafts  PostingDraft[]
 
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
@@ -459,5 +464,58 @@ model BuildPhoto {
   takenAt   DateTime
   createdAt DateTime   @default(now())
 
+  @@index([projectId])
+}
+
+// ---------------------------------------------------------------------------
+// Posting pipeline (SESSION_0687) — templates → DRAFT → APPROVAL, never auto-post
+// ---------------------------------------------------------------------------
+//
+// Mirrors the BBL approval-queue posture: every rendered post starts at `draft` and this pipeline
+// STOPS at `approved`. Publishing to a platform is a later wired step + an explicit operator
+// action — nothing in lib/posting/** (the generator, the status rules, or these actions) ever
+// writes status `posted`. Owned subtree: lib/posting/**, app/posting/**.
+// docs/product/mammoth-build/templates/posting-templates.md is the copy source of truth.
+
+enum PostingPlatform {
+  facebook
+  instagram
+  google_business_profile
+}
+
+/// `draft` = rendered, awaiting human review. `approved` = a human confirmed accuracy/publication
+/// rights — still NOT posted. `posted` = published externally; no write path in this app sets it.
+enum PostingStatus {
+  draft
+  approved
+  posted
+}
+
+/// A rendered social post generated from a posting template, held for human review before
+/// scheduling (posting-templates.md's "Scheduling checklist": "A human approves the rendered post
+/// before scheduling").
+model PostingDraft {
+  id           String          @id @default(cuid())
+  /// The CRM Project the copy is drawn from ("verify facts against the CRM Project record").
+  /// Optional — a draft can exist without one (e.g. a generic FAQ post).
+  project      Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId    String?
+  platform     PostingPlatform
+  /// Which lib/posting/templates.ts entry this was rendered from (e.g. "before_after").
+  templateKey  String
+  /// The rendered copy. May still contain literal `[PLACEHOLDER]` tokens the generator could not
+  /// fill — approval is refused while any remain (lib/posting/status.ts).
+  body         String          @db.Text
+  status       PostingStatus   @default(draft)
+  scheduledFor DateTime?
+  approvedAt   DateTime?
+  approvedBy   TeamMember?     @relation("PostingDraftApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedById String?
+  /// Stamped only by a later wired publish step — never by this pipeline.
+  postedAt     DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([status])
   @@index([projectId])
 }
