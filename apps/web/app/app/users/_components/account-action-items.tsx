@@ -28,9 +28,9 @@ type AccountActionItemsProps = {
  * The shared account-action menu items — Role submenu, ban/unban, and revoke-sessions —
  * for the `/app/users` surfaces (AC-ECOSYSTEM-2). Extracted verbatim from the byte-identical
  * bodies that `person-actions.tsx` (list row kebab) and `user-actions.tsx` (detail account
- * panel) each carried; the menu items, server-action wiring (`updateUserRole` + Better Auth
- * `admin.*`), toasts, and the `isAdmin`-gated ban predicate are UNCHANGED — this is a pure
- * view-layer dedup, no authz change.
+ * panel) each carried; the menu items, mutation wiring (oRPC `users.updateRole` for role,
+ * Better Auth `admin.*` for ban/unban + revoke-sessions), toasts, and the `isAdmin`-gated
+ * ban predicate are UNCHANGED — this is a pure view-layer dedup, no authz change.
  *
  * Rendered as `DropdownMenuItem`/submenu CHILDREN inside each caller's own `RowActionsMenu`
  * shell. Everything else stays at the CALLER: the linked-account gate (list hides these for
