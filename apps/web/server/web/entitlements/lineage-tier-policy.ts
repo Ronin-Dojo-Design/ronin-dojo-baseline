@@ -7,6 +7,7 @@ import {
   resolveLineageListingRenderPolicyFromEntitlementKeys,
   resolveLineageProfileDetailRenderPolicyFromListingPolicy,
 } from "~/lib/entitlements/lineage-tier-policy"
+import { activeEntitlementWhereForUsers } from "~/server/web/entitlements/active-entitlement"
 import { db } from "~/services/db"
 
 export async function getLineageListingRenderPolicyForUser({
@@ -51,16 +52,17 @@ export async function getLineageListingRenderPoliciesForUsers({
     return policies
   }
 
+  // WL-P3-39 (SESSION_0535 FI-028): shares the active-tier-entitlement `where` predicate via
+  // `activeEntitlementWhereForUsers`, NOT the single-user `hasAnyActiveEntitlement` boolean helper —
+  // this is a genuinely different shape (batch `findMany` across many users, needs each user's
+  // matched `entitlement.key`s to resolve their tier, not just an any-match boolean).
   const grants = await db.userEntitlement.findMany({
-    where: {
-      userId: { in: uniqueUserIds },
-      status: "ACTIVE",
-      entitlement: {
-        brand,
-        key: { in: [...LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS] },
-      },
-      OR: [{ endsAt: null }, { endsAt: { gt: now } }],
-    },
+    where: activeEntitlementWhereForUsers({
+      userIds: uniqueUserIds,
+      keys: LINEAGE_LISTING_TIER_ENTITLEMENT_KEYS,
+      brand,
+      now,
+    }),
     select: {
       userId: true,
       entitlement: { select: { key: true } },

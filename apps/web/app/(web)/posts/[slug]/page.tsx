@@ -18,6 +18,7 @@ import { UpgradePanel } from "~/components/web/ui/upgrade-panel"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz"
+import { UPGRADE_HREF } from "~/lib/entitlements/routes"
 import { getPageData, getPageMetadata } from "~/lib/pages"
 import { toVideoEmbedUrl } from "~/lib/video-embed"
 import {
@@ -30,9 +31,6 @@ import { findCommunityPostBySlug } from "~/server/web/community/queries"
 export const dynamicParams = true
 
 type Props = PageProps<"/posts/[slug]">
-
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
 
 /**
  * Community post detail (SESSION_0493, ADR 0042 Amendment 1). HIDDEN posts 404 for everyone except

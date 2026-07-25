@@ -2,10 +2,14 @@
 
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
+import { hasAnyActiveEntitlement } from "~/server/web/entitlements/active-entitlement"
 import { db } from "~/services/db"
 
 /**
  * Check if a user has a specific active entitlement.
+ *
+ * WL-P3-39 (SESSION_0535 FI-028): delegates to the shared `hasAnyActiveEntitlement` — a single-key
+ * check is just the 1-key-array case of "any of `keys`". Behavior-preserving: same `where` shape.
  */
 export async function hasEntitlement(
   userId: string,
@@ -15,15 +19,7 @@ export async function hasEntitlement(
   cacheTag(`user-entitlements-${userId}`)
   cacheLife("seconds")
 
-  const grant = await db.userEntitlement.findFirst({
-    where: {
-      userId,
-      status: "ACTIVE",
-      entitlement: { key: entitlementKey, brand },
-      OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-    },
-  })
-  return !!grant
+  return hasAnyActiveEntitlement(userId, [entitlementKey], brand, db)
 }
 
 /**
