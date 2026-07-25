@@ -2,6 +2,7 @@ import { belt } from "~/server/belt/router"
 import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
 import { inbox } from "~/server/orpc/routers/inbox"
+import { socialQueue } from "~/server/orpc/routers/social-queue"
 import { promotion } from "~/server/promotion/router"
 import { techniques } from "~/server/techniques/router"
 
@@ -27,7 +28,8 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
  * member-facing, own-Passport belt-journey mutations. SESSION_0580 (G-022
  * Lane B) adds `techniques` — own-user technique-progress tracking.
  * SESSION_0639 (G-033 slice 1) adds `inbox` — the `email.manage`-gated
- * inbound-email read/triage surface.
+ * inbound-email read/triage surface. SESSION_0686 adds `socialQueue` — the
+ * `social-queue.manage`-gated consent-first approval queue (nothing publishes).
  */
 export const appRouter = {
   ping,
@@ -35,6 +37,7 @@ export const appRouter = {
     brand,
   },
   inbox,
+  socialQueue,
   lineage,
   promotion,
   belt,

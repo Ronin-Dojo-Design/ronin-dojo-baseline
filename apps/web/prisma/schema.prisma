@@ -173,6 +173,9 @@ model User {
   dataSubjectRequests          DataSubjectRequest[] @relation("DataSubjectRequestSubmitter")
   dataSubjectRequestsFulfilled DataSubjectRequest[] @relation("DataSubjectRequestFulfiller")
 
+  // @added SESSION_0686 — social approval-queue audit trail (who approved a brand-social draft).
+  approvedSocialQueueItems SocialQueueItem[] @relation("SocialQueueApprovedBy")
+
   // Indexes
   @@index([id])
 }
@@ -1134,6 +1137,10 @@ model Passport {
   // @added SESSION_0528 (ADR 0046 D2) — techniques this person authored (their profile curriculum,
   // `where authorPassportId = me`). Back-relation for `Technique.author`.
   authoredTechniques Technique[]
+
+  // @added SESSION_0686 — person-centric social-queue drafts about this person (consent subject).
+  // Cascade: deleting the person deletes their pending celebrations (the privacy lever).
+  socialQueueItems SocialQueueItem[]
 }
 
 model DirectoryProfile {
@@ -4618,4 +4625,85 @@ model InboundEmail {
 
   @@index([receivedAt])
   @@index([triageStatus])
+}
+
+/// SESSION_0686 — BBL social-flywheel approval queue (approval-queue-first, the wave-4 ground
+/// rule). Which domain event class generated a draft (the spec's E1–E5 rows).
+// @added   SESSION_0686 (2026-07-24)
+// @why     social-flywheel-approval-queue-spec-draft.md §3 — capture → approve → (later) publish
+// @wired   server/orpc/routers/social-queue.ts (read/transitions) · app/app/social-queue (surface)
+enum SocialQueueSource {
+  CLAIM_VERIFIED // E1 — person-centric (consent-gated)
+  RANK_PROMOTION // E2 — person-centric (consent-gated)
+  TECHNIQUE_FEATURED // E3 — instructor-rights fork F5 gates any later publish
+  GRAPH_MILESTONE // E4 — aggregate numbers only, names no person
+  BLOG_POST // E5 — brand-owned editorial content
+}
+
+/// Status machine (enforced in server code, not the DB): DRAFT → APPROVED · DRAFT → REJECTED ·
+/// APPROVED → REJECTED (pulled before publish, incl. consent revocation). PUBLISHED is reserved
+/// for the LATER wired publish step — NO v1 code path writes it; approval STOPS the machine.
+enum SocialQueueStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+  PUBLISHED
+}
+
+/// CONSENT BASIS (spec §2.3, flywheel ground rules 2–3) — why this item may be published at all.
+/// Recorded at enqueue time AND re-verified live at approve time (enqueue-time consent is
+/// necessary, not sufficient).
+enum SocialConsentBasis {
+  /// Person-centric content. Requires an account-claimed subject Passport (`userId != null` —
+  /// placeholder Passports are structurally excluded) AND the affirmative publicity opt-in
+  /// (fork F2). F2 is NOT yet ratified, so approval of MEMBER_OPT_IN items FAILS CLOSED until
+  /// the operator ratifies the consent mechanism.
+  MEMBER_OPT_IN
+  /// Aggregate numbers only (e.g. "100th verified black belt" milestone) — names no person,
+  /// draws no member data. Lowest risk.
+  AGGREGATE_ONLY
+  /// Brand-owned editorial content (e.g. staff blog post) — no member is the subject.
+  OWNED_CONTENT
+}
+
+/// SESSION_0686 — event-generated brand-social drafts awaiting HUMAN approval. Nothing
+/// auto-posts: the v1 machine deliberately STOPS at APPROVED ("ready to publish"); the actual
+/// publish/send is a later wired step behind operator authorization.
+model SocialQueueItem {
+  id     String            @id @default(cuid(2))
+  source SocialQueueSource
+  /// Idempotency key (spec §2.2): `claim:<id>` · `award:<id>` · `technique:<id>` ·
+  /// `milestone:<metric>:<n>` · `post:<id>`. Unique with source → enqueue is conflict-noop.
+  subjectKey String
+  /// Render-input snapshot at event time (spec §2.4): card inputs + `headline` + caption seed +
+  /// CTA path. Drawn ONLY from already-public profile fields at the member's tier — never
+  /// evidence documents or private account data (the public-data floor, ground rule 3).
+  payload Json
+  /// Operator-editable caption (seeded from payload).
+  caption String?
+  /// Why this item may be published (consent floor). Re-verified at approve time for
+  /// person-centric items — see `server/social-queue/transitions.ts`.
+  consentBasis   SocialConsentBasis
+  status         SocialQueueStatus  @default(DRAFT)
+  rejectedReason String?
+  brand          Brand              @default(BBL)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  approvedAt     DateTime?
+  /// Reserved for the later wired publish step — NO v1 writer exists.
+  publishedAt    DateTime?
+
+  /// Approval audit — survives account churn (SetNull mirrors `PassportClaimRequest.reviewedBy`).
+  approvedBy   User?   @relation("SocialQueueApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedById String?
+
+  /// Person-centric subject (E1/E2; null for aggregate/owned types). Cascade — deleting the
+  /// person deletes their drafts (the privacy lever): a DSR DELETE erases pending celebrations
+  /// mechanically.
+  passport   Passport? @relation(fields: [passportId], references: [id], onDelete: Cascade)
+  passportId String?
+
+  @@unique([source, subjectKey])
+  @@index([status, createdAt])
+  @@index([passportId])
 }
