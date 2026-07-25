@@ -65,7 +65,7 @@ test.describe("Org-claim loop (WL-P2-13)", () => {
     await expect(page.getByText(`Claim ${ORG_NAME}`)).toBeVisible({ timeout: 30_000 })
     const signInCta = page.getByRole("link", { name: "Sign in to claim" })
     await expect(signInCta).toBeVisible()
-    await expect(signInCta).toHaveAttribute("href", /\/auth\/login\?next=/)
+    await expect(signInCta).toHaveAttribute("href", new RegExp(`/auth/login\\?next=.*${org.slug}`))
 
     // 1b. The same org (type DOJO) serves the school lens with the same teaser.
     await page.goto(`/schools/${org.slug}`)
@@ -90,7 +90,7 @@ test.describe("Org-claim loop (WL-P2-13)", () => {
     await page.context().clearCookies()
     await createAuthenticatedSession(page, admin.userId)
     await page.goto("/app/claims")
-    const rowLink = page.getByRole("link", { name: claimant.name, exact: true }).first()
+    const rowLink = page.getByRole("link", { name: claimant.name, exact: true })
     await expect(rowLink).toBeVisible({ timeout: 30_000 })
     await rowLink.click()
 
