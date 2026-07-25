@@ -51,6 +51,35 @@ kernel extraction — 0681 stays off both.
 commit) → pre-authorized Fable salvage on the same worktree (operator standing rule). Codex credits
 are the operator's to top up for future codex lanes.
 
+### Waves 17-19 (lanes 0693-0701) — WL-clearing batch, launched 2026-07-24
+
+Operator extended authorization: batches of 3 waves through wave 36; Fable unrestricted; /caveman
+readouts. 0692 minted as the AM merge baton, so lanes run 0693+.
+
+| Lane | Driver | Item (WL row) | Status |
+| --- | --- | --- | --- |
+| 0693 | Sonnet | WL-P2-44 button-type lint guard (frozen L1 untouched — lint-rule option) | dispatched |
+| 0694 | Sonnet | WL-P3-58 `hsl(var(--X))` dead-token idiom ×3 + repo grep | dispatched |
+| 0695 | Sonnet | WL-P3-39 `hasAnyActiveEntitlement` extraction + JOIN_HREF consts | dispatched |
+| 0696 | Fable | WL-P2-13 org-claim CTA (owner-less orgs) + dev-login smoke | dispatched |
+| 0697 | Fable | WL-P2-43 migrate 2 revalidate-bypass files → oRPC (SOT-ADR D3) | dispatched |
+| 0698 | Opus | WL-P2-23 ancestry-timeline deep-links (→ /directory/[slug], funnel-first) | dispatched |
+| 0699 | Sonnet | WL-P2-51 bottom-nav mounted-guard + e2e workaround removal | dispatched |
+| 0700 | Fable | WL-P2-45 PassportEditor one-submit + riders a-d | dispatched |
+| 0701 | Fable | WL-P2-41 invite-email bind rollback + users/[id] fallback + media types | dispatched |
+
+**Skipped with reason:** WL-P2-33 (PENDING OPERATOR SIGN-OFF — security gate), WL-P2-47 (row says
+"do not spend launch time"; unreachable today), WL-P2-8 (needs Brian's pulse summary first),
+WL-P2-12 (target file lives in frozen `components/common/*` — escalate, not edit).
+
+### Operator direction for waves 20+ (received 2026-07-24, mid-run)
+
+Kernel-extraction epic: WL debt + brand-agnostic surfaces/components/cards/carousels extract into
+`packages/ui-kit` so ALL brands get **CMS, CRM, social media, finance tracking, email inbox**
+modules. **Override (operator-acknowledged):** the SESSION_0641 decision to queue the inbox kernel
+extraction (0683) behind the AM merge review is lifted — 0681 lanes may execute it; operator does
+the Resend webhook-secret setup in the morning. 0683's staged stub to be reconciled by the merge owner.
+
 ## What landed
 
 - 0689 → PR #312 (handle-reservation worksheet).
