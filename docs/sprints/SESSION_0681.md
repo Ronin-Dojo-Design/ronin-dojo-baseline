@@ -82,8 +82,33 @@ the Resend webhook-secret setup in the morning. 0683's staged stub to be reconci
 
 ## What landed
 
-- 0689 → PR #312 (handle-reservation worksheet).
-- 0684 → PR #313 (MMB GBP submission pack; operator facts held as `[VERIFY]`).
+Waves 15+16 — COMPLETE (8/8):
+- 0689 → PR #312 (handle-reservation worksheet) · 0684 → PR #313 (GBP pack, `[VERIFY]` held)
+- 0690 → PR #314 (LinkedIn calendar; forks F1/F4 + Day-1 anchor = operator)
+- 0685 → PR #316 (review-request engine; TCPA gate; migration = merge step)
+- 0687 → PR #317 (posting pipeline; 63/0; migration = merge step)
+- 0686 → PR #318 (approval-queue; 38/0; no PUBLISHED edge; fork F2 = operator)
+- 0688 → PR #321 (**MERGE-AFTER #318**; celebration-card feeder, drafts-only, consent fails closed)
+- 0691 → PR #323 (Fable salvage; inbox CRAP 110→20; 1741/0; orchestrator `next build` REAL_EXIT=0;
+  new WL candidate: `socialLinks` array-vs-Record shape drift)
+
+Waves 17-19 — 6/9 (0695/0697/0698 in flight):
+- 0699 → PR #319 (mounted-guard; e2e = AM) · 0694 → PR #320 (**STALE ROW** — WL-P3-58 fixed by
+  0636/#267; evidence doc only) · 0700 → PR #322 (one-submit PassportEditor; riders a/b OBSOLETE,
+  surface deleted 0525; successor finding: DashboardTabs dirty-discard)
+- 0701 → PR #324 (bind rollback + users/[id] fallback + typed media params; half-row already fixed 0515)
+- 0693 → PR #325 (button-type AST guard wired into lint:check) · 0696 → PR #326 (verify-first: CTA
+  existed since 0355 — built the missing e2e claim-loop smoke instead, GREEN; lane held at PR gate,
+  orchestrator opened under the standing word)
+
+**Verify-first scoreboard: 4 of 9 WL rows were stale/partially-stale** (0694 full, 0696 part-a,
+0700 riders a/b, 0701 half of item a) — the operator's mid-run verify-first order prevented 4
+make-work builds. Root cause flagged: merged lanes' Proposed-ledger-edits not yet applied to the
+wiring-ledger (0636's edits missing → row queued twice).
+
+**Environment notes:** shared local Postgres contention under ~11 parallel lanes (P2028 timeouts,
+one 43-fail flake that retried clean 1741/0); Write/Edit PreToolUse hooks timed out under a load
+spike in 3 lanes (heredoc fallback used, content verified).
 
 ## Proposed ledger edits
 
