@@ -75,7 +75,13 @@ disjoint (each owns its own file; shared surfaces are frozen/read-only).
    the shared canonical checkout (FS-0035; two orchestrators in canonical strand each other's work). Then prove
    disjointness (epic-plan §1) and write the dispatch record: lane → branch/worktree → prompt → persona/model.
 1. **Dispatch** all N in one turn (parallel `Agent` calls) — Cody per build lane, Petey per plan lane. Each
-   runs its own worktree lane to a **held commit** (never pushes).
+   runs its own worktree lane to a **held commit** (never pushes). **Two lines every dispatch prompt MUST
+   carry (SESSION_0709):** (a) *foreground gates only — no backgrounded suites/monitors* (the 0681 stall
+   vector recurred at 0709 when this lived only in the recipe, not the prompt); (b) the **push posture,
+   quoting the operator's grant** — lanes correctly refuse relayed authorization, so if the operator
+   pre-authorized per-lane pushes/PRs, say so verbatim ("PR creation operator-authorized this session;
+   merges held") or lanes stall at the PR gate. Also tell lanes to run **targeted test files + rely on CI**
+   — a full suite against the shared local DB across sibling lanes is never a usable signal.
 2. **Watch + resume** — a lane that crashes (session-limit) resumes via `SendMessage` with disk-truth-first
    instructions (re-read the worktree's real state first). A lane that hits real ambiguity → **escalate to the
    operator**, never force through.
