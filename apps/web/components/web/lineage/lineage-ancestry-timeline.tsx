@@ -122,7 +122,11 @@ function TimelineEntry({
         <p className="pl-[4.5rem] text-muted-foreground text-sm italic">{entry.narrative}</p>
       )}
 
-      <motion.div initial={false} viewport={{ once: true }} {...entranceMotion(reduceMotion, index)}>
+      <motion.div
+        initial={false}
+        viewport={{ once: true }}
+        {...entranceMotion(reduceMotion, index)}
+      >
         {href ? (
           <Link
             href={href}

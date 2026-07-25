@@ -55,9 +55,7 @@ describe("LineageAncestryTimeline — WL-P2-23 ancestor deep-links", () => {
 
     // The link wraps the row content — the founder's name lives inside the anchor,
     // so a click on the name/avatar navigates (not just some empty affordance).
-    const anchor = html.match(
-      /<a [^>]*href="\/directory\/rigan-machado"[^>]*>([\s\S]*?)<\/a>/,
-    )
+    const anchor = html.match(/<a [^>]*href="\/directory\/rigan-machado"[^>]*>([\s\S]*?)<\/a>/)
     expect(anchor?.[1]).toContain("Rigan Machado")
   })
 
