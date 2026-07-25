@@ -295,6 +295,26 @@ backlinks:
 | Git hygiene | branch=main · single close commit → close PR (held for operator word) · canonical claim released at end |
 | Graphify | nodes=20923 · edges=41009 · communities=2850 (gate runner, pre-commit) |
 
+## Post-close addendum (2026-07-25, operator-directed)
+
+- **MMB commit-record analysis:** first MMB mention `b0feb3a6` (2026-06-20); 87 MMB-scoped
+  squash-level commits to date (62 pre-engagement / 25 since); prior developer's displayed record:
+  147 commits since Dec 2025 (provisional — composition unverified, per the letter).
+- **Developer-performance assessment letter** (Larry draft → hostile review → revise; comparison
+  figures + secondhand concerns + unverified quote deliberately REMOVED — see the counsel memo):
+  [`mmb-developer-performance-assessment-DRAFT.md`](../business/legal/mmb-developer-performance-assessment-DRAFT.md)
+  (letter + Moriarty-only transmittal memo; memo never travels with the letter). Access-provenance
+  updated on operator confirmation: org invite 2026-07-22 by M. Flores, subsequently
+  rescinded (per Flores, by Mr. Dodge) → 07-25 review via screenshare; audit-log corroboration named.
+- **MMB branded email shell** (logo + #ff6a1a, table-based email-safe):
+  [`mmb-branded-email-template.html`](../product/mammoth-build/templates/mmb-branded-email-template.html);
+  send channel = operator's own account (no MMB/RDD-verified Resend sending domain on disk — the
+  BBL key is domain-scoped). Nothing sent by the agent.
+- **Vault:** MMB_SESSION_0007 addendum + org chart (3 equal owners w/ emails) + contacts +
+  letter-only copy + email template in 90_Templates. Counsel memo kept OUT of the vault
+  (vault is Michael-visible).
+- Confirmed for the operator: sessions 0632/0633/0635 merged on main (PRs #262/#263/#264).
+
 ## Next session
 
 ### Goal
