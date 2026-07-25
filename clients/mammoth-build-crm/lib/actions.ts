@@ -84,8 +84,12 @@ class ForbiddenError extends Error {
  * provisioning the owner record on first authenticated action (a fresh login has
  * a User but no TeamMember yet). Throws `UnauthorizedError` when unauthenticated.
  * The returned id is the ownership key for all scoping below.
+ *
+ * Exported (SESSION_0685) so lib/reviews/actions.ts reuses this ONE owner-gate
+ * rather than building a second auth path — every "use server" module in this
+ * app authenticates the same way.
  */
-async function requireOwner(): Promise<string> {
+export async function requireOwner(): Promise<string> {
   const session = await getServerSession();
   const user = session?.user;
   if (!user?.id) {
@@ -122,8 +126,10 @@ async function requireOwner(): Promise<string> {
  * Load a project the caller is allowed to act on, or throw. Allowed = the row is
  * owned by the caller, OR it's an unowned legacy row (claimable). Used as the
  * ownership pre-check before every mutation on an existing project.
+ *
+ * Exported (SESSION_0685) — see `requireOwner`.
  */
-async function requireOwnedProject(
+export async function requireOwnedProject(
   id: string,
   ownerId: string,
 ): Promise<{ ownerId: string | null }> {
