@@ -94,9 +94,9 @@ test.describe("Org-claim loop (WL-P2-13)", () => {
     await expect(rowLink).toBeVisible({ timeout: 30_000 })
     await rowLink.click()
 
-    await expect(
-      page.getByRole("heading", { name: `Claim: ${ORG_NAME}`, level: 1 }),
-    ).toBeVisible({ timeout: 30_000 })
+    await expect(page.getByRole("heading", { name: `Claim: ${ORG_NAME}`, level: 1 })).toBeVisible({
+      timeout: 30_000,
+    })
     await page.getByRole("button", { name: "Approve", exact: true }).click()
     await expect(page.getByText("Approved — ownership granted to the claimant.")).toBeVisible({
       timeout: 30_000,
