@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Ronin Building Design × Mammoth Build — Pitch Deck (DRAFT v0.1)</title>
+<title>Ronin Building Design × Mammoth Build — Pitch Deck (DRAFT v0.2)</title>
 <meta name="description" content="Starter high-level pitch deck: how Ronin Building Design proposes to improve the Mammoth Build web presence." />
 <style>
   :root{
@@ -269,15 +269,38 @@
     text-align:center;
   }
   .edge-zone{
-    position:fixed;top:0;bottom:60px;width:64px;
+    position:fixed;top:0;bottom:60px;width:56px;
     z-index:40;cursor:pointer;
     background:transparent;
     border:none;
     padding:0;
   }
-  .edge-zone.left{left:0;}
-  .edge-zone.right{right:0;}
+  .edge-zone.left{left:22px;}   /* clear of iPadOS Safari's ~20pt edge-swipe-back gesture margin */
+  .edge-zone.right{right:22px;} /* clear of iPadOS Safari's ~20pt edge-swipe-forward gesture margin */
   .edge-zone:focus-visible{outline:2px solid var(--primary);outline-offset:-2px;}
+
+  /* ---- corner nav buttons: visible, large, never edge-pinned (iPad gesture-safe) ---- */
+  .corner-nav-btn{
+    position:fixed;bottom:78px;
+    width:52px;height:52px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(28,31,35,.94);
+    border:1px solid var(--border);
+    color:var(--ink);
+    font-size:1.4rem;line-height:1;
+    z-index:55;cursor:pointer;
+    box-shadow:0 4px 18px rgba(0,0,0,.4);
+    transition:border-color .15s ease, color .15s ease, transform .12s ease;
+  }
+  .corner-nav-btn:hover:not(:disabled){border-color:var(--primary);color:var(--primary);}
+  .corner-nav-btn:active:not(:disabled){transform:scale(.94);}
+  .corner-nav-btn:disabled{opacity:.3;cursor:default;}
+  .corner-nav-btn:focus-visible{outline:2px solid var(--primary);outline-offset:2px;}
+  .corner-nav-btn.left{left:26px;}   /* clear of the same iPadOS edge-swipe margin as .edge-zone */
+  .corner-nav-btn.right{right:26px;}
+  @media (max-width:640px){
+    .corner-nav-btn{bottom:74px;width:48px;height:48px;}
+  }
 
   /* ---- SVG infographic slide ---- */
   .infoflow{width:100%;max-width:78rem;margin:0 auto;}
@@ -287,6 +310,82 @@
     font-size:.82rem;
     color:var(--muted2);
     margin-top:.4rem;
+  }
+
+  /* ---- status pills (feature roster) ---- */
+  .status-pill{
+    display:inline-flex;align-items:center;gap:.4rem;
+    font-family:var(--font-display);
+    font-size:.64rem;font-weight:700;
+    letter-spacing:.11em;text-transform:uppercase;
+    padding:.24rem .65rem;border-radius:999px;
+    border:1px solid;margin-bottom:.75rem;
+  }
+  .status-pill .dot{width:.4rem;height:.4rem;border-radius:50%;flex:0 0 auto;}
+  .status-pill.live{color:#4ade80;border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.09);}
+  .status-pill.live .dot{background:#4ade80;}
+  .status-pill.review{color:var(--primary);border-color:rgba(255,106,26,.4);background:rgba(255,106,26,.09);}
+  .status-pill.review .dot{background:var(--primary);}
+  .status-pill.planned{color:var(--muted);border-color:var(--border);background:var(--surface2);}
+  .status-pill.planned .dot{background:var(--muted2);}
+  .status-pill.prototype{color:#c4b5fd;border-color:rgba(167,139,250,.4);background:rgba(167,139,250,.09);}
+  .status-pill.prototype .dot{background:#a78bfa;}
+  .status-legend{display:flex;flex-wrap:wrap;gap:.9rem;margin:0 0 1.5rem;}
+  .status-legend .status-pill{margin-bottom:0;}
+  .card ul.list{margin-top:.9rem;gap:.55rem;}
+  .card ul.list li{font-size:.86rem;}
+
+  /* ---- mini flow (compact, in-card step chain) ---- */
+  .mini-flow{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;margin:1.4rem 0;}
+  .mini-flow .mstep{
+    flex:1 1 11rem;min-width:10rem;
+    background:var(--surface);border:1px solid var(--border);border-radius:10px;
+    padding:.8rem .95rem;
+  }
+  .mini-flow .mstep .status-pill{margin-bottom:.5rem;}
+  .mini-flow .mstep .t{display:block;font-size:.88rem;color:var(--ink);font-weight:600;}
+  .mini-flow .marrow{align-self:center;color:var(--muted2);font-size:1.2rem;flex:0 0 auto;padding:0 .1rem;}
+
+  /* ---- cutover flow bars (zero-downtime handoff) ---- */
+  .cutover-bars{display:flex;max-width:78rem;margin:.6rem auto 0;gap:.4rem;}
+  .cutover-bars .bar{flex:1;text-align:center;}
+  .cutover-bars .bar .track{height:7px;border-radius:4px;margin-bottom:.55rem;}
+  .cutover-bars .bar.old .track{background:var(--muted2);}
+  .cutover-bars .bar.new .track{background:var(--primary);}
+  .cutover-bars .bar .label{font-size:.76rem;color:var(--muted2);}
+  .cutover-bars .bar.old .label strong{color:var(--muted);}
+  .cutover-bars .bar.new .label strong{color:var(--primary);}
+
+  /* ---- closing beat (final slide) ---- */
+  .closing-beat{margin-top:2.3rem;display:flex;flex-direction:column;gap:.15rem;}
+  .closing-beat .line{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(1.5rem,3.7vw,2.6rem);
+    line-height:1.16;
+    color:var(--ink);
+    margin:0;
+  }
+  .closing-beat .line.accent{color:var(--primary);}
+
+  /* ---- 3D configurator mockup ---- */
+  .configurator-mock{
+    display:grid;grid-template-columns:1.15fr 1fr;gap:2.2rem;align-items:center;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:1.8rem 2rem;margin-top:1.5rem;
+  }
+  .configurator-mock svg{width:100%;height:auto;display:block;}
+  .slider-mock .row{display:flex;align-items:center;gap:.9rem;margin-bottom:1rem;}
+  .slider-mock .row:last-child{margin-bottom:0;}
+  .slider-mock .label{width:7.2rem;font-size:.8rem;color:var(--muted);flex:0 0 auto;}
+  .slider-mock .track{flex:1;height:4px;background:var(--border);border-radius:2px;position:relative;}
+  .slider-mock .track .fill{position:absolute;left:0;top:0;bottom:0;background:var(--primary);border-radius:2px;}
+  .slider-mock .track .thumb{
+    position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    background:var(--primary);border:2px solid var(--ink);transform:translate(-50%,-50%);
+  }
+  @media (max-width:900px){
+    .configurator-mock{grid-template-columns:1fr;}
   }
 
   @media (max-width:900px){
@@ -303,7 +402,7 @@
   <!-- 1 — TITLE -->
   <section class="slide is-active" data-title="Title">
     <div class="inner">
-      <span class="badge"><span class="dot"></span> Draft · v0.1</span>
+      <span class="badge"><span class="dot"></span> Draft · v0.2</span>
       <p class="eyebrow">Ronin Building Design</p>
       <h1 class="title">Built all the way through — online, too.</h1>
       <p class="lede">
@@ -511,7 +610,154 @@
     </div>
   </section>
 
-  <!-- 12 — INFOGRAPHIC -->
+  <!-- 12 — FEATURE ROSTER: BUILT & SHIPPING -->
+  <section class="slide" data-title="Feature roster — built">
+    <div class="inner">
+      <p class="eyebrow">What's already in motion</p>
+      <h2 class="title">Built &amp; shipping.</h2>
+      <p class="lede">
+        Everything below is real — built inside the same shop that built this deck, not a roadmap
+        promise. Status is honest: what's live, what's in review, what's still ahead.
+      </p>
+      <div class="status-legend">
+        <span class="status-pill live"><span class="dot"></span>Live</span>
+        <span class="status-pill review"><span class="dot"></span>In review</span>
+        <span class="status-pill planned"><span class="dot"></span>Planned</span>
+        <span class="status-pill prototype"><span class="dot"></span>Prototype</span>
+      </div>
+      <div class="cols two">
+        <div class="card">
+          <span class="status-pill live"><span class="dot"></span>Live</span>
+          <h3>Custom CRM</h3>
+          <p class="ink">A purpose-built system of record — Mammoth's own database, not a shared tool.</p>
+          <ul class="list check">
+            <li>Contact &amp; company roster</li>
+            <li>Lead → Order pipeline board</li>
+            <li>Lead-source reporting</li>
+            <li>CSV/JSON lead-sheet import with duplicate-safe commit</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="status-pill review"><span class="dot"></span>In review</span>
+          <h3>Custom CMS &amp; site</h3>
+          <p class="ink">The public face — rebuilt, optimized, ready for the mammothmb.com attach.</p>
+          <ul class="list check">
+            <li>Landing page rebuilt from the recovered mock</li>
+            <li>Full SEO foundation — metadata, sitemap, robots, manifest</li>
+            <li>Branded social-preview (OG) images + favicon</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 13 — FEATURE ROSTER: AUTOMATIONS IN MOTION -->
+  <section class="slide" data-title="Feature roster — automations">
+    <div class="inner">
+      <p class="eyebrow">What's next</p>
+      <h2 class="title">Automations in motion.</h2>
+      <p class="lede">Every open inquiry, every invoice, every job-site photo — routed somewhere, not lost.</p>
+      <div class="mini-flow">
+        <div class="mstep">
+          <span class="status-pill review"><span class="dot"></span>In review</span>
+          <span class="t">Inquiry capture</span>
+        </div>
+        <div class="marrow">→</div>
+        <div class="mstep">
+          <span class="status-pill planned"><span class="dot"></span>Planned</span>
+          <span class="t">Follow-up sequences</span>
+        </div>
+        <div class="marrow">→</div>
+        <div class="mstep">
+          <span class="status-pill planned"><span class="dot"></span>Planned</span>
+          <span class="t">Review engine</span>
+        </div>
+      </div>
+      <div class="cols two">
+        <div class="card">
+          <span class="status-pill planned"><span class="dot"></span>Planned</span>
+          <h3>Client-billing automations</h3>
+          <p>Invoice, quote, and line-item records are already modeled in the CRM's own database, with a
+            payment-link field ready to wire up. <strong class="ink">QuickBooks integration</strong> is being
+            researched in a parallel track now.</p>
+        </div>
+        <div class="card">
+          <span class="status-pill planned"><span class="dot"></span>Planned</span>
+          <h3>Social + SEO automation program</h3>
+          <p>Research complete: before/during/after job-site photos into posts, and a review request the
+            moment a build is satisfied. A Google Business Profile is the single highest-leverage gap
+            found — platform mix and cadence are open questions for a walkthrough with Michael.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 14 — THE WOW ITEM: 3D CONFIGURATOR -->
+  <section class="slide" data-title="The wow item">
+    <div class="inner">
+      <p class="eyebrow">The wow item</p>
+      <h2 class="title">A 3D building configurator.</h2>
+      <span class="status-pill prototype"><span class="dot"></span>Prototype</span>
+      <p class="lede">
+        An early, working prototype — a parametric metal building a visitor can spin, resize, and
+        re-color right in the browser. Not a committed feature, not on the roadmap yet — a proof
+        that the idea works.
+      </p>
+      <div class="configurator-mock">
+        <svg viewBox="0 0 460 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Line-art illustration of a parametric metal building with width, length, and height dimension markers.">
+          <!-- hidden/back edges -->
+          <g stroke="#6f7680" stroke-width="1.5" stroke-dasharray="4 4" fill="none">
+            <line x1="120" y1="120" x2="160" y2="96"></line>
+            <line x1="300" y1="120" x2="340" y2="96"></line>
+            <line x1="210" y1="60" x2="250" y2="36"></line>
+            <line x1="160" y1="96" x2="250" y2="36"></line>
+            <line x1="250" y1="36" x2="340" y2="96"></line>
+          </g>
+          <!-- front gable + wall (solid) -->
+          <g stroke="#ff6a1a" stroke-width="2.5" fill="rgba(255,106,26,.06)" stroke-linejoin="round">
+            <polygon points="120,120 210,60 300,120"></polygon>
+            <rect x="120" y="120" width="180" height="100" fill="rgba(255,106,26,.04)"></rect>
+          </g>
+          <!-- wall ribs -->
+          <g stroke="#3a3f45" stroke-width="1">
+            <line x1="140" y1="120" x2="140" y2="220"></line>
+            <line x1="160" y1="120" x2="160" y2="220"></line>
+            <line x1="260" y1="120" x2="260" y2="220"></line>
+            <line x1="280" y1="120" x2="280" y2="220"></line>
+          </g>
+          <!-- door -->
+          <rect x="195" y="172" width="30" height="48" fill="#16181b" stroke="#ff6a1a" stroke-width="1.5"></rect>
+          <!-- dimension: width -->
+          <g stroke="#6f7680" stroke-width="1">
+            <line x1="120" y1="240" x2="300" y2="240"></line>
+            <line x1="120" y1="234" x2="120" y2="246"></line>
+            <line x1="300" y1="234" x2="300" y2="246"></line>
+          </g>
+          <text x="210" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="12" fill="#9ba1a8">W · width</text>
+          <!-- dimension: height -->
+          <g stroke="#6f7680" stroke-width="1">
+            <line x1="96" y1="60" x2="96" y2="220"></line>
+            <line x1="90" y1="60" x2="102" y2="60"></line>
+            <line x1="90" y1="220" x2="102" y2="220"></line>
+          </g>
+          <text x="70" y="144" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="12" fill="#9ba1a8" transform="rotate(-90 70 144)">H · height</text>
+          <!-- dimension: length (depth) -->
+          <g stroke="#6f7680" stroke-width="1">
+            <line x1="300" y1="120" x2="340" y2="96"></line>
+          </g>
+          <text x="332" y="115" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="12" fill="#9ba1a8">L</text>
+        </svg>
+        <div class="slider-mock">
+          <div class="row"><span class="label">Width</span><div class="track"><div class="fill" style="width:62%;"></div><div class="thumb" style="left:62%;"></div></div></div>
+          <div class="row"><span class="label">Length</span><div class="track"><div class="fill" style="width:44%;"></div><div class="thumb" style="left:44%;"></div></div></div>
+          <div class="row"><span class="label">Roof pitch</span><div class="track"><div class="fill" style="width:30%;"></div><div class="thumb" style="left:30%;"></div></div></div>
+          <p class="fine" style="margin-top:1.1rem;">Plus live eave-height and wall-color controls, and full orbit — drag to look around the building from any angle.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 15 — INFOGRAPHIC -->
   <section class="slide" data-title="The shape of it">
     <div class="inner">
       <p class="eyebrow">The shape of it</p>
@@ -618,7 +864,123 @@
     </div>
   </section>
 
-  <!-- 13 — ENGAGEMENT OPTIONS -->
+  <!-- 16 — CUTOVER JOURNEY -->
+  <section class="slide" data-title="Cutover journey">
+    <div class="inner">
+      <p class="eyebrow">mammoth.build → mammothmb.com</p>
+      <h2 class="title">Zero-downtime, by design.</h2>
+      <p class="lede">
+        The new site and CRM get built and proven out at <strong class="ink">mammothmb.com</strong> while
+        <strong class="ink">mammoth.build</strong> keeps serving customers exactly as it does today —
+        nothing changes for a visitor until the moment we flip the switch.
+      </p>
+      <div class="infoflow">
+        <svg viewBox="0 0 1400 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cutover process diagram: Build, Review, DNS, Go-live, Aftercare, with a status bar showing mammoth.build staying live through DNS and mammothmb.com taking over from Go-live onward.">
+          <defs>
+            <marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#ff6a1a"></path>
+            </marker>
+          </defs>
+
+          <!-- connectors -->
+          <line x1="204" y1="130" x2="383" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow2)"></line>
+          <line x1="491" y1="130" x2="670" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow2)"></line>
+          <line x1="778" y1="130" x2="957" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow2)"></line>
+          <line x1="1065" y1="130" x2="1244" y2="130" stroke="#ff6a1a" stroke-width="3" marker-end="url(#arrow2)"></line>
+
+          <!-- stage: BUILD -->
+          <g>
+            <rect x="80" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="150" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">01 · BUILD</text>
+            <circle cx="150" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="128" y1="150" x2="128" y2="108"></line>
+              <line x1="128" y1="108" x2="172" y2="108"></line>
+              <line x1="150" y1="108" x2="150" y2="128"></line>
+              <line x1="118" y1="150" x2="138" y2="150"></line>
+            </g>
+            <circle cx="150" cy="132" r="3" fill="#ff6a1a"></circle>
+            <text x="150" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Build</text>
+            <text x="150" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">New site + CRM built</text>
+            <text x="150" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">at mammothmb.com</text>
+          </g>
+
+          <!-- stage: REVIEW -->
+          <g>
+            <rect x="367" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="437" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">02 · REVIEW</text>
+            <circle cx="437" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round">
+              <circle cx="428" cy="120" r="16"></circle>
+              <line x1="440" y1="132" x2="458" y2="150"></line>
+            </g>
+            <text x="437" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Review</text>
+            <text x="437" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">RDD verifies data,</text>
+            <text x="437" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">security &amp; forms; Michael signs off</text>
+          </g>
+
+          <!-- stage: DNS -->
+          <g>
+            <rect x="654" y="14" width="140" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="724" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">03 · DNS</text>
+            <circle cx="724" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none">
+              <circle cx="702" cy="118" r="5" fill="#ff6a1a"></circle>
+              <circle cx="746" cy="118" r="5" fill="#ff6a1a"></circle>
+              <circle cx="724" cy="146" r="5" fill="#ff6a1a"></circle>
+              <line x1="702" y1="118" x2="746" y2="118"></line>
+              <line x1="702" y1="118" x2="724" y2="146"></line>
+              <line x1="746" y1="118" x2="724" y2="146"></line>
+            </g>
+            <text x="724" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">DNS</text>
+            <text x="724" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">Records point</text>
+            <text x="724" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">mammothmb.com live</text>
+          </g>
+
+          <!-- stage: GO-LIVE -->
+          <g>
+            <rect x="931" y="14" width="160" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="1011" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">04 · GO-LIVE</text>
+            <circle cx="1011" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="997,122 1011,104 1025,122"></polyline>
+              <line x1="1011" y1="108" x2="1011" y2="150"></line>
+            </g>
+            <text x="1011" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Go-live</text>
+            <text x="1011" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">mammoth.build retires</text>
+            <text x="1011" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">on Michael's schedule</text>
+          </g>
+
+          <!-- stage: AFTERCARE -->
+          <g>
+            <rect x="1198" y="14" width="164" height="32" rx="16" fill="rgba(255,106,26,.14)" stroke="#ff6a1a"></rect>
+            <text x="1280" y="35" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="13" letter-spacing="1" fill="#ff6a1a">05 · AFTERCARE</text>
+            <circle cx="1280" cy="130" r="54" fill="#1c1f23" stroke="#2a2e33" stroke-width="2"></circle>
+            <g stroke="#ff6a1a" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M 1280,102 L 1258,112 L 1258,132 C 1258,148 1268,158 1280,162 C 1292,158 1302,148 1302,132 L 1302,112 Z"></path>
+              <path d="M 1270,132 L 1278,140 L 1292,120" stroke-width="2.5"></path>
+            </g>
+            <text x="1280" y="216" text-anchor="middle" font-family="Bahnschrift,Arial Narrow,system-ui,sans-serif" font-weight="700" font-size="19" fill="#f4f5f6">Aftercare</text>
+            <text x="1280" y="242" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">RDD watches closely —</text>
+            <text x="1280" y="260" text-anchor="middle" font-family="-apple-system,Segoe UI,system-ui,sans-serif" font-size="13" fill="#9ba1a8">uptime, forms, quick fixes</text>
+          </g>
+        </svg>
+        <div class="cutover-bars">
+          <div class="bar old" style="flex-grow:3;">
+            <div class="track"></div>
+            <div class="label"><strong>mammoth.build</strong> — live the whole time</div>
+          </div>
+          <div class="bar new" style="flex-grow:2;">
+            <div class="track"></div>
+            <div class="label"><strong>mammothmb.com</strong> — live from Go-live onward</div>
+          </div>
+        </div>
+        <p class="infoflow-caption">The site and mammothmb.com are covered by the RDD team, end to end — before, during, and after the switch.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 17 — ENGAGEMENT OPTIONS -->
   <section class="slide" data-title="Working together">
     <div class="inner">
       <p class="eyebrow">Working together</p>
@@ -643,7 +1005,7 @@
     </div>
   </section>
 
-  <!-- 14 — NEXT STEPS -->
+  <!-- 18 — NEXT STEPS + CLOSE -->
   <section class="slide" data-title="Next steps">
     <div class="inner">
       <p class="eyebrow">Next steps</p>
@@ -653,8 +1015,13 @@
         <li>Walk through the CRM/intake direction already in build.</li>
         <li>Pick one lane from the Pricing options one-pager and start there.</li>
       </ul>
-      <p class="lede" style="margin-top:1.8rem;">Built all the way through — for the business, not just the build.</p>
-      <p class="fine">
+      <div class="closing-beat">
+        <p class="line">Built by Ronin Building Design.</p>
+        <p class="line">Built for Mammoth.</p>
+        <p class="line">Built for family.</p>
+        <p class="line accent">Built for success.</p>
+      </div>
+      <p class="fine" style="margin-top:1.6rem;">
         Ronin Building Design · reachable for now via
         <a href="mailto:welcome@ronindojodesign.com?subject=Mammoth%20Build%20pitch%20deck" style="color:var(--primary);">welcome@ronindojodesign.com</a>
       </p>
@@ -665,12 +1032,14 @@
     <div class="brand"><strong>Ronin Building Design</strong> — a Ronin Dojo Design company</div>
     <div class="nav-cluster">
       <button class="nav-btn" id="prevBtn" aria-label="Previous slide">‹</button>
-      <span class="counter" id="counter">01 / 14</span>
+      <span class="counter" id="counter">01 / 18</span>
       <button class="nav-btn" id="nextBtn" aria-label="Next slide">›</button>
     </div>
   </div>
   <button class="edge-zone left" id="edgeLeft" aria-label="Previous slide"></button>
   <button class="edge-zone right" id="edgeRight" aria-label="Next slide"></button>
+  <button class="corner-nav-btn left" id="cornerPrev" aria-label="Previous slide">‹</button>
+  <button class="corner-nav-btn right" id="cornerNext" aria-label="Next slide">›</button>
 </div>
 
 <script>
@@ -685,6 +1054,8 @@
     var nextBtn = document.getElementById('nextBtn');
     var edgeLeft = document.getElementById('edgeLeft');
     var edgeRight = document.getElementById('edgeRight');
+    var cornerPrev = document.getElementById('cornerPrev');
+    var cornerNext = document.getElementById('cornerNext');
 
     function pad(n) { return n < 10 ? '0' + n : '' + n; }
 
@@ -696,6 +1067,8 @@
       progressEl.style.width = (((idx + 1) / total) * 100) + '%';
       prevBtn.disabled = idx === 0;
       nextBtn.disabled = idx === total - 1;
+      cornerPrev.disabled = idx === 0;
+      cornerNext.disabled = idx === total - 1;
     }
 
     function next() { if (idx < total - 1) { idx++; render(); } }
@@ -719,6 +1092,8 @@
     nextBtn.addEventListener('click', next);
     edgeLeft.addEventListener('click', prev);
     edgeRight.addEventListener('click', next);
+    cornerPrev.addEventListener('click', prev);
+    cornerNext.addEventListener('click', next);
 
     render();
   })();
