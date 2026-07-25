@@ -159,6 +159,12 @@ export const APP_AREA_PERMISSIONS = {
   roles: "roles.manage",
   schedule: "schedule.manage",
   skillLevels: "skill-levels.manage",
+  // SESSION_0686: the consent-gated social approval-queue (`/app/social-queue`). A new authz
+  // NEED maps to a new KEY in the existing per-area matrix, never a new system (mirrors
+  // `clientIntake`/`planningIntake`). Deliberately NOT `posts.manage` — a marketing queue
+  // reviewable by a future VA must be grantable without handing over blog admin (spec §4).
+  // admin `"*"` covers it; no grant plumbing.
+  socialQueue: "social-queue.manage",
   storage: "storage.manage",
   subscriptionTiers: "subscription-tiers.manage",
   subscriptions: "subscriptions.manage",

@@ -3,6 +3,7 @@ import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
 import { certificates } from "~/server/orpc/routers/certificates"
 import { inbox } from "~/server/orpc/routers/inbox"
+import { socialQueue } from "~/server/orpc/routers/social-queue"
 import { users } from "~/server/orpc/routers/users"
 import { promotion } from "~/server/promotion/router"
 import { techniques } from "~/server/techniques/router"
@@ -32,7 +33,9 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
  * inbound-email read/triage surface. SESSION_0697 (WL-P2-43) adds `users` +
  * `certificates` — the `/app/users` and certificate-issuance admin mutations,
  * whose layout-typed revalidation bypassed the safe-action seam (the third
- * revalidation idiom, now owned by the procedures).
+ * revalidation idiom, now owned by the procedures). SESSION_0686 adds
+ * `socialQueue` — the `social-queue.manage`-gated consent-first approval queue
+ * (nothing publishes).
  */
 export const appRouter = {
   ping,
@@ -41,6 +44,7 @@ export const appRouter = {
   },
   certificates,
   inbox,
+  socialQueue,
   lineage,
   promotion,
   belt,
