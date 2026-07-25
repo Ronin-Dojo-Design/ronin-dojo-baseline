@@ -65,6 +65,7 @@ function passportFormValues(passport: PassportOne) {
     socialLinks: Array.isArray(passport.socialLinks)
       ? (passport.socialLinks as Array<{ platform: string; url: string }>)
       : [],
+    allowSocialCelebration: passport.allowSocialCelebration,
   }
 }
 
@@ -342,6 +343,36 @@ function PassportFields({
 
         <div className="@md:col-span-2">
           <SocialLinksEditor form={form} />
+        </div>
+
+        {/* Fork F2 (SESSION_0705, PL-027): the affirmative publicity opt-in — the ONE place it
+            can be edited (ADR 0025). Default OFF; the social-queue approve gate re-reads it
+            live, so unchecking it revokes consent for any pending celebration. */}
+        <div className="@md:col-span-2 flex flex-col gap-3">
+          <div>
+            <H3 size="h5">Publicity</H3>
+            <Hint>
+              Off by default. When enabled, Black Belt Legacy may celebrate your verified belt
+              promotions on our social channels; every post is still human-reviewed first, and
+              unchecking this revokes permission for anything not yet posted.
+            </Hint>
+          </div>
+          <FormField
+            control={form.control}
+            name="allowSocialCelebration"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    aria-label="Celebrate my promotions publicly"
+                  />
+                </FormControl>
+                <FormLabel className="mt-0!">Celebrate my promotions publicly</FormLabel>
+              </FormItem>
+            )}
+          />
         </div>
       </div>
     </section>

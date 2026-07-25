@@ -17,6 +17,8 @@ export const passportOnePayload = {
   avatarUrl: true,
   bio: true,
   socialLinks: true,
+  // Fork F2 (SESSION_0705): publicity opt-in — surfaced in the PassportEditor only.
+  allowSocialCelebration: true,
   createdAt: true,
   updatedAt: true,
   userId: true,

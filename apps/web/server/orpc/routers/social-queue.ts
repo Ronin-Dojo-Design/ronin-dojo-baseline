@@ -144,9 +144,11 @@ const list = authedProcedure
  * it does NOT publish, schedule, or send anything (non-negotiable #1). The live consent
  * re-check runs FIRST (spec §2.3):
  *
- * - re-check fails `consent-revoked` → the item is auto-flipped to REJECTED with
- *   `rejectedReason: "consent-revoked"` (returned, not thrown — the queue reflects reality).
- * - re-check fails `consent-unratified` / `unknown-basis` → CONFLICT; the item STAYS DRAFT.
+ * - re-check fails `consent-revoked` (subject gone, unclaimed, or — fork F2, ratified
+ *   SESSION_0705 — not holding the `allowSocialCelebration` opt-in) → the item is auto-flipped
+ *   to REJECTED with `rejectedReason: "consent-revoked"` (returned, not thrown — the queue
+ *   reflects reality).
+ * - re-check fails `unknown-basis` → CONFLICT; the item STAYS DRAFT.
  */
 const approve = authedProcedure
   .meta({ permission: APP_AREA_PERMISSIONS.socialQueue })
@@ -166,10 +168,12 @@ const approve = authedProcedure
     }
 
     // THE CONSENT GATE — re-verified against the LIVE subject, never the enqueue-time state.
+    // `allowSocialCelebration` = the fork-F2 affirmative opt-in (default OFF), read live so a
+    // member who opted out after enqueue is honored here.
     const passport = item.passportId
       ? await db.passport.findUnique({
           where: { id: item.passportId },
-          select: { userId: true },
+          select: { userId: true, allowSocialCelebration: true },
         })
       : null
     const consent = evaluateApprovalConsent({ consentBasis: item.consentBasis, passport })
@@ -190,10 +194,7 @@ const approve = authedProcedure
     }
     if (!consent.ok) {
       throw new ORPCError("CONFLICT", {
-        message:
-          consent.reason === "consent-unratified"
-            ? "The publicity-consent mechanism (fork F2) is not yet ratified — person-centric items cannot be approved until it lands. The item stays DRAFT."
-            : "Unrecognized consent basis — refusing to approve. The item stays DRAFT.",
+        message: "Unrecognized consent basis — refusing to approve. The item stays DRAFT.",
       })
     }
 
