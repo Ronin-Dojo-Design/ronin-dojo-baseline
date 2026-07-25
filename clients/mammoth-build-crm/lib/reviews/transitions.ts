@@ -9,10 +9,8 @@
  * on success, so the DB write only happens once this doesn't throw.
  */
 
-import { assertConsentToSend, ConsentGuardError, type ConsentCheckInput } from "./consent";
-import type { ReviewRequestStatus } from "./types";
-
-export { ConsentGuardError };
+import { assertConsentToSend, type ConsentCheckInput } from "./consent";
+import type { ReviewRequestStatus, ReviewSequenceStep } from "./types";
 
 export class ReviewRequestStateError extends Error {
   constructor(message: string) {
@@ -39,4 +37,35 @@ export function assertApprovable(input: ReviewRequestTransitionInput): void {
     );
   }
   assertConsentToSend(input);
+}
+
+/** The (status, optOut) slice of prior ReviewRequest rows the duplicate guard inspects. */
+export interface PriorReviewRequest {
+  status: ReviewRequestStatus;
+  optOut: boolean;
+}
+
+/**
+ * "Send once only" / "Only one follow-up is queued" (review-request-sequences.md
+ * Automation contract + Send checklist): a project may hold at most ONE active
+ * request per sequence step. Called by `generateReviewRequestDraft` with the
+ * project's existing rows for that step, BEFORE it writes a new draft — throws
+ * `ReviewRequestStateError` when a non-opted-out `draft`/`approved` row already
+ * exists. An opted-out row doesn't block: the opt-out ended that thread, and
+ * whether a NEW request may ever go out is the consent gate's call, not this
+ * one's. `sent` rows are the future send step's suppression concern (nothing in
+ * this codebase writes `sent` today).
+ */
+export function assertNoActiveDuplicate(
+  step: ReviewSequenceStep,
+  prior: readonly PriorReviewRequest[],
+): void {
+  const active = prior.some(
+    (row) => !row.optOut && (row.status === "draft" || row.status === "approved"),
+  );
+  if (active) {
+    throw new ReviewRequestStateError(
+      `A ${step} review request is already drafted or approved for this project — send once only.`,
+    );
+  }
 }

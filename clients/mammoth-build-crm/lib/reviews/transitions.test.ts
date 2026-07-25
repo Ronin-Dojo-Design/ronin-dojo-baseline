@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { ConsentGuardError } from "./consent";
-import { assertApprovable, ReviewRequestStateError } from "./transitions";
+import {
+  assertApprovable,
+  assertNoActiveDuplicate,
+  ReviewRequestStateError,
+} from "./transitions";
 
 describe("assertApprovable (draft -> approved, the ONE transition this engine performs)", () => {
   test("approves a draft, consented, non-opted-out email request", () => {
@@ -43,5 +47,35 @@ describe("assertApprovable (draft -> approved, the ONE transition this engine pe
     expect(() =>
       assertApprovable({ status: "approved", channel: "sms", smsConsent: false, optOut: false }),
     ).toThrow(/not draft/);
+  });
+});
+
+describe("assertNoActiveDuplicate (send once only — one active request per project+step)", () => {
+  test("allows the first request for a step (no prior rows)", () => {
+    expect(() => assertNoActiveDuplicate("first_touch", [])).not.toThrow();
+  });
+
+  test("blocks a second draft while one is already drafted for the same step", () => {
+    expect(() =>
+      assertNoActiveDuplicate("first_touch", [{ status: "draft", optOut: false }]),
+    ).toThrow(ReviewRequestStateError);
+  });
+
+  test("blocks a new draft while an approved request is queued for the same step", () => {
+    expect(() =>
+      assertNoActiveDuplicate("follow_up", [{ status: "approved", optOut: false }]),
+    ).toThrow(/send once only/);
+  });
+
+  test("an opted-out prior row doesn't block (that thread ended; consent gate owns the rest)", () => {
+    expect(() =>
+      assertNoActiveDuplicate("first_touch", [{ status: "draft", optOut: true }]),
+    ).not.toThrow();
+  });
+
+  test("a `sent` prior row doesn't trip THIS guard (send-step suppression owns it)", () => {
+    expect(() =>
+      assertNoActiveDuplicate("first_touch", [{ status: "sent", optOut: false }]),
+    ).not.toThrow();
   });
 });

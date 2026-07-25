@@ -21,10 +21,10 @@
  */
 
 import { db } from "../db";
-import { requireOwner, requireOwnedProject } from "../actions";
+import { requireOwner, requireOwnedProject } from "../authz";
 import { getReviewRequestSenderConfig } from "./config";
 import { planReviewRequest } from "./generator";
-import { assertApprovable } from "./transitions";
+import { assertApprovable, assertNoActiveDuplicate } from "./transitions";
 import type { ReviewRequestCustomerInput, ReviewSequenceStep } from "./types";
 
 const OPEN_TASK_STATUSES = ["open", "at_risk"] as const;
@@ -39,6 +39,17 @@ export async function generateReviewRequestDraft(
 ) {
   const ownerId = await requireOwner();
   await requireOwnedProject(projectId, ownerId);
+
+  // "Send once only" / "Only one follow-up is queued" (review-request-
+  // sequences.md Automation contract + Send checklist): a project holds at
+  // most ONE active request per sequence step. Checked before rendering so a
+  // re-trigger can't queue a duplicate draft. The rows are fetched raw and
+  // the RULE lives in the pure guard (lib/reviews/transitions.ts).
+  const priorRequests = await db.reviewRequest.findMany({
+    where: { projectId, sequenceStep: step },
+    select: { status: true, optOut: true },
+  });
+  assertNoActiveDuplicate(step, priorRequests);
 
   const project = await db.project.findUniqueOrThrow({
     where: { id: projectId },
