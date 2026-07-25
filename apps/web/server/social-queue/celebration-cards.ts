@@ -38,7 +38,11 @@ export type RankPromotionCelebrationPayload = {
   kind: "rank-promotion-celebration-card"
   /** Display headline — the queue list's subject line AND the OG card title. */
   headline: string
-  /** Celebration-card params — aligned with the #288/#292 `PromotionCardInput` prototype. */
+  /**
+   * Celebration-card params — same *shape family* as the #288/#292 `PromotionCardInput`
+   * prototype, but deliberately divergent: `beltColorHex` is nullable here (renderer falls
+   * back to brand accent) and `lineageLine` replaces the prototype's `academyName`.
+   */
   card: {
     name: string
     beltName: string
@@ -50,8 +54,10 @@ export type RankPromotionCelebrationPayload = {
     lineageLine: string | null
   }
   /**
-   * RELATIVE OG-render URL (`/api/og?…`) for the card image — origin-free so the stored
-   * payload never bakes in an environment host; the queue surface renders it same-origin.
+   * RELATIVE OG-render URL (`/api/og?…`) — origin-free so the stored payload never bakes in
+   * an environment host; the queue surface renders it same-origin. NOTE: until renderer
+   * graduation (SESSION_0688 ledger #3) this targets the GENERIC OgBase card (title +
+   * description only) — the belt-colored celebration card is a later render path.
    */
   ogImageUrl: string
   /** Relative CTA path for the eventual post link (UTM decoration is the publisher's job). */
@@ -179,7 +185,9 @@ export const enqueueRankPromotionCelebration = async (input: {
     beltColorHex: entry.rank.colorHex,
     awardedAt: entry.rankAward?.awardedAt ?? entry.createdAt,
     lineageLine,
-    slug: dto.slug,
+    // `/directory/[slug]` is visibility-gated — a non-PUBLIC profile would 404 the CTA, so
+    // fall back to /lineage for anything but PUBLIC (the projector returns slug regardless).
+    slug: entry.passport.directoryProfile?.visibility === "PUBLIC" ? dto.slug : null,
   })
 
   const subjectKey = `award:${entry.id}`

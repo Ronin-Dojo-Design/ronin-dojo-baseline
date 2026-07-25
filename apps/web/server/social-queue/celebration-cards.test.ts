@@ -241,6 +241,20 @@ describe("enqueueRankPromotionCelebration — the explicit trigger seam", () => 
     expect(payload.card.lineageLine).toBeNull()
   })
 
+  it("non-PUBLIC directory visibility → draft created, CTA falls back to /lineage (no 404 CTA)", async () => {
+    state.entry = makeEntry({
+      passport: makePassport({
+        directoryProfile: { slug: "jane-doe", visibility: "MEMBERS_ONLY", showRanks: true },
+      }),
+    })
+    const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
+    expect(result.outcome).toBe("created")
+    const payload = state.createCalls[0].payload as { ctaPath: string }
+    // `/directory/[slug]` is visibility-gated server-side — baking the slug into the payload
+    // for a MEMBERS_ONLY/HIDDEN profile would hand the publisher a dead link.
+    expect(payload.ctaPath).toBe("/lineage")
+  })
+
   it("CONSENT FAILS CLOSED: placeholder subject (no account) → nothing is generated", async () => {
     state.entry = makeEntry({ passport: makePassport({ user: null }) })
     const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
