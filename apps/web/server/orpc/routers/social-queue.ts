@@ -83,6 +83,20 @@ const headlineOf = (payload: unknown): string | null => {
   return null
 }
 
+/**
+ * @added SESSION_0688 — extract the card-preview render URL from a payload snapshot
+ * (`{ ogImageUrl: "/api/og?…" }`, written by the celebration-card feeder). RELATIVE og-route
+ * paths ONLY: a stored payload can never point the admin surface's <img> at an arbitrary
+ * origin — anything else ships as null.
+ */
+const previewImageUrlOf = (payload: unknown): string | null => {
+  if (payload && typeof payload === "object" && !Array.isArray(payload)) {
+    const url = (payload as Record<string, unknown>).ogImageUrl
+    if (typeof url === "string" && url.startsWith("/api/og?")) return url
+  }
+  return null
+}
+
 const list = authedProcedure
   .meta({ permission: APP_AREA_PERMISSIONS.socialQueue })
   .input(listInput)
@@ -111,6 +125,7 @@ const list = authedProcedure
     const rows: SocialQueueRow[] = items.map(item => ({
       id: item.id,
       headline: headlineOf(item.payload),
+      previewImageUrl: previewImageUrlOf(item.payload),
       subjectKey: item.subjectKey,
       source: item.source,
       consentBasis: item.consentBasis,
