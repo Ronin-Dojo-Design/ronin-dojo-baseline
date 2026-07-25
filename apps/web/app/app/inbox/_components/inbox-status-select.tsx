@@ -4,13 +4,15 @@ import { useState, useTransition } from "react"
 import { toast } from "sonner"
 import { DataSelect } from "~/components/common/data-select"
 import { client } from "~/lib/orpc-client"
-import { INBOX_TRIAGE_STATUSES, type InboxTriageStatus } from "~/server/inbox/schema"
+import {
+  INBOX_TRIAGE_STATUS_LABELS,
+  INBOX_TRIAGE_STATUSES,
+  type InboxTriageStatus,
+} from "~/server/inbox/schema"
 
-const STATUS_OPTIONS: { value: InboxTriageStatus; label: string }[] = [
-  { value: "UNREAD", label: "Unread" },
-  { value: "READ", label: "Read" },
-  { value: "ARCHIVED", label: "Archived" },
-]
+const STATUS_OPTIONS: { value: InboxTriageStatus; label: string }[] = INBOX_TRIAGE_STATUSES.map(
+  status => ({ value: status, label: INBOX_TRIAGE_STATUS_LABELS[status] }),
+)
 
 // `unknown` because Base UI's Select `onValueChange` is untyped in the generic-less form.
 const toTriageStatus = (value: unknown): InboxTriageStatus =>

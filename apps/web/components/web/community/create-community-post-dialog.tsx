@@ -35,6 +35,7 @@ import { TextArea } from "~/components/common/textarea"
 import { LoginDialog } from "~/components/web/auth/login-dialog"
 import { COMMUNITY_POST_TYPES } from "~/components/web/community/post-type"
 import { useSession } from "~/lib/auth-client"
+import { UPGRADE_HREF } from "~/lib/entitlements/routes"
 import { createCommunityPost, uploadCommunityPostImage } from "~/server/web/community/actions"
 import { communityPostImageSchema, createCommunityPostSchema } from "~/server/web/community/schema"
 
@@ -55,9 +56,6 @@ import { communityPostImageSchema, createCommunityPostSchema } from "~/server/we
 
 /** Title input cap — mirrored into the remaining-characters hint (C1-7). */
 const TITLE_MAX_LENGTH = 100
-
-/** The paid-tier upgrade funnel — the same route the profile/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
 
 type CreateCommunityPostDialogProps = {
   styles: { id: string; name: string }[]

@@ -41,6 +41,16 @@ describe("formatPromotionDate", () => {
   it("returns null for an unparseable date", () => {
     expect(formatPromotionDate("not-a-date")).toBeNull()
   })
+
+  // WL-P2-45 rider d: widened to accept Date so RanksSection (Prisma Date columns)
+  // shares this formatter instead of its former formatPromotedOn duplicate.
+  it("accepts a Date instance (the RanksSection call shape)", () => {
+    expect(formatPromotionDate(new Date("2009-07-08T00:00:00.000Z"))).toBe("Jul 2009")
+  })
+
+  it("returns null for an invalid Date instance", () => {
+    expect(formatPromotionDate(new Date("not-a-date"))).toBeNull()
+  })
 })
 
 describe("sortByPromotion", () => {
