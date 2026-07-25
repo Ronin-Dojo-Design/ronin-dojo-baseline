@@ -1,9 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
 import { useRouter } from "next/navigation"
 import { type ComponentProps, use, useMemo } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { AffiliationRole } from "~/.generated/prisma/browser"
 import { BeltSwatch } from "~/components/common/belt-swatch"
@@ -23,10 +23,18 @@ import { Input } from "~/components/common/input"
 import { Link } from "~/components/common/link"
 import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
+import type { z } from "zod"
+import { client } from "~/lib/orpc-client"
 import { cx } from "~/lib/utils"
-import { createPerson } from "~/server/admin/users/actions"
 import type { findAddPersonOptions } from "~/server/admin/users/queries"
 import { createPersonSchema } from "~/server/admin/users/schema"
+
+/**
+ * Form values are the schema's INPUT type (`affiliationRole` carries a `.default()`, so
+ * z.input != z.infer): `zodResolver` types itself over the input side, and the oRPC client
+ * accepts input-typed values (the procedure's own validation applies the default).
+ */
+type CreatePersonFormValues = z.input<typeof createPersonSchema>
 
 const AFFILIATION_ROLE_LABELS: Record<AffiliationRole, string> = {
   [AffiliationRole.TRAINS_AT]: "Trains at",
@@ -43,41 +51,39 @@ type PersonFormProps = ComponentProps<"form"> & {
 /**
  * Admin "just add someone" form. One submit → accountless Passport (no synthetic User, per
  * SOT-ADR D1 — claimable precisely because it has no account) + stated RankAward + optional
- * Affiliation (lineage placement layered in SESSION_0358 TASK_02). Mirrors the
- * `/admin/tools/new` create idiom (react-hook-form + Zod + next-safe-action). Selects are
- * dynamically populated and id-aware (`DataSelect`) — no hardcoded ranks/orgs.
+ * Affiliation (lineage placement layered in SESSION_0358 TASK_02). Writes through the oRPC
+ * `users.createPerson` procedure (WL-P2-43 — full-oRPC direction; react-hook-form + Zod).
+ * Selects are dynamically populated and id-aware (`DataSelect`) — no hardcoded ranks/orgs.
  */
 export function PersonForm({ className, title, optionsPromise, ...props }: PersonFormProps) {
   const router = useRouter()
   const { disciplines, ranks, organizations, trees, treeMembers } = use(optionsPromise)
-  const resolver = zodResolver(createPersonSchema)
 
-  const { form, action, handleSubmitWithAction } = useHookFormAction(createPerson, resolver, {
-    formProps: {
-      defaultValues: {
-        name: "",
-        displayName: "",
-        email: "",
-        disciplineId: "",
-        rankId: "",
-        organizationId: "",
-        schoolName: "",
-        affiliationRole: AffiliationRole.TRAINS_AT,
-        treeId: "",
-        parentMemberId: "",
-      },
+  const form = useForm<CreatePersonFormValues>({
+    resolver: zodResolver(createPersonSchema),
+    defaultValues: {
+      name: "",
+      displayName: "",
+      email: "",
+      disciplineId: "",
+      rankId: "",
+      organizationId: "",
+      schoolName: "",
+      affiliationRole: AffiliationRole.TRAINS_AT,
+      treeId: "",
+      parentMemberId: "",
     },
+  })
 
-    actionProps: {
-      onSuccess: () => {
-        toast.success("Person added")
-        router.push("/app/users")
-      },
-
-      onError: ({ error }) => {
-        toast.error(error.serverError ?? "Could not add person")
-      },
-    },
+  const handleSubmitWithAction = form.handleSubmit(async values => {
+    try {
+      await client.users.createPerson(values)
+      toast.success("Person added")
+      router.push("/app/users")
+    } catch (error) {
+      // Surface the real oRPC message; fall back only for opaque failures.
+      toast.error(error instanceof Error && error.message ? error.message : "Could not add person")
+    }
   })
 
   const disciplineId = form.watch("disciplineId")
@@ -342,7 +348,7 @@ export function PersonForm({ className, title, optionsPromise, ...props }: Perso
             Cancel
           </Button>
 
-          <Button type="submit" size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={form.formState.isSubmitting}>
             Add person
           </Button>
         </div>

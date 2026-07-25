@@ -1,12 +1,14 @@
 "use client"
 
-import { useAction } from "next-safe-action/hooks"
+import { useRouter } from "next/navigation"
+import { useTransition } from "react"
+import { toast } from "sonner"
 import { CertificateIssueDialog } from "~/app/app/certificates/_components/certificate-issue-dialog"
 import type { ActiveUser } from "~/components/admin/recipient-options"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { H4 } from "~/components/common/heading"
-import { revokeCertificate } from "~/server/admin/certificates/issuance-actions"
+import { client } from "~/lib/orpc-client"
 import type { findIssuancesByTemplate } from "~/server/admin/certificates/issuance-queries"
 
 type Issuance = Awaited<ReturnType<typeof findIssuancesByTemplate>>[number]
@@ -18,7 +20,24 @@ type Props = {
 }
 
 export function CertificateIssuanceList({ templateId, issuances, users }: Props) {
-  const { execute: revokeAction, isPending } = useAction(revokeCertificate)
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  // oRPC `certificates.revoke` (WL-P2-43): the procedure owns the layout-typed
+  // revalidation; the refresh here re-renders the revoked row (a Server Action
+  // used to carry that re-render in-band — an RPC response doesn't).
+  const revokeAction = ({ id }: { id: string }) => {
+    startTransition(async () => {
+      try {
+        await client.certificates.revoke({ id })
+        router.refresh()
+      } catch (error) {
+        toast.error(
+          error instanceof Error && error.message ? error.message : "Failed to revoke certificate",
+        )
+      }
+    })
+  }
 
   return (
     <div className="space-y-4">
