@@ -33,7 +33,14 @@ import {
   type SalesCockpitReadModel,
   type SalesQueueItem,
 } from "./sales-cockpit";
+import type { PrismaClient } from "../.generated/prisma/client";
 import { phoneKey } from "./contact-match";
+import {
+  INTAKE_QUESTIONNAIRE,
+  planIntakeCommit,
+  type IntakeCaptureInput,
+  type IntakeCommitReport,
+} from "./intake-commit";
 import { FIRST_TOUCH_NEXT_TASK, planLeadCommit, type LeadCommitReport } from "./lead-commit";
 import type { ExistingContact, LeadSheetFormat } from "./lead-ingest";
 import type { LeadSourceValue } from "./lead-source";
@@ -251,32 +258,41 @@ async function loadProject(id: string): Promise<Project> {
 }
 
 /**
- * Find a contact by case-insensitive email, then by normalized phone, else
- * create one. The write-path half of the ONE dedupe semantic
- * (lib/contact-match.ts) — widened at SESSION_0582 to match the ingest
- * preview (operator ratification #1): email compares case-insensitively, and a
- * provided phone falls back to a last-10-digit match. Phone candidates are
- * keyed in JS because the column stores free-form spellings SQL can't
- * normalize — same tracer-scale tradeoff as `listLeadDedupeIndex`.
+ * Match a contact by case-insensitive email, then by normalized phone — the write-path half of
+ * the ONE dedupe semantic (lib/contact-match.ts), widened at SESSION_0582 to match the ingest
+ * preview (operator ratification #1). Phone candidates are keyed in JS because the column stores
+ * free-form spellings SQL can't normalize — same tracer-scale tradeoff as `listLeadDedupeIndex`.
+ * Split from `findOrCreateContact` at SESSION_0632 so callers that must REPORT a match without
+ * creating (the intake commit) consume the same matcher rather than growing a second one; takes
+ * the db/transaction client so a caller can match inside its own transaction snapshot.
  */
-async function findOrCreateContact(name?: string, email?: string, phone?: string) {
-  const trimmedEmail = (email ?? "").trim();
-  const trimmedPhone = (phone ?? "").trim();
+async function matchContact(client: Pick<PrismaClient, "contact">, email: string, phone: string) {
+  const trimmedEmail = email.trim();
   if (trimmedEmail) {
-    const existing = await db.contact.findFirst({
+    const existing = await client.contact.findFirst({
       where: { email: { equals: trimmedEmail, mode: "insensitive" } },
     });
     if (existing) {
       return existing;
     }
   }
-  const byPhone = phoneKey(trimmedPhone);
+  const byPhone = phoneKey(phone.trim());
   if (byPhone) {
-    const candidates = await db.contact.findMany({ where: { phone: { not: null } } });
+    const candidates = await client.contact.findMany({ where: { phone: { not: null } } });
     const match = candidates.find((candidate) => phoneKey(candidate.phone) === byPhone);
     if (match) {
       return match;
     }
+  }
+  return null;
+}
+
+async function findOrCreateContact(name?: string, email?: string, phone?: string) {
+  const trimmedEmail = (email ?? "").trim();
+  const trimmedPhone = (phone ?? "").trim();
+  const match = await matchContact(db, trimmedEmail, trimmedPhone);
+  if (match) {
+    return match;
   }
   return db.contact.create({
     data: {
@@ -752,6 +768,41 @@ export async function commitLeadSheet(
     // transaction budget is too tight for a full sheet on a cold pool.
     { timeout: 30_000 },
   );
+}
+
+/**
+ * Commit one discovery-intake capture — the write half of /app/intake (SESSION_0632, behind the
+ * page's explicit confirm). Owner-gated. The server re-runs `planIntakeCommit` on the raw input
+ * (client-shaped payloads are never trusted): a capture with no valid email/phone key or no
+ * answers is refused with a report, never written. Dedupe runs INSIDE the transaction via
+ * `matchContact` (the ONE matcher): a matched contact is attached to and reported — never
+ * enriched or overwritten — and the lead Project lands on the pipeline with the same
+ * `createProject` semantics as every other lead (MB-LEAD-002 posture).
+ *
+ * RETENTION LAW: answers flow only to the CRM DB (Project.notes digest); the report carries
+ * ids and the match flag, never answer text.
+ */
+export async function commitIntakeCapture(input: IntakeCaptureInput): Promise<IntakeCommitReport> {
+  const ownerId = await requireOwner();
+  const plan = planIntakeCommit(INTAKE_QUESTIONNAIRE, input);
+  if (!plan.ok) {
+    return plan;
+  }
+  return db.$transaction(async (transaction) => {
+    const matched = await matchContact(transaction, plan.contact.email, plan.contact.phone ?? "");
+    const contact =
+      matched ?? (await transaction.contact.create({ data: plan.contact, select: { id: true } }));
+    const project = await transaction.project.create({
+      data: { ...plan.project, contactId: contact.id, ownerId },
+      select: { id: true, name: true },
+    });
+    return {
+      ok: true as const,
+      contactMatched: matched !== null,
+      projectId: project.id,
+      projectName: project.name,
+    };
+  });
 }
 
 /**
