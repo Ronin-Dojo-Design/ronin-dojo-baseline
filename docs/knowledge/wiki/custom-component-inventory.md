@@ -4,8 +4,8 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-23
-last_agent: codex-session-0622
+updated: 2026-07-25
+last_agent: claude-session-0692
 pairs_with:
   - docs/sprints/SESSION_0398.md
   - docs/sprints/SESSION_0386.md
@@ -658,6 +658,19 @@ The three placeholder panels replaced by real self-fetching panels, each composi
 | `ComponentCatalogPanel` + `CardCatalogPanel` (WS-B) | `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog}-panel.tsx` | Projects the PWCC `/files` specs (`status`/`lifecycle`/`wiring`/`brands`) via `component-catalog-parse.ts` + `fetch-catalog.ts`. Cards = a FACET (`kind === "card"`) of the SAME feed via a shared `buildCatalogPanels` (ADR 0040 — one source, not two). `brands:` added to the `/files` SPEC_TEMPLATE; untagged → `rdd`. `bugs` stubbed until DBS (0596) lands. |
 | `CookbookPanel` (WS-C) | `apps/web/components/app/state-of-dojo/cookbook-panel.tsx` | Projects `SOT_Cookbook.md` router rows + `recipes/*.md` frontmatter via `cookbook-parse.ts` + `fetch-cookbook.ts`, **stage-tagged** (idea/plan/build/review/ship — same vocabulary as the preview artifact). Correctly did NOT force `BrandTabs` (product-lane-typed); reused the L1 `Tabs` primitive filtered by `PipelineStage` (`defaultStage` = first-non-empty). |
 | `TokenCostPanel` + `TokenCostChart`/`TokenCostSessionTable` (WS-D) | `apps/web/components/app/state-of-dojo/token-cost/*` | Reads per-session `telemetry:` frontmatter (`token-cost-parse.ts` + `fetch-token-cost.ts`; schema at `docs/protocols/state-of-dojo-telemetry-schema.md`) → a HAND-ROLLED SVG area chart (tokens-correct, a11y-complete, `role="img"` + accessible table twin — no `dataviz`/chart-lib exists; DES-002 tracks the missing shared primitive). `$/token` rates are labeled estimates. |
+
+## BBL social-flywheel approval queue — `/app/social-queue` (SESSION_0686/0688)
+
+Conformed **AdminCollection** sibling of `/app/inbox` (the pattern IS the admin law — `/app/tools`
+= ref impl). No shared component was created or edited; route-local leaves compose the shared
+AdminCollection/data-table kernel. Consent posture: the status machine has NO edge into
+PUBLISHED; approve stops at APPROVED (see PL-027 for the activation forks).
+
+| Component | Path | Notable behavior |
+| --- | --- | --- |
+| `SocialQueueTable` | `apps/web/app/app/social-queue/_components/social-queue-table.tsx` | Conformed AdminCollection data-table over `SocialQueueItem` (Source facet, Draft-first status select, honest empty state). Merge smoke PASS (SESSION_0692). |
+| `SocialQueueRowActions` | `apps/web/app/app/social-queue/_components/social-queue-row-actions.tsx` | Row-level approve/reject over the oRPC `socialQueue` router; caller-owned items as `RowActionsMenu` children (shell law upheld). MEMBER_OPT_IN approval fails closed until fork F2 ratifies. |
+| preview-thumbnail column | `apps/web/app/app/social-queue/_components/social-queue-table-columns.tsx` | SESSION_0688 addition: renders the existing generic `/api/og` OgBase card as a preview thumbnail (`previewImageUrl`); null-safe for empty/legacy payloads. Belt-color renderer graduation into `components/web/og/` is deferred (PL-027). |
 
 ## How to update this file
 

@@ -4,6 +4,7 @@ slug: rdd-founder-linkedin-content-calendar-draft
 type: content-draft
 status: draft
 created: 2026-07-24
+updated: 2026-07-25
 session: SESSION_0658
 author: "Claude (Fable 5) — overnight auto lane, wave 6"
 last_agent: claude-session-0658

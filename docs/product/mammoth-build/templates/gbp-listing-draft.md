@@ -8,6 +8,8 @@ session: 0656
 
 > **DRAFT — VERIFY EVERY PLACEHOLDER BEFORE PUBLISHING**
 
+> **Superseded for claim work** by [`docs/product/mammoth-build/gbp/submission-pack.md`](../gbp/submission-pack.md) (SESSION_0684) — the actionable submission pack; this template stays as the source draft.
+
 # Google Business Profile listing draft
 
 This draft uses Mammoth's existing product and brand canon. Unknown listing facts stay explicit

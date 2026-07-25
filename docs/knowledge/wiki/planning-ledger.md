@@ -4,8 +4,8 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-22
-last_agent: petey-session-0616
+updated: 2026-07-25
+last_agent: claude-session-0692
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -522,6 +522,73 @@ plan scope.
 - **Anchors:** `/schools/[slug]` + org registration flows, join-funnel memory (comp gate + global
   modal), claim system (ADR 0036), PL-025 (same surface family — consider co-planning).
 - **Lane:** BBL product. **Cross-refs:** SESSION_0696 (org-claim e2e), goals-ledger G-022 adjacency.
+
+### PL-027 — BBL social-flywheel activation: ratify fork F2 + wire the celebration trigger — queued
+
+- **Status:** queued. Intake: SESSION_0686 + SESSION_0688 proposed-ledger sections (waves 15/16,
+  merged as PRs #318/#321 at SESSION_0692 — the approval-queue + OG publish path are LIVE but
+  deliberately inert until these decisions land).
+- **Ratify (operator) — fork F2:** publicity-consent mechanism + default. Spec §2.3 recommends
+  `Passport.allowSocialCelebration` — **opt-in, default OFF, edited only in the PassportEditor**.
+  Until ratified, MEMBER_OPT_IN approvals **fail closed** (by design): RANK_PROMOTION drafts
+  accumulate in DRAFT and cannot be approved.
+- **Then wire:**
+  - **Celebration trigger call-site** — `enqueueRankPromotionCelebration` has NO call site by
+    design (admin action on RankEntry verify? event hook? Phase-D nightly diff?) — wherever it
+    fires, it **must be authz-gated**.
+  - **Approval-UI residue** — `/app/social-queue` sidebar nav entry deliberately not added
+    (permission-gated, URL-reachable today).
+  - **Belt-color renderer graduation** — the celebration card still renders the generic `/api/og`
+    OgBase; graduate the #288/#292 prototype (`scripts/prototypes/bbl-og-cards/`, which app code
+    must not import) into `components/web/og/` — payload already carries
+    `beltColorHex`/`lineageLine`, so it's render-side only.
+- **Brand-enum prune note (SESSION_0692):** `SocialQueueItem` added `brand Brand @default(BBL)`
+  (unread column) — include in the dead in-app Brand-enum/`getRequestBrand` prune epic's
+  checklist (drop = migration). No drift-register row exists for that prune yet; this bullet is
+  the pointer.
+- **Lane:** BBL product. **Cross-refs:** SESSION_0686, SESSION_0688, SESSION_0692,
+  [custom-component-inventory](custom-component-inventory.md) (`/app/social-queue`).
+
+### PL-028 — MMB engines wiring slice: triggers + approval UIs for the review-request and posting engines — queued
+
+- **Status:** queued. Intake: SESSION_0685 + SESSION_0687 proposed-ledger sections + SESSION_0692
+  review findings (merged as PRs #316/#317; both engines stop at `approved` — no send/post path
+  exists).
+- **Scope to plan:**
+  - **Completed-job trigger** — wire the `Project.stage → complete` hook to
+    `generateReviewRequestDraft` (no call site today).
+  - **Approval UI** — for review-requests (`app/reviews/**` was not built) and posting drafts
+    (`/posting` has no nav link from the `/app` shell — deferred to avoid a two-lane race).
+  - **Decide "Resolution Task" semantics** — today ANY open task suppresses the Google-review ask
+    (routes to `private_recovery`, never `google_request`).
+  - **Contact-level opt-out durability** before any send step lands (consent re-checked LIVE at
+    approval; opt-out must survive to the send seam).
+  - **Dedup `requireOwner`** — `lib/posting/actions.ts` duplicates it verbatim; import the
+    `lib/authz.ts` helper (0685's auth helpers moved there at SESSION_0692 fix `02e2e0e5`).
+  - **Add a `prebuild` migrate-deploy hook** to `clients/mammoth-build-crm` (unlike `apps/web`,
+    committed migrations don't auto-apply on deploy — both wave migrations were applied manually).
+  - **Post-GBP-claim wiring** — once the operator verifies the GBP: mammoth.build footer GBP link
+    (closes the #282 gap) + the CRM Satisfied-Installation → review-request seam.
+- **Lane:** client — Mammoth Build. **Cross-refs:** PL-024 (fold in where the MVP overlaps),
+  SESSION_0684 (`docs/product/mammoth-build/gbp/submission-pack.md`), SESSION_0692.
+
+### PL-029 — RDD founder-LinkedIn calendar start: ratify forks F1 + F4, anchor Day 1 — queued
+
+- **Status:** queued. Intake: SESSION_0690 (calendar drafted, cannot start).
+- **Blocked on operator:** (a) ratify forks **F1** (platform priority) and **F4** (AI-assist
+  level) in `docs/architecture/research/research-review-rdd-social-automation.md` — both still
+  `pending operator sign-off`; (b) anchor **Day 1 to a real Monday** so the calendar's `Date`
+  column can be filled.
+- **At ratification (one edit, not before):** reconcile the calendar's "Fork-dependent notes" and
+  the #283/#280 draft's fork-appendix to the chosen options; then run the weekly approval pass.
+  Drafts only — the operator schedules; no auto-post exists or is implied.
+- **Executable artifact (handle side of the same RDD social start — #291/SESSION_0689):**
+  `docs/architecture/research/rdd-handle-reservation-worksheet.md` (audit → worksheet → operator
+  reserves; record reservations + fallbacks after the sitting). Placed here because the
+  goals-ledger's "RDD social-goals row" SESSION_0664/0689 pointed at was never minted (G-032
+  burned) — this PL row is where that pointer lives until an RDD social G-row exists.
+- **Lane:** RDD brand. **Cross-refs:** `docs/product/rdd/founder-linkedin-calendar.md`,
+  SESSION_0690, SESSION_0689, `docs/architecture/research/rdd-niche-handle-audit.md`.
 
 ## Cross-references
 

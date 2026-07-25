@@ -315,7 +315,9 @@ if (PREFIX === "SESSION") {
       .map(s => s.trim())
       .filter(Boolean)
     for (const b of branches) {
-      const m = b.match(/^session-(\d{4})(?:\D|$)/)
+      // `auto/session-NNNN-*` (overnight-orchestrator lanes) claims a number exactly like
+      // `session-NNNN-*` — missing the prefix minted collisions at SESSION_0692's close.
+      const m = b.match(/^(?:auto\/)?session-(\d{4})(?:\D|$)/)
       if (m) numbers.add(Number.parseInt(m[1] as string, 10))
     }
   } catch {
