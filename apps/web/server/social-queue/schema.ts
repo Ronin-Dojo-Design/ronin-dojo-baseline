@@ -77,6 +77,12 @@ export type SocialQueueSortableColumn = (typeof SOCIAL_QUEUE_SORTABLE_COLUMNS)[n
 export type SocialQueueRow = {
   id: string
   headline: string | null
+  /**
+   * @added SESSION_0688 — relative `/api/og?…` card-preview URL extracted from the payload
+   * snapshot (og-route paths ONLY — the router refuses any other payload URL); null when the
+   * payload carries none. Rendered as the row thumbnail; the payload itself stays server-only.
+   */
+  previewImageUrl: string | null
   /** The idempotency key (`claim:<id>` · `award:<id>` · …) — the operator's fallback label. */
   subjectKey: string
   source: string

@@ -2,6 +2,7 @@
 
 import { formatDate } from "@dirstack/utils"
 import type { ColumnDef } from "@tanstack/react-table"
+import Image from "next/image"
 import type { ComponentProps } from "react"
 import { Badge } from "~/components/common/badge"
 import { Note } from "~/components/common/note"
@@ -44,13 +45,31 @@ const enumBadge = <K extends string>(
 }
 
 /**
- * Columns for the `/app/social-queue` AdminCollection (SESSION_0686, spec §4): subject,
- * source, consent basis, status, created, approve/reject actions (pinned right — the tools
- * table convention). The preview drawer + rendered-card thumbnail arrive with the renderer
- * phase; this slice reviews on the payload headline.
+ * Columns for the `/app/social-queue` AdminCollection (SESSION_0686, spec §4): card preview
+ * (SESSION_0688 — the og-route render of the payload's card params; the screenshot-thumbnail
+ * idiom from `tool-form.tsx`), subject, source, consent basis, status, created,
+ * approve/reject actions (pinned right — the tools table convention). The full preview
+ * drawer arrives with a later phase; this slice reviews on thumbnail + headline.
  */
 export const getColumns = (): ColumnDef<SocialQueueRow>[] => {
   return [
+    {
+      accessorKey: "previewImageUrl",
+      enableSorting: false,
+      size: 140,
+      header: ({ column }) => <DataTableColumnHeader column={column} title="Preview" />,
+      cell: ({ row }) =>
+        row.original.previewImageUrl ? (
+          <Image
+            src={row.original.previewImageUrl}
+            alt={row.original.headline ?? "Card preview"}
+            width={128}
+            height={67}
+            unoptimized
+            className="h-12 w-auto rounded-md border box-content aspect-video object-cover"
+          />
+        ) : null,
+    },
     {
       accessorKey: "headline",
       enableHiding: false,

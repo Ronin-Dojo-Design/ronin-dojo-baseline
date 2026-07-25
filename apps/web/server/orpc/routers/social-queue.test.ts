@@ -214,6 +214,37 @@ describe("authz — social-queue.manage via the existing can() matrix (never a 5
   })
 })
 
+// @added SESSION_0688 — the celebration-card feeder's preview wiring.
+describe("list — card-preview URL extraction (SESSION_0688)", () => {
+  it("ships a relative /api/og payload URL as the row's previewImageUrl", async () => {
+    state.items.set(
+      "i1",
+      makeItem({
+        id: "i1",
+        payload: { headline: "Jane promoted", ogImageUrl: "/api/og?title=Jane+promoted" },
+      }),
+    )
+    const result = await asCaller(admin).list({})
+    expect(result.rows[0].previewImageUrl).toBe("/api/og?title=Jane+promoted")
+  })
+
+  it("refuses any non-og-route payload URL (absolute/foreign origins ship as null)", async () => {
+    state.items.set(
+      "a",
+      makeItem({
+        id: "a",
+        subjectKey: "k-a",
+        payload: { ogImageUrl: "https://evil.example/x.png" },
+      }),
+    )
+    state.items.set("b", makeItem({ id: "b", subjectKey: "k-b", payload: { headline: "no url" } }))
+    const result = await asCaller(admin).list({})
+    for (const row of result.rows) {
+      expect(row.previewImageUrl).toBeNull()
+    }
+  })
+})
+
 describe("approve — DRAFT → APPROVED, and STOP (no publish)", () => {
   it("approves a DRAFT aggregate item: status APPROVED, approver stamped, NOTHING published", async () => {
     state.items.set("i1", makeItem({ id: "i1" }))
