@@ -1,3 +1,4 @@
+import { OG_CARD_RANK_PROMOTION } from "~/components/web/og/promotion-card-params"
 import { getOpenGraphImageUrl } from "~/lib/opengraph"
 import { evaluateApprovalConsent } from "~/server/social-queue/transitions"
 import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
@@ -22,12 +23,12 @@ import { db } from "~/services/db"
  * cron, or any router in this slice — no auto-fire exists.
  *
  * ═══ CONSENT AT ENQUEUE (fails closed) ═══
- * The gate reuses 0686's `evaluateApprovalConsent` (never a parallel consent check):
- * - `consent-revoked` / `unknown-basis` (no subject Passport, deleted, or NOT account-claimed
- *   — a placeholder person cannot have consented) → NOTHING is generated.
- * - `consent-unratified` (fork F2 pending) → the DRAFT may exist: per 0686's own approve
- *   handler this is "a temporary platform condition, not a subject revocation" — the item
- *   stays un-approvable until F2 lands, and approve re-runs the live check regardless.
+ * The gate reuses 0686's `evaluateApprovalConsent` (never a parallel consent check). Since
+ * fork F2 was ratified (SESSION_0705 — `Passport.allowSocialCelebration`, opt-in, default
+ * OFF), the FULL consent check applies at enqueue: no subject Passport, not account-claimed
+ * (a placeholder person cannot have consented), or no affirmative opt-in → NOTHING is
+ * generated. Approve re-runs the same check LIVE regardless (enqueue-time consent is
+ * necessary, not sufficient).
  * - PUBLIC-DATA FLOOR (flywheel ground rule 3): the member's rank display must be public
  *   (`projectPublicPassport` — `showRanks === false` or no public awards → nothing is
  *   generated). Only already-public profile fields ever enter the payload.
@@ -55,9 +56,11 @@ export type RankPromotionCelebrationPayload = {
   }
   /**
    * RELATIVE OG-render URL (`/api/og?…`) — origin-free so the stored payload never bakes in
-   * an environment host; the queue surface renders it same-origin. NOTE: until renderer
-   * graduation (SESSION_0688 ledger #3) this targets the GENERIC OgBase card (title +
-   * description only) — the belt-colored celebration card is a later render path.
+   * an environment host; the queue surface renders it same-origin. Since SESSION_0705
+   * (renderer graduation) the URL carries `card=rank-promotion` + the card params, so
+   * `/api/og` renders the belt-colored `OgPromotionCard`; title/description ride along so any
+   * consumer that ignores the card params still gets the generic OgBase fallback. Legacy
+   * payloads (title/description only) keep rendering OgBase — null-safe by construction.
    */
   ogImageUrl: string
   /** Relative CTA path for the eventual post link (UTM decoration is the publisher's job). */
@@ -75,14 +78,13 @@ export type EnqueueCelebrationResult =
 
 /**
  * Enqueue-time consent gate — DELEGATES to 0686's `evaluateApprovalConsent` for the
- * `MEMBER_OPT_IN` basis (one consent brain, never two). Structural failures (revoked /
- * unknown) block generation entirely; the F2-unratified condition allows the DRAFT (it
- * blocks APPROVAL, which re-checks live — see the module doc).
+ * `MEMBER_OPT_IN` basis (one consent brain, never two). Post-F2 (SESSION_0705) the full
+ * check applies: only a live, account-claimed subject holding the affirmative
+ * `allowSocialCelebration` opt-in generates a draft. Approve re-checks live regardless.
  */
-export const canEnqueueMemberOptInDraft = (passport: { userId: string | null } | null): boolean => {
-  const consent = evaluateApprovalConsent({ consentBasis: "MEMBER_OPT_IN", passport })
-  return consent.ok || consent.reason === "consent-unratified"
-}
+export const canEnqueueMemberOptInDraft = (
+  passport: { userId: string | null; allowSocialCelebration: boolean } | null,
+): boolean => evaluateApprovalConsent({ consentBasis: "MEMBER_OPT_IN", passport }).ok
 
 /** UTC-pinned long date ("July 24, 2026") so payload snapshots are machine-stable. */
 const formatAwardDate = (date: Date): string =>
@@ -102,6 +104,7 @@ export const buildRankPromotionCelebrationPayload = (input: {
   slug: string | null
 }): RankPromotionCelebrationPayload => {
   const headline = `${input.displayName} promoted to ${input.beltName}`
+  const date = formatAwardDate(input.awardedAt)
 
   return {
     kind: "rank-promotion-celebration-card",
@@ -110,12 +113,23 @@ export const buildRankPromotionCelebrationPayload = (input: {
       name: input.displayName,
       beltName: input.beltName,
       beltColorHex: input.beltColorHex,
-      date: formatAwardDate(input.awardedAt),
+      date,
       lineageLine: input.lineageLine,
     },
     // Empty origin → a relative `/api/og?…` path (see the payload contract doc above).
+    // `card=rank-promotion` + params → the belt-colored OgPromotionCard render path
+    // (SESSION_0705 graduation); title/description ride along as the OgBase fallback.
     ogImageUrl: getOpenGraphImageUrl(
-      { title: headline, description: input.lineageLine ?? undefined },
+      {
+        title: headline,
+        description: input.lineageLine ?? undefined,
+        card: OG_CARD_RANK_PROMOTION,
+        name: input.displayName,
+        beltName: input.beltName,
+        beltColorHex: input.beltColorHex ?? undefined,
+        date,
+        lineageLine: input.lineageLine ?? undefined,
+      },
       "",
     ),
     ctaPath: input.slug ? `/directory/${input.slug}` : "/lineage",
@@ -151,8 +165,10 @@ export const enqueueRankPromotionCelebration = async (input: {
       status: true,
       passportId: true,
       // The canonical PUBLIC identity select (ADR 0025) — the projector applies the
-      // showRanks redaction below; no private field is ever read.
-      passport: { select: publicPassportPayload },
+      // showRanks redaction below; no private field is ever read. `allowSocialCelebration`
+      // (fork F2, SESSION_0705) rides alongside for the consent gate ONLY — it never enters
+      // the payload.
+      passport: { select: { ...publicPassportPayload, allowSocialCelebration: true } },
       rank: { select: { name: true, colorHex: true } },
       rankAward: { select: { awardedAt: true } },
       createdAt: true,
@@ -164,9 +180,14 @@ export const enqueueRankPromotionCelebration = async (input: {
   // Only VERIFIED promotions celebrate — an unverified/disputed award is not a public fact.
   if (entry.status !== "VERIFIED") return { outcome: "skipped", reason: "not-verified" }
 
-  // CONSENT (fails closed): structural legs via 0686's check — see the module doc.
+  // CONSENT (fails closed): the FULL post-F2 check via 0686's gate — see the module doc.
   const subjectUserId = entry.passport.user?.id ?? null
-  if (!canEnqueueMemberOptInDraft({ userId: subjectUserId })) {
+  if (
+    !canEnqueueMemberOptInDraft({
+      userId: subjectUserId,
+      allowSocialCelebration: entry.passport.allowSocialCelebration,
+    })
+  ) {
     return { outcome: "skipped", reason: "consent" }
   }
 
