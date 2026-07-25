@@ -12,7 +12,7 @@ import type { Brand } from "~/.generated/prisma/client"
  */
 
 /** The one event type this slice consumes; everything else is 200-and-ignore. */
-export const EMAIL_RECEIVED_EVENT = "email.received"
+const EMAIL_RECEIVED_EVENT = "email.received"
 
 /**
  * Recipient-domain → Brand map for INBOUND mail. This is a different axis from
@@ -22,7 +22,7 @@ export const EMAIL_RECEIVED_EVENT = "email.received"
  * Values are string literals (type-checked against the Prisma `Brand` union via the type-only
  * import) so this module never value-imports the Brand enum — the known client-shared trap.
  */
-export const RECIPIENT_DOMAIN_TO_BRAND: Record<string, Brand> = {
+const RECIPIENT_DOMAIN_TO_BRAND: Record<string, Brand> = {
   "blackbeltlegacy.com": "BBL",
   "ronindojodesign.com": "RONIN_DOJO_DESIGN",
   "baselinemartialarts.com": "BASELINE_MARTIAL_ARTS",

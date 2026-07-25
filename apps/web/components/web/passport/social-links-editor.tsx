@@ -25,8 +25,19 @@ const PLATFORMS = [
   { value: "LINKEDIN", label: "LinkedIn" },
 ] as const
 
+/** Static value→label map for the platform `Select` (hoisted — identical for every row). */
+const PLATFORM_ITEMS = Object.fromEntries(PLATFORMS.map(p => [p.value, p.label]))
+
+/**
+ * The slice of the passport form this editor owns — matches `updatePassportSchema.socialLinks`
+ * (`server/web/passport/schemas.ts`). The parent's `UseFormReturn` must cover at least this shape.
+ */
+type SocialLinksFormValues = {
+  socialLinks: { platform: string; url: string }[]
+}
+
 type SocialLinksEditorProps = {
-  form: UseFormReturn<any>
+  form: UseFormReturn<SocialLinksFormValues>
 }
 
 export function SocialLinksEditor({ form }: SocialLinksEditorProps) {
@@ -61,7 +72,7 @@ export function SocialLinksEditor({ form }: SocialLinksEditorProps) {
                 <Select
                   value={platformField.value}
                   onValueChange={platformField.onChange}
-                  items={Object.fromEntries(PLATFORMS.map(p => [p.value, p.label]))}
+                  items={PLATFORM_ITEMS}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Platform" />

@@ -19,6 +19,13 @@ import { getSortingStateParser } from "~/lib/parsers"
 export const INBOX_TRIAGE_STATUSES = ["UNREAD", "READ", "ARCHIVED"] as const
 export type InboxTriageStatus = (typeof INBOX_TRIAGE_STATUSES)[number]
 
+/** Display labels for the triage states — the toolbar filter and in-row select share these. */
+export const INBOX_TRIAGE_STATUS_LABELS: Record<InboxTriageStatus, string> = {
+  UNREAD: "Unread",
+  READ: "Read",
+  ARCHIVED: "Archived",
+}
+
 /**
  * Brand filter values as string literals — the Prisma `Brand` enum's members without
  * value-importing the enum into client-shared code (the known trap). Kept in sync by the
