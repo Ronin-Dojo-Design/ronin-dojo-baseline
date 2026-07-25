@@ -72,7 +72,7 @@ readouts. 0692 minted as the AM merge baton, so lanes run 0693+.
 "do not spend launch time"; unreachable today), WL-P2-8 (needs Brian's pulse summary first),
 WL-P2-12 (target file lives in frozen `components/common/*` — escalate, not edit).
 
-### Operator direction for waves 20+ (received 2026-07-24, mid-run)
+### Operator direction for POST-wave-36 (received 2026-07-24, mid-run; corrected: applies after 36, if reached)
 
 Kernel-extraction epic: WL debt + brand-agnostic surfaces/components/cards/carousels extract into
 `packages/ui-kit` so ALL brands get **CMS, CRM, social media, finance tracking, email inbox**
