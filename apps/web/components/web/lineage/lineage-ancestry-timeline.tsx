@@ -99,9 +99,10 @@ function TimelineEntry({
         <Stack size="sm" direction="row" wrap className="items-center">
           {/* White member names (operator, SESSION_0525) — `text-foreground` reads white on the
               dark BBL profile (and dark on light), replacing the brand-red/pinkish name hue.
-              `group-hover:underline` fires ONLY under the linked wrapper (no `.group` ancestor on
-              a non-link row → inert), so the operator's white name is untouched off-hover. */}
-          <span className="truncate font-bold text-foreground italic underline-offset-4 [font-family:var(--font-bbl-heading),system-ui,sans-serif] group-hover:underline">
+              `group-hover/ancestry:underline` fires ONLY under the linked wrapper's NAMED
+              `group/ancestry` (no ambient-`.group` coupling; a non-link row → inert), so the
+              operator's white name is untouched off-hover. */}
+          <span className="truncate font-bold text-foreground italic underline-offset-4 [font-family:var(--font-bbl-heading),system-ui,sans-serif] group-hover/ancestry:underline">
             {entry.displayName}
           </span>
           {isOwner && (
@@ -131,7 +132,7 @@ function TimelineEntry({
           <Link
             href={href}
             aria-label={`View ${entry.displayName}'s lineage profile`}
-            className="group flex items-center gap-4 rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="group/ancestry flex items-center gap-4 rounded-lg outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             {row}
           </Link>

@@ -53,6 +53,10 @@ describe("LineageAncestryTimeline — WL-P2-23 ancestor deep-links", () => {
 
     expect(html).toContain('href="/directory/rigan-machado"')
 
+    // SSR-visibility pin (the component header's contract): the hidden entrance state
+    // lives in whileInView keyframes, so the server must NEVER ship `opacity:0` inline.
+    expect(html).not.toContain("opacity:0")
+
     // The link wraps the row content — the founder's name lives inside the anchor,
     // so a click on the name/avatar navigates (not just some empty affordance).
     const anchor = html.match(/<a [^>]*href="\/directory\/rigan-machado"[^>]*>([\s\S]*?)<\/a>/)
