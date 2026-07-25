@@ -118,20 +118,16 @@ describe("findViolations", () => {
 })
 
 describe("lintButtonType (full apps/web scan)", () => {
-  it(
-    "finds zero inert-Button-in-form violations in the current codebase",
-    () => {
-      // Regression enforcement: SESSION_0520 fixed all 14 known call sites. This scan proves no
-      // new violation has shipped since — it's the "run the guard over apps/web" gate, wired
-      // into `bun run test` so CI re-checks it on every PR, not just at `lint` time. Walking and
-      // parsing ~1000 .tsx files is slower than the 5s bun:test default, hence the raised timeout.
-      const violations = lintButtonType()
-      if (violations.length > 0) {
-        const list = violations.map(v => `  ${v.file}:${v.line}:${v.column}`).join("\n")
-        throw new Error(`Found ${violations.length} inert Button(s) in a <form>:\n${list}`)
-      }
-      expect(violations).toEqual([])
-    },
-    30_000,
-  )
+  it("finds zero inert-Button-in-form violations in the current codebase", () => {
+    // Regression enforcement: SESSION_0520 fixed all 14 known call sites. This scan proves no
+    // new violation has shipped since — it's the "run the guard over apps/web" gate, wired
+    // into `bun run test` so CI re-checks it on every PR, not just at `lint` time. Walking and
+    // parsing ~1000 .tsx files is slower than the 5s bun:test default, hence the raised timeout.
+    const violations = lintButtonType()
+    if (violations.length > 0) {
+      const list = violations.map(v => `  ${v.file}:${v.line}:${v.column}`).join("\n")
+      throw new Error(`Found ${violations.length} inert Button(s) in a <form>:\n${list}`)
+    }
+    expect(violations).toEqual([])
+  }, 30_000)
 })
