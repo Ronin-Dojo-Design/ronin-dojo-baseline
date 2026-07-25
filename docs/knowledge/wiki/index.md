@@ -4,7 +4,7 @@ slug: index
 type: concept
 status: active
 created: 2026-04-26
-updated: 2026-07-23
+updated: 2026-07-25
 author: Brian + Copilot
 last_agent: claude-session-0624
 ---
@@ -145,6 +145,7 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION 0263 BBL Recon](../../architecture/lineage/SESSION_0263_bbl_recon.md)                                                                 | report       | active — monorepo lineage data + brand asset inventory                                                                                                              |
 | [BBL BJJ Rank + Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md)                                   | architecture | active — SESSION_0264 BJJ rank/PODs field map                                                                                                                       |
 | [Promotion Event Model](../../architecture/lineage/promotion-event-model.md)                                                                   | plan         | accepted — SESSION_0318 amended ADR 0016, migrated PromotionEvent + nullable FKs, seeded the April 10, 2026 ceremony + cohort link + read-only Rank-History display |
+| [RDD Handle-Reservation Worksheet](../../architecture/research/rdd-handle-reservation-worksheet.md)                                            | research     | research — RDD research cluster (with `rdd-niche-handle-audit.md` + `research-review-rdd-social-automation.md`): operator-executable reservation plan (audit → worksheet → operator reserves; record reservations + fallbacks after the sitting). SESSION_0689 / #291 |
 
 ### ADRs
 

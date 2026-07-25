@@ -4,6 +4,7 @@ slug: research-review-cowork-automations
 type: research-review
 status: research-review
 created: 2026-07-23
+updated: 2026-07-25
 captured: 2026-07-24
 session: SESSION_0670
 origin: "Cowork mobile session (operator's morning brief)"
@@ -173,7 +174,7 @@ this incident just resolved itself before anyone (human or automation) acted on 
 
 A repo-side complement is being built in parallel tonight in **SESSION_0671**
 (`scripts/deploy-watchdog/`), notify-only, riding the existing `ntfy.sh` push stack documented in
-[`notification-stack-ntfy.md`](../../knowledge/wiki/notification-stack-ntfy.md) rather than standing
+[`ntfy-pushover-telegram.md`](../../runbooks/dev-environment/ntfy-pushover-telegram.md) rather than standing
 up a new channel. It covers the same "silent red build" gap from the repo/CI side (polling Vercel
 deploy status, pushing on `ERROR`/`CANCELED`) as a script, not an agent loop — cheap and always-on.
 
@@ -189,7 +190,7 @@ self-updating route (`apps/web/app/app/state/page.tsx`) that self-refreshes on a
 plus a deterministic gate-runner render path — both documented in
 [`research-review-state-of-dojo-automation.md`](research-review-state-of-dojo-automation.md) and
 covered by the
-[`state-of-dojo-kernel-and-frozen-contract`](../../knowledge/wiki/state-of-dojo-kernel-and-frozen-contract.md)
+[`state-of-project-projection`](../../protocols/state-of-project-projection.md)
 memory. Nothing needs to be built or rendered repo-side to make State-of-Dojo reachable — it already
 is, at zero token cost per read.
 
