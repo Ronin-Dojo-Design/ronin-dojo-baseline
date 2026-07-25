@@ -240,6 +240,33 @@ export function sortMembers(a: CanvasMember, b: CanvasMember): number {
   return nodeDisplayName(a.node).localeCompare(nodeDisplayName(b.node))
 }
 
+/**
+ * Belt-order sort for the tree READ MODEL (PL-026 quick fix): highest awarded belt
+ * first (`memberTopRank(...).sortOrder` desc — awarded truth, ADR 0035, discipline-
+ * scoped exactly like every tree surface), unranked members last, deterministic
+ * name-asc then node-id tiebreak. Generic over any row carrying a `node` so the
+ * server projection (`materializeLineageTreeResult`) can order
+ * `LineageTreeMemberRow[]` directly. Pure; returns a sorted copy.
+ *
+ * NOTE (rank-brand invariant): ordering scopes by `disciplineId` only — never by
+ * `rank.brand` (BBL BJJ ranks carry `brand: null`; a brand filter silently breaks it).
+ */
+export function sortMembersByBeltOrder<T extends { node: LineageNodeRow }>(
+  members: readonly T[],
+  disciplineId?: string | null,
+): T[] {
+  return [...members].sort((a, b) => {
+    const aBelt = memberTopRank(a.node, disciplineId)?.sortOrder ?? Number.NEGATIVE_INFINITY
+    const bBelt = memberTopRank(b.node, disciplineId)?.sortOrder ?? Number.NEGATIVE_INFINITY
+    if (aBelt !== bBelt) return bBelt - aBelt
+
+    const byName = nodeDisplayName(a.node).localeCompare(nodeDisplayName(b.node))
+    if (byName !== 0) return byName
+
+    return a.node.id.localeCompare(b.node.id)
+  })
+}
+
 export function buildChildGroups({
   children,
   visualGroupById,

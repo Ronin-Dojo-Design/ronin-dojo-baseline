@@ -16,6 +16,7 @@ import {
   nodeDisplayName,
   resolveLineageMemberView,
   sortMembers,
+  sortMembersByBeltOrder,
 } from "~/lib/lineage/canvas-model"
 import type { LineageNodeRow, LineageVisualGroupRow } from "~/server/web/lineage/payloads"
 
@@ -115,6 +116,118 @@ describe("sortMembers", () => {
     assert.deepEqual(
       sorted.map(member => member.id),
       ["beta", "charlie", "alpha"],
+    )
+  })
+})
+
+// --- SESSION_0704 (PL-026 quick fix) — belt-order read-model sort. -----------
+
+function makeBeltMember({
+  id,
+  name,
+  beltSortOrder = null,
+  disciplineId = "disc-bjj",
+}: {
+  id: string
+  name: string
+  beltSortOrder?: number | null
+  disciplineId?: string
+}): CanvasMember {
+  const member = makeMember({ id, name })
+  if (beltSortOrder != null) {
+    member.node.passport.rankAwardsEarned = [
+      {
+        id: `award-${id}`,
+        awardedAt: null,
+        rank: {
+          name: `Belt ${beltSortOrder}`,
+          colorHex: null,
+          sortOrder: beltSortOrder,
+          rankSystem: { id: `rs-${disciplineId}`, discipline: { id: disciplineId } },
+        },
+      },
+    ] as never
+  }
+  return member
+}
+
+describe("sortMembersByBeltOrder", () => {
+  test("orders highest awarded belt first; unranked members last", () => {
+    const sorted = sortMembersByBeltOrder([
+      makeBeltMember({ id: "white", name: "White", beltSortOrder: 1 }),
+      makeBeltMember({ id: "unranked", name: "Unranked" }),
+      makeBeltMember({ id: "black", name: "Black", beltSortOrder: 8 }),
+      makeBeltMember({ id: "purple", name: "Purple", beltSortOrder: 5 }),
+    ])
+
+    assert.deepEqual(
+      sorted.map(member => member.id),
+      ["black", "purple", "white", "unranked"],
+    )
+  })
+
+  test("tiebreak within the same belt is display-name asc (pinned, PL-026)", () => {
+    const sorted = sortMembersByBeltOrder([
+      makeBeltMember({ id: "zed", name: "Zed", beltSortOrder: 7 }),
+      makeBeltMember({ id: "alpha", name: "Alpha", beltSortOrder: 7 }),
+      makeBeltMember({ id: "mike", name: "Mike", beltSortOrder: 7 }),
+    ])
+
+    assert.deepEqual(
+      sorted.map(member => member.id),
+      ["alpha", "mike", "zed"],
+    )
+  })
+
+  test("equal belt AND name falls back to node id for full determinism", () => {
+    const sorted = sortMembersByBeltOrder([
+      makeBeltMember({ id: "b", name: "Same Name", beltSortOrder: 7 }),
+      makeBeltMember({ id: "a", name: "Same Name", beltSortOrder: 7 }),
+    ])
+
+    assert.deepEqual(
+      sorted.map(member => member.id),
+      ["a", "b"],
+    )
+  })
+
+  test("discipline-scoped: sorts by the belt IN the tree's discipline, not the global top (ADR 0035 §3)", () => {
+    // TKD 8th dan (sortOrder 20) + BJJ blue (sortOrder 4) vs BJJ black (sortOrder 8).
+    const multi = makeBeltMember({ id: "multi", name: "Multi", beltSortOrder: 4 })
+    multi.node.passport.rankAwardsEarned = [
+      // Payload contract: pre-ordered by Rank.sortOrder desc → TKD first.
+      {
+        id: "award-multi-tkd",
+        awardedAt: null,
+        rank: {
+          name: "8th Dan",
+          colorHex: null,
+          sortOrder: 20,
+          rankSystem: { id: "rs-tkd", discipline: { id: "disc-tkd" } },
+        },
+      },
+      {
+        id: "award-multi-bjj",
+        awardedAt: null,
+        rank: {
+          name: "Blue Belt",
+          colorHex: null,
+          sortOrder: 4,
+          rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj" } },
+        },
+      },
+    ] as never
+    const bjjBlack = makeBeltMember({ id: "bjj-black", name: "Black", beltSortOrder: 8 })
+
+    // Scoped to the BJJ tree: black (8) beats multi's BJJ blue (4) — the TKD 20 is ignored.
+    assert.deepEqual(
+      sortMembersByBeltOrder([multi, bjjBlack], "disc-bjj").map(member => member.id),
+      ["bjj-black", "multi"],
+    )
+    // Unscoped (no discipline): multi's global top (20) wins.
+    assert.deepEqual(
+      sortMembersByBeltOrder([multi, bjjBlack]).map(member => member.id),
+      ["multi", "bjj-black"],
     )
   })
 })
