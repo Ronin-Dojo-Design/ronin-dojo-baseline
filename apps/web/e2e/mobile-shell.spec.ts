@@ -19,21 +19,8 @@
 import { expect, test } from "@playwright/test"
 import { cleanupTestUser, createAuthenticatedUser, grantTestEntitlement } from "./helpers/auth"
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async () => {
   test.skip(Boolean(process.env.CI), "mobile-shell e2e is a local/manual screenshot aid")
-  // The Next DEV overlay badge (<nextjs-portal>) floats bottom-left and intercepts taps on the
-  // mobile-viewport fixed chrome (a pre-existing /lineage BottomNav hydration warning trips it —
-  // see SESSION_0529 notes; not a shell regression). This spec only ever runs against dev
-  // servers, so keep removing the overlay element (an injected <style> gets wiped when React
-  // regenerates the document tree after the hydration mismatch; the portal itself is not
-  // React-owned, so removal sticks until the overlay re-appends it).
-  await page.addInitScript(() => {
-    setInterval(() => {
-      for (const portal of Array.from(document.querySelectorAll("nextjs-portal"))) {
-        portal.remove()
-      }
-    }, 250)
-  })
 })
 
 const MOBILE = { width: 390, height: 844 }
@@ -295,12 +282,8 @@ test.describe("Epic B mobile shell", () => {
       await expect(page.getByRole("button", { name: /^premium$/i })).toBeVisible()
       await page.screenshot({ path: `${SHOTS}/elite-04-clip-premium.png` })
 
-      // Done → the sheet closes and the techniques list shows the new authored row. Programmatic
-      // click: the Next DEV overlay badge (<nextjs-portal>, tripped by the pre-existing /lineage
-      // BottomNav hydration warning) overlaps this corner and intercepts the pointer hit-test.
-      await page
-        .getByRole("button", { name: /^done$/i })
-        .evaluate(el => (el as HTMLElement).click())
+      // Done → the sheet closes and the techniques list shows the new authored row.
+      await page.getByRole("button", { name: /^done$/i }).click()
       await expect(page.getByRole("heading", { name: /add videos/i })).toHaveCount(0)
       await expect(page.getByRole("link", { name: "Flying Triangle E2E" })).toBeVisible()
       await page.screenshot({ path: `${SHOTS}/elite-05-technique-in-list.png` })

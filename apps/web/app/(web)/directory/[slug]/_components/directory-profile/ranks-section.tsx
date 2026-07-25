@@ -1,6 +1,7 @@
 import { BeltSwatch } from "~/components/common/belt-swatch"
 import { H4 } from "~/components/common/heading"
 import { Stack } from "~/components/common/stack"
+import { formatPromotionDate } from "~/components/web/lineage/lineage-cohort-timeline/promotion-format"
 import { Section } from "~/components/web/ui/section"
 import type { DirectoryProfile } from "./directory-profile-data"
 
@@ -13,13 +14,11 @@ import type { DirectoryProfile } from "./directory-profile-data"
  * FI-024 H4: each rank reads as a data-driven belt (`BeltSwatch` off `Rank.colorHex`, never a
  * hardcoded map) with its discipline + promoted-on date, ordered highest belt first (the payload's
  * `Rank.sortOrder desc`) — the colorless outline badges were unreadable.
+ *
+ * WL-P2-45 rider d: the promoted-on date shares the lineage timeline's
+ * `formatPromotionDate` (widened to accept `Date`) — the local `formatPromotedOn`
+ * duplicate is gone.
  */
-function formatPromotedOn(date: Date | string | null): string | null {
-  if (!date) return null
-  const d = typeof date === "string" ? new Date(date) : date
-  if (Number.isNaN(d.getTime())) return null
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", timeZone: "UTC" })
-}
 
 export function RanksSection({ profile }: { profile: DirectoryProfile }) {
   const { user } = profile
@@ -33,7 +32,7 @@ export function RanksSection({ profile }: { profile: DirectoryProfile }) {
       <H4>Ranks &amp; Achievements</H4>
       <Stack direction="column" size="sm" className="w-full">
         {user.ranks.map(rankAward => {
-          const promotedOn = formatPromotedOn(rankAward.awardedAt)
+          const promotedOn = formatPromotionDate(rankAward.awardedAt)
           const meta = [rankAward.disciplineName, promotedOn && `Promoted ${promotedOn}`]
             .filter(Boolean)
             .join(" · ")

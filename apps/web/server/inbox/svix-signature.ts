@@ -61,12 +61,9 @@ export const verifySvixSignature = (input: SvixVerificationInput): SvixVerificat
   const encodedSecret = secret.startsWith(SECRET_PREFIX)
     ? secret.slice(SECRET_PREFIX.length)
     : secret
-  let key: Buffer
-  try {
-    key = Buffer.from(encodedSecret, "base64")
-  } catch {
-    return { valid: false, reason: "malformed-secret" }
-  }
+  // Buffer.from(str, "base64") never throws — invalid characters are skipped — so a garbage
+  // secret surfaces as an empty decode, which is the malformed case.
+  const key = Buffer.from(encodedSecret, "base64")
   if (key.length === 0) {
     return { valid: false, reason: "malformed-secret" }
   }

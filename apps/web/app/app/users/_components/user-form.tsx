@@ -1,8 +1,9 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useHookFormAction } from "@next-safe-action/adapter-react-hook-form/hooks"
+import { useRouter } from "next/navigation"
 import type { ComponentProps } from "react"
+import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { UserActions } from "~/app/app/users/_components/user-actions"
 import { Avatar, AvatarImage } from "~/components/common/avatar"
@@ -27,39 +28,41 @@ import {
   SelectValue,
 } from "~/components/common/select"
 import { Stack } from "~/components/common/stack"
+import { client } from "~/lib/orpc-client"
 import { cx } from "~/lib/utils"
-import { updateUser } from "~/server/admin/users/actions"
 import type { findUserById } from "~/server/admin/users/queries"
-import { userSchema } from "~/server/admin/users/schema"
+import { userSchema, type UserSchema } from "~/server/admin/users/schema"
 
 type UserFormProps = ComponentProps<"form"> & {
   user: NonNullable<Awaited<ReturnType<typeof findUserById>>>
 }
 
 export function UserForm({ children, className, title, user, ...props }: UserFormProps) {
-  const resolver = zodResolver(userSchema)
+  const router = useRouter()
 
-  // Update user
-  const { form, action, handleSubmitWithAction } = useHookFormAction(updateUser, resolver, {
-    formProps: {
-      defaultValues: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        image: user.image ?? "",
-        role: (user.role as "admin" | "tournament_director" | "user") ?? "user",
-      },
+  // Update user via the oRPC `users.update` procedure (WL-P2-43): the procedure owns
+  // the layout-typed /app/users revalidation; the refresh re-renders the saved values
+  // (a Server Action used to carry that re-render in-band — an RPC response doesn't).
+  const form = useForm<UserSchema>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      image: user.image ?? "",
+      role: (user.role as "admin" | "tournament_director" | "user") ?? "user",
     },
+  })
 
-    actionProps: {
-      onSuccess: () => {
-        toast.success("User successfully updated")
-      },
-
-      onError: ({ error }) => {
-        toast.error(error.serverError)
-      },
-    },
+  const handleSubmitWithAction = form.handleSubmit(async values => {
+    try {
+      await client.users.update(values)
+      toast.success("User successfully updated")
+      router.refresh()
+    } catch (error) {
+      // Surface the real oRPC message (FORBIDDEN carries the self-role-change copy).
+      toast.error(error instanceof Error && error.message ? error.message : "Failed to update user")
+    }
   })
 
   return (
@@ -158,7 +161,7 @@ export function UserForm({ children, className, title, user, ...props }: UserFor
             Cancel
           </Button>
 
-          <Button type="submit" size="md" isPending={action.isPending}>
+          <Button type="submit" size="md" isPending={form.formState.isSubmitting}>
             Update user
           </Button>
         </div>

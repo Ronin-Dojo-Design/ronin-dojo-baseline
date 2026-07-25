@@ -15,7 +15,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { admin } from "~/lib/auth-client"
 import { isAdmin } from "~/lib/authz-predicates"
-import { updateUserRole } from "~/server/admin/users/actions"
+import { client } from "~/lib/orpc-client"
 
 const roles = ["admin", "user", "tournament_director"] as const
 
@@ -28,9 +28,9 @@ type AccountActionItemsProps = {
  * The shared account-action menu items — Role submenu, ban/unban, and revoke-sessions —
  * for the `/app/users` surfaces (AC-ECOSYSTEM-2). Extracted verbatim from the byte-identical
  * bodies that `person-actions.tsx` (list row kebab) and `user-actions.tsx` (detail account
- * panel) each carried; the menu items, server-action wiring (`updateUserRole` + Better Auth
- * `admin.*`), toasts, and the `isAdmin`-gated ban predicate are UNCHANGED — this is a pure
- * view-layer dedup, no authz change.
+ * panel) each carried; the menu items, mutation wiring (oRPC `users.updateRole` for role,
+ * Better Auth `admin.*` for ban/unban + revoke-sessions), toasts, and the `isAdmin`-gated
+ * ban predicate are UNCHANGED — this is a pure view-layer dedup, no authz change.
  *
  * Rendered as `DropdownMenuItem`/submenu CHILDREN inside each caller's own `RowActionsMenu`
  * shell. Everything else stays at the CALLER: the linked-account gate (list hides these for
@@ -53,16 +53,26 @@ export const AccountActionItems = ({ user }: AccountActionItemsProps) => {
             value={user.role}
             onValueChange={value => {
               startUpdateTransition(() => {
+                // oRPC `users.updateRole` (WL-P2-43). Unlike the old safe-action call
+                // (which resolved with `{serverError}` and false-toasted success), the
+                // RPC client THROWS on failure — so the promise toast needs an error arm.
                 toast.promise(
                   async () => {
-                    await updateUserRole({
+                    await client.users.updateRole({
                       id: user.id,
                       role: value as (typeof roles)[number],
                     })
 
                     router.refresh()
                   },
-                  { loading: "Updating...", success: "Role successfully updated" },
+                  {
+                    loading: "Updating...",
+                    success: "Role successfully updated",
+                    error: (error: unknown) =>
+                      error instanceof Error && error.message
+                        ? error.message
+                        : "Failed to update role",
+                  },
                 )
               })
             }}

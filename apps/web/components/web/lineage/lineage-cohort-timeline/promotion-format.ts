@@ -13,12 +13,18 @@ export function promotionYear(iso: string | null): string | null {
   return Number.isNaN(year) ? null : String(year)
 }
 
-/** "Mon YYYY" (UTC) for the card provenance line, or null when undated/invalid. */
-export function formatPromotionDate(iso: string | null): string | null {
-  if (!iso) return null
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return null
-  return date.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
+/**
+ * "Mon YYYY" (UTC) for the card provenance line, or null when undated/invalid.
+ *
+ * WL-P2-45 rider d (Desi LOW-2): widened from `string | null` to also accept `Date`
+ * so the directory-profile ranks section (`RanksSection`, which reads Prisma `Date`
+ * columns) shares THIS formatter instead of its duplicated local `formatPromotedOn`.
+ */
+export function formatPromotionDate(date: Date | string | null): string | null {
+  if (!date) return null
+  const d = typeof date === "string" ? new Date(date) : date
+  if (Number.isNaN(d.getTime())) return null
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
 }
 
 /**

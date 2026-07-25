@@ -67,3 +67,51 @@ export const updateDirectoryProfileSchema = z.object({
   coverPhotoUrl: optionalUrl,
   videoIntroUrl: optionalUrl,
 })
+
+// ---------------------------------------------------------------------------
+// Combined Passport + DirectoryProfile schema (WL-P2-45, SESSION_0700)
+// ---------------------------------------------------------------------------
+//
+// The ONE merged schema behind the PassportEditor's single Save. A flat merge (not
+// nested sub-objects) so the editor's RHF field names stay exactly what they were
+// under the two separate forms — no `passport.`/`directoryProfile.` prefix churn,
+// and `SocialLinksEditor`'s `socialLinks` contract is untouched. The two field sets
+// share no key (Passport = identity, DirectoryProfile = presentation), so the spread
+// is collision-free; `splitPassportAndProfileInput` routes each parsed key back to
+// its owning model. The granular schemas above REMAIN the public API for granular
+// consumers — do not delete them.
+
+export const updatePassportAndProfileSchema = z.object({
+  ...updatePassportSchema.shape,
+  ...updateDirectoryProfileSchema.shape,
+})
+
+type UpdatePassportInput = z.infer<typeof updatePassportSchema>
+type UpdateDirectoryProfileInput = z.infer<typeof updateDirectoryProfileSchema>
+
+/**
+ * Split a parsed combined payload back into its Passport / DirectoryProfile halves.
+ *
+ * Only keys PRESENT on the input are copied, preserving the load-bearing
+ * undefined-skip semantics (absent field → Prisma skips it; null → clears the
+ * column — see the locationCountry note above). Keys are routed by schema shape
+ * membership, so a new field added to either granular schema automatically lands
+ * in the right half of the combined update.
+ */
+export function splitPassportAndProfileInput(
+  input: Partial<z.infer<typeof updatePassportAndProfileSchema>>,
+): { passport: UpdatePassportInput; directoryProfile: UpdateDirectoryProfileInput } {
+  const passport: Record<string, unknown> = {}
+  const directoryProfile: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(input)) {
+    if (key in updatePassportSchema.shape) passport[key] = value
+    else if (key in updateDirectoryProfileSchema.shape) directoryProfile[key] = value
+    // Unknown keys (e.g. the admin passportId, stripped by the caller) are dropped.
+  }
+
+  return {
+    passport: passport as UpdatePassportInput,
+    directoryProfile: directoryProfile as UpdateDirectoryProfileInput,
+  }
+}

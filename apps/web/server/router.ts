@@ -1,8 +1,10 @@
 import { belt } from "~/server/belt/router"
 import { lineage } from "~/server/lineage/router"
 import { publicProcedure } from "~/server/orpc/procedure"
+import { certificates } from "~/server/orpc/routers/certificates"
 import { inbox } from "~/server/orpc/routers/inbox"
 import { socialQueue } from "~/server/orpc/routers/social-queue"
+import { users } from "~/server/orpc/routers/users"
 import { promotion } from "~/server/promotion/router"
 import { techniques } from "~/server/techniques/router"
 
@@ -28,20 +30,26 @@ const brand = publicProcedure.meta({ permission: "health.read" }).handler(({ con
  * member-facing, own-Passport belt-journey mutations. SESSION_0580 (G-022
  * Lane B) adds `techniques` — own-user technique-progress tracking.
  * SESSION_0639 (G-033 slice 1) adds `inbox` — the `email.manage`-gated
- * inbound-email read/triage surface. SESSION_0686 adds `socialQueue` — the
- * `social-queue.manage`-gated consent-first approval queue (nothing publishes).
+ * inbound-email read/triage surface. SESSION_0697 (WL-P2-43) adds `users` +
+ * `certificates` — the `/app/users` and certificate-issuance admin mutations,
+ * whose layout-typed revalidation bypassed the safe-action seam (the third
+ * revalidation idiom, now owned by the procedures). SESSION_0686 adds
+ * `socialQueue` — the `social-queue.manage`-gated consent-first approval queue
+ * (nothing publishes).
  */
 export const appRouter = {
   ping,
   health: {
     brand,
   },
+  certificates,
   inbox,
   socialQueue,
   lineage,
   promotion,
   belt,
   techniques,
+  users,
 }
 
 export type AppRouter = typeof appRouter

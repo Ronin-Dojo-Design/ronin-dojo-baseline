@@ -29,7 +29,7 @@ const roles = {
  *   - the admin() plugin supplies the role field (User.role: owner | member),
  *     so an `owner` can manage members without a second authz system;
  *   - the CRM-owner link (auth User → TeamMember) is materialized lazily in
- *     lib/actions.ts (`requireOwner`) — not here — so a fresh login resolves to
+ *     lib/authz.ts (`requireOwner`) — not here — so a fresh login resolves to
  *     its owner record on its first authenticated action.
  *
  * Secrets/origins come from env (validated in lib/env.ts): BETTER_AUTH_SECRET is
