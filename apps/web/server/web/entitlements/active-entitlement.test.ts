@@ -68,9 +68,7 @@ describe("hasAnyActiveEntitlement", () => {
       },
     })
 
-    await expect(hasAnyActiveEntitlement(user.id, [tag("expired-key")], BRAND)).resolves.toBe(
-      false,
-    )
+    await expect(hasAnyActiveEntitlement(user.id, [tag("expired-key")], BRAND)).resolves.toBe(false)
   })
 
   it("false — a grant for the WRONG brand", async () => {
@@ -110,9 +108,9 @@ describe("hasAnyActiveEntitlement", () => {
       },
     })
 
-    await expect(
-      hasAnyActiveEntitlement(user.id, [tag("some-other-key")], BRAND),
-    ).resolves.toBe(false)
+    await expect(hasAnyActiveEntitlement(user.id, [tag("some-other-key")], BRAND)).resolves.toBe(
+      false,
+    )
   })
 
   it("false — a REVOKED grant", async () => {
@@ -131,9 +129,7 @@ describe("hasAnyActiveEntitlement", () => {
       },
     })
 
-    await expect(hasAnyActiveEntitlement(user.id, [tag("revoked-key")], BRAND)).resolves.toBe(
-      false,
-    )
+    await expect(hasAnyActiveEntitlement(user.id, [tag("revoked-key")], BRAND)).resolves.toBe(false)
   })
 
   it("true — a null `endsAt` (never expires)", async () => {
@@ -153,8 +149,6 @@ describe("hasAnyActiveEntitlement", () => {
       },
     })
 
-    await expect(hasAnyActiveEntitlement(user.id, [tag("lifetime-key")], BRAND)).resolves.toBe(
-      true,
-    )
+    await expect(hasAnyActiveEntitlement(user.id, [tag("lifetime-key")], BRAND)).resolves.toBe(true)
   })
 })
