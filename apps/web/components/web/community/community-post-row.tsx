@@ -11,6 +11,7 @@ import { Link } from "~/components/common/link"
 import { CommunityPostActions } from "~/components/web/community/community-post-actions"
 import { CommunityPostFlair } from "~/components/web/community/community-post-flair"
 import { Author } from "~/components/web/ui/author"
+import { UPGRADE_HREF } from "~/lib/entitlements/routes"
 import type { CommunityPostView } from "~/server/web/community/post-gate"
 
 /**
@@ -27,9 +28,6 @@ type CommunityPostRowProps = {
   /** Server-batched saved-state (D6). `undefined` → the Save button self-checks on mount. */
   initialSaved?: boolean
 }
-
-/** The paid-tier upgrade funnel — the same route the composer/technique upgrade CTAs link to. */
-const UPGRADE_HREF = "/lineage/join"
 
 export const CommunityPostRow = ({
   view,
