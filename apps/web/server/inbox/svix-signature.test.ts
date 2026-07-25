@@ -76,6 +76,20 @@ describe("verifySvixSignature", () => {
     expect(result).toEqual({ valid: false, reason: "no-signature-match" })
   })
 
+  it("rejects a malformed secret that base64-decodes to nothing", () => {
+    // Buffer.from(str, "base64") never throws — invalid chars are skipped — so an
+    // all-invalid secret decodes to an EMPTY key; the length===0 guard must fire.
+    const result = verifySvixSignature({
+      payload: PAYLOAD,
+      id: ID,
+      timestamp: TIMESTAMP,
+      signature: `v1,${sign(PAYLOAD, ID, TIMESTAMP)}`,
+      secret: "whsec_!!!!",
+      nowMs: NOW_MS,
+    })
+    expect(result).toEqual({ valid: false, reason: "malformed-secret" })
+  })
+
   it("rejects missing svix headers", () => {
     const result = verifySvixSignature({
       payload: PAYLOAD,
