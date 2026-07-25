@@ -39,16 +39,8 @@ export async function canUploadMedia(userId: string, brand: Brand): Promise<bool
 
   // Run all 3 checks in parallel (single round-trip per check, all concurrent)
   const [entitlementGrant, roleBasedMembership, ownedOrg] = await Promise.all([
-    // Check 1: Explicit entitlement grant
-    db.userEntitlement.findFirst({
-      where: {
-        userId,
-        status: "ACTIVE",
-        entitlement: { key: "S3_UPLOAD", brand },
-        OR: [{ endsAt: null }, { endsAt: { gt: new Date() } }],
-      },
-      select: { id: true },
-    }),
+    // Check 1: Explicit entitlement grant (shared active-grant predicate — WL-P3-39)
+    hasAnyActiveEntitlement(userId, ["S3_UPLOAD"], brand, db),
     // Check 2: Role-based — INSTRUCTOR, COACH, OWNER, ORG_ADMIN
     db.membership.findFirst({
       where: {

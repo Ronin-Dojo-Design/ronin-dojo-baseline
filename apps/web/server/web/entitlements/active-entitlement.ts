@@ -5,9 +5,10 @@ type AppDb = typeof appDb
 
 /**
  * WL-P3-39 dedup (SESSION_0535 FI-028): the "does {userId} hold an ACTIVE, unexpired grant whose
- * `entitlement.brand` matches and `entitlement.key` is one of `keys`" predicate existed as 3
+ * `entitlement.brand` matches and `entitlement.key` is one of `keys`" predicate existed as 4
  * near-identical inline `where` clauses (`community/permissions.ts`, `entitlements/lineage-tier-
- * policy.ts`, `entitlements/queries.ts`). This module is the ONE place that shape lives.
+ * policy.ts`, and `entitlements/queries.ts` ×2 — `hasEntitlement` + `canUploadMedia`). All four now
+ * delegate here; this module is the ONE place that shape lives.
  *
  * Two builders, not one, because the call sites differ in a way that is NOT safe to collapse: two
  * are single-user existence checks (`findFirst`), one is a multi-user batch lookup (`findMany`,
