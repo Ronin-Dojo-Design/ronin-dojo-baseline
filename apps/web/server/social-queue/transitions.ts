@@ -6,7 +6,8 @@ import type {
 /**
  * The social approval-queue status machine + consent gate (SESSION_0686,
  * social-flywheel-approval-queue-spec-draft.md §2.3/§3). Pure — no IO, unit-tested in
- * isolation; the oRPC router (`server/orpc/routers/social-queue.ts`) is the only consumer.
+ * isolation; consumers: the oRPC router (`server/orpc/routers/social-queue.ts`) for writes +
+ * the row-actions UI (transition-aware buttons).
  *
  * ═══ THE TWO NON-NEGOTIABLES ═══
  *
