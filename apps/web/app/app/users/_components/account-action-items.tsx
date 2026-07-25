@@ -15,7 +15,7 @@ import {
 } from "~/components/common/dropdown-menu"
 import { admin } from "~/lib/auth-client"
 import { isAdmin } from "~/lib/authz-predicates"
-import { updateUserRole } from "~/server/admin/users/actions"
+import { client } from "~/lib/orpc-client"
 
 const roles = ["admin", "user", "tournament_director"] as const
 
@@ -53,16 +53,26 @@ export const AccountActionItems = ({ user }: AccountActionItemsProps) => {
             value={user.role}
             onValueChange={value => {
               startUpdateTransition(() => {
+                // oRPC `users.updateRole` (WL-P2-43). Unlike the old safe-action call
+                // (which resolved with `{serverError}` and false-toasted success), the
+                // RPC client THROWS on failure — so the promise toast needs an error arm.
                 toast.promise(
                   async () => {
-                    await updateUserRole({
+                    await client.users.updateRole({
                       id: user.id,
                       role: value as (typeof roles)[number],
                     })
 
                     router.refresh()
                   },
-                  { loading: "Updating...", success: "Role successfully updated" },
+                  {
+                    loading: "Updating...",
+                    success: "Role successfully updated",
+                    error: (error: unknown) =>
+                      error instanceof Error && error.message
+                        ? error.message
+                        : "Failed to update role",
+                  },
                 )
               })
             }}
