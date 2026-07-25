@@ -518,30 +518,44 @@ plan scope.
   school must be tied into registering yourself** — ONE flow, not a separate process.
 - **Related quick-fix routed to build (not plan):** students on the BBL lineage tree must render in
   **belt order (highest → lowest)**, not random — dispatched as a 0681 W20 lane (sort at the read
-  model, `memberTopRank` sortOrder).
+  model, `memberTopRank` sortOrder). **→ RESOLVED SESSION_0704 (PR #336, Doug GwN 9.2):**
+  belt-order at the read model — `materializeLineageTreeResult` orders members via
+  `sortMembersByBeltOrder` (`memberTopRank` sortOrder desc, discipline-scoped, name-asc tiebreak)
+  and remaps `visualSortOrder` so the `visualSortOrder`-sorted public surfaces (board, mobile
+  list, honor strip, galaxy) inherit the order; editor drag-reorder path untouched. The DEFAULT
+  cohort-timeline view deliberately stays chronological — belt-order there lands as a user-facing
+  sort filter in the explorer epic (PL-030, operator call SESSION_0709).
 - **Anchors:** `/schools/[slug]` + org registration flows, join-funnel memory (comp gate + global
   modal), claim system (ADR 0036), PL-025 (same surface family — consider co-planning).
 - **Lane:** BBL product. **Cross-refs:** SESSION_0696 (org-claim e2e), goals-ledger G-022 adjacency.
 
-### PL-027 — BBL social-flywheel activation: ratify fork F2 + wire the celebration trigger — queued
+### PL-027 — BBL social-flywheel activation: trigger call-site remains — in-progress
 
-- **Status:** queued. Intake: SESSION_0686 + SESSION_0688 proposed-ledger sections (waves 15/16,
-  merged as PRs #318/#321 at SESSION_0692 — the approval-queue + OG publish path are LIVE but
-  deliberately inert until these decisions land).
-- **Ratify (operator) — fork F2:** publicity-consent mechanism + default. Spec §2.3 recommends
-  `Passport.allowSocialCelebration` — **opt-in, default OFF, edited only in the PassportEditor**.
-  Until ratified, MEMBER_OPT_IN approvals **fail closed** (by design): RANK_PROMOTION drafts
-  accumulate in DRAFT and cannot be approved.
+- **Status:** in-progress — F2 + renderer graduation LANDED SESSION_0705/0709 (PR #339); the
+  trigger call-site + nav residue are what remains. Intake: SESSION_0686 + SESSION_0688
+  proposed-ledger sections (waves 15/16, merged as PRs #318/#321 at SESSION_0692).
+- **Fork F2 — ✅ RATIFIED + LANDED (operator @ SESSION_0709; built SESSION_0705, PR #339, Doug
+  GwN 8.9):** `Passport.allowSocialCelebration` — opt-in, **default OFF**, additive migration
+  `20260725000000`. MEMBER_OPT_IN approvals verify the LIVE bit at approve-time: false →
+  fail-closed `consent-revoked` (terminal auto-reject), true → approve proceeds;
+  `consent-unratified` retired per 0686's own pinned-test comment. **Member-writable ONLY**
+  (Doug P2 closed in-lane): admin Passport schemas `.omit()` the field
+  (`server/admin/people/schemas.ts`, pinned by `schemas.test.ts`) and the PassportEditor renders
+  the Publicity block in owner mode only — any future admin surface for the field is a NEW
+  operator decision, not a schema widening. Operational note: legacy pre-F2 DRAFTs for
+  non-opted-in subjects terminal auto-reject on first approve attempt (spec-correct; don't
+  misread the first post-deploy queue triage as a regression).
 - **Then wire:**
   - **Celebration trigger call-site** — `enqueueRankPromotionCelebration` has NO call site by
     design (admin action on RankEntry verify? event hook? Phase-D nightly diff?) — wherever it
     fires, it **must be authz-gated**.
   - **Approval-UI residue** — `/app/social-queue` sidebar nav entry deliberately not added
     (permission-gated, URL-reachable today).
-  - **Belt-color renderer graduation** — the celebration card still renders the generic `/api/og`
-    OgBase; graduate the #288/#292 prototype (`scripts/prototypes/bbl-og-cards/`, which app code
-    must not import) into `components/web/og/` — payload already carries
-    `beltColorHex`/`lineageLine`, so it's render-side only.
+  - **Belt-color renderer graduation — ✅ DONE (SESSION_0705, PR #339):** `components/web/og/`
+    `OgPromotionCard` + `promotion-card-params` (`card=rank-promotion` on `/api/og`); feeder
+    payload URL graduated; legacy/empty payloads fall back to OgBase (null-safe, pinned);
+    zero app-code imports from `scripts/prototypes/**` (Doug-verified, injection-hardened,
+    `lineageLine` deliberately replaces the prototype's academyName slot).
 - **Brand-enum prune note (SESSION_0692):** `SocialQueueItem` added `brand Brand @default(BBL)`
   (unread column) — include in the dead in-app Brand-enum/`getRequestBrand` prune epic's
   checklist (drop = migration). No drift-register row exists for that prune yet; this bullet is
@@ -589,6 +603,42 @@ plan scope.
   burned) — this PL row is where that pointer lives until an RDD social G-row exists.
 - **Lane:** RDD brand. **Cross-refs:** `docs/product/rdd/founder-linkedin-calendar.md`,
   SESSION_0690, SESSION_0689, `docs/architecture/research/rdd-niche-handle-audit.md`.
+
+### PL-030 — Lineage-explorer quality epic: sort filter + hostile review + fallow/architecture pass + Expo readiness — queued · operator-elected
+
+- **Status:** queued (operator-elected mid-SESSION_0709; full verbatim intent in SESSION_0709
+  `## Next session` — staged as SESSION_0711). Scope, in the operator's framing ("professionally
+  developing this with discipline and clean, understandable code that Apple would ship"):
+  - **Sort filter (product):** the cohort-timeline explorer gets a user-facing sort offering BOTH
+    chronological and belt order (the PL-026 "both as a filter" call); decide whether it extends
+    to all five surfaces or timeline-only (grill fork).
+  - **Explorer filter review:** the cinematic explorer's filter system generally.
+  - **Per-surface quality:** hostile code review + `/code-quality` score on each of the five
+    public surfaces — cohort timeline (default), board view, mobile list, honor strip, galaxy.
+  - **`/fallow-fix-loop` + `/improve-codebase-architecture`** passes over the explorer family.
+  - **Expo/iOS readiness research-recommend:** are we set up for an eventual Expo app? Feeds on
+    PL-031's API-contract-extraction gap; assess Next-coupling, `next/cache` in read paths,
+    auth/media flows.
+- **Lane:** BBL product. **Cross-refs:** SESSION_0709 (Next-session block = the spec), PL-026
+  (sort-filter origin), WL-P2-3 (ListRow extraction — 2 of the 7 instances live in explorer
+  surfaces; fold in when touched), G-008 adjacency.
+
+### PL-031 — Monorepo platform gaps: shared config presets, API-contract extraction, task orchestration — queued
+
+- **Status:** queued. Intake: SESSION_0709 operator-provided reference article
+  (<https://medium.com/@abhiupadhyayc51/creating-a-next-js-and-node-js-monorepo-template-of-modern-full-stack-projects-7259ea076050>,
+  template <https://github.com/abhiupadhyay-Dev/nextjs-nodejs-monorepo-template>) + the 0709 gap
+  assessment (we exceed the template on multi-app deploy units / oRPC typed contracts / kernel
+  doctrine; a standalone Node API server is deliberately NOT wanted).
+- **Gap 1 — `packages/config` shared tool presets (cheap, high-leverage):** per-workspace
+  tsconfig/oxlint/oxfmt drift is real — session evidence: ui-kit format gate floats on oxfmt
+  defaults, root `lint:check` absent (hit by 2 lanes). Structural fix for the WL-P3-69(a) class.
+- **Gap 2 — API-contract extraction:** oRPC router types live inside `apps/web`; extract contract
+  types into `packages/` (grow `packages/api-client`) so a second consumer (Expo/iOS, client
+  apps) gets typed contracts without cross-app imports. Enabling move for PL-030's Expo lane.
+- **Gap 3 — task orchestration/caching (turborepo/Nx-class):** gates fan out via hand-rolled
+  scripts; research-recommend before adopting (CI + local gate minutes at 5 apps and growing).
+- **Lane:** repo/kernel. **Cross-refs:** WL-P3-69, WL-P2-69 (resolved format axis), ADR 0034/0038/0051.
 
 ## Cross-references
 

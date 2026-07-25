@@ -74,6 +74,14 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   against `ronindojo_e2e`, plus the full unit gate `bun run test` green in SESSION_0551.
 - **Reusable pattern:** a "unique" key derived from a **truncated non-unique prefix** of a unique value is
   a collision class, not uniqueness — check what the `slice()` actually keeps.
+- **Recurrence (SESSION_0709, cross-run flavor):** `server/web/lineage/node-profile-actions.test.ts:110`
+  — `code: tag("DISC").slice(0, 16)` truncates the tag's ms-timestamp to its first 3 digits (stable for
+  ~3 years), so the code is **constant across runs of the same file**. Invisible normally (afterAll
+  cleanup deletes the row) — but a suite run KILLED mid-file (this session: lane crashes on the shared
+  prodsnap DB) strands the row, and every later run of that file P2002s at setup. Fixed-by-cleanup
+  (stranded `session-0184-1785005311040-*` fixture rows deleted; file 6/6 green after). The code fix —
+  same `createFixtureRunIdentity(...).shortCode()` move as above — still owed on this file and any other
+  `tag(...).slice(0,16)` site; grep `slice(0, 16)` under `apps/web/**/*.test.ts` when picking this up.
 
 ### TFF-006 — billing portal/checkout cluster flakes in the full suite *under `--parallel=1`* (105-file scale)
 
