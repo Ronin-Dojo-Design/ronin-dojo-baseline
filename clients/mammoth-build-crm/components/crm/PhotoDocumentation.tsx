@@ -107,7 +107,9 @@ export function PhotoDocumentation({
             <div key={p.id}>
               <h4 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">
                 {p.label}{" "}
-                <span className="text-primary-hover">{shots.length > 0 ? `· ${shots.length}` : ""}</span>
+                <span className="text-primary-hover">
+                  {shots.length > 0 ? `· ${shots.length}` : ""}
+                </span>
               </h4>
               <div className="mt-2 space-y-3">
                 {shots.length === 0 && (
@@ -116,9 +118,16 @@ export function PhotoDocumentation({
                   </p>
                 )}
                 {shots.map((ph) => (
-                  <figure key={ph.id} className="overflow-hidden rounded-md border border-border bg-surface">
+                  <figure
+                    key={ph.id}
+                    className="overflow-hidden rounded-md border border-border bg-surface"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={ph.dataUrl} alt={ph.caption || `${p.label} photo`} className="w-full" />
+                    <img
+                      src={ph.dataUrl}
+                      alt={ph.caption || `${p.label} photo`}
+                      className="w-full"
+                    />
                     <figcaption className="flex items-center justify-between gap-2 p-2 text-xs">
                       <span className="truncate text-muted">
                         {ph.caption || getStage(ph.stage).label}

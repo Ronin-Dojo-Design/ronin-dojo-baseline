@@ -10,9 +10,9 @@
  * `requires: "orderConfirmed"` = the order-guard; `terminal + reasonOnLost` = no silent drop.
  */
 
-import type { BoardCard, BoardConfig } from "@ronin-dojo/ui-kit/kanban"
-import { leadSourceLabel } from "./lead-source"
-import type { Project } from "./types"
+import type { BoardCard, BoardConfig } from "@ronin-dojo/ui-kit/kanban";
+import { leadSourceLabel } from "./lead-source";
+import type { Project } from "./types";
 
 export const MAMMOTH_BOARD: BoardConfig = {
   id: "mammoth-pipeline",
@@ -24,15 +24,31 @@ export const MAMMOTH_BOARD: BoardConfig = {
     { id: "qualified", name: "Qualified", gate: "Use, region, rough dimensions", sla: 3 },
     { id: "quote", name: "Design & Quote", gate: "Quote built from product library", sla: 5 },
     { id: "contract", name: "Contract", gate: "Quote e-signed (= the contract)", sla: 5 },
-    { id: "deposit", name: "Deposit", gate: "Deposit invoice sent / paid", requires: "orderConfirmed" },
+    {
+      id: "deposit",
+      name: "Deposit",
+      gate: "Deposit invoice sent / paid",
+      requires: "orderConfirmed",
+    },
     { id: "engineering", name: "Engineering", gate: "PE stamp for the state" },
     { id: "fabrication", name: "Fabrication", gate: "Fab-milestone invoice issued" },
     { id: "delivery", name: "Delivery & Erection", gate: "Sequenced delivery + milestone invoice" },
-    { id: "complete", name: "Order Complete", gate: "Final invoice; order confirmed", requires: "orderConfirmed" },
-    { id: "lost", name: "Closed-Lost", gate: "Reason required (no silent drops)", terminal: true, reasonOnLost: true },
+    {
+      id: "complete",
+      name: "Order Complete",
+      gate: "Final invoice; order confirmed",
+      requires: "orderConfirmed",
+    },
+    {
+      id: "lost",
+      name: "Closed-Lost",
+      gate: "Reason required (no silent drops)",
+      terminal: true,
+      reasonOnLost: true,
+    },
   ],
   automations: ["rotting", "next-step-reminder", "stage-sla", "order-guard", "lost-reason"],
-}
+};
 
 /**
  * Map an existing Mammoth Project (lib/store.ts) to a kernel BoardCard.
@@ -59,5 +75,5 @@ export function projectToCard(p: Project): BoardCard {
     badges: [{ label: leadSourceLabel(p.source) }],
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
-  }
+  };
 }

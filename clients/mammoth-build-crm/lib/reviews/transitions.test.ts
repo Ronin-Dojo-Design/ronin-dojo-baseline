@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { ConsentGuardError } from "./consent";
-import {
-  assertApprovable,
-  assertNoActiveDuplicate,
-  ReviewRequestStateError,
-} from "./transitions";
+import { assertApprovable, assertNoActiveDuplicate, ReviewRequestStateError } from "./transitions";
 
 describe("assertApprovable (draft -> approved, the ONE transition this engine performs)", () => {
   test("approves a draft, consented, non-opted-out email request", () => {

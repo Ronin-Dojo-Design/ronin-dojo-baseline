@@ -153,9 +153,7 @@ export async function approvePostingDraft(id: string): Promise<PostingDraftRecor
       body: current.body,
       status: current.status as PostingStatus,
     });
-    throw new Error(
-      replan.ok ? `Draft "${id}" changed while approving — retry.` : replan.reason,
-    );
+    throw new Error(replan.ok ? `Draft "${id}" changed while approving — retry.` : replan.reason);
   }
   const row = await db.postingDraft.findUniqueOrThrow({ where: { id } });
   return toRecord(row);

@@ -23,9 +23,9 @@
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* Mammoth's own UI aliases (non-kernel components). */
-  --accent: var(--primary);          /* primary CTA = Mammoth orange */
-  --accent-foreground: var(--bg);    /* dark ink on the orange button */
-  --danger: var(--primary-hover);    /* at-risk = the one loud signal, on-brand orange */
+  --accent: var(--primary); /* primary CTA = Mammoth orange */
+  --accent-foreground: var(--bg); /* dark ink on the orange button */
+  --danger: var(--primary-hover); /* at-risk = the one loud signal, on-brand orange */
 
   /*
    * Kernel bridge for the shared AdminKanban board (@ronin-dojo/ui-kit — PWCC-007). The kernel

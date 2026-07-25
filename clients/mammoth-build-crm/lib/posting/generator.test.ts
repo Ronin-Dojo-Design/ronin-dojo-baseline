@@ -1,9 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  extractPlaceholders,
-  hasUnresolvedPlaceholders,
-  renderPostingTemplate,
-} from "./generator";
+import { extractPlaceholders, hasUnresolvedPlaceholders, renderPostingTemplate } from "./generator";
 import { POSTING_PLATFORMS, POSTING_TEMPLATES } from "./templates";
 
 describe("extractPlaceholders", () => {

@@ -25,10 +25,18 @@ export const PROCESS_STEPS: { label: string; desc: string }[] = [
 
 export const BUILDING_TYPES: { id: string; title: string; blurb: string }[] = [
   { id: "commercial", title: "Commercial", blurb: "Service centers, offices, and storefronts." },
-  { id: "auto-service", title: "Auto Service", blurb: "Bays, lifts, and flow built around the work." },
+  {
+    id: "auto-service",
+    title: "Auto Service",
+    blurb: "Bays, lifts, and flow built around the work.",
+  },
   { id: "retail", title: "Retail", blurb: "Clear-span space that flexes with your floor plan." },
   { id: "flex", title: "Flex Space", blurb: "Warehouse + office under one engineered roof." },
-  { id: "agricultural", title: "Agricultural", blurb: "Equipment, livestock, and storage that lasts." },
+  {
+    id: "agricultural",
+    title: "Agricultural",
+    blurb: "Equipment, livestock, and storage that lasts.",
+  },
   { id: "residential", title: "Residential", blurb: "Shops, garages, and barndominiums." },
   { id: "office", title: "Office", blurb: "Finished, conditioned workspace, planned in." },
   { id: "warehouse", title: "Warehouse", blurb: "Tall, wide, and ready for racking." },
@@ -40,8 +48,7 @@ export const CONTEXT_BAND =
 // ---- CRM seed data (demo projects for Sunday review) ----
 
 const now = Date.now();
-const iso = (offsetDays: number) =>
-  new Date(now - offsetDays * 86_400_000).toISOString();
+const iso = (offsetDays: number) => new Date(now - offsetDays * 86_400_000).toISOString();
 
 export const SEED_PROJECTS: Project[] = [
   {

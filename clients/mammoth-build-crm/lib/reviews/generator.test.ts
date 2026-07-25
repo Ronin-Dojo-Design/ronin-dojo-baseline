@@ -12,7 +12,9 @@ const CONFIG: ReviewRequestSenderConfig = {
   emailUnsubscribeLink: "https://mammoth.build/unsubscribe",
 };
 
-const customer = (overrides: Partial<ReviewRequestCustomerInput> = {}): ReviewRequestCustomerInput => ({
+const customer = (
+  overrides: Partial<ReviewRequestCustomerInput> = {},
+): ReviewRequestCustomerInput => ({
   customerFirstName: "Alex",
   buildingType: "60x100 Agricultural",
   smsConsent: false,
@@ -55,7 +57,10 @@ describe("planReviewRequest", () => {
   });
 
   test("consent alone (no channel preference) still defaults to email", () => {
-    const rendered = planReviewRequest(customer({ smsConsent: true, preferredChannel: null }), CONFIG);
+    const rendered = planReviewRequest(
+      customer({ smsConsent: true, preferredChannel: null }),
+      CONFIG,
+    );
     expect(rendered.channel).toBe("email");
   });
 

@@ -38,9 +38,25 @@ function BuildingMark({ className = "" }: { className?: string }) {
         />
       ))}
       {/* roll-up door */}
-      <rect x="120" y="112" width="52" height="52" fill="#15171a" stroke="var(--primary)" strokeWidth="2" />
+      <rect
+        x="120"
+        y="112"
+        width="52"
+        height="52"
+        fill="#15171a"
+        stroke="var(--primary)"
+        strokeWidth="2"
+      />
       {/* entry */}
-      <rect x="196" y="124" width="26" height="40" fill="#15171a" stroke="#3a4048" strokeWidth="1.5" />
+      <rect
+        x="196"
+        y="124"
+        width="26"
+        height="40"
+        fill="#15171a"
+        stroke="#3a4048"
+        strokeWidth="1.5"
+      />
       {/* eave trim */}
       <rect x="40" y="76" width="240" height="4" fill="var(--primary-deep)" />
     </svg>

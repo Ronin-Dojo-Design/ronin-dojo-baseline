@@ -104,7 +104,8 @@ function calendarDateKey(date: Date): string {
 }
 
 export function validateContactAttemptInput(input: ContactAttemptInput): ValidContactAttemptInput {
-  if (!input.projectId.trim()) throw new Error("Choose an Opportunity before recording an attempt.");
+  if (!input.projectId.trim())
+    throw new Error("Choose an Opportunity before recording an attempt.");
   if (!CONTACT_ATTEMPT_CHANNELS.includes(input.channel)) {
     throw new Error("Choose a supported manual Contact Attempt channel.");
   }
@@ -191,7 +192,11 @@ export function buildAttemptLog(activities: AttemptSourceActivity[]): AttemptLog
 /** The "Attempt N of 3" cadence readout for a project's attempt count. */
 export function attemptProgress(count: number): AttemptProgress {
   if (count === 0) {
-    return { cadenceMet: false, count, label: `No attempts yet — target ${ATTEMPT_CADENCE_TARGET}` };
+    return {
+      cadenceMet: false,
+      count,
+      label: `No attempts yet — target ${ATTEMPT_CADENCE_TARGET}`,
+    };
   }
   if (count <= ATTEMPT_CADENCE_TARGET) {
     return {
@@ -207,10 +212,7 @@ export function attemptProgress(count: number): AttemptProgress {
   };
 }
 
-export function bucketDueActivities(
-  activities: SalesQueueItem[],
-  now: Date,
-): SalesQueueBuckets {
+export function bucketDueActivities(activities: SalesQueueItem[], now: Date): SalesQueueBuckets {
   const today = calendarDateKey(now);
   const buckets: SalesQueueBuckets = { overdue: [], today: [], upcoming: [] };
   const sorted = [...activities].sort((a, b) => {

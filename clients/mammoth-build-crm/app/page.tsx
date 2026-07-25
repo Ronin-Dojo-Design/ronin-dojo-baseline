@@ -77,7 +77,9 @@ export default function LandingPage() {
           <h2 id="buildings" className="font-display text-3xl font-bold">
             What we build
           </h2>
-          <p className="mt-2 text-muted">Save the types you're interested in — it pre-fills your inquiry.</p>
+          <p className="mt-2 text-muted">
+            Save the types you're interested in — it pre-fills your inquiry.
+          </p>
           <div className="mt-8">
             <BuildingTypesGrid />
           </div>
@@ -91,8 +93,8 @@ export default function LandingPage() {
             One record, lead to order — with proof at every step.
           </h2>
           <p className="mt-2 max-w-2xl text-muted">
-            The custom Mammoth Build CRM: a project moves through every stage, and a build can&apos;t
-            be dropped or marked done before it&apos;s a real order.
+            The custom Mammoth Build CRM: a project moves through every stage, and a build
+            can&apos;t be dropped or marked done before it&apos;s a real order.
           </p>
           <div className="mt-8">
             <CrmPreview />
@@ -135,7 +137,8 @@ export default function LandingPage() {
           </Link>
         </div>
         <p className="mx-auto mt-6 max-w-6xl text-xs text-muted">
-          MVP demo · palette provisional pending brand assets · © {new Date().getFullYear()} Mammoth Metal Buildings
+          MVP demo · palette provisional pending brand assets · © {new Date().getFullYear()} Mammoth
+          Metal Buildings
         </p>
       </footer>
     </main>

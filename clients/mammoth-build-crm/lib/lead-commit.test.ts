@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { ExistingContact } from "./lead-ingest";
-import {
-  FIRST_TOUCH_NEXT_TASK,
-  planLeadCommit,
-  type LeadCommitPlan,
-} from "./lead-commit";
+import { FIRST_TOUCH_NEXT_TASK, planLeadCommit, type LeadCommitPlan } from "./lead-commit";
 import {
   SANITIZED_EXISTING_CONTACTS,
   SANITIZED_LEAD_SHEET_CSV,
@@ -69,11 +65,7 @@ describe("planLeadCommit", () => {
 
   test("is idempotent: re-planning the same sheet against the first run's writes skips everything", () => {
     const firstRun = planLeadCommit(SANITIZED_LEAD_SHEET_CSV, "csv", []);
-    const secondRun = planLeadCommit(
-      SANITIZED_LEAD_SHEET_CSV,
-      "csv",
-      asExistingContacts(firstRun),
-    );
+    const secondRun = planLeadCommit(SANITIZED_LEAD_SHEET_CSV, "csv", asExistingContacts(firstRun));
 
     expect(secondRun.creates).toEqual([]);
     // All 7 keyed rows now match the CRM — including the case-flipped email

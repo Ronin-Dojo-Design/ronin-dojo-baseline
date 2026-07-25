@@ -1,10 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  MAX_SHEET_ROWS,
-  dedupeLeadRows,
-  parseLeadSheet,
-  type LeadSheetRow,
-} from "./lead-ingest";
+import { MAX_SHEET_ROWS, dedupeLeadRows, parseLeadSheet, type LeadSheetRow } from "./lead-ingest";
 import {
   SANITIZED_EXISTING_CONTACTS,
   SANITIZED_LEAD_SHEET_CSV,
@@ -65,7 +60,9 @@ describe("parseLeadSheet — CSV", () => {
 
   test("flags rows without contact details and unrecognized sources", () => {
     expect(result.rows[4]!.issues).toContain("No email or phone — can't be contacted or deduped.");
-    expect(result.rows[6]!.issues).toContain('Unrecognized Lead Source "Facebook" — mapped to Other.');
+    expect(result.rows[6]!.issues).toContain(
+      'Unrecognized Lead Source "Facebook" — mapped to Other.',
+    );
     expect(result.rows[6]!.source).toBe("other");
   });
 

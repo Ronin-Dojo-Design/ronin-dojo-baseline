@@ -38,8 +38,7 @@ export default function NewJobOrderPage() {
     }
     setSubmitting(true);
     const name =
-      form.name.trim() ||
-      `${form.contactName || "New"} — ${form.buildingType || "Building"}`;
+      form.name.trim() || `${form.contactName || "New"} — ${form.buildingType || "Building"}`;
     try {
       const project = await create({ ...form, name });
       router.push(`/app/project/${project.id}`);
@@ -52,8 +51,8 @@ export default function NewJobOrderPage() {
     <div className="mx-auto max-w-2xl">
       <h1 className="font-display text-2xl font-bold">New Job Order</h1>
       <p className="text-sm text-muted">
-        Start of the job. This creates a project at the Lead stage — and it can't be
-        dropped without a reason.
+        Start of the job. This creates a project at the Lead stage — and it can't be dropped without
+        a reason.
       </p>
 
       <form onSubmit={onSubmit} className="mt-7 space-y-4">
@@ -68,16 +67,32 @@ export default function NewJobOrderPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Contact name">
-            <input required value={form.contactName} onChange={(e) => set("contactName", e.target.value)} className={input} />
+            <input
+              required
+              value={form.contactName}
+              onChange={(e) => set("contactName", e.target.value)}
+              className={input}
+            />
           </Field>
           <Field label="Contact email">
-            <input required type="email" value={form.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} className={input} />
+            <input
+              required
+              type="email"
+              value={form.contactEmail}
+              onChange={(e) => set("contactEmail", e.target.value)}
+              className={input}
+            />
           </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Building type">
-            <select required value={form.buildingType} onChange={(e) => set("buildingType", e.target.value)} className={input}>
+            <select
+              required
+              value={form.buildingType}
+              onChange={(e) => set("buildingType", e.target.value)}
+              className={input}
+            >
               <option value="">Select…</option>
               {BUILDING_TYPES.map((b) => (
                 <option key={b.id} value={b.title}>
@@ -87,28 +102,61 @@ export default function NewJobOrderPage() {
             </select>
           </Field>
           <Field label="Region / site">
-            <input value={form.region} onChange={(e) => set("region", e.target.value)} placeholder="City, State" className={input} />
+            <input
+              value={form.region}
+              onChange={(e) => set("region", e.target.value)}
+              placeholder="City, State"
+              className={input}
+            />
           </Field>
         </div>
 
         <Field label="Intended use">
-          <input value={form.use} onChange={(e) => set("use", e.target.value)} placeholder="e.g. 6-bay auto service" className={input} />
+          <input
+            value={form.use}
+            onChange={(e) => set("use", e.target.value)}
+            placeholder="e.g. 6-bay auto service"
+            className={input}
+          />
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Width (ft)">
-            <input type="number" min={0} value={form.width ?? ""} onChange={(e) => setNum("width", e.target.value)} className={input} />
+            <input
+              type="number"
+              min={0}
+              value={form.width ?? ""}
+              onChange={(e) => setNum("width", e.target.value)}
+              className={input}
+            />
           </Field>
           <Field label="Length (ft)">
-            <input type="number" min={0} value={form.length ?? ""} onChange={(e) => setNum("length", e.target.value)} className={input} />
+            <input
+              type="number"
+              min={0}
+              value={form.length ?? ""}
+              onChange={(e) => setNum("length", e.target.value)}
+              className={input}
+            />
           </Field>
           <Field label="Eave height (ft)">
-            <input type="number" min={0} value={form.eaveHeight ?? ""} onChange={(e) => setNum("eaveHeight", e.target.value)} className={input} />
+            <input
+              type="number"
+              min={0}
+              value={form.eaveHeight ?? ""}
+              onChange={(e) => setNum("eaveHeight", e.target.value)}
+              className={input}
+            />
           </Field>
         </div>
 
         <Field label="Notes">
-          <textarea rows={3} value={form.notes} onChange={(e) => set("notes", e.target.value)} className={input} />
+          <textarea
+            rows={3}
+            value={form.notes}
+            onChange={(e) => set("notes", e.target.value)}
+            className={input}
+          />
         </Field>
 
         <div className="flex gap-3">

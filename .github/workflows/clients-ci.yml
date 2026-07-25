@@ -149,3 +149,16 @@ jobs:
           else
             echo "No lint:check script in ${{ matrix.product }} — skipping (add oxlint to enable a lint gate)."
           fi
+      # Format is opt-in per product, same shape as lint (WL-P2-69): run
+      # format:check only if the product defines it (mammoth adopted oxfmt with
+      # its own config matching existing style — SESSION_0708). Closes the gap
+      # that let 6 SESSION_0692 PRs land red on `oxfmt --check` with no gate to
+      # catch it pre-merge.
+      - name: Format (if the product defines format:check)
+        working-directory: ${{ matrix.product }}
+        run: |
+          if node -e "process.exit(require('./package.json').scripts?.['format:check'] ? 0 : 1)"; then
+            bun run format:check
+          else
+            echo "No format:check script in ${{ matrix.product }} — skipping (add oxfmt to enable a format gate)."
+          fi

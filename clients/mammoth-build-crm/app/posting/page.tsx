@@ -12,7 +12,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { MCard, type MCardBadge } from "@ronin-dojo/ui-kit";
-import { approvePostingDraft, generatePostingDraft, listPostingDrafts } from "@/lib/posting/actions";
+import {
+  approvePostingDraft,
+  generatePostingDraft,
+  listPostingDrafts,
+} from "@/lib/posting/actions";
 import { extractPlaceholders } from "@/lib/posting/generator";
 import {
   POSTING_PLATFORMS,
@@ -138,8 +142,7 @@ export default function PostingPipelinePage() {
           <h1 className="font-display text-2xl font-bold">Posting pipeline</h1>
           <p className="mt-1 max-w-xl text-sm text-muted">
             Render a template into a draft, review it, then approve. Approving never posts —
-            publishing to Facebook, Instagram, or Google Business Profile is a separate, later
-            step.
+            publishing to Facebook, Instagram, or Google Business Profile is a separate, later step.
           </p>
         </div>
         <a href="/app" className="text-sm text-muted transition-colors hover:text-ink">

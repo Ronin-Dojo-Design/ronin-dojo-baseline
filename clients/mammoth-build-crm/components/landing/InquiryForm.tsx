@@ -37,8 +37,7 @@ export function InquiryForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated]);
 
-  const update = (field: keyof Draft, value: string) =>
-    setDraft((d) => ({ ...d, [field]: value }));
+  const update = (field: keyof Draft, value: string) => setDraft((d) => ({ ...d, [field]: value }));
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +51,8 @@ export function InquiryForm() {
       <div className="rounded-lg border border-primary bg-elevated p-6 text-center">
         <p className="font-display text-xl font-semibold">Saved locally — we'll be in touch.</p>
         <p className="mt-2 text-sm text-muted">
-          (MVP: this inquiry is stored on your device only. In production it routes
-          into the Mammoth CRM as a new lead.)
+          (MVP: this inquiry is stored on your device only. In production it routes into the Mammoth
+          CRM as a new lead.)
         </p>
         <button
           type="button"
