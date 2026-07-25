@@ -65,6 +65,7 @@ function passportFormValues(passport: PassportOne) {
     socialLinks: Array.isArray(passport.socialLinks)
       ? (passport.socialLinks as Array<{ platform: string; url: string }>)
       : [],
+    allowSocialCelebration: passport.allowSocialCelebration,
   }
 }
 
@@ -149,10 +150,13 @@ export function PassportEditor({
 
   // Admin mode swaps BOTH the action (owner-keyed → admin-keyed) and the schema
   // (adds `passportId`), and injects the target id into the submitted values. The admin
-  // schema is a superset of the base schema, so the base-schema value shape is the
-  // common type; `passportId` is the one extra runtime key. RHF's `values` prop is typed
-  // against the (self-schema) union, so cast just that merged object — the key still rides
-  // through to the admin action, which is the only consumer that reads it.
+  // schema is the base schema MINUS the consent field (`allowSocialCelebration` — omitted
+  // per PR #339 Doug P2: only the member may consent) PLUS `passportId`, so neither shape
+  // subsumes the other; the base-schema value shape stays the working type. RHF's `values`
+  // prop and the resolver are both typed against the self schema, so cast at those two
+  // seams — `passportId` still rides through to the admin action (its only consumer), and
+  // the admin resolver still VALIDATES with the omitted schema at runtime (the consent key
+  // is schema-stripped before submit).
   const values = (
     isAdmin
       ? { ...editorFormValues(passport, directoryProfile), passportId: adminPassportId }
@@ -160,8 +164,17 @@ export function PassportEditor({
   ) as ReturnType<typeof editorFormValues>
 
   const { form, handleSubmitWithAction } = useHookFormAction(
-    isAdmin ? updatePassportAndProfileAsAdmin : updatePassportAndProfile,
-    zodResolver(isAdmin ? updatePassportAndProfileAsAdminSchema : updatePassportAndProfileSchema),
+    // Same cast seam: the hook infers the form type from the action's input schema; keep the
+    // SELF flavor as the static type (the admin action still parses its own omitted+passportId
+    // schema server-side — the cast never changes what validates or writes).
+    (isAdmin
+      ? updatePassportAndProfileAsAdmin
+      : updatePassportAndProfile) as typeof updatePassportAndProfile,
+    zodResolver(
+      (isAdmin
+        ? updatePassportAndProfileAsAdminSchema
+        : updatePassportAndProfileSchema) as typeof updatePassportAndProfileSchema,
+    ),
     {
       formProps: { values },
       actionProps: {
@@ -343,6 +356,41 @@ function PassportFields({
         <div className="@md:col-span-2">
           <SocialLinksEditor form={form} />
         </div>
+
+        {/* Fork F2 (SESSION_0705, PL-027): the affirmative publicity opt-in — the ONE place it
+            can be edited (ADR 0025). Default OFF; the social-queue approve gate re-reads it
+            live, so unchecking it revokes consent for any pending celebration.
+            OWNER MODE ONLY (PR #339 Doug P2): consent must come from the member — an admin
+            flipping it on another person's behalf would be manufactured consent. The admin
+            schemas also `.omit()` the field, so even a crafted submit cannot write it. */}
+        {!isAdmin && (
+          <div className="@md:col-span-2 flex flex-col gap-3">
+            <div>
+              <H3 size="h5">Publicity</H3>
+              <Hint>
+                Off by default. When enabled, Black Belt Legacy may celebrate your verified belt
+                promotions on our social channels; every post is still human-reviewed first, and
+                unchecking this revokes permission for anything not yet posted.
+              </Hint>
+            </div>
+            <FormField
+              control={form.control}
+              name="allowSocialCelebration"
+              render={({ field }) => (
+                <FormItem className="flex items-center gap-2">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      aria-label="Celebrate my promotions publicly"
+                    />
+                  </FormControl>
+                  <FormLabel className="mt-0!">Celebrate my promotions publicly</FormLabel>
+                </FormItem>
+              )}
+            />
+          </div>
+        )}
       </div>
     </section>
   )

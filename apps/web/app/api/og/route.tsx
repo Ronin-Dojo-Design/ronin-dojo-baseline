@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server"
 import { getTranslations } from "next-intl/server"
 import { createLoader } from "nuqs/server"
 import { OgBase } from "~/components/web/og/og-base"
+import { OgPromotionCard } from "~/components/web/og/og-promotion-card"
+import { parsePromotionCardParams } from "~/components/web/og/promotion-card-params"
 import { getBrandSiteConfig, siteConfig } from "~/config/site"
 import { Brand } from "~/.generated/prisma/client"
 import { loadGoogleFont } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
-import { openGraphSearchParams } from "~/lib/opengraph"
+import { ogImageSearchParams } from "~/lib/opengraph"
 
 export const contentType = "image/png"
 export const alt = "OpenGraph Image"
@@ -16,17 +18,10 @@ export const size = { width: 1200, height: 630 }
 export const GET = async (req: NextRequest) => {
   const t = await getTranslations()
   const brandConfig = getBrandSiteConfig(Brand.BBL)
-  const { title, description, faviconUrl } = createLoader(openGraphSearchParams)(req)
+  const loaded = createLoader(ogImageSearchParams)(req)
+  const { title, description, faviconUrl } = loaded
 
-  const params = {
-    title: title ?? brandConfig.name,
-    description: description ?? t("brand.description"),
-    faviconUrl: faviconUrl ?? `${siteConfig.url}${resolvePublicMediaUrl(brandConfig.faviconSrc)}`,
-    siteName: brandConfig.name,
-    siteTagline: t("brand.tagline"),
-  }
-
-  return new ImageResponse(<OgBase {...params} />, {
+  const imageOptions = {
     width: 1200,
     height: 630,
     fonts: [
@@ -43,5 +38,26 @@ export const GET = async (req: NextRequest) => {
         style: "normal",
       },
     ],
-  })
+  } satisfies ConstructorParameters<typeof ImageResponse>[1]
+
+  // `card=rank-promotion` variant (SESSION_0705, PL-027 renderer graduation): the belt-color
+  // celebration card. `parsePromotionCardParams` is the null-safety seam — incomplete/legacy
+  // URLs (title/description only) fall through to the generic OgBase below.
+  const promotion = parsePromotionCardParams(loaded)
+  if (promotion) {
+    return new ImageResponse(
+      <OgPromotionCard {...promotion} siteName={brandConfig.name} />,
+      imageOptions,
+    )
+  }
+
+  const params = {
+    title: title ?? brandConfig.name,
+    description: description ?? t("brand.description"),
+    faviconUrl: faviconUrl ?? `${siteConfig.url}${resolvePublicMediaUrl(brandConfig.faviconSrc)}`,
+    siteName: brandConfig.name,
+    siteTagline: t("brand.tagline"),
+  }
+
+  return new ImageResponse(<OgBase {...params} />, imageOptions)
 }

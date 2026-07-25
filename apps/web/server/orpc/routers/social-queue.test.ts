@@ -15,8 +15,8 @@
  *   1. authz — every procedure gates on `social-queue.manage` (guest UNAUTHORIZED, member/
  *      director FORBIDDEN with zero writes, admin + FI-019 grantee pass)
  *   2. transitions — DRAFT→APPROVED, DRAFT/APPROVED→REJECTED, terminal REJECTED, CAS races
- *   3. consent — the live approve-time re-check (revoked → auto-reject; unratified F2 →
- *      fail closed, item stays DRAFT)
+ *   3. consent — the live approve-time re-check (structurally revoked OR missing the fork-F2
+ *      `allowSocialCelebration` opt-in → auto-reject; opted-in subject → approve proceeds)
  *   4. NOTHING PUBLISHES on approve (or ever) — no write in the whole run touches
  *      `PUBLISHED`/`publishedAt`
  *
@@ -63,7 +63,7 @@ type UpdateCall = { where: Record<string, unknown>; data: Record<string, unknown
 
 const state = {
   items: new Map<string, ItemRow>(),
-  passports: new Map<string, { userId: string | null }>(),
+  passports: new Map<string, { userId: string | null; allowSocialCelebration: boolean }>(),
   /** Writes captured for the CURRENT test (reset per test). */
   updateCalls: [] as UpdateCall[],
   /** EVERY write across the whole file (never reset) — the "nothing publishes" recorder. */
@@ -272,8 +272,8 @@ describe("approve — DRAFT → APPROVED, and STOP (no publish)", () => {
     expect(result.outcome).toBe("approved")
   })
 
-  it("MEMBER_OPT_IN with a claimed subject FAILS CLOSED while F2 is unratified — CONFLICT, item stays DRAFT, zero writes", async () => {
-    state.passports.set("p1", { userId: "owner-1" })
+  it("MEMBER_OPT_IN with an OPTED-IN claimed subject → APPROVED (fork F2 ratified, SESSION_0705) — still no publish", async () => {
+    state.passports.set("p1", { userId: "owner-1", allowSocialCelebration: true })
     state.items.set(
       "i1",
       makeItem({
@@ -283,13 +283,36 @@ describe("approve — DRAFT → APPROVED, and STOP (no publish)", () => {
         source: "RANK_PROMOTION",
       }),
     )
-    await expectORPCError(asCaller(admin).approve({ id: "i1" }), "CONFLICT")
-    expect(state.items.get("i1")?.status).toBe("DRAFT")
-    expect(state.updateCalls).toEqual([])
+    const result = await asCaller(admin).approve({ id: "i1" })
+    expect(result).toMatchObject({ id: "i1", outcome: "approved", status: "APPROVED" })
+    const item = state.items.get("i1")
+    expect(item?.status).toBe("APPROVED")
+    expect(item?.publishedAt).toBeNull()
+  })
+
+  it("MEMBER_OPT_IN with a claimed subject NOT holding the opt-in (default OFF) → AUTO-REJECTED consent-revoked — fails closed", async () => {
+    state.passports.set("p1", { userId: "owner-1", allowSocialCelebration: false })
+    state.items.set(
+      "i1",
+      makeItem({
+        id: "i1",
+        consentBasis: "MEMBER_OPT_IN",
+        passportId: "p1",
+        source: "RANK_PROMOTION",
+      }),
+    )
+    const result = await asCaller(admin).approve({ id: "i1" })
+    expect(result).toMatchObject({
+      id: "i1",
+      outcome: "auto-rejected",
+      status: "REJECTED",
+      rejectedReason: "consent-revoked",
+    })
+    expect(state.items.get("i1")?.status).toBe("REJECTED")
   })
 
   it("MEMBER_OPT_IN whose subject became a placeholder (userId null) → AUTO-REJECTED with consent-revoked", async () => {
-    state.passports.set("p1", { userId: null })
+    state.passports.set("p1", { userId: null, allowSocialCelebration: false })
     state.items.set(
       "i1",
       makeItem({

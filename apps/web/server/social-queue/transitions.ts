@@ -63,14 +63,16 @@ export type ApprovalConsentResult =
   | {
       ok: false
       /**
-       * - `consent-revoked` — the subject can no longer consent (Passport deleted, or no
-       *   longer account-claimed). The item is auto-flipped to REJECTED (spec §2.3).
-       * - `consent-unratified` — the affirmative publicity opt-in mechanism (fork F2) is not
-       *   yet ratified, so no affirmative signal can be verified. The item STAYS DRAFT (a
-       *   temporary platform condition, not a subject revocation).
+       * - `consent-revoked` — no verifiable affirmative consent exists RIGHT NOW: the subject
+       *   Passport is gone, no longer account-claimed, or does not hold the affirmative
+       *   `allowSocialCelebration` opt-in (fork F2, RATIFIED at SESSION_0705 — opt-in,
+       *   default OFF). The item is auto-flipped to REJECTED (spec §2.3).
        * - `unknown-basis` — an unrecognized consent basis. Fails closed, item stays DRAFT.
+       *
+       * (`consent-unratified` — the pre-F2 "mechanism doesn't exist yet" holding state —
+       * retired at SESSION_0705 when the opt-in column landed; no code path can emit it.)
        */
-      reason: "consent-revoked" | "consent-unratified" | "unknown-basis"
+      reason: "consent-revoked" | "unknown-basis"
     }
 
 /**
@@ -87,18 +89,17 @@ export type ApprovalConsentResult =
  *     2. that Passport still exists and is ACCOUNT-CLAIMED (`userId != null`) — placeholder
  *        Passports are structurally excluded (spec §2.3 leg 1): an accountless person cannot
  *        have consented to anything;
- *     3. the subject holds the AFFIRMATIVE publicity opt-in (fork F2 — proposed
- *        `Passport.allowSocialCelebration`, explicit opt-in, default OFF). F2 is NOT YET
- *        RATIFIED by the operator, so this leg FAILS CLOSED for every item: until the consent
- *        mechanism exists there is no affirmative signal to verify, and "no verifiable
- *        consent" must mean "no approval" (flywheel ground rule 2). When F2 lands, this leg
- *        becomes `passport.allowSocialCelebration === true` — a one-line change, covered by
- *        the table-driven tests.
+ *     3. the subject holds the AFFIRMATIVE publicity opt-in — fork F2, RATIFIED at
+ *        SESSION_0705: `Passport.allowSocialCelebration`, explicit opt-in, DEFAULT OFF,
+ *        editable only in the PassportEditor (ADR 0025). `false` means "no verifiable
+ *        affirmative consent right now" → consent-revoked (flywheel ground rule 2:
+ *        revocation — including never-opting-in — is honored at every later gate). This is
+ *        the exact one-line swap 0686 pre-specified for ratification.
  */
 export const evaluateApprovalConsent = (input: {
   consentBasis: string
   /** The LIVE subject Passport (`null` = item has no passportId, or the row is gone). */
-  passport: { userId: string | null } | null
+  passport: { userId: string | null; allowSocialCelebration: boolean } | null
 }): ApprovalConsentResult => {
   const basis = input.consentBasis as SocialConsentBasisLiteral
 
@@ -113,9 +114,13 @@ export const evaluateApprovalConsent = (input: {
       return { ok: false, reason: "consent-revoked" }
     }
 
-    // Leg 3: the affirmative publicity opt-in (fork F2) — UNRATIFIED, so it FAILS CLOSED.
-    // Ratification swaps this line for the real `allowSocialCelebration` read.
-    return { ok: false, reason: "consent-unratified" }
+    // Leg 3: the affirmative publicity opt-in (fork F2, ratified). No opt-in bit → no
+    // verifiable consent → revoked. Read LIVE by every caller, so opting out later revokes.
+    if (input.passport.allowSocialCelebration !== true) {
+      return { ok: false, reason: "consent-revoked" }
+    }
+
+    return { ok: true }
   }
 
   // Unknown basis: fail closed — never approve what we cannot classify.

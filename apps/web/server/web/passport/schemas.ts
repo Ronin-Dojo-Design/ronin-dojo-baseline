@@ -35,6 +35,9 @@ export const updatePassportSchema = z.object({
       }),
     )
     .optional(),
+  // Fork F2 (SESSION_0705, PL-027): affirmative publicity opt-in for social celebration
+  // posts. Editable ONLY through the PassportEditor (ADR 0025 — the ONE identity editor).
+  allowSocialCelebration: z.boolean().optional(),
 })
 
 export const updateDirectoryProfileSchema = z.object({

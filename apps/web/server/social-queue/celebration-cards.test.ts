@@ -82,13 +82,17 @@ const {
 
 // ── fixtures ─────────────────────────────────────────────────────────────────────────────────
 
-/** A `publicPassportPayload`-shaped row: account-claimed, ranks public, one BJJ award. */
+/**
+ * A `publicPassportPayload`-shaped row (+ the fork-F2 `allowSocialCelebration` consent bit the
+ * feeder selects alongside): account-claimed, OPTED-IN, ranks public, one BJJ award.
+ */
 const makePassport = (overrides: Record<string, unknown> = {}) => ({
   id: "p-1",
   displayName: "Jane Doe",
   avatarUrl: null,
   bio: null,
   socialLinks: null,
+  allowSocialCelebration: true,
   user: { id: "user-1", name: "Jane Doe", image: null },
   directoryProfile: { slug: "jane-doe", visibility: "PUBLIC", showRanks: true },
   rankAwardsEarned: [
@@ -168,10 +172,21 @@ describe("buildRankPromotionCelebrationPayload — the render-input snapshot (sp
     expect(params.get("description")).toBe("Rigan Machado → Bob Bass → Jane Doe")
   })
 
-  it("no lineage line → description omitted from the OG URL, card carries null", () => {
+  it("the OG URL carries the graduated card params (SESSION_0705): card=rank-promotion + name/belt/color/date/lineage", () => {
+    const params = ogParamsOf(buildRankPromotionCelebrationPayload(base).ogImageUrl)
+    expect(params.get("card")).toBe("rank-promotion")
+    expect(params.get("name")).toBe("Jane Doe")
+    expect(params.get("beltName")).toBe("Black Belt")
+    expect(params.get("beltColorHex")).toBe("#111111")
+    expect(params.get("date")).toBe("July 12, 2026")
+    expect(params.get("lineageLine")).toBe("Rigan Machado → Bob Bass → Jane Doe")
+  })
+
+  it("no lineage line → description + lineageLine omitted from the OG URL, card carries null", () => {
     const payload = buildRankPromotionCelebrationPayload({ ...base, lineageLine: null })
     expect(payload.card.lineageLine).toBeNull()
     expect(ogParamsOf(payload.ogImageUrl).get("description")).toBeNull()
+    expect(ogParamsOf(payload.ogImageUrl).get("lineageLine")).toBeNull()
   })
 
   it("CTA path: /directory/<slug> when public, /lineage fallback when none", () => {
@@ -182,16 +197,25 @@ describe("buildRankPromotionCelebrationPayload — the render-input snapshot (sp
   it("null Rank.colorHex rides as null (renderer falls back to the brand accent)", () => {
     const payload = buildRankPromotionCelebrationPayload({ ...base, beltColorHex: null })
     expect(payload.card.beltColorHex).toBeNull()
+    expect(ogParamsOf(payload.ogImageUrl).get("beltColorHex")).toBeNull()
   })
 })
 
 describe("canEnqueueMemberOptInDraft — delegates to 0686's consent gate, fails closed", () => {
-  it("account-claimed subject → draft allowed (F2-unratified blocks APPROVAL, not drafting)", () => {
-    expect(canEnqueueMemberOptInDraft({ userId: "user-1" })).toBe(true)
+  it("account-claimed subject HOLDING the F2 opt-in → draft allowed", () => {
+    expect(canEnqueueMemberOptInDraft({ userId: "user-1", allowSocialCelebration: true })).toBe(
+      true,
+    )
+  })
+
+  it("claimed subject WITHOUT the opt-in (default OFF) → false — consent is a precondition to drafting too", () => {
+    expect(canEnqueueMemberOptInDraft({ userId: "user-1", allowSocialCelebration: false })).toBe(
+      false,
+    )
   })
 
   it("placeholder (unclaimed) subject → false", () => {
-    expect(canEnqueueMemberOptInDraft({ userId: null })).toBe(false)
+    expect(canEnqueueMemberOptInDraft({ userId: null, allowSocialCelebration: false })).toBe(false)
   })
 
   it("missing subject → false", () => {
@@ -257,6 +281,13 @@ describe("enqueueRankPromotionCelebration — the explicit trigger seam", () => 
 
   it("CONSENT FAILS CLOSED: placeholder subject (no account) → nothing is generated", async () => {
     state.entry = makeEntry({ passport: makePassport({ user: null }) })
+    const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
+    expect(result).toEqual({ outcome: "skipped", reason: "consent" })
+    expect(state.createCalls).toEqual([])
+  })
+
+  it("CONSENT FAILS CLOSED: claimed subject WITHOUT the F2 opt-in (default OFF) → nothing is generated", async () => {
+    state.entry = makeEntry({ passport: makePassport({ allowSocialCelebration: false }) })
     const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
     expect(result).toEqual({ outcome: "skipped", reason: "consent" })
     expect(state.createCalls).toEqual([])

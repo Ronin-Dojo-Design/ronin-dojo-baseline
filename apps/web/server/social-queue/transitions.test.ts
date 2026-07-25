@@ -70,8 +70,9 @@ describe("status machine — NOTHING publishes (non-negotiable #1)", () => {
 })
 
 describe("consent gate — evaluateApprovalConsent (spec §2.3, non-negotiable #2)", () => {
-  const claimed = { userId: "user-1" }
-  const placeholder = { userId: null }
+  const optedIn = { userId: "user-1", allowSocialCelebration: true }
+  const notOptedIn = { userId: "user-1", allowSocialCelebration: false }
+  const placeholder = { userId: null, allowSocialCelebration: false }
 
   it("AGGREGATE_ONLY passes with no subject — aggregate numbers name no person", () => {
     expect(evaluateApprovalConsent({ consentBasis: "AGGREGATE_ONLY", passport: null })).toEqual({
@@ -98,18 +99,31 @@ describe("consent gate — evaluateApprovalConsent (spec §2.3, non-negotiable #
     ).toEqual({ ok: false, reason: "consent-revoked" })
   })
 
-  it("MEMBER_OPT_IN with a claimed Passport STILL fails closed while fork F2 is unratified — no verifiable affirmative signal means no approval", () => {
-    // This test PINS the fail-closed posture. When the operator ratifies F2 (the
-    // `Passport.allowSocialCelebration` opt-in), this expectation changes DELIBERATELY to
-    // "ok when the bit is true, consent-revoked when false" — never silently.
-    expect(evaluateApprovalConsent({ consentBasis: "MEMBER_OPT_IN", passport: claimed })).toEqual({
-      ok: false,
-      reason: "consent-unratified",
+  it("MEMBER_OPT_IN: claimed subject HOLDING the allowSocialCelebration opt-in → ok (fork F2, ratified SESSION_0705)", () => {
+    // The deliberate flip of 0686's pinned fail-closed test: F2 is ratified, the opt-in bit
+    // exists, and "ok when the bit is true, consent-revoked when false" is now the law.
+    expect(evaluateApprovalConsent({ consentBasis: "MEMBER_OPT_IN", passport: optedIn })).toEqual({
+      ok: true,
     })
   })
 
+  it("MEMBER_OPT_IN: claimed subject WITHOUT the opt-in (default OFF) → consent-revoked — no affirmative signal, no approval", () => {
+    expect(
+      evaluateApprovalConsent({ consentBasis: "MEMBER_OPT_IN", passport: notOptedIn }),
+    ).toEqual({ ok: false, reason: "consent-revoked" })
+  })
+
+  it("MEMBER_OPT_IN: an UNCLAIMED Passport with the bit somehow true is STILL revoked — structural legs run first", () => {
+    expect(
+      evaluateApprovalConsent({
+        consentBasis: "MEMBER_OPT_IN",
+        passport: { userId: null, allowSocialCelebration: true },
+      }),
+    ).toEqual({ ok: false, reason: "consent-revoked" })
+  })
+
   it("an unknown consent basis fails closed — never approve what cannot be classified", () => {
-    expect(evaluateApprovalConsent({ consentBasis: "IMPLIED", passport: claimed })).toEqual({
+    expect(evaluateApprovalConsent({ consentBasis: "IMPLIED", passport: optedIn })).toEqual({
       ok: false,
       reason: "unknown-basis",
     })

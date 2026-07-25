@@ -1082,6 +1082,11 @@ model Passport {
   avatarUrl                 String?
   bio                       String?
   socialLinks               Json?
+  // @added SESSION_0705 — fork F2 (PL-027): affirmative publicity opt-in for social celebration
+  // posts (flywheel spec §2.3 leg 3). DEFAULT OFF — only an explicit PassportEditor opt-in flips
+  // it (ADR 0025: the ONE identity editor); the social-queue approve gate re-reads it LIVE
+  // (`evaluateApprovalConsent`), so flipping it off revokes consent for any pending item.
+  allowSocialCelebration    Boolean   @default(false)
   // @added SESSION_0357 — Passport is the identity source of truth (passport-and-shells.md).
   // coverPhoto/videoIntro are identity media moved off DirectoryProfile (the presentation *view*);
   // placeOfBirth/startedTrainingAt come from the BBL Pods `bbl_member` model. Schools/rank are NOT
