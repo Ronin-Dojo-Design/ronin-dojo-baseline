@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { AccountSection } from "~/app/app/users/_components/account-section"
 import { Wrapper } from "~/components/common/wrapper"
 import { PassportEditor } from "~/components/web/passport/passport-editor"
@@ -6,6 +6,7 @@ import { Brand } from "~/.generated/prisma/client"
 import { findPersonByPassportId } from "~/server/admin/people/queries"
 import { findUserPermissionGrantStates } from "~/server/admin/permissions/queries"
 import { findUserById } from "~/server/admin/users/queries"
+import { resolvePassportIdByUserId } from "~/server/admin/users/resolve-passport-id"
 import type { DirectoryProfileOne } from "~/server/web/passport/payloads"
 import { hasEntitlement } from "~/server/web/entitlements/queries"
 
@@ -40,6 +41,14 @@ export default async ({ params }: PageProps<"/app/users/[id]">) => {
   const person = await findPersonByPassportId(id)
 
   if (!person) {
+    // WL-P2-41(b): this route was re-keyed from User ids to Passport ids, so a pre-re-key
+    // bookmark (`/app/users/{userId}`) used to fall straight to 404. Resolve the legacy USER id
+    // to its unique passport and redirect to the passport-keyed URL; only a genuinely unknown id
+    // still 404s.
+    const passportId = await resolvePassportIdByUserId(id)
+    if (passportId) {
+      redirect(`/app/users/${passportId}`)
+    }
     return notFound()
   }
 

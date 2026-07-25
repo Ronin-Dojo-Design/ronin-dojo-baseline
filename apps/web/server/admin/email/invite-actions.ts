@@ -7,6 +7,7 @@ import { sendEmail } from "~/lib/email"
 import { adminActionClient } from "~/lib/safe-actions"
 import { db } from "~/services/db"
 import { bindPendingClaim, buildClaimSignInUrl } from "~/server/web/lineage/mint-claim-magic-link"
+import { rollbackPendingClaimBind, snapshotPendingClaim } from "./pending-claim-rollback"
 import { sendBblClaimInviteSchema } from "./invite-schema"
 
 /**
@@ -23,7 +24,8 @@ import { sendBblClaimInviteSchema } from "./invite-schema"
  *   3. `bindPendingClaim(toEmail, nodeId)` — persist the email→node pending claim (90-day TTL);
  *      `lib/auth.ts` reconciliation auto-claims it on the recipient's NEXT sign-in,
  *   4. `buildClaimSignInUrl(<BBL origin>)` — the durable public sign-in URL (no one-shot token),
- *   5. send `EmailBblClaimYourProfile` with that URL.
+ *   5. send `EmailBblClaimYourProfile` with that URL; a FAILED send rolls the bind back
+ *      (delete a fresh bind / restore a pre-existing one — WL-P2-41a, `pending-claim-rollback.ts`).
  */
 export const sendBblClaimInvite = adminActionClient
   .inputSchema(sendBblClaimInviteSchema)
@@ -62,6 +64,14 @@ export const sendBblClaimInvite = adminActionClient
       )
     }
 
+    // WL-P2-41(a): snapshot any pre-existing binding BEFORE the bind so a failed send can be
+    // compensated without destroying prior state. `bindPendingClaim` is an idempotent re-arm
+    // (upsert: extend the 90-day window, clear consumption) — on a RE-send the row predates this
+    // action and the earlier successfully-sent durable email still reconciles through it, so a
+    // send failure must RESTORE that prior row, not delete it. (Snapshot→bind isn't atomic, but a
+    // stale snapshot degrades to the pre-fix benign-orphan behavior — see pending-claim-rollback.)
+    const priorBinding = await snapshotPendingClaim(toEmail, parsedInput.nodeId)
+
     // Bind the email→node durably, then link the email to the public sign-in URL — the binding is
     // SERVER-SIDE, not in the URL, so a mail scanner or late click can't consume it.
     // The pre-guard above and this bind are not atomic: if the node gets claimed in that window,
@@ -75,21 +85,31 @@ export const sendBblClaimInvite = adminActionClient
     }
     const claimUrl = buildClaimSignInUrl(await getBrandOrigin())
 
-    const result = await sendEmail({
-      brand: Brand.BBL,
-      to: toEmail,
-      subject: "Claim your Black Belt Legacy profile",
-      react: EmailBblClaimYourProfile({
+    // Send failure → roll the bind back (WL-P2-41a, SESSION_0515 deferral): the recipient never
+    // received an email pointing at this binding. Fresh bind → delete; re-send → restore. The
+    // rollback is best-effort so the SEND error stays the surfaced (toastable) failure.
+    let result: Awaited<ReturnType<typeof sendEmail>>
+    try {
+      result = await sendEmail({
+        brand: Brand.BBL,
         to: toEmail,
-        firstName: parsedInput.firstName || null,
-        profileName: parsedInput.profileName,
-        claimUrl,
-        compTier: "ELITE",
-        isLifetime: parsedInput.isLifetime ?? false,
-      }),
-    })
+        subject: "Claim your Black Belt Legacy profile",
+        react: EmailBblClaimYourProfile({
+          to: toEmail,
+          firstName: parsedInput.firstName || null,
+          profileName: parsedInput.profileName,
+          claimUrl,
+          compTier: "ELITE",
+          isLifetime: parsedInput.isLifetime ?? false,
+        }),
+      })
+    } catch (error) {
+      await rollbackPendingClaimBind(toEmail, parsedInput.nodeId, priorBinding)
+      throw error
+    }
 
     if (result?.error) {
+      await rollbackPendingClaimBind(toEmail, parsedInput.nodeId, priorBinding)
       throw new Error(result.error.message)
     }
 
