@@ -496,6 +496,33 @@ plan scope.
   [G-024](goals-ledger.md), `clients/mammoth-build-crm`, apps/rdd `/clients/mammoth`, ADR 0051
   (kernel→brand→app), ADR 0038 (per-product DB). **⏰ Deadline 2026-08-07.**
 
+### PL-025 — BBL vertical lineage timeline v2 + LineageProfileDrawer_v2 (TimeCapsuleCards + media swipers) — queued · grill session SESSION_0702
+
+- **Operator vision (2026-07-25, mid-0681-run — verbatim intent):** the BBL vertical timeline's
+  instructor cards (the chain leading to the member) must LINK to `LineageProfileDrawer`; the drawer
+  itself gets a **`_v2`** that goes through the `desi-design-review.md` recipe + a **/hallmark pass**,
+  and gains a **vertical belt-history timeline of that individual** — white belt → current belt,
+  mirroring the instructor-lineage timeline but personal. Each belt = a **TimeCapsuleCard** that
+  accordion-expands into a **StudentsCarousel-style horizontal swiper** (cf.
+  `apps/web/components/web/lineage/students-carousel-v2.tsx`) of pictures, videos, tournament wins etc.
+- **Process (operator-directed):** own planning session + a proper `/grill-me` + discussion BEFORE any
+  build. Staged as **SESSION_0702** (branch `session-0702-lineage-timeline-v2-plan`).
+- **Anchors:** `components/web/lineage/lineage-profile-drawer/*` (v1), `lineage-ancestry-timeline.tsx`
+  (+ SESSION_0698's deep-link lane), rank truth = `memberTopRank` / RankEntry-only law, media =
+  uploader family + R2 seam, freemium: technique reels/media gating (`profile-media-freemium-model-0525`).
+- **Lane:** BBL product. **Cross-refs:** WL-P2-23, desi-design-ledger, `docs/protocols/recipes/desi-design-review.md`.
+
+### PL-026 — BBL school-page makeover + unified self+school registration — queued · needs plan session
+
+- **Operator (2026-07-25):** (a) the school page needs a **serious makeover**; (b) **registering a
+  school must be tied into registering yourself** — ONE flow, not a separate process.
+- **Related quick-fix routed to build (not plan):** students on the BBL lineage tree must render in
+  **belt order (highest → lowest)**, not random — dispatched as a 0681 W20 lane (sort at the read
+  model, `memberTopRank` sortOrder).
+- **Anchors:** `/schools/[slug]` + org registration flows, join-funnel memory (comp gate + global
+  modal), claim system (ADR 0036), PL-025 (same surface family — consider co-planning).
+- **Lane:** BBL product. **Cross-refs:** SESSION_0696 (org-claim e2e), goals-ledger G-022 adjacency.
+
 ## Cross-references
 
 - [Goals Ledger](goals-ledger.md) — where planned ideas graduate to.
