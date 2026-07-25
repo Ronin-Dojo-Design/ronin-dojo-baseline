@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 /**
  * RDD — the public marketing surface for `ronindojodesign.com` (SESSION_0625, Slice B3).
@@ -223,9 +224,17 @@ export default function HomePage() {
       </Section>
 
       <footer className="border-t border-border px-5 py-10 sm:px-8">
-        <div className="mx-auto flex w-full max-w-5xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-display text-sm font-semibold text-ink">Ronin Dojo Design</p>
-          <p className="text-sm text-muted">One kernel. Many brands. Built to last.</p>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-6">
+            <Link
+              href="/industries"
+              className="font-display text-sm font-semibold text-muted transition-colors hover:text-primary hover:underline"
+            >
+              Industries
+            </Link>
+            <p className="text-sm text-muted">One kernel. Many brands. Built to last.</p>
+          </div>
         </div>
       </footer>
     </main>
