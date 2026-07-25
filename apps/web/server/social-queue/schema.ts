@@ -38,7 +38,7 @@ export type SocialQueueSourceLiteral = (typeof SOCIAL_QUEUE_SOURCES)[number]
  * publicity opt-in (fork F2) re-verified LIVE at approve time; `AGGREGATE_ONLY` names no
  * person; `OWNED_CONTENT` is brand editorial.
  */
-export const SOCIAL_CONSENT_BASES = ["MEMBER_OPT_IN", "AGGREGATE_ONLY", "OWNED_CONTENT"] as const
+const SOCIAL_CONSENT_BASES = ["MEMBER_OPT_IN", "AGGREGATE_ONLY", "OWNED_CONTENT"] as const
 export type SocialConsentBasisLiteral = (typeof SOCIAL_CONSENT_BASES)[number]
 
 /** Facet/badge labels for the source column. */

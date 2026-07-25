@@ -41,9 +41,12 @@ export default async ({ searchParams }: PageProps<"/app/social-queue">) => {
   const api = await rsc()
   // The nuqs sort parser admits any row key; the router's zod enum only the sortable subset —
   // drop URL-crafted non-sortable ids here instead of 500ing on input validation (inbox idiom).
-  const sort = search.sort.filter(
-    (entry): entry is { id: SocialQueueSortableColumn; desc: boolean } => SORTABLE.has(entry.id),
-  )
+  // The router also caps sort entries at 3 — clamp crafted URLs that repeat sortable ids.
+  const sort = search.sort
+    .filter((entry): entry is { id: SocialQueueSortableColumn; desc: boolean } =>
+      SORTABLE.has(entry.id),
+    )
+    .slice(0, 3)
   const rowsPromise: Promise<SocialQueueListResult> = api.socialQueue.list({
     status: search.status,
     source: search.source,
