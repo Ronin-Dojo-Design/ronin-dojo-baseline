@@ -1,6 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
 import { cache } from "react"
 import { type Brand, LineageVisibility, type Prisma } from "~/.generated/prisma/client"
+import { sortMembersByBeltOrder } from "~/lib/lineage/canvas-model"
 import { parseSort } from "~/server/web/_shared/sortable"
 import {
   type LineageNodeProfile,
@@ -433,6 +434,21 @@ export const materializeLineageTreeResult = (
     return { ...normalizedMember, node: redactedNode }
   })
 
+  // Belt-order the surviving members at the read model (PL-026 quick fix): highest
+  // awarded belt first (`memberTopRank`, discipline-scoped to the tree, ADR 0035),
+  // unranked last, name-asc tiebreak. Downstream visual comparators (`sortMembers`)
+  // order siblings by `visualSortOrder`, so the projection REMAPS `visualSortOrder`
+  // to the belt-order index — the `visualSortOrder`-sorted public surfaces (board
+  // view, mobile list, honor strip, galaxy) inherit belt order with no component
+  // changes. The cohort-timeline explorer (the default view) deliberately keeps its
+  // own chronological child sort (`sortByPromotion`) — belt-order there is queued as
+  // a user-facing sort filter (SESSION_0709 operator call). The editor read path
+  // (`getLineageEditorTree`) is untouched and keeps raw DB placement values, so
+  // drag-reorder math still works on real `visualSortOrder`.
+  const beltOrderedMembers = sortMembersByBeltOrder(normalizedMembers, tree.disciplineId).map(
+    (member, index) => ({ ...member, visualSortOrder: index }),
+  )
+
   const normalizedGroups = tree.visualGroups
     .filter(group => referencedGroupIds.has(group.id))
     .map(group =>
@@ -450,7 +466,7 @@ export const materializeLineageTreeResult = (
 
   return {
     tree: { ...summary, defaultRootMemberId },
-    members: normalizedMembers,
+    members: beltOrderedMembers,
     visualGroups: normalizedGroups,
     defaultRootMemberId,
   }

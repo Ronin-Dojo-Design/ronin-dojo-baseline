@@ -384,7 +384,8 @@ describe("getLineageTreeBySlug", () => {
     expect(result!.tree.id).toBe(fx!.publishedTreeId)
     expect(result!.defaultRootMemberId).toBe(fx!.publicMemberAId)
 
-    // memberC (RESTRICTED) dropped; A then B by visualSortOrder asc.
+    // memberC (RESTRICTED) dropped; A then B — both unranked, so the belt-order
+    // read model (SESSION_0704, PL-026) falls back to the name-asc tiebreak.
     const memberIds = result!.members.map(m => m.id)
     expect(memberIds).toEqual([fx!.publicMemberAId, fx!.publicMemberBId])
 
@@ -646,7 +647,12 @@ function makeMember(overrides: {
   visualGroupId?: string | null
   visibility?: "PUBLIC" | "RESTRICTED" | "PRIVATE" | "UNLISTED"
   primaryVisualParentMemberId?: string | null
+  /** SESSION_0704 (PL-026): display name + awarded belt for belt-order tests. */
+  name?: string
+  beltSortOrder?: number
+  beltDisciplineId?: string
 }): LineageTreeMemberRow {
+  const hasPassport = overrides.name != null || overrides.beltSortOrder != null
   return {
     id: overrides.id,
     visualSortOrder: overrides.visualSortOrder ?? 0,
@@ -660,6 +666,39 @@ function makeMember(overrides: {
     node: {
       id: `node-${overrides.id}`,
       visibility: overrides.visibility ?? "PUBLIC",
+      ...(hasPassport
+        ? {
+            passport: {
+              id: `passport-${overrides.id}`,
+              displayName: overrides.name ?? null,
+              avatarUrl: null,
+              bio: null,
+              socialLinks: null,
+              user: null,
+              directoryProfile: null,
+              affiliations: [],
+              rankAwardsEarned:
+                overrides.beltSortOrder != null
+                  ? [
+                      {
+                        id: `award-${overrides.id}`,
+                        awardedAt: null,
+                        rank: {
+                          id: `rank-${overrides.beltSortOrder}`,
+                          name: `Belt ${overrides.beltSortOrder}`,
+                          colorHex: null,
+                          sortOrder: overrides.beltSortOrder,
+                          rankSystem: {
+                            id: "rs-1",
+                            discipline: { id: overrides.beltDisciplineId ?? "disc-1" },
+                          },
+                        },
+                      },
+                    ]
+                  : [],
+            },
+          }
+        : {}),
     },
   } as unknown as LineageTreeMemberRow
 }
@@ -685,7 +724,7 @@ function makeGroup(
 function makeTree(
   members: LineageTreeMemberRow[],
   visualGroups: LineageVisualGroupRow[],
-  overrides: { defaultRootMemberId?: string | null } = {},
+  overrides: { defaultRootMemberId?: string | null; disciplineId?: string | null } = {},
 ): LineageTreePublicRow {
   return {
     id: "tree-1",
@@ -698,7 +737,7 @@ function makeTree(
     isPublished: true,
     defaultRootMemberId: overrides.defaultRootMemberId ?? null,
     organizationId: null,
-    disciplineId: null,
+    disciplineId: overrides.disciplineId ?? null,
     styleId: null,
     ownerNodeId: null,
     members,
@@ -824,6 +863,52 @@ describe("materializeLineageTreeResult", () => {
 
     const result = materializeLineageTreeResult(tree, ["PUBLIC", "UNLISTED"] as const)
     expect(result.members.map(m => m.id)).toEqual(["mA"])
+  })
+
+  // --- SESSION_0704 (PL-026 quick fix) — belt-order at the read model. --------
+
+  it("orders members by belt (highest first), unranked last, name-asc tiebreak — and remaps visualSortOrder", () => {
+    const tree = makeTree(
+      [
+        makeMember({ id: "white", name: "Aaron", beltSortOrder: 1, visualSortOrder: 0 }),
+        makeMember({ id: "black", name: "Zed", beltSortOrder: 8, visualSortOrder: 10 }),
+        makeMember({ id: "unranked", name: "Randy", visualSortOrder: 5 }),
+        makeMember({ id: "brown-b", name: "Bravo", beltSortOrder: 7, visualSortOrder: 20 }),
+        makeMember({ id: "brown-a", name: "Alpha", beltSortOrder: 7, visualSortOrder: 30 }),
+      ],
+      [],
+    )
+
+    const result = materializeLineageTreeResult(tree)
+
+    // Belt order highest → lowest; same-belt tiebreak = display-name asc (pinned);
+    // unranked members sort last.
+    expect(result.members.map(m => m.id)).toEqual([
+      "black",
+      "brown-a",
+      "brown-b",
+      "white",
+      "unranked",
+    ])
+    // visualSortOrder is REMAPPED to the belt-order index so the client sibling
+    // comparators (`sortMembers`, visualSortOrder-first) preserve belt order on
+    // every public surface (board, timeline, carousel, galaxy, honor strip).
+    expect(result.members.map(m => m.visualSortOrder)).toEqual([0, 1, 2, 3, 4])
+  })
+
+  it("belt order scopes to the tree's discipline — an award in another discipline reads unranked (never rank.brand)", () => {
+    const tree = makeTree(
+      [
+        // Globally-higher TKD dan, but NOT in this tree's discipline → unranked here.
+        makeMember({ id: "tkd", name: "Tkd", beltSortOrder: 20, beltDisciplineId: "disc-2" }),
+        makeMember({ id: "bjj", name: "Bjj", beltSortOrder: 3, beltDisciplineId: "disc-1" }),
+      ],
+      [],
+      { disciplineId: "disc-1" },
+    )
+
+    const result = materializeLineageTreeResult(tree)
+    expect(result.members.map(m => m.id)).toEqual(["bjj", "tkd"])
   })
 })
 
