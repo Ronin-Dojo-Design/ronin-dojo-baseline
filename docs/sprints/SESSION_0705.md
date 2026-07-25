@@ -205,6 +205,22 @@ Status: landed. See "What landed".
 
 Status: landed. See "What landed".
 
+### SESSION_0705_TASK_03 — PR #339 Doug P2 fix: admin cannot write the consent bit
+
+Status: landed. Doug's review (GO-WITH-NOTE 8.9) found that the admin editor path could flip
+another member's `allowSocialCelebration` (manufactured consent): `updatePassportAsAdminSchema` /
+`updatePassportAndProfileAsAdminSchema` inherited the field by extending the self-serve schemas,
+the admin actions write parsed input verbatim by arbitrary `passportId`, and the Publicity
+checkbox rendered in admin mode on `/app/users/[id]`. Fix (schema-level, so the type system
+proves it): both admin schemas now `.omit({ allowSocialCelebration: true })` before extending
+with `passportId`; the Publicity block renders in owner mode only (`{!isAdmin && …}`); new
+`server/admin/people/schemas.test.ts` pins that a crafted admin submit is stripped (parse output,
+schema shapes, and the combined-action split all lack the field) while the owner path still
+carries it. Type ripple: the admin schema is no longer a superset of the self schema, so the
+editor's action+resolver ternaries are cast to the SELF flavor (the file's existing cast idiom;
+runtime validation/writes unchanged — the admin action still parses its own omitted schema
+server-side).
+
 ## What landed
 
 - **A — renderer graduation (render-side only):** the #288/#292 prototype's promotion-card design
@@ -257,6 +273,8 @@ Status: landed. See "What landed".
 | `apps/web/server/social-queue/transitions.test.ts` | consent table updated: true→ok, false→revoked, adversarial placeholder+true |
 | `apps/web/server/social-queue/celebration-cards.test.ts` | opt-in fixtures, not-opted-in skip test, card-param URL assertions |
 | `apps/web/server/orpc/routers/social-queue.test.ts` | opted-in→APPROVED (no publish), not-opted-in→auto-rejected |
+| `apps/web/server/admin/people/schemas.ts` | Doug P2 fix: admin schemas `.omit({ allowSocialCelebration })` — admin cannot write consent |
+| `apps/web/server/admin/people/schemas.test.ts` | NEW — pins the manufactured-consent guard (admin strips, owner keeps) |
 | `docs/sprints/SESSION_0705.md` | this file |
 
 ## Verification
@@ -280,6 +298,7 @@ Gates (all real exit codes, foreground, post-resume):
 | `bun run format:check` (apps/web) | exit 0 ("All matched files use the correct format.") |
 | `bun run test server/social-queue/transitions.test.ts server/social-queue/celebration-cards.test.ts server/orpc/routers/social-queue.test.ts components/web/og/promotion-card-params.test.ts` (apps/web, `--parallel=1` runner) | 76 pass / 0 fail, exit 0 |
 | `bun run test server/web/passport/public-projection.test.ts components/web/lineage/galaxy/bbl-galaxy-from-lineage.test.ts` | 13 pass / 0 fail, exit 0 |
+| Post-Doug-P2-fix re-run: `bun run typecheck` (apps/web) · `lint:check` · `format:check` · targeted suites + `server/admin/people/schemas.test.ts` | exit 0 · exit 0 · exit 0 · 88 pass / 0 fail exit 0 |
 
 **Full-suite caveat (expected, structural):** the FULL `bun run test` run red-gates in this
 worktree with Prisma P2022 on real-DB suites — the worktree's generated client knows
@@ -305,6 +324,10 @@ lane's code are hermetic and pass (above).
     stay open on those two bullets.
 - **Custom-component-inventory:** add `OgPromotionCard` (+ `promotion-card-params`) under the OG
   render path family (merge owner, at ledger-apply).
+- **PL-027 rider (Doug P2, PR #339 review):** note in the F2 bullet that the opt-in is
+  member-writable ONLY — admin schemas `.omit()` it (`server/admin/people/schemas.ts`), pinned by
+  `server/admin/people/schemas.test.ts`. Any future admin surface for the field is a new operator
+  decision, not a schema widening.
 - **Merge-owner post-merge step:** apply the migration to the shared local DB
   (`bunx prisma migrate deploy` on `ronindojo_prodsnap` after preflight per the schema-migration
   runbook) so full local suites go green again; prod auto-applies via `prebuild → migrate deploy`.
