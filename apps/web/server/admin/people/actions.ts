@@ -1,5 +1,6 @@
 "use server"
 
+import type { z } from "zod"
 import { adminActionClient } from "~/lib/safe-actions"
 import {
   updateDirectoryProfileAsAdminSchema,
@@ -22,6 +23,29 @@ import { splitPassportAndProfileInput } from "~/server/web/passport/schemas"
 // session userId). The ONE `PassportEditor` is reused for both by injecting the action
 // + schema as props.
 
+/**
+ * The upsert `create` payload for a DirectoryProfile born on first admin edit.
+ * `create` needs concrete values, so undefined partial-update fields fall back to
+ * the model defaults. Shared by the granular and combined admin actions below.
+ */
+const directoryProfileCreateData = (
+  passportId: string,
+  data: Omit<z.infer<typeof updateDirectoryProfileAsAdminSchema>, "passportId">,
+) => ({
+  passportId,
+  slug: data.slug ?? undefined,
+  visibility: data.visibility ?? undefined,
+  locationCity: data.locationCity ?? undefined,
+  locationRegion: data.locationRegion ?? undefined,
+  locationCountry: data.locationCountry ?? undefined,
+  showEmail: data.showEmail ?? undefined,
+  showPhone: data.showPhone ?? undefined,
+  showOrgs: data.showOrgs ?? undefined,
+  showRanks: data.showRanks ?? undefined,
+  coverPhotoUrl: data.coverPhotoUrl ?? undefined,
+  videoIntroUrl: data.videoIntroUrl ?? undefined,
+})
+
 export const updatePassportAsAdmin = adminActionClient
   .inputSchema(updatePassportAsAdminSchema)
   .action(async ({ parsedInput: { passportId, ...data }, ctx: { db, revalidate } }) => {
@@ -39,25 +63,11 @@ export const updateDirectoryProfileAsAdmin = adminActionClient
   .action(async ({ parsedInput: { passportId, ...data }, ctx: { db, revalidate } }) => {
     // Accountless roster placeholders never got a DirectoryProfile (only the sign-up
     // hook / add-person-with-account paths create one), so upsert: create a default
-    // profile on first admin edit, update it thereafter. `create` needs concrete
-    // values, so undefined partial-update fields fall back to the model defaults.
+    // profile on first admin edit, update it thereafter.
     const profile = await db.directoryProfile.upsert({
       where: { passportId },
       update: data,
-      create: {
-        passportId,
-        slug: data.slug ?? undefined,
-        visibility: data.visibility ?? undefined,
-        locationCity: data.locationCity ?? undefined,
-        locationRegion: data.locationRegion ?? undefined,
-        locationCountry: data.locationCountry ?? undefined,
-        showEmail: data.showEmail ?? undefined,
-        showPhone: data.showPhone ?? undefined,
-        showOrgs: data.showOrgs ?? undefined,
-        showRanks: data.showRanks ?? undefined,
-        coverPhotoUrl: data.coverPhotoUrl ?? undefined,
-        videoIntroUrl: data.videoIntroUrl ?? undefined,
-      },
+      create: directoryProfileCreateData(passportId, data),
     })
 
     revalidate({ paths: ["/app/users", `/app/users/${passportId}`] })
@@ -85,20 +95,7 @@ export const updatePassportAndProfileAsAdmin = adminActionClient
       const directoryProfile = await tx.directoryProfile.upsert({
         where: { passportId },
         update: profileData,
-        create: {
-          passportId,
-          slug: profileData.slug ?? undefined,
-          visibility: profileData.visibility ?? undefined,
-          locationCity: profileData.locationCity ?? undefined,
-          locationRegion: profileData.locationRegion ?? undefined,
-          locationCountry: profileData.locationCountry ?? undefined,
-          showEmail: profileData.showEmail ?? undefined,
-          showPhone: profileData.showPhone ?? undefined,
-          showOrgs: profileData.showOrgs ?? undefined,
-          showRanks: profileData.showRanks ?? undefined,
-          coverPhotoUrl: profileData.coverPhotoUrl ?? undefined,
-          videoIntroUrl: profileData.videoIntroUrl ?? undefined,
-        },
+        create: directoryProfileCreateData(passportId, profileData),
       })
       return { passport, directoryProfile }
     })

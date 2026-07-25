@@ -47,8 +47,9 @@ export const updateDirectoryProfile = userActionClient
  * behind the PassportEditor's ONE Save. Both halves persist in a single interactive
  * transaction: partial failure (either update throwing) rolls the WHOLE write back,
  * so the owner never lands in a half-saved identity state. The granular
- * `updatePassport` / `updateDirectoryProfile` twins above remain for granular
- * consumers — this orchestrates, it does not replace them.
+ * `updatePassport` / `updateDirectoryProfile` twins above currently have no
+ * callers; they are kept per the WL-P2-45 dispatch, not because anything
+ * consumes them today.
  */
 export const updatePassportAndProfile = userActionClient
   .inputSchema(updatePassportAndProfileSchema)
