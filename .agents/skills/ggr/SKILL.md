@@ -57,8 +57,16 @@ bound). The operator can always accept — the policy *bounds* the loop, it does
 
 ## Phase 4 — Record + fold into bow-out
 
-- Write the verdict into the SESSION file `## Review log` (Giddy: reviewed tasks · composite · caps applied ·
-  before→after fallow delta · follow-ups routed to a ledger row or a fix). Cite `code-quality-matrix §N`.
+- Write the verdict into the SESSION file `## Close evidence` (legacy templates: `## Review log`) — Giddy:
+  reviewed tasks · composite · caps applied · before→after fallow delta · follow-ups routed to a ledger row
+  or a fix. Cite `code-quality-matrix §N`.
+- **Mandatory Systemic-health line** (code-quality-matrix §6) in every recorded score:
+  `**Systemic health:** CI = green|red(url) · findings routed N/N (ids) · FS patterns: none|FS-NNNN`.
+- **Systemic 8.9 caps** (code-quality-matrix §4 — a cap always loops, Phase 2): **red CI on the session's
+  own lane** (a green claim must paste the run URL) · **known-but-unrouted debt** (observed anywhere, no
+  ledger row at score time) · **recurring FS pattern fired again** (also flip that FS row `mitigated` →
+  `open`) · **flake write-off** (failure blamed on flake/unrelated/environmental without a ledger row + a
+  fix-or-quarantine slice). Cap claims about CI/ledger state must paste evidence, never assert.
 - `/ggr` is the **universal closing gate** — at bow-out it runs before the push gate. Unresolved findings
   become Proposed ledger edits, never silently dropped. *(The bow-out wiring in `closing.md` is G-031 slice
   S5; until then, invoke `/ggr` explicitly at close.)*
