@@ -1,5 +1,5 @@
 ---
-title: "ADR 0004 — RankEntry is the ONE rank model"
+title: "ADR 0058 — RankEntry is the ONE rank model"
 slug: adr-0058-rankentry-is-rank-truth
 type: decision
 status: accepted
@@ -8,7 +8,7 @@ updated: 2026-07-26
 last_agent: claude-session-0711
 ---
 
-# 0004 — RankEntry is the ONE rank model
+# 0058 — RankEntry is the ONE rank model
 
 ## Status
 

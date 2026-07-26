@@ -1,5 +1,5 @@
 ---
-title: "ADR 0003 — One database per app"
+title: "ADR 0057 — One database per app"
 slug: adr-0057-per-app-databases
 type: decision
 status: accepted
@@ -8,7 +8,7 @@ updated: 2026-07-26
 last_agent: claude-session-0711
 ---
 
-# 0003 — One database per app
+# 0057 — One database per app
 
 ## Status
 

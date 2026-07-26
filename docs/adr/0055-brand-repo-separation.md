@@ -1,4 +1,4 @@
-# 0001 — Brand repo separation (fork, don't rewrite)
+# 0055 — Brand repo separation (fork, don't rewrite)
 
 Status: accepted (ratified by the operator, SESSION_0711). Supersedes legacy ADR 0034
 (one-monorepo-hosts-all); amends ADR 0051 (kernel → brand → app taxonomy survives; the
