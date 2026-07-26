@@ -90,8 +90,8 @@ into context each session; detailed rules live in referenced docs, read on deman
   brand apps live in-repo until a contractual handoff**, then extract to their own repo consuming the
   published `ui-kit` (ADR 0033 D1). A true separate repo is reserved for client handoff only.
 - **The in-app multi-*brand* `Brand`-enum harness is dead** (4 brand-skins crammed into ONE app —
-  single-brand collapse to BBL; the ~170 vestigial `getRequestBrand` sites are slated for full
-  prune). **Multi-*app* (separate apps in one monorepo, one deploy per brand/instance) is the
+  single-brand collapse to BBL; the `getRequestBrand` prune is **complete — 0 sites remain**; the
+  `Brand` enum + its literal sites stay until the parked Stage-2 column drop). **Multi-*app* (separate apps in one monorepo, one deploy per brand/instance) is the
   model** — a brand skin per *deploy* (the white-label instance axis) is alive; multiple skins in
   one app via the enum is what's dead. Repo name stays neutral — **not** `black-belt-legacy` (BBL's
   identity is its Vercel project + `blackbeltlegacy.com`).

@@ -150,7 +150,9 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
       brand: TEST_BRAND,
       name: `E2E Lineage Comp Discipline ${runId}`,
       slug: slugify(`${TAG_PREFIX}-discipline-${runId}`),
-      code: slugify(`lc-${runId}`).slice(0, 16),
+      // TFF-010: keep the unique suffix — `lc-${runId}` is 16 chars of prefix+ms, so a
+      // slice(0, 16) truncated the UUID off entirely (P2002 under parallel workers).
+      code: slugify(`lc-${runId.split("-").at(-1)}`),
     },
   })
 

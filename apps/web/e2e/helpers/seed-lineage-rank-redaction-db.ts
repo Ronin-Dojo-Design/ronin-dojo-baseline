@@ -197,7 +197,9 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
       brand: TEST_BRAND,
       name: `E2E Rank Redaction Discipline ${runId}`,
       slug: slugify(`${TAG_PREFIX}-discipline-${runId}`),
-      code: slugify(`rr-${runId}`).slice(0, 16),
+      // TFF-010: keep the unique suffix — `rr-${runId}` is 16 chars of prefix+ms, so a
+      // slice(0, 16) truncated the UUID off entirely (P2002 under parallel workers).
+      code: slugify(`rr-${runId.split("-").at(-1)}`),
     },
   })
 

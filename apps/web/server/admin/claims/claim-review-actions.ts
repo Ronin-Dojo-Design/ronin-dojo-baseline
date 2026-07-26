@@ -28,8 +28,10 @@ const PROFILE_CLAIM_REVIEW_ERROR = {
 
 export const reviewProfileClaim = adminActionClient
   .inputSchema(reviewProfileClaimSchema)
-  .action(async ({ parsedInput, ctx: { user, db } }) => {
-    return db.$transaction(async tx => {
+  .action(async ({ parsedInput, ctx: { user, db, revalidate } }) => {
+    let grantedOrgSlug: string | null = null
+
+    const result = await db.$transaction(async tx => {
       const claim = await tx.profileClaimRequest.findFirst({
         where: { id: parsedInput.claimId, brand: Brand.BBL },
         select: {
@@ -52,7 +54,7 @@ export const reviewProfileClaim = adminActionClient
       if (parsedInput.decision === "APPROVED" && claim.subjectType === "ORGANIZATION") {
         const org = await tx.organization.findFirst({
           where: { id: claim.organizationId ?? "", brand: Brand.BBL },
-          select: { id: true, ownerId: true },
+          select: { id: true, ownerId: true, slug: true },
         })
         // Only grant if still owner-less (avoid clobbering an owner set meanwhile).
         if (org && !org.ownerId) {
@@ -61,6 +63,7 @@ export const reviewProfileClaim = adminActionClient
             data: { ownerId: claim.claimantUserId },
           })
           ownershipGranted = true
+          grantedOrgSlug = org.slug
         }
       }
 
@@ -83,4 +86,17 @@ export const reviewProfileClaim = adminActionClient
         personMergePending: parsedInput.decision === "APPROVED" && claim.subjectType === "PERSON",
       }
     })
+
+    // WL-P2-82: approving an org claim flips `organization.ownerId`, which
+    // `getOrganizationBySlug` serves from the `organization-${slug}` cache tag —
+    // without this revalidate the new owner keeps seeing the "Claim" CTA for a
+    // full cacheLife("minutes") window (the 4-sighting "flake" was this staleness).
+    if (grantedOrgSlug) {
+      revalidate({
+        tags: [`organization-${grantedOrgSlug}`, "organizations"],
+        paths: ["/app/claims"],
+      })
+    }
+
+    return result
   })
