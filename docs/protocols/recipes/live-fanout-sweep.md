@@ -30,7 +30,7 @@ vs N separate sessions; proven at SESSION_0582 (3 lanes, one crash-resume) and S
 → build → merge). This card is the **thin chain** over the existing pieces — it invents nothing, it sequences
 them for the live case.
 
-Where [`orchestrator.md`](orchestrator.md) is the dispatch half and [`AM_Coffee_Merge_Review.md`](AM_Coffee_Merge_Review.md)
+Where [`orchestrator.md`](orchestrator.md) is the dispatch half and [`am-coffee-merge-review.md`](am-coffee-merge-review.md)
 is the **AFK/overnight** sweep, this card is the **operator-present, same-session** sweep.
 
 ## When (vs the alternatives)
@@ -38,7 +38,7 @@ is the **AFK/overnight** sweep, this card is the **operator-present, same-sessio
 | Situation | Use |
 | --- | --- |
 | 2+ lanes, genuinely disjoint file sets, operator present, want ONE session | **this card** |
-| Same, but launched to run overnight / unattended | [`orchestrator.md`](orchestrator.md) → [`AM_Coffee_Merge_Review.md`](AM_Coffee_Merge_Review.md) |
+| Same, but launched to run overnight / unattended | [`orchestrator.md`](orchestrator.md) → [`am-coffee-merge-review.md`](am-coffee-merge-review.md) |
 | One lane only | [`lane.md`](lane.md) / [`seq-lane-build`](../../../.claude/skills/seq-lane-build/SKILL.md) inline |
 | Lanes are NOT disjoint (shared files) | do NOT fan out — serialize as one lane |
 

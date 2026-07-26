@@ -7,7 +7,7 @@ created: 2026-07-20
 updated: 2026-07-20
 last_agent: claude-session-0584
 pairs_with:
-  - docs/protocols/recipes/PM_Planning_Lane.md
+  - docs/protocols/recipes/pm-planning-lane.md
   - docs/protocols/recipes/merge-wave.md
   - docs/protocols/recipes/review-wave.md
 backlinks:
@@ -22,7 +22,7 @@ tags:
 # Recipe — AM Coffee Merge Review
 
 The morning half of the overnight pair — the SAME session that staged the fan-out
-([PM_Planning_Lane](PM_Planning_Lane.md)) wakes on lane completion and runs this sweep
+([PM_Planning_Lane](pm-planning-lane.md)) wakes on lane completion and runs this sweep
 autonomously, holding at the push gate for the operator's coffee word. Proven at SESSION_0582.
 
 ## Persona pack
@@ -50,7 +50,7 @@ burns idle cycles polling). The trigger has to be the thing that knows the lanes
 
 ## No-overnight-push law (unconditional)
 
-Every lane commits locally only ([PM_Planning_Lane](PM_Planning_Lane.md)). This sweep may merge
+Every lane commits locally only ([PM_Planning_Lane](pm-planning-lane.md)). This sweep may merge
 lanes to **local** `main` and apply Proposed-ledger-edits, but the push gate stays **shut** through
 the entire sweep. The sweep's terminal state is always "verdicts ready, holding for your word" —
 never a pushed commit, however clean the run.
@@ -76,7 +76,7 @@ model/persona" for the operator. Never force through.
 
 ## Cross-references
 
-- [Recipe — PM Planning Lane](PM_Planning_Lane.md) — the evening half that stages what this sweeps.
+- [Recipe — PM Planning Lane](pm-planning-lane.md) — the evening half that stages what this sweeps.
 - [Recipe — Merge Wave](merge-wave.md) — the gate ladder this sweep drives.
 - [Recipe — Review Wave](review-wave.md) — the per-lane review pattern this sweep's Doug pass reuses.
 - [Explicit push authorization] — the standing law this recipe never overrides.

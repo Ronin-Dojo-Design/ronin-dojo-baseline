@@ -50,9 +50,11 @@ const LEDGER_ID_RE =
   /\b(?:WL-P\d+-\d+|FS-\d{2,4}|D-\d{2,4}|FI-\d{2,4}|MB-\d{2,4}|TFF-\d{2,4}|INC-[\w-]+|G-\d{2,4}|TD-\d{2,4}|PL-\d{2,4}|RLL-\d{2,4}|YLL-\d{2,4}|GPTLL-\d{2,4}|DBS-\d{2,4})\b|RISK\s*#?\d+/g
 
 // High-signal future-work language (deliberately NOT "out of scope" — that's usually a
-// scope-guard boundary, not a deferred trackable item).
+// scope-guard boundary, not a deferred trackable item). Includes the WRITE-OFF vocabulary
+// (SESSION_0711): a failure waved away as "flake"/"unrelated"/"environmental" without a
+// ledger row + a fix-or-quarantine slice is a deferral in disguise.
 const DEFERRAL_RE =
-  /\b(?:deferred?|defer to|follow[-\s]?up|fast[-\s]?follow|(?:next|later|separate|own|its own)\s+slice|TICKET-[\w-]+|punt(?:ed)?|revisit|left for later|for a later\b|not folded in)\b/i
+  /\b(?:deferred?|defer to|follow[-\s]?up|fast[-\s]?follow|(?:next|later|separate|own|its own)\s+slice|TICKET-[\w-]+|punt(?:ed)?|revisit|left for later|for a later\b|not folded in|flak(?:e[sy]?|iness)|unrelated|passed on re-?run|environmental|host contention)\b/i
 
 // Skip pure scope-guard negatives ("Do NOT …") and anything under a `Scope guard` heading.
 const SCOPE_GUARD_LINE_RE = /^\s*[-*]?\s*(?:Do NOT|Don'?t|Never)\b/i

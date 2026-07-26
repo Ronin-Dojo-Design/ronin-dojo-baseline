@@ -4,8 +4,8 @@ slug: cody-preflight
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-25
+last_agent: claude-session-0711
 source_sops:
   - docs/ronin_dojo_baseline_systems_pack/10_SOP_AGENT_WORKFLOWS_AND_RITUALS_BASELINE.md
   - docs/ronin_dojo_baseline_systems_pack/07_NEXT_SESSION_LOADING_ORDER_BASELINE.md
@@ -24,6 +24,25 @@ Before writing ANY new file, component, schema change, or backend implementation
 ## Why
 
 SESSION_0014 proved that without enforceable gates, the agent skips discovery and builds from scratch. SESSION_0026 proved the same for schema work — 26 models added without pre-flight. This protocol produces a **reviewable artifact** — not a promise to "check first."
+
+## §0 — Architecture-conformance gate (runs BEFORE code, every work type)
+
+Before any checklist below, run the deterministic invariant gate from the repo root:
+
+```bash
+bun scripts/arch-gate.ts
+```
+
+It reads [`docs/architecture/invariants.yml`](../architecture/invariants.yml) — flat rows of
+`{id, adr, glob, pattern, max_count, allowlist?}` — scans the tree, and **fails on any breach**
+(e.g. a `getRequestBrand` reintroduction, a next-safe-action import added against ADR 0024's
+full-oRPC direction, a new `server/**/*actions*.ts` file importing next-safe-action, a legacy
+claim-model reference). It also **ratchets**: a green run that measures a lower count rewrites the
+manifest ceiling down, so migrations lock in automatically.
+
+Rules: a red gate blocks writing code — fix the breach or take it to the operator; **never raise a
+`max_count` or extend an allowlist to get green** (that is an operator/ADR decision). Record the
+gate result (`✓` or the breach id) in the pre-flight output.
 
 ## Scope
 

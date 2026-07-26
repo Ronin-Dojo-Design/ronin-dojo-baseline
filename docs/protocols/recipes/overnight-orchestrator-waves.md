@@ -8,8 +8,8 @@ updated: 2026-07-24
 last_agent: claude-session-0679
 pairs_with:
   - docs/protocols/recipes/orchestrator.md
-  - docs/protocols/recipes/PM_Planning_Lane.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/pm-planning-lane.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
   - docs/protocols/recipes/lane.md
   - docs/protocols/recipes/merge-wave.md
 backlinks:
@@ -52,7 +52,7 @@ repeatable law.
 - **Operator** — asleep or on the phone; steers by short texts; the ONLY authority for merges,
   deploys, and anything beyond the standing authorization.
 - **AM merge owner** — a *different, attended* session that inherits the whole run via
-  [AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md).
+  [AM_Coffee_Merge_Review](am-coffee-merge-review.md).
 
 ## Load-set
 
@@ -249,7 +249,7 @@ the morning, and the final DONE marker.
 ## Cross-references
 
 - [Recipe — Orchestrator](orchestrator.md) — the single-wave engine this card loops.
-- [Recipe — PM Planning Lane](PM_Planning_Lane.md) / [AM Coffee Merge Review](AM_Coffee_Merge_Review.md) — the evening/morning halves this run stretches between.
+- [Recipe — PM Planning Lane](pm-planning-lane.md) / [AM Coffee Merge Review](am-coffee-merge-review.md) — the evening/morning halves this run stretches between.
 - [Recipe — Lane](lane.md) — what each dispatched worktree runs.
 - [Recipe — Merge Wave](merge-wave.md) — the gate ladder the AM sweep enforces.
 - `docs/sprints/SESSION_0635.md` + `docs/sprints/SESSION_0641.md` (on `session-0635-rdd-golive` until merged) — the proving run's full record.

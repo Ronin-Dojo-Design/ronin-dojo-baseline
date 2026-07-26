@@ -8,7 +8,7 @@ updated: 2026-07-20
 last_agent: claude-session-0584
 pairs_with:
   - docs/protocols/recipes/orchestrator.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
   - docs/architecture/decisions/0049-session-numbering-lane-facet-and-ref-claim-mint.md
 backlinks:
@@ -58,7 +58,7 @@ Proven at SESSION_0582 (four lanes + one orchestrator stub staged in one evening
 ## No-overnight-push law
 
 Every staged lane commits **locally only**. The push gate stays shut through the entire overnight
-run and through the morning sweep — see [AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md). This
+run and through the morning sweep — see [AM_Coffee_Merge_Review](am-coffee-merge-review.md). This
 is unconditional: no lane, however green, pushes without the operator's explicit word.
 
 ## Minimum-output contract
@@ -77,6 +77,6 @@ is unconditional: no lane, however green, pushes without the operator's explicit
 
 - [Recipe — Epic Plan](epic-plan.md) — shapes the lanes this card stages.
 - [Recipe — Orchestrator](orchestrator.md) — what the staged stub executes at adoption.
-- [Recipe — AM Coffee Merge Review](AM_Coffee_Merge_Review.md) — the morning half.
+- [Recipe — AM Coffee Merge Review](am-coffee-merge-review.md) — the morning half.
 - [Autonomous Sessions Runbook](../../runbooks/dev-environment/autonomous-sessions.md) — the headless driver prior art.
 - [ADR 0049](../../architecture/decisions/0049-session-numbering-lane-facet-and-ref-claim-mint.md) — staged stubs + number minting.

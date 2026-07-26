@@ -1,117 +1,26 @@
 ---
-title: Chat Handoff Protocol
+title: Chat Handoff Protocol — SUPERSEDED (folded into SESSION_TEMPLATE)
 slug: chat-handoff
 type: protocol
-status: active
+status: superseded
 created: 2026-04-25
-updated: 2026-04-26
-last_agent: copilot-session-0006
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
-  - docs/rituals/closing.md
-  - docs/rituals/opening.md
+  - docs/sprints/_template/SESSION_TEMPLATE.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
-# Chat handoff protocol
+# Chat handoff protocol — superseded
 
-How sessions hand off context to each other so we don't lose momentum between bow-out and the next bow-in.
+**Folded into [`docs/sprints/_template/SESSION_TEMPLATE.md`](../sprints/_template/SESSION_TEMPLATE.md)
+at SESSION_0711 (template v2).** The still-true content lives there as the template's conventions
+block: the single-state-file doctrine (one `SESSION_NNNN.md` per session, no parallel handoff files),
+what does NOT belong in a SESSION file, the numbering rules (now ADR 0049 — mint via
+`ledger-id-next`, gaps burn), and the bow-in minimum read. The unclosed-session recovery it described
+is [`unclean-close-recovery.md`](../runbooks/dev-environment/unclean-close-recovery.md); the
+quick/full close split it preserved was merged into one close at SESSION_0241
+([`closing.md`](../rituals/closing.md)).
 
-> Slimmed-down successor to the legacy `CHAT_HANDOFF.md`. Where the legacy version maintained two parallel state files (`CHAT_HANDOFF.md` + `PETEY_NEXT_SESSION_PROMPT_*.md`), this protocol consolidates them into one: the latest `docs/sprints/SESSION_NNNN.md`.
-
-## The single state file
-
-Every session has exactly one file: `docs/sprints/SESSION_NNNN.md` (4-digit zero-padded, monotonically increasing).
-
-That file is **the** state. There is no `CHAT_HANDOFF.md`, no `NEXT_SESSION_PROMPT.md`, no parallel YAML manifest. If the next session needs to know something about the previous one, it reads the SESSION file.
-
-## SESSION file structure
-
-A SESSION file has these sections, in this order:
-
-```markdown
-# SESSION_NNNN
-
-**Date:** YYYY-MM-DD
-**Operator:** {who is running the session — human + LLM, or just human}
-**Goal:** {one sentence, set at bow-in}
-
-<!-- Status lives in frontmatter only (status: in-progress | closed-quick | closed-full) -->
-
-## What landed
-
-- {bullet of what was completed in this session}
-- ...
-
-## Files touched
-
-- `path/to/file` — {one-line note}
-- ...
-
-## Decisions resolved
-
-- {decision and outcome, with reference to ADR or program-plan section if applicable}
-- ...
-
-## Open decisions / blockers
-
-- {anything that needs the user to weigh in before the next session can proceed}
-- ...
-
-## Next session
-
-- **Goal:** {one sentence}
-- **Inputs to read:** {3–5 file paths max}
-- **First task:** {what Cody/the operator should do first}
-
-## Reflections (optional, full-close only)
-
-- {anything worth remembering — surprises, kaizen-style observations, things that almost broke}
-```
-
-## When to write the SESSION file
-
-- **Bow-in (opening ritual):** create the file at the start of the session, fill in `Date`, `Operator`, `Goal`. Set frontmatter `status: in-progress`. Optionally pre-populate `Inputs to read` from your plan.
-- **During the session:** update `Files touched` and `What landed` as you go (or at the end — whatever feels light).
-- **Bow-out (closing ritual):** finalize `What landed`, `Decisions resolved`, `Open decisions`, `Next session`. Set frontmatter `status` to `closed-quick` or `closed-full`. If full-close, fill in `Reflections`.
-
-## Quick close vs. full close
-
-Two modes (preserved from legacy v4.5):
-
-- **Quick close** — back-to-back execution sessions where the next one will pick up immediately. Write the minimal SESSION file (skip Reflections), commit if needed, move on.
-- **Full close** — end of day, end of a sprint, or after a milestone. Add Reflections, double-check `Next session` is unblocked, optionally update memory entries with anything worth carrying forward.
-
-## What is *not* in the SESSION file
-
-- Long narrative recaps. The diff is the recap.
-- Code snippets. Reference file paths and line numbers, not pasted blobs.
-- Personal/cultural/philosophical notes. Those go to operator-side memory.
-- Repeated content from program-plan.md, plan-vs-current.md, ADRs. Reference them; don't copy.
-
-## Numbering
-
-Start at `SESSION_0001.md`. Each new session increments by 1. Don't reuse numbers, don't skip numbers. If a session was started but never closed, append `_unclosed` to its filename and start the next session with the next number — the open one becomes a known-incomplete artifact.
-
-## What if the previous SESSION wasn't closed?
-
-If you're starting a session and the latest SESSION file has `status: in-progress` in frontmatter:
-
-1. Decide whether to resume that session (continue writing into the same file) or start fresh.
-2. If starting fresh: rename the previous one to `SESSION_NNNN_unclosed.md`, then create the new one with the next number.
-3. Note in the new session's `What landed` that the previous one was abandoned and why.
-
-## Reading the SESSION file at bow-in
-
-The opening ritual instructs you to read the latest SESSION file. The minimum read is:
-
-- `Goal` of the previous session (was it achieved?)
-- `Open decisions / blockers` (do any of these block today?)
-- `Next session: Goal + First task` (likely your starting point)
-
-Anything else you read on demand.
-
-## Cross-references (added SESSION_0010)
-
-- [Next Session Loading Order](next-session-loading-order.md) — the explicit tier-1/tier-2/tier-3 file load order for the start of any session
-- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — read at bow-in when choosing the next proof target
+This tombstone stays so inbound links resolve. Do not extend it — edit the template.

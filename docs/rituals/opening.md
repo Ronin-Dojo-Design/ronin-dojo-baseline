@@ -4,8 +4,8 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-23
-last_agent: claude-session-0624
+updated: 2026-07-26
+last_agent: claude-session-0711
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/WORKFLOW_6.0.md
@@ -18,15 +18,15 @@ backlinks:
 
 # Opening ritual — bow in
 
-Run this at the start of every session, before any code is touched.
-
-> v5.0 refresh of the legacy `opening_v4.5.md`. Heavy machinery (JETTY metadata, multi-tier auto-load packs, session-numbered handoff packets) has been dropped. What remains is the operational core: load just enough context to act, then commit to one task.
+Run this at the start of every session, before any code is touched. Load just enough context to
+act, then commit to one task.
 
 ## Agent-agnostic
 
-This ritual is the source of truth for any agent that opens a session: Claude, Copilot, Codex, or otherwise. The ritual itself never depends on a specific LLM, IDE, or CLI. The trigger may differ per environment (Claude Code: `/bow-in` skill; Copilot/Codex chat: the words "bow in"; CLI script: a make target), but the steps below are identical and binding.
-
-Convention for the `last_agent` SESSION-file field is `<agent>-session-NNNN` where `<agent>` names the LLM/runtime that ran the session (e.g., `claude-session-0031`, `copilot-session-0028`, `codex-session-0030`). Past sessions in this repo use whichever agent actually executed; do not rewrite history, only record yours accurately on the new SESSION file.
+This ritual is the source of truth for any agent that opens a session (Claude, Copilot, Codex, …).
+The trigger differs per environment (Claude Code: `/bow-in`; chat: the words "bow in"); the steps
+are identical and binding. `last_agent` convention: `<agent>-session-NNNN` naming the LLM/runtime
+that actually executed — record yours accurately, never rewrite history.
 
 ## Trigger
 
@@ -89,14 +89,13 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 ### 0. BBL / launch work — read the SoT set FIRST (and nothing else first)
 
 > For any Black Belt Legacy or launch work, the **source-of-truth set is the only thing to open first**,
-> in this order — do **not** go hunting the wider wiki (that re-discovery loop is the problem this set fixes):
+> in this order — do **not** go hunting the wider wiki:
 >
-> 1. [`BBL-SOT-Spec.md`](../product/black-belt-legacy/BBL-SOT-Spec.md) — the build blueprint: phases 0–7, exact files, done-means, session roadmap.
-> 2. [`SOT-ADR.md`](../product/black-belt-legacy/SOT-ADR.md) — consolidated decisions D1–D7 (**supersedes** the scattered ADRs; those are historical).
+> 1. [`BBL-SOT-Spec.md`](../product/black-belt-legacy/BBL-SOT-Spec.md) — the build blueprint.
+> 2. [`SOT-ADR.md`](../product/black-belt-legacy/SOT-ADR.md) — consolidated decisions D1–D7 (**supersedes** the scattered ADRs).
 > 3. [`PRD.md`](../product/black-belt-legacy/PRD.md) · 4. [`STORIES.md`](../product/black-belt-legacy/STORIES.md) · 5. [`CUTOVER_CHECKLIST.md`](../product/black-belt-legacy/CUTOVER_CHECKLIST.md) · 6. [`GAP_MATRIX.md`](../product/black-belt-legacy/GAP_MATRIX.md) (**re-verify against the live app — known stale**).
 >
-> If any other doc contradicts the SoT set, **the SoT set + the live app win.** The steps below still run
-> (latest SESSION file, branch check, new SESSION file), but the SoT set is your task context.
+> If any other doc contradicts the SoT set, **the SoT set + the live app win.** The steps below still run.
 
 ### 1. Read the latest SESSION file
 
@@ -106,188 +105,116 @@ Find the highest-numbered file in `docs/sprints/`. That's the previous session.
 > `status: staged`, it is the pre-staged stub for **this** session: adopt it (flip `staged` →
 > `in-progress`; skip the step-6 `cp`) and treat the next-highest closed file as the previous
 > session. Mint/verify your number with `bun scripts/ledger-id-next.ts --prefix=SESSION` — it
-> scans canonical sprints ∪ every worktree's sprints ∪ `session-*` branch refs, so parallel
-> claims are visible pre-merge. On a parallel lane, create `session-NNNN-<lane-slug>` at bow-in
-> to claim the number. Gaps stay burned — never recycle a leaked number.
+> scans canonical sprints ∪ every worktree's sprints ∪ `session-*` branch refs. On a parallel
+> lane, create `session-NNNN-<lane-slug>` at bow-in to claim the number. Gaps stay burned.
 
-Read at minimum:
-
-- The previous session's `Goal` (was it achieved?)
-- `Open decisions / blockers` (any block today?)
-- `Next session: Goal` and `First task` (likely your starting point)
+Read at minimum: the previous `Goal` (achieved?), `Open decisions / blockers` (any block today?),
+and `Next session: Goal` + `First task` (likely your starting point).
 
 ### 1b. Scan the open ledgers — bundle 3–5 coherent items (inbound loop)
 
-The ledgers ARE the backlog. After reading the prior SESSION's `Next session` block, pull the open
-ledger items and bundle **3–5 coherent ones** into this session's Petey plan — per
-[`loop-of-loops-ledger-driven-sessions.md`](../protocols/loop-of-loops-ledger-driven-sessions.md).
-
-Run the aggregator instead of hand-scanning eight files:
+The ledgers ARE the backlog ([`loop-of-loops-ledger-driven-sessions.md`](../protocols/loop-of-loops-ledger-driven-sessions.md)).
+Run the aggregators instead of hand-scanning eight files:
 
 ```bash
 bun scripts/ledger-backlog.ts          # ranked open items across FS/D/WL/FI/MB/TFF/INC/RISK/TD
 bun scripts/ledger-backlog.ts --ledger=WL   # one ledger · --top=N to cap · --json for tooling
-( cd apps/web && bun scripts/board-backlog.ts --top=10 )  # the operator's PRIORITIZED board — open KanbanCards in board order
+( cd apps/web && bun scripts/board-backlog.ts --top=10 )  # the operator's PRIORITIZED board order
 ```
 
-The **board-backlog** line is the inbound half of the DB Kanban loop (SESSION_0476): it reads the operator's
-`/app/loop-board` prioritization back out (`KanbanCard`, `stage != done`, in board `order`), so **the
-operator's drag-to-prioritize sets this session's candidate order** — not just the raw ledger rank. It must run
-from `apps/web` (needs `.env` + a reachable DB); in a fresh worktree with no DB it prints a clean one-liner and
-is safely skipped. When the board and the ledger scan disagree, the **board wins** (it encodes the operator's
-explicit ordering); fall back to the ledger rank when the board is empty/unreachable.
+**Board wins over raw ledger rank** — `board-backlog` reads the operator's `/app/loop-board`
+drag-to-prioritize order (SESSION_0476); fall back to ledger rank when the board is empty/unreachable
+(in a fresh worktree with no DB it prints a clean one-liner and is safely skipped).
 
-Then **bundle on one coherence axis** so the session is one reviewable lane, not a grab-bag:
-
-- **By domain hub** — all lineage, or all directory/org items (reuse one mental model + one hub read).
-- **By risk class** — all authz/public-surface (one PR, one security pass), or all docs-only (one free push).
-- **By deploy unit** — all `apps/web` app-code (one CI matrix), or all governance/docs (no deploy).
-
-Why **3–5**: one coherent lane fits one close's review + one PR, and stays under the ~120K "dumb zone".
-Fewer = under-utilized; more = the close can't honestly verify them all.
-
-**Precedence:** the operator's `/goal` and the prior `Next session` block win. The ledger scan
-*supplements* them (fills the session, surfaces what's overdue) — it does not override an operator
-directive. The symmetric bow-out **cross-off sweep** (closing.md) flips resolved rows to done.
+Then **bundle 3–5 items on ONE coherence axis** — by domain hub, by risk class, or by deploy unit —
+so the session is one reviewable lane, not a grab-bag (fits one close's review + one PR, stays under
+the ~120K "dumb zone"). **Precedence:** the operator's `/goal` and the prior `Next session` block win;
+the ledger scan supplements, never overrides.
 
 ### 1c. Open PRs are a live backlog source — route to `/pr-fix-loop` (G-007)
 
-The aggregator's `PR` rows are **live state**, not a markdown ledger: `scripts/ledger-backlog.ts` queries
-`gh pr list --state open` and emits each open PR as a backlog item (red-CI / changes-requested = **P1**,
-draft / clean = **P2**, then oldest-first). So the bow-in scan already surfaces open PRs alongside ledger
-debt (and `/app/loop-board` projects them when a GitHub token is configured).
-
-**If open PRs exist and the operator hasn't pinned a different lane, the default lane is `/pr-fix-loop`** —
-keep the open-PR queue merge-ready before opening new build work. Run one pass (review → score → fix the
-mechanical blockers on each PR branch → verdict), pause-on-merge. Bundle the PRs as the session's coherent
-lane (one risk class: "open PRs"). This is the outbound half of the Loop-of-Loops: inbound ledger debt and
-outbound open-PR review become one auto-surfaced backlog. See the [`pr-fix-loop`](../../.claude/skills/pr-fix-loop/SKILL.md)
-skill (worktree fan-out) and [`pr-review-score-fix-loop.md`](../protocols/pr-review-score-fix-loop.md).
-
-Precedence is unchanged: an operator `/goal` or the prior `Next session` block still wins; PR-pickup is the
-default *only when nothing else is pinned*.
+`ledger-backlog.ts` also emits each open PR as a live backlog item (red-CI / changes-requested =
+**P1**, draft / clean = **P2**, oldest-first). **If open PRs exist and the operator hasn't pinned a
+different lane, the default lane is [`/pr-fix-loop`](../../.claude/skills/pr-fix-loop/SKILL.md)** —
+one pass (review → score → fix mechanical blockers → verdict), pause-on-merge, bundled as the
+session's coherent lane. Precedence unchanged: an operator `/goal` or the prior `Next session` block
+still wins. See [`pr-review-score-fix-loop.md`](../protocols/pr-review-score-fix-loop.md).
 
 ### 1d. Parallel-lane assessment (additive, G-023)
 
-Once steps 1b/1c have surfaced this session's candidate work, before committing to a single lane:
-**scan whether 2+ of those candidates are genuinely disjoint** (distinct file sets, each
-independently reviewable — the same test [`fan-out-session-recipe.md`](../protocols/fan-out-session-recipe.md)
-§1 uses for a full fan-out). If they are, that's a signal to route to
-[`recipes/epic-plan.md`](../protocols/recipes/epic-plan.md) (prove disjointness, write paste-ready
-prompts, dispatch as a fan-out) instead of picking just one and leaving provably-parallel work
-queued. If nothing surfaces 2+ disjoint candidates, proceed with the single elected lane as normal
-— this step is a cheap check, not a mandate to always fan out. Cross-note the assessment
-(ran / found N disjoint candidates / found none) in the SESSION file's Bow-in section.
+Before committing to a single lane: **scan whether 2+ candidates from 1b/1c are genuinely disjoint**
+(distinct file sets, independently reviewable — the [`fan-out-session-recipe.md`](../protocols/fan-out-session-recipe.md)
+§1 test). If yes, route to [`recipes/epic-plan.md`](../protocols/recipes/epic-plan.md) instead of
+picking one and queueing provably-parallel work. If not, proceed single-lane — this is a cheap check,
+not a mandate. Note the assessment result in the SESSION file's Bow-in section.
 
 ### 2. Read WORKFLOW 6.0 + SOT_Cookbook
 
-[`docs/protocols/WORKFLOW_6.0.md`](../protocols/WORKFLOW_6.0.md) is the governing operating system
-for SESSION_0584 forward (supersedes 5.0 — its rituals-read is dead canon, don't read it here).
-Read the hard rules once if you haven't recently; then use
-[`SOT_Cookbook.md`](../protocols/SOT_Cookbook.md)'s task→workflow router to pick today's
-skill/loop. There is no session calendar or fixed worktree map to confirm anymore — the
-[goals ledger](../knowledge/wiki/goals-ledger.md) + `ledger-backlog.ts`/`board-backlog.ts` (step 1b)
-are the live backlog, and each lane gets its own `../ronin-NNNN` worktree
-([`seq-lane-build`](../../.claude/skills/seq-lane-build/SKILL.md)) rather than a fixed map entry.
-Dirstarter-alignment is a build-time gate, not a bow-in table — [`cody-preflight.md`](../protocols/cody-preflight.md)
-owns it when the task actually touches an L1 area.
+[`WORKFLOW_6.0.md`](../protocols/WORKFLOW_6.0.md) is the governing operating system (SESSION_0584
+forward; supersedes 5.0 — its rituals-read is dead canon). Read the hard rules once if you haven't
+recently; then use [`SOT_Cookbook.md`](../protocols/SOT_Cookbook.md)'s task→workflow router to pick
+today's skill/loop. The [goals ledger](../knowledge/wiki/goals-ledger.md) + the step-1b aggregators
+are the live backlog; each parallel lane gets its own `../ronin-NNNN` worktree
+([`seq-lane-build`](../../.claude/skills/seq-lane-build/SKILL.md)). Dirstarter-alignment is a
+build-time gate owned by [`cody-preflight.md`](../protocols/cody-preflight.md). Then skim
+[`program-plan.md`](../architecture/program-plan.md) for broader context (partially superseded;
+layered-architecture + brand-sequencing sections remain valid).
 
-Then skim [`docs/architecture/program-plan.md`](../architecture/program-plan.md) for broader context (partially superseded but layered architecture and brand sequencing sections remain valid).
+### 3. Routed discovery — ONE table (replaces the old steps 3/3b/3c/3d)
 
-### 3. Skim relevant cross-references on demand
+Don't bulk-read. Route by what today's task touches, reach for rows as the work surfaces a need:
 
-Only the ones that bear on today's task:
+| When today's task touches… | Read / run | Why |
+| --- | --- | --- |
+| Schema or data behavior | [`plan-vs-current.md`](../architecture/plan-vs-current.md) | spec-vs-impl reality check |
+| An architectural choice | [`decisions/`](../architecture/decisions/) + `ls -t docs/architecture/decisions/ \| head` | a ratified decision may already exist |
+| People, rank, schools, lineage | Identity canon: [`passport-and-shells`](../knowledge/wiki/concepts/passport-and-shells.md) · [`ronin-project-context`](../knowledge/wiki/ronin-project-context.md) · [lineage SOP](../product/black-belt-legacy/lineage-data-wiring-flow.md) · [`repo-truth-index`](../knowledge/wiki/repo-truth-index.md) (ADR 0025) | don't re-derive the identity model |
+| DB / deploys / environment | [`docs/runbooks/`](../runbooks/) (start at the [domain hub](../runbooks/README.md)) | operational SoT |
+| Any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting) | [`dirstarter-docs-inventory`](../knowledge/wiki/dirstarter-docs-inventory.md) **Alignment URLs** | extend, never bypass |
+| An area with prior failures | [`failed-steps-log.md`](../protocols/failed-steps-log.md) `open`/`mitigated` rows + [`drift-register.md`](../knowledge/wiki/drift-register.md) | acknowledge the failure + confirm mitigation BEFORE proceeding |
+| A lane a past session learned from | [Learning records](../learning/ddd/learning-records/README.md) + recent ADRs: `ls -t docs/learning/ddd/learning-records/ docs/architecture/decisions/ \| head` | the anti-rediscovery layer — skipping the record re-incurs the lesson ([LR 0007](../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md)) |
+| A named domain/entity (ANY lane) | `graphify query "<lane nouns>" --budget 1500` (per [`graphify-repo-memory.md`](../runbooks/dev-environment/graphify-repo-memory.md)) | cheapest pull of captured knowledge — the graph indexes docs too (ledger rows, ADRs, LRs surface as nodes); skip only for a trivial single-file edit |
+| Cross-area / search-heavy work (porting, security review, "search everything" lanes) | `graphify stats` + `graphify query "<terms>" --budget 2000` **before any repo-wide grep/rg/find** | open the exact files the graph names, verify by direct inspection; graph = navigation, not proof |
+| A feature domain with a domain hub | The hub **first**, then the SOP/ADR it points to, then its route inventory: [Lineage hub](../runbooks/domain-features/lineage-hub.md) · [Directory/Org/Profile hub](../runbooks/domain-features/directory-org-profile-hub.md) | prevents re-discovering existing capability (SESSION_0356); no hub yet = build one as part of the work |
+| Doc-only, full-text lookup | `bun run docs:nav` → `docs/index.html`, or the [runbooks hub](../runbooks/README.md) | the navigator answers "what *docs* exist about X"; Graphify answers "what *code* relates to X" |
 
-- [`docs/architecture/plan-vs-current.md`](../architecture/plan-vs-current.md) — if the task touches schema or data behavior.
-- [`docs/architecture/decisions/`](../architecture/decisions/) — if the task touches an architectural choice.
-- **Identity canon** — if the task touches people, rank, schools, or lineage, read these *before* re-deriving the model: [`passport-and-shells`](../knowledge/wiki/concepts/passport-and-shells.md) (Passport = identity SoT), [`ronin-project-context`](../knowledge/wiki/ronin-project-context.md), the [lineage SOP](../product/black-belt-legacy/lineage-data-wiring-flow.md), and the [repo-truth-index canonical-entity layer](../knowledge/wiki/repo-truth-index.md) (entity → source-of-truth table). Ratified in [ADR 0025](../architecture/decisions/0025-passport-identity-source-of-truth.md).
-- [`docs/runbooks/`](../runbooks/) — if the task involves the database, deploys, or environment.
-- [`docs/knowledge/wiki/dirstarter-docs-inventory.md`](../knowledge/wiki/dirstarter-docs-inventory.md) — **Alignment URLs section.** If the task touches any of the 10 L1 areas (storage, payments, media, content, monetization, blog, auth, theming, Prisma, hosting), check alignment before proceeding.
-
-Don't bulk-read. Reach for these as the work surfaces a need.
-
-### 3b. Check FAILED_STEPS log + Drift Register + recent Learning Records / ADRs
-
-Read [`docs/protocols/failed-steps-log.md`](../protocols/failed-steps-log.md). Check for any `open` or `mitigated` entries in the area you're about to work in. If found, acknowledge the prior failure and confirm the mitigation is in place before proceeding.
-
-Also skim [`docs/knowledge/wiki/drift-register.md`](../knowledge/wiki/drift-register.md) for open drift entries relevant to today's lane. If a drift item directly affects the task, note it in the SESSION file.
-
-Then skim the **Giddy learning records** ([`docs/learning/ddd/learning-records/`](../learning/ddd/learning-records/README.md)) and recent **ADRs** ([`docs/architecture/decisions/`](../architecture/decisions/)) for any entry that touches today's lane — quick surface: `ls -t docs/learning/ddd/learning-records/ docs/architecture/decisions/ | head`. A learning record encodes the *lesson* of a past session (why a fix took the shape it did); an ADR encodes a ratified decision. This is the **anti-rediscovery layer**: skipping the record that touches your lane re-incurs the lesson it was written to prevent — [LR 0007](../learning/ddd/learning-records/0007-the-discoverability-heuristic-and-built-not-pointed.md) is literally about this "built-not-pointed" failure. Read the one(s) on your lane; don't bulk-read.
-
-### 3c. Graphify-first discovery for search-heavy lanes
-
-Use [`docs/runbooks/graphify-repo-memory.md`](../runbooks/dev-environment/graphify-repo-memory.md) when today's task is likely to cross multiple repo areas: component porting, Dirstarter updates, auth/payment/security review, hostile repo review, old-monorepo mapping, or any lane where the agent would otherwise "search everything."
-
-For those lanes, run Graphify before any repo-wide text search:
-
-```bash
-graphify stats
-graphify query "<lane nouns and domain terms>" --budget 2000
-```
-
-Then open the exact files Graphify identifies and verify them by direct source/doc inspection. Do not use repo-wide `grep`, `rg`, or `find` for task planning before the graph query. If a path is already known, open that exact file directly.
-
-**Doc discovery aids (optional, not gates):** when a task touches an operational area, start from the [runbooks domain hub](../runbooks/README.md) and jump to the relevant module instead of guessing filenames. For doc-only, full-text lookup, regenerate and search the navigator: `bun run docs:nav` then open `docs/index.html`. Division of labor — Graphify answers "what *code* relates to X"; the navigator answers "what *docs* exist about X."
-
-**Make a cheap query the default — not only for search-heavy lanes:** for *any* lane touching a named domain or entity, run one budget-capped `graphify query "<lane nouns>" --budget 1500` before planning. Graphify indexes the **docs** too — ledger rows, ADRs, and learning records surface as nodes, not just code (proven: a query for a drift topic returns the `D-NNN` rows themselves) — so this is the cheapest way to pull captured knowledge you'd otherwise have to already know to name. Record the query and selected files in the SESSION file if it changes what you open. Skip only for a truly trivial single-file edit. Graphify is a navigation aid, not proof.
-
-### 3d. Domain-hub-first for feature lanes (read before grilling/planning)
-
-When today's task touches a **feature domain that has a domain hub**, read it **before** you grill or plan — in this order: **domain hub → the SOP/ADR it points to → the route inventory** in the hub. The hub is a surface-index that prevents re-discovering capability that already exists (the SESSION_0356 "are we querying in the right workflow timeline?" fix; FINDING_02). Querying Graphify by a narrow task noun *after* you know the surface beats guessing the surface from the noun.
-
-Current domain hubs (`docs/runbooks/domain-features/`):
-
-- [Lineage Domain Hub](../runbooks/domain-features/lineage-hub.md) — promotion provenance, trees, canvas, claim.
-- [Directory / Organization / Profile Domain Hub](../runbooks/domain-features/directory-org-profile-hub.md) — discovery, org/school/person profiles, the register vs claim funnels.
-
-If the lane touches a domain with **no** hub yet, that is a signal to build one as part of the work (mirror an existing hub). **Never assert a capability is missing from an errored/empty search** — confirm against the hub + route inventory first.
+**Never assert a capability is missing from an errored/empty search** — confirm against the hub +
+route inventory first. Record any graph query that changed what you opened in the SESSION file.
 
 ### 4. Identify ONE task for this session
 
-State the task in chat (or in your notes) before you start. Be explicit:
+State the task explicitly: what is it, why now (one sentence), and what does "done" look like?
 
-- What is the task?
-- Why this task now? (one sentence connecting to program plan or user request)
-- What does "done" look like?
-
-**Classify, then dispatch — don't role-play the roster.** First do a **named read** of
+**Classify, then dispatch — don't role-play the roster.** Do a **named read** of
 [`SOT_Cookbook.md`](../protocols/SOT_Cookbook.md)'s **task → workflow router** and the
-**allowed-vs-never table** (§4) in [`agent-systems-map`](../knowledge/wiki/agent-systems-map.md) —
-a read, not a pointer: these are session-wide routing + trust-boundary rules, not just
-skill-selection. Classify this task against the router, then
-**dispatch the matched flow as real sub-agents** via the `Agent` tool's `subagent_type` (the roster lives in
-`.claude/agents/*.md`):
+**allowed-vs-never table** (§4) in [`agent-systems-map`](../knowledge/wiki/agent-systems-map.md),
+classify the task, then **dispatch the matched flow as real sub-agents** (`Agent` tool
+`subagent_type`; roster in `.claude/agents/*.md`):
 
-- **Unclear / multi-part / open decisions →** run **[`/pp`](../../.claude/skills/pp/SKILL.md)** (plan only) or **[`/ppp`](../../.claude/skills/ppp/SKILL.md)** (plan + the paste-ready baton) — the `petey-plan` entrypoints (ADR 0052 D1) — to **grill the open forks first** and emit the plan block, then dispatch `cody` (build) → **[`/ggr`](../../.claude/skills/ggr/SKILL.md)** (the QAR gate — runs the Doug/Desi/Giddy review wave + scores) per the plan's `Parallelism` section.
-- **Clear build →** dispatch [`cody`](../agents/cody.md) to execute — **Cody completes the [pre-flight protocol](../protocols/cody-preflight.md) before writing any code** — then [`doug`](../agents/doug.md) to verify the diff.
-- **Other lanes** (bug → `/diagnose`, review → `/code-review`, cleanup → `/fallow-fix-loop`, new client → `/new-client-recipe`, …) → run the router's matched skill/loop.
+- **Unclear / multi-part / open decisions →** [`/pp`](../../.claude/skills/pp/SKILL.md) (plan only) or
+  [`/ppp`](../../.claude/skills/ppp/SKILL.md) (plan + paste-ready baton) — grill the open forks first —
+  then dispatch `cody` (build) → [`/ggr`](../../.claude/skills/ggr/SKILL.md) (the QAR gate).
+- **Clear build →** dispatch [`cody`](../agents/cody.md) — **Cody completes the
+  [pre-flight protocol](../protocols/cody-preflight.md), including its §0 arch-gate, before writing
+  any code** — then [`doug`](../agents/doug.md) to verify the diff.
+- **Other lanes** (bug → `/diagnose`, review → `/code-review`, cleanup → `/fallow-fix-loop`, new
+  client → `/new-client-recipe`, …) → run the router's matched skill/loop.
 
-Reserve fan-out for genuinely-disjoint work; a one-file change is a single inline Cody, not a fleet (CLAUDE.md
-rule). **Dispatch builds and verifies — it never pushes/merges/deploys**; hold at the push gate for the
-operator's explicit word (explicit-push-authorization). The lead may still act inline for a single coherent
-change, but the roster is now a real dispatch layer, not a set of hats.
+Reserve fan-out for genuinely-disjoint work; a one-file change is a single inline Cody. **Dispatch
+builds and verifies — it never pushes/merges/deploys**; hold at the push gate for the operator's
+explicit word (explicit-push-authorization).
 
 ### 4b. Number tasks in the SESSION file
 
-For every task in the session plan, add or update an entry in the current SESSION file's `## Petey plan` and `## Task log` sections before implementation starts.
-
-Use stable IDs:
-
-```text
-SESSION_NNNN_TASK_01
-SESSION_NNNN_TASK_02
-SESSION_NNNN_TASK_03
-```
-
-The SESSION file is now the canonical audit ledger that lets Giddy/Doug verify ownership, done criteria, status, and review coverage. The legacy cross-session `project-log.md` ledger was retired at SESSION_0228; the historical archive lives at [`docs/_archive/project-log/`](../_archive/project-log/) and is read-only.
+Every planned task gets a stable ID (`SESSION_NNNN_TASK_01`, `_02`, …) in the SESSION file's
+`## Petey plan` + task-log sections before implementation starts. The SESSION file is the canonical
+audit ledger (project-log retired at SESSION_0228; archive at [`docs/_archive/project-log/`](../_archive/project-log/)).
 
 ### 5. Branch check
 
-Verify the current git branch (`git branch --show-current`) and working tree status (`git status --short`).
-
-- If on `main` and that's expected: proceed.
-- If uncommitted changes from a previous session exist: raise them before starting new work.
-- If on a stale feature branch: discuss with the user whether to merge/rebase/abandon before starting.
+`git branch --show-current` + `git status --short`. On `main` and expected → proceed. Uncommitted
+changes from a previous session → raise them before new work. Stale feature branch → discuss
+merge/rebase/abandon with the user first.
 
 ### 6. Create the new SESSION file
 
@@ -297,29 +224,15 @@ Copy the template — do NOT generate from scratch:
 cp docs/sprints/_template/SESSION_TEMPLATE.md docs/sprints/SESSION_NNNN.md
 ```
 
-Then fill in every `<placeholder>` and delete the HTML comment blocks. The template is the source of truth for section order, frontmatter shape, and lint compliance. See [`docs/sprints/_template/SESSION_TEMPLATE.md`](../sprints/_template/SESSION_TEMPLATE.md).
-
-**Session type values (SESSION_0139+):**
-
-| Type | When to use |
-| --- | --- |
-| `session--open` | **Default at bow-in.** Use when the session scope isn't clear yet, or when it ends up being a mix of planning, implementation, and review. Stays as-is at bow-out if the session was mixed. |
-| `session--plan` | Petey-led planning, gap analysis, task staging — no code written. Set at bow-out if the session was purely planning. |
-| `session--implement` | Cody-led code execution against an existing plan. Set at bow-out. |
-| `session--review` | Doug/Giddy-led QA, hostile review, test-only sessions. Set at bow-out. |
-| `session` | Legacy (pre-0139). Do not use for new sessions. |
-
-Refine `type` at bow-out: if the session was clearly one mode, narrow it. If it was mixed, leave it `session--open`. No backfill needed — old sessions stay `type: session`.
-
-Then fill in `Date`, `Operator`, `Goal`. Set frontmatter `status: in-progress`. The rest gets filled during/at end of session.
-
-**ADR 0049:** if bow-in found a `status: staged` stub (step 1), this step is just the flip
-`staged` → `in-progress` — no `cp`. Either way, fill the lane facet keys: `lane`
+Fill every `<placeholder>`, delete the HTML comments, set `Date`/`Operator`/`Goal`, frontmatter
+`status: in-progress`. `type` defaults to `session--open`; narrow at bow-out to `session--plan` /
+`session--implement` / `session--review` if the session was clearly one mode (legacy `session` is
+pre-0139 only). **ADR 0049:** if bow-in found a `status: staged` stub (step 1), this step is just
+the flip `staged` → `in-progress` — no `cp`. Either way fill the lane facet keys: `lane`
 (`repo | rdd | mmb | bbl | bma | usa`), optional `lane_seq` / `vault_session` / `goal_ids` /
-`tickets`. Frontmatter is the cross-ref source of truth; section-header wikilinks are human
-sugar only.
+`tickets`. Frontmatter is the cross-ref source of truth.
 
-If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file already existing.
+If you skip this step, you've also skipped the bow-out — the closing ritual depends on this file.
 
 ### 6b. Petey's three bow-in questions + the State-of-Dojo ask (MANDATORY — ask before Begin work)
 
@@ -342,45 +255,35 @@ Artifact (`/preview-artifacts`) and paste the URL into the SESSION `## Artifacts
 
 ### 7. Begin work
 
-The opening ritual is done. From here forward, you are operating as Petey or Cody (or both, sequentially) for the duration of the session.
-
-## Optional: brief alignment check
-
-If anything in the previous SESSION file or the program plan looks stale or contradictory, raise it before starting work. Better to spend two minutes confirming than two hours building against the wrong understanding.
+The opening ritual is done. If anything in the previous SESSION file or the program plan looks stale
+or contradictory, raise it before starting — two minutes confirming beats two hours building against
+the wrong understanding.
 
 ## State-of-Dojo at bow-in — cite the live route; publish only on ask
 
 **The zero-token default (SESSION_0617, [`research-review-state-of-dojo-automation`](../architecture/research/research-review-state-of-dojo-automation.md)).**
-The always-current State-of-Dojo already lives at the deployed route **`/app/state`** (`StatePanel`
-self-fetches `main`, ~5-min cache) — so the operator sees the landscape for **0 agent tokens** by opening one
-URL. **Do not agent-publish an Artifact every session** (that was the walked-back over-correction). Instead:
-
-- **Cite `/app/state`** at bow-in (free, live).
-- The **render is deterministic** — `bun scripts/state-of-project.ts` (→ `out/state-of-project.html`) runs in
-  the bow-out gate runner, not as agent work.
-- **The publish ask is owned by step 6b** — a mandatory `AskUserQuestion` in the numbered ritual **and** in the
-  executed `/bow-in` skill body, *not* this prose (which is why it now fires — FS-0037). This section is the
-  *why*; step 6b is the *ask*.
-
-Projection-only (reads `docs/sprints/*` + `goals-ledger.md`, never writes a ledger). See
-[`state-of-project-projection.md`](../protocols/state-of-project-projection.md).
+The always-current State-of-Dojo lives at the deployed route **`/app/state`** (`StatePanel`
+self-fetches `main`, ~5-min cache) — the operator sees the landscape for **0 agent tokens**. Do not
+agent-publish an Artifact every session; the render is deterministic (`bun scripts/state-of-project.ts`
+in the bow-out gate runner), and **the publish ask is owned by step 6b**. Projection-only — reads
+`docs/sprints/*` + `goals-ledger.md`, never writes a ledger
+([`state-of-project-projection.md`](../protocols/state-of-project-projection.md)).
 
 ## What this ritual is NOT
 
-- Not a context dump. You're not loading every file in the repo.
-- Not a meta-philosophical exercise. Operator-side memory holds the philosophy; this ritual is just operational.
-- Not a checklist for the user. The user can ask "are we ready to work" — that's a fine substitute for steps 1–3 if they trust the operator.
+- Not a context dump — you're not loading every file in the repo.
+- Not a meta-philosophical exercise — operator-side memory holds the philosophy.
+- Not a checklist for the user — "are we ready to work" is a fine substitute for steps 1–3 if they trust the operator.
 
 ## Cross-references
 
 - [Closing ritual](closing.md) — pairs with this; ends the session.
-- [WORKFLOW 6.0](../protocols/WORKFLOW_6.0.md) — governing operating system for SESSION_0584+ (supersedes 5.0).
+- [WORKFLOW 6.0](../protocols/WORKFLOW_6.0.md) — governing operating system (supersedes 5.0).
 - [SOT_Cookbook](../protocols/SOT_Cookbook.md) — the task→workflow router.
-- [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format.
-- [Next Session Loading Order](../protocols/next-session-loading-order.md) — explicit tier-1/2/3 file load order at bow-in.
-- [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist before writing any new component.
-- [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only record of SOP violations and corrective actions.
-- [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) — optional graph check for search-heavy lanes.
-- [Petey Plan protocol](../protocols/petey-plan.md) — structured planning when the task is unclear or multi-part.
-- [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map; consult when you're unsure which file to trust.
+- [SESSION_TEMPLATE](../sprints/_template/SESSION_TEMPLATE.md) — the SESSION file format (absorbed `chat-handoff.md`).
+- [Next Session Loading Order](../protocols/next-session-loading-order.md) — tier-1/2/3 load order at bow-in.
+- [Cody Pre-flight Protocol](../protocols/cody-preflight.md) — enforceable checklist (+ §0 arch-gate) before writing code.
+- [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only SOP-violation record.
+- [Petey Plan protocol](../protocols/petey-plan.md) — structured planning for unclear/multi-part tasks.
+- [Repo Truth Index](../knowledge/wiki/repo-truth-index.md) — authoritative source map.
 - [Petey](../agents/petey.md), [Cody](../agents/cody.md) — the roles you'll play next.

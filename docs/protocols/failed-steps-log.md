@@ -32,6 +32,16 @@ Append-only log of SOP/guardrail violations. Every entry must have:
 
 This log is **read during bow-in** (Tier 1 loading). If an agent has a prior failure pattern, it must acknowledge it before starting work.
 
+**Status conventions (SESSION_0711 — header note only; existing rows unedited):**
+
+- **`mitigated` requires a defeat-test.** A row may only move to `mitigated` when the guard was
+  proven by an attempt to DEFEAT it (run the blocked command, take the forbidden path) — not by
+  observing that it "looks installed" (the FS-0040 lesson). Cite the defeat-test in the row.
+- **`verified-absent-through: SESSION_NNNN`** — the convention for "this pattern has not recurred":
+  append the marker with the last session that actively checked, instead of silently assuming. A
+  `mitigated` pattern that **fires again** flips back to `open` (and caps the session's score —
+  `code-quality-matrix` §4).
+
 ---
 
 ## Log format

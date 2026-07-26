@@ -9,7 +9,7 @@ last_agent: claude-session-0620
 pairs_with:
   - docs/protocols/recipes/new-brand-intake.md
   - docs/protocols/recipes/new-brand-interview-business.md
-  - docs/protocols/recipes/PM_Planning_Lane.md
+  - docs/protocols/recipes/pm-planning-lane.md
 backlinks:
   - docs/protocols/SOT_Cookbook.md
 tags:
@@ -103,6 +103,6 @@ client's meeting* into an existing product's canon.
 
 - [`new-brand-intake`](new-brand-intake.md) / [`new-brand-interview-business`](new-brand-interview-business.md)
   — the new-brand cousins (stand up a brand vs. absorb a meeting).
-- [`PM_Planning_Lane`](PM_Planning_Lane.md) — where a rich intake fans out into a build wave.
+- [`PM_Planning_Lane`](pm-planning-lane.md) — where a rich intake fans out into a build wave.
 - MMB instance: `docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md` (the reference capture),
   the MMB LLL / MC-grill system, and the `/game-on` MMB session overlay.

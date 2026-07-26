@@ -10,7 +10,7 @@ pairs_with:
   - docs/protocols/giddy-merge-strategy.md
   - docs/protocols/merge-to-main.md
   - docs/protocols/recipes/review-wave.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
   - docs/rituals/closing.md
 backlinks:
   - docs/protocols/SOT_Cookbook.md
@@ -27,7 +27,7 @@ tags:
 **Retires [`giddy-merge-strategy.md`](../giddy-merge-strategy.md)** (SESSION_0584, G-023) — same
 gate ladder, same hard guards, absorbed into the recipe-card format so it can be pointed at from
 [`SOT_Cookbook.md`](../SOT_Cookbook.md), the [orchestrator](orchestrator.md), and
-[AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md) alike. `giddy-merge-strategy.md` carries a
+[AM_Coffee_Merge_Review](am-coffee-merge-review.md) alike. `giddy-merge-strategy.md` carries a
 supersede banner and stays as detailed historical reference — nothing below is new law, it is the
 same law in the new shape.
 
@@ -68,7 +68,7 @@ Every change moves up this ladder. State your current gate when you report statu
 | **G3** | Review ready | commit set clean + auditable | hand to operator / [review-wave](review-wave.md) / `pr-review-score-fix-loop` |
 | **G4** | Push approved | operator gave explicit go | manual push — one per session at close |
 
-Default posture is **stop at G3**. A fan-out sweep ([AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md))
+Default posture is **stop at G3**. A fan-out sweep ([AM_Coffee_Merge_Review](am-coffee-merge-review.md))
 may merge multiple lanes to LOCAL `main` while still holding at G3 — merging locally is not pushing.
 
 ### Required checks before commit (G2)
@@ -120,5 +120,5 @@ list (or `none`) · status (`PASS | FAIL | MANUAL STEP REQUIRED`) · next 3 step
 - [`giddy-merge-strategy.md`](../giddy-merge-strategy.md) — retired into this card; detailed history.
 - [Merge to Main](../merge-to-main.md) — the rebase/PR/squash mechanics this gates.
 - [PR Review → Score → Fix Loop](../pr-review-score-fix-loop.md) — what runs at G3.
-- [Recipe — AM Coffee Merge Review](AM_Coffee_Merge_Review.md) — the fan-out sweep that drives this ladder.
+- [Recipe — AM Coffee Merge Review](am-coffee-merge-review.md) — the fan-out sweep that drives this ladder.
 - [Closing ritual](../../rituals/closing.md) — Git hygiene + the single-push order at bow-out.

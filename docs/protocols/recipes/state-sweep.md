@@ -8,7 +8,7 @@ updated: 2026-07-21
 last_agent: petey-state-sweep
 recipe: state-sweep
 pairs_with:
-  - docs/protocols/recipes/PM_Planning_Lane.md
+  - docs/protocols/recipes/pm-planning-lane.md
   - docs/protocols/recipes/lane.md
   - docs/knowledge/wiki/wiring-ledger.md
   - .claude/skills/wayfinder/SKILL.md
@@ -33,7 +33,7 @@ pass and leaves the repo's status ledgers honest:
 3. **What can run unattended?** — surface the fully-specified, disjoint, gate-able work and stage it
    as **launchable lane stubs** for an overnight autonomous fan-out.
 
-It is the assessment sibling of the planning lane: [`PM_Planning_Lane`](PM_Planning_Lane.md) grills
+It is the assessment sibling of the planning lane: [`PM_Planning_Lane`](pm-planning-lane.md) grills
 open forks and stages *decided* work; State Sweep takes inventory, corrects the ledgers, and hands
 off *already-decided* work — **it never grills and never builds product code.**
 
@@ -94,10 +94,10 @@ off *already-decided* work — **it never grills and never builds product code.*
 
 ## Cross-references
 
-- [Recipe — PM Planning Lane](PM_Planning_Lane.md) — the grill-and-stage sibling (this one assesses
+- [Recipe — PM Planning Lane](pm-planning-lane.md) — the grill-and-stage sibling (this one assesses
   and corrects; that one decides).
 - [Recipe — Lane](lane.md) — the load-set each staged stub hydrates from.
-- [Recipe — AM Coffee Merge Review](AM_Coffee_Merge_Review.md) — the morning side of an overnight
+- [Recipe — AM Coffee Merge Review](am-coffee-merge-review.md) — the morning side of an overnight
   fan-out this recipe stages.
 - [wayfinder SKILL.md](../../../.claude/skills/wayfinder/SKILL.md) — the epic-map source for the
   status render.

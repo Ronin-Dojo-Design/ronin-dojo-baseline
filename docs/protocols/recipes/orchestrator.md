@@ -9,8 +9,8 @@ last_agent: claude-session-0584
 pairs_with:
   - docs/protocols/recipes/epic-plan.md
   - docs/protocols/recipes/lane.md
-  - docs/protocols/recipes/PM_Planning_Lane.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/pm-planning-lane.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
 backlinks:
   - docs/protocols/SOT_Cookbook.md
 tags:
@@ -22,7 +22,7 @@ tags:
 # Recipe — Orchestrator
 
 Runs an already-planned [epic-plan](epic-plan.md) fan-out: dispatches every lane, babysits for
-crashes, and hands the landed set to the [merge sweep](AM_Coffee_Merge_Review.md). Proven at
+crashes, and hands the landed set to the [merge sweep](am-coffee-merge-review.md). Proven at
 SESSION_0582 (three Sonnet lanes, one mid-flight session-limit crash, `SendMessage` resume,
 zero-conflict merge) and the SESSION_0587 overnight variant (four lanes, one staged stub).
 
@@ -53,7 +53,7 @@ never `git add -A` in canonical; stage explicit paths.
 | Mode | Trigger | Notes |
 | --- | --- | --- |
 | **Live-attended** | operator present, dispatches in-chat | Agent tool, `subagent_type: "cody"`, parallel tool calls in one turn for genuinely-disjoint lanes. |
-| **Overnight/unattended** | staged via [PM_Planning_Lane](PM_Planning_Lane.md) | one staged `SESSION_NNNN` stub (`recipe: orchestrator`) carries all N dispatch prompts; the next `/bow-in` IS the dispatch — no pasting. |
+| **Overnight/unattended** | staged via [PM_Planning_Lane](pm-planning-lane.md) | one staged `SESSION_NNNN` stub (`recipe: orchestrator`) carries all N dispatch prompts; the next `/bow-in` IS the dispatch — no pasting. |
 | **Crash mid-flight** | a lane hits a session-limit kill | `SendMessage` resume with disk-truth-first instructions (re-read the worktree's actual state before continuing) — proven safe when the lane's file set is genuinely disjoint from siblings. |
 
 ## Escalation valve (always active)
@@ -69,7 +69,7 @@ experiment) safe rather than reckless.
 1. **Dispatch record** — which lanes launched, on which branches/worktrees, with which prompt.
 2. **Landing record** — per lane: done / blocked / crashed-then-resumed, with evidence.
 3. **Trigger to the merge sweep** — on the FINAL lane landing, hand off to
-   [AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md) (completion-triggered, not cron — see that
+   [AM_Coffee_Merge_Review](am-coffee-merge-review.md) (completion-triggered, not cron — see that
    card for why).
 4. **Zero silent state loss** — a crashed lane is resumed or explicitly reported lost with its
    last-known state; never quietly dropped.
@@ -78,6 +78,6 @@ experiment) safe rather than reckless.
 
 - [Recipe — Epic Plan](epic-plan.md) — produces what this card dispatches.
 - [Recipe — Lane](lane.md) — what each dispatched worktree runs.
-- [Recipe — PM Planning Lane](PM_Planning_Lane.md) — the evening staging half.
-- [Recipe — AM Coffee Merge Review](AM_Coffee_Merge_Review.md) — the morning sweep half.
+- [Recipe — PM Planning Lane](pm-planning-lane.md) — the evening staging half.
+- [Recipe — AM Coffee Merge Review](am-coffee-merge-review.md) — the morning sweep half.
 - [Fan-out session recipe](../fan-out-session-recipe.md) — the underlying cross-session mechanics.
