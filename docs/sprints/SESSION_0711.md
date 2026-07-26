@@ -140,6 +140,8 @@ green).
 format pin · T1–T6 ritual trim · G1–G5 governance consolidation · CAND pick · cleanup manifest
 (workflow in flight).
 
+- **Brand-repo-separation ratified → plan staged:** ADR `docs/adr/0001-brand-repo-separation.md` + execution plan `docs/sprints/plans/petey-plan-0711-brand-repo-separation.md` (fork-don't-rewrite, five sibling repos; awaiting operator go per phase).
+
 ## Artifacts
 
 - State-of-Dojo snapshot (bow-in, operator-elected): <https://claude.ai/code/artifact/ad14e1ae-5a73-4787-876b-fe604f78de55>
