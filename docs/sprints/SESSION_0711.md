@@ -142,6 +142,30 @@ format pin · T1–T6 ritual trim · G1–G5 governance consolidation · CAND pi
 
 - **Brand-repo-separation ratified → plan staged:** ADR `docs/adr/0001-brand-repo-separation.md` + execution plan `docs/sprints/plans/petey-plan-0711-brand-repo-separation.md` (fork-don't-rewrite, five sibling repos; awaiting operator go per phase).
 
+## Execution (operator-ratified, post-diagnosis)
+
+- **Memory:** phase 1 staleness trim 136→115 → phase 2 topic-consolidation → **23 files**
+  (21 topics + 1 standalone + index), 10/10 fact spot-checks, index==disk parity.
+- **Execution wave (6-agent workflow `wf_13fa99e4-867`):** SEC-01/02 payment-integrity fix
+  (server-priced checkout, amount-verified webhook ×6 branches, 24 rejection tests) · docs D1–D9
+  (13.5MB purged, index 1.12MB→50KB, era-B archive 195 files, 14 ADR truth-stamps, fresh
+  `docs/adr/` + 3 seed ADRs) · gates lane (4 systemic caps, `arch-gate.ts` + `invariants.yml`
+  ratchet, deferral write-off vocab, opening 386→289 / closing 540→406 / template v2,
+  Kaizen→routing receipt) · dead-code ~282 LOC (fallow MI 89.6→89.9, targets 56→42) ·
+  migration lane (ADR 0001 + `plans/petey-plan-0711-brand-repo-separation.md`).
+- **PR #341** pushed on operator word ("Push, then PR, then go on phase B"). First CI run RED —
+  frozen-lockfile desync (FS-0043, Pattern 5 recurrence: baseline `package.json` dep removal
+  without lock sync; verify suite lacked an install gate) + 2 oxfmt stragglers; fixed `f23b7835`,
+  CI re-running. First watch monitor failed silent (FS-0036 class, noted in FS-0043) — re-armed
+  error-visible.
+- **Phase B started (operator go):** B1 done — 4 private sibling repos created
+  (Baseline-Martial-Arts · Mammoth-Metal-Buildings · USA-Stickfighting ·
+  Ronin-Dojo-Design-Monorepo). B2+ (mirror push, rename→Black-Belt-Legacy, remotes, Vercel
+  repoint, secrets audit) gated on #341 green + merge.
+- **Operator routing calls:** WEKAF kits ride into USA-Stickfighting (others trim at Phase C —
+  no export step) · `slide-01-title.png` → `docs/product/mammoth-build/assets/` ·
+  orphaned `course-enrollment/payloads.ts` deleted (Giddy call: git history is the archive).
+
 ## Artifacts
 
 - State-of-Dojo snapshot (bow-in, operator-elected): <https://claude.ai/code/artifact/ad14e1ae-5a73-4787-876b-fe604f78de55>
