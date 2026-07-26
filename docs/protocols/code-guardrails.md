@@ -100,7 +100,7 @@ oxfmt (verified on 0.54.0, any config) is **not idempotent** on this shape: each
 more comment line onto the `},` line, in **reverse order**, converging only after N+1 passes with the
 comment block merged into a single reversed line. Consequences: `--check` can fail right after a
 `--write`, and the comment's prose is destroyed. First hit SESSION_0706 (a test's `}, 15000)` timeout
-argument); minimal repro + draft upstream issue prepared at WL-P3-69(c).
+argument); minimal repro + upstream report filed at WL-P3-69(c): <https://github.com/oxc-project/oxc/issues/24960> (verified on 0.54.0 and 0.60.0).
 
 ```typescript
 // ❌ oxfmt reorders/merges these lines nondeterministically across passes
