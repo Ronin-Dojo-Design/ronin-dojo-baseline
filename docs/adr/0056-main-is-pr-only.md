@@ -1,6 +1,6 @@
 ---
 title: "ADR 0002 — main is PR-only"
-slug: adr-lean-0002-main-is-pr-only
+slug: adr-0056-main-is-pr-only
 type: decision
 status: accepted
 created: 2026-07-26

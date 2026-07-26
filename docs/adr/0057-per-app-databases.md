@@ -1,6 +1,6 @@
 ---
 title: "ADR 0003 — One database per app"
-slug: adr-lean-0003-per-app-databases
+slug: adr-0057-per-app-databases
 type: decision
 status: accepted
 created: 2026-07-26

@@ -21,6 +21,8 @@ backlinks:
   - docs/sprints/SESSION_0479.md
 ---
 
+> **TOMBSTONE (SESSION_0711):** the law now lives at [`docs/adr/0058-rankentry-is-rank-truth.md`](../../adr/0058-rankentry-is-rank-truth.md) — this file is historical record only. Written once, never maintained.
+
 # ADR 0035 — Lineage rank display from awarded truth; `selectedRankAward` → pending claim
 
 ## Status

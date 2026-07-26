@@ -64,7 +64,7 @@ _Avoid_: confusing it with this CONTEXT.md (domain language, not visual system).
 An anti-AI-slop design review run by the **Desi** agent driving a design skill (hallmark or Impeccable — both installed, called on demand). Scoped to greenfield / mockups / skins / brand surfaces, never overriding the ui-kit token contract on app surfaces (D11).
 _Avoid_: "design review" used to mean a generic PR review.
 
-### Multi-repo era (post ADR-0001 fork, SESSION_0711)
+### Multi-repo era (post ADR-0055 fork, SESSION_0711)
 
 **Brand repo**:
 One of the five sibling repos (Black-Belt-Legacy · Baseline-Martial-Arts · Mammoth-Metal-Buildings · USA-Stickfighting), forked with full shared history, trimmed to its brand.

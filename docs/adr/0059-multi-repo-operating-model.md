@@ -1,7 +1,7 @@
 # 0005 — Multi-repo daily operating model
 
 **Status:** accepted (SESSION_0711 grill, operator-ratified)
-**Context:** ADR 0001 split the portfolio into five sibling repos. A solo operator + agent
+**Context:** ADR 0055 split the portfolio into five sibling repos. A solo operator + agent
 fleet needs one daily operating model or five drifting ones will emerge.
 
 ## Decision

@@ -1,6 +1,6 @@
 ---
 title: "ADR 0004 — RankEntry is the ONE rank model"
-slug: adr-lean-0004-rankentry-is-rank-truth
+slug: adr-0058-rankentry-is-rank-truth
 type: decision
 status: accepted
 created: 2026-07-26
