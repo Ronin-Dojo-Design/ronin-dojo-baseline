@@ -107,8 +107,8 @@ longer take down BBL.
 - **Phase 1 — LANDED (SESSION_0459, local-first).** Mammoth Build CRM scaffolded with its own
   `prisma/schema.prisma` (the HubSpot-replacement CRM core — Contact/Company/Project/Activity/Quote/
   LineItem/Product/Invoice/BuildPhoto/TeamMember + 9 enums, grounded in the
-  [Flores intake brief](../../business/leads/mammoth-build-michael-flores.md) §3a/§4/§5/§6 and the
-  [HubSpot-replacement epic](../../epics/mammoth-rebuild-crm-001.md)), its own `prisma.config.ts`
+  `Flores intake brief` §3a/§4/§5/§6 and the
+  `HubSpot-replacement epic`), its own `prisma.config.ts`
   (Prisma 7 moves the URL out of the schema) + `DATABASE_URL` + standalone `bun.lock`. First migration
   applied to a new local `mammoth_dev`; **isolation proven** — `ronindojo_prodsnap` stayed byte-identical
   (140 tables, same digest) and the root `bun.lock` was untouched. The current Postgres is **declared**

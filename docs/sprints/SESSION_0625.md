@@ -87,7 +87,7 @@ Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operato
 
 **Task — run the [Client_Meeting_Intake](../protocols/recipes/client-meeting-intake.md) recipe on MMB.**
 
-1. **Adopt the capture:** [`docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md`](../product/mammoth-build/assets/Michaels_Notes_Meeting.md)
+1. **Adopt the capture:** `docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md`
    (`status: captured-needs-grill`, `contains_real_data: false`). Confirm demo-safe.
 2. **Grill (MC-grill + goal election):** resolve every ambiguous branch — what Michael wants the sales
    cockpit to *answer / do / feel*. Name the product north-star (already drafted in the notes: "know every

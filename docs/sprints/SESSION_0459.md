@@ -105,8 +105,8 @@ Phase-1 micro-forks:
 9. **Schema scope EXPANDED mid-session (operator-directed).** The carried "SMALL 2-model schema" was
    superseded by the operator's directive to research mammothbuild.com + HubSpot-replacement needs and
    build the real schema. Result: the HubSpot-replacement CRM core (10 models + 9 enums), every element
-   traceable to the [Flores intake brief](../business/leads/mammoth-build-michael-flores.md) §3a/§4/§5/§6
-   + the [HubSpot-replacement epic](../epics/mammoth-rebuild-crm-001.md) + the MVP forms. Still
+   traceable to the `Flores intake brief` §3a/§4/§5/§6
+   + the `HubSpot-replacement epic` + the MVP forms. Still
    Mammoth-owned, local-only, zero BBL risk — and a stronger isolation proof. (`mammothbuild.com` is a
    parked domain → `atom.com`; the real client site is `mammoth.build`, which 403s automated fetches as
    the brief predicted — so the in-repo brief + MVP forms are the authoritative source.)

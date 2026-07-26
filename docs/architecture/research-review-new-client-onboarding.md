@@ -122,7 +122,7 @@ reinvention the repo's "one card / one kernel" ethos forbids (cf. learning recor
 
 Implemented SESSION_0459: the [runbook](../runbooks/onboarding/new-client-runbook.md) + the
 [`/new-client-recipe` skill](../../.claude/skills/new-client-recipe/SKILL.md), proven on
-[Mammoth Build CRM](../product/mammoth-build/PRD.md). The mechanical scaffold script
+`Mammoth Build CRM`. The mechanical scaffold script
 ([`scripts/new-client-scaffold.ts`](../../scripts/new-client-scaffold.ts)) followed in **SESSION_0462**,
 together with **per-product CI** (`clients-ci.yml` — a dynamic discover→matrix so each `clients/*` gets
 its own typecheck/lint while a client-only change no longer fires BBL's e2e). The trio (skill + runbook +

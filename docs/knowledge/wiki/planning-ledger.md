@@ -360,7 +360,7 @@ plan scope.
 ### PL-015 — Phase 14 RDD lift from the old ronin-dojo-monorepo — queued · **source doc in hand**
 
 - **Origin:** operator directive, bow-out 2026-07-22.
-- **✅ Source doc imported (2026-07-22):** [`phase14-local-deployment-checklist`](../../product/rdd/phase14-local-deployment-checklist.md)
+- **✅ Source doc imported (2026-07-22):** `phase14-local-deployment-checklist`
   (operator-provided from Baseline_Vault; secret-scanned clean). It is a 14-section DirStarter local-deploy
   + Phase 1–14 port/lift checklist: **§0 app-boundary gate** (Option A `apps/rdd-web` new app —
   *recommended* — vs Option B tenant), inventory → scaffold → DB/env → design system → **6 bounded epics

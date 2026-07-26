@@ -77,7 +77,7 @@ lists "Leads / contact intake" as `[REUSE]`; client intake is its missing siblin
   — steel building supply · erection/install · concrete & excavation · building-only vs
   building + install — plus building spec/size, site readiness, permits/jurisdiction, delivery
   window, **Installation Path** (`Mammoth-Installed` / `Customer-Installed`, already canon in
-  [`CONTEXT.md`](../product/mammoth-build/CONTEXT.md)), budget/financing, and decision-maker.
+  `CONTEXT.md`), budget/financing, and decision-maker.
 - **Why it matters beyond the form:** this is the first real consumer of the commercial-lane
   taxonomy, which SESSION_0625's intake audit found **unrouted** (GAP-1 — only the two Installation
   Paths reached canon; steel-supply-only and concrete+excavation have no home). Landing it here

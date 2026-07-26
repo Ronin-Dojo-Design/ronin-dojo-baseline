@@ -302,12 +302,12 @@ backlinks:
   147 commits since Dec 2025 (provisional — composition unverified, per the letter).
 - **Developer-performance assessment letter** (Larry draft → hostile review → revise; comparison
   figures + secondhand concerns + unverified quote deliberately REMOVED — see the counsel memo):
-  [`mmb-developer-performance-assessment-DRAFT.md`](../business/legal/mmb-developer-performance-assessment-DRAFT.md)
+  `mmb-developer-performance-assessment-DRAFT.md`
   (letter + Moriarty-only transmittal memo; memo never travels with the letter). Access-provenance
   updated on operator confirmation: org invite 2026-07-22 by M. Flores, subsequently
   rescinded (per Flores, by Mr. Dodge) → 07-25 review via screenshare; audit-log corroboration named.
 - **MMB branded email shell** (logo + #ff6a1a, table-based email-safe):
-  [`mmb-branded-email-template.html`](../product/mammoth-build/templates/mmb-branded-email-template.html);
+  `mmb-branded-email-template.html`;
   send channel = operator's own account (no MMB/RDD-verified Resend sending domain on disk — the
   BBL key is domain-scoped). Nothing sent by the agent.
 - **Vault:** MMB_SESSION_0007 addendum + org chart (3 equal owners w/ emails) + contacts +

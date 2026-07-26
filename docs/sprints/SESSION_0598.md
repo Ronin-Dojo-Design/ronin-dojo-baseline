@@ -65,7 +65,7 @@ sessions under **G-027**.
 
 Research: `/rr` seq-research-recommend — **Petey** (existing-machinery inventory) + **Giddy**
 (architecture / Dirstarter / git+deploy shape), both grounded in the real tree; **Brandon** produced
-the RDD business-interview worked example ([`docs/product/rdd/brand-brief.md`](../product/rdd/brand-brief.md)).
+the RDD business-interview worked example (`docs/product/rdd/brand-brief.md`).
 
 1. **Home → `apps/rdd`** (workspace peer, cloned from `apps/baseline`). First-party + permanent →
    `clients/*` handoff-isolation (own lockfile + `file:`-ui-kit Turbopack hack + `link-ui-kit`
@@ -140,7 +140,7 @@ cards are first proven by RDD/0598 — **skill-ify (rung-3) deferred until 2–3
 | `new-brand-interview-client.md` | Petey/Brandon | client requirements + handoff (for `clients/*`; N/A first-party RDD) |
 
 Each carries a **session-template stub** (`recipe:` key). RDD worked examples: business brief →
-[`docs/product/rdd/brand-brief.md`](../product/rdd/brand-brief.md) (Brandon); design brief =
+`docs/product/rdd/brand-brief.md` (Brandon); design brief =
 State-of-Dojo token extraction; onboarding = Slice-A step list.
 
 ## Uploads — raw assets placed (operator, mid-session)

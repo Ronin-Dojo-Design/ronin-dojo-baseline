@@ -68,7 +68,7 @@ recipe: new-brand-interview-business
 ## Worked example — RDD (SESSION_0598)
 
 From the operator's option-3 + portfolio answer, Brandon produced
-[`docs/product/rdd/brand-brief.md`](../../product/rdd/brand-brief.md): positioning ("one kernel, many
+`docs/product/rdd/brand-brief.md`: positioning ("one kernel, many
 brands"), mission draft, founder four-beat spine (`[operator to fill]`), showcase content type (fields),
 three revenue lines, module map (leads/directory/auth/media **reuse**; testimonials + portfolio-adapter
 **net-new**), two-state entitlements (public marketing + private admin). 8 open questions routed to operator.

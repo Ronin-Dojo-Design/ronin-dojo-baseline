@@ -34,7 +34,7 @@ its own database** — the model ratified in [ADR 0034](../../architecture/decis
 skill is the invokable entrypoint that executes these steps with operator gates (mirrors how `/bow-in`
 executes `opening.md`).
 
-> **Reference implementation:** [Mammoth Build CRM](../../product/mammoth-build/PRD.md)
+> **Reference implementation:** `Mammoth Build CRM`
 > (`clients/mammoth-build-crm/`) — the first product through this recipe (SESSION_0459). When a step is
 > ambiguous, copy what Mammoth does.
 
@@ -76,7 +76,7 @@ Capture the client requirements before any schema. Author (or confirm) the lead/
 `docs/business/leads/` — who the client is, the friction being solved, the forms they collect, the
 pipeline/stages, the domain objects. This brief is what the schema is *translated from*.
 (Mammoth: `docs/business/leads/mammoth-build-michael-flores.md` + the
-[HubSpot-replacement epic](../../epics/mammoth-rebuild-crm-001.md).)
+`HubSpot-replacement epic`.)
 
 > **Research note:** if the client has a live site, check it — but verify the domain (a marketing
 > redirect or parked domain is not the app). Many sites block automated fetches; fall back to the

@@ -68,7 +68,7 @@ recipe: new-brand-intake
 ## Worked example — RDD (SESSION_0598)
 
 Operator's Q2 answer (option-3 surface + portfolio showcase + founder story) was the raw ask; the
-brief landed at [`docs/product/rdd/brand-brief.md`](../../product/rdd/brand-brief.md) (Brandon
+brief landed at `docs/product/rdd/brand-brief.md` (Brandon
 synthesized the business depth). Home = `apps/rdd` (first-party); modules = leads/directory/auth/media
 reuse + testimonials/portfolio-adapter net-new.
 

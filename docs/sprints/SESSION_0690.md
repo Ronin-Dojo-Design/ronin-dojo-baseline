@@ -27,7 +27,7 @@ backlinks:
 
 ## Goal
 
-Make [`rdd-founder-linkedin-content-calendar-draft.md`](../architecture/research/rdd-founder-linkedin-content-calendar-draft.md)
+Make `rdd-founder-linkedin-content-calendar-draft.md`
 *runnable*: a 28-day calendar with day/date-slots, content pillars, hooks, full draft posts, CTAs, and
 asset-needed, plus a cadence recommendation and an operator "how to approve + schedule" checklist. Run
 on the #280 recommended defaults (LinkedIn · founder profile · 3×/week · AI-drafts + human-approves ·
