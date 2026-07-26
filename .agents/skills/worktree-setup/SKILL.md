@@ -4,7 +4,7 @@ description: Bootstrap a fresh git worktree so gates and the dev server run — 
 ---
 
 A fresh git worktree (a `../ronin-NNNN` created off `main`, not the canonical
-`/Users/brianscott/dev/ronin-dojo-app`) is **not set up**: no `node_modules`, no `apps/web/.env`, no
+`/Users/brianscott/dev/black-belt-legacy`) is **not set up**: no `node_modules`, no `apps/web/.env`, no
 `apps/baseline/.env`, no generated Prisma clients, and `graphify` reads 0 nodes. Run this **before any
 gate** (`tsc`, `oxlint`, `bun test`, `next dev`) — otherwise they fail on module resolution and look like a
 broken repo.
@@ -12,7 +12,7 @@ broken repo.
 Run `.claude/skills/worktree-setup/bootstrap.sh` from the worktree (or follow it manually). It:
 
 1. **Ensures `apps/web/.env` exists FIRST** — copies the canonical
-   `/Users/brianscott/dev/ronin-dojo-app/apps/web/.env` (or, if that's absent, exports a throwaway
+   `/Users/brianscott/dev/black-belt-legacy/apps/web/.env` (or, if that's absent, exports a throwaway
    `DATABASE_URL` so `bun install`'s prisma `postinstall` doesn't abort the whole install). Env-first
    means the postinstall generates the client in one shot — the documented order installs first and
    hits the `PrismaConfigEnvError: Cannot resolve environment variable: DATABASE_URL` failure.

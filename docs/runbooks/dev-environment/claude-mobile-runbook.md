@@ -4,8 +4,8 @@ slug: claude-mobile-runbook
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/runbooks/dev-environment/codex-mobile-runbook.md
   - docs/runbooks/dev-environment/autonomous-sessions.md
@@ -83,7 +83,7 @@ MacBook (lid open, caffeinated)
 
 ```bash
 # from the phone SSH client, on the laptop:
-cd /Users/brianscott/dev/ronin-dojo-app
+cd /Users/brianscott/dev/black-belt-legacy
 tmux new -As dojo            # create/attach a persistent session named "dojo"
 
 # COWORK:

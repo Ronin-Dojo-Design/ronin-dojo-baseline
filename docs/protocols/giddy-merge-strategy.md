@@ -4,8 +4,8 @@ slug: giddy-merge-strategy
 type: protocol
 status: superseded
 created: 2026-06-20
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-26
+last_agent: claude-session-0712
 superseded_by: docs/protocols/recipes/merge-wave.md
 pairs_with:
   - docs/protocols/recipes/merge-wave.md
@@ -52,7 +52,7 @@ on a merge, this is your gate.
    build unless `apps/web` / `pnpm-lock.yaml` / `package.json` / `vercel.json` changed
    (SESSION_0335).
 3. **Run the FS-0024 git guard before any mutating git** — confirm `pwd` is
-   `/Users/brianscott/dev/ronin-dojo-app` and `git remote` is `ronin-dojo-baseline`,
+   `/Users/brianscott/dev/black-belt-legacy` and `git remote` is `ronin-dojo-baseline`,
    never the read-only `dirstarter_template` cwd.
 4. **Never force-push `main`.** `--force-with-lease` is allowed only on a *session
    branch* during a `merge-to-main` rebase, never on `main`.

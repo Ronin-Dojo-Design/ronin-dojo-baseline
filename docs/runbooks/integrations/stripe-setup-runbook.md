@@ -4,8 +4,8 @@ slug: stripe-setup-runbook
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/sprints/_archive/SESSION_0098.md
   - docs/sprints/SESSION_0344.md
@@ -144,7 +144,7 @@ Do not select all events.
 From the app environment:
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 ```
 
 Start the app in one terminal.
@@ -179,7 +179,7 @@ Restart the dev server after changing `.env`.
 SESSION_0344 added an explicit local-only Stripe service mock for browser e2e proof:
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 E2E_STRIPE_MOCK=1 bun run dev:e2e  # terminal 1: the server must see the mock flag
 E2E_STRIPE_MOCK=1 bun run test:e2e:local -- \
   e2e/stripe/lineage-membership-checkout.spec.ts --project=chromium  # terminal 2

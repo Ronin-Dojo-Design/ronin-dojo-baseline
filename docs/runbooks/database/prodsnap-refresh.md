@@ -4,8 +4,8 @@ slug: prodsnap-refresh
 type: runbook
 status: active
 created: 2026-07-21
-updated: 2026-07-21
-last_agent: claude-session-0597
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/runbooks/database/database.md
   - docs/runbooks/database/schema-migration.md
@@ -43,7 +43,7 @@ prodsnap).
 ## Steps
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 PGBIN=/Applications/Postgres.app/Contents/Versions/latest/bin   # PG18 tools
 
 # 1. Read the Neon direct URL from .env.prod into a shell var (NEVER hand-parse the secret into

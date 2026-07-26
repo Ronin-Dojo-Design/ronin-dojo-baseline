@@ -9,7 +9,7 @@ Run a budget-capped Graphify query INSTEAD of repo-wide `grep`/`rg`/`find`/`ls` 
 1. **Always query from the canonical checkout** — the graph lives there only:
 
    ```bash
-   cd /Users/brianscott/dev/ronin-dojo-app && graphify query "<lane nouns + domain terms>" --budget 1500
+   cd /Users/brianscott/dev/black-belt-legacy && graphify query "<lane nouns + domain terms>" --budget 1500
    ```
 
    Widen to `--budget 2000` if the first pass misses. A fresh worktree reads **0 nodes = graph

@@ -10,7 +10,7 @@ file reads (CLAUDE.md Graphify-first rule; runbook:
 1. From the **canonical checkout** (worktree graphs are empty by design, 0 nodes ≠ no matches):
 
    ```bash
-   cd /Users/brianscott/dev/ronin-dojo-app && graphify query "<subsystem nouns — code AND doc terms>" --budget 2500
+   cd /Users/brianscott/dev/black-belt-legacy && graphify query "<subsystem nouns — code AND doc terms>" --budget 2500
    graphify explain "<hub node>"   # optional: expand a single node + its connections
    ```
 

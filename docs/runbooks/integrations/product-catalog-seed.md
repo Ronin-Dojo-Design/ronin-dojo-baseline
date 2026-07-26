@@ -4,8 +4,8 @@ slug: product-catalog-seed
 type: runbook
 status: active
 created: 2026-05-08
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/runbooks/database/schema-migration.md
   - docs/runbooks/integrations/stripe-setup-runbook.md
@@ -80,7 +80,7 @@ metadata: {
 ### 1. Pre-flight check
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 
 # Print the parent-shell targets without exposing credentials; the names must agree.
 bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
@@ -186,7 +186,7 @@ Never reset `ronindojo_prodsnap`. A full from-zero catalog proof uses the litera
 every Prisma/seed child receives both URLs explicitly so `.env` cannot redirect it to prodsnap.
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 
 # 1. Recreate only the literal disposable scratch database.
 /Applications/Postgres.app/Contents/Versions/latest/bin/dropdb --if-exists --force ronindojo_catalog_scratch

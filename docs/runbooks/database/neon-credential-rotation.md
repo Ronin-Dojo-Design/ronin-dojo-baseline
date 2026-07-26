@@ -4,8 +4,8 @@ slug: neon-credential-rotation
 type: runbook
 status: active
 created: 2026-07-16
-updated: 2026-07-16
-last_agent: codex-session-0548
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/security/ronin-security-risk-register.md
   - docs/runbooks/database/database.md
@@ -52,7 +52,7 @@ This runbook does not rotate data, run migrations, or change schema.
 1. Open the Neon dashboard for the production project.
 2. Open the Vercel project settings for the production deployment.
 3. Open the local checkout that owns the ignored production overlay:
-   `/Users/brianscott/dev/ronin-dojo-app/apps/web/.env.prod`.
+   `/Users/brianscott/dev/black-belt-legacy/apps/web/.env.prod`.
 4. Confirm which app/database is production before editing anything.
 5. Prepare both connection strings from the new Neon values:
    - `DATABASE_URL`: pooled runtime connection string when the app expects pooled Neon access.
@@ -104,7 +104,7 @@ Use environment variables or an env file, not a literal URL on the command line.
 Recommended local shape:
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 SKIP_ENV_VALIDATION=1 bun --env-file=.env.prod prisma db execute --stdin
 ```
 

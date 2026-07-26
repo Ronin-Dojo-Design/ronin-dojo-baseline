@@ -8,7 +8,7 @@ plus a mandatory prior-art step. Read this file and follow in order; it carries 
 of its own — the protocol it points at does.
 
 1. **Graphify prior-art query FIRST** — from the CANONICAL checkout, before any repo-wide
-   `grep`/`rg`/`find`/`ls`: `cd /Users/brianscott/dev/ronin-dojo-app && graphify query "<nouns>"
+   `grep`/`rg`/`find`/`ls`: `cd /Users/brianscott/dev/black-belt-legacy && graphify query "<nouns>"
    --budget 1500` per [`graphify-query`](../graphify-query/SKILL.md). This is the step that makes
    "research first" real — SESSION_0582's `/rr` found `scripts/auto-session.sh` (an existing
    headless driver) before anyone reinvented it; a research pass that skips this step is just

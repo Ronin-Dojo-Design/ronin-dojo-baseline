@@ -4,8 +4,8 @@ slug: dev-environment
 type: runbook
 status: active
 created: 2026-04-27
-updated: 2026-07-20
-last_agent: claude-session-0587
+updated: 2026-07-26
+last_agent: claude-session-0712
 use_count: 0
 pairs_with:
   - docs/runbooks/dev-environment/mcp-usage-runbook.md
@@ -57,7 +57,7 @@ git worktree add ../<worktree-name> -b <branch> main
 cd ../<worktree-name>
 
 # 3. Copy apps/web env vars from the canonical main worktree BEFORE install
-cp /Users/brianscott/dev/ronin-dojo-app/apps/web/.env apps/web/.env
+cp /Users/brianscott/dev/black-belt-legacy/apps/web/.env apps/web/.env
 
 # 4. Install deps from the worktree ROOT (Bun workspace — one root bun.lock)
 bun install
@@ -276,7 +276,7 @@ bun run test           # 3. unit tests (deterministic --parallel=1 gate)
 If the task touched docs:
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app   # repo root
+cd /Users/brianscott/dev/black-belt-legacy   # repo root
 bun run wiki:lint
 ```
 
