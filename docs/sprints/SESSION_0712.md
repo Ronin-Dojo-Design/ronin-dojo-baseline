@@ -122,6 +122,14 @@ PL-030 explorer epic queued behind the fork work.
 ## Artifacts
 
 - State-of-Dojo frozen snapshot (bow-in): <https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd>
+- Fork Fan-out Board (per-repo C/D step board, operator-requested): <https://claude.ai/code/artifact/8e513de0-a42f-4037-9363-fb6786a0cacb>
+
+## /gq — "did we trim the /cas /car /cac skills?"
+
+No — they were never built. `/cas`·`/car`·`/cac` (`create-a-sequence` / `create-a-recipe` /
+`create-a-card`, WS-E) are the SESSION_0605 **staged plan**, still `status: staged`, now at
+`docs/sprints/_archive/monorepo-era/SESSION_0605.md`. The trim deleted no skills; the graph query
+also surfaced pre-trim phantoms (mammoth paths) — full Graphify rebuild queued at bow-out.
 
 ## Next session
 
