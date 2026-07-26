@@ -1,7 +1,7 @@
 import { createSerializer, type inferParserType, parseAsString } from "nuqs/server"
 import { siteConfig } from "~/config/site"
 
-export const openGraphSearchParams = {
+const openGraphSearchParams = {
   title: parseAsString,
   description: parseAsString,
   faviconUrl: parseAsString,
@@ -15,7 +15,7 @@ export type OpenGraphParams = Partial<inferParserType<typeof openGraphSearchPara
  * `parsePromotionCardParams`), the route renders the belt-colored `OgPromotionCard` instead
  * of the generic `OgBase`. Kept alongside the base params so there is ONE og URL contract.
  */
-export const promotionCardSearchParams = {
+const promotionCardSearchParams = {
   card: parseAsString,
   name: parseAsString,
   beltName: parseAsString,

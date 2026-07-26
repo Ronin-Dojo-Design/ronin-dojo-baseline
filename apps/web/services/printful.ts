@@ -141,69 +141,6 @@ export async function createOrder(params: {
 }
 
 /**
- * Get an existing order by Printful order ID.
- *
- * @see https://developers.printful.com/docs/#operation/getOrderById
- */
-export async function getOrder(orderId: number): Promise<PrintfulOrder> {
-  return printfulFetch<PrintfulOrder>(`/orders/${orderId}`)
-}
-
-/**
- * Get an existing order by our external ID (MerchOrder.id).
- *
- * @see https://developers.printful.com/docs/#operation/getOrderById
- */
-export async function getOrderByExternalId(externalId: string): Promise<PrintfulOrder> {
-  return printfulFetch<PrintfulOrder>(`/orders/@${externalId}`)
-}
-
-/**
- * Calculate shipping rates for a given recipient + items.
- * Call this before checkout to show the customer shipping options + costs.
- *
- * @see https://developers.printful.com/docs/#operation/calculateShippingRates
- */
-export async function getShippingRates(params: {
-  recipient: Pick<PrintfulRecipient, "address1" | "city" | "state_code" | "country_code" | "zip">
-  items: { variant_id?: number; quantity: number }[]
-}): Promise<PrintfulShippingRate[]> {
-  return printfulFetch<PrintfulShippingRate[]>("/shipping/rates", {
-    method: "POST",
-    body: JSON.stringify(params),
-  })
-}
-
-/**
- * Cancel a Printful order. Only works if the order hasn't started fulfillment.
- *
- * @see https://developers.printful.com/docs/#operation/cancelOrder
- */
-export async function cancelOrder(orderId: number): Promise<PrintfulOrder> {
-  return printfulFetch<PrintfulOrder>(`/orders/${orderId}`, {
-    method: "DELETE",
-  })
-}
-
-/**
- * Estimate costs for an order without creating it.
- *
- * @see https://developers.printful.com/docs/#operation/estimateOrderCosts
- */
-export async function estimateOrderCosts(params: {
-  recipient: PrintfulRecipient
-  items: PrintfulOrderItem[]
-}): Promise<{
-  costs: { subtotal: string; discount: string; shipping: string; tax: string; total: string }
-  retail_costs: { subtotal: string; discount: string; shipping: string; tax: string; total: string }
-}> {
-  return printfulFetch("/orders/estimate", {
-    method: "POST",
-    body: JSON.stringify(params),
-  })
-}
-
-/**
  * Verify a Printful webhook signature.
  * Returns true if the signature matches, false otherwise.
  */

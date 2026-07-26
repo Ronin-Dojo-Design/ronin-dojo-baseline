@@ -11,10 +11,6 @@ import { loadGoogleFont } from "~/lib/fonts"
 import { resolvePublicMediaUrl } from "~/lib/media"
 import { ogImageSearchParams } from "~/lib/opengraph"
 
-export const contentType = "image/png"
-export const alt = "OpenGraph Image"
-export const size = { width: 1200, height: 630 }
-
 export const GET = async (req: NextRequest) => {
   const t = await getTranslations()
   const brandConfig = getBrandSiteConfig(Brand.BBL)

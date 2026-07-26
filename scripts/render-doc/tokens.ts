@@ -11,7 +11,7 @@
 import { brandTokenCss, type BrandTokenBlock } from "../../packages/ui-kit/src/tokens/tokens"
 
 /** RDD's brand block, traced to apps/rdd/app/globals.css `--mk-*` bridge. */
-export const RDD_BRAND: BrandTokenBlock = {
+const RDD_BRAND: BrandTokenBlock = {
   accent: "#3B82F6",
   accentStrong: "#2563EB",
   onAccent: "#0D0F12",
@@ -25,7 +25,7 @@ export const RDD_BRAND: BrandTokenBlock = {
 }
 
 /** RDD's type pair — traced to apps/rdd/app/globals.css `--font-display` / `--font-sans`. */
-export const RDD_FONTS = {
+const RDD_FONTS = {
   display: '"Saira","Bahnschrift","Arial Narrow",system-ui,sans-serif',
   sans: '"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif',
   mono: "ui-monospace,SFMono-Regular,Menlo,monospace",
