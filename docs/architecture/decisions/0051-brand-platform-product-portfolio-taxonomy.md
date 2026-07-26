@@ -136,4 +136,4 @@ BBL memberships) — the reuse thesis of ADR 0040 holds only if no dojo assumpti
 - [ADR 0040 — design-system doctrine & card architecture](0040-design-system-doctrine-and-card-architecture.md) — the kernel/module tier (unchanged).
 - [ADR 0048 — two-repo vault-kit](0048-two-repo-vault-kit-and-client-ops-projections.md) — SOT-per-brand vaults.
 - [Planning Ledger PL-004](../../knowledge/wiki/planning-ledger.md) — the row this ratifies.
-- [SESSION_0589](../../sprints/SESSION_0589.md) — the ratifying grill.
+- [SESSION_0589](../../sprints/_archive/monorepo-era/SESSION_0589.md) — the ratifying grill.

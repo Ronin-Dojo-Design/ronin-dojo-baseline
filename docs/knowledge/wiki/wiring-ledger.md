@@ -374,7 +374,7 @@ flowchart TD
 - [Baseline Design System Hub](../../runbooks/design/baseline-design-system.md) — primitive set the handroll slips should have used.
 - [Custom Component Inventory](custom-component-inventory.md) — where enhanced components are re-documented at close.
 - [Test Fail Fix Ledger](test-fail-fix-ledger.md) — companion ledger for clustered failing-test pointers.
-- [SESSION_0304](../../sprints/SESSION_0304.md) — session that produced this ledger + the fixes.
+- [SESSION_0304](../../sprints/_archive/monorepo-era/SESSION_0304.md) — session that produced this ledger + the fixes.
 - [SESSION_0347](../../sprints/_archive/era-b/SESSION_0347.md) — session that closed the unaudited admin entitlement path.
 
 ## Sources

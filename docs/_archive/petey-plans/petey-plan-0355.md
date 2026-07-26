@@ -110,6 +110,6 @@ inventing an ownership-transfer flow. Confirm before schema.
 
 ## Cross-references
 
-- [SESSION_0354](../../sprints/SESSION_0354.md) — landed WL-P1-7 + WL-P2-10 + org link-through fix.
+- [SESSION_0354](../../sprints/_archive/monorepo-era/SESSION_0354.md) — landed WL-P1-7 + WL-P2-10 + org link-through fix.
 - [Wiring ledger](../../knowledge/wiki/wiring-ledger.md) — WL-P1-7, WL-P2-10.
 - Existing pattern: `server/web/lineage/claim-actions.ts`, `app/admin/lineage/claims/**`.

@@ -4,7 +4,7 @@ slug: bbl-stripe-products-spec
 type: spec
 status: active
 created: 2026-06-17
-updated: 2026-06-29
+updated: 2026-07-26
 last_agent: claude-session-0473
 pairs_with:
   - docs/architecture/decisions/0030-per-brand-stripe-account.md
@@ -132,6 +132,6 @@ live payer is a separate, rehearsed, operator-gated step** (never `cs_live` unre
 
 - ADR 0030 — per-brand Stripe account (`docs/architecture/decisions/0030-per-brand-stripe-account.md`)
 - [SOT-ADR](SOT-ADR.md) D13 — the ratified membership-tier model
-- [SESSION_0473](../../sprints/SESSION_0473.md) — S1 reprice + consolidate
+- [SESSION_0473](../../sprints/_archive/monorepo-era/SESSION_0473.md) — S1 reprice + consolidate
 - [CUTOVER_CHECKLIST](CUTOVER_CHECKLIST.md) — BBL go-live steps
 - [Gift / comp membership epic](GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) — tier-gating + comp cohort

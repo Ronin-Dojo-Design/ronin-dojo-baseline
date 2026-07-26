@@ -4,7 +4,7 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-25
+updated: 2026-07-26
 last_agent: claude-session-0692
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
@@ -323,7 +323,7 @@ plan scope.
 - **Captured:** [`docs/product/north-star-bubble-builder-bento-box.md`](../../product/north-star-bubble-builder-bento-box.md) — the flagship vision (canvas-of-canvases · shells + one passport · bento-box page-builder · tournament blueprint · sliding-tile mats · Apple-Pencil/iPad-native · CCC engines-built-once).
 - **Session focus:** user delight + experience. **Grill deep with pros** (operator asked to be grilled) — but in the *dedicated* session, not inline; break each feature into highlights · key necessities · desired behaviors.
 - **Research:** Milanote (canvas layout/tech) · sliding-tile puzzle games (mat-swipe behavior) · Beaver Builder (page-builder model).
-- **Relationship:** the create-\* commands + component lifecycle (WS-E) staged in [SESSION_0605](../../sprints/SESSION_0605.md) are this North Star's **tooling substrate** — scope 0605 as a child of PL-012. Look-and-feel North Star = the Ronin Dojo Monorepo.
+- **Relationship:** the create-\* commands + component lifecycle (WS-E) staged in [SESSION_0605](../../sprints/_archive/monorepo-era/SESSION_0605.md) are this North Star's **tooling substrate** — scope 0605 as a child of PL-012. Look-and-feel North Star = the Ronin Dojo Monorepo.
 - **Graduates to:** its own `G-NNN` at the dedicated plan session. Not yet stubbed — mint the SESSION when grabbed.
 
 ### PL-013 — Iggy Agent: social-media automation for all brands — queued

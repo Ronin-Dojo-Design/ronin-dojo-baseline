@@ -166,7 +166,7 @@ a tabbed/section body, so the three pages converge without over-abstracting the 
 
 ## Cross-references
 
-- [SESSION_0355](sprints/SESSION_0355.md) — assessment origin + the shipped DataSelect/claim/register interim.
+- [SESSION_0355](sprints/_archive/monorepo-era/SESSION_0355.md) — assessment origin + the shipped DataSelect/claim/register interim.
 - [Lineage data wiring SOP](product/black-belt-legacy/lineage-data-wiring-flow.md) — §5 directory, §6 claim, §9 privacy.
 - [Data + wiring SOP](runbooks/sops/sop-data-and-wiring-flows.md) — §18 org registration = Tool-submission analogue.
 - `components/web/profile/profile-hero.tsx`, `components/web/directory/facet-result-card.tsx`,

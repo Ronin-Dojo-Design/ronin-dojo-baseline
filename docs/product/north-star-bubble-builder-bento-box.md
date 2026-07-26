@@ -4,7 +4,7 @@ slug: north-star-bubble-builder-bento-box
 type: reference
 status: active
 created: 2026-07-21
-updated: 2026-07-21
+updated: 2026-07-26
 last_agent: claude-session-0604
 pairs_with:
   - docs/knowledge/wiki/planning-ledger.md
@@ -81,7 +81,7 @@ mission — it filters and applies to every other surface, brand, client, and in
 - The **State-of-Dojo projection framework** (SESSION_0603 `_kernel/*`) is the first working "cards from a
   source, one vocabulary" surface — the Cookbook / Component-Catalog panels (WS-B/C) are the seed of the CCC.
 - The **create-\* scaffold commands + component lifecycle (WS-E)** staged in
-  [SESSION_0605](../sprints/SESSION_0605.md) are the **tooling substrate** for this vision — `/cac`
+  [SESSION_0605](../sprints/_archive/monorepo-era/SESSION_0605.md) are the **tooling substrate** for this vision — `/cac`
   (create-a-card) + the CCC + promote-to-live-component is literally the "Custom Card Component Catalog
   Creator" in miniature. 0605's grill should be scoped as a child of this North Star.
 - The **Obsidian dashboard epic** + the vault constellation (ADR 0048) are the docs/canvas precedent.
@@ -130,6 +130,6 @@ mission — it filters and applies to every other surface, brand, client, and in
 ## Cross-references
 
 - [Planning Ledger — PL-012](../knowledge/wiki/planning-ledger.md) — the intake row for the dedicated `/pp` session.
-- [SESSION_0605](../sprints/SESSION_0605.md) — the create-\* / WS-E tooling substrate (a child of this).
+- [SESSION_0605](../sprints/_archive/monorepo-era/SESSION_0605.md) — the create-\* / WS-E tooling substrate (a child of this).
 - [Custom Component Inventory](../knowledge/wiki/custom-component-inventory.md) — the CCC this vision scales up.
 - [Obsidian Dashboard Epic](obsidian-dashboard/Obsidian_Dashboard_Epic.md) — the canvas/vault precedent.

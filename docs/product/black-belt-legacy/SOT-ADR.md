@@ -333,7 +333,7 @@ refreshed into `dirstarter_template` at SESSION_0359.
 ## D13 — BBL membership-tier + verification-on-ramp model  *(ratified SESSION_0472)*
 
 > Full grill record + reuse-vs-build matrix + the 10–12-slice build plan live in
-> [`SESSION_0472.md`](../../sprints/SESSION_0472.md) (decisions D472-1..15). This is the consolidated entry.
+> [`SESSION_0472.md`](../../sprints/_archive/monorepo-era/SESSION_0472.md) (decisions D472-1..15). This is the consolidated entry.
 
 - **Four tiers = the four existing entitlement keys** (no new model): Free (account only) · **Premium Member**
   `LINEAGE_PREMIUM` **$35/yr** · **Elite Member** `LINEAGE_ELITE` **$65/yr · $45 verified-black-belt** ·
