@@ -39,6 +39,14 @@ if [ ! -d "$ROOT/apps/web/.generated/prisma" ]; then
   (cd "$ROOT/apps/web" && bunx prisma generate --no-hints)
 fi
 
+# SESSION_0712 (Phase C) — materialize the gitignored Claude settings from the tracked template
+# so the bow-in gates fire in fresh clones/worktrees (registration is gitignored; scripts are
+# tracked). Never overwrites an existing settings.json (it accumulates machine-local permissions).
+if [ ! -f "$ROOT/.claude/settings.json" ] && [ -f "$ROOT/.claude/settings.shared.json" ]; then
+  cp "$ROOT/.claude/settings.shared.json" "$ROOT/.claude/settings.json"
+  echo "✓ copied .claude/settings.shared.json → .claude/settings.json (hook registration)"
+fi
+
 # FS-0039 — install the tracked pre-push hook. Idempotent, and `core.hooksPath` lives in the SHARED
 # .git/config, so this one call covers canonical and every worktree. Guards the worktree cross-lane
 # push accident (`git push origin main` from a worktree publishes a SIBLING lane's commits).
