@@ -19,16 +19,10 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
-      # `clients/**` and sibling `apps/*` products (e.g. `apps/baseline`) are their
-      # OWN deploy units (ADR 0034) with their own gate (clients-ci.yml, the
-      # "Products CI" workflow). A
-      # product-only change can't affect apps/web's e2e, so it no longer fires BBL's
-      # chromium/firefox/webkit ×3 matrix (SESSION_0462/0465). `scripts/**` is
-      # root tooling apps/web does NOT import (verified SESSION_0465) — a
-      # scripts-only change can't change e2e behavior.
-      - 'clients/**'
-      - 'apps/baseline/**'
-      - 'apps/rdd/**'
+      # Since the ADR 0055 brand-repo fork (Phase C3), apps/web is the ONLY app
+      # in this repo — the former clients/** + sibling apps/* filters are gone
+      # with the trees. `scripts/**` is root tooling apps/web does NOT import
+      # (verified SESSION_0465) — a scripts-only change can't change e2e behavior.
       - 'scripts/**'
   push:
     branches: [main]
@@ -38,9 +32,6 @@ on:
       - '.claude/**'
       - '.github/copilot-instructions.md'
       - '.github/prompts/**'
-      - 'clients/**'
-      - 'apps/baseline/**'
-      - 'apps/rdd/**'
       - 'scripts/**'
   workflow_dispatch:
 
