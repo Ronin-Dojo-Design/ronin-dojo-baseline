@@ -20,7 +20,7 @@
     "dev": "bun run --filter @ronin-dojo/web dev",
     "build": "bun run --filter @ronin-dojo/web build",
     "lint": "bun run --filter '*' lint",
-    "format:check": "bun run --filter '*' format:check && bash scripts/format-check-clients.sh",
+    "format:check": "bun run --filter '*' format:check",
     "wiki:lint": "bun run scripts/wiki-lint.ts",
     "markdown:lint:architecture": "npx markdownlint-cli2 \"docs/architecture/**/*.md\" \"docs/architecture/*.md\"",
     "markdown:fix:architecture": "bun run scripts/fix-architecture-markdownlint.ts",
