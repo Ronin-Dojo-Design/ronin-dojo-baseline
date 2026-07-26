@@ -1,0 +1,16 @@
+{
+  // Fallow config — created SESSION_0711 cleanup lane A2 (fallow accuracy).
+  // Root package.json workspaces deliberately excludes clients/* (standalone-bun
+  // packages with their own bun.lock + gates — adding them to root workspaces
+  // rewrites the root lock). fallow's own workspace-discovery diagnostic sanctions
+  // ignorePatterns for exactly this case; mammoth is analyzed by its own tooling.
+  "ignorePatterns": ["clients/mammoth-build-crm/**"],
+  // Next.js metadata-file conventions: the framework reads these exports itself
+  // (default export + alt/size/contentType/runtime) — never imported by app code.
+  "ignoreExports": [
+    { "file": "**/app/icon.tsx", "exports": ["*"] },
+    { "file": "**/app/**/icon.tsx", "exports": ["*"] },
+    { "file": "**/app/opengraph-image.tsx", "exports": ["*"] },
+    { "file": "**/app/**/opengraph-image.tsx", "exports": ["*"] }
+  ]
+}

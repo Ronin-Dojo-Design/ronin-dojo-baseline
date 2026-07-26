@@ -11,6 +11,11 @@ carries the invariant steps. Subagents: `Read` this file and follow in order.
 lane's plan is resolved and PINNED in the dispatch prompt. A dispatched builder never
 re-opens or resolves operator forks.
 
+**Per-stage effort tiers:** mechanical stages (bootstrap, gates, session record) run at LOW
+effort; verify/judge stages (recon claim-verification, runtime proof, self-review) run at HIGH.
+**Every dispatch prompt carries an explicit finish condition** (the observable state that means
+"done" — gates green + evidence recorded, not "when it feels complete").
+
 1. **Worktree claim + bootstrap.** From the canonical checkout: `git fetch origin`; verify
    the reservation branch has no unique commits (`git log --oneline main..<branch>` EMPTY,
    else STOP and report); `git worktree add /Users/brianscott/dev/ronin-<NNNN> <branch>`;

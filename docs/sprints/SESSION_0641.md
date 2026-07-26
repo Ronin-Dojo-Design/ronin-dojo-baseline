@@ -8,7 +8,7 @@ updated: 2026-07-24
 last_agent: session-0641-bowout
 sprint: S12
 lane: repo
-recipe: "AM_Coffee_Merge_Review"
+recipe: "am-coffee-merge-review"
 goal_ids: [G-033, G-013, G-019, G-030]
 pairs_with:
   - docs/sprints/SESSION_0635.md

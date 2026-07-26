@@ -21,6 +21,8 @@ backlinks:
 
 # ADR 0015 — Domain Hosting Infrastructure
 
+> **Amended (back-stamped 2026-07-26, SESSION_0711):** "deploys automatically via Vercel on push to main" is decoupled since SESSION_0335 — `vercel.json` `ignoreCommand` skips the prod build unless app code changed (docs/CI pushes do not deploy). Per-app Vercel projects per [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md).
+
 **Status:** Accepted
 **Date:** 2026-05-09
 

@@ -8,7 +8,7 @@ updated: 2026-06-27
 last_agent: claude-session-0454
 pairs_with:
   - docs/sprints/SESSION_0456.md
-  - docs/petey-plan-0454-autonomous-paydown.md
+  - docs/_archive/petey-plans/petey-plan-0454-autonomous-paydown.md
   - docs/runbooks/domain-features/lineage-hub.md
   - docs/architecture/decisions/0037-lineage-branch-heads-and-visual-placement.md
 backlinks:

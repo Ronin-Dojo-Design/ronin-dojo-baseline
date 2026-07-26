@@ -189,7 +189,7 @@ screenshot before/after:
 
 - Epic: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md)
 - Port map: [PORTMAP-0006 — Adaptive connector + rails inside wide tree generations (SPIKE)](../graphify-component-port-map.md)
-- Session: [SESSION_0337](../../../../sprints/SESSION_0337.md)
+- Session: [SESSION_0337](../../../../sprints/_archive/era-b/SESSION_0337.md)
 - Depends on: [Lineage Carousel Rail port spec](./lineage-carousel-rail-port-spec.md) (Slice 3 — the rail this consumes)
 - BBL source: none — net-new adaptation of our SESSION_0336 `LineageConnectorLayer`
   (`apps/web/components/web/lineage/lineage-tree-canvas.tsx`).

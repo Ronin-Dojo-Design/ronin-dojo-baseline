@@ -1,6 +1,6 @@
 # ADR 0007 — BBL one-time migration from legacy to new stack
 
-**Status:** Accepted (planned)
+**Status:** Implemented (historical) — back-stamped 2026-07-26 (SESSION_0711): the cutover happened; blackbeltlegacy.com is live on the new stack with paid tiers.
 **Date:** 2026-04-25
 
 ## Context

@@ -11,10 +11,6 @@ function Select({ ...props }: ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />
 }
 
-function SelectGroup({ ...props }: SelectPrimitive.Group.Props) {
-  return <SelectPrimitive.Group data-slot="select-group" {...props} />
-}
-
 function SelectValue({ ...props }: SelectPrimitive.Value.Props) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
 }
@@ -116,16 +112,6 @@ function SelectContent({
   )
 }
 
-function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) {
-  return (
-    <SelectPrimitive.GroupLabel
-      data-slot="select-label"
-      className={cx("px-2 py-1.5 text-sm font-medium", className)}
-      {...props}
-    />
-  )
-}
-
 function SelectItem({ className, children, label, ...props }: SelectPrimitive.Item.Props) {
   return (
     <SelectPrimitive.Item
@@ -150,25 +136,4 @@ function SelectItem({ className, children, label, ...props }: SelectPrimitive.It
   )
 }
 
-function SelectSeparator({ className, ...props }: SelectPrimitive.Separator.Props) {
-  return (
-    <SelectPrimitive.Separator
-      data-slot="select-separator"
-      className={cx("-mx-1 my-1 h-px bg-border", className)}
-      {...props}
-    />
-  )
-}
-
-export {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectScrollDownButton,
-  SelectScrollUpButton,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-}
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue }

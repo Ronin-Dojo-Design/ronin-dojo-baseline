@@ -18,8 +18,8 @@ import { Price } from "~/components/web/price"
 import { adsConfig } from "~/config/ads"
 import { type AdSpot, useAds } from "~/hooks/use-ads"
 import { cx } from "~/lib/utils"
+import { createAdsCheckout } from "~/server/web/ads/actions"
 import type { AdMany } from "~/server/web/ads/payloads"
-import { createStripeCheckout } from "~/server/web/products/actions"
 
 type AdsCalendarProps = ComponentProps<"div"> & {
   ads: AdMany[]
@@ -76,7 +76,7 @@ export const AdsPicker = ({ className, ads, type, ...props }: AdsCalendarProps) 
   const { price, selections, hasSelections, findAdSpot, clearSelection, updateSelection } =
     useAds(spots)
 
-  const { execute, isPending } = useAction(createStripeCheckout, {
+  const { execute, isPending } = useAction(createAdsCheckout, {
     onError: ({ error }) => {
       toast.error(error.serverError)
     },
@@ -87,34 +87,15 @@ export const AdsPicker = ({ className, ads, type, ...props }: AdsCalendarProps) 
       ({ dateRange, duration }) => dateRange?.from && dateRange?.to && duration,
     )
 
-    const lineItems = validSelections.map(selection => {
-      const adSpot = findAdSpot(selection.type)
-
-      const discountedPrice = price?.discountPercentage
-        ? adSpot.price * (1 - price.discountPercentage / 100)
-        : adSpot.price
-
-      return {
-        price_data: {
-          product_data: { name: `${selection.type} Ad` },
-          unit_amount: Math.round(discountedPrice * 100),
-        },
-        quantity: selection.duration ?? 1,
-      }
-    })
-
-    const adData = validSelections.map(selection => ({
-      type: selection.type,
-      startsAt: selection.dateRange?.from?.getTime() ?? 0,
-      endsAt: selection.dateRange?.to?.getTime() ?? 0,
-    }))
-
+    // SEC-01: pricing, metadata, and URLs are all derived server-side from the
+    // selections — the client never sends amounts (createAdsCheckout pins the
+    // canonical total into session metadata for webhook verification).
     execute({
-      lineItems,
-      mode: "payment",
-      metadata: { ads: JSON.stringify(adData) },
-      successUrl: "/advertise/success",
-      cancelUrl: "/advertise",
+      selections: validSelections.map(selection => ({
+        type: selection.type,
+        startsAt: selection.dateRange?.from?.getTime() ?? 0,
+        endsAt: selection.dateRange?.to?.getTime() ?? 0,
+      })),
     })
   }
 

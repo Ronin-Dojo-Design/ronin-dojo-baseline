@@ -4,7 +4,7 @@ slug: doc-pruning-register
 type: registry
 status: active
 created: 2026-05-18
-updated: 2026-06-29
+updated: 2026-07-26
 author: Brian + Giddy
 last_agent: claude-session-0298
 backlinks:
@@ -51,6 +51,11 @@ Do not delete or move a doc just because it feels stale. First preserve the usef
 | duplicate alias/canonical-id imports | reference | reference (kept, excluded) | `docs/knowledge/wiki/aliases-and-canonical-ids.md` | Canonical alias ledger already exists. | **RESOLVED (SESSION_0298):** under `docs/_imports/` — covered by the `docs/_imports/*` decision above. |
 | session-specific planning reports whose decisions landed elsewhere | mixed | reference | latest relevant `docs/sprints/SESSION_NNNN.md`, PRD, ADR, or architecture doc | Session planning is useful history, not always active product truth. | Demote only after landed decision is linked. |
 | `docs/sprints/SESSION_0221..04xx.md` (closed sessions) | active | keep active | `docs/sprints/_archive/` available if needed | **SESSION_0423 hygiene sweep:** archive frontier sits at 0220 (0001–0220 already in `_archive/`); ~180 closed sessions linger in the active dir. 22 `in-progress` were reconciled in 0423 (21 retro-closed, only the live session left). | **SKIPPED (operator, SESSION_0423).** The 21 retro-closes were the real fix; closed sessions stay in the active dir (the index lists both active + `_archive/`, so they're not orphaned). Revisit only if active-dir size becomes a problem — then `git mv SESSION_0221..N → _archive/` + rewrite each index row path to `../../sprints/_archive/`. |
+| 5 unreferenced component-porting PNGs (PWCC ×3 + component-conversion + mermaid-diagram) | reference | deleted | ASCII/mermaid-code source mds (kept/archived) | 0 referencers repo-wide; regenerable from kept mermaid source. | **RESOLVED (SESSION_0711 sweep):** deleted (6.75MB). Referenced balkan-orgchart-board.png + iggy-video-workflow.png recompressed in place (~6.5MB → ~0.38MB). |
+| 11 spent petey plans + consolidation-merge-prompt.md at docs root | reference | archived | `docs/_archive/petey-plans/` | Spent plans; RH-2 epic row prescribed the destination. | **RESOLVED (SESSION_0711 sweep):** moved with atomic relinks (ADR 0023 frontmatter, 4 SESSION links, RH-2 row); the 12 refuted live plans stay at docs root. |
+| 13 stale wiki pages (topic-index, form-inventory, second-brain-levels, adoption-checklist, dirstarter-gap-audit/uplift-backlog, directory-monetization-roadmap, 4 component-porting/PWCC pages, port-map-component-card) | mixed | archived | `docs/_archive/wiki/`; form rows folded into custom-component-inventory.md | Vote-confirmed archive set; index rows + backlinks repointed. | **RESOLVED (SESSION_0711 sweep):** moved; wiki-lint 0 errors. |
+| `docs/knowledge/wiki/log.md` | active (append mandate) | archived (frozen) | SESSION_NNNN spine | Sequenced freeze: llm-wiki-schema §4 + open-brain-repo-memory rules amended FIRST, then moved. | **RESOLVED (SESSION_0711 sweep):** frozen at `docs/_archive/wiki/log.md`; append mandate retired. |
+| `docs/sprints/SESSION_0221..0419.md` (closed sessions) | active | archived (wave 1) | `docs/sprints/_archive/era-b/` | Supersedes the SESSION_0423 SKIP now that active-dir size is a problem; 0304/0353/0354/0355 stay (open WL rows cite them). | **RESOLVED (SESSION_0711 sweep):** 195 sessions moved; internal + inbound links rewritten; wiki-lint 0 errors. |
 
 ## Archive metadata rule
 

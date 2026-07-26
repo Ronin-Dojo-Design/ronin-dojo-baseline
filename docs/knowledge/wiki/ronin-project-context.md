@@ -4,7 +4,7 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-07-20
+updated: 2026-07-26
 author: Brian + Giddy
 last_agent: claude-session-0590
 backlinks:
@@ -13,7 +13,7 @@ backlinks:
   - docs/product/README.md
   - docs/product/baseline-martial-arts/PRD.md
 pairs_with:
-  - docs/protocols/WORKFLOW_5.0.md
+  - docs/protocols/WORKFLOW_6.0.md
   - docs/knowledge/wiki/doc-pruning-register.md
   - docs/product/baseline-martial-arts/PRD.md
   - docs/product/black-belt-legacy/PRD.md
@@ -86,7 +86,7 @@ monorepo, one deploy per brand/instance) is the model.** Repo name stays neutral
 ## Non-negotiable rules
 
 - Dirstarter is the L1 baseline.
-- `WORKFLOW_5.0` governs sessions.
+- `WORKFLOW_6.0` governs sessions (thin spine + SOT_Cookbook + recipe cards; 5.0 is kept-superseded).
 - Latest accepted ADR beats older reports.
 - Current Prisma schema beats nostalgia.
 - Brand scoping is mandatory.

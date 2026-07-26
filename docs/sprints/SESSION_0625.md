@@ -8,13 +8,13 @@ updated: 2026-07-23
 last_agent: claude-session-0625
 sprint: S12
 lane: mmb
-recipe: "Client_Meeting_Intake"
+recipe: "client-meeting-intake"
 goal_ids: ["G-021"]
 tickets: []
 pairs_with:
   - docs/sprints/SESSION_0620.md
   - docs/sprints/SESSION_0624.md
-  - docs/protocols/recipes/Client_Meeting_Intake.md
+  - docs/protocols/recipes/client-meeting-intake.md
   - docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -24,7 +24,7 @@ backlinks:
 
 > **Pre-staged stub (ADR 0049), staged by SESSION_0620.** **Parallel pair** with
 > [SESSION_0624](SESSION_0624.md) (AM merge) — run in separate worktrees/lanes. First run of the newly
-> synthesized [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe, applied to the
+> synthesized [Client_Meeting_Intake](../protocols/recipes/client-meeting-intake.md) recipe, applied to the
 > Mammoth (MMB) instance. Lane facet `mmb` — consider the `/game-on` MMB overlay + MC-grill.
 
 ## Operator
@@ -66,7 +66,7 @@ Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operato
 4. **Build the onboarding form as an interactive, live-fillable form** — **FeatureWidget-style**
    (`apps/web/components/web/feature-widget.tsx` is the pattern) so the operator can **type Michael's answers
    in live, or Michael can write them in himself**. This IS the interactive *capture* front-end for the
-   [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe — its output feeds the grill
+   [Client_Meeting_Intake](../protocols/recipes/client-meeting-intake.md) recipe — its output feeds the grill
    → synthesize → route flow below. Demo-safe (no secrets/PII); reuse the uploader/R2 seam if it takes files.
 
 > **SotD ↔ MMB wiring note (operator caught this — real gap, SESSION_0620).** The MMB tab **is** correctly
@@ -85,7 +85,7 @@ Run via **`/game-on`** (the MMB lean overlay). These pull up live so the operato
 <!-- Was the stub's `## Next session` block; renamed at close so it does not collide with the real
      `## Next session` below (duplicate H2s break the wiki-lint anchor contract). -->
 
-**Task — run the [Client_Meeting_Intake](../protocols/recipes/Client_Meeting_Intake.md) recipe on MMB.**
+**Task — run the [Client_Meeting_Intake](../protocols/recipes/client-meeting-intake.md) recipe on MMB.**
 
 1. **Adopt the capture:** [`docs/product/mammoth-build/assets/Michaels_Notes_Meeting.md`](../product/mammoth-build/assets/Michaels_Notes_Meeting.md)
    (`status: captured-needs-grill`, `contains_real_data: false`). Confirm demo-safe.

@@ -4,8 +4,8 @@ slug: merge-to-main
 type: protocol
 status: active
 created: 2026-05-03
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
   - docs/protocols/WORKFLOW_6.0.md
   - docs/protocols/project-log.md
@@ -20,7 +20,8 @@ backlinks:
 
 ## Pre-conditions
 
-1. Session is `closed-full` with hostile review ≥ 9.5.
+1. Session is closed with a [`/ggr`](../../.claude/skills/ggr/SKILL.md) composite **≥ 9.0**
+   (ADR 0052 D6 — the universal QAR clear line; hard caps always loop regardless of score).
 2. All verification commands passed (or known debt documented as FINDING).
 3. Branch has been committed and pushed to `origin`.
 

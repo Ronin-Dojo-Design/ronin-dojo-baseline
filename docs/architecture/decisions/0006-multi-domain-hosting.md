@@ -1,5 +1,7 @@
 # ADR 0006 — Multi-domain hosting on one Vercel deployment
 
+> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711)** by [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md) / [ADR 0038](0038-per-product-database-separation.md). "All brand domains on a single Vercel deployment" is false today: the monorepo runs 3 apps on 3 per-app Vercel projects (deploy unit = the app).
+
 **Status:** Accepted
 **Date:** 2026-04-25
 

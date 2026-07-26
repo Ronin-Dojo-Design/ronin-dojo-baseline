@@ -11,7 +11,7 @@ pairs_with:
   - apps/web/server/web/claims/claim-actions.ts
   - apps/web/server/admin/claims/claim-review-actions.ts
   - docs/sprints/SESSION_0354.md
-  - docs/petey-plan-0355.md
+  - docs/_archive/petey-plans/petey-plan-0355.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---

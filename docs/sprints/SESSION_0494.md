@@ -80,7 +80,7 @@ Author `petey-plan-0494` capturing the C → A → B epics as vertical slices, g
 ### Tasks
 
 See `## Task log`. Full build spec lives in
-[`docs/petey-plan-0494-experience-epics.md`](../petey-plan-0494-experience-epics.md).
+[`docs/petey-plan-0494-experience-epics.md`](../_archive/petey-plans/petey-plan-0494-experience-epics.md).
 
 ### Open decisions
 

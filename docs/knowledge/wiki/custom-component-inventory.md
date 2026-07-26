@@ -4,7 +4,7 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-25
+updated: 2026-07-26
 last_agent: claude-session-0692
 pairs_with:
   - docs/sprints/SESSION_0398.md
@@ -672,6 +672,35 @@ PUBLISHED; approve stops at APPROVED (see PL-027 for the activation forks).
 | `SocialQueueRowActions` | `apps/web/app/app/social-queue/_components/social-queue-row-actions.tsx` | Row-level approve/reject over the oRPC `socialQueue` router; caller-owned items as `RowActionsMenu` children (shell law upheld). MEMBER_OPT_IN approval verifies the LIVE `Passport.allowSocialCelebration` bit at approve-time (F2 ratified SESSION_0705/0709 — false → fail-closed `consent-revoked`, true → proceeds). |
 | preview-thumbnail column | `apps/web/app/app/social-queue/_components/social-queue-table-columns.tsx` | SESSION_0688 addition: renders the `/api/og` card as a preview thumbnail (`previewImageUrl`); null-safe for empty/legacy payloads. Belt-color renderer graduated SESSION_0705 (PR #339) — promotion payloads now render `OgPromotionCard`. |
 | `OgPromotionCard` + `promotion-card-params` | `apps/web/components/web/og/og-promotion-card.tsx` · `promotion-card-params.ts` | SESSION_0705 graduation of the #288/#292 prototype (app code never imports `scripts/prototypes/**`): belt-colored promotion card on `/api/og?card=rank-promotion` — accent bar, PROMOTION kicker, belt-color chip (regex-validated hex, CSS-injection tested), name/divider/date, `lineageLine` in the prototype's academyName slot. Params parser requires `card`+`name`+`beltName` or returns null → generic OgBase fallback; free text clamped 80/60/40/160. Renders only what the URL carries (no DB read). |
+
+## Forms inventory (folded from the retired `form-inventory.md`, SESSION_0711)
+
+The standalone `form-inventory.md` (0294-era snapshot) is archived at
+`docs/_archive/wiki/form-inventory.md`. Its still-true content, path-corrected for the
+admin→app migration (`app/admin/*` → `app/app/*`), lives here:
+
+**Admin entity forms** — one `<Entity>Form` per admin CRUD surface at
+`app/app/<entity>/_components/<entity>-form.tsx`: age-groups, brand-settings
+(`upsertBrandSettings`), categories, certificates (certificate-template), content
+(content-atom + content-variant), courses, entitlements, invites, leads,
+organizations `[id]` theme (`updateOrgTheme`), posts, pricing-plans, programs, reports, roles,
+skill-levels, subscriptions, subscription-tiers, tags, tools, tournaments (+ roles, rule-sets,
+staff-assignment, score-forms), users.
+
+**Web forms** — `AdForm` (`app/(web)/advertise/success/`), `SchoolForm` + `TechniqueForm`
+(`app/(web)/dashboard/`), `ClaimForm` (`app/(web)/invite/[code]/`), `LineageClaimForm` +
+`LineageNodeProfileForm` + `JoinLegacyForm` (`app/(web)/lineage/…`), `SelfServiceThemeForm`
+(`app/(web)/organizations/[slug]/settings/theme/`, `updateOrgThemeSelfService`), `DsrForm`
+(`app/(web)/privacy/request/`), `SubmitForm` (`app/(web)/submit/`), `LoginForm`, `CTAForm`,
+`LeadCaptureForm`, `LineageGroupHeaderForm`, `CreateOrganizationForm`, `InviteJoinForm`,
+`CreateProgramForm`, `CreateScheduleForm` (`components/web/…`). Passport profile editing is
+`PassportEditor` (ADR 0025) — the old dashboard `ProfileForm` is gone.
+
+**Conventions (still law):** forms use `Form`/`FormField`/`FormItem`/`FormLabel`/`FormControl`/
+`FormMessage` from `~/components/common/form` (RHF + Zod); schemas co-located with the form;
+admin actions `server/admin/*/actions.ts` via `adminActionClient`, web actions
+`server/web/*/actions.ts` via `userActionClient`/`publicActionClient`; image upload inside forms =
+`FormMedia` (`components/common/form-media.tsx`) / the uploader family (image-inputs law).
 
 ## How to update this file
 

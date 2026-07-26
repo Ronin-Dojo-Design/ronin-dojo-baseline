@@ -217,7 +217,7 @@ bug-free MVP — **then** (operator-gated) the clone-tree cleanup + admin branch
 ### First task
 
 **AUTONOMOUS sessions (`auto-session.sh`):** bow in against
-[`docs/petey-plan-0454-autonomous-paydown.md`](../petey-plan-0454-autonomous-paydown.md) and do the **next
+[`docs/petey-plan-0454-autonomous-paydown.md`](../_archive/petey-plans/petey-plan-0454-autonomous-paydown.md) and do the **next
 unchecked slice** (start at **Slice 1 — D-024**). Treat its **HARD BOUNDARY as binding** (schema-free,
 behavior-preserving, no prod data, no FI-001, no `brand`/`prisma`/Neon). One slice → one PR. After the last
 slice (or on any STOP), **hand back to the operator** per the plan's hand-back block.

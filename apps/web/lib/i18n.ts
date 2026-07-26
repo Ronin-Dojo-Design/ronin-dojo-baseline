@@ -2,10 +2,10 @@ import { glob, readFile } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { getRequestConfig } from "next-intl/server"
 
-export const locales = ["en"] as const
-export const defaultLocale = "en" as const
+const locales = ["en"] as const
+const defaultLocale = "en" as const
 
-export type Locale = (typeof locales)[number]
+type Locale = (typeof locales)[number]
 
 // Dynamically load all JSON files from the locale directory
 const loadMessages = async (locale: Locale) => {

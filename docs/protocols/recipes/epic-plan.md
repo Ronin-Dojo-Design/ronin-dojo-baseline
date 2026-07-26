@@ -52,7 +52,7 @@ session's bow-in ([`fan-out-session-recipe.md`](../fan-out-session-recipe.md) §
 | Work is "mostly separate" but shares files | **Sequential** — one session, not a fan-out. |
 | Genuinely disjoint file sets, each lane independently reviewable, a plan already ran | **Fan-out** — N parallel [lane](lane.md) dispatches via [orchestrator](orchestrator.md). |
 | One session, multiple slices building on each other | **§5b in-session chain** (agent-systems-map) — gotcha-encoded brief → structured deliverable → review wave → batched fix → delta verify → push gate, all inside one session. |
-| Needs to run unattended overnight | **[PM_Planning_Lane](PM_Planning_Lane.md)** stages it; **[AM_Coffee_Merge_Review](AM_Coffee_Merge_Review.md)** sweeps it. |
+| Needs to run unattended overnight | **[PM_Planning_Lane](pm-planning-lane.md)** stages it; **[AM_Coffee_Merge_Review](am-coffee-merge-review.md)** sweeps it. |
 
 ## Minimum-output contract
 

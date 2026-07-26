@@ -202,7 +202,7 @@ To run S1–S5 as an autonomous Claude/Codex loop (or one session at a time):
 
 ## Cross-references
 
-- [SESSION_0337](sprints/SESSION_0337.md) — the design review + Slice 0 + this plan.
+- [SESSION_0337](sprints/_archive/era-b/SESSION_0337.md) — the design review + Slice 0 + this plan.
 - [Porting runbook](runbooks/porting/react-to-next-component-porting-runbook.md) — the 8-step pipeline.
 - [Component port map](knowledge/wiki/component-porting/graphify-component-port-map.md) — PORTMAP-0002..0006.
 - [BBL STORIES](product/black-belt-legacy/STORIES.md) / [GAP_MATRIX](product/black-belt-legacy/GAP_MATRIX.md).

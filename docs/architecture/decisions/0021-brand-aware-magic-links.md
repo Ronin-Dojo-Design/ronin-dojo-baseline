@@ -17,6 +17,8 @@ backlinks:
 
 # ADR 0021 — Brand-aware magic links and request-origin email links
 
+> **Partially superseded (back-stamped 2026-07-26, SESSION_0711):** the host-map and `wekaf.local`/`baseline.local` dev origins are dead multi-brand-harness vestiges ([ADR 0034](0034-monorepo-platform-and-per-product-deploys.md)/[ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md) — one app per deploy). The request-origin **sender-selection** half stays live.
+
 ## Status
 
 Accepted

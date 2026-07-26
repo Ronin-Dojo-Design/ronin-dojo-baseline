@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-23
-last_agent: claude-session-0624
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -31,6 +31,16 @@ Append-only log of SOP/guardrail violations. Every entry must have:
 - **Verification method** — how we prove the fix works (not "I'll try harder")
 
 This log is **read during bow-in** (Tier 1 loading). If an agent has a prior failure pattern, it must acknowledge it before starting work.
+
+**Status conventions (SESSION_0711 — header note only; existing rows unedited):**
+
+- **`mitigated` requires a defeat-test.** A row may only move to `mitigated` when the guard was
+  proven by an attempt to DEFEAT it (run the blocked command, take the forbidden path) — not by
+  observing that it "looks installed" (the FS-0040 lesson). Cite the defeat-test in the row.
+- **`verified-absent-through: SESSION_NNNN`** — the convention for "this pattern has not recurred":
+  append the marker with the last session that actively checked, instead of silently assuming. A
+  `mitigated` pattern that **fires again** flips back to `open` (and caps the session's score —
+  `code-quality-matrix` §4).
 
 ---
 
@@ -1028,6 +1038,29 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Fix (#309, merged + verified live):** replaced with a check on the **tip commit's own changed files** — `bash -c '! git diff-tree --no-commit-id --name-only -r HEAD | grep -vE "[.]mdx?$" | grep -qE "^(apps/rdd/|packages/|bun[.]lock|package[.]json)"'` — which is present in the shallow clone and exact under squash-merge, keeps the path-scope + markdown-exclusion, and **fails toward BUILD**. Validated the way Vercel runs it (`sh -c`): apps/rdd change → build (exit 1), clients-only/docs-only → skip (exit 0). Post-merge the deploy went **Ready** and `/clients/mammoth` returned 401→200.
 - **Lesson:** an `ignoreCommand` must **fail toward BUILD** on any ambiguity, and be validated the way the platform runs it (shallow clone, `sh -c`) — not just locally. A "skip" default silently un-ships merged work and looks green. Same family as FS-0036/0040 (a guard/gate that "passed silently while broken").
 - **Status:** mitigated (#309). **Watch:** the other per-app `vercel.json` gates (`apps/web`, `apps/baseline`, `clients/*`) still use the `HEAD^ HEAD` shape — audit candidate (may already work if those deploys have deeper clones, but same latent risk).
+
+### FS-0042 — bare `fallow` fails every session; the invocation fact never entered the read-path
+
+- **Session:** SESSION_0711 (operator-directed add: "this happens every time you run Fallow").
+- **What happened:** the agent ran `fallow health` bare → `fallow not found` → rediscovered it lives at
+  `node_modules/.bin/fallow` (repo devDependency, never on PATH). This exact discover-fail-rediscover loop
+  has repeated across sessions; the operator has watched it every time.
+- **Root cause:** the invocation fact exists (memory says `npx fallow`; `package.json` has `audit:fallow`
+  scripts) but the *read-path documents agents actually execute* — `hostile-repo-review.md`,
+  `fallow-fix-loop` SKILL, CLAUDE.md fallow references — all say bare `fallow ...`, so every fresh agent
+  copies the failing form first. Same family as FS-0037/LR 0007: the fix existed but sat outside the
+  executed read-path.
+- **Corrective action:** (1) this row; (2) memory `fallow-baseline-before-implementation` updated to LEAD
+  with the invocation (`bunx fallow` / `node_modules/.bin/fallow`); (3) follow-up routed: sweep the
+  executed docs (`hostile-repo-review.md`, `.claude/skills/fallow-fix-loop/SKILL.md`,
+  `.claude/skills/ggr/SKILL.md`, `code-quality-matrix.md`) to write `bunx fallow` in every command block.
+  (Root `package.json` wrapper scripts rejected: root `package.json` edits trigger the prod deploy gate.)
+- **Related found-while-fixing:** `ledger-id-next.ts --prefix=FS` returns FS-0344 — it over-matches a
+  minter-example string in SESSION_0575 and now self-perpetuates; the log itself (highest FS-0041) is
+  canonical for FS ids. Minter fix routed with the same sweep.
+- **Lesson:** a fact agents need at execution time must live in the command block they copy, not in a
+  memory or an inventory beside it.
+- **Status:** open (memory + row done; doc sweep queued this session).
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

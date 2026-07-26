@@ -1,0 +1,39 @@
+# Architecture invariants — enforced by scripts/arch-gate.ts (cody-preflight §0, SESSION_0711).
+#
+# Flat rows only: {id, adr, note, glob, pattern, max_count, allowlist?}.
+#   - pattern is a JS regex source (no flags; matched per-line, global).
+#   - max_count RATCHETS DOWN: a green run that measures a LOWER count rewrites max_count
+#     to the measured value — the ceiling only ever falls, never rises.
+#   - allowlist rows are "forbidden for NEW files": any file matching the glob whose content
+#     matches the pattern and is NOT in the allowlist fails the gate (max_count stays 0).
+#
+# Run: bun scripts/arch-gate.ts   (exit 1 on any breach; rewrites this file on ratchet)
+
+- id: no-get-request-brand
+  adr: ADR 0051
+  note: the in-app multi-brand Brand-enum harness is dead — getRequestBrand is fully pruned and must never return
+  glob: apps/web/**/*.{ts,tsx}
+  pattern: getRequestBrand
+  max_count: 0
+
+- id: next-safe-action-imports-shrink
+  adr: ADR 0024
+  note: FULL oRPC adoption — next-safe-action retires as surfaces migrate; import count may only fall
+  glob: apps/web/**/*.{ts,tsx}
+  pattern: from ['"]next-safe-action
+  max_count: 87
+
+- id: legacy-claim-model-refs-shrink
+  adr: ADR 0036
+  note: ONE Passport-keyed claim (PassportClaimRequest) — LineagePendingClaim is the legacy model slated for teardown; refs may only fall
+  glob: apps/web/**/*.{ts,tsx}
+  pattern: LineagePendingClaim
+  max_count: 7
+
+- id: no-new-next-safe-action-server-actions
+  adr: ADR 0024
+  note: no NEW server action file may import next-safe-action (current offenders, if any, are allowlisted below)
+  glob: apps/web/server/**/*actions*.ts
+  pattern: from ['"]next-safe-action
+  max_count: 0
+  allowlist: []

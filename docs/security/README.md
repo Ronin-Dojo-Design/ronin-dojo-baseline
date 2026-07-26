@@ -4,7 +4,7 @@ slug: ronin-security-review
 type: index
 status: active
 created: 2026-05-31
-updated: 2026-06-26
+updated: 2026-07-26
 last_agent: claude-session-0451
 pairs_with:
   - docs/knowledge/wiki/manual-boundary-registry.md
@@ -109,7 +109,7 @@ If global installs are not allowed, add a repo-local script that wraps `npx @nod
 - Multi-brand decision: [ADR 0004 — Multi-brand as column](../architecture/decisions/0004-multi-brand-as-column.md)
 - Brand magic links: [ADR 0021 — Brand-aware magic links](../architecture/decisions/0021-brand-aware-magic-links.md)
 - Brand chrome resolution: [ADR 0022 — Brand Chrome Resolution](../architecture/decisions/0022-brand-chrome-resolution.md)
-- Session ledger: [SESSION 0313](../sprints/SESSION_0313.md)
+- Session ledger: [SESSION 0313](../sprints/_archive/era-b/SESSION_0313.md)
 - Manual launch boundaries: [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md)
 
 ## Open Questions

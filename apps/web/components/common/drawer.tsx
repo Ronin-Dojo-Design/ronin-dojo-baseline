@@ -22,16 +22,8 @@ function Drawer({ ...props }: DialogPrimitive.Root.Props) {
   return <DialogPrimitive.Root data-slot="drawer" {...props} />
 }
 
-function DrawerTrigger({ ...props }: DialogPrimitive.Trigger.Props) {
-  return <DialogPrimitive.Trigger data-slot="drawer-trigger" {...props} />
-}
-
 function DrawerPortal({ ...props }: DialogPrimitive.Portal.Props) {
   return <DialogPrimitive.Portal data-slot="drawer-portal" {...props} />
-}
-
-function DrawerClose({ ...props }: DialogPrimitive.Close.Props) {
-  return <DialogPrimitive.Close data-slot="drawer-close" {...props} />
 }
 
 function DrawerOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) {
@@ -177,19 +169,6 @@ function DrawerHeader({ className, ...props }: ComponentProps<"div">) {
   )
 }
 
-function DrawerFooter({ className, ...props }: ComponentProps<"div">) {
-  return (
-    <div
-      data-slot="drawer-footer"
-      className={cx(
-        "flex flex-col-reverse gap-2 -m-4 mt-0 px-4 py-3 border-t md:flex-row md:justify-between md:-m-6 md:mt-0 md:px-6 md:py-4 md:sticky md:-bottom-6 md:bg-background",
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
 function DrawerTitle({ className, ...props }: DialogPrimitive.Title.Props) {
   return (
     <DialogPrimitive.Title
@@ -212,15 +191,4 @@ function DrawerDescription({ className, ...props }: DialogPrimitive.Description.
   )
 }
 
-export {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerPortal,
-  DrawerTitle,
-  DrawerTrigger,
-}
+export { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle }

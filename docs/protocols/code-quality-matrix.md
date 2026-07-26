@@ -4,8 +4,8 @@ slug: code-quality-matrix
 type: protocol
 status: active
 created: 2026-06-26
-updated: 2026-06-26
-last_agent: claude-session-0451
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
   - docs/protocols/code-guardrails.md
   - docs/protocols/pr-review-score-fix-loop.md
@@ -126,7 +126,15 @@ average and the cap.**
 | Data-integrity rule only documented, not DB-enforced | 8.9 |
 | Dirstarter baseline bypassed/replaced where it should be extended (Class A) | 8.9 |
 | New custom pattern/primitive not documented/inventoried (Class B/C) | 8.9 |
+| **Red CI on the session's own lane** — the lane's CI run is red at score time; any score asserting otherwise must paste the run URL | 8.9 |
+| **Known-but-unrouted debt** — debt observed anywhere (review, fallow, chat, a TODO) with **no ledger row** at score time (closing.md §6.7 router) | 8.9 |
+| **Recurring FS pattern fired again** — a `mitigated` failed-steps-log pattern recurred this session; **also flips that FS row `mitigated` → `open`** | 8.9 |
+| **Flake write-off** — a failure attributed to flake/unrelated/environmental **without** a ledger row + a fix-or-quarantine slice (deferral-guard write-off vocabulary) | 8.9 |
 | No credible verification — behavior never run/tested, only "it compiles" | 9.4 |
+
+**Evidence rule:** any cap claim about CI or ledger state must **paste evidence** — the CI run URL, the
+ledger row id(s) — never assert. "CI is green" without a URL, or "routed" without an id, scores as the
+capped failure, not as a pass.
 
 The regression cap is deliberately the harshest: the operator's standing requirement is *no regression in
 functionality or behavior — just refactoring or refinement.* A cleanup that changes behavior is a defect, not
@@ -142,8 +150,9 @@ a refactor, and the matrix refuses to score it as shippable.
 | 5.0–6.9 | Weak | Rework before merge. |
 | < 5.0 | Not shippable | Stop; re-derive the approach. |
 
-`9.5` is the same merge precondition `pr-review-score-fix-loop` and `merge-to-main` already use — the matrix
-does not invent a new bar, it gives a finer-grained way to reach it.
+The operative gate is **[`/ggr`](../../.claude/skills/ggr/SKILL.md) ≥ 9.0** (ADR 0052 D6) — the same
+threshold `pr-review-score-fix-loop` and `merge-to-main` cite. 9.5–10 remains the *gold* band the matrix
+aims at; the matrix does not invent a new bar, it gives a finer-grained way to reach it.
 
 ## 6. Output shape (what the skill records)
 
@@ -163,10 +172,17 @@ does not invent a new bar, it gives a finer-grained way to reach it.
 | D7 Convention/reuse | 9 | reuses ListingCard; inventoried |
 
 **Weighted average:** 8.4 · **Cap applied:** none · **Composite: 8.4 / 10**
+**Systemic health:** CI = green(<run URL>) · findings routed 3/3 (WL-P2-81, FS-0041, D-042) · FS patterns: none
 **Apple/Facebook verdict:** functional, not yet gold — two named fixes close it.
 **Top fixes:** (1) bound the input length (D2); (2) extract the duplicated predicate (D3); (3) split
 `finalizeClaim` (D5).
 ```
+
+The **`Systemic health:`** line is **mandatory in every recorded score**:
+`**Systemic health:** CI = green|red(url) · findings routed N/N (ids) · FS patterns: none|FS-NNNN`.
+It is what the §4 systemic caps (red CI · unrouted debt · recurring FS · flake write-off) are checked
+against — a score without it is incomplete, and its CI/ledger claims must carry pasted evidence (§4
+evidence rule).
 
 Record the score in the SESSION file `## Review log` (the cross-session ledger was retired at SESSION_0228 —
 SESSION files are canonical). Cite `code-quality-matrix §N` so the basis is auditable.

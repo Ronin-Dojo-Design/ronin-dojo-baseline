@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-23
-last_agent: claude-session-0624
+updated: 2026-07-26
+last_agent: claude-session-0711
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -21,13 +21,12 @@ backlinks:
 
 Run this before ending any session. The point: leave the repo in a state where the next bow-in is cheap.
 
-> v5.0 refresh of the legacy `closing_v4.5.md`. Quick/full distinction is preserved. The legacy multi-file state machine (`CHAT_HANDOFF.md` + `GIDDY_BRANCH_MONITOR.md` + `PETEY_NEXT_SESSION_PROMPT_*.md`) is consolidated into one file: the current `SESSION_NNNN.md`.
-
 ## Agent-agnostic
 
-This ritual is the source of truth for any agent that closes a session: Claude, Copilot, Codex, or otherwise. The ritual itself never depends on a specific LLM, IDE, or CLI. The trigger may differ per environment (Claude Code: `/bow-out` skill; Copilot/Codex chat: the words "bow out"; CLI script: a make target), but the steps below are identical and binding.
-
-When you record `last_agent` in the SESSION frontmatter or in this doc's frontmatter, name the agent that actually executed the work (e.g., `claude-session-0031`, `copilot-session-0028`, `codex-session-0030`). Do not rewrite past values; only stamp your own accurately on the artifacts you touched.
+This ritual is the source of truth for any agent that closes a session (Claude, Copilot, Codex, …).
+The trigger differs per environment (Claude Code: `/bow-out`; chat: the words "bow out"); the steps
+are identical and binding. Record `last_agent` as the agent that actually executed
+(`<agent>-session-NNNN`); never rewrite past values.
 
 ## Trigger
 
@@ -53,196 +52,144 @@ bash scripts/bow-out-gates.sh
 
 It runs every gate in one shot — task-log check, format-fix on touched files, `wiki:lint`, `next build` (only
 if `apps/web/**` changed), `graphify update` (capturing the node/edge/community count), git state, ledger
-cross-off **candidate detection**, the board-backlog next-pick list, the fallow introduced-findings delta, and
-the hostile-review trigger — then prints a **pre-filled `## Full close evidence` table** (deterministic cells
-already filled) and an **`## LLM remainder checklist`** of only the judgment work left. It is read-mostly
-(auto-fixes formatting only) and **never commits or pushes**. Spend your tokens on the checklist remainder, not
-on re-running gates by hand.
+cross-off **candidate detection**, the board-backlog next-pick list, the fallow introduced-findings delta,
+the deterministic State-of-Dojo render, and the hostile-review trigger — then prints a **pre-filled
+`## Full close evidence` table** and an **`## LLM remainder checklist`** of only the judgment work left. It is
+read-mostly (auto-fixes formatting only) and **never commits or pushes**. Spend your tokens on the checklist
+remainder, not on re-running gates by hand. (If a build is mid-flight, let it finish first; note any abandoned
+build in step 2.)
 
-(If a tool call or build is mid-flight, let it finish first; note any abandoned build in step 2.)
+Two judgment gates ride along with the runner's output (formerly standalone steps 6c/6d):
+
+- **Class-A code-quality gate (SESSION_0466).** If the session shipped **Class-A custom code** — a
+  substantial new/changed module that is not a thin Dirstarter extension, per the A/B/C split in
+  [`code-quality-matrix`](../protocols/code-quality-matrix.md) — run
+  [`/code-quality`](../../.claude/skills/code-quality/SKILL.md) on the largest such module and record the
+  `/10` (+ any hard cap) in the evidence table. Skip with "no Class-A custom code this session" for
+  docs/config/thin-wrapper diffs.
+- **State-of-Dojo (SESSION_0617).** The render is deterministic (`bun scripts/state-of-project.ts` →
+  gitignored `out/state-of-project.html`; the live route `/app/state` reflects `main` for 0 agent tokens).
+  **Petey's bow-out three questions** — ① goal hit / what landed? ② next lane (stage the stub)? ③ **publish
+  a frozen SotD snapshot + push?** — are enforced in the executed `/bow-out` skill body (FS-0037: prose the
+  read-path never reaches does not fire). Only on a *yes* to ③ publish an Artifact (`/preview-artifacts`)
+  and paste the URL into `## Artifacts`; otherwise cite `/app/state`. Projection-only — a stale status it
+  surfaces gets fixed through the finding router (§6.7), never the renderer.
 
 ### 2. Update the SESSION file
 
 Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 
-- `What landed` — bullets of completed work
-- `Files touched` — paths + one-line note each
-- `Artifacts` — every Artifact **published** this session (private claude.ai links) logged with a **status**
-  (`keep` / `discard` / `promote` → prod/beta), so it can be revisited at a future bow-in and disposed of
-  deliberately. Write "None." if the session published none. (Convention added SESSION_0617 — the section
-  lives in the SESSION template.)
-- `Decisions resolved` — anything the user signed off on this session
-- `Open decisions / blockers` — anything unblocking the next session
-- `Next session: Goal + Inputs to read + First task`
-- **ADR 0049 pre-stage:** mint N+1 (`bun scripts/ledger-id-next.ts --prefix=SESSION`), create
-  the real `SESSION_NNNN+1.md` stub with `status: staged` + Goal/First-task copied from your
-  `Next session` block, and set `next_session:` in this session's frontmatter. The next bow-in
-  adopts the stub. Skip only when the lane explicitly ends.
-- `Task log` — the `TASK_PLAN_LOG` IDs touched this session
-- `Review log` — the `TASK_REVIEW_LOG` entry for this session
-- `Hostile close review` — Giddy + Doug verdict, Dirstarter docs check, score cap if any
-- `ADR / ubiquitous-language check` — any architectural decision or domain term created, updated, or explicitly marked not needed
+- `Delivered` — the ONE table: task ID · status · what landed (template v2 merges the old
+  `Task log` + `What landed`; if the `Goal` wasn't reached, say so explicitly and why), plus
+  `Decisions resolved` and key files with one-line notes
+- `Artifacts` — every Artifact **published** this session (private claude.ai links) with a **status**
+  (`keep` / `discard` / `promote`); "None." if none (SESSION_0617 convention)
+- `Open decisions / blockers` · `Next session: Goal + First task (+ inputs to read)`
+- **ADR 0049 pre-stage:** mint N+1 (`bun scripts/ledger-id-next.ts --prefix=SESSION`), create the real
+  `SESSION_NNNN+1.md` stub with `status: staged` + Goal/First-task copied from your `Next session` block,
+  and set `next_session:` in this session's frontmatter. Skip only when the lane explicitly ends.
+- `Close evidence` — the `/ggr` composite + Systemic-health line + reviewer verdicts + evidence table
+  (template v2 merges the old `Review log` / `Hostile close review` / `Full close evidence`), plus the
+  ADR / ubiquitous-language line
 - Frontmatter `status: closed`
 
-**Single source of truth (SESSION_0342):** status lives only in the YAML frontmatter `status:` field (`in-progress` → `closed`). The body `## Status` section is a pointer, not a second copy — there is nothing to keep in sync. This supersedes the old FS-0015 atomicity rule, which existed only because the value was duplicated in the body.
+**Single source of truth (SESSION_0342):** status lives only in the frontmatter `status:` field; the body
+`## Status` section is a pointer, not a second copy.
 
-**SESSION-file gate:** Before setting `closed` status, verify the current SESSION file has at least one entry in its `## Task log` table. The cross-session `project-log.md` was retired at SESSION_0228. Use an exact-file check:
+**SESSION-file gate:** before setting `closed`, verify the file has ≥1 task table row (the gate runner's
+Gate 2 counts lines starting `| SESSION_NNNN_TASK_` anywhere in the file — the v2 `## Delivered` table or
+the legacy `## Task log` both satisfy it):
 
 ```bash
-awk '/^## Task log/{flag=1; next} /^## /{flag=0} flag' docs/sprints/SESSION_NNNN.md | grep -c "SESSION_NNNN_TASK"
+grep -cE '^\| *SESSION_[0-9]{4}_TASK_[0-9]+' docs/sprints/SESSION_NNNN.md
 ```
 
-Must return >= 1 before setting `closed`. Do not append to `docs/protocols/project-log.md` — it is frozen.
-
-If the session didn't accomplish its `Goal`, note that explicitly in `What landed` ("Goal X was not reached because Y").
+Must return ≥ 1. Never append to `docs/protocols/project-log.md` — it is frozen (SESSION_0228).
 
 ### 3. JETTY 3.0 sweep on touched files
 
-For every file listed in `Files touched`, run this dual sweep:
+For every file in `Files touched`:
 
-#### 3a. Doc frontmatter sweep
+- **Frontmatter:** wiki/architecture docs get current `updated` + `last_agent`; annotated code files get
+  `updated` bumped and `health` re-evaluated.
+- **Backlinks both directions:** if A references B, both A's and B's frontmatter reflect the link
+  (`backlinks` / `pairs_with` — verify both pages list each other for any new cross-reference).
+- **Wiki index (FS-0019 gate):** if new wiki pages were created or a page's status/health changed, add/update
+  the rows in `docs/knowledge/wiki/index.md` and bump its `updated`. If the session **added, moved, or retired
+  a runbook**, update the [runbooks domain hub](../runbooks/README.md) in the same pass — and a moved doc
+  always ships its inbound relinks atomically. (Session rows no longer live in the wiki index — the
+  SESSION_NNNN spine is the source of truth.)
+- **Formatting (G8/R8):** handled by the step-1 gate runner — incremental, touched files only.
 
-- If it's a wiki page or architecture doc: verify JETTY 3.0 frontmatter is present and `updated` date is current.
-- If it's a code file with a wiki annotation (e.g., `wiki/files/schema-prisma.md`): bump `updated`, re-evaluate `health`.
-- Set `last_agent` to the current agent identity on every doc you touched.
-
-#### 3b. Bidirectional backlinks audit
-
-- Update `backlinks` on any page that references or is referenced by touched files. **Both directions** — if A references B, both A's and B's frontmatter must reflect the link.
-- Update `pairs_with` on any page that was newly cross-referenced during the session. Verify both pages list each other.
-
-#### 3c. Wiki index completeness check (FS-0019 gate)
-
-- Open `docs/knowledge/wiki/index.md`.
-- Verify the **current session** has an entry in the session table with correct status.
-- Verify no prior sessions are missing (spot-check the last 5 session numbers). If gaps exist, fill them before closing.
-- If any new wiki pages were created, or any page status/health changed, add/update the relevant rows.
-- If the session **added, moved, or retired a runbook**, update the [runbooks domain hub](../runbooks/README.md) in the same pass (same rule as the custom-component-inventory). Moving a runbook also requires relinking inbound references — never move without an atomic relink.
-- Bump `updated` on `wiki/index.md` itself.
-
-If you created new cross-references during the session, verify both pages list each other in `pairs_with` or `backlinks`.
-
-Run wiki-lint from the repo root after the manual sweep:
+Then run wiki-lint from the repo root and record the real result (never "wiki-lint ran" without counts,
+and note whether failures are pre-existing or introduced):
 
 ```bash
 bun run wiki:lint
 ```
 
-If wiki-lint fails, record the exact error/warning count and whether failures are pre-existing or introduced by this session. Do not write "wiki-lint ran" without the command result.
-
-#### 3d. Incremental formatting fix (G8 / R8)
-
-Handled by the step-1 gate runner — it auto-fixes formatting on the files you touched (`oxfmt` on code; markdown
-stays check-only via `wiki:lint`). Incremental by design: only touched files, never a repo-wide batch.
-
 ### 4. Git hygiene
 
-> **Single-push order (FS-0025) — defer this step to LAST.** Finish all SESSION-file content first (the step-1
-> gate runner already ran graphify + captured its count into the evidence table, so the tree is final). Then
-> `git add -A` → one commit → one push. The only value you can't write pre-commit is the commit hash — don't
-> chase it with a second commit; the evidence cell reads `see git log` and you state the hash in the bow-out
-> chat response.
+> **Single-push order (FS-0025) — defer this step to LAST.** Finish all SESSION-file content first, then
+> stage → one commit → one push. The only value you can't write pre-commit is the commit hash — the evidence
+> cell reads `see git log`; state the hash in the bow-out chat response. Never a second "fill close evidence"
+> commit.
 
-Before committing:
-
-1. **Branch check**: Verify you're on the expected branch (`git branch --show-current`). If you should be on a feature branch but you're on `main`, stop and discuss with the user.
-2. **Worktree check**: Run `git worktree list`. If a session worktree is clean and its branch is already merged into the active branch, remove the worktree and delete the local branch. If it still has unique commits or uncommitted files, record the branch/path and leave it in place.
-   - **Parallel-dispatch sessions (own worktree):** if this session ran in its own worktree (e.g. `../ronin-NNNN` on branch `session-NNNN-<lane>`, as set up by `/new-client-recipe`-style parallel dispatch), the close MUST self-clean once its branch is merged to `main`: `git worktree remove ../ronin-NNNN` then `git branch -d session-NNNN-<lane>`. Leaving stale worktrees/branches is the parallel-session equivalent of an unclean close.
-3. **Stage and review**: `git add -A && git status` — review the list. No secrets, no `.env`, no `node_modules`.
-   The gate runner's **Gate 12b secret scan** (key/token/private-key patterns over touched files) is the
-   deterministic backstop — a hit blocks commit/push until the value is removed **and rotated**.
-   **Canonical parallel-safety (FS-0035):** if a *sibling* session's file is present in the tree (e.g. an
-   untracked `SESSION_MMMM.md` you don't own), do **NOT** `git add -A` — it would sweep the sibling's
-   uncommitted work into your commit. Stage **explicit paths** (`git add <your files>`) and confirm the sibling
-   file is not staged (`git diff --cached --name-only | grep SESSION_MMMM`) before committing.
-4. **Commit**: Use a conventional commit message (`feat:`, `docs:`, `fix:`, `chore:`). Don't bundle unrelated changes into one commit.
-5. **Push + PR**: only if the user has authorized pushes. If not, note "changes committed but not pushed" in the SESSION file. **`main` is PR-only (ADR 0053)** — `git push origin main` fails, server-side and locally:
+1. **Branch check:** `git branch --show-current` — on `main` when you should be on a feature branch → stop
+   and discuss.
+2. **Worktree check:** `git worktree list`. Merged session worktree → remove it + delete the branch (stale
+   worktrees are the parallel-session unclean close). Unique commits/uncommitted files → record and leave.
+3. **Stage and review:** `git add -A && git status` — no secrets/`.env`/`node_modules` (gate runner Gate 12b
+   secret scan is the backstop; a hit blocks until removed **and rotated**). **FS-0035:** if a *sibling*
+   session's file is in the tree, do **NOT** `git add -A` — stage explicit paths and confirm the sibling
+   file isn't staged (`git diff --cached --name-only | grep SESSION_MMMM`).
+4. **Commit:** conventional message; don't bundle unrelated changes.
+5. **Push + PR:** only with explicit operator authorization. **`main` is PR-only (ADR 0053)**:
 
    ```bash
    git push -u origin HEAD                                    # your session branch, never main
    gh pr create --fill && gh pr merge --squash --delete-branch
    ```
 
-   This does **not** change the cost model — `ci.yml`/`playwright.yml` apply `paths-ignore` to
-   `pull_request` as well as `push`, so a **docs-only PR is still free** (no matrix, no deploy). Don't
-   "optimize" the PR away. If the push is rejected because a sibling advanced the branch, **rebase — never
-   force** (`non_fast_forward` is blocked on `main` anyway).
-6. **Release the canonical claim (FS-0035):** after the push (or if you leave work uncommitted), run
-   `bash scripts/canonical-claim.sh release --session NNNN` so the next session's bow-in occupancy guard sees
-   canonical free. (No-op if this session ran isolated in its own worktree and never claimed canonical.)
+   Docs-only PRs are still free (`paths-ignore` applies to `pull_request` too) — don't "optimize" the PR
+   away. Push rejected because a sibling advanced the branch → **rebase, never force**.
+6. **Release the canonical claim (FS-0035):** `bash scripts/canonical-claim.sh release --session NNNN`
+   after the push (no-op if the session ran isolated in its own worktree).
 
 If the user hasn't authorized commits, leave changes uncommitted and note that in `Open decisions / blockers`.
 
 ### 4a. Pre-push cost gate (CI / GitHub Actions spend)
 
-Pushing to `main` is not free. An **app-code** push (anything under `apps/web/**`) fires the full CI
-matrix — typecheck, unit, oxc, and **Playwright ×3 browsers** (chromium/firefox/webkit) — *and* a Vercel
-prod deploy. A remote build failure burns that entire matrix to learn what a local build would have told
-you for free. So, before an app-code push:
-
-1. **Run `next build` locally** (`cd apps/web && bun run build`) — it mirrors Vercel's build and catches
-   the failures tsc/lint/test can't: `"use server"` non-function exports, Prisma-in-browser, dynamic-import
-   issues. Push **only when it's green.** (Docs/governance pushes skip this — they don't build or deploy.)
-2. **Be selective about _when_:** one push per session at close (never mid-session); push a *complete,
-   verified unit*, not work-in-progress. Batch only when another push is genuinely imminent — don't strand
-   finished, verified work waiting for a bundle that isn't coming.
-3. **Keep docs separate from code when independent:** `ci.yml` + `playwright.yml` already `paths-ignore`
-   `docs/**` / `**.md` / `.claude/**` (SESSION_0267), and `vercel.json`'s `ignoreCommand` skips the deploy
-   for non-`apps/web` pushes — so a **docs-only push is free** (no CI matrix, no deploy). A mixed app+docs
-   commit still pays the full matrix; split them when the docs don't depend on the code.
-
-Record in the SESSION evidence table whether the local build gate was run and its result. (Standing
-follow-up cost lever: the per-push Playwright **×3** matrix is the biggest remaining GHA spend — trimming
-it to chromium-only per-push with the full ×3 on a nightly/label is the structural win.)
+An **app-code** push (`apps/web/**`) fires the full CI matrix (typecheck, unit, oxc, Playwright ×3) *and* a
+Vercel prod deploy. Before one: **run `next build` locally** (`cd apps/web && bun run build` — it mirrors
+Vercel and catches the `"use server"` / Prisma-in-browser / dynamic-import traps tsc/tests miss; push only
+when green) · **one push per session at close**, a complete verified unit · **keep docs separate from code
+when independent** (docs-only pushes are free — `paths-ignore` + `vercel.json` `ignoreCommand`; a mixed
+commit pays the full matrix). Record the local-build result in the evidence table. (Standing cost lever:
+Playwright ×3 per push → chromium-only per-push with ×3 nightly.)
 
 ### 4b. Graphify update (run by the step-1 gate runner)
 
-The step-1 gate runner already ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` and captured the
-node/edge/community count into the evidence table. This runs **before** the commit on purpose (FS-0025):
-`.graphify/` is git-ignored and indexes the working tree, so a pre-commit run avoids the second "fill close
-evidence" push. Nothing to do here unless the runner reported Graphify unavailable — then run it manually or
-record "skipped." See [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md).
+The gate runner already ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` and captured the counts —
+before the commit on purpose (FS-0025: `.graphify/` is git-ignored and indexes the working tree). Nothing to
+do unless the runner reported Graphify unavailable — then run manually or record "skipped."
 
-**Docs Navigator** ([docs-navigator runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never commit it.** `docs/index.html` is generated (~7 MB) and git-ignored; run `bun run docs:nav` whenever you want to browse the latest docs. It is not a close gate and must not enter a commit (it would churn megabytes every session).
+**Docs Navigator** ([runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never
+commit it.** `docs/index.html` is generated (~17.5 MB) and git-ignored; `bun run docs:nav` on demand. Not a
+close gate — it must never enter a commit.
 
 ### 4c. E2E run-evidence guard (FS-0031)
 
-If this session's diff **touches `apps/web/e2e/**`** (any spec/helper), a new or changed Playwright
-assertion must have been **run locally** before it ships — FS-0031 was three consecutive red-`main`
-pushes from assertions "verified by inspection" because the suite couldn't be run locally. Before the
-pre-push gate:
+If the diff **touches `apps/web/e2e/**`**, a new/changed Playwright assertion must have been **run locally**
+before it ships (FS-0031: three red-`main` pushes from assertions "verified by inspection"). Recipe:
+`cd apps/web && bun run e2e:db:setup` (needs `.env.e2e` with both DB URLs on `ronindojo_e2e`; migrate-only) →
+`bun run dev:e2e` (a Node launcher — NEVER run `next` under the bun runtime; it poisons Turbopack's PostCSS
+worker) → `bun run test:e2e:local -- <spec> --project=chromium` (writes `apps/web/.e2e-run-evidence.json`) →
+gate the close with `bun run e2e:evidence:check` (override only with a real `--waiver="…"`).
 
-1. **Provision + migrate the small e2e DB once** (idempotent — the heavy `ronindojo_prodsnap` times out
-   on cold admin-list pages, so use the dedicated `ronindojo_e2e`): `cd apps/web && bun run e2e:db:setup`.
-   Requires `apps/web/.env.e2e` (gitignored; shape in `.env.e2e.example` — copy `.env`, override
-   **both** `DATABASE_URL` and `DIRECT_URL` to `ronindojo_e2e`). The setup is migrate-only; seed separately
-   only when the affected manual smoke needs reference data.
-2. **Run the affected spec** against it (sidesteps the FS-0002-banned `bun dev`): start the e2e-bound
-   dev server with `cd apps/web && bun run dev:e2e` (= `node scripts/run-e2e-dev.mjs` — a Node
-   launcher that `process.loadEnvFile(".env.e2e")`s the DB URLs then spawns `next dev --turbo`). Do
-   **NOT** use `bun --env-file=.env.e2e next dev` — running `next` under the bun runtime injects a bun
-   loader into the child `NODE_OPTIONS` and poisons Turbopack's PostCSS worker (FS-0031 0533 residual).
-   Then `bun run test:e2e:local -- <spec> --project=chromium`. This writes the run-evidence artifact
-   `apps/web/.e2e-run-evidence.json`.
-3. **Gate the close on the evidence**: `bun run e2e:evidence:check`. It passes only when a fresh,
-   passing run covers every touched spec; it blocks (with the recipe) on missing/stale evidence.
-   Override only with a real reason: `bun run e2e:evidence:check --waiver="…"`.
-
-The e2e-evidence check is **not** wired into a git hook — you MAY call it from one yourself.
-
-> **Amended SESSION_0624.** This paragraph used to say flatly *"the repo ships the guard, not the hook"*,
-> and that is no longer true: the repo **does** ship git hooks, in `scripts/githooks/` (FS-0039/FS-0040,
-> [ADR 0053](../architecture/decisions/0053-main-is-pr-only.md)). The supply-chain rule it was protecting
-> still holds, restated accurately:
->
-> - Hook **logic lives in `scripts/githooks/`** — tracked, reviewable, and diffable in a PR. Never
->   hand-written into `.git/hooks/`, which no one reviews.
-> - Hooks are **inert until `bash scripts/githooks/install.sh` runs once per clone.** It writes exactly
->   one thing: an **absolute** `core.hooksPath`. `/worktree-setup` calls it, and it **must announce what
->   it did** — installing silently is the thing the original caution was aimed at.
-> - **Hook content changes get reviewed like any code**, in a PR. That is now enforced, not requested.
-> - A session verifies the guards are actually live with **`bash scripts/githooks/doctor.sh`** — because
->   FS-0040 was a hook that was installed, looked correct, and ran nowhere.
+Hook policy (SESSION_0624, ADR 0053): hook logic lives in `scripts/githooks/` (tracked, PR-reviewed, never
+hand-written into `.git/hooks/`); inert until `install.sh` runs once per clone; prove guards live with
+`bash scripts/githooks/doctor.sh` (FS-0040). The e2e-evidence check is not wired into a git hook.
 
 ### 5. Bow-out line
 
@@ -252,31 +199,27 @@ That's the core close done.
 
 ## Optional deep items
 
-Do these when useful — especially at end of day, end of sprint, milestone, or when the session touched schema/auth/payments/deployment/production data.
+Do these when useful — especially at end of day, end of sprint, milestone, or when the session touched
+schema/auth/payments/deployment/production data.
 
-> **Sprint-boundary cadence — run the repo-wide hostile review.** When a sprint closes/opens (a new `S#`)
-> or on signal (token burn rediscovering files, suspected duplication/drift, before a large porting lane),
-> run [`hostile-repo-review.md`](../protocols/hostile-repo-review.md) — the repo-wide sibling of the
-> per-diff `hostile-close-review`. This is its cadence hook: the protocol governs by being *triggered here*,
-> not by being remembered (the lesson of SESSION_0467, where it had drifted out of memory). It is not a
-> per-session step — most bow-outs skip it.
+> **Sprint-boundary cadence:** when a sprint closes/opens (a new `S#`) or on signal (token burn
+> rediscovering files, suspected duplication/drift, before a large porting lane), run
+> [`hostile-repo-review.md`](../protocols/hostile-repo-review.md) — the repo-wide sibling of the per-diff
+> close review. The protocol governs by being *triggered here*, not remembered (SESSION_0467). Not a
+> per-session step.
 
-### 6. Reflections (in the SESSION file)
+### 6. Reflections (in the SESSION file) — the routing receipt
 
-Add a `## Reflections` section to the SESSION file. Capture what's worth remembering:
-
-- Surprises encountered.
-- Things that almost broke (and what saved them).
-- Patterns or anti-patterns observed.
-- Anything you'd tell yourself if you were starting this work again.
-
-This is the kaizen-style note from the legacy system, kept lightweight.
+Add a `## Reflections` section: **≤ 5 bullets**, each a lesson worth remembering (a surprise, a near-break,
+a pattern/anti-pattern), and **each bullet MUST end with a route** — `→ route: <ledger-id>` (the row it
+became), `→ route: <file edited>` (the doc/protocol it fixed), or `→ route: no-action (<why>)`. A lesson
+without a route is exactly the "discussed and it evaporated" failure §6.8 guards against. **"Reflections"
+is the one name** — the legacy "Kaizen" alias is retired.
 
 ### 6a. Evidence artifact (required when Doug ran live UAT; on-request otherwise)
 
-The step-1 gate runner **pre-fills the deterministic cells** of this table (task-log, format, wiki:lint, build,
-graphify, git state) — paste its output and fill only the judgment cells (Kaizen, Hostile review, Class-A score,
-Review & Recommend, Memory sweep). The schema:
+The step-1 gate runner **pre-fills the deterministic cells** of this table — paste its output and fill only
+the judgment cells. The schema:
 
 ```markdown
 ## Full close evidence
@@ -286,7 +229,7 @@ Review & Recommend, Memory sweep). The schema:
 | JETTY/frontmatter sweep | <files checked; updated/last_agent/health changes or "no frontmatter changes needed"> |
 | Backlinks/index sweep | <pairs_with/backlinks/index changes or "no new links"> |
 | Wiki lint | <command + pass/fail count + whether failures are pre-existing or introduced> |
-| Kaizen reflection | <Reflections section present: yes/no> |
+| Reflections routing receipt | <N lessons → N routes (ids)> |
 | Hostile close review | <TASK_REVIEW_LOG entry or not-applicable line> |
 | Code-quality gate (Class-A) | <`/code-quality` score /10 + any hard-cap, or "no Class-A custom code this session"> |
 | Runtime verification (Doug) | <`qa-runtime-verification` result for touched routes/actions, or "no runtime surface touched"> |
@@ -294,87 +237,43 @@ Review & Recommend, Memory sweep). The schema:
 | Review & Recommend | <next session goal written: yes/no> |
 | Memory sweep | <operator memory update, protocol/doc update, or "none needed because..."> |
 | Next session unblock check | <unblocked or blocked-on-user with reason> |
-| Git hygiene | <branch, worktree list result, status, "single push — hash reported at bow-out / see git log", or explicit no-commit reason. Do NOT make a second `fill close evidence` commit (FS-0025).> |
-| Graphify update | <node/edge/community count — graphify run BEFORE the close commit so this is captured in the single push (FS-0025), or "skipped — Graphify unavailable/no file changes"> |
+| Git hygiene | <branch, worktree list result, status, "single push — hash reported at bow-out / see git log", or explicit no-commit reason (FS-0025: no second evidence commit)> |
+| Graphify update | <node/edge/community count (run BEFORE the close commit, FS-0025), or "skipped — unavailable/no file changes"> |
 ```
 
-Generic checkmarks are not enough. The proof cell must say what was checked or what changed.
+Generic checkmarks are not enough — the proof cell must say what was checked or what changed. The
+`Reflections routing receipt` cell is the ONE name for the old "Kaizen" row: `N lessons → N routes (ids)`.
 
-**Policy (ratified SESSION_0582, wired SESSION_0584):** the `Evidence-artifact URL` row is
-**required, not optional, whenever the `Runtime verification (Doug)` row is anything other than
-"no runtime surface touched"** — i.e. whenever Doug ran a live UAT, a headless probe with visual
-output, or any check that produced something worth *seeing* (screenshots, rendered HTML, a live
-page). Publish it as an Artifact link ([[preview-via-published-artifacts]] — inline
-widgets/attachments don't render for the operator; a published HTML Artifact URL does) and paste
-the URL into the row. When the session genuinely touched no runtime surface, `n/a` is a complete
-answer — don't manufacture an artifact for a docs-only close. Outside that trigger, an artifact is
-**on-request only** (the operator can ask for one at any point; it's not a default expectation).
-[`scripts/bow-out-gates.sh`](../../scripts/bow-out-gates.sh) Gate 12c enforces this deterministically
-at close.
+**Policy (SESSION_0582/0584, enforced by `bow-out-gates.sh` Gate 12c):** the `Evidence-artifact URL` row is
+**required whenever `Runtime verification (Doug)` is anything but "no runtime surface touched"** — publish
+the live-UAT / visual proof as an Artifact link ([[preview-via-published-artifacts]] — inline widgets don't
+render for the operator). Runtime-free session → `n/a` is complete; otherwise artifacts are on-request only.
 
 ### 6b. Repo code glossary (optional, on-demand)
 
-Not a gate and not run every session. Add to [`repo-code-glossary.md`](../knowledge/wiki/repo-code-glossary.md)
-when the **operator asks** ("add X to the glossary") or when this session used a technical term a
-non-technical reader would stumble on (e.g., `CI`, `SHA`, `enum`, `adapter`). Keep each entry to 1–2
-plain-English lines + one concrete example (a repo file or a commit SHA from the session). Skip silently
-when nothing new came up.
-
-### 6c. Code-quality gate — Class-A custom code (SESSION_0466)
-
-If this session shipped **Class-A custom code** — a substantial new/changed module that is *not* a thin
-Dirstarter extension, judged by the A/B/C split in
-[`code-quality-matrix`](../protocols/code-quality-matrix.md) — run the
-[`/code-quality`](../../.claude/skills/code-quality/SKILL.md) skill on the largest such module and record
-the `/10` score (+ any hard-cap triggered) in the `## Full close evidence` table. This holds the
-gold-standard bar on exactly the custom code the matrix exists to police (the kernel / card / loop-board
-kind of work), not Dirstarter-derived CRUD. Skip with a one-line "no Class-A custom code this session"
-when the diff is docs / config / thin-wrapper only.
-
-### 6d. State-of-Dojo at bow-out — deterministic render; publish only on ask
-
-**The zero-token default (SESSION_0617, [`research-review-state-of-dojo-automation`](../architecture/research/research-review-state-of-dojo-automation.md)).**
-The live route **`/app/state`** already reflects `main` on its ~5-min `revalidate` window — the operator sees
-what changed for **0 agent tokens**. So:
-
-- **The render is a deterministic gate:** `bow-out-gates.sh` runs `bun scripts/state-of-project.ts`
-  (→ `out/state-of-project.html`, gitignored) every close — no agent work.
-- **Petey's bow-out three questions include the publish ask** (symmetric to bow-in): ① did we hit the goal /
-  what landed? ② what's the next lane (stage the stub)? ③ **publish a frozen State-of-Dojo snapshot + push?**
-  Only on a *yes* to (3) does the agent publish an Artifact (`/preview-artifacts`) and paste the URL into
-  `## Artifacts`. Otherwise cite `/app/state`.
-
-Projection-only — never edits a ledger; if the render surfaces a stale status, fix it through the finding
-router (§6.7), not the renderer. **The three-questions ask is enforced in the executed `/bow-out` skill body**
-(not this prose alone) so it can't be skipped — the both-halves fix after the bow-in version was skipped the
-session after it was added (FS-0037, SESSION_0618; symmetric to opening.md step 6b).
+Not a gate. Add to [`repo-code-glossary.md`](../knowledge/wiki/repo-code-glossary.md) when the operator asks
+or when the session used a term a non-technical reader would stumble on. 1–2 plain-English lines + one
+concrete example. Skip silently when nothing new came up.
 
 ### 6.5. Review & Recommend (stage the next session)
 
-Run **[`/ggr`](../../.claude/skills/ggr/SKILL.md)** — the universal QAR closing gate (ADR 0052 D4/D5/D6). It is the hard pass that checks plan sanity, Dirstarter alignment, security, data integrity, verification honesty, and standards compliance, and it **enforces the gate policy**: **≥9.0 clears · 7.0–8.9 auto-loops ≤2 Giddy passes then the operator gate · hard-caps always loop**. For a Build lane `/ggr` applies the [`hostile-close-review`](../protocols/hostile-close-review.md) caps + the 100/1k/10k confidence triad as its rubric — **one review, not two** (that protocol is the referenced *how*; `/ggr` is the invocation). If the session touched a Dirstarter baseline layer, check live `https://dirstarter.com/docs` pages and cite the sources in `TASK_REVIEW_LOG`. **Record the `/ggr` composite in `## Review log`** (a code-touching session's close is verified by `bow-out-gates` Gate 12d looking for it there).
+Run **[`/ggr`](../../.claude/skills/ggr/SKILL.md)** — the universal QAR closing gate (ADR 0052 D4/D5/D6). It is the hard pass that checks plan sanity, Dirstarter alignment, security, data integrity, verification honesty, and standards compliance, and it **enforces the gate policy**: **≥9.0 clears · 7.0–8.9 auto-loops ≤2 Giddy passes then the operator gate · hard-caps always loop**. For a Build lane `/ggr` applies the [`hostile-close-review`](../protocols/hostile-close-review.md) caps + the 100/1k/10k confidence triad as its rubric — **one review, not two** (that protocol is the referenced *how*; `/ggr` is the invocation). If the session touched a Dirstarter baseline layer, check live `https://dirstarter.com/docs` pages and cite the sources in the close evidence. **Record the `/ggr` composite in `## Close evidence`** (legacy sessions: `## Review log`) — a code-touching session's close is verified by `bow-out-gates` Gate 12d grepping the SESSION file for it.
 
-Run the [Review & Recommend protocol](../protocols/review-recommend.md). This reviews what landed, checks the boundary registry and program plan, and writes a concrete `Next session` recommendation into the SESSION file — then materializes it as the ADR 0049 staged stub (§2 pre-stage step; the "optionally pre-stages" below is now the mechanized default). **Seed the `Next session → Goal + First task` from the top-ranked open backlog item** — the operator's `/app/loop-board` board order (`cd apps/web && bun scripts/board-backlog.ts --top=10`) first, falling back to the ledger rank — unless the operator pinned a `/goal`; the boundary registry + program plan then contextualize the pick (SESSION_0476 closed the gap where the next-block was authored disconnected from the live backlog). Optionally pre-stages the next `SESSION_NNNN+1.md` so the next bow-in is nearly zero-cost.
-
-At full close, also consider running [Petey Plan protocol](../protocols/petey-plan.md) to pre-write the next session's plan block — this means the next session skips the planning phase entirely and goes straight to execution.
-
-Append or update the review entry inside the current SESSION file's `## Review log` and `## Hostile close review` sections. The review entry must reference the numbered task IDs from the SESSION file's `## Task log` and list unresolved findings as open follow-ups. Do not write to `docs/protocols/project-log.md` — it is frozen.
+Then run [Review & Recommend](../protocols/review-recommend.md): review what landed, check the boundary
+registry + program plan, write the `Next session` recommendation, and materialize it as the ADR 0049 staged
+stub (§2 pre-stage). **Seed `Next session → Goal + First task` from the top-ranked open backlog item** —
+board order first (`cd apps/web && bun scripts/board-backlog.ts --top=10`), then ledger rank — unless the
+operator pinned a `/goal` (SESSION_0476). Optionally pre-write the next [Petey plan](../protocols/petey-plan.md).
+The review entry must reference the session's task IDs and list unresolved findings as open follow-ups.
 
 ### 6.6. ADR + ubiquitous-language check
 
-If the session made, changed, or rejected an architectural decision, create or update an ADR in `docs/architecture/decisions/`. If that decision touches a Dirstarter baseline layer, the ADR must include compact proof links to the relevant live Dirstarter docs. Do not paste long excerpts; one short `Dirstarter docs proof` table with URLs is enough.
-
-Baseline layers that require Dirstarter proof in the ADR:
-
-- project structure
-- Prisma/database
-- Better Auth/authentication
-- payments/Stripe
-- storage/media
-- deployment/cron
-- content/blog/SEO
-- theming/UI primitives
-
-If the session introduced or changed a domain term, update [Ubiquitous Language](../architecture/ubiquitous-language.md). If no ADR or glossary update is needed, record that explicitly in the SESSION file.
+If the session made, changed, or rejected an architectural decision, create/update an ADR in
+`docs/architecture/decisions/`. Decisions touching a Dirstarter baseline layer (project structure,
+Prisma/database, Better Auth, payments/Stripe, storage/media, deployment/cron, content/blog/SEO,
+theming/UI primitives) must include a compact `Dirstarter docs proof` table with live-doc URLs — no long
+excerpts. New/changed domain terms → update [Ubiquitous Language](../architecture/ubiquitous-language.md).
+If neither is needed, record that explicitly in the SESSION file.
 
 ### 6.7. Finding router — where each finding type goes
 
@@ -466,17 +365,19 @@ missed deferral is the failure it prevents, so a few dismissable false positives
 
 ### 7. Memory sweep
 
-If anything from this session is worth carrying forward across all future sessions (not just the next one), update operator-side memory. Examples:
-
-- A new architectural decision worth remembering — captured as an ADR; mentioned in memory only if it changes how we work.
-- A discovered constraint or gotcha that future sessions will hit.
-- A user preference that shapes future work.
-
-Do *not* memory-dump the SESSION file's content. The SESSION file is the session-scoped record; memory is for project-scoped facts.
+If anything from this session is worth carrying across **all** future sessions (a constraint, a gotcha, a
+user preference that shapes work), update operator-side memory. Do *not* memory-dump the SESSION file —
+memory is for project-scoped facts, not session records.
 
 ### 8. Confirm next session is unblocked
 
-Re-read your `Open decisions / blockers` and `Next session` entries. Is the next session's `First task` actually doable, or does it require user input first? If the latter, explicitly note "BLOCKED ON USER" in the next session's entry.
+Re-read `Open decisions / blockers` + `Next session`. If the next `First task` needs user input first,
+explicitly note "BLOCKED ON USER" in the entry.
+
+## Unclean close recovery
+
+Moved to [`docs/runbooks/dev-environment/unclean-close-recovery.md`](../runbooks/dev-environment/unclean-close-recovery.md)
+(SESSION_0711). Use it when a previous session's bow-out was skipped — crash, compaction, or operator error.
 
 ## What this ritual is NOT
 
@@ -486,55 +387,20 @@ Re-read your `Open decisions / blockers` and `Next session` entries. Is the next
 
 ## What you must not skip
 
-- The SESSION file update. **Always.** No exceptions. If you skipped it, the session didn't close — it crashed.
+- The SESSION file update. **Always.** If you skipped it, the session didn't close — it crashed.
 - The `Next session` entry. If the next session can't pick up the thread, this ritual failed.
-- The JETTY 3.0 sweep (step 3). If you touched wiki pages and didn't update backlinks, the next agent will have broken references.
-- The git hygiene check (step 4). Uncommitted changes with no record of what they are = lost work.
+- The JETTY sweep (step 3) on touched wiki pages — or the next agent inherits broken references.
+- The git hygiene check (step 4). Uncommitted changes with no record = lost work.
 
 ## Cross-references
 
 - [Opening ritual](opening.md) — paired counterpart at the start of a session.
-- [Chat handoff protocol](../protocols/chat-handoff.md) — describes the SESSION file format in full.
-- [Wiki lint protocol](../protocols/wiki-lint.md) — rules for JETTY 3.0 sweep verification.
-- [Schema Migration Runbook](../runbooks/database/schema-migration.md) — recurring schema change cycle.
+- [SESSION_TEMPLATE](../sprints/_template/SESSION_TEMPLATE.md) — the SESSION file format (absorbed `chat-handoff.md`).
+- [Wiki lint protocol](../protocols/wiki-lint.md) — rules for the JETTY sweep verification.
 - [Code guardrails](../protocols/code-guardrails.md) — coding standards enforced every session.
 - [FAILED_STEPS Log](../protocols/failed-steps-log.md) — append-only log for protocol misses and mitigations.
 - [Incidents log](../knowledge/wiki/incidents.md) — append-only log for unclean closes.
-- [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — hard close review against Dirstarter, security, data integrity, and workflow honesty.
-- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — at full close, log/update any "smoke pending" boundaries the session shifted.
-- [SOP — Agent Workflows and Rituals](../runbooks/sops/sop-agent-workflows-and-rituals.md) — the full bow-out / next-target selection procedure as a runbook.
-- [Petey Plan protocol](../protocols/petey-plan.md) — structured planning for staging the next session at bow-out.
-- [Review & Recommend protocol](../protocols/review-recommend.md) — the review + next-target recommendation cycle run at full close.
-- [Graphify Repo Memory Runbook](../runbooks/dev-environment/graphify-repo-memory.md) — local repo graph for cross-domain navigation.
-
----
-
-## UNCLEAN_CLOSING - Unclean close recovery
-
-Use when a previous session's bow-out was skipped — context loss, compaction, crash, or operator error.
-
-### When this applies
-
-- The latest `SESSION_NNNN.md` has `Status: in-progress` but the session is over.
-- A new session discovers the previous one was never closed.
-- The closing ritual was interrupted mid-flight.
-
-### Recovery checklist
-
-1. **Read the unclosed SESSION file.** Identify what was done by reading `git log`, `git diff`, and any partial `What landed` entries.
-2. **Backfill the SESSION file.** Fill in `What landed`, `Files touched`, `Decisions resolved`, `Open decisions / blockers`, `Next session`.
-3. **Set status:** frontmatter `status: closed` and add a `**Close notes:** unclean recovery — {reason}` line in the body.
-4. ~~**Add reason tag:**~~ *(merged into step 3 above)*
-5. **Log the incident.** Append an entry to [`docs/knowledge/wiki/incidents.md`](../knowledge/wiki/incidents.md) with date, session number, reason, and recovery actions.
-6. **JETTY 3.0 sweep.** Run step 3 from quick close on any files touched in the unclosed session.
-7. **Wiki index update.** Update session status in `wiki/index.md`.
-8. **Continue.** Create the next `SESSION_NNNN.md` and proceed with bow-in.
-
-### Status values
-
-| Status | Meaning |
-| --- | --- |
-| `in-progress` | Session is active |
-| `closed` | Session is done |
-
-Legacy values (`closed-quick`, `closed-full`, `closed-unclean`) are accepted in old SESSION files but should not be used for new sessions.
+- [Giddy + Doug Hostile Close Review](../protocols/hostile-close-review.md) — the hard close review `/ggr` applies.
+- [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md) — log/update "smoke pending" boundaries.
+- [Review & Recommend protocol](../protocols/review-recommend.md) — the review + next-target cycle at full close.
+- [Unclean close recovery runbook](../runbooks/dev-environment/unclean-close-recovery.md) — when the previous bow-out was skipped.

@@ -73,6 +73,6 @@ Store post metadata and media at the `ContentAtom` level:
 
 ## Cross-references
 
-- [SESSION_0224](../../sprints/SESSION_0224.md)
+- [SESSION_0224](../../sprints/_archive/era-b/SESSION_0224.md)
 - [Custom Component Inventory](../../knowledge/wiki/custom-component-inventory.md)
 - [Content Atoms](../../knowledge/wiki/content-engine/content-atoms.md)

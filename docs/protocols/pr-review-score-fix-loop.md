@@ -4,8 +4,8 @@ slug: pr-review-score-fix-loop
 type: protocol
 status: active
 created: 2026-06-20
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
   - docs/protocols/merge-to-main.md
   - docs/protocols/recipes/merge-wave.md
@@ -97,7 +97,8 @@ Immediately after scoring, Giddy picks exactly one decision before any fix launc
 
 1. **`KEEP_AS_IS_AND_IMPROVE`** — intent is aligned but a quality/function check is
    incomplete. → Improve in place, then re-run from Step 1.
-2. **`INTEGRATE_PASS`** — binary accelerator is `yes` **and** gate score `≥ 9.5`.
+2. **`INTEGRATE_PASS`** — binary accelerator is `yes` **and** gate score `≥ 9.0`
+   (the [`/ggr`](../../.claude/skills/ggr/SKILL.md) clear line, ADR 0052 D6).
    → Integrate precisely via [`merge-to-main.md`](merge-to-main.md) +
    [[merge-wave]] (commit/push only on explicit operator approval —
    [[explicit-push-authorization]]).
@@ -138,7 +139,8 @@ Borrowed from the three-pass model — use the smallest valid mode, escalate on 
 
 Stop only when **all** are true:
 
-1. gate score `≥ 9.5` (this repo's `merge-to-main` precondition),
+1. gate score `≥ 9.0` — the [`/ggr`](../../.claude/skills/ggr/SKILL.md) clear line (ADR 0052 D6;
+   also this repo's `merge-to-main` precondition — hard caps always loop regardless of score),
 2. binary accelerator is `yes`,
 3. Giddy decision is `INTEGRATE_PASS`,
 4. status is `PASS`.

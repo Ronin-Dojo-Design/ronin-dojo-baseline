@@ -135,7 +135,7 @@ Proven in SESSION_0338:
 ## Cross-references
 
 - Epic plan: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md) (Slice 1).
-- Proof session: [SESSION_0338](../../../../sprints/SESSION_0338.md).
+- Proof session: [SESSION_0338](../../../../sprints/_archive/era-b/SESSION_0338.md).
 - Port map record: PORTMAP-0002 in [Graphify Component Port Map](../graphify-component-port-map.md).
 - Next slice: [Lineage Mobile List port spec](./lineage-mobile-list-port-spec.md) (< sm fallback).
 - BBL prior art (read for behavior only): `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/lineage/MobileLineageList.jsx` (the < 640px boundary in its header) + the parent route's desktop-tree-vs-mobile-list switch.

@@ -33,4 +33,4 @@ When you stamp `last_agent` on the SESSION file or touched docs, name the agent 
 
 - [Opening ritual (source of truth)](../../docs/rituals/opening.md) · [Closing ritual](../../docs/rituals/closing.md)
 - [Loop of Loops — ledger-driven sessions](../../docs/protocols/loop-of-loops-ledger-driven-sessions.md) (the `scripts/ledger-backlog.ts` aggregator)
-- [WORKFLOW 5.0](../../docs/protocols/WORKFLOW_5.0.md) · [Graphify Repo Memory](../../docs/runbooks/dev-environment/graphify-repo-memory.md) · [Petey Plan](../../docs/protocols/petey-plan.md) · [Cody Pre-flight](../../docs/protocols/cody-preflight.md)
+- [WORKFLOW 6.0](../../docs/protocols/WORKFLOW_6.0.md) · [Graphify Repo Memory](../../docs/runbooks/dev-environment/graphify-repo-memory.md) · [Petey Plan](../../docs/protocols/petey-plan.md) · [Cody Pre-flight](../../docs/protocols/cody-preflight.md)

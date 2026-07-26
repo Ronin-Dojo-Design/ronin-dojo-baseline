@@ -8,6 +8,10 @@
 # skipped loudly, not silently; a client that HAS one and fails, fails the gate.
 set -euo pipefail
 
+# WL-P3-69(b): run-from-anywhere guard — without this, any other cwd makes `clients/*/`
+# match nothing and the gate exits 0 silently (the FS-0036 "silent no-op" shape).
+cd "$(dirname "$0")/.."
+
 status=0
 
 for dir in clients/*/; do

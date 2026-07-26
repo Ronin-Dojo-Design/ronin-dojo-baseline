@@ -4,7 +4,7 @@ slug: component-launch-sweep-recipe
 type: runbook
 status: active
 created: 2026-06-17
-updated: 2026-07-16
+updated: 2026-07-26
 last_agent: codex-session-0542
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
@@ -444,4 +444,4 @@ Surfaced by the **/directory/[slug] member-detail sweep** (the 244-line public p
 
 - [ADR 0022 — brand-neutral primitives](../architecture/decisions/0022-brand-chrome-resolution.md)
 - [Lineage Domain Hub](domain-features/lineage-hub.md)
-- [SESSION_0410](../sprints/SESSION_0410.md) — the grill that established this recipe + the worked example.
+- [SESSION_0410](../sprints/_archive/era-b/SESSION_0410.md) — the grill that established this recipe + the worked example.

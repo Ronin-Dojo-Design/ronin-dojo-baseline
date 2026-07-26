@@ -28,22 +28,22 @@ function vibrate(pattern: number | number[]): boolean {
 }
 
 /** Light confirmation tap — buttons, toggles, selections. */
-export function hapticTap(): void {
+function hapticTap(): void {
   vibrate(8)
 }
 
 /** Selection change — checkbox/division toggles. */
-export function hapticSelect(): void {
+function hapticSelect(): void {
   vibrate(5)
 }
 
 /** Positive outcome — registration started, action committed. */
-export function hapticSuccess(): void {
+function hapticSuccess(): void {
   vibrate([10, 40, 18])
 }
 
 /** Cautionary outcome — destructive confirm, error. */
-export function hapticWarning(): void {
+function hapticWarning(): void {
   vibrate([16, 30, 16])
 }
 

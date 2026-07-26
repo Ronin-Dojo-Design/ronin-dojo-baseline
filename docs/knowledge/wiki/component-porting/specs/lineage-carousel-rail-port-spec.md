@@ -190,8 +190,8 @@ assertions; screenshot before/after:
 
 - Epic: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md)
 - Port map: [PORTMAP-0004 — Carousel rail (Embla extension)](../graphify-component-port-map.md)
-- Session: [SESSION_0337](../../../../sprints/SESSION_0337.md)
-- Proof session: [SESSION_0340](../../../../sprints/SESSION_0340.md)
+- Session: [SESSION_0337](../../../../sprints/_archive/era-b/SESSION_0337.md)
+- Proof session: [SESSION_0340](../../../../sprints/_archive/era-b/SESSION_0340.md)
 - BBL source (read for behavior only):
   `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/shared/CarouselRail.jsx`
 - Existing primitive being extended: `apps/web/components/common/carousel.tsx`

@@ -4,8 +4,8 @@ slug: sot-cookbook
 type: protocol
 status: active
 created: 2026-07-20
-updated: 2026-07-21
-last_agent: claude-session-0588
+updated: 2026-07-25
+last_agent: claude-session-0711
 pairs_with:
   - docs/protocols/WORKFLOW_6.0.md
   - docs/knowledge/wiki/agent-systems-map.md
@@ -43,7 +43,10 @@ here for the live table.
 | Prove a change actually works | `/verify` + [`qa-runtime-verification`](qa-runtime-verification.md) | runtime evidence, not "it compiles" |
 | Emergency user-blocking prod bug | [`hot-fix-protocol`](hot-fix-protocol.md) | fast within the push gate, not past it |
 | A multi-slice epic that decomposes into disjoint lanes | [`recipes/epic-plan.md`](recipes/epic-plan.md) → [`recipes/orchestrator.md`](recipes/orchestrator.md) → N × [`recipes/lane.md`](recipes/lane.md) | plan once, prove disjointness, fan out |
-| Staging an unattended overnight fan-out | [`recipes/PM_Planning_Lane.md`](recipes/PM_Planning_Lane.md) (evening) → [`recipes/AM_Coffee_Merge_Review.md`](recipes/AM_Coffee_Merge_Review.md) (morning) | pin every fork before launch; sweep + push-gate at coffee |
+| Staging an unattended overnight fan-out | [`recipes/pm-planning-lane.md`](recipes/pm-planning-lane.md) (evening) → [`recipes/am-coffee-merge-review.md`](recipes/am-coffee-merge-review.md) (morning) | pin every fork before launch; sweep + push-gate at coffee |
+| A rolling multi-wave overnight run (2+ waves of autonomous lanes, one orchestrator) | [`recipes/overnight-orchestrator-waves.md`](recipes/overnight-orchestrator-waves.md) | the 0635 gold-run pattern: wave-after-wave dispatch, completion-triggered, zero unauthorized merges |
+| Absorb a client meeting's notes (capture → grill → route to PRD/STORIES/goals) | [`recipes/client-meeting-intake.md`](recipes/client-meeting-intake.md) | meeting intake without prose-rot; any client, any meeting |
+| Quality pass over a merged trunk (post-fan-out sweep of landed lanes) | [`recipes/quality-suite.md`](recipes/quality-suite.md) | diff-bounded `/code-quality` + `/fallow-fix-loop`, behavior-preserving; the merged-trunk sibling of `page-code-review` |
 | Run N disjoint lanes in ONE attended session (dispatch → review → merge) | Petey (Opus) + [`recipes/live-fanout-sweep.md`](recipes/live-fanout-sweep.md) | persona-subagent fanout + same-session sweep; token-efficient vs N separate sessions (SESSION_0582/0597) |
 | Take stock: assess repo-state, flip stale ledgers, stage an overnight autonomous fan-out | Petey (Opus) + [`recipes/state-sweep.md`](recipes/state-sweep.md) | read-first status sweep + ledger status-correction + launchable lane stubs; the assessment sibling of the planning lane |
 | Merging/pushing a branch, gate ladder G0→G4 | [`recipes/merge-wave.md`](recipes/merge-wave.md) | absorbs `giddy-merge-strategy.md`'s gates |
@@ -52,6 +55,35 @@ here for the live table.
 | Stand up a new brand/client app deploy (plan-first) | [`recipes/new-brand-setup.md`](recipes/new-brand-setup.md) → [intake](recipes/new-brand-intake.md) · [onboarding](recipes/new-brand-onboarding.md) · interviews: [design](recipes/new-brand-interview-design.md)/[business](recipes/new-brand-interview-business.md)/[client](recipes/new-brand-interview-client.md) | own DB+deploy+brand; first-party `apps/*` or client `clients/*` (ADR 0034/0038/0051); RDD = exerciser #1 |
 | Turn interviews into mission/motto/brand canon | **Brandon** ([role](../agents/brandon.md)) | separate confirmed truth from recommendations |
 | Repo feels heavy / duplicated / drifting | [`hostile-repo-review`](hostile-repo-review.md) | the repo-wide lean-out |
+
+## Operator quick-map (folded from `operator-playbook.md`, SESSION_0711)
+
+**Inline vs fan-out:** one coherent change → inline, single agent, single PR. Work that splits cleanly
+by directory (no shared files) → fan-out, one lane per disjoint dir, `isolation: worktree`, one PR per
+slice. Shared files / dependent stages → sequence, don't parallelize. Fuzzy scope → Petey plan first.
+
+**Pause-on-merge:** agents build + drive-to-green; **the operator pulls the merge trigger** (merging
+app-code = prod deploy per `vercel.json` `ignoreCommand`; docs/governance pushes don't deploy).
+
+**Hard-won rules:** worktree-isolate any agent that mutates files (a dirty-tree subagent `git stash`
+clobbers edits) · a wave that adds a dep MUST commit the lockfile (CI runs `--frozen-lockfile`) · run a
+local `next build` on changed `"use server"`/route/client-chrome modules (tsc/tests miss those traps).
+
+**Loop-routing rows** (signals the router table doesn't already carry):
+
+| Signal | Reach for |
+| --- | --- |
+| "What's the intent — am I solving the right thing?" | [`identify-intent-improve-loop.md`](identify-intent-improve-loop.md) |
+| Deep correctness/quality sweep | [`three-pass-loop.md`](three-pass-loop.md); cloud multi-agent = `/code-review ultra` |
+| Pre-merge ordering / what-next | [`review-recommend.md`](review-recommend.md) |
+| "Is this the simplest version?" | `/fallow-fix-loop` + `/code-quality` (D3 — `kiss-dry-yagni-loop` is superseded) |
+
+**Standing gate:** brand-harness prune **Stage 2 (schema drop) stays gated** — its own session, the 4
+Phase-0 decisions first (`petey-plan-brand-harness-prune.md`); Stage 1 is complete + shipped.
+
+**Cadence:** one push per session at close · operator drives, nothing canonical by default · verify
+before declaring done (drive the real app for prod-facing changes) · big decisions → fresh window past
+the ~120K "dumb zone".
 
 ## Recipe cards vs sequence skills — which to read
 
