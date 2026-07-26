@@ -11,7 +11,7 @@ set -euo pipefail
 MIRROR="$HOME/dev/RDD_Baseline44_Vault"
 declare -a VAULTS=(
   "$HOME/Dropbox/Obsidian/Baseline_ObsidianDB/RDD_Master_Vault"
-  "$HOME/Dropbox/Obsidian/Mammoth_Master_Vault"
+  # MMB_Shared (Michael's Google Drive) joins here once Drive for Desktop mounts it locally.
 )
 
 if [ ! -d "$MIRROR/.git" ]; then
