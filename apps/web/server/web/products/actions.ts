@@ -7,13 +7,56 @@ import { getServerSession } from "~/lib/auth"
 import { actionClient } from "~/lib/safe-actions"
 import { findStripeCustomerForCheckout } from "~/server/web/billing/stripe-customers"
 import { checkoutSchema } from "~/server/web/products/schema"
+import { db } from "~/services/db"
 import { stripe } from "~/services/stripe"
 
 export const createStripeCheckout = actionClient
   .inputSchema(checkoutSchema)
   .action(async ({ parsedInput: { lineItems, successUrl, cancelUrl, mode, metadata, coupon } }) => {
     const session = await getServerSession()
-    const shouldAttachCustomer = Boolean(session?.user?.id && metadata?.userId === session.user.id)
+
+    // SEC-01: every line item must reference a server-known Stripe price.
+    // Client-supplied amounts (`price_data`) are rejected at the schema; here
+    // each referenced price is verified against the Stripe account and against
+    // the requested mode, so the charged amount always comes from the
+    // canonical Stripe price record.
+    for (const item of lineItems) {
+      const price = await stripe.prices.retrieve(item.price).catch(() => null)
+
+      if (!price?.active) {
+        throw new Error("Selected price is not available.")
+      }
+
+      if (mode === "subscription" && !price.recurring) {
+        throw new Error("Selected price does not support subscriptions.")
+      }
+
+      if (mode === "payment" && price.recurring) {
+        throw new Error("Selected price requires a subscription checkout.")
+      }
+    }
+
+    // SEC-01: metadata is server-derived from the typed allowlist — the tool
+    // slug must reference a real tool, and the userId is taken from the
+    // authenticated session, never from the client.
+    if (metadata?.tool) {
+      const tool = await db.tool.findUnique({
+        where: { slug: metadata.tool },
+        select: { id: true },
+      })
+
+      if (!tool) {
+        throw new Error("Selected tool is not available.")
+      }
+    }
+
+    const trustedMetadata: Record<string, string> = {
+      ...(metadata?.tool ? { tool: metadata.tool } : {}),
+      ...(session?.user?.id ? { userId: session.user.id } : {}),
+    }
+    const hasMetadata = Object.keys(trustedMetadata).length > 0
+
+    const shouldAttachCustomer = Boolean(session?.user?.id)
     const requestBrand = shouldAttachCustomer ? Brand.BBL : null
     const existingCustomer =
       session?.user?.id && requestBrand
@@ -36,8 +79,9 @@ export const createStripeCheckout = actionClient
             : "if_required"
           : undefined,
       invoice_creation: mode === "payment" ? { enabled: true } : undefined,
-      metadata: mode === "payment" ? metadata : undefined,
-      subscription_data: mode === "subscription" && metadata ? { metadata } : undefined,
+      metadata: mode === "payment" && hasMetadata ? trustedMetadata : undefined,
+      subscription_data:
+        mode === "subscription" && hasMetadata ? { metadata: trustedMetadata } : undefined,
       allow_promotion_codes: coupon ? undefined : true,
       discounts: coupon ? [{ coupon }] : undefined,
       success_url: `${siteConfig.url}${successUrl}?sessionId={CHECKOUT_SESSION_ID}`,

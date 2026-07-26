@@ -176,13 +176,13 @@ const claimStripeWebhookEvent = async (event: Stripe.Event) => {
   }
 }
 
-const markStripeWebhookEventProcessed = async (eventId: string) => {
+const markStripeWebhookEventProcessed = async (eventId: string, note: string | null = null) => {
   await db.stripeWebhookEvent.update({
     where: { id: eventId },
     data: {
       status: "PROCESSED",
       processedAt: new Date(),
-      lastError: null,
+      lastError: note,
     },
   })
 }
@@ -248,18 +248,123 @@ const resolvePricingPlanPriceIds = async (
   return mappedItems
 }
 
-const resolvePricingPlanLineItems = async (
+const fetchCheckoutLineItems = async (
   session: Stripe.Checkout.Session,
   stripeClient: Stripe,
-): Promise<MappedPricingPlanLineItem[]> => {
+): Promise<Stripe.LineItem[]> => {
   const lineItems = await stripeClient.checkout.sessions.listLineItems(session.id)
+  return lineItems.data
+}
+
+const resolvePricingPlanLineItems = async (
+  lineItems: Stripe.LineItem[],
+): Promise<MappedPricingPlanLineItem[]> => {
   return resolvePricingPlanPriceIds(
-    lineItems.data
+    lineItems
       .map(item => ({ priceId: item.price?.id, quantity: item.quantity }))
       .filter((item): item is { priceId: string; quantity: number | null } =>
         Boolean(item.priceId),
       ),
   )
+}
+
+// -----------------------------------------------------------------------------
+// SEC-01 — payment-integrity verification.
+//
+// Every `checkout.session.completed` fulfillment branch cross-checks the paid
+// amount against the canonical expected price BEFORE granting anything. A
+// mismatch is logged and flagged on the StripeWebhookEvent row, fulfillment is
+// skipped, and the webhook still ACKs (no 500 back to Stripe).
+// -----------------------------------------------------------------------------
+
+/**
+ * Paid amount for verification. `amount_subtotal` is the pre-discount/pre-tax
+ * item total, so legitimate coupons and automatic tax never trip the check;
+ * fall back to `amount_total` when subtotal is absent.
+ */
+const getPaidCheckoutAmountCents = (session: Stripe.Checkout.Session): number | null => {
+  return session.amount_subtotal ?? session.amount_total ?? null
+}
+
+/** Sum of `plan.amountCents * quantity` for DB-mapped line items. */
+const sumMappedPlanCents = (mappedItems: MappedPricingPlanLineItem[]): number | null => {
+  if (mappedItems.length === 0) return null
+  return mappedItems.reduce((sum, item) => sum + item.plan.amountCents * item.quantity, 0)
+}
+
+/**
+ * Sum of Stripe line-item amounts (`price.unit_amount * quantity`). Returns
+ * null when the amounts cannot be established (empty or missing unit_amount).
+ */
+const sumStripeLineItemCents = (lineItems: Stripe.LineItem[]): number | null => {
+  if (lineItems.length === 0) return null
+
+  let total = 0
+  for (const item of lineItems) {
+    const unitAmount = item.price?.unit_amount
+    if (typeof unitAmount !== "number") return null
+    total += unitAmount * (item.quantity ?? 1)
+  }
+
+  return total
+}
+
+/**
+ * Verify a paid amount against a canonical expected amount. Returns null when
+ * verified, or a flag string (logged + stored on the webhook event) when not.
+ */
+const verifyPaidAmount = ({
+  session,
+  expectedCents,
+  label,
+}: {
+  session: Stripe.Checkout.Session
+  expectedCents: number | null
+  label: string
+}): string | null => {
+  const paidCents = getPaidCheckoutAmountCents(session)
+
+  if (expectedCents === null || paidCents === null || paidCents < expectedCents) {
+    const flag = `AMOUNT_MISMATCH ${label}: expected=${expectedCents ?? "unknown"} paid=${paidCents ?? "unknown"} session=${session.id}`
+    console.error(`[stripe-webhook] ${flag}`)
+    return flag
+  }
+
+  return null
+}
+
+/**
+ * Canonical expected amount for a tournament registration: the sum of the
+ * division fees referenced in the session metadata. Returns a flag string when
+ * the metadata is malformed or the paid amount is below the canonical fee.
+ */
+const verifyTournamentRegistrationAmount = async (
+  session: Stripe.Checkout.Session,
+): Promise<string | null> => {
+  const { divisionIds } = session.metadata ?? {}
+
+  let parsedDivisionIds: string[]
+  try {
+    const parsed: unknown = JSON.parse(divisionIds ?? "")
+    if (!Array.isArray(parsed) || !parsed.every(id => typeof id === "string")) {
+      throw new Error("divisionIds is not a string array")
+    }
+    parsedDivisionIds = parsed
+  } catch {
+    return `AMOUNT_MISMATCH tournament_registration: malformed divisionIds session=${session.id}`
+  }
+
+  const divisions = await db.division.findMany({
+    where: { id: { in: parsedDivisionIds } },
+    select: { id: true, feeCents: true },
+  })
+
+  if (divisions.length !== parsedDivisionIds.length) {
+    return `AMOUNT_MISMATCH tournament_registration: unknown division ids session=${session.id}`
+  }
+
+  const expectedCents = divisions.reduce((sum, division) => sum + division.feeCents, 0)
+  return verifyPaidAmount({ session, expectedCents, label: "tournament_registration" })
 }
 
 const resolveBrandFromCheckout = async (
@@ -1086,23 +1191,55 @@ export const processStripeWebhook = async (
       return new Response(JSON.stringify({ received: true, duplicate: true }))
     }
 
+    // SEC-01: amount-mismatch flags collected while processing. The event is
+    // still ACKed and marked PROCESSED (never a 5xx back to Stripe), but the
+    // flags are stored on the StripeWebhookEvent row for review.
+    const integrityFlags: string[] = []
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object
         const { mode, subscription, metadata } = session
-        const mappedItems = await resolvePricingPlanLineItems(session, stripeClient)
+        const stripeLineItems = await fetchCheckoutLineItems(session, stripeClient)
+        const mappedItems = await resolvePricingPlanLineItems(stripeLineItems)
 
         await persistStripeCustomerFromCheckout(session, mappedItems)
 
-        // Grant entitlements linked to the purchased/subscribed plan.
-        await grantEntitlementsFromCheckout(session, mappedItems)
-
         switch (mode) {
           case "payment": {
-            await createLedgerFromCheckout(session, mappedItems)
+            // SEC-01: cross-check the paid amount against the canonical
+            // PricingPlan amounts before granting anything plan-derived.
+            const planAmountFlag =
+              mappedItems.length > 0
+                ? verifyPaidAmount({
+                    session,
+                    expectedCents: sumMappedPlanCents(mappedItems),
+                    label: "pricing_plan",
+                  })
+                : null
+
+            if (planAmountFlag) {
+              integrityFlags.push(planAmountFlag)
+            } else {
+              // Grant entitlements linked to the purchased plan.
+              await grantEntitlementsFromCheckout(session, mappedItems)
+              await createLedgerFromCheckout(session, mappedItems)
+            }
 
             // Handle program enrollment payment
             if (metadata?.type === "program_enrollment") {
+              const enrollmentFlag =
+                planAmountFlag ??
+                (mappedItems.length === 0
+                  ? `AMOUNT_MISMATCH program_enrollment: no mapped pricing plan session=${session.id}`
+                  : null)
+
+              if (enrollmentFlag) {
+                integrityFlags.push(enrollmentFlag)
+                console.error(`[stripe-webhook] skipped program enrollment — ${enrollmentFlag}`)
+                break
+              }
+
               await fulfillProgramEnrollment(session)
               revalidateTag("programs", "infinite")
               break
@@ -1110,6 +1247,16 @@ export const processStripeWebhook = async (
 
             // Handle tournament registration payment
             if (metadata?.type === "tournament_registration") {
+              const tournamentFlag = await verifyTournamentRegistrationAmount(session)
+
+              if (tournamentFlag) {
+                integrityFlags.push(tournamentFlag)
+                console.error(
+                  `[stripe-webhook] skipped tournament registration — ${tournamentFlag}`,
+                )
+                break
+              }
+
               await fulfillTournamentRegistration(session, stripeClient)
               revalidateTag("tournaments", "infinite")
               break
@@ -1133,6 +1280,28 @@ export const processStripeWebhook = async (
                     select: { name: true, amountCents: true, organizationId: true, metadata: true },
                   })
                 : null
+
+              // SEC-01: merch fulfillment requires a canonical plan and a paid
+              // amount that covers it (subtotal excludes shipping/tax).
+              if (!plan) {
+                const merchFlag = `AMOUNT_MISMATCH merch_purchase: unknown pricing plan session=${session.id}`
+                integrityFlags.push(merchFlag)
+                console.error(`[stripe-webhook] skipped merch fulfillment — ${merchFlag}`)
+                break
+              }
+
+              const merchQuantity = stripeLineItems[0]?.quantity ?? 1
+              const merchFlag = verifyPaidAmount({
+                session,
+                expectedCents: plan.amountCents * merchQuantity,
+                label: "merch_purchase",
+              })
+
+              if (merchFlag) {
+                integrityFlags.push(merchFlag)
+                console.error(`[stripe-webhook] skipped merch fulfillment — ${merchFlag}`)
+                break
+              }
 
               const shipping = (session as any).shipping_details as {
                 name?: string | null
@@ -1250,9 +1419,33 @@ export const processStripeWebhook = async (
 
             // Handle tool expedited payment
             if (metadata?.tool) {
-              const tool = await db.tool.findUniqueOrThrow({
+              // SEC-01: the canonical amount for a tool purchase is the Stripe
+              // price on the session line items (client price_data is banned at
+              // the checkout schema, so these are server-known prices).
+              const toolFlag = verifyPaidAmount({
+                session,
+                expectedCents: sumStripeLineItemCents(stripeLineItems),
+                label: "premium_tool",
+              })
+
+              if (toolFlag) {
+                integrityFlags.push(toolFlag)
+                console.error(`[stripe-webhook] skipped premium tool fulfillment — ${toolFlag}`)
+                break
+              }
+
+              const tool = await db.tool.findUnique({
                 where: { slug: metadata.tool },
               })
+
+              if (!tool) {
+                const unknownToolFlag = `AMOUNT_MISMATCH premium_tool: unknown tool slug session=${session.id}`
+                integrityFlags.push(unknownToolFlag)
+                console.error(
+                  `[stripe-webhook] skipped premium tool fulfillment — ${unknownToolFlag}`,
+                )
+                break
+              }
 
               // Notify the submitter of the premium tool
               after(async () => await notifySubmitterOfPremiumTool(tool))
@@ -1265,6 +1458,12 @@ export const processStripeWebhook = async (
           }
 
           case "subscription": {
+            // Grant entitlements linked to the subscribed plan (amounts for
+            // subscriptions always come from the real Stripe recurring price;
+            // `syncSubscriptionEntitlements` below re-syncs from the live
+            // subscription object as well).
+            await grantEntitlementsFromCheckout(session, mappedItems)
+
             const subscriptionId = getStripeId(subscription)
             if (!subscriptionId) break
 
@@ -1561,7 +1760,10 @@ export const processStripeWebhook = async (
       }
     }
 
-    await markStripeWebhookEventProcessed(event.id)
+    await markStripeWebhookEventProcessed(
+      event.id,
+      integrityFlags.length > 0 ? integrityFlags.join(" | ").slice(0, 1000) : null,
+    )
   } catch (error) {
     try {
       await markStripeWebhookEventFailed(event.id, error)
