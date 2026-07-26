@@ -119,6 +119,19 @@ PL-030 explorer epic queued behind the fork work.
 - **Rider routed:** replace the broken `obsidian-vault` skill with a thin RDD-vault pointer
   (live vault path + conventions), delegating format knowledge to the kepano set.
 
+## /gq — ACD + Tuff Buffs (the 6th/7th board slots)
+
+- **ACD (Amy Coaches Data):** ratified 6th brand — ADR 0051 taxonomy table + `ronin-project-context.md`
+  (amycoachesdata.com, data/analytics coaching, non-martial-arts, "load-bearing evidence" the kernel
+  stays domain-agnostic). **No repo, no app, no code** anywhere (org repo list checked) — correctly
+  absent from the ADR 0055 fork; its lane starts with a scope/interview session (G-027 recipe family),
+  then repo + ruleset + scaffold (ADR 0057 own DB).
+- **Tuff Buffs:** ratified as the **pilot white-label instance of Baseline** (ADR 0051 — transitional,
+  being absorbed, NOT a peer repo). WordPress today (Local Sites checkout); own Stripe account
+  (the `acct_1T065a…` CLI trap). Path: blocked on the Baseline trim → Baseline-skinned instance app
+  (own deploy + DB) → migrate content/commerce → WP sunset.
+- Both added to the Fork Fan-out Board (republished, same URL).
+
 ## Artifacts
 
 - State-of-Dojo frozen snapshot (bow-in): <https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd>
