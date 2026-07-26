@@ -87,4 +87,3 @@ export const canEditOrganization = async (
   })
   return Boolean(organization)
 }
-

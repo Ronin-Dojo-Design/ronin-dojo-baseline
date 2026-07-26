@@ -62,4 +62,3 @@ export const getCurrentCourseEnrollmentState = async ({
     hasCourseAccessEntitlement: Boolean(entitlement),
   }
 }
-
