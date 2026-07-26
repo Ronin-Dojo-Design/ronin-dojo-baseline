@@ -68,9 +68,9 @@ the **caps in §4 are applied** — a cap can only *lower* the composite.
 | --- | --- | ---: | --- | --- |
 | D1 | **Correctness & behavior integrity** | 2.0 | Does it do what it claims? Edge cases, error handling, no regression. | a run/test/render (not "it compiles"); `bun test` touched-area |
 | D2 | **Security & data integrity** | 2.0 | Authz on every exposed path; boundary validation; DB-enforced invariants; no secret leakage. | `/security-review`; schema constraints; authz trace |
-| D3 | **Simplicity (KISS/DRY/YAGNI)** | 1.5 | Straightest logic; no duplication, no dead code, no speculative generality. | `fallow audit` CRAP + duplication clone-groups; guardrail G1 |
+| D3 | **Simplicity (KISS/DRY/YAGNI)** | 1.5 | Straightest logic; no duplication, no dead code, no speculative generality. | `bunx fallow audit` CRAP + duplication clone-groups; guardrail G1 |
 | D4 | **Readability & clarity** | 1.5 | Obvious to the next developer; naming; matches local idiom; JETTY `@why`/`@wired` where required. | JETTY annotation present; idiom match by eye |
-| D5 | **Maintainability** | 1.5 | Cohesion, testability, small reviewable units, no dead code. | `fallow health` maintainability index; dead-code count |
+| D5 | **Maintainability** | 1.5 | Cohesion, testability, small reviewable units, no dead code. | `bunx fallow health` maintainability index; dead-code count |
 | D6 | **Scalability & efficiency** | 1.0 | Confidence at 100/1k/10k; no hot/startup-path work; query efficiency; indexes. | EXPLAIN/N+1 check; the 100/1k/10k confidence triad |
 | D7 | **Convention & reuse fit** | 1.5 | Extends Dirstarter (not bypasses); reuses L1 primitives; custom code justified + inventoried. | §3 judging protocol; `dirstarter-component-inventory`, `custom-component-inventory` |
 

@@ -41,7 +41,7 @@ Without this bound every page pass swallows the whole app. Write the explicit fi
 
 ## Step 1 — fallow BASELINE (capture as an artifact, before any edit)
 
-`fallow health` + `fallow dupes` + `fallow audit` scoped to the Step-0 files. **Write the numbers down**
+`bunx fallow health` + `bunx fallow dupes` + `bunx fallow audit` scoped to the Step-0 files. **Write the numbers down**
 (CRAP hotspots, dup clusters, dead-code, complexity) into the SESSION file. No delta proof is honest without
 a captured baseline.
 

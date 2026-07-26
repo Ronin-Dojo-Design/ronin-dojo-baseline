@@ -85,7 +85,7 @@ route it to the supervised lane** — do not migrate.
 ### 5. Verify
 
 - `npx tsc --noEmit` → 0 errors.
-- `npx fallow audit` → **no new findings**. Decomposition relocates functions to new file paths, so the
+- `bunx fallow audit` → **no new findings**. Decomposition relocates functions to new file paths, so the
   audit's path-based diff flags moved code as "introduced" — read `introduced: 0` in the JSON + a held
   maintainability number, **not** the raw above-threshold count.
 - **Live-DOM check** (Playwright/Chrome MCP) → the component renders + interacts; screenshot. Prove it on

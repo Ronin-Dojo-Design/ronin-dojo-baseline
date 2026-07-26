@@ -79,7 +79,7 @@ This is the review sibling of the build fanout — same roster, same disjointnes
 
 0. **Bound the diff.** Compute `<base>..<head>`, list the code-bearing files, partition by deploy unit.
    Docs/`.claude` → wiki-lint/pointer lens only. Write the file list into the SESSION task.
-1. **Fallow baseline** (before any edit): `npx fallow audit --changed-since <base> --gate all --format json`.
+1. **Fallow baseline** (before any edit): `bunx fallow audit --changed-since <base> --gate all --format json`.
    Record complexity/CRAP hotspots, dupe clone groups, dead-code by scoped file. No delta is honest without this.
 2. **Scored review** (read-only, fan out per lane): `/code-quality` (/10 + Class A/B/C + hard caps →
    "Apple/Facebook grade?") on each code file; Desi UX lens on UI lanes; wiki-lint on docs lanes. Output
