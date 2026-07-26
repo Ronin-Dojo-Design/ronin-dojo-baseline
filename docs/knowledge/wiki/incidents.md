@@ -4,8 +4,8 @@ slug: incidents
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-07-18
-last_agent: claude-session-0569
+updated: 2026-07-26
+last_agent: claude-session-0712
 ---
 
 # Incidents Log
@@ -36,3 +36,5 @@ See [closing ritual — unclean close recovery](../../rituals/closing.md#unclean
 | 2026-07-17 | SESSION_0546 | session-limit-continuation | Claude hit its session limit after the five-commit quality lane landed and while Cody was building Wave 1; the SESSION remained open with review/build work in flight | Codex verified the committed branch, merged it locally into canonical `main`, completed the in-flight Wave 1 without losing edits, obtained Cody handoff plus Desi/Doug review, preserved responsive/export evidence, ran close gates, and closed SESSION_0546. Nothing pushed. | SESSION_0546 (Codex continuation) |
 | 2026-07-18 | SESSION_0569 | session-limit-continuation | Claude hit its session limit mid-turn between the Desi audit/brief delivery and the Wave 2 build dispatch — second occurrence in the technique lane (first: SESSION_0546) | Operator resumed after reset; no edits were in flight (audit was read-only, prior work committed), build/review pipeline continued in-session and closed normally. Pattern note: both hits landed during long multi-sub-agent waves — commit-early discipline (already practiced) is the mitigation that made both recoveries lossless. | SESSION_0569 (same-session continuation) |
 | 2026-07-22 | SESSION_0583 / 0585 / 0613 | unclean-close | Three sessions left `status: in-progress` after their work landed + pushed (commits `28b5fd95`, `9d4a397b`, `4632eabf`); each had full `What landed` + historical "push gate held" text. Surfaced by the State-of-Dojo `needs-you` feed flooding with resolved-but-open sessions | Verified work landed via git, flipped all three frontmatter `status:` → `closed` (docs-only). Root of the projection noise is stale source data, not the projection. | SESSION_0617 |
+| 2026-07-26 | SESSION_0711 (#342 squash) | unclean-close | The #342 squash-merge reintroduced the pre-renumber ADR files (docs/adr/0001–0004 duplicates of 0055–0058) alongside the ec075daa renames, and the renamed files kept old-number titles/H1s — HEAD carried a half-renumbered corpus | Found at SESSION_0712 bow-in survey; duplicates dropped + renumber finished (`a654233f`), README table completed | SESSION_0712 |
+| 2026-07-26 | SESSION_0674 | unclean-close | Frontmatter stayed `in-review` after the build merged (PR #303, `b2fc7013` — `/app/state/[brand]` + BrandStatePanel); same class as the 0583/0585/0613 stale-status flood | Verified merge via git, flipped frontmatter `status:` → `closed` (docs-only) in SESSION_0712 | SESSION_0712 |

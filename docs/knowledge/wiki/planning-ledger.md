@@ -623,6 +623,33 @@ plan scope.
   (sort-filter origin), WL-P2-3 (ListRow extraction — 2 of the 7 instances live in explorer
   surfaces; fold in when touched), G-008 adjacency.
 
+
+### PL-032 — SotD usefulness epic: one renderer, epics/fan-out baked in, the promised components landed — queued · operator-directed
+
+- **Status:** queued (operator-directed SESSION_0712 — "I want it useful: progress + what needs
+  doing, visually, without hunting the docs"). Full findings map in SESSION_0712 §SotD review
+  (Explore sweep: 19 shipped · 7 in-flight · 14 planned-never-started · 7 no-owner).
+- **Scope, in order:**
+  1. **Unify renderers** — `scripts/state-of-project.ts` imports `_kernel/phase.ts` (kills D-055:
+     duplicated PHASES/BELT_WORD/BRANDS/masthead; adds the missing deploy-scope gate).
+  2. **PL-020 once** — belt-ladder action words + order + un-inverted white/black, fixed in the one
+     shared vocabulary.
+  3. **Epics panel + Fan-out panel in the renderer** — the SESSION_0712 hand-built artifact tabs
+     (epics consolidated from docs/epics/ + product epic-plans + staged stubs; per-slot fork board)
+     become deterministic sections so EVERY snapshot carries them automatically.
+  4. **WL-P2-76** docs-navigator link card (0620 /rr ratified the link-card form, not a panel).
+  5. **WL-P2-75** MBR rows → Needs-you feed.
+  6. **PL-003 §1** loop-board embed ON the SotD page.
+  7. **Fork-era home decision (grill fork):** portfolio SotD lives where (RDD-Monorepo) vs
+     per-brand SotD (each repo's own `/app/state`) — S14 `/app/state/[brand]` is prior art.
+- **Backlog adjacency (pull in only if cheap):** PL-009 DBS component (staged 0596) · PL-007
+  Kaizen cards · WL-P2-71 wayfinder panel · M3 historical-frontmatter backfill.
+- **Plan (session A, grilled + staged SESSION_0712 bow-out):**
+  `docs/sprints/plans/petey-plan-0712-sotd-usefulness.md` — forks resolved: SotD home =
+  RDD-Mono + per-brand routes · renderer-first slice · build in BBL, cherry-pick up immediately.
+- **Lane:** repo/kernel. **Cross-refs:** D-055, PL-020, PL-003, WL-P2-75/-76, G-023, G-014
+  (the operator's visibility driver), SESSION_0712 §SotD review.
+
 ### PL-031 — Monorepo platform gaps: shared config presets, API-contract extraction, task orchestration — queued
 
 - **Status:** queued. Intake: SESSION_0709 operator-provided reference article

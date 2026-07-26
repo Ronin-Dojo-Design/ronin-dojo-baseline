@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0712 — Phase C: trim-to-brand fan-out (five-repo era)"
 slug: session-0712
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-26
 updated: 2026-07-26
 last_agent: claude-session-0712
@@ -84,6 +84,16 @@ PL-030 explorer epic queued behind the fork work.
 | TASK_07 | ✅ `main-pr-only` ruleset created ACTIVE on all four siblings (ids 19777563–66); `b5f97e17` tracked `.claude/settings.shared.json` + bootstrap copy step (cherry-pick to RDD-Monorepo per ADR 0059) |
 | TASK_08 (WL-P3-69) | ✅ `4a31dbaf`/`fad078db` — (a) ui-kit oxfmt pinned zero-diff; (b) moot (C1 deleted the script); (c) comment-reorder REPRODUCED (worse: one line hoisted per pass, converges N+1) → G10 guardrail + scratchpad repro + DRAFT upstream issue (unposted, operator-gated) |
 | TASK_09 (FS-0042) | ✅ `03d89b88`/`d92992ba`/`d2dd66ee` — bunx-fallow doc sweep (6 executed docs), minter phantom-filter fix, + the Doug-caught self-burn evidence line fixed |
+
+## Goal extension (bow-out ①)
+
+Operator: "goal not hit until the 7 repos are in the local dev folder." Done in-session:
+4 sibling clones at `ecefd008` (`baseline-martial-arts` · `mammoth-metal-buildings` ·
+`usa-stickfighting` · `ronin-dojo-design-monorepo`) + **Amy-Coaches-Data created** (fresh
+private repo, no fork history — nothing existed to fork; `main-pr-only` ruleset active;
+cloned as `amy-coaches-data`) + Tuff Buffs slot = the pre-existing `~/dev/ronin-dojo-monorepo`
+(old WP/React work; NO new TB repo — ADR 0051 instance model honored, operator call).
+All 7 slots local. Repos are cloned, NOT bootstrapped (each repo's own session, ADR 0059).
 
 ## Verification
 
@@ -171,19 +181,58 @@ No — they were never built. `/cas`·`/car`·`/cac` (`create-a-sequence` / `cre
 `docs/sprints/_archive/monorepo-era/SESSION_0605.md`. The trim deleted no skills; the graph query
 also surfaced pre-trim phantoms (mammoth paths) — full Graphify rebuild queued at bow-out.
 
+## Reflections
+
+- **The fork's first trim proved the recipe cheap:** C1–C6 landed in one session with zero test
+  regressions (1923 pass) because deletion-by-ordinary-commit + shared history means nothing is
+  ever lost — the fear tax on trimming was already paid at 0711. The SESSION_0712 task log is now
+  the reusable recipe for the three sibling trims.
+- **Squash-merges are a drift vector at close:** #342 reintroduced files its own branch had
+  renamed (ADR 0001–0004 dupes) and #303's session record never flipped from in-review. Both
+  found only because this session LOOKED. Routed as incidents; the pattern to watch is
+  "close-time squash + rename in the same wave."
+- **Ledgers self-burn:** writing a minter's predicted output verbatim into a scanned ledger
+  claims the id (FS-0042's own close evidence did it). Rule recorded: mangle ids in ledger prose.
+- **The operator's SotD frustration was data, not vibes:** the sweep proved ~7 promised
+  components never landed and two renderers drifted. The fix is one lane (PL-032), not scattered
+  patches — and the hand-built artifact tabs are the mock for it.
+
+## Review log
+
+- Doug full-diff verify: **GO 9.2/10** (gates in §Verification). Gate 12d: `/ggr` composite not
+  required (no shippable app-code beyond deletions + a config pin; working-tree diff at gate time
+  was docs-only). CI on PR #343: **9/9 green** incl. chromium 28m — Phase C3 done-means satisfied.
+
+## Full close evidence
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS (9 rows, all ✅) |
+| Format-fix (code) | 0 code files (ui-kit pin verified green) |
+| wiki:lint | 0 err / 108 warn |
+| Build | `next build` PASS (Doug) + CI 9/9 green |
+| /ggr (code session) | n/a per Gate 12d — Doug 9.2 GO stands |
+| Graphify | full rebuild at close (post-trim; incremental keeps phantoms) |
+| Git state | branch=session-0712-phase-c-trim · PR #343 green · merge on operator word |
+| Secret scan | PASS |
+| Evidence-artifact URL | https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd (SotD + Fan-out + Epics tabs) |
+| Finding router | INC ×2 (#342 squash dupes · 0674 stale status) · D-055 (renderer split) · PL-032 (SotD usefulness) · WL-P3-69 ✅ · FS-0042 closed |
+
 ## Next session
 
 ### Goal
 
-Phase C fan-out continues per ADR 0059 (session = one repo): run the trim-to-brand C1–C6 in the
-NEXT sibling checkout (Baseline-Martial-Arts or Mammoth-Metal-Buildings — Mammoth first if the
-2026-08-05 cutover pressure says so), reusing this session's recipe (this file's Task log +
-`docs/sprints/plans/petey-plan-0711-brand-repo-separation.md`). Then Phase D validation per repo.
+**Mammoth trim** (operator-elected 0712 bow-out; 08-05 cutover pressure): run C1–C6 + D1–D3 in
+`~/dev/mammoth-metal-buildings` (cloned at `ecefd008`, ruleset live), reusing this file's Task
+log as the recipe. Restore the parked `.env` from `~/dev/_secrets-parking/mammoth-build-crm/`
+first. SESSION_0713 stub staged.
 
 ### First task
 
-In the sibling checkout: bootstrap (`/worktree-setup` equivalent — settings.shared.json copy now
-exists), then C1 `git rm` the non-brand apps. Riders queued for a BBL hygiene lane: Doug P3
-residue list (SESSION_0712 §Verification), oxfmt upstream issue post (draft in 0712 scratchpad —
-needs operator word), Desktop vault copy deletion (still pending operator word), PL-030 explorer
-epic behind the fork work.
+Bootstrap the Mammoth checkout (bootstrap.sh copies settings.shared.json post-#343), C1 `git rm`
+apps/web + apps/baseline + apps/rdd. Queued after/alongside: **PL-032 session A** (plan staged:
+`docs/sprints/plans/petey-plan-0712-sotd-usefulness.md` — builds in BBL, cherry-picks up) ·
+BBL hygiene lane (Doug P3 residue: stale worktrees, pre-0304 petey-plan sweep, WEKAF PNGs →
+USA-Stickfighting, ADR 0055/0059 frontmatter) · Desktop vault copy deletion (STILL pending
+operator word) · PL-030 explorer epic · RDD-Mono bootstrap session (set the weekly sync DAY —
+unset as of 0712).

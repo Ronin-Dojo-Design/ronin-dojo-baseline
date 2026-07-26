@@ -2,7 +2,7 @@
 title: "SESSION 0674 — brand-scoped state surfaces (SotD=BBL-only, SotB=MMB-only) — verify-first vs frozen kernel (auto lane, wave 11/12)"
 slug: session-0674
 type: session--implement
-status: in-review
+status: closed
 created: 2026-07-24
 updated: 2026-07-24
 last_agent: claude-session-0674
