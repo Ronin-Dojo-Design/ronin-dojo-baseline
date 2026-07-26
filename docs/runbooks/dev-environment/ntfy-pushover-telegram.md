@@ -4,8 +4,8 @@ slug: ntfy-pushover-telegram
 type: runbook
 status: active
 created: 2026-06-02
-updated: 2026-06-03
-last_agent: claude-session-0335
+updated: 2026-07-26
+last_agent: claude-session-0712
 domain: ops
 pairs_with:
   - docs/runbooks/dev-environment/dev-environment.md
@@ -66,7 +66,7 @@ ronin-brian-a3f7c2e9b1d4
 mkdir -p ~/.config
 
 # Copy the example and edit
-cp /Users/brianscott/dev/ronin-dojo-app/scripts/notify/ronin-alerts.env.example \
+cp /Users/brianscott/dev/black-belt-legacy/scripts/notify/ronin-alerts.env.example \
    ~/.config/ronin-alerts.env
 
 # Edit: replace NTFY_TOPIC=ronin-REPLACE-ME-<random> with your topic
@@ -87,7 +87,7 @@ chmod 600 ~/.config/ronin-alerts.env
 ### Step 4 — Test
 
 ```bash
-/Users/brianscott/dev/ronin-dojo-app/scripts/notify/ntfy-send.sh \
+/Users/brianscott/dev/black-belt-legacy/scripts/notify/ntfy-send.sh \
   --title "Test" --tags tada "Hello from dev machine"
 ```
 

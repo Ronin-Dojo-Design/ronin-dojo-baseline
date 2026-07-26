@@ -13,7 +13,7 @@
 
 set -euo pipefail
 
-repo="/Users/brianscott/dev/ronin-dojo-app"
+repo="/Users/brianscott/dev/black-belt-legacy"
 
 # Gate 1: repo must exist
 [ -d "$repo/.git" ] || { echo '{}'; exit 0; }

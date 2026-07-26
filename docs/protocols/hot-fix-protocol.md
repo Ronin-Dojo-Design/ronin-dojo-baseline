@@ -4,8 +4,8 @@ slug: hot-fix-protocol
 type: protocol
 status: active
 created: 2026-06-20
-updated: 2026-07-23
-last_agent: claude-session-0624
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/protocols/merge-to-main.md
   - docs/protocols/recipes/merge-wave.md
@@ -76,7 +76,7 @@ Make the minimal change. Solve the bug, nothing more.
 ### Phase 5 — Commit (G2)
 
 Run the **FS-0024 git guard** before any mutating git (confirm `pwd` is
-`/Users/brianscott/dev/ronin-dojo-app` and `git remote` is `ronin-dojo-baseline`, never the
+`/Users/brianscott/dev/black-belt-legacy` and `git remote` is `ronin-dojo-baseline`, never the
 read-only template cwd). Then:
 
 ```bash

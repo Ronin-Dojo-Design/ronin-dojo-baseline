@@ -4,8 +4,8 @@ slug: merge-to-main
 type: protocol
 status: active
 created: 2026-05-03
-updated: 2026-07-25
-last_agent: claude-session-0711
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/protocols/WORKFLOW_6.0.md
   - docs/protocols/project-log.md
@@ -84,7 +84,7 @@ gh pr merge <pr-number> --squash --delete-branch
 ### 6. Pull main in orchestration worktree
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app  # main worktree
+cd /Users/brianscott/dev/black-belt-legacy  # main worktree
 git pull origin main
 ```
 

@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-07-26
-last_agent: claude-session-0711
+last_agent: claude-session-0712
 pairs_with:
   - docs/rituals/closing.md
   - docs/protocols/WORKFLOW_6.0.md
@@ -37,7 +37,7 @@ Any of: "Bow in" / starting a fresh session / opening a new chat / picking up af
 ### Before Step 0 — Fresh-worktree bootstrap (environment readiness)
 
 > If this session runs in a **fresh git worktree** (a `../ronin-NNNN` created off `main`, not the
-> canonical `/Users/brianscott/dev/ronin-dojo-app`), it is **not set up**: no `node_modules`, no
+> canonical `/Users/brianscott/dev/black-belt-legacy`), it is **not set up**: no `node_modules`, no
 > `apps/web/.env`, no generated Prisma client, and **`graphify` returns 0 nodes** (the graph lives in
 > the canonical checkout). Every gate — `tsc`, `oxlint`, `bun test`, `next dev` — fails on module
 > resolution until you bootstrap, and "graphify-first discovery" silently no-ops. **Do NOT read these

@@ -4,8 +4,8 @@ slug: database
 type: runbook
 status: active
 created: 2026-04-25
-updated: 2026-07-16
-last_agent: codex-session-0548
+updated: 2026-07-26
+last_agent: claude-session-0712
 use_count: 0
 pairs_with:
   - docs/runbooks/dev-environment/mcp-usage-runbook.md
@@ -88,7 +88,7 @@ Prisma's checked-in migration history owns the database extension contract.
 If you ever fix Docker Desktop or move to a different machine with working Docker, the `docker-compose.yml` + `infra/postgres/init.sql` we scaffolded will work as-is:
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app
+cd /Users/brianscott/dev/black-belt-legacy
 docker compose up -d                                                    # Postgres on localhost:5432, db ronindojo_dev
 docker compose down       # stop, keep data
 docker compose down -v    # stop AND wipe data (destroys volume)

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ronin-cwd-guard.sh — Block Bash calls that look like ronin-dojo-app work but are
-# missing the required `cd /Users/brianscott/dev/ronin-dojo-app && ` prefix.
+# missing the required `cd /Users/brianscott/dev/black-belt-legacy && ` prefix.
 #
 # Why: The VSCode primary cwd in this user's sessions is the purchased read-only
 # DirStarter template at `/Users/brianscott/Local Sites/DirStarter /dirstarter_template`.
@@ -41,9 +41,9 @@ fi
 
 # Already prefixed with the ronin-dojo-app cd → allow.
 case "$cmd" in
-  "cd /Users/brianscott/dev/ronin-dojo-app"*) echo '{}'; exit 0 ;;
-  'cd "/Users/brianscott/dev/ronin-dojo-app'*) echo '{}'; exit 0 ;;
-  "cd '/Users/brianscott/dev/ronin-dojo-app"*) echo '{}'; exit 0 ;;
+  "cd /Users/brianscott/dev/black-belt-legacy"*) echo '{}'; exit 0 ;;
+  'cd "/Users/brianscott/dev/black-belt-legacy'*) echo '{}'; exit 0 ;;
+  "cd '/Users/brianscott/dev/black-belt-legacy"*) echo '{}'; exit 0 ;;
 esac
 
 # Other legitimate non-ronin workspaces — allow.
@@ -98,7 +98,7 @@ cat <<'EOF'
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
-    "permissionDecisionReason": "FS-0024 guard: this Bash call looks like ronin-dojo-app work but is missing the required `cd /Users/brianscott/dev/ronin-dojo-app && ` prefix. The harness primary cwd is the read-only DirStarter template — every Bash call referencing git/gh/pnpm/bun/vercel/graphify or workspace paths (apps/web/, docs/sprints/, etc.) MUST start with `cd /Users/brianscott/dev/ronin-dojo-app && …`. If you actually mean the dirstarter_template, prefix with `cd \"/Users/brianscott/Local Sites/DirStarter /dirstarter_template\" && …` instead. See ~/.claude/projects/.../memory/feedback_ronin_dojo_bash_cwd.md and docs/protocols/failed-steps-log.md FS-0024."
+    "permissionDecisionReason": "FS-0024 guard: this Bash call looks like ronin-dojo-app work but is missing the required `cd /Users/brianscott/dev/black-belt-legacy && ` prefix. The harness primary cwd is the read-only DirStarter template — every Bash call referencing git/gh/pnpm/bun/vercel/graphify or workspace paths (apps/web/, docs/sprints/, etc.) MUST start with `cd /Users/brianscott/dev/black-belt-legacy && …`. If you actually mean the dirstarter_template, prefix with `cd \"/Users/brianscott/Local Sites/DirStarter /dirstarter_template\" && …` instead. See ~/.claude/projects/.../memory/feedback_ronin_dojo_bash_cwd.md and docs/protocols/failed-steps-log.md FS-0024."
   }
 }
 EOF

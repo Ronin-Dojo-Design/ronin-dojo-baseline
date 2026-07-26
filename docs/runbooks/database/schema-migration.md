@@ -4,8 +4,8 @@ slug: schema-migration
 type: runbook
 status: active
 created: 2026-04-28
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-07-26
+last_agent: claude-session-0712
 use_count: 3
 pairs_with:
   - docs/runbooks/database/database.md
@@ -41,7 +41,7 @@ When adding new models, enums, fields, or relations to `apps/web/prisma/schema.p
 ### 1. Pre-flight check
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 # Verify parent-shell targets without printing credentials
 bun -e 'for (const k of ["DATABASE_URL","DIRECT_URL"]) { const v=process.env[k]; console.log(k, v ? new URL(v).pathname.slice(1) : "(unset)") }'
 
@@ -94,7 +94,7 @@ Best for large wave migrations with many new models, or changes that drop column
 /Applications/Postgres.app/Contents/Versions/latest/bin/createdb ronindojo_schema_scratch
 
 # Pin BOTH Prisma URLs for the command.
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
   DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
   bunx prisma db push --accept-data-loss
@@ -108,7 +108,7 @@ bunx prisma generate
 Best for adding columns/models to an existing schema where you want a versioned migration file. Production uses `prisma migrate deploy` (see `package.json` `prebuild`), so migration files are needed for production deploys.
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 # Either author against an explicitly pinned scratch DB, or create/hand-author the migration directory.
 env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
   DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
@@ -171,7 +171,7 @@ bunx prisma db pull --print | grep "^model " | wc -l
 ### 5. Seed (disposable DB only)
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app/apps/web
+cd /Users/brianscott/dev/black-belt-legacy/apps/web
 env DATABASE_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
   DIRECT_URL=postgresql://brianscott@localhost:5432/ronindojo_schema_scratch \
   bunx prisma db seed
@@ -203,7 +203,7 @@ overlay. Treat webpack as the fallback, not the default, unless a specific smoke
 ### 7. Commit
 
 ```bash
-cd /Users/brianscott/dev/ronin-dojo-app
+cd /Users/brianscott/dev/black-belt-legacy
 git add apps/web/prisma/schema.prisma apps/web/prisma/migrations/<migration-directory>/
 git diff --cached -- apps/web/prisma/schema.prisma apps/web/prisma/migrations/
 git commit -m "schema: Wave X — <description>"

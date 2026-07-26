@@ -10,7 +10,7 @@ set -euo pipefail
 
 # repo/worktree root = three levels up from this script (.claude/skills/worktree-setup/)
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
-CANONICAL_ENV="/Users/brianscott/dev/ronin-dojo-app/apps/web/.env"
+CANONICAL_ENV="/Users/brianscott/dev/black-belt-legacy/apps/web/.env"
 APP_ENV="$ROOT/apps/web/.env"
 
 cd "$ROOT"

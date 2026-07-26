@@ -34,7 +34,7 @@ case "$path" in
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
-    "permissionDecisionReason": "[dirstarter-readonly-guard] Refusing to $tool '$path'. The path is inside the purchased read-only DirStarter template — only file reads (cat/ls/diff) are allowed there. If you meant the ronin-dojo-app repo, use /Users/brianscott/dev/ronin-dojo-app/... instead. See ~/.claude/projects/.../memory/feedback_dirstarter_template_readonly.md."
+    "permissionDecisionReason": "[dirstarter-readonly-guard] Refusing to $tool '$path'. The path is inside the purchased read-only DirStarter template — only file reads (cat/ls/diff) are allowed there. If you meant the ronin-dojo-app repo, use /Users/brianscott/dev/black-belt-legacy/... instead. See ~/.claude/projects/.../memory/feedback_dirstarter_template_readonly.md."
   }
 }
 EOF

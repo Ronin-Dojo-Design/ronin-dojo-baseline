@@ -4,8 +4,8 @@ slug: recipe-merge-wave
 type: protocol
 status: active
 created: 2026-07-20
-updated: 2026-07-20
-last_agent: claude-session-0584
+updated: 2026-07-26
+last_agent: claude-session-0712
 pairs_with:
   - docs/protocols/giddy-merge-strategy.md
   - docs/protocols/merge-to-main.md
@@ -50,7 +50,7 @@ same law in the new shape.
    action.
 2. **Never auto-deploy.** Push ≠ deploy on this repo: `vercel.json`'s `ignoreCommand` skips the
    prod build unless `apps/web` / `bun.lock` / `package.json` / `vercel.json` changed.
-3. **Run the FS-0024 git guard before any mutating git** — `pwd` is `/Users/brianscott/dev/ronin-dojo-app`
+3. **Run the FS-0024 git guard before any mutating git** — `pwd` is `/Users/brianscott/dev/black-belt-legacy`
    (or a `../ronin-NNNN` lane worktree) and `git remote` is `ronin-dojo-baseline`, never the
    read-only `dirstarter_template` cwd.
 4. **Never force-push `main`.** `--force-with-lease` is allowed only on a *session branch* during a

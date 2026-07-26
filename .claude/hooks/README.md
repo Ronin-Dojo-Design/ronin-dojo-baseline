@@ -8,7 +8,7 @@ Origin: SESSION_0210 (2026-05-20). After three repeats of FS-0024 (Bash cwd drif
 
 | Layer | Event | Matcher | Script | Behavior |
 |---|---|---|---|---|
-| Claude Code | `PreToolUse` | `Bash` | `ronin-cwd-guard.sh` | Block Bash calls referencing `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` or workspace paths unless prefixed with `cd /Users/brianscott/dev/ronin-dojo-app`. Honors `RONIN_GUARD_BYPASS=1` as escape hatch. Pairs with [FS-0024](../../docs/protocols/failed-steps-log.md). |
+| Claude Code | `PreToolUse` | `Bash` | `ronin-cwd-guard.sh` | Block Bash calls referencing `git`/`gh`/`pnpm`/`bun`/`vercel`/`graphify` or workspace paths unless prefixed with `cd /Users/brianscott/dev/black-belt-legacy`. Honors `RONIN_GUARD_BYPASS=1` as escape hatch. Pairs with [FS-0024](../../docs/protocols/failed-steps-log.md). |
 | Claude Code | `PreToolUse` | `Write\|Edit\|NotebookEdit` | `dirstarter-readonly-guard.sh` | Block any write whose `file_path` is under `/Users/brianscott/Local Sites/DirStarter /dirstarter_template/`. Catches the OTHER half of FS-0024 — accidental writes into the purchased read-only template. |
 | Claude Code | `PostToolUse` | `Bash` | `oxlint-fix-nudge.sh` | After any `oxlint … --fix` batch, emit a `systemMessage` reminding to follow up with `tsc --noEmit`. Pairs with [FS-0023 / auto-fixer JSX blindspot](../../docs/protocols/failed-steps-log.md). |
 | Claude Code | `PostToolUse` | `Write\|Edit` | `env-shape-check.sh` | When a `.env*` file is written/edited, shape-check each `KEY=VALUE` (Stripe `sk_…` prefix + length, `whsec_…`, Resend `re_…`, AWS `AKIA…`, `DATABASE_URL` URI shape, placeholder red flags). Emits `systemMessage` with anomalies; never blocks. |

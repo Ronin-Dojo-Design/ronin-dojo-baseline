@@ -15,7 +15,7 @@
 # To remove: delete this file and the `source` lines in ~/.zshenv / ~/.bashrc.
 
 _RONIN_TEMPLATE_DIR="/Users/brianscott/Local Sites/DirStarter /dirstarter_template"
-_RONIN_REPO_DIR="/Users/brianscott/dev/ronin-dojo-app"
+_RONIN_REPO_DIR="/Users/brianscott/dev/black-belt-legacy"
 
 _ronin_in_template() {
   case "$PWD" in

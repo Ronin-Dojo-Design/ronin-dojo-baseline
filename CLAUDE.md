@@ -7,7 +7,7 @@ demand, not per turn.
 
 ## The repo (five-repo era — ADR 0055/0059)
 
-- **This is the Black Belt Legacy brand repo** (`/Users/brianscott/dev/ronin-dojo-app`, remote
+- **This is the Black Belt Legacy brand repo** (`/Users/brianscott/dev/black-belt-legacy`, remote
   `Ronin-Dojo-Design/Black-Belt-Legacy`) — one of five sibling repos forked at `ecefd008` with
   full shared history (fork-don't-rewrite). Siblings: Baseline-Martial-Arts ·
   Mammoth-Metal-Buildings · USA-Stickfighting · **Ronin-Dojo-Design-Monorepo** (keeps

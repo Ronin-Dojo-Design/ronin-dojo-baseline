@@ -4,8 +4,8 @@ slug: lineage-tree-runbook
 type: runbook
 status: active
 created: 2026-06-13
-updated: 2026-06-14
-last_agent: claude-session-0381
+updated: 2026-07-26
+last_agent: claude-session-0712
 domain: lineage
 pairs_with:
   - docs/runbooks/domain-features/lineage-hub.md
@@ -386,7 +386,7 @@ For now, it is a visual/UX proving ground.
 Install
 Because SESSION_0360 made Bun canonical, use:
 
-cd /Users/brianscott/dev/ronin-dojo-app
+cd /Users/brianscott/dev/black-belt-legacy
 
 bun add balkan-orgchart-js-community
 
@@ -1389,7 +1389,7 @@ Ronin’s current SoT is explicit that public payloads and brand-scope/audit/rat
 What to verify
 Run:
 
-cd /Users/brianscott/dev/ronin-dojo-app
+cd /Users/brianscott/dev/black-belt-legacy
 
 bun run --filter @ronin-dojo/web typecheck
 bun run --filter @ronin-dojo/web lint:check

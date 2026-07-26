@@ -10,7 +10,7 @@ from the **canonical checkout** — details in
 1. Run the incremental refresh (AST-only, fast, no API cost):
 
    ```bash
-   cd /Users/brianscott/dev/ronin-dojo-app && GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .
+   cd /Users/brianscott/dev/black-belt-legacy && GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .
    ```
 
    The env var lifts the default 5000-node viz cap so the whole codebase indexes.
