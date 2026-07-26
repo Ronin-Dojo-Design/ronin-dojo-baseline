@@ -4,7 +4,7 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-25
+updated: 2026-07-26
 last_agent: claude-session-0692
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
@@ -323,7 +323,7 @@ plan scope.
 - **Captured:** [`docs/product/north-star-bubble-builder-bento-box.md`](../../product/north-star-bubble-builder-bento-box.md) — the flagship vision (canvas-of-canvases · shells + one passport · bento-box page-builder · tournament blueprint · sliding-tile mats · Apple-Pencil/iPad-native · CCC engines-built-once).
 - **Session focus:** user delight + experience. **Grill deep with pros** (operator asked to be grilled) — but in the *dedicated* session, not inline; break each feature into highlights · key necessities · desired behaviors.
 - **Research:** Milanote (canvas layout/tech) · sliding-tile puzzle games (mat-swipe behavior) · Beaver Builder (page-builder model).
-- **Relationship:** the create-\* commands + component lifecycle (WS-E) staged in [SESSION_0605](../../sprints/SESSION_0605.md) are this North Star's **tooling substrate** — scope 0605 as a child of PL-012. Look-and-feel North Star = the Ronin Dojo Monorepo.
+- **Relationship:** the create-\* commands + component lifecycle (WS-E) staged in [SESSION_0605](../../sprints/_archive/monorepo-era/SESSION_0605.md) are this North Star's **tooling substrate** — scope 0605 as a child of PL-012. Look-and-feel North Star = the Ronin Dojo Monorepo.
 - **Graduates to:** its own `G-NNN` at the dedicated plan session. Not yet stubbed — mint the SESSION when grabbed.
 
 ### PL-013 — Iggy Agent: social-media automation for all brands — queued
@@ -360,7 +360,7 @@ plan scope.
 ### PL-015 — Phase 14 RDD lift from the old ronin-dojo-monorepo — queued · **source doc in hand**
 
 - **Origin:** operator directive, bow-out 2026-07-22.
-- **✅ Source doc imported (2026-07-22):** [`phase14-local-deployment-checklist`](../../product/rdd/phase14-local-deployment-checklist.md)
+- **✅ Source doc imported (2026-07-22):** `phase14-local-deployment-checklist`
   (operator-provided from Baseline_Vault; secret-scanned clean). It is a 14-section DirStarter local-deploy
   + Phase 1–14 port/lift checklist: **§0 app-boundary gate** (Option A `apps/rdd-web` new app —
   *recommended* — vs Option B tenant), inventory → scaffold → DB/env → design system → **6 bounded epics
@@ -622,6 +622,33 @@ plan scope.
 - **Lane:** BBL product. **Cross-refs:** SESSION_0709 (Next-session block = the spec), PL-026
   (sort-filter origin), WL-P2-3 (ListRow extraction — 2 of the 7 instances live in explorer
   surfaces; fold in when touched), G-008 adjacency.
+
+
+### PL-032 — SotD usefulness epic: one renderer, epics/fan-out baked in, the promised components landed — queued · operator-directed
+
+- **Status:** queued (operator-directed SESSION_0712 — "I want it useful: progress + what needs
+  doing, visually, without hunting the docs"). Full findings map in SESSION_0712 §SotD review
+  (Explore sweep: 19 shipped · 7 in-flight · 14 planned-never-started · 7 no-owner).
+- **Scope, in order:**
+  1. **Unify renderers** — `scripts/state-of-project.ts` imports `_kernel/phase.ts` (kills D-055:
+     duplicated PHASES/BELT_WORD/BRANDS/masthead; adds the missing deploy-scope gate).
+  2. **PL-020 once** — belt-ladder action words + order + un-inverted white/black, fixed in the one
+     shared vocabulary.
+  3. **Epics panel + Fan-out panel in the renderer** — the SESSION_0712 hand-built artifact tabs
+     (epics consolidated from docs/epics/ + product epic-plans + staged stubs; per-slot fork board)
+     become deterministic sections so EVERY snapshot carries them automatically.
+  4. **WL-P2-76** docs-navigator link card (0620 /rr ratified the link-card form, not a panel).
+  5. **WL-P2-75** MBR rows → Needs-you feed.
+  6. **PL-003 §1** loop-board embed ON the SotD page.
+  7. **Fork-era home decision (grill fork):** portfolio SotD lives where (RDD-Monorepo) vs
+     per-brand SotD (each repo's own `/app/state`) — S14 `/app/state/[brand]` is prior art.
+- **Backlog adjacency (pull in only if cheap):** PL-009 DBS component (staged 0596) · PL-007
+  Kaizen cards · WL-P2-71 wayfinder panel · M3 historical-frontmatter backfill.
+- **Plan (session A, grilled + staged SESSION_0712 bow-out):**
+  `docs/sprints/plans/petey-plan-0712-sotd-usefulness.md` — forks resolved: SotD home =
+  RDD-Mono + per-brand routes · renderer-first slice · build in BBL, cherry-pick up immediately.
+- **Lane:** repo/kernel. **Cross-refs:** D-055, PL-020, PL-003, WL-P2-75/-76, G-023, G-014
+  (the operator's visibility driver), SESSION_0712 §SotD review.
 
 ### PL-031 — Monorepo platform gaps: shared config presets, API-contract extraction, task orchestration — queued
 

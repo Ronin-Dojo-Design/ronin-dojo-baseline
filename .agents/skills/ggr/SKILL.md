@@ -27,7 +27,7 @@ coexists with a planning-only session. The gate **policy** (Phase 2) is identica
    surface changed), Desi on member-facing / shared-primitive UI, Giddy on moved structure (new files/dirs,
    protocol/ritual edits, ADR-worthy decisions). Reviewers verify on ONE commit; they do not fix.
 2. **Gather the objective metrics** — run the audit half of [`/fallow-fix-loop`](../fallow-fix-loop/SKILL.md)
-   (`fallow audit --changed-since HEAD` + `fallow health`) for the CRAP / duplication / dead-code /
+   (`bunx fallow audit --changed-since HEAD` + `bunx fallow health`) for the CRAP / duplication / dead-code /
    complexity / maintainability-index signal that grounds **D3** (simplicity) and **D5** (maintainability).
    No scoring from vibes — every dimension cites evidence.
 3. **Score** — run [`/code-quality`](../code-quality/SKILL.md) to produce the matrix `/10` per unit (class

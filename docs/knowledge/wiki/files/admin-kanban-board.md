@@ -13,8 +13,6 @@ pairs_with:
 
   - docs/product/black-belt-legacy/page-specs/bbl-admin-task-board.md
   - docs/knowledge/wiki/files/m-card-pattern.md
-  - docs/knowledge/wiki/files/mammoth-crm-bindings.md
-  - docs/epics/mammoth-rebuild-crm-001.md
   - docs/knowledge/wiki/component-design-system.md
 backlinks:
 
@@ -43,7 +41,7 @@ a sales pipeline, a project tracker, or a content calendar by swapping a stage c
 essentials: **lead intake** (form → card in column 1) and **follow-up automations** (rotting/at-risk
 detection, next-step reminders, stage SLAs). **One rule:** the board is config + data — zero
 per-project code; brand = token swap (design system). First consumer: Mammoth CRM for Michael Flores
-([PWCC-004](mammoth-crm-bindings.md)).
+(PWCC-004, `mammoth-crm-bindings` — now in RDD-Monorepo).
 
 ## Low-fi wireframe — board (desktop, dark)
 
@@ -242,7 +240,7 @@ stages, dark/orange token block.
 Spec authored SESSION_0428 (PWCC-007; Petey plan / Desi branding+UX pass / reusable Cody build-loop
 prompt) per Brian's "light simple effective AdminKanban for CRM + lead intake + follow-up automations
 for Michael Flores, reusable for any project." Generalizes the Mammoth pipeline
-([PWCC-004](mammoth-crm-bindings.md)) into a config-driven library board; reuses
+(PWCC-004, `mammoth-crm-bindings` — now in RDD-Monorepo) into a config-driven library board; reuses
 [m-card](m-card-pattern.md) + [AdminTaskBoard](../../../product/black-belt-legacy/page-specs/bbl-admin-task-board.md) taxonomy + the
 [design system](../component-design-system.md). Grounded in TuffBuffs `TaskBoard.jsx` + the Mammoth
 intake brief.

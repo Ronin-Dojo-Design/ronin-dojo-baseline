@@ -348,38 +348,53 @@ if (!(PREFIXES as readonly string[]).includes(PREFIX)) {
 }
 
 const { numbers, padWidth } = usedNumbers(PREFIX)
-const max = numbers.size === 0 ? 0 : Math.max(...numbers)
-const next = `${PREFIX}-${String(max + 1).padStart(padWidth, "0")}`
 
-// D-049 self-check: mint-scan max vs the canonical ledger's DEFINED max. A gap > 50 means the
-// reference-scan almost certainly picked up a phantom (meta-commentary text, an ID scheme this
-// script doesn't know about, etc.) — warn and recommend register-truth instead of blind trust.
+/**
+ * FS-0042 (D-049's sequel): occurrences wildly beyond the canonical ledger's DEFINED max are
+ * phantom strings — a minter-example output quoted verbatim in a sprint record (SESSION_0575's
+ * `FS-0343`), citation typos (`FS-0342`/`FS-0186`), or prose *about* this very bug — and they
+ * SELF-PERPETUATE: once the buggy output is recorded in docs/, the recording becomes the new max
+ * (`--prefix=FS` returned FS-0344+ forever off exactly this loop). The old self-check here already
+ * *diagnosed* the class (gap > 50 ⇒ "likely phantom, use register-truth") but still reported the
+ * phantom max as `next`. Promoted to a FILTER: a number more than PHANTOM_GAP beyond the ledger's
+ * defined max cannot claim an id. Legit semantics preserved — references still count, archives
+ * still count, sibling-worktree drafts still count, because all of those live within the window
+ * (a real backlog cannot outrun its own ledger by >50 never-defined rows).
+ */
+const PHANTOM_GAP = 50
 const ledgerRel = LEDGER_FILE[PREFIX]
-let gapWarning: string | null = null
-let safeNext: string | null = null
-if (ledgerRel) {
-  const registerMax = ledgerDefinedMax(PREFIX, ledgerRel)
-  const gap = max - registerMax
-  if (gap > 50) {
-    safeNext = `${PREFIX}-${String(registerMax + 1).padStart(padWidth, "0")}`
-    gapWarning = `mint-scan max ${PREFIX}-${max} is ${gap} ahead of ${ledgerRel}'s defined max ${PREFIX}-${registerMax} — likely a phantom match (composite session-scoped IDs, or prose mentioning a number), NOT a real backlog. Recommended next free (register-truth): ${safeNext}.`
-  }
-}
+const registerMax = ledgerRel ? ledgerDefinedMax(PREFIX, ledgerRel) : 0
+const phantomIgnored =
+  registerMax > 0
+    ? [...numbers].filter(n => n > registerMax + PHANTOM_GAP).sort((a, b) => a - b)
+    : []
+const counted = [...numbers].filter(n => !phantomIgnored.includes(n))
+const max = counted.length === 0 ? 0 : Math.max(...counted)
+const next = `${PREFIX}-${String(max + 1).padStart(padWidth, "0")}`
 
 if (JSON_OUT) {
   console.log(
-    JSON.stringify({ prefix: PREFIX, used: numbers.size, max, next, gapWarning, safeNext }),
+    JSON.stringify({
+      prefix: PREFIX,
+      used: counted.length,
+      max,
+      next,
+      registerMax,
+      phantomIgnored: phantomIgnored.map(n => `${PREFIX}-${String(n).padStart(padWidth, "0")}`),
+    }),
   )
 } else {
   console.log(
-    `\n  ${PREFIX}: ${numbers.size} number(s) in use, highest ${PREFIX}-${String(max).padStart(padWidth, "0")}.`,
+    `\n  ${PREFIX}: ${counted.length} number(s) in use, highest ${PREFIX}-${String(max).padStart(padWidth, "0")}.`,
   )
   console.log(`  Next free ID: ${next}`)
   console.log(
     `  (max+1 over every occurrence in docs/ incl. archives — gap numbers are retired, never reuse them.)`,
   )
-  if (gapWarning) {
-    console.log(`\n  ⚠ SELF-CHECK: ${gapWarning}\n`)
+  if (phantomIgnored.length > 0) {
+    console.log(
+      `\n  ⚠ Ignored ${phantomIgnored.length} phantom occurrence(s) > ${ledgerRel}'s defined max ${PREFIX}-${registerMax} + ${PHANTOM_GAP}: ${phantomIgnored.map(n => `${PREFIX}-${String(n).padStart(padWidth, "0")}`).join(", ")} — prose/example strings, not claims (FS-0042).\n`,
+    )
   } else {
     console.log("")
   }

@@ -7,13 +7,6 @@
       "runtimeArgs": ["next", "dev", "--turbo"],
       "cwd": "apps/web",
       "port": 3000
-    },
-    {
-      "name": "mmb-dev",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["next", "dev", "--port", "3300"],
-      "cwd": "clients/mammoth-build-crm",
-      "port": 3300
     }
   ]
 }

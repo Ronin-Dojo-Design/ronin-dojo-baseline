@@ -147,7 +147,7 @@ judo seed lands.
 ## Paste-ready lane prompts
 
 The three prompts are **committed verbatim in
-[`SESSION_0578.md` §"Fan-out lane prompts"](../sprints/SESSION_0578.md)** (launch artifact —
+[`SESSION_0578.md` §"Fan-out lane prompts"](../sprints/_archive/monorepo-era/SESSION_0578.md)** (launch artifact —
 never chat-only, per recipe §6) and follow [recipe §2](../protocols/fan-out-session-recipe.md) —
 pinned number, worktree/branch/setup, owned-scope + non-goals, ledger rows, gates, push/hold,
 gotcha floor, bow-out/loop-state. Blocks must not be trimmed when re-using. The grappling-scope

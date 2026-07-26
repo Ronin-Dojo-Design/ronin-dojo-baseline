@@ -92,7 +92,7 @@ goal_ids: [G-NNN]         # the deploy's program row
 
 Home `apps/rdd` · DB `rdd_dev` · Resend `ronindojodesign.com` key · new Vercel project + domain
 `ronindojodesign.com` · reach = local-scaffold-only, surface = full (marketing/portfolio + auth +
-State-of-Dojo host). Goal row **G-027**. Brand brief: [`docs/product/rdd/brand-brief.md`](../../product/rdd/brand-brief.md).
+State-of-Dojo host). Goal row **G-027**. Brand brief: `docs/product/rdd/brand-brief.md`.
 
 ## Cross-references
 

@@ -1061,6 +1061,21 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Lesson:** a fact agents need at execution time must live in the command block they copy, not in a
   memory or an inventory beside it.
 - **Status:** open (memory + row done; doc sweep queued this session).
+- **Status (SESSION_0712):** **closed** — sweep + minter fix landed. Sweep: every executed fallow command
+  block now reads `bunx fallow …` (`fallow-fix-loop` SKILL incl. its invocation preamble, `ggr` SKILL,
+  `code-quality-matrix.md` D3/D5, `page-code-review.md` Step 1, `recipes/quality-suite.md`,
+  `component-launch-sweep-recipe.md`); `hostile-repo-review.md` contains zero fallow commands (verified by
+  grep — nothing to change); remaining bare mentions are historical prose (archives, ledger rows, this row)
+  and stay. Minter: the related over-match is fixed in `ledger-id-next.ts` — the D-049 gap>50 self-check is
+  promoted from warn-only to a **filter** (occurrences > ledger-defined-max + 50 are reported but cannot
+  claim ids). Before: `--prefix=FS` → next `FS-` 0345 (phantom max 0344, self-perpetuating). After the
+  fix, at time of writing, the minter reported highest `FS-` 0043 with 0149/0186/0342/0343/0344 as
+  ignored phantoms — and then THIS evidence paragraph's original wording spelled the predicted next id
+  out verbatim and burned it (Doug, SESSION_0712 verify): **documenting an expected mint output inside a
+  scanned ledger claims the number** — the FS-0042 phantom class eating its own tail. Ids in ledger prose
+  are now written mangled (`FS-` NNNN) unless the row IS the claim; mangling the offending prose
+  released the accidentally-claimed number (verified post-fix: minter mints it as next free again). `--prefix=SESSION` unchanged (highest SESSION_0712 / next 0713); `--check` unchanged;
+  `tsc -p scripts` green. Archived SESSION_0575 untouched (append-only history).
 
 ### FS-0043 — write-lane edited a workspace package.json without lockfile sync; verify suite had no install gate
 

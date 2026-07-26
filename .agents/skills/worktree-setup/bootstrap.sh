@@ -12,8 +12,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 CANONICAL_ENV="/Users/brianscott/dev/ronin-dojo-app/apps/web/.env"
 APP_ENV="$ROOT/apps/web/.env"
-BASELINE_ENV="$ROOT/apps/baseline/.env"
-BASELINE_DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
 cd "$ROOT"
 echo "▶ worktree-setup: $ROOT"
@@ -41,24 +39,12 @@ if [ ! -d "$ROOT/apps/web/.generated/prisma" ]; then
   (cd "$ROOT/apps/web" && bunx prisma generate --no-hints)
 fi
 
-if [ -d "$ROOT/apps/baseline" ]; then
-  if [ -f "$BASELINE_ENV" ]; then
-    echo "✓ apps/baseline/.env already present"
-  else
-    cat > "$BASELINE_ENV" <<EOF
-# Placeholder env for fresh-worktree bootstrap only.
-# Replace with a real baseline_dev URL before running the Baseline app.
-DATABASE_URL="$BASELINE_DATABASE_URL"
-BETTER_AUTH_SECRET="placeholder-worktree-secret"
-BETTER_AUTH_URL="http://localhost:3100"
-EOF
-    echo "✓ wrote placeholder apps/baseline/.env"
-  fi
-
-  if [ ! -d "$ROOT/apps/baseline/.generated/prisma" ]; then
-    echo "▶ baseline prisma generate (client was not materialized by postinstall)"
-    (cd "$ROOT/apps/baseline" && DATABASE_URL="$BASELINE_DATABASE_URL" bunx prisma generate --no-hints)
-  fi
+# SESSION_0712 (Phase C) — materialize the gitignored Claude settings from the tracked template
+# so the bow-in gates fire in fresh clones/worktrees (registration is gitignored; scripts are
+# tracked). Never overwrites an existing settings.json (it accumulates machine-local permissions).
+if [ ! -f "$ROOT/.claude/settings.json" ] && [ -f "$ROOT/.claude/settings.shared.json" ]; then
+  cp "$ROOT/.claude/settings.shared.json" "$ROOT/.claude/settings.json"
+  echo "✓ copied .claude/settings.shared.json → .claude/settings.json (hook registration)"
 fi
 
 # FS-0039 — install the tracked pre-push hook. Idempotent, and `core.hooksPath` lives in the SHARED

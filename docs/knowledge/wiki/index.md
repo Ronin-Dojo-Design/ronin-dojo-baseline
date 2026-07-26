@@ -82,19 +82,12 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | --- | --- | --- |
 | [Product Documentation Index](../../product/README.md) | index | active |
 | [North Star — Bubble Builder Bento Box](../../product/north-star-bubble-builder-bento-box.md) | north-star | active — the ULTIMATE north star (canvas-of-canvases · shells + one passport · bento page-builder · tournament blueprint · sliding-tile mats · CCC engines-built-once); captured SESSION_0604 → dedicated `/pp` epic (PL-012, RDD phase 14) |
-| [Baseline Martial Arts PRD](../../product/baseline-martial-arts/PRD.md) | prd | active |
-| [Baseline Martial Arts Stories](../../product/baseline-martial-arts/STORIES.md) | stories | active |
 | [Black Belt Legacy PRD](../../product/black-belt-legacy/PRD.md) | prd | active |
 | [Black Belt Legacy Stories](../../product/black-belt-legacy/STORIES.md) | stories | active |
 | [Black Belt Legacy Gap Matrix](../../product/black-belt-legacy/GAP_MATRIX.md) | report | active — SESSION_0349 records shared trust badges across directory/detail/lineage surfaces, `legend` policy support, and `/directory` faceting as the next follow-up |
 | [Black Belt Legacy Cutover Checklist](../../product/black-belt-legacy/CUTOVER_CHECKLIST.md) | report | active — SESSION_0345 proved the real signed-webhook path via Stripe CLI test-mode rehearsal + fixed a returning-customer checkout bug; prod is live-mode (drift D-018) so the proxy step is corrected — deployed-domain webhook wiring is a money-free launch item |
 | [BBL Gift/Comp Membership + Tier-Gating Epic](../../product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md) | spec | draft — SESSION_0345 staged: comp/gift `UserEntitlement(MANUAL_GRANT)` on the existing spine, RBAC granting, tier-gated tree-card visibility, invite/claim tie-ins, BBL.com import, multi-rank seed plan |
 | [Post-Launch SOT](../../product/black-belt-legacy/POST_LAUNCH_SOT.md) | sot | active — single light P0/P1/P2 running list + Now-live (MVP_LIVE) + widget Feedback inbox; supersedes feature-intake-ledger (SESSION_0424); `lifecycle:` yaml convention |
-| [Mammoth Build CRM PRD](../../product/mammoth-build/PRD.md) | prd | draft — SESSION_0570 ratified Product North Star, Brand Heartbeat, and delivery → two-path Satisfied Installation finish line |
-| [Mammoth Build CRM Stories](../../product/mammoth-build/STORIES.md) | stories | draft — sales cockpit, delivery/installation, enablement, satisfaction, and brand-quality backlog |
-| [Mammoth Build Ubiquitous Language](../../product/mammoth-build/CONTEXT.md) | concept | active — canonical Prospect/Lead/Opportunity/Project, Installation Path, Satisfied Installation, Successful Close, and enablement terms |
-| [Mammoth Build Operating System](../../product/mammoth-build/OPERATING_SYSTEM.md) | protocol | active — three authorities, lean `/game-on`→`/game-off`, vault/CRM/public surface boundaries, and proportional quality/privacy gates |
-| [Mammoth Operating-Context Recovery Manifest](../../product/mammoth-build/MMB_RECOVERY_MANIFEST.md) | reference | active — phone/iCloud/local artifact paths, missing `MMB_INITIAL_INTAKE`, legacy goal disposition, and Discussion→Determination→Decision pilot |
 
 ## Architecture
 
@@ -145,7 +138,6 @@ Master index of all knowledge pages, docs, and sessions in the Ronin Dojo Baseli
 | [SESSION 0263 BBL Recon](../../architecture/lineage/SESSION_0263_bbl_recon.md) | report | active — monorepo lineage data + brand asset inventory |
 | [BBL BJJ Rank + Verification Import Map](../../architecture/lineage/bbl-bjj-rank-verification-import-map.md) | architecture | active — SESSION_0264 BJJ rank/PODs field map |
 | [Promotion Event Model](../../architecture/lineage/promotion-event-model.md) | plan | accepted — SESSION_0318 amended ADR 0016, migrated PromotionEvent + nullable FKs, seeded the April 10, 2026 ceremony + cohort link + read-only Rank-History display |
-| [RDD Handle-Reservation Worksheet](../../architecture/research/rdd-handle-reservation-worksheet.md) | research | research — RDD research cluster (with `rdd-niche-handle-audit.md` + `research-review-rdd-social-automation.md`): operator-executable reservation plan (audit → worksheet → operator reserves; record reservations + fallbacks after the sitting). SESSION_0689 / #291 |
 
 ### ADRs
 
@@ -367,8 +359,6 @@ Session rows no longer live here (the table was 1MB of duplicated frontmatter an
 | [three-level magnetic drawer (content-agnostic canvas)](files/three-level-magnetic-drawer.md) | file | active — `lifecycle: PLANNED`; PWCC-003; 3 detents + infinite m-card list; Todoist→cinematic chrome |
 | [AdminKanban (reusable column board + intake + automations)](files/admin-kanban-board.md) | file | active — `lifecycle: PLANNED`; PWCC-007; config-driven CRM pipeline + lead intake + follow-up automations; Desi pass + reusable Cody loop |
 | [Loop Board (/app/loop-board — shared ledger-backed AdminKanban)](files/loop-board.md) | file | active — `lifecycle: MVP_LIVE`; Loop-of-Loops P3 **Phase B (SESSION_0461): editable + DB-backed** — `KanbanCard` (single SoT) + Prisma `BoardStore`; live-ledger projection demoted to an insert-only importer; `AdminTaskBoard` retired/consolidated |
-| [Mammoth CRM bindings (PWCC-004/005/006)](files/mammoth-crm-bindings.md) | file | active — `lifecycle: PLANNED`; library→Mammoth surface bindings + cloud-agent prompts (Petey orchestration) |
-| [Mammoth-Rebuild CRM — HubSpot replacement](../../epics/mammoth-rebuild-crm-001.md) | epic | active — component-driven CRM (PWCC-001/002/003 + design system); cross-brand proof |
 | [Component Design System (BBL doc & email branding tokens)](component-design-system.md) | concept | active — Desi brand pass (SESSION_0428); `component-design-system.html` is the living visual reference |
 | [SPEC file template](files/_template/SPEC_TEMPLATE.md) | template | active — canonical `_spec` shape for the files catalog |
 | [wiki-lint.ts](../../protocols/wiki-lint.md) | protocol | active |

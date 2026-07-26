@@ -1,5 +1,5 @@
 ---
-title: "ADR 0002 — main is PR-only"
+title: "ADR 0056 — main is PR-only"
 slug: adr-0056-main-is-pr-only
 type: decision
 status: accepted
@@ -8,7 +8,7 @@ updated: 2026-07-26
 last_agent: claude-session-0711
 ---
 
-# 0002 — Nothing lands on `main` except through a PR
+# 0056 — Nothing lands on `main` except through a PR
 
 ## Status
 

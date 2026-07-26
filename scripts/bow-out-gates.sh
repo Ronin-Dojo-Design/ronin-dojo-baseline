@@ -349,7 +349,7 @@ CODE_SESSION=0
 while IFS= read -r file; do
   [ -n "$file" ] || continue
   case "$file" in
-    apps/web/*|clients/*|packages/*) CODE_SESSION=1; break ;;
+    apps/web/*|packages/*) CODE_SESSION=1; break ;;
   esac
 done <<< "$TOUCHED"
 if [ "$CODE_SESSION" = "1" ]; then
@@ -357,13 +357,13 @@ if [ "$CODE_SESSION" = "1" ]; then
     echo "PASS: /ggr score found in $SESSION_FILE (## Review log)."
     EV_GGR="PASS (score present)"
   else
-    echo "  → code-touching session (apps/web|clients|packages) but NO /ggr composite in"
+    echo "  → code-touching session (apps/web|packages) but NO /ggr composite in"
     echo "     $SESSION_FILE ## Review log. Run /ggr and record the composite before close"
     echo "     (closing.md §6.5, ADR 0052 D4/D5/D6). BLOCKING."
     EV_GGR="MISSING (code session, no /ggr — BLOCKING)"
   fi
 else
-  echo "no shippable code touched (apps/web|clients|packages) — /ggr score not required."
+  echo "no shippable code touched (apps/web|packages) — /ggr score not required."
   EV_GGR="n/a (no code touched)"
 fi
 

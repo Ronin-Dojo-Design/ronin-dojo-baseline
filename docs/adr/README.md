@@ -23,17 +23,18 @@ yet re-ratified here. When a legacy ADR and a `docs/adr/` record conflict, `docs
 
 ## Numbering
 
-- `0001` — **reserved** for the migration lane (not minted here).
-- `0002+` — seeded below; append monotonically, never reuse a number.
+One global sequence (see the ratified section below): legacy ended at 0054, this corpus
+continues at **0055+** — append monotonically, never reuse a number.
 
 ## Current records
 
 | ADR | Decision | Re-states |
 | --- | --- | --- |
-| 0001 | (reserved — migration lane) | — |
+| [0055](0055-brand-repo-separation.md) | Brand repo separation — five sibling repos, fork-don't-rewrite | supersedes legacy 0034 |
 | [0056](0056-main-is-pr-only.md) | `main` is PR-only, enforced by a GitHub ruleset | legacy 0053 |
 | [0057](0057-per-app-databases.md) | One database per app (deploy unit = app + DB) | legacy 0038 (+0034) |
 | [0058](0058-rankentry-is-rank-truth.md) | RankEntry is the ONE rank model | supersedes legacy 0016/0035 |
+| [0059](0059-multi-repo-operating-model.md) | Multi-repo daily operating model (session = one repo; RDD upstream) | — |
 
 ## Re-ratification backlog (by subject)
 
@@ -48,7 +49,7 @@ touch, not speculatively:
   admin law (0045); shared kernel extraction (0033 D1 / 0040 Option B).
 - **Identity & claims** — Passport as identity SoT (0025); unified Passport-keyed claim (0036);
   social-signin pending claim (0032).
-- **Lineage & belts** — rank display from awarded truth (0035 → folded into 0004 here); technique
+- **Lineage & belts** — rank display from awarded truth (0035 → folded into 0058 here); technique
   ownership axes (0046); grappling-arts technique scope (0050); branch heads + placement (0037).
 - **Commerce** — entitlement-first commerce (0011); per-brand Stripe accounts (0030); tier
   auto-grant (0054, renumbered from dup 0012).

@@ -1,4 +1,4 @@
-# 0005 — Multi-repo daily operating model
+# 0059 — Multi-repo daily operating model
 
 **Status:** accepted (SESSION_0711 grill, operator-ratified)
 **Context:** ADR 0055 split the portfolio into five sibling repos. A solo operator + agent

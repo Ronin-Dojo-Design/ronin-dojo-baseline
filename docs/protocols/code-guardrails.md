@@ -94,6 +94,30 @@ socialLinks: z.record(z.string(), z.string().url()),
 socialLinks: z.record(z.string().url()),
 ```
 
+### G10 — Never place `//` comments between a closing `}` argument and a trailing call argument (oxfmt mangles them)
+
+oxfmt (verified on 0.54.0, any config) is **not idempotent** on this shape: each format pass hoists ONE
+more comment line onto the `},` line, in **reverse order**, converging only after N+1 passes with the
+comment block merged into a single reversed line. Consequences: `--check` can fail right after a
+`--write`, and the comment's prose is destroyed. First hit SESSION_0706 (a test's `}, 15000)` timeout
+argument); minimal repro + upstream report filed at WL-P3-69(c): <https://github.com/oxc-project/oxc/issues/24960> (verified on 0.54.0 and 0.60.0).
+
+```typescript
+// ❌ oxfmt reorders/merges these lines nondeterministically across passes
+test("resets on reopen", () => {
+  expect(1).toBe(1)
+},
+// why the long timeout…
+// …more explanation
+15000)
+
+// ✅ put the comment ABOVE the whole call (or inside the function body)
+// why the long timeout… …more explanation
+test("resets on reopen", () => {
+  expect(1).toBe(1)
+}, 15000)
+```
+
 ## When to run
 
 - **During session**: after completing each code task, before moving to the next

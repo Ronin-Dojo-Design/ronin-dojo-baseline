@@ -10,7 +10,7 @@ given). The loop is goal-driven: **diagnose → review → fix → re-verify →
 diff is clean** (no new dead code, no new duplication you introduced, complexity not worse than before,
 all behavior still green).
 
-> Repo context: this is `ronin-dojo-app`. `fallow` is in `node_modules/.bin` — invoke via `npx fallow …`.
+> Repo context: this is `ronin-dojo-app`. `fallow` is in `node_modules/.bin` — invoke via `bunx fallow …` (never bare `fallow`, FS-0042).
 > Run commands from `apps/web`. macOS has **no `timeout`** binary — don't wrap commands in it. Default DB
 > is `ronindojo_prodsnap`. The dev server runs on `localhost:3000` (FS-0002: `npx next dev --turbo`).
 
@@ -32,12 +32,12 @@ Hold this Goal across every phase. Loop phases 3–5 until the Goal is met or yo
 
    ```bash
    cd apps/web
-   npx fallow audit --changed-since HEAD --gate new-only --max-crap 30   # CRAP + complexity findings
-   npx fallow audit --changed-since HEAD --gate new-only                 # dead code + duplication detail
+   bunx fallow audit --changed-since HEAD --gate new-only --max-crap 30  # CRAP + complexity findings
+   bunx fallow audit --changed-since HEAD --gate new-only                 # dead code + duplication detail
    ```
 
    Record: dead-code issues, duplication clone-groups, complexity findings, and **which are inherited**
-   (the gate prints "excluded N inherited findings"). `fallow health` gives the repo-wide maintainability
+   (the gate prints "excluded N inherited findings"). `bunx fallow health` gives the repo-wide maintainability
    index + CRAP distribution if you want the broader picture. Inherited findings are reported as
    follow-ups, not fixed here (unless trivially in your touched lines).
 

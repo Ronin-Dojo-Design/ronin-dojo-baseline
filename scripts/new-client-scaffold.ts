@@ -9,7 +9,9 @@
  * the human/agent following the runbook.
  *
  * What it does (and ONLY this):
- *   - scaffolds clients/<name>/ from a reference product (default mammoth-build-crm)
+ *   - scaffolds clients/<name>/ from a reference product (--from=<reference> REQUIRED
+ *     since the ADR 0055 fork — the old default, mammoth-build-crm, lives in the
+ *     RDD-Monorepo sibling repo)
  *   - copies the product-AGNOSTIC config verbatim (tsconfig, next.config, postcss,
  *     tailwind, .gitignore, prisma.config.ts)
  *   - generates NAME-STAMPED starters (package.json, .env.example, a minimal
@@ -51,8 +53,9 @@ const ARGS = process.argv.slice(2)
 // ── arg parsing ────────────────────────────────────────────────────────────
 const FLAGS = new Set(ARGS.filter(a => a.startsWith("--")).map(a => a.split("=")[0]))
 const FROM_ARG = ARGS.find(a => a.startsWith("--from="))
-// Present-but-empty (`--from=`) is an operator typo, not "use the default" — surface it.
-const FROM = FROM_ARG === undefined ? "mammoth-build-crm" : FROM_ARG.slice("--from=".length)
+// No default since the ADR 0055 fork: the old reference (mammoth-build-crm) moved to
+// the RDD-Monorepo sibling repo. Present-but-empty (`--from=`) is an operator typo — surface it.
+const FROM = FROM_ARG === undefined ? null : FROM_ARG.slice("--from=".length)
 const NAME = ARGS.find(a => !a.startsWith("--"))
 const APPLY = FLAGS.has("--apply")
 const CREATEDB = FLAGS.has("--createdb")
@@ -76,7 +79,7 @@ if (HELP || !NAME) {
       "    bun scripts/new-client-scaffold.ts <product-name>           # DRY-RUN: print the plan, write nothing",
       "    bun scripts/new-client-scaffold.ts <product-name> --apply   # scaffold clients/<name>/",
       "    bun scripts/new-client-scaffold.ts <product-name> --apply --createdb   # + createdb <name>_dev",
-      "    bun scripts/new-client-scaffold.ts <product-name> --from=<reference>   # default: mammoth-build-crm",
+      "    bun scripts/new-client-scaffold.ts <product-name> --from=<reference>   # REQUIRED: existing dir under clients/",
       "",
       "  <product-name> = kebab-case (^[a-z][a-z0-9-]*$). Becomes the dir, package name, and <name>_dev DB.",
       "",
@@ -92,10 +95,17 @@ if (HELP || !NAME) {
 if (!/^[a-z][a-z0-9-]*$/.test(NAME)) {
   die(`Invalid product name "${NAME}". Use kebab-case: ^[a-z][a-z0-9-]*$ (e.g. acme-roofing).`)
 }
+if (FROM === null) {
+  die(
+    "--from=<reference> is required: this repo has no client apps since the ADR 0055 " +
+      "brand-repo fork — clone the reference client (e.g. mammoth-build-crm) from the " +
+      "RDD-Monorepo sibling repo into clients/ first, or pass an existing clients/ dir.",
+  )
+}
 // --from is a bare client dir name — reject empty / path-traversal so the copy
 // source can never escape clients/ (it's read-only, but keep it tight).
 if (FROM === "" || FROM.includes("/") || FROM.includes("..")) {
-  die(`Invalid --from value "${FROM}". Use a bare client dir name (e.g. mammoth-build-crm).`)
+  die(`Invalid --from value "${FROM}". Use a bare client dir name.`)
 }
 
 const SRC = join(ROOT, "clients", FROM)

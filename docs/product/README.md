@@ -4,9 +4,9 @@ slug: product-documentation-index
 type: index
 status: active
 created: 2026-05-18
-updated: 2026-06-20
+updated: 2026-07-26
 author: Brian + Giddy
-last_agent: claude-session-0425
+last_agent: claude-session-0712
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -14,8 +14,8 @@ backlinks:
 pairs_with:
   - docs/knowledge/wiki/ronin-project-context.md
   - docs/knowledge/wiki/doc-pruning-register.md
-  - docs/product/baseline-martial-arts/PRD.md
-  - docs/product/baseline-martial-arts/STORIES.md
+  - docs/product/black-belt-legacy/PRD.md
+  - docs/product/black-belt-legacy/STORIES.md
 tags:
   - product
   - prd
@@ -46,17 +46,13 @@ They should not duplicate every schema detail, every session note, or every hist
 
 | Brand | Product theme | Canonical docs | Status |
 | --- | --- | --- | --- |
-| Baseline Martial Arts | Run a school and training system | `baseline-martial-arts/PRD.md`, `baseline-martial-arts/STORIES.md` | active |
 | Black Belt Legacy | Preserve martial arts legacy | `black-belt-legacy/PRD.md`, `black-belt-legacy/STORIES.md` | active |
-| WEKAF USA | Run tournaments and competition operations | `wekaf-usa/` | planned |
-| Ronin Dojo Design | Sell and operate white-label systems | `ronin-dojo-design/` | planned |
-| Mammoth Build | Custom CRM for a metal-building client — lead→order with build-photo proof (replaces HubSpot) | `mammoth-build/PRD.md`, `mammoth-build/STORIES.md` | draft |
+
+Since the ADR 0055 brand-repo fork (Phase C2), this repo carries **Black Belt Legacy only**. The
+other brand lanes (Baseline Martial Arts, Mammoth Build, WEKAF USA, Ronin Dojo Design) live in
+their own sibling repos; RDD-Monorepo retains the full pre-fork history.
 
 ## Current priority
-
-Baseline Martial Arts and Black Belt Legacy now have canonical PRD/story packs.
-
-Baseline proves the operating system through Brian's real school/program first, then becomes the reusable school-ops SaaS, course-certification, and affiliation model for other schools and university programs.
 
 Black Belt Legacy preserves martial arts legacy through profiles, claims, rank history, lineage, curriculum, certifications, and community trust.
 

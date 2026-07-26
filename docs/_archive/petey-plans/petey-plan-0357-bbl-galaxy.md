@@ -46,6 +46,6 @@ BBL lineage/black-belt legacy. Spec plans + code exist from a ChatGPT session/br
 
 ## Cross-references
 
-- [SESSION_0355](../../sprints/SESSION_0355.md) — where this was surfaced + staged.
+- [SESSION_0355](../../sprints/_archive/monorepo-era/SESSION_0355.md) — where this was surfaced + staged.
 - [petey-plan-0337](../../petey-plan-0337-lineage-responsive-carousel.md) — the adapt-not-port precedent.
 - [BBL STORIES](../../product/black-belt-legacy/STORIES.md).

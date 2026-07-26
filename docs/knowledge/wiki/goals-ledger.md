@@ -4,7 +4,7 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-24
+updated: 2026-07-26
 last_agent: claude-session-0635
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -380,7 +380,7 @@ aggregator reads it with no new parser logic.
   Contact Attempt → one owned, due Next Action. Reusable templates/presets live in the monorepo;
   private notes stay in the Mammoth vault; CRM truth stays in Mammoth's database.
 - **Lane:** Mammoth product / vault-kit / CRM. **Session:**
-  [`SESSION_0571`](../../sprints/SESSION_0571.md). **Depends on:** G-014 vault-kit packaging and
+  [`SESSION_0571`](../../sprints/_archive/monorepo-era/SESSION_0571.md). **Depends on:** G-014 vault-kit packaging and
   the existing ADR 0038 per-product Mammoth DB.
 - **Progress:** SESSION_0571 reconciled the phone/iCloud/local evidence, kept
   `MMB_INITIAL_INTAKE` explicitly missing, mapped the legacy `/GOALS` folder as historical rather
@@ -397,7 +397,7 @@ aggregator reads it with no new parser logic.
   operator-ratified); `commitLeadSheet` owner-gated, server-side re-parse, in-tx index,
   skip+report (never enrich/overwrite), Contact + lead Project per new row; Doug GO-WITH-NOTE
   9.6/10 with hermetic scratch-DB UAT. **Loop-3 slice (b) LANDED**
-  ([`SESSION_0586`](../../sprints/SESSION_0586.md), 0587 sweep): Lead Source facet on the
+  ([`SESSION_0586`](../../sprints/_archive/monorepo-era/SESSION_0586.md), 0587 sweep): Lead Source facet on the
   Sales-cockpit roster AND the pipeline board — shared `LeadSourceFacet` chips, ONE
   `normalizeLeadSource`/`leadSourceLabel` vocabulary, per-source counts, honest zero-count
   empty state; read-side only (board filter = remount over filtered `BoardStore`, ui-kit kernel
@@ -455,20 +455,20 @@ aggregator reads it with no new parser logic.
   door, curriculum at real scale needs the harvested trunk data, and progress tracking is the
   member-facing value that justifies GA. (SESSION_0578 grill, 4 forks resolved.)
 - **Progress (SESSION_0582 sweep — three lanes LANDED, merged C→B→A-S1):**
-  **Lane C DONE** ([`SESSION_0579`](../../sprints/SESSION_0579.md)): judo 20/20 Kodokan adopted
+  **Lane C DONE** ([`SESSION_0579`](../../sprints/_archive/monorepo-era/SESSION_0579.md)): judo 20/20 Kodokan adopted
   (`nativeName`/`aliases` additive migration), AABB guard, ADR 0050 (grappling scope — the
   blocking merge-gate) ratified. Ground-truth corrections: BJJ trunk is **80** techniques (the
   "98" counted section objects); the "~14 dark slugs" were already backfilled pre-lane. Wrestling
   authoring gap stays open (child, P3 — no dataset). **Lane B DONE**
-  ([`SESSION_0580`](../../sprints/SESSION_0580.md)): oRPC `techniques` router, own-user
+  ([`SESSION_0580`](../../sprints/_archive/monorepo-era/SESSION_0580.md)): oRPC `techniques` router, own-user
   upsert/clear runtime-proven, AUD2-5 channel = leading glyph via shared
   `components/common/technique-progress-status.tsx` (Lane A consumes this SAME module for
   cards/graph), dashboard "My progress", no-leak test green. **Lane A S1 DONE**
-  ([`SESSION_0581`](../../sprints/SESSION_0581.md)): C4 eased zoom-to-fit (+never-during-drag,
+  ([`SESSION_0581`](../../sprints/_archive/monorepo-era/SESSION_0581.md)): C4 eased zoom-to-fit (+never-during-drag,
   CSS motion-reduce), WL-P2-67 resolved (375px fit = 61/61 nodes, zoom 0.160), D-4 cooperative
   touch (pan-y + 2-finger pinch), AUD2-3 mobile toolbar, AUD2-8 dead-token fix, AUD2-9 PNG
   demote — computed-style/live proofs in the session file. **Lane A S2 DONE**
-  ([`SESSION_0583`](../../sprints/SESSION_0583.md), 0587 sweep): C5 neighborhood glow —
+  ([`SESSION_0583`](../../sprints/_archive/monorepo-era/SESSION_0583.md), 0587 sweep): C5 neighborhood glow —
   **redesigned selected→hover-driven** (selected-glow proved invisible behind the dialog's
   backdrop blur; judgment call flagged for Desi/operator confirm, not silently substituted) ·
   D3 empty states (graph type-filter + AUD2-7 curriculum topic-filter EmptyList + "Show all
@@ -526,7 +526,7 @@ aggregator reads it with no new parser logic.
 - **Why:** the pattern already runs the repo by hand (0574/0577/0578 proved it in one night);
   6.0 makes it law the read-path consumes, and the rituals currently point at a corpse.
 - **Progress (0587 sweep):** **Session A + B core DONE via
-  [`SESSION_0584`](../../sprints/SESSION_0584.md)** (operator full-scope election folded A+B+
+  [`SESSION_0584`](../../sprints/_archive/monorepo-era/SESSION_0584.md)** (operator full-scope election folded A+B+
   personas into one lane): WORKFLOW_6.0 spine · 5.0 supersede banner · rituals repointed off
   the dead 5.0 canon (opening step 1d + step 2 rewrite; closing §6a evidence-artifact policy +
   bow-out-gates Gate 12c dry-run-proven) · SOT_Cookbook + §1 router move + map demotion ·
@@ -535,7 +535,7 @@ aggregator reads it with no new parser logic.
   session-ops-cookbook → session-command-log rename · 6 personas canonical in
   `.claude/agents/` with Allowed/never sections (docs/agents = pointer stubs) ·
   seq-research-recommend skill · D-049 fixed. **SOT-dashboard slice 1 DONE via
-  [`SESSION_0585`](../../sprints/SESSION_0585.md):** `state-of-project-parse` lib (30 tests) +
+  [`SESSION_0585`](../../sprints/_archive/monorepo-era/SESSION_0585.md):** `state-of-project-parse` lib (30 tests) +
   additive `ledger-backlog --json` sessions/goals fields (text output byte-stable) +
   `state-of-project.ts` renderer + `state-of-project-projection.md` protocol; slice 2
   (`/app/state`) open. **Remaining:** Session C (lane facet + `--lane=` — read 0585's additive

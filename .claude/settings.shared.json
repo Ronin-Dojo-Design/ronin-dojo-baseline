@@ -1,0 +1,36 @@
+{
+  "_comment": "Tracked template for the gitignored .claude/settings.json (SESSION_0712, Phase C). Fresh clones/worktrees: copy this file to .claude/settings.json (bootstrap.sh does it) — the hook REGISTRATION is gitignored while the hook SCRIPTS are tracked, so without the copy the bow-in gates silently never fire. Machine-local permission allowlists accumulate in the copy, never here.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun \"$CLAUDE_PROJECT_DIR/scripts/pr-nudge.ts\""
+          }
+        ]
+      },
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/bow-in-gates.sh\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/bowout-reminder.sh\""
+          }
+        ]
+      }
+    ]
+  }
+}
