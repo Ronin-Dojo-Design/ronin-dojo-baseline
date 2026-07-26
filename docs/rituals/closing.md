@@ -174,6 +174,12 @@ The gate runner already ran `GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify update .` an
 before the commit on purpose (FS-0025: `.graphify/` is git-ignored and indexes the working tree). Nothing to
 do unless the runner reported Graphify unavailable — then run manually or record "skipped."
 
+**Full-rebuild law (HRR-09, SESSION_0711):** incremental `update` keeps phantom nodes for deleted/moved
+files. If the session deleted, moved, or archived files (structural change), run the full rebuild instead:
+`rm -rf .graphify && GRAPHIFY_VIZ_NODE_LIMIT=10000 graphify run .` — the 0711 cleanup rebuild dropped
+phantoms worth 23% of nodes and 26% of disk. Per-repo law in the five-repo era: every repo owns its own
+graph; there is no shared graph.
+
 **Docs Navigator** ([runbook](../runbooks/dev-environment/docs-navigator.md)) is **regenerate-only — never
 commit it.** `docs/index.html` is generated (~17.5 MB) and git-ignored; `bun run docs:nav` on demand. Not a
 close gate — it must never enter a commit.
