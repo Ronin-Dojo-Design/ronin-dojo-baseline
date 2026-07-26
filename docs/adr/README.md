@@ -31,9 +31,9 @@ yet re-ratified here. When a legacy ADR and a `docs/adr/` record conflict, `docs
 | ADR | Decision | Re-states |
 | --- | --- | --- |
 | 0001 | (reserved — migration lane) | — |
-| [0002](0002-main-is-pr-only.md) | `main` is PR-only, enforced by a GitHub ruleset | legacy 0053 |
-| [0003](0003-per-app-databases.md) | One database per app (deploy unit = app + DB) | legacy 0038 (+0034) |
-| [0004](0004-rankentry-is-rank-truth.md) | RankEntry is the ONE rank model | supersedes legacy 0016/0035 |
+| [0056](0056-main-is-pr-only.md) | `main` is PR-only, enforced by a GitHub ruleset | legacy 0053 |
+| [0057](0057-per-app-databases.md) | One database per app (deploy unit = app + DB) | legacy 0038 (+0034) |
+| [0058](0058-rankentry-is-rank-truth.md) | RankEntry is the ONE rank model | supersedes legacy 0016/0035 |
 
 ## Re-ratification backlog (by subject)
 
@@ -54,3 +54,14 @@ touch, not speculatively:
   auto-grant (0054, renumbered from dup 0012).
 - **API layer** — FULL oRPC adoption (0024 as amended by SOT-ADR D3).
 - **Content** — Post as the canonical blog surface (0042); content-atom relations (0018).
+
+## Numbering, tombstones, and brand repos (ratified SESSION_0711 grill)
+
+- **One global sequence.** Legacy ended at 0054; this corpus continues at 0055+. "ADR NNNN"
+  is unambiguous forever; the dir split is purely live-vs-archive, never a second id space.
+- **Tombstone law.** The law lives ONLY here. A legacy ADR superseded by a fresh one carries a
+  one-line tombstone banner (written once, never maintained); its body is historical record.
+  The legacy dir never gains new entries.
+- **Brand repos (post Phase C).** Each brand repo carries only its subset of `docs/adr/`.
+  New brand-specific decisions → that repo's `docs/adr/`. Portfolio-wide decisions → RDD-Monorepo
+  first, sync down (ADR 0059 law 4).

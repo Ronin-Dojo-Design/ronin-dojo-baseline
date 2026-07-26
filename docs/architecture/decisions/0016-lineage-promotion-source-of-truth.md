@@ -19,7 +19,7 @@ backlinks:
 
 # ADR 0016 - Lineage Promotion Source of Truth
 
-> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711)** by [lean ADR 0004 — RankEntry is the ONE rank model](../../adr/0004-rankentry-is-rank-truth.md): RankAward is no longer canonical — reads are collapsed onto RankEntry and the RankAward table-drop is queued as G-011. The awarded-truth display rule survives on RankEntry (see also [ADR 0035](0035-lineage-rank-display-from-awarded-truth.md)).
+> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711)** by [lean ADR 0004 — RankEntry is the ONE rank model](../../adr/0058-rankentry-is-rank-truth.md): RankAward is no longer canonical — reads are collapsed onto RankEntry and the RankAward table-drop is queued as G-011. The awarded-truth display rule survives on RankEntry (see also [ADR 0035](0035-lineage-rank-display-from-awarded-truth.md)).
 
 **Status:** Accepted
 **Date:** 2026-05-17

@@ -14,6 +14,8 @@ backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
+> **TOMBSTONE (SESSION_0711):** the law now lives at [`docs/adr/0056-main-is-pr-only.md`](../../adr/0056-main-is-pr-only.md) — this file is historical record only. Written once, never maintained.
+
 # ADR 0053 — Nothing lands on `main` except through a PR
 
 ## Status

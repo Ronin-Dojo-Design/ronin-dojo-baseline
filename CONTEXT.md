@@ -63,3 +63,33 @@ _Avoid_: confusing it with this CONTEXT.md (domain language, not visual system).
 **Design pass**:
 An anti-AI-slop design review run by the **Desi** agent driving a design skill (hallmark or Impeccable — both installed, called on demand). Scoped to greenfield / mockups / skins / brand surfaces, never overriding the ui-kit token contract on app surfaces (D11).
 _Avoid_: "design review" used to mean a generic PR review.
+
+### Multi-repo era (post ADR-0055 fork, SESSION_0711)
+
+**Brand repo**:
+One of the five sibling repos (Black-Belt-Legacy · Baseline-Martial-Arts · Mammoth-Metal-Buildings · USA-Stickfighting), forked with full shared history, trimmed to its brand.
+_Avoid_: "monorepo" for these — only RDD-Monorepo keeps everything.
+
+**Upstream (RDD-Monorepo)**:
+Ronin-Dojo-Design-Monorepo — upstream-of-record for the kernel (ui-kit) and the process OS. Brand repos cherry-pick from it; nothing auto-syncs.
+_Avoid_: pushing brand-specific work into it.
+
+**Portfolio triage**:
+The morning cockpit move on unpinned days: open RDD, run the portfolio-status command (all five repos: open PRs, CI health, top ledger items), elect the day's goal, switch to that brand repo. A command, not a session — ~5 min cap. Pinned days skip it.
+_Avoid_: turning the cockpit visit into its own work session.
+
+**Environment ladder**:
+local dev → preview → production, per repo. Preview = the Vercel per-PR build URL (this IS staging — no persistent staging branch/env anywhere); production = `main`, auto-deploy. Migrations rehearse on prodsnap before merge.
+_Avoid_: "staging" meaning a long-lived branch or separate deploy — ratified trunk + PR previews everywhere (SESSION_0711 grill).
+
+**Lean ritual (per-repo)**:
+The trimmed bow-in/bow-out + SESSION template v2 that travels into every brand repo with its own SESSION spine and ledgers. RDD-Monorepo holds the canonical copies; brand repos cherry-pick ritual updates.
+_Avoid_: forking ritual text per repo — updates flow from upstream only.
+
+**Weekly sync session**:
+The one scheduled RDD-Monorepo session per week: batch cherry-picks out to brand repos (ui-kit, ritual, gate updates) as small sync PRs. Urgent fixes cherry-pick immediately, off-schedule.
+_Avoid_: daily syncing (churn) or silent no-schedule drift.
+
+**Session = one repo**:
+A Claude session scopes to exactly one repo. Two brands in a day = two sessions. Worktrees are for fan-outs WITHIN a repo, never for hopping repos.
+_Avoid_: multi-repo sessions (muddy handoffs, mixed ledgers).

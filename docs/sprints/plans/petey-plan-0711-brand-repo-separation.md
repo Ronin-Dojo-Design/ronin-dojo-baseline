@@ -1,7 +1,7 @@
 # Petey plan 0711 — brand repo separation (staged execution)
 
 Status: **staged — awaiting operator go per phase.** No phase starts without the word.
-Decision record: `docs/adr/0001-brand-repo-separation.md` (fork-don't-rewrite; five
+Decision record: `docs/adr/0055-brand-repo-separation.md` (fork-don't-rewrite; five
 sibling repos with full shared history; RDD-Monorepo = upstream-of-record).
 
 Target repos (all `Ronin-Dojo-Design/`, private):

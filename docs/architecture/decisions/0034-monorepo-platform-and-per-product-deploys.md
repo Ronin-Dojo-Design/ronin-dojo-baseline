@@ -21,6 +21,8 @@ tags:
   - bbl
 ---
 
+> **TOMBSTONE (SESSION_0711):** the law now lives at [`docs/adr/0055-brand-repo-separation.md`](../../adr/0055-brand-repo-separation.md) — this file is historical record only. Written once, never maintained.
+
 # ADR 0034 — One monorepo platform + per-product Vercel deploys
 
 > **⚠ Vocabulary superseded by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md)

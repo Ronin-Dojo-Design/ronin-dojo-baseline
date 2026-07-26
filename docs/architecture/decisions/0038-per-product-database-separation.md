@@ -22,6 +22,8 @@ tags:
   - bbl
 ---
 
+> **TOMBSTONE (SESSION_0711):** the law now lives at [`docs/adr/0057-per-app-databases.md`](../../adr/0057-per-app-databases.md) — this file is historical record only. Written once, never maintained.
+
 # ADR 0038 — Per-product database separation (BBL prod-repo deferred)
 
 > **⚠ Vocabulary superseded by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md)

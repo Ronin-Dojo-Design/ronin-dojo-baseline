@@ -1062,6 +1062,25 @@ Read this section at bow-in instead of skimming every individual entry.
   memory or an inventory beside it.
 - **Status:** open (memory + row done; doc sweep queued this session).
 
+### FS-0043 — write-lane edited a workspace package.json without lockfile sync; verify suite had no install gate
+
+- **Session:** SESSION_0711 (cleanup execution wave, PR #341).
+- **What happened:** the dead-code lane removed `pg`/`@types/pg` from `apps/baseline/package.json`
+  (correct change) but could not run `bun install` in-lane; the verify agent's 8-gate suite ran
+  wiki-lint/tsc/oxlint/tests/fallow/arch-gate against the EXISTING `node_modules` and never ran
+  `bun install --frozen-lockfile`. CI then failed every job at install (9–37s deaths across
+  typecheck/lint/unit/playwright/deploy) — one full red CI cycle paid.
+- **Root cause:** Pattern 5 recurrence (deploy-chain desync, FS-0022/0023 class): a dependency
+  edit and its lockfile are one atomic change, and no gate in the verify recipe asserts it.
+- **Corrective action:** (1) `bun.lock` synced + committed with the fix (`f23b7835`); (2) the
+  verify-pass recipe gains gate 0: `bun install --frozen-lockfile` whenever any `package.json`
+  changed — routed to the workflow verify-agent prompt template.
+- **Related (FS-0036 class, own tooling):** the first CI monitor watched silently for 60 min —
+  its error branch swallowed failures with no event (silence looked like "still running").
+  Re-armed with error-visible events. Rule reaffirmed: a watcher must emit on failure paths,
+  not only the happy path.
+- **Status:** mitigated (lock synced + verified; recipe-gate routed this session).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
