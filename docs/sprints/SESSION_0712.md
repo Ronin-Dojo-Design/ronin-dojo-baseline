@@ -132,6 +132,33 @@ PL-030 explorer epic queued behind the fork work.
   (own deploy + DB) → migrate content/commerce → WP sunset.
 - Both added to the Fork Fan-out Board (republished, same URL).
 
+## SotD review — wiring + the invisible-work map (operator-requested)
+
+- **Explore sweep (full inventory in-session):** 19 SHIPPED items · 7 in-flight · 14 planned-not-started ·
+  7 mentioned-no-owner. Headline: the promised SotD is ONE dashboard with ~10 components; what exists is
+  (a) the static script (5 sections), (b) live `/app/state` (3 sections), (c) FOUR sibling panels mounted
+  NEXT to it on `/app` (ComponentCatalog · CardCatalog · Cookbook · TokenCost) — never ON it, and (d) ~7
+  promised components queued across PL-003/-006/-007/-009/-020 + WL-P2-71/-75/-76/-80 with no open session.
+- **Drift finding (D-candidate, route at bow-out):** two renderers diverged — `scripts/state-of-project.ts`
+  keeps its own copies of PHASES/BELT_WORD/BRANDS/masthead instead of importing
+  `apps/web/components/app/state-of-dojo/_kernel/phase.ts`; the script also lacks the deploy-scope gate
+  (leaks cross-brand data the live route suppresses) and the per-skin masthead. Every vocabulary fix
+  (e.g. PL-020) must land twice; the bow-out gate renders the stale one each close.
+- **Stale-status finding:** `_archive/monorepo-era/SESSION_0674.md` frontmatter says `in-review` but its
+  build IS merged (`b2fc7013`, PR #303 — `/app/state/[brand]` + BrandStatePanel). Unclean-close class.
+- **Docs-nav/graph on SotD:** WL-P2-76 (docs-navigator on SotD — 0620 /rr ratified a LINK CARD, not a
+  panel; never built) · PL-008/SESSION_0595 (per-brand vaults with own docs-nav + graphify HTML — staged,
+  never run). Graph output on SotD was never promised beyond PL-008.
+- **Epics visibility:** epics live scattered (docs/epics/ ×3 · BBL product epic-plans/specs ×5 ·
+  obsidian-dashboard epic · staged plan stubs 0594/0595/0605 · PL-030). Consolidated as a new **Epics tab**
+  on the frozen artifact (15 rows); a permanent epics panel belongs in the renderer lane below.
+- **Routed recommendation:** ONE plan lane ("SotD usefulness epic", /pp next session or after the sibling
+  trims): unify both renderers on `_kernel/phase.ts` → PL-020 belt words once → bake Fan-out + Epics panels
+  into `state-of-project.ts` → WL-P2-76 docs-nav link card → WL-P2-75 MBR→Needs-you → PL-003 §1 loop-board
+  embed; decide the fork-era home of the PORTFOLIO SotD (RDD-Monorepo) vs the per-brand SotD (each repo).
+- **Consolidation done this session:** the frozen artifact now carries RDD/BBL/MMB + **Fan-out** (7 slots)
+  + **Epics** (15 epics) tabs at ONE url (see Artifacts).
+
 ## Artifacts
 
 - State-of-Dojo frozen snapshot (bow-in): <https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd>
