@@ -2,7 +2,7 @@
 title: "ADR 0004 — Multi-brand encoded as brand column"
 slug: adr-0004-multi-brand-as-column
 type: decision
-status: accepted
+status: superseded
 created: 2026-04-25
 updated: 2026-06-06
 last_agent: codex-session-0351
@@ -15,6 +15,8 @@ backlinks:
 ---
 
 # ADR 0004 — Multi-brand encoded as `brand` column
+
+> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711)** by [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md) + [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md). The in-app multi-brand `Brand`-enum harness is dead — the model is multi-*app* (one deploy per brand/instance), and the ~170 vestigial `getRequestBrand` sites are slated for full prune. `lib/auth.ts:105` still cites this ADR; treat that as vestige, not law.
 
 **Status:** Accepted
 **Date:** 2026-04-25

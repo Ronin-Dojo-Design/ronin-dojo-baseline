@@ -149,5 +149,5 @@ function.
 - Epic plan: [Petey Plan 0337 — Lineage Responsiveness + Carousel](../../../../petey-plan-0337-lineage-responsive-carousel.md) (Slice 2).
 - Port map record: PORTMAP-0003 in [Graphify Component Port Map](../graphify-component-port-map.md).
 - Prior slice: [Lineage Responsive Mode Switch port spec](./lineage-responsive-switch-port-spec.md) (board/tree default).
-- Proof session: [SESSION_0339](../../../../sprints/SESSION_0339.md).
+- Proof session: [SESSION_0339](../../../../sprints/_archive/era-b/SESSION_0339.md).
 - BBL prior art (read for behavior only): `ronin-dojo-monorepo/src/brands/blackbeltlegacy/components/lineage/MobileLineageList.jsx` (`buildFlattenedTree` + indent/connector idiom).

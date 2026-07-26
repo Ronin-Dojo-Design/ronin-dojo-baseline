@@ -9,7 +9,7 @@ last_agent: claude-session-0356
 pairs_with:
   - docs/architecture/uplift/epic-2026-05-19.md
   - docs/architecture/dirstarter-baseline-index.md
-  - docs/knowledge/wiki/dirstarter-gap-audit.md
+  - docs/_archive/wiki/dirstarter-gap-audit.md
   - docs/sprints/SESSION_0356.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -107,5 +107,5 @@ interactive* surfaces; the gap-audit's "no migration" intent wins for *existing*
 
 - `docs/architecture/uplift/epic-2026-05-19.md` (oRPC lock + lane index)
 - `docs/architecture/dirstarter-baseline-index.md` §13k (oRPC = ADR-level, do not mass-replace)
-- `docs/knowledge/wiki/dirstarter-gap-audit.md` line 124 (no-migration stance)
+- `docs/_archive/wiki/dirstarter-gap-audit.md` line 124 (no-migration stance)
 - `docs/knowledge/wiki/drift-register.md` (the epic↔gap-audit contradiction entry, SESSION_0356)

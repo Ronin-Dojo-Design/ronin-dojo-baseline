@@ -4,7 +4,7 @@ slug: lineage-listing-runbook
 type: runbook
 status: active
 created: 2026-05-16
-updated: 2026-07-01
+updated: 2026-07-26
 last_agent: claude-session-0490
 pairs_with:
   - docs/runbooks/baseline-listings-runbook.md
@@ -12,7 +12,7 @@ pairs_with:
   - docs/architecture/lineage/lineage-rank-promotion-sync-rules.md
   - docs/architecture/lineage/lineage-v1-acceptance-test-plan.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
-  - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
+  - docs/_archive/wiki/directory-monetization-roadmap.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0344.md
@@ -1017,7 +1017,7 @@ Each step gets its own Petey plan + Cody pre-flight + Doug/Giddy review per WORK
 - [Lineage Rank Promotion Sync Rules](../../architecture/lineage/lineage-rank-promotion-sync-rules.md) — promoter-change rules that apply after a claim is approved.
 - [Lineage v1 Acceptance Test Plan](../../architecture/lineage/lineage-v1-acceptance-test-plan.md) — unit/UI/QA matrix the listing tier work must satisfy.
 - [ADR 0016 — Lineage Promotion Source of Truth](../../architecture/decisions/0016-lineage-promotion-source-of-truth.md) — RankAward is canonical; PROMOTED_BY is mirror.
-- [Directory Monetization Roadmap](../../knowledge/wiki/content-engine/directory-monetization-roadmap.md) — overall directory monetization plan; lineage is one revenue surface inside it.
+- [Directory Monetization Roadmap](../../_archive/wiki/directory-monetization-roadmap.md) — overall directory monetization plan; lineage is one revenue surface inside it.
 - [SOP — Data and Wiring Flows](../sops/sop-data-and-wiring-flows.md) — canonical flow diagram conventions.
 - [SOP — E2E User Lifecycle](../sops/sop-e2e-user-lifecycle.md) — where claim + tier flows sit in the user lifecycle.
 

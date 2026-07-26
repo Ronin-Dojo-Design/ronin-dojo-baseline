@@ -26,6 +26,8 @@ tags:
 
 # ADR 0033 — Component library as a shared kernel + strategic-harness posture
 
+> **⛔ D12 supersession (back-stamped 2026-07-26, SESSION_0711):** the strategic-harness / "BBL extracts to its own repo" posture is superseded by [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md) — BBL is a permanent in-repo flagship and the 4-brand harness is dead (single-brand collapse + full prune). Previously this note lived only at `SOT-ADR.md` D12 (line 277). The shared-kernel half (ui-kit extraction, D1) stands.
+
 ## Status
 
 Accepted — SESSION_0421 ratified all decisions, including D1: the kernel lives in `packages/ui-kit`;

@@ -4,7 +4,7 @@ slug: bbl-parity-spec
 type: spec
 status: active
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-07-26
 last_agent: claude-session-tender-babbage
 author: Brian + Claude
 tags:
@@ -20,7 +20,7 @@ tags:
 # BBL_PARITY_SPEC — Dashboard / Profile Pixel-Parity Build Blueprint
 
 > The build blueprint for the **BBL dashboard/profile parity epic** flagged in
-> [`../../sprints/SESSION_0408.md`](../../sprints/SESSION_0408.md) ("Next session" block:
+> [`../../sprints/SESSION_0408.md`](../../sprints/_archive/era-b/SESSION_0408.md) ("Next session" block:
 > *"profile + public ~60–75% reusable; dashboard is the build; the public BJJ Passport ID card
 > is the signature gap"*). It maps every legacy **BBLApp** surface to a disposition against the
 > **current `apps/web`** component set, so any agent can pick a slice and build it **reuse-first**.
@@ -59,7 +59,7 @@ presentation layer; see §5.)
 | Promotions | `/events`, dashboard Events | `PromotionTimeline`, `DashboardEventsTab` | CCI §3g |
 | Shared identity hero | claim teaser / editor preview | `ProfileHero` (presentation-only) | CCI §0 |
 
-**Data already exists** ([`../../sprints/SESSION_0408.md`](../../sprints/SESSION_0408.md)): 76 BBL members
+**Data already exists** ([`../../sprints/SESSION_0408.md`](../../sprints/_archive/era-b/SESSION_0408.md)): 76 BBL members
 imported with `RankAward` belts, a `bbl-lineage` tree with parent edges, schools as Organizations, and
 `Passport.avatarUrl` (default + real). So the rich-profile reads exist; this epic mostly **renders** them.
 

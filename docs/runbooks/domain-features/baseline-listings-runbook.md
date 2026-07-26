@@ -4,14 +4,14 @@ slug: baseline-listings-runbook
 type: runbook
 status: active
 created: 2026-05-14
-updated: 2026-05-20
+updated: 2026-07-26
 last_agent: codex-session-0207
 pairs_with:
   - docs/runbooks/sop-data-and-wiring-flows.md
   - docs/runbooks/lineage-listing-runbook.md
   - docs/architecture/dirstarter-baseline-index.md
   - docs/architecture/dirstarter-upstream-sync-2026-05-14.md
-  - docs/knowledge/wiki/content-engine/directory-monetization-roadmap.md
+  - docs/_archive/wiki/directory-monetization-roadmap.md
   - docs/knowledge/wiki/manual-boundary-registry.md
   - docs/sprints/SESSION_0165.md
   - docs/sprints/SESSION_0207.md

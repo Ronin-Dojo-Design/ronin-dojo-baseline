@@ -11,7 +11,7 @@ pairs_with:
   - docs/architecture/decisions/0010-cache-strategy.md
 backlinks:
   - docs/sprints/SESSION_0019.md
-  - docs/knowledge/wiki/dirstarter-gap-audit.md
+  - docs/_archive/wiki/dirstarter-gap-audit.md
 needs_fix:
   - "Backfill automated cache-isolation test IDs if auth-variant shared caching is expanded"
 tags:

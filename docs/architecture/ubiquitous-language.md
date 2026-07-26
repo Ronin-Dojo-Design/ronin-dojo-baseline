@@ -4,7 +4,7 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-20
+updated: 2026-07-26
 last_agent: claude-session-0582
 version: 2
 pairs_with:
@@ -13,6 +13,7 @@ pairs_with:
   - docs/architecture/programs-curriculum-certification-spec.md
   - docs/architecture/monetization-entitlements-spec.md
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
+  - docs/architecture/decisions/0051-brand-platform-product-portfolio-taxonomy.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
   - docs/architecture/decisions/0043-rank-award-fact-vs-member-milestone.md
   - docs/architecture/decisions/0047-promoter-as-placeholder-recruited-coach-identity.md
@@ -38,6 +39,27 @@ It exists to prevent AI-assisted development from creating naming drift, duplica
 ## Rule
 
 If a code change introduces, renames, or changes the meaning of a domain concept, update this file in the same change.
+
+## Portfolio taxonomy (ADR 0051 — kernel → brand → app)
+
+The ratified tier vocabulary
+([ADR 0051](decisions/0051-brand-platform-product-portfolio-taxonomy.md)); every term below is
+load-bearing:
+
+- **Kernel** — the ONE shared technical substrate: `packages/ui-kit` + the (aspirational) library
+  of brand-agnostic feature-modules. What old docs called "the platform."
+- **Brand** — the top portfolio unit (BBL · Mammoth · Baseline · WEKAF · ACD · RDD); owns one or
+  more apps. (Distinct from the in-code `Brand` enum — see the Brand section below.)
+- **App** — THE DEPLOY UNIT: one Vercel project + one database (ADR 0038). What ADR 0034/0038
+  called a "product."
+- **Suite → Product → Feature** — optional intra-app nesting used only as an app grows; a
+  "product" is a **feature-area within an app**, never a whole deploy. Small apps stay flat
+  (`app → features`).
+- **White-label instance** — the orthogonal axis: a customer deploy of Baseline's White Labeled
+  Dojo, resold by RDD; each instance IS an app (own deploy + DB, brand-skinned). Tuff Buffs is
+  the pilot instance, being absorbed into Baseline.
+
+_Avoid_: "platform" for the kernel (legacy word), "product" for a deploy (that is an **app**).
 
 ## Repository & environment language
 
@@ -623,6 +645,10 @@ A sellable commercial offer, such as a Program, Course, Certification, Membershi
 
 In SESSION_0029, Product is a domain concept, not yet a Prisma model. Do not add a `Product` table until the unified catalog need is proven by implementation.
 
+Note (ADR 0051): in portfolio-taxonomy language, "product" separately means a **feature-area
+within an app** (see Portfolio taxonomy above) — never a whole deploy (that is an **app**). This
+commerce Product (a sellable offer) is a third, domain-level sense; context disambiguates.
+
 ### PricingPlan
 
 The internal Ronin price and terms record for an organization and optional Program.
@@ -755,7 +781,12 @@ An append-only ledger entry for a point-bearing event. Links back to source (Ran
 
 ## Brand
 
-The public-facing product identity or domain context.
+Two senses (ADR 0051):
+
+1. **Portfolio brand** — the top portfolio unit (kernel → **brand** → app); owns one or more
+   apps. This is the ratified meaning (see Portfolio taxonomy at the top of this file).
+2. **The in-code `Brand` enum/column** (below) — a vestige of the dead in-app multi-brand
+   harness, retained only until the full prune lands.
 
 Initial values:
 

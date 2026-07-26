@@ -15,6 +15,8 @@ backlinks:
 
 # ADR 0012 — Admin CRUD routing: flat with filter, not nested under orgs
 
+> **Note (back-stamped 2026-07-26, SESSION_0711):** the admin surface has since migrated `/admin/*` → `/app/*` (AdminCollection law, ADR 0045); read the route examples below as `/app/<entity>/`. The *decision* — flat routing with filter columns, never org-nested — still stands. The duplicate "ADR 0012 tier-auto-grant" file was renumbered to [ADR 0054](0054-tier-auto-grant.md).
+
 ## Context
 
 Dirstarter's admin panel uses flat routing for all entities: `/admin/tools/`, `/admin/categories/`, `/admin/tags/`, `/admin/users/`. Each entity's list page handles filtering via URL query params (nuqs).

@@ -4,7 +4,7 @@ slug: wiring-ledger
 type: reference
 status: active
 created: 2026-05-29
-updated: 2026-07-25
+updated: 2026-07-26
 last_agent: claude-session-0692
 pairs_with:
   - docs/sprints/SESSION_0304.md
@@ -375,7 +375,7 @@ flowchart TD
 - [Custom Component Inventory](custom-component-inventory.md) — where enhanced components are re-documented at close.
 - [Test Fail Fix Ledger](test-fail-fix-ledger.md) — companion ledger for clustered failing-test pointers.
 - [SESSION_0304](../../sprints/SESSION_0304.md) — session that produced this ledger + the fixes.
-- [SESSION_0347](../../sprints/SESSION_0347.md) — session that closed the unaudited admin entitlement path.
+- [SESSION_0347](../../sprints/_archive/era-b/SESSION_0347.md) — session that closed the unaudited admin entitlement path.
 
 ## Sources
 

@@ -8,7 +8,7 @@ updated: 2026-04-27
 source_pages:
   - docs/sprints/SESSION_0017.md
   - docs/knowledge/wiki/index.md
-  - docs/knowledge/wiki/log.md
+  - docs/_archive/wiki/log.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -46,17 +46,17 @@ Raw source (session, ADR, code, external doc)
 
 1. **Raw sources are immutable.** SESSION files, ADRs, and external docs don't get rewritten. Wiki pages synthesize them.
 2. **Wiki pages declare provenance.** Every wiki page uses `source_pages` and/or `derived_from` in frontmatter.
-3. **The log is append-only.** `wiki/log.md` gets an entry every session. It must never fall behind.
+3. **The log is retired.** `wiki/log.md` is frozen and archived at `docs/_archive/wiki/log.md` (SESSION_0711); the SESSION_NNNN file is the per-session log. No new entries.
 4. **The index is the master registry.** If a doc exists but isn't in `wiki/index.md`, it's invisible to future agents.
 5. **Drift is tracked, not ignored.** When two sources contradict, record it in `drift-register.md` — don't silently pick one.
-6. **Sessions update memory.** Every session close must update: log, index (if new docs), and drift register (if contradictions found).
+6. **Sessions update memory.** Every session close must update: index (if new docs) and drift register (if contradictions found). (The log-append step is retired with `log.md`.)
 
 ## What belongs where
 
 | Artifact | Location | Updated by |
 | --- | --- | --- |
 | Session-specific work log | `docs/sprints/SESSION_NNNN.md` | During session |
-| Chronological change record | `docs/knowledge/wiki/log.md` | Session close |
+| Chronological change record | `docs/_archive/wiki/log.md` (frozen SESSION_0711) | retired — SESSION file is the log |
 | Master doc registry | `docs/knowledge/wiki/index.md` | When new docs created |
 | Contradictions / stale claims | `docs/knowledge/wiki/drift-register.md` | When detected |
 | Pattern reference pages | `docs/knowledge/wiki/files/` | When patterns studied |

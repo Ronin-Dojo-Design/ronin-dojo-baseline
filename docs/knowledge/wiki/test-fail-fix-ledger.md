@@ -4,7 +4,7 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-07-17
+updated: 2026-07-26
 last_agent: codex-session-0551
 pairs_with:
   - docs/sprints/SESSION_0341.md
@@ -226,9 +226,9 @@ isolation) noted there too.
 
 - [SOP — Test Writing Patterns](../../runbooks/sops/sop-test-writing.md) — **§2 (runner) explains most
   full-suite failures; §12 is the test inventory. Read first.**
-- [SESSION_0341](../../sprints/SESSION_0341.md) — created this ledger from the first 21-failure clustered
+- [SESSION_0341](../../sprints/_archive/era-b/SESSION_0341.md) — created this ledger from the first 21-failure clustered
   full-suite run (without consulting SOP §2).
-- [SESSION_0342](../../sprints/SESSION_0342.md) — root-caused and resolved TFF-001..005 (`--parallel=1`).
+- [SESSION_0342](../../sprints/_archive/era-b/SESSION_0342.md) — root-caused and resolved TFF-001..005 (`--parallel=1`).
 - [Wiring Ledger](wiring-ledger.md) — companion ledger for product wiring and handroll gaps.
 
 ## Sources

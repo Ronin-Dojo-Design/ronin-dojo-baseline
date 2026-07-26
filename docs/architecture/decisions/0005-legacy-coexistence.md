@@ -1,5 +1,7 @@
 # ADR 0005 — Legacy stack stays at tuffbuffs.com; new stack runs everything else
 
+> **Endgame amended (back-stamped 2026-07-26, SESSION_0711):** the original "legacy eventually retired" endgame is superseded by [ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md) — Tuff Buffs is being **absorbed into Baseline** (the pilot white-label instance mid-rebrand), not merely retired.
+
 **Status:** Accepted
 **Date:** 2026-04-25
 

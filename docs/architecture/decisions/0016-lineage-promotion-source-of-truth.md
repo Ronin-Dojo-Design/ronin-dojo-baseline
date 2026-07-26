@@ -2,7 +2,7 @@
 title: "ADR 0016 - Lineage Promotion Source of Truth"
 slug: adr-0016
 type: adr
-status: accepted
+status: superseded
 created: 2026-05-17
 updated: 2026-07-01
 last_agent: codex-session-0479
@@ -18,6 +18,8 @@ backlinks:
 ---
 
 # ADR 0016 - Lineage Promotion Source of Truth
+
+> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711)** by [lean ADR 0004 — RankEntry is the ONE rank model](../../adr/0004-rankentry-is-rank-truth.md): RankAward is no longer canonical — reads are collapsed onto RankEntry and the RankAward table-drop is queued as G-011. The awarded-truth display rule survives on RankEntry (see also [ADR 0035](0035-lineage-rank-display-from-awarded-truth.md)).
 
 **Status:** Accepted
 **Date:** 2026-05-17

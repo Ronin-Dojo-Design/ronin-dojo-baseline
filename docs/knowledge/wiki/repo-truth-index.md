@@ -4,7 +4,7 @@ slug: repo-truth-index
 type: concept
 status: active
 created: 2026-04-27
-updated: 2026-06-29
+updated: 2026-07-26
 last_agent: claude-session-0449
 pairs_with:
   - aliases-and-canonical-ids
@@ -12,7 +12,7 @@ pairs_with:
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/architecture/program-plan.md
-  - docs/knowledge/wiki/baseline-docs-adoption-checklist.md
+  - docs/_archive/wiki/baseline-docs-adoption-checklist.md
   - docs/knowledge/how-to-use-these-registries.md
 needs_fix:
   - "Needs backlinks added to any newly linked docs"

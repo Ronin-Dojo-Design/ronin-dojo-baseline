@@ -61,12 +61,15 @@ Every page must:
 
 No isolated pages.
 
-### 4. Maintain index and log
+### 4. Maintain the index
 
 After each ingestion or update:
 
 - update `wiki/index.md`
-- append a new entry to `wiki/log.md`
+
+(The old second step — "append a new entry to `wiki/log.md`" — is retired: `log.md` was frozen and
+archived at `docs/_archive/wiki/log.md` in the SESSION_0711 sweep. The SESSION_NNNN file is the
+session log; nothing appends to the wiki log anymore.)
 
 ### 5. Handle contradictions explicitly
 

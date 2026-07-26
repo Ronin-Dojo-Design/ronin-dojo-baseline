@@ -9,11 +9,11 @@ last_agent: claude-session-0692
 next_session: SESSION_0709
 sprint: S12
 lane: repo
-recipe: "AM_Coffee_Merge_Review"
+recipe: "am-coffee-merge-review"
 goal_ids: []
 pairs_with:
   - docs/sprints/SESSION_0681.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
   - docs/protocols/recipes/overnight-orchestrator-waves.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -24,7 +24,7 @@ backlinks:
 > **Staged by SESSION_0681 (the gold-standby daytime orchestrator).** This is the merge baton for the
 > waves-15/16 fan-out. **0692 is the ONLY merge owner** for these lanes — SESSION_0681 never merges,
 > never deploys. Adopt: flip `status:` → `in-progress`, run the
-> [AM_Coffee_Merge_Review](../protocols/recipes/AM_Coffee_Merge_Review.md) checklist below. Live
+> [AM_Coffee_Merge_Review](../protocols/recipes/am-coffee-merge-review.md) checklist below. Live
 > dispatch record = SESSION_0681's orchestrator PR (updated after every wave).
 
 ## Lane inventory (waves 15 + 16)

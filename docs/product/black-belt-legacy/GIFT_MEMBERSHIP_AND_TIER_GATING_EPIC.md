@@ -4,12 +4,12 @@ slug: bbl-gift-membership-and-tier-gating-epic
 type: spec
 status: draft
 created: 2026-06-04
-updated: 2026-06-10
+updated: 2026-07-26
 last_agent: claude-session-0359
 pairs_with:
   - docs/product/black-belt-legacy/GAP_MATRIX.md
   - docs/product/black-belt-legacy/CUTOVER_CHECKLIST.md
-  - docs/architecture/decisions/0012-tier-auto-grant.md
+  - docs/architecture/decisions/0054-tier-auto-grant.md
   - docs/architecture/decisions/0019-membership-lifecycle-ownership.md
   - docs/sprints/SESSION_0345.md
 backlinks:
@@ -186,8 +186,8 @@ posture. Confirm the RBAC matrix and the entitlement-keys-as-tier decision at bo
 
 - [GAP_MATRIX](GAP_MATRIX.md) — BBL-PROFILE-001 (public profile page), BBL-MIGRATE-002 (dedup) are
   prerequisites/neighbors.
-- [ADR 0012 — tier auto-grant](../../architecture/decisions/0012-tier-auto-grant.md) — paid grant authority.
+- [ADR 0054 — tier auto-grant (renumbered from dup 0012)](../../architecture/decisions/0054-tier-auto-grant.md) — paid grant authority.
 - [ADR 0019 — membership lifecycle ownership](../../architecture/decisions/0019-membership-lifecycle-ownership.md)
   — access vs membership boundary this epic must honor.
-- [SESSION_0345](../../sprints/SESSION_0345.md) — checkout gate proof + returning-customer fix that precede
+- [SESSION_0345](../../sprints/_archive/era-b/SESSION_0345.md) — checkout gate proof + returning-customer fix that precede
   this epic.

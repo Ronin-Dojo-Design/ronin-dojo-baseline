@@ -20,6 +20,8 @@ backlinks:
 
 # ADR 0051 — Portfolio taxonomy: kernel → brand → app → (suite → product → feature)
 
+> **Reality note (back-stamped 2026-07-26, SESSION_0711):** the brand-agnostic **feature-module library is aspirational** — `packages/` currently holds only `ui-kit` + `api-client`. The taxonomy is ratified law; the module library is the direction of travel, not shipped inventory.
+
 **Status:** accepted (SESSION_0589 operator grill, ratified). Supersedes the *unit-of-portfolio*
 and *unit-of-deploy* vocabulary of [ADR 0034](0034-monorepo-platform-and-per-product-deploys.md) and
 [ADR 0038](0038-per-product-database-separation.md); the technical-substrate model of

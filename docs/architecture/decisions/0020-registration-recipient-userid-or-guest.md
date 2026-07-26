@@ -89,5 +89,5 @@ Not applicable in the negative sense — Better Auth's `User` model is Dirstarte
 ## Related decisions
 
 - [ADR 0019 — Membership lifecycle ownership](0019-membership-lifecycle-ownership.md) — parallel structure: drew a boundary between `Membership` (community/admin state) and `UserEntitlement` (subscription-driven access) without forcing a schema delta. ADR-0020 takes the opposite tack — drawing the boundary requires a schema delta — because the Registration unique constraint couldn't be made to fit two recipient kinds without one.
-- [SESSION_0260](../../sprints/SESSION_0260.md) — A2.5 implementation that shipped the discriminated input + auto-stub-User and triggered this ADR.
-- [SESSION_0261](../../sprints/SESSION_0261.md) — A3 implementation (migration + null-handling sweep + UI v2 + this ADR + Doug verification).
+- [SESSION_0260](../../sprints/_archive/era-b/SESSION_0260.md) — A2.5 implementation that shipped the discriminated input + auto-stub-User and triggered this ADR.
+- [SESSION_0261](../../sprints/_archive/era-b/SESSION_0261.md) — A3 implementation (migration + null-handling sweep + UI v2 + this ADR + Doug verification).

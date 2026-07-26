@@ -28,7 +28,7 @@ raw import -> adoption pass -> canonical repo version -> archive/delete raw dupl
 
 Add this file as:
 
-`docs/knowledge/wiki/baseline-docs-adoption-checklist.md`
+`docs/_archive/wiki/baseline-docs-adoption-checklist.md`
 
 This makes it visible to the repo-native wiki system and easy to link from sessions, rituals, and protocols.
 

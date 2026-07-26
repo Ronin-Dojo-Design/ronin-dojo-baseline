@@ -28,6 +28,8 @@ tags:
 
 # ADR 0041 — Agent roster as a dispatch layer + the Kanban board as the session driver
 
+> **Partially superseded (back-stamped 2026-07-26, SESSION_0711):** [ADR 0052](0052-lean-single-lane-baton-session-model.md) (line 63) demotes the Kanban board from "THE session driver" to **the visual** — the SESSION_NNNN spine + lane batons drive sessions. The agent-roster dispatch layer stands.
+
 ## Status
 
 **Accepted** — 2026-06-30 (SESSION_0476).

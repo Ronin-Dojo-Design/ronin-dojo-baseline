@@ -9,7 +9,7 @@ last_agent: claude-session-0624
 next_session: docs/sprints/SESSION_0634.md
 sprint: S12
 lane: repo
-recipe: "AM_Coffee_Merge_Review"
+recipe: "am-coffee-merge-review"
 goal_ids: ["G-023"]
 tickets: ["WL-P3-54", "WL-P3-24", "WL-P3-37", "WL-P3-55", "WL-P3-41", "WL-P3-46", "WL-P3-61", "FS-0038", "WL-P3-63"]
 pairs_with:
@@ -17,7 +17,7 @@ pairs_with:
   - docs/sprints/SESSION_0625.md
   - docs/sprints/SESSION_0631.md
   - docs/sprints/SESSION_0634.md
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/wiring-ledger.md
@@ -29,7 +29,7 @@ backlinks:
 > **Pre-staged stub (ADR 0049), staged by SESSION_0620.** **Parallel pair** with
 > [SESSION_0625](SESSION_0625.md) (MMB_Meeting_Intake) — run in separate worktrees/lanes. This is the
 > **coffee-review primary**: review + merge the 3 autonomous WL-clearing PRs from the SESSION_0620 morning.
-> Recipe: [AM_Coffee_Merge_Review](../protocols/recipes/AM_Coffee_Merge_Review.md).
+> Recipe: [AM_Coffee_Merge_Review](../protocols/recipes/am-coffee-merge-review.md).
 
 ## Operator
 
@@ -154,7 +154,7 @@ and `apps/web` changed in all three, so `vercel.json`'s `ignoreCommand` did **no
 authorized as part of this coffee-merge lane" and answered **Go / Fix specs / Yes** at bow-in; the #256
 merge was the explicit "wait for green, then merge" branch of that answer.
 
-**Recipe conflict to resolve (Giddy finding 5).** [`AM_Coffee_Merge_Review`](../protocols/recipes/AM_Coffee_Merge_Review.md)
+**Recipe conflict to resolve (Giddy finding 5).** [`AM_Coffee_Merge_Review`](../protocols/recipes/am-coffee-merge-review.md)
 §"No-overnight-push law (unconditional)" says the sweep may merge only to **local** `main` and that its
 terminal state is "verdicts ready, holding for your word — never a pushed commit, however clean the run."
 This session merged via `gh pr merge`, which advances `origin/main` directly and deploys. That was correct

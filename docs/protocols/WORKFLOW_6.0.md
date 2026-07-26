@@ -77,7 +77,7 @@ a session calendar/launch board (dead — the [goals ledger](../knowledge/wiki/g
 | Build | Cody | [`cody-preflight.md`](cody-preflight.md) then execute |
 | Verify | Doug (+Desi/Giddy as needed) | [`recipes/review-wave.md`](recipes/review-wave.md) |
 | Multi-session / multi-lane epic | Petey (parent plan) | [`recipes/epic-plan.md`](recipes/epic-plan.md) → [`recipes/orchestrator.md`](recipes/orchestrator.md) → [`recipes/lane.md`](recipes/lane.md) per lane → [`recipes/merge-wave.md`](recipes/merge-wave.md) |
-| Overnight / unattended | Petey (evening) → same session (morning) | [`recipes/PM_Planning_Lane.md`](recipes/PM_Planning_Lane.md) → [`recipes/AM_Coffee_Merge_Review.md`](recipes/AM_Coffee_Merge_Review.md) |
+| Overnight / unattended | Petey (evening) → same session (morning) | [`recipes/pm-planning-lane.md`](recipes/pm-planning-lane.md) → [`recipes/am-coffee-merge-review.md`](recipes/am-coffee-merge-review.md) |
 | Bow-out | any agent | [`closing.md`](../rituals/closing.md) |
 
 ## Score rubric — one home, not two

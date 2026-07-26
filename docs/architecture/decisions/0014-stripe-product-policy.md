@@ -26,6 +26,8 @@ backlinks:
 
 # ADR 0014 — Stripe Product Policy
 
+> **Partially superseded (back-stamped 2026-07-26, SESSION_0711):** "the platform owns one Stripe account" is false since [ADR 0030](0030-per-brand-stripe-account.md) — there are two live-mode Stripe accounts (per-brand). The product/price naming policy below survives per-account.
+
 **Status:** Accepted
 **Date:** 2026-05-08
 **Deciders:** Brian + Copilot acting as Petey

@@ -4,7 +4,7 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-07-20
+updated: 2026-07-26
 last_agent: claude-session-0582
 pairs_with:
   - docs/rituals/closing.md
@@ -287,5 +287,5 @@ commit) so the term is concrete, not abstract.
 ## Cross-references
 
 - [Closing ritual](../../rituals/closing.md) — the optional spike that points here.
-- [SESSION_0350](../../sprints/SESSION_0350.md) — the session these first entries came from.
+- [SESSION_0350](../../sprints/_archive/era-b/SESSION_0350.md) — the session these first entries came from.
 - [Learning record 0002](../../learning/ddd/learning-records/0002-shared-kernel-in-practice.md) — the kernel, taught.

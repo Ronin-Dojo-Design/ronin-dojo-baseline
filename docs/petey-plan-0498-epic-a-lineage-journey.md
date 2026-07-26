@@ -7,7 +7,7 @@ created: 2026-07-04
 updated: 2026-07-04
 last_agent: claude-session-0497
 pairs_with:
-  - docs/petey-plan-0494-experience-epics.md
+  - docs/_archive/petey-plans/petey-plan-0494-experience-epics.md
   - docs/sprints/SESSION_0497.md
   - docs/runbooks/domain-features/lineage-hub.md
 backlinks:

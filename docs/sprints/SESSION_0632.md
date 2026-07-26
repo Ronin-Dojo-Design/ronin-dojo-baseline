@@ -12,7 +12,7 @@ goal_ids: ["G-021", "G-027"]
 tickets: []
 pairs_with:
   - docs/sprints/SESSION_0625.md
-  - docs/protocols/recipes/Client_Meeting_Intake.md
+  - docs/protocols/recipes/client-meeting-intake.md
   - docs/product/rdd/brand-brief.md
 backlinks:
   - docs/knowledge/wiki/index.md

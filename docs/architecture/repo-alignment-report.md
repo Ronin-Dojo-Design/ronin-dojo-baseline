@@ -4,7 +4,7 @@ slug: repo-alignment-report
 type: report
 status: active
 created: 2026-06-06
-updated: 2026-06-06
+updated: 2026-07-26
 last_agent: codex-session-0351
 pairs_with:
   - docs/knowledge/wiki/wiring-ledger.md
@@ -104,4 +104,4 @@ SESSION_0351 intentionally did not auto-fix its findings:
 - [Drift Register](../knowledge/wiki/drift-register.md)
 - [Manual Boundary Registry](../knowledge/wiki/manual-boundary-registry.md)
 - [Data Model](data-model.md)
-- [SESSION_0351](../sprints/SESSION_0351.md)
+- [SESSION_0351](../sprints/_archive/era-b/SESSION_0351.md)

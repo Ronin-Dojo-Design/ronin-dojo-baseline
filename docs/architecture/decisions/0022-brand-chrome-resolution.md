@@ -2,7 +2,7 @@
 title: "ADR 0022 — Brand Chrome Resolution"
 slug: adr-0022-brand-chrome-resolution
 type: decision
-status: accepted
+status: superseded
 created: 2026-05-28
 updated: 2026-05-29
 last_agent: codex-session-0351
@@ -16,6 +16,8 @@ backlinks:
 ---
 
 # ADR 0022 — Brand Chrome Resolution
+
+> **⛔ SUPERSEDED (back-stamped 2026-07-26, SESSION_0711):** `getRequestBrand()` has 0 hits in `apps/web`; brand chrome/color source of truth moved to the `BrandSettings` DB row (injected by `layout.tsx`). The in-app multi-brand harness this ADR served is dead ([ADR 0034](0034-monorepo-platform-and-per-product-deploys.md)/[ADR 0051](0051-brand-platform-product-portfolio-taxonomy.md)).
 
 ## Status
 

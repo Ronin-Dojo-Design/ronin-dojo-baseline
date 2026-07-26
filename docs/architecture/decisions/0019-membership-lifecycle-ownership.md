@@ -10,7 +10,7 @@ pairs_with:
   - docs/sprints/SESSION_0258.md
   - docs/sprints/SESSION_0259.md
   - docs/architecture/decisions/0011-entitlement-first-commerce.md
-  - docs/architecture/decisions/0012-tier-auto-grant.md
+  - docs/architecture/decisions/0054-tier-auto-grant.md
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/sprints/SESSION_0259.md
@@ -79,4 +79,4 @@ Not applicable — this ADR codifies an internal Ronin Dojo schema boundary betw
 ## Related decisions
 
 - [ADR 0011 — Entitlement-first commerce](0011-entitlement-first-commerce.md) — established `UserEntitlement` as the authorization primitive for paid features.
-- [ADR 0012 — Tier-based entitlement auto-grant via Stripe webhook](0012-tier-auto-grant.md) — defined the Stripe-driven granting flow this ADR explicitly preserves.
+- [ADR 0054 (renumbered from dup 0012) — Tier-based entitlement auto-grant via Stripe webhook](0054-tier-auto-grant.md) — defined the Stripe-driven granting flow this ADR explicitly preserves.

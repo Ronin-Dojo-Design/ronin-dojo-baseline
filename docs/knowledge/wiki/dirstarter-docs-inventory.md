@@ -4,11 +4,11 @@ slug: dirstarter-docs-inventory
 type: concept
 status: active
 created: 2026-04-28
-updated: 2026-05-11
+updated: 2026-07-26
 author: Petey
 last_agent: copilot-session-0134
 pairs_with:
-  - docs/knowledge/wiki/dirstarter-gap-audit.md
+  - docs/_archive/wiki/dirstarter-gap-audit.md
 parent: docs/knowledge/wiki/index.md
 backlinks:
   - docs/knowledge/wiki/index.md
@@ -149,7 +149,7 @@ Dirstarter is our L1 pattern source, but the live docs move faster than our pinn
 
 ## Relationships
 
-- Pairs with: [Dirstarter Gap Audit](dirstarter-gap-audit.md)
+- Pairs with: [Dirstarter Gap Audit](../../_archive/wiki/dirstarter-gap-audit.md)
 - Backlinks: [wiki index](index.md), [SESSION_0019](../../sprints/_archive/SESSION_0019.md)
 
 ## Sources

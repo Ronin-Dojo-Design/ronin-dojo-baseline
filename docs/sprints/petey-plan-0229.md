@@ -4,7 +4,7 @@ slug: petey-plan-0229
 type: petey-plan
 status: active
 created: 2026-05-23
-updated: 2026-05-23
+updated: 2026-07-26
 last_agent: claude-session-0229
 sprint: S6
 pairs_with:
@@ -208,13 +208,13 @@ Ship the three remaining public-facing Content Engine features on `/posts` and `
 
 ## Cross-references
 
-- [SESSION_0223](./SESSION_0223.md) — Content Engine Stage 2 (seed proof + blog parity); source of items D + E.
-- [SESSION_0225](./SESSION_0225.md) — ContentAtom admin CRUD; source of item C; backfilled findings closed in 0229.
-- [SESSION_0226](./SESSION_0226.md) — ContentVariant inline + media + tags; source of item A (FINDING_03).
-- [SESSION_0227](./SESSION_0227.md) — ContentVariant preview + media ordering + tag clicks; shipped variant hydration fix.
-- [SESSION_0228](./SESSION_0228.md) — Project-log retirement + hostile-review backfill; surfaced items A and FINDING_02 that 0229 closed.
-- [SESSION_0229](./SESSION_0229.md) — Admin brand-leak remediation; source of item B (deferred write-path test).
-- [SESSION_0230](./SESSION_0230.md) — Write-path brand-leak fixes + test debt closure; closed items A + B.
+- [SESSION_0223](_archive/era-b/SESSION_0223.md) — Content Engine Stage 2 (seed proof + blog parity); source of items D + E.
+- [SESSION_0225](_archive/era-b/SESSION_0225.md) — ContentAtom admin CRUD; source of item C; backfilled findings closed in 0229.
+- [SESSION_0226](_archive/era-b/SESSION_0226.md) — ContentVariant inline + media + tags; source of item A (FINDING_03).
+- [SESSION_0227](_archive/era-b/SESSION_0227.md) — ContentVariant preview + media ordering + tag clicks; shipped variant hydration fix.
+- [SESSION_0228](_archive/era-b/SESSION_0228.md) — Project-log retirement + hostile-review backfill; surfaced items A and FINDING_02 that 0229 closed.
+- [SESSION_0229](_archive/era-b/SESSION_0229.md) — Admin brand-leak remediation; source of item B (deferred write-path test).
+- [SESSION_0230](_archive/era-b/SESSION_0230.md) — Write-path brand-leak fixes + test debt closure; closed items A + B.
 - [Petey Plan Protocol](../protocols/petey-plan.md) — protocol this doc instantiates.
 - [Closing ritual](../rituals/closing.md) — all sessions end with full-close per this ritual.
 

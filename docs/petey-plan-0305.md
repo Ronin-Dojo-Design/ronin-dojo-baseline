@@ -392,7 +392,7 @@ Depends on: trophy.so components installed (`npx shadcn@latest add @trophyso/...
 - [ADR 0022 — Brand Chrome Resolution](architecture/decisions/0022-brand-chrome-resolution.md) —
   motion stays brand-neutral
 
-- [SESSION_0305](sprints/SESSION_0305.md) — session executing the drawer fixes + this plan
+- [SESSION_0305](sprints/_archive/era-b/SESSION_0305.md) — session executing the drawer fixes + this plan
 
 ## Session estimates
 

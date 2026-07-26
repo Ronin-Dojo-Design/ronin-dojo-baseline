@@ -8,7 +8,7 @@ updated: 2026-07-25
 last_agent: claude-session-0692
 sprint: S12
 lane: repo
-recipe: "PM_Planning_Lane"
+recipe: "pm-planning-lane"
 goal_ids: []
 pairs_with:
   - docs/sprints/SESSION_0692.md

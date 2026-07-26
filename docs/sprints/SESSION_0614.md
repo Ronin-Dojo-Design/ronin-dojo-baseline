@@ -9,11 +9,11 @@ last_agent: claude-session-0614
 next_session: docs/sprints/SESSION_0617.md
 sprint: S12
 lane: repo
-recipe: AM_Coffee_Merge_Review
+recipe: am-coffee-merge-review
 goal_ids: []
 tickets: []
 pairs_with:
-  - docs/protocols/recipes/AM_Coffee_Merge_Review.md
+  - docs/protocols/recipes/am-coffee-merge-review.md
   - docs/protocols/recipes/merge-wave.md
   - docs/protocols/recipes/state-sweep.md
   - docs/petey-plan-tier1-autonomous-lanes.md
@@ -37,7 +37,7 @@ Brian + <agent>-session-0614
 ## Goal
 
 Merge **all** open work in one attended sweep, drive each lane to G3 (review-ready) on the merged
-tree, and hold at the push gate. Recipe: [`AM_Coffee_Merge_Review`](../protocols/recipes/AM_Coffee_Merge_Review.md)
+tree, and hold at the push gate. Recipe: [`AM_Coffee_Merge_Review`](../protocols/recipes/am-coffee-merge-review.md)
 with the [`merge-wave`](../protocols/recipes/merge-wave.md) gate ladder (G0 rebase → G4 build/e2e).
 
 ## Next session
