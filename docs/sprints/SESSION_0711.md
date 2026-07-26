@@ -166,6 +166,24 @@ format pin · T1–T6 ritual trim · G1–G5 governance consolidation · CAND pi
   no export step) · `slide-01-title.png` → `docs/product/mammoth-build/assets/` ·
   orphaned `course-enrollment/payloads.ts` deleted (Giddy call: git history is the archive).
 
+## Phase B — fork mechanics (COMPLETE, this session)
+
+- **#341 MERGED** (squash → `ecefd008`) on 14/14 green — incl. Playwright chromium first-try
+  (the WL-P2-82 spec passing on the real fix). BBL prod deployed from the merge.
+- **B1 ✅** 4 private siblings created. **B2 ✅** full history pushed — `main @ ecefd008`
+  identical across all five (bootstrap pushes via the documented ADR 0053 break-glass;
+  server ruleset guards only the original). **B3 ✅** `ronin-dojo-baseline` →
+  **`Black-Belt-Legacy`** (GitHub redirect live, default=main). **B4 ✅** origin repointed
+  (shared config → covers all worktrees), fetch verified. **B5 ✅** Vercel: BBL project rode the
+  rename via repo-ID (no action); `ronindojodesign` → `Ronin-Dojo-Design-Monorepo` repo
+  (disconnect/connect via CLI). Baseline + Mammoth have no git-connected Vercel projects in this
+  scope — they get theirs at Phase C/D from their own repos. **B6 ✅** secrets audit: BBL carries
+  the single `NEON_API_KEY` Actions secret (appropriate); 4 siblings have ZERO secrets (their CI
+  will red on missing secrets until the Phase C matrix prune — expected); Vercel envs per-project,
+  no cross-brand keys found.
+- **Phase C holds for the per-phase operator checkpoint** (trim-to-brand per repo, CI prune,
+  ~150-line CLAUDE.md routers, fresh SESSION eras, per-repo ADR subsets).
+
 ## Artifacts
 
 - State-of-Dojo snapshot (bow-in, operator-elected): <https://claude.ai/code/artifact/ad14e1ae-5a73-4787-876b-fe604f78de55>
