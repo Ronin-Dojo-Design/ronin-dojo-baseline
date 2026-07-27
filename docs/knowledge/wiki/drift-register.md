@@ -27,7 +27,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source B:** `scripts/state-of-project.ts` — keeps private copies of PHASES/PHASE_LABEL/BELT_WORD/BRANDS (`:57-76`) and a hardcoded masthead (`:329`); no deploy-scope gate (renders all 3 brands — leaks cross-brand data the live route suppresses); no per-skin masthead. They share the parse core only.
 - **Consequence:** every vocabulary/scope fix (e.g. PL-020 belt action-words) must land twice; the bow-out gate renders the stale script every close.
 - **Decision:** unify the script on the kernel — first step of the PL-032 SotD-usefulness lane.
-- **Status:** open — routed to PL-032.
+- **Status:** **RESOLVED (SESSION_0714, `a9530dc0`).** Extracted a dependency-free `apps/web/lib/state-of-dojo/vocab.ts` substrate that BOTH `_kernel/phase.ts` (re-export) and `scripts/state-of-project.ts` (import) consume — zero duplicated vocabulary, every fix lands once (Doug-verified, grep-proven). Deploy-scope gate intentionally NOT wired into the script (all-brands = local portfolio view, not a customer deploy; the live route's `VISIBLE_BRAND_SKINS` still gates) — routed as a separate follow-up, not part of the drift.
 - **Found in:** SESSION_0712 (SotD wiring review, Explore sweep).
 
 
