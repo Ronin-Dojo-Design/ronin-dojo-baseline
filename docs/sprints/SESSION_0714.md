@@ -98,6 +98,30 @@ All in one session, one PR.
   new app panels; flag any pressure to widen it.
 - Post-trim BBL spine is brand-only (S13 era) — script board section shrinks; expected, not a regression.
 
+### Pivot — grill 0714 (operator: A = full parity to the 0712 artifact)
+
+**What happened:** the operator reviewed the shipped work against the SESSION_0712 hand-built
+artifact (`77fd25bb`) and rejected the flat-sections approach. `/grill-me` outcome: **A (full
+parity) + F (fix-lane)**. The PL-032 plan under-specified fidelity — "bake Epics/Fan-out *panels*"
+was built as two flat appended sections, NOT a reproduction of the 6-tab board the operator
+hand-built and liked. **Root disconnect:** nobody opened the operator's artifact and built to it;
+the plan's "the 0712 artifact tabs are the mock" was read as inspiration, not spec.
+
+**Corrected goal:** `scripts/state-of-project.ts` must **deterministically reproduce the 0712
+artifact** — 6 top-level tabs (RDD · BBL · MMB · Fan-out · Epics · What landed), the 8-sub-tab
+Fan-out board, categorized Epics (4 groups), and the What-landed panel. Live data stays live;
+bespoke fork/epic/landed narrative → structured data so it regenerates. **KEEP** this session's
+belt-word swap (operator liked it) + the `vocab.ts` substrate (the unification is the right base).
+
+**Literal fidelity spec:** `docs/product/black-belt-legacy/_sotd-spec/SESSION_0712-artifact-target.html`
+(the operator's own artifact, saved). Build to THIS, do not invent.
+
+#### SESSION_0714_TASK_05 — reproduce the 0712 artifact deterministically (Cody → fidelity-loop)
+
+- **Done means:** `bun scripts/state-of-project.ts` renders all 6 tabs matching the spec's
+  structure + content; Fan-out is the sub-tabbed board; Epics categorized; What-landed present;
+  live sections still pull live; deterministic re-render; operator sign-off on visual fidelity.
+
 ## Pre-flight: TASK_01 — unify `state-of-project.ts` on the kernel vocabulary
 
 ### §0 arch-gate
@@ -163,6 +187,8 @@ checklist here as `### Pre-flight: <task>` before writing code.>
 | SESSION_0714_TASK_02 | landed | PL-020: `phaseWord()` returns `PHASE_LABEL` unconditionally in `vocab.ts` → both `/app/state` (projection.tsx, no edit needed) + script render show Planned/In flight/Review/Held/Done on colored belt stops. Fixes 2+3 (order/inversion) were D-055 symptoms already fixed by TASK_01 — verified via DOM, invariant comments added. `BELT_WORD` now zero-consumer → flagged for cleanup. Gates: arch 4/4 · tsc 0 · oxlint 0 · 105 tests pass |
 | SESSION_0714_TASK_03 | landed | Epics (13 rows, 4 source types) + Fan-out (7 slots) sections baked into `scripts/state-of-project.ts`; new `docs/protocols/fork-fanout.yml` = Fan-out SoT (read via `Bun.YAML`). Deterministic (globs sorted; twice-render byte-identical sans timestamp). Gates: arch 4/4 · oxlint 0 |
 | SESSION_0714_TASK_04 | landed | Hygiene: 6 pre-0304 lane files → `_archive/monorepo-era/lanes/` (1 left, live-ref'd) · 3 WEKAF brand-kit PNGs removed (unref'd, in usa-stickfighting fork) · ADR 0055/0059 frontmatter added · api-client `format` scripts + `.oxfmtrc.json` (README reformatted). WEKAF *app residue* (seeds/public/config) ROUTED, not touched. Gates: wiki-lint 0 err · api-client format:check clean |
+| SESSION_0714_TASK_05 | landed (`eb2cb782`) | **Full-parity rebuild (grill pivot A).** `state-of-project.ts` now reproduces the 0712 6-tab board deterministically: RDD/BBL/MMB (live data) + Fan-out 8-sub-tab board + Epics (4 groups, live 13 rows kept) + What-landed. Fan-out + What-landed **byte-identical to spec**; new `fork-fanout.yml` (board) + `sotd-landed.yml` data (block scalars — dodges the `#`-truncation trap). Belt-words = PHASE_LABEL (operator). Gates: arch 4/4 · oxlint 0 · deterministic. **Remaining: operator visual sign-off + 390px pass.** |
+| SESSION_0714 process | landed (`f5c782a9`) | **FS-0044 no-orphan-front-end guard** — CLAUDE.md standing directive + agent-systems-map §4 never-do (Pillar 4∩5) + cody-preflight §0b gate + FS-0044 + memory. Prevents the flat-sections miss recurring. |
 
 **Decisions resolved:** PL-020 belt-word content (operator 0714) → **reuse PHASE_LABEL** on dojo
 skins (Planned/In flight/Review/Held/Done); dojo + MMB converge on one vocabulary; keep colored
@@ -199,7 +225,8 @@ Integration pass across all four lanes (working tree, pre-commit):
 
 | Artifact | Purpose | Status |
 | --- | --- | --- |
-| [State of the Dojo — SESSION 0714](https://claude.ai/code/artifact/76deeeae-b790-4c38-b306-c8a509a6d058) | bow-in State-of-Dojo frozen snapshot (deterministic `state-of-project.ts` render) | keep |
+| [State of the Dojo — SESSION 0714](https://claude.ai/code/artifact/76deeeae-b790-4c38-b306-c8a509a6d058) | Full-parity 6-tab board (reproduces the 0712 mock `77fd25bb` deterministically from live data) — pending operator sign-off | keep |
+| [SESSION_0712 artifact (operator's original)](https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd) | The fidelity spec TASK_05 reproduces | reference |
 
 ## Open decisions / blockers
 
