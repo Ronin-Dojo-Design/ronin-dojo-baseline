@@ -20,15 +20,23 @@
  */
 
 import { execFileSync } from "node:child_process"
+import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import type { Item } from "../apps/web/lib/loop-board/ledger-parse"
 import type {
   ArtifactDetail,
   GoalDetail,
-  Phase,
   ProductLane,
   SessionDetail,
 } from "../apps/web/lib/state-of-dojo/parse"
+// The projection vocabulary is imported from the ONE shared, framework-free substrate the app kernel
+// (`_kernel/phase.ts`) also re-exports — no private copies, so every vocab fix lands once (D-055).
+import {
+  BRAND_SKINS,
+  MASTHEAD_TITLE_HERE,
+  PHASE_LABEL,
+  PHASES,
+} from "../apps/web/lib/state-of-dojo/vocab"
 
 const ROOT = resolve(import.meta.dir, "..")
 const OUT_PATH = resolve(ROOT, process.argv[2] ?? "out/state-of-project.html")
@@ -53,27 +61,6 @@ function loadFeed(): Feed {
 
 const esc = (s: string): string =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
-
-const PHASES: Phase[] = ["planned", "in-flight", "review", "held", "done"]
-const PHASE_LABEL: Record<Phase, string> = {
-  planned: "Planned",
-  "in-flight": "In flight",
-  review: "Review",
-  held: "Held",
-  done: "Done",
-}
-const BELT_WORD: Record<Phase, string> = {
-  planned: "White",
-  "in-flight": "Blue",
-  review: "Purple",
-  held: "Brown",
-  done: "Black",
-}
-const BRANDS: { key: ProductLane; label: string }[] = [
-  { key: "rdd", label: "RDD" },
-  { key: "bbl", label: "BBL" },
-  { key: "mmb", label: "MMB" },
-]
 
 /** Honest-empties wrapper: a zero-row section says so in plain text, never renders silently
  * blank (v3 mock design decision). */
@@ -118,16 +105,16 @@ function workBoard(sessions: SessionDetail[]): string {
   return `<section class="work-board"><h2>Work board</h2><div class="columns">${cols}</div></section>`
 }
 
-/** One goal's belt-ladder: a 5-stop track (white/blue/purple/brown/black); stops up to and including
- * the goal's current phase are "reached", the rest are dim. `dropped` goals have no natural
- * ladder position — badged separately, ladder rendered fully dim. */
+/** One goal's phase-ladder: a 5-stop track — physical belt COLORS (white→blue→purple→brown→black)
+ * on the stops, but ONE action-word vocabulary on every skin (OPERATOR CALL 0714 / PL-020:
+ * `PHASE_LABEL`, not belt-color words). Stops up to and including the goal's current phase are
+ * "reached", the rest are dim. `dropped` goals have no natural ladder position — badged separately,
+ * ladder rendered fully dim. Order is `PHASES` (planned→done ⇒ white stop first, black stop last). */
 function beltLadder(g: GoalDetail): string {
   const reachedIndex = g.status.toLowerCase() === "dropped" ? -1 : PHASES.indexOf(g.phase)
   const stops = PHASES.map((phase, i) => {
     const reached = i <= reachedIndex
-    return `<span class="stop stop-${phase} ${reached ? "reached" : ""}" title="${esc(BELT_WORD[phase])} / ${esc(PHASE_LABEL[phase])}">
-      <span class="lbl-belt">${esc(BELT_WORD[phase])}</span><span class="lbl-neutral">${esc(PHASE_LABEL[phase])}</span>
-    </span>`
+    return `<span class="stop stop-${phase} ${reached ? "reached" : ""}" title="${esc(PHASE_LABEL[phase])}">${esc(PHASE_LABEL[phase])}</span>`
   }).join("")
   const dropped = g.status.toLowerCase() === "dropped" ? '<span class="pill pill-crit">dropped</span>' : ""
   return `<li class="ladder-row">
@@ -151,9 +138,10 @@ function goalLadderTable(goals: GoalDetail[]): string {
       </tr>`
     })
     .join("")
+  const phaseHeads = PHASES.map(p => `<th>${esc(PHASE_LABEL[p])}</th>`).join("")
   return `<table class="ladder-table"><thead><tr>
     <th>ID</th><th>Goal</th><th>Pri</th><th>Status</th>
-    <th>White</th><th>Blue</th><th>Purple</th><th>Brown</th><th>Black</th>
+    ${phaseHeads}
   </tr></thead><tbody>${rows}</tbody></table>`
 }
 
@@ -231,6 +219,152 @@ function brandPanel(brand: ProductLane, active: boolean, sessions: SessionDetail
   </section>`
 }
 
+// --- Epics section ---------------------------------------------------------------------------
+//
+// Epics live scattered (SESSION_0712 SotD sweep): hand-off epic docs under `docs/epics/`, BBL
+// product epic-plans with frontmatter, staged plan stubs, and epic-flagged rows in the PL/GL
+// ledgers. This section parses all four live sources deterministically so the frozen-snapshot
+// publish needs zero hand-merging (PL-032). PROJECTION ONLY — the docs/ledgers stay the source
+// of truth; a missing source degrades to an empty group, never a hard fail.
+
+type EpicRow = { id: string; title: string; status: string; source: string; path: string }
+
+/** Pull the value of one frontmatter key from a fenced `---` block (tiny, dependency-free — the
+ * doc set uses flat scalar frontmatter for `title`/`status`, so a line scan beats a YAML parse
+ * here). Returns `""` when the doc has no frontmatter or no such key. */
+function frontmatterField(body: string, key: string): string {
+  if (!body.startsWith("---")) return ""
+  const end = body.indexOf("\n---", 3)
+  if (end === -1) return ""
+  const block = body.slice(3, end)
+  const line = block.split("\n").find(l => l.trimStart().startsWith(`${key}:`))
+  if (!line) return ""
+  return line.slice(line.indexOf(":") + 1).trim().replace(/^["']|["']$/g, "")
+}
+
+/** First markdown H1 (`# …`), with any `Epic —`/`G-NNN` decoration kept — it is the doc's own name. */
+function firstH1(body: string): string {
+  const line = body.split("\n").find(l => l.startsWith("# "))
+  return line ? line.slice(2).trim() : ""
+}
+
+/** Status from prose docs that carry a `Status:` line instead of frontmatter (e.g. the 0711 plan
+ * uses `Status: **staged — …**`). Strips markdown emphasis and trailing sentence noise. */
+function proseStatus(body: string): string {
+  const line = body.split("\n").find(l => /^\s*Status:/i.test(l))
+  if (!line) return ""
+  return line
+    .replace(/^\s*Status:\s*/i, "")
+    .replace(/\*\*/g, "")
+    .split("—")[0]
+    .split(".")[0]
+    .trim()
+}
+
+function loadEpics(items: Item[]): EpicRow[] {
+  const rows: EpicRow[] = []
+  const read = (rel: string): string => {
+    try {
+      return readFileSync(resolve(ROOT, rel), "utf-8")
+    } catch {
+      return ""
+    }
+  }
+  const glob = (pattern: string): string[] =>
+    [...new Bun.Glob(pattern).scanSync({ cwd: ROOT })].sort((a, b) => a.localeCompare(b))
+
+  // 1. Hand-off epic docs — no frontmatter; the H1 is the name, source is the folder.
+  for (const rel of glob("docs/epics/*.md")) {
+    const body = read(rel)
+    rows.push({ id: rel.replace(/^docs\/epics\//, "").replace(/\.md$/, ""), title: firstH1(body) || rel, status: "epic doc", source: "docs/epics", path: rel })
+  }
+
+  // 2. Product epic-plans — frontmatter-driven (case-insensitive `epic` in the filename).
+  const productEpics = [...glob("docs/product/**/*.md")].filter(p => /epic/i.test(p.split("/").pop() ?? ""))
+  for (const rel of productEpics) {
+    const body = read(rel)
+    rows.push({ id: frontmatterField(body, "slug") || rel, title: frontmatterField(body, "title") || firstH1(body) || rel, status: frontmatterField(body, "status") || "—", source: "product", path: rel })
+  }
+
+  // 3. Staged plan stubs — frontmatter status where present, else the prose `Status:` line.
+  for (const rel of glob("docs/sprints/plans/*.md")) {
+    const body = read(rel)
+    rows.push({ id: frontmatterField(body, "slug") || rel.split("/").pop()?.replace(/\.md$/, "") || rel, title: frontmatterField(body, "title") || firstH1(body) || rel, status: frontmatterField(body, "status") || proseStatus(body) || "—", source: "plan stub", path: rel })
+  }
+
+  // 4. Epic-flagged PL/GL ledger rows — already parsed in the feed (DRY: one ledger read, not two).
+  for (const i of items.filter(i => (i.ledger === "PL" || i.ledger === "GL") && /\bepic\b/i.test(i.summary))) {
+    rows.push({ id: i.id, title: i.summary, status: i.status, source: "ledger", path: `docs/knowledge/wiki/${i.ledger === "PL" ? "planning" : "goals"}-ledger.md` })
+  }
+
+  return rows
+}
+
+/** Map a free-text epic/slot status to a pill class, matching the base renderer's semantics: green
+ * is reserved for genuinely complete work; in-motion (active/in-progress/staged/queued) reads amber;
+ * dropped/blocked reads critical; everything else (epic doc, draft, n-a) is neutral. */
+function statusPill(status: string): string {
+  const s = status.toLowerCase()
+  if (/\b(done|shipped|live|complete|closed)\b/.test(s)) return "good"
+  if (/\b(active|in-progress|in-review|staged|proposed|queued|pending|created)\b/.test(s)) return "warn"
+  if (/\b(dropped|blocked|abandoned)\b/.test(s)) return "crit"
+  return "neutral"
+}
+
+function epicsSection(items: Item[]): string {
+  const epics = loadEpics(items)
+  const rows = epics.map(
+    e => `<li class="epic-row">
+      <span class="pill pill-${statusPill(e.status)}">${esc(e.status)}</span>
+      <span class="epic-title">${esc(e.title)}</span>
+      <span class="muted"><span class="src-tag">${esc(e.source)}</span> · <code>${esc(e.path)}</code></span>
+    </li>`,
+  )
+  return `<section class="epics"><h2>Epics <span class="count">${epics.length}</span></h2>
+    <h3>docs/epics · product epic-plans · staged plan stubs · epic-flagged ledger rows</h3>
+    <ul class="epic-list">${listOrEmpty(rows, "No epics found across the parsed sources.")}</ul></section>`
+}
+
+// --- Fan-out section -------------------------------------------------------------------------
+//
+// The Fork Fan-out Board (7 portfolio slots) — SoT is `docs/protocols/fork-fanout.yml` (structured,
+// canonical), read via Bun's built-in YAML parser (no dependency). The 0711 petey-plan enumerates
+// only the five sibling repos + uniform C1–C6/D1–D3 steps and carries no per-slot live status, so
+// the yml — not the plan prose — is the fan-out source. A missing/parse-failing yml degrades to an
+// honest empty section rather than a hard fail.
+
+type FanoutSlot = { key: string; label: string; repo: string; source: string; domain: string; status: string; note: string }
+type FanoutDoc = { title?: string; recipe?: string; steps?: string[]; slots?: FanoutSlot[] }
+
+function loadFanout(): FanoutDoc | null {
+  try {
+    const raw = readFileSync(resolve(ROOT, "docs/protocols/fork-fanout.yml"), "utf-8")
+    return Bun.YAML.parse(raw) as FanoutDoc
+  } catch {
+    return null
+  }
+}
+
+function fanoutSection(): string {
+  const doc = loadFanout()
+  const slots = doc?.slots ?? []
+  const cards = slots.map(
+    s => `<li class="fanout-card" data-status="${esc(s.status)}">
+      <div class="fanout-head"><span class="pill pill-${statusPill(s.status)}">${esc(s.status)}</span> <strong>${esc(s.label)}</strong></div>
+      <div class="fanout-repo"><code>${esc(s.repo)}</code> · <span class="muted">${esc(s.domain)}</span></div>
+      <div class="fanout-src muted">${esc(s.source)}</div>
+      <div class="fanout-note">${esc(s.note)}</div>
+    </li>`,
+  )
+  const steps = (doc?.steps ?? []).map(st => `<li>${esc(st)}</li>`).join("")
+  const recipe = doc?.recipe ? `<span class="muted">recipe: <code>${esc(doc.recipe)}</code></span>` : ""
+  return `<section class="fanout"><h2>Fork fan-out <span class="count">${slots.length}</span></h2>
+    <h3>Per-slot brand-repo separation status (ADR 0055/0059) ${recipe}</h3>
+    <ul class="fanout-grid">${listOrEmpty(cards, "No fan-out slots — docs/protocols/fork-fanout.yml missing or unreadable.")}</ul>
+    ${steps ? `<details class="fanout-steps"><summary>Uniform trim recipe (C1–C6 · D1–D3)</summary><ol>${steps}</ol></details>` : ""}
+  </section>`
+}
+
 // --- CSS ------------------------------------------------------------------------------------
 
 const CSS = `
@@ -282,10 +416,7 @@ h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .stop-in-flight{background:#1d4ed8}
 .stop-review{background:#7c3aed}
 .stop-held{background:#7a5230}
-.stop-done{background:#111111}
-.lbl-neutral{display:none}
-[data-brand="mmb"] .lbl-belt{display:none}
-[data-brand="mmb"] .lbl-neutral{display:inline}
+.stop-done{background:#111111} /* black belt: near-black fill, white stop first / this stop last (planned→done) */
 .ladder-table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
 .ladder-table th,.ladder-table td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
 .ladder-table .tick{text-align:center;color:var(--muted)}
@@ -295,6 +426,22 @@ h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .artifact-title{font-weight:600}
 .artifact-row code{font-size:10px;word-break:break-all}
 .needs-you ul{margin:0;padding:0}
+.epic-list{list-style:none;margin:0;padding:0}
+.epic-row{font-size:13px;margin-bottom:8px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.epic-title{font-weight:600}
+.epic-row code{font-size:10px;word-break:break-all}
+.src-tag{display:inline-block;background:var(--line);color:var(--ink);border-radius:6px;padding:0 6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.fanout-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.fanout-card{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px}
+.fanout-head{display:flex;gap:6px;align-items:center;font-size:13px}
+.fanout-repo{font-size:11px}
+.fanout-repo code{font-size:11px;word-break:break-all}
+.fanout-src{font-size:11px}
+.fanout-note{font-size:12px;color:var(--ink)}
+.fanout-steps{margin-top:12px;font-size:12px}
+.fanout-steps summary{cursor:pointer;color:var(--muted);font-weight:600}
+.fanout-steps ol{margin:8px 0 0;padding-left:20px}
+.fanout-steps li{margin-bottom:2px}
 footer{max-width:1100px;margin:0 auto;padding:16px;font-size:11px;color:var(--muted)}
 footer p{margin:4px 0}
 @media (max-width:700px){
@@ -318,25 +465,27 @@ function page(feed: Feed): string {
   const { items, sessions, goals, artifacts } = feed
   const prCount = items.filter(i => i.ledger === "PR").length
   const renderedAt = new Date().toISOString()
-  const panels = BRANDS.map((b, i) => brandPanel(b.key, i === 0, sessions, goals)).join("")
-  const tabs = BRANDS.map(
+  const panels = BRAND_SKINS.map((b, i) => brandPanel(b.key, i === 0, sessions, goals)).join("")
+  const tabs = BRAND_SKINS.map(
     (b, i) =>
       `<button class="tab${i === 0 ? " active" : ""}" data-tab="${b.key}" role="tab" aria-selected="${i === 0}">${esc(b.label)}</button>`,
   ).join("")
 
-  return `<!doctype html><html lang="en" data-brand="${BRANDS[0].key}"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="en" data-brand="${BRAND_SKINS[0].key}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>State of the Dojo</title>
+<title>${esc(MASTHEAD_TITLE_HERE)}</title>
 <style>${CSS}</style></head>
 <body>
 <header class="masthead">
   <div class="eyebrow">Ronin Dojo Design</div>
-  <h1>State of the Dojo</h1>
+  <h1>${esc(MASTHEAD_TITLE_HERE)}</h1>
   <nav class="tabs" role="tablist">${tabs}</nav>
   <div class="meta">${sessions.length} sessions · ${goals.length} goals · ${prCount} open PR(s) · rendered ${esc(renderedAt)}</div>
 </header>
 <main>
 ${panels}
+${epicsSection(items)}
+${fanoutSection()}
 ${recentlyAdded(artifacts ?? [])}
 ${riskWatch(items)}
 ${needsYou(sessions, goals)}
@@ -345,7 +494,9 @@ ${needsYou(sessions, goals)}
   <p><strong>Projection only</strong> — ledgers stay the source of truth. Sources:
   <code>docs/sprints/SESSION_*.md</code> frontmatter · <code>docs/knowledge/wiki/goals-ledger.md</code> ·
   <code>scripts/ledger-backlog.ts --json</code> (which also carries the live <code>gh pr list</code>
-  PR count folded in above). Regenerate: <code>bun scripts/state-of-project.ts</code>. See
+  PR count folded in above). Epics parsed from <code>docs/epics/</code> · product epic-plans ·
+  <code>docs/sprints/plans/</code> stubs · epic-flagged PL/GL ledger rows. Fan-out from
+  <code>docs/protocols/fork-fanout.yml</code>. Regenerate: <code>bun scripts/state-of-project.ts</code>. See
   <code>docs/protocols/state-of-project-projection.md</code> for the re-render ritual.</p>
   <p>Rendered ${esc(renderedAt)}</p>
 </footer>

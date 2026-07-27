@@ -1,0 +1,72 @@
+# Fork Fan-out Board — per-slot brand-repo separation status (ADR 0055 / 0059).
+#
+# Single source of truth for the SotD renderer's Fan-out section (PL-032). The fork RECIPE
+# (per-repo trim/validate steps) is uniform across brand slots and lives once in `recipe` below;
+# per-slot `status` + `note` track live progress. Update a slot when its trim advances (e.g. a
+# sibling trim lands its PR). The 0711 petey-plan enumerates only the five sibling repos + generic
+# C1–C6/D1–D3 steps and carries no per-slot live status, so this structured file — not the plan
+# prose — is the canonical fan-out source the renderer reads.
+#
+# status vocabulary: done · in-progress · pending · n-a · created
+title: Fork Fan-out Board
+recipe: docs/sprints/plans/petey-plan-0711-brand-repo-separation.md
+steps:
+  - C1 delete other brands' apps/* + clients/*
+  - C2 delete other-brand docs/seeds
+  - C3 CI matrix prune to surviving app
+  - C4 lean CLAUDE.md router (~150 lines)
+  - C5 fresh SESSION era → _archive/<era>/
+  - C6 ADR subset (only brand-binding)
+  - D1 fresh clone → install → build
+  - D2 Vercel preview deploy
+  - D3 primary-funnel smoke
+slots:
+  - key: bbl
+    label: Black Belt Legacy
+    repo: black-belt-legacy
+    source: rename of ronin-dojo-baseline
+    domain: blackbeltlegacy.com
+    status: done
+    note: Trim-to-brand complete (SESSION_0712, PR #343) — apps/web only, CI 9/9 green.
+  - key: baseline
+    label: Baseline Martial Arts
+    repo: baseline-martial-arts
+    source: fork of ronin-dojo-baseline
+    domain: baselinemartialarts.com
+    status: pending
+    note: Cloned at ecefd008, main-pr-only ruleset active; trim not started (own session).
+  - key: mammoth
+    label: Mammoth Metal Buildings
+    repo: mammoth-metal-buildings
+    source: fork of ronin-dojo-baseline
+    domain: mammothmb.com
+    status: in-progress
+    note: SESSION_0713 Mammoth trim (C1–C6 + D1–D3), 08-05 cutover pressure; .env restored from parking.
+  - key: usa-stickfighting
+    label: USA Stickfighting
+    repo: usa-stickfighting
+    source: fork of ronin-dojo-baseline
+    domain: per its app (WEKAF)
+    status: pending
+    note: Cloned at ecefd008, ruleset active; trim not started; WEKAF brand-kit PNGs route here.
+  - key: rdd-monorepo
+    label: RDD Monorepo
+    repo: rdd-monorepo
+    source: fork (keeps everything)
+    domain: ronindojodesign.com
+    status: n-a
+    note: Upstream-of-record for process OS + packages/ui-kit — keeps everything by design, never trimmed.
+  - key: amy-coaches-data
+    label: Amy Coaches Data
+    repo: amy-coaches-data
+    source: created fresh (no fork history)
+    domain: amycoachesdata.com
+    status: created
+    note: Ratified 6th brand; empty private repo + ruleset live, no app/code yet — scope/interview session pending.
+  - key: tuff-buffs
+    label: Tuff Buffs
+    repo: (WordPress instance, no peer repo)
+    source: pilot white-label instance of Baseline
+    domain: tuffbuffs (WP today)
+    status: pending
+    note: Transitional instance (ADR 0051) — WordPress today; path = Baseline-skinned instance app → migrate → WP sunset.
