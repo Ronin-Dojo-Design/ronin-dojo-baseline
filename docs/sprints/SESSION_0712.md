@@ -4,7 +4,7 @@ slug: session-0712
 type: session--implement
 status: closed
 created: 2026-07-26
-updated: 2026-07-26
+updated: 2026-07-27
 last_agent: claude-session-0712
 sprint: S13
 lane: repo
@@ -217,6 +217,28 @@ also surfaced pre-trim phantoms (mammoth paths) — full Graphify rebuild queued
 | Secret scan | PASS |
 | Evidence-artifact URL | https://claude.ai/code/artifact/77fd25bb-4dd6-4f34-98f0-98dea93adbfd (SotD + Fan-out + Epics tabs) |
 | Finding router | INC ×2 (#342 squash dupes · 0674 stale status) · D-055 (renderer split) · PL-032 (SotD usefulness) · WL-P3-69 ✅ · FS-0042 closed |
+
+## Goal verdict
+
+**EXTENDED → YES.** Original goal (Phase C BBL trim) hit and merged (PR #343, CI 9/9). The
+operator extended it at bow-out ("7 repos in the local dev folder") — also hit same day. All
+post-close directives executed (below).
+
+## Post-close operations (operator-directed, same day)
+
+| Op | Evidence |
+| --- | --- |
+| Mammoth `.env` parked + leftover trees deleted | `~/dev/_secrets-parking/mammoth-build-crm/` |
+| oxfmt idempotency bug posted upstream (re-verified on 0.60.0 first) | oxc-project/oxc#24960 |
+| kepano/obsidian-skills installed user-level (pinned) | `~/.claude/vendor/obsidian-skills` @a1dc48e |
+| SotD artifact consolidated: + Fan-out (7 slots) + Epics (15) + What-landed tabs | artifact URL in §Artifacts |
+| SotD invisible-work sweep → D-055 + PL-032 minted, grilled, planned | `plans/petey-plan-0712-sotd-usefulness.md` |
+| Process-OS cherry-picked up immediately (operator call) | rdd-monorepo PR #1 |
+| All 7 portfolio slots local (4 clones + amy-coaches-data created + TB = old monorepo) | fetch-verified |
+| Canonical renamed `ronin-dojo-app` → `black-belt-legacy` (+compat symlink; stale 0413 clone deleted) | PR #344 |
+| Stale worktrees pruned (6 + husks + caches) after safety verification; uniques backed up | `_secrets-parking/worktree-backups/` |
+| Repo names normalized lowercase; long-form monorepo → `rdd-monorepo` | PR #345 + ADR 0055 amendment |
+| Ritual amendment: goal-verdict question at bow-in ⓪ + recorded `## Goal verdict` at close | this PR |
 
 ## Next session
 
