@@ -184,13 +184,16 @@ Integration pass across all four lanes (working tree, pre-commit):
 | `bun test lib/state-of-dojo/` | 105 pass / 0 fail |
 | api-client `format:check` | all files correct |
 | `docs/protocols/fork-fanout.yml` parse | ✓ 7 slots (Bun.YAML) |
-| Doug full-diff verify | pending dispatch |
-| Desi rendered-panel review + `/app/state` smoke | pending dispatch |
+| Doug full-diff verify (`641aa635..HEAD`) | **GO 9.2/10**, no hard cap — arch 4/4 · tsc 0 · `next build` PASS · format:check green · wiki-lint 0 err · `bun run test` green on clean run (the 5-fail run was pre-existing FS-0027 mock-leakage, 0 test files touched); import boundary + hygiene verified |
+| Desi rendered-panel review (390px + 1100px) | structurally sound, mobile-clean, belt-words coherent; **2 publish-blockers** (YAML note truncation + epic-pill truncation) + 3 LOW deferred |
+| Review fixes (commit `b57ed93f`) + re-verify | ✅ YAML notes quoted (BBL note renders full incl. `#343`) · epic pills tokenized (no truncation) · arch-gate pass · oxlint clean · deterministic |
 
 **Follow-ups routed (bow-out finding router):**
+- **FS (new):** unquoted YAML scalars containing ` #` are silently comment-truncated by `Bun.YAML.parse` (Doug+Desi, SESSION_0714) — fixed here by quoting; log the pattern + consider a lint guard.
 - `BELT_WORD` now zero-consumer — cleanup candidate (needs operator sign-off before delete).
 - SotD script **deploy-scope gate** not wired (would drop RDD/MMB tabs) — dedicated follow-up if a scope-gated variant is wanted.
 - **WEKAF app residue** (seeds create `wekaf-usa` org · `public/images/brands/wekaf-usa` · `next.config` `wekaf.local` · email/tests) — baseline-vestige cleanup, route to WL/D.
+- Desi LOW ×3 (epic-doc pill redundancy · phase-vs-status pill-color divergence doc · "Held" mid-ladder monotonicity) — follow-up session.
 
 ## Artifacts
 
