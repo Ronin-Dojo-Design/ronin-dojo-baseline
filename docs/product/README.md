@@ -4,7 +4,7 @@ slug: product-documentation-index
 type: index
 status: active
 created: 2026-05-18
-updated: 2026-07-26
+updated: 2026-07-27
 author: Brian + Giddy
 last_agent: claude-session-0712
 backlinks:
@@ -59,7 +59,7 @@ Black Belt Legacy preserves martial arts legacy through profiles, claims, rank h
 ## Supporting canon
 
 - `docs/architecture/launch/2026_05_18_PRODUCT_LAUNCH_ALL_BRANDS.md`
-- `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md`
+- `docs/architecture/source/Launch-OS-baseline-martial-arts-.md`
 - `docs/architecture/lineage/lineage-tree-v1-requirements.md`
 - `docs/architecture/lineage/lineage-editor-permissions-spec.md`
 - `docs/knowledge/wiki/repo-truth-index.md`

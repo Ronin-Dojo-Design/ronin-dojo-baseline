@@ -4,7 +4,7 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-07-26
+updated: 2026-07-27
 author: Brian + Giddy
 last_agent: claude-session-0590
 backlinks:
@@ -145,7 +145,7 @@ They should not carry every implementation note, full session history, raw resea
 
 - `docs/product/baseline-martial-arts/PRD.md`
 - `docs/product/baseline-martial-arts/STORIES.md`
-- `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md`
+- `docs/architecture/source/Launch-OS-baseline-martial-arts-.md`
 
 ## Current Black Belt Legacy canon
 

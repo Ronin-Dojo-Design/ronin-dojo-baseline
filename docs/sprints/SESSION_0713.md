@@ -25,7 +25,7 @@ backlinks:
 
 ## Goal
 
-Phase C (C1–C6) + Phase D (D1–D3) for Mammoth-Metal-Buildings, per
+Phase C (C1–C6) + Phase D (D1–D3) for mammoth-metal-buildings, per
 `docs/sprints/plans/petey-plan-0711-brand-repo-separation.md` and the SESSION_0712 Task-log
 recipe. Keeps `clients/mammoth-build-crm` (promote toward `apps/`) + `packages/*`; deletes
 apps/web · apps/baseline · apps/rdd + other-brand docs. PL-024 cutover 2026-08-05 — the trim

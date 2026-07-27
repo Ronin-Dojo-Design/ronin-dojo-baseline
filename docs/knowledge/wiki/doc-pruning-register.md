@@ -4,7 +4,7 @@ slug: doc-pruning-register
 type: registry
 status: active
 created: 2026-05-18
-updated: 2026-07-26
+updated: 2026-07-27
 author: Brian + Giddy
 last_agent: claude-session-0298
 backlinks:
@@ -41,7 +41,7 @@ Do not delete or move a doc just because it feels stale. First preserve the usef
 
 | Path / pattern | Current status | Recommended status | Canonical replacement / summary target | Reason | Action |
 | --- | --- | --- | --- | --- | --- |
-| `docs/architecture/source/Launch-OS-Baseline-Martial-Arts-.md` | reference | active supporting / later reference | `docs/product/baseline-martial-arts/PRD.md`, `docs/product/baseline-martial-arts/STORIES.md`, `docs/knowledge/wiki/ronin-project-context.md` | Useful Baseline launch/source material, but too broad to remain the active product truth now that Baseline has a canonical PRD/story pack. | Keep as source for now; demote after Baseline PRD is accepted. |
+| `docs/architecture/source/Launch-OS-baseline-martial-arts-.md` | reference | active supporting / later reference | `docs/product/baseline-martial-arts/PRD.md`, `docs/product/baseline-martial-arts/STORIES.md`, `docs/knowledge/wiki/ronin-project-context.md` | Useful Baseline launch/source material, but too broad to remain the active product truth now that Baseline has a canonical PRD/story pack. | Keep as source for now; demote after Baseline PRD is accepted. |
 | `docs/architecture/source/*` | mixed | reference | `docs/knowledge/wiki/ronin-project-context.md`, product docs, ADRs | Raw planning/source material should not compete with accepted architecture/product docs. | Review one-by-one before archive moves. |
 | `docs/_imports/*` | reference | **DELETED (SESSION_0468)** | — | Imported packs duplicate adopted wiki/registry content. | **SUPERSEDED — `_imports/` removed at SESSION_0468 (S48 lean-out).** The 0298 "keep, excluded" call was reversed: `_imports/baseline-systems-pack/` was byte-identical to the root pack (epic RH-1), so it was deleted (emptying `docs/_imports/` entirely) and its 7 live "Source:" footnotes repointed to the root pack. One canonical copy now (the root pack). The other former member, `_imports/monorepo-design-system/`, was deleted at SESSION_0467 (confidently-wrong). |
 | `docs/ronin_dojo_baseline_systems_pack/*` | reference | reference (kept — now the sole canonical copy) | existing wiki registries and project-context | Earlier generated systems pack; the duplicate `_imports/` copy is gone. | **RESOLVED (SESSION_0468):** kept as the **one** canonical import-pack lineage after the `_imports/` duplicate was deleted (S48). Still excluded by dir name from lint + nav; out of active load. |
