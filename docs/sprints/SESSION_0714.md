@@ -11,7 +11,7 @@ lane: bbl
 recipe: "epic-plan"
 goal_ids: [G-023]
 tickets: []
-next_session:
+next_session: docs/sprints/SESSION_0715.md
 pairs_with:
   - docs/sprints/SESSION_0712.md
   - docs/sprints/plans/petey-plan-0712-sotd-usefulness.md
@@ -230,17 +230,70 @@ Integration pass across all four lanes (working tree, pre-commit):
 
 ## Open decisions / blockers
 
-None.
+None blocking. Architectural note (operator, grill 0714): the **portfolio SotD** (cross-repo status
+aggregation) lives in **rdd-monorepo** and pulls every sibling's status via the GitHub-API fetch
+pattern — the BBL board here is necessarily brand-local (ADR 0059), and its Fan-out per-slot status
+is hand-maintained `fork-fanout.yml` (will drift). The live cross-repo version is the rdd-monorepo
+session (already ratified as PL-032 session B). Not a blocker; routed to Next session.
 
 ## Next session
 
-- **Goal:** <bow-out>
-- **First task:** <bow-out>
+- **Goal:** rdd-monorepo bootstrap + **PL-032 session B** — cherry-pick this session's SotD renderer
+  up, then make the **portfolio Fan-out board live** (cross-repo status via GitHub-API fetch, so it
+  reflects the Mammoth trim + every sibling without hand-editing). Set the weekly RDD sync day.
+- **First task:** clone/bootstrap rdd-monorepo; cherry-pick `a9530dc0`+`eb2cb782` (renderer + data);
+  scope the cross-repo fetch (read each sibling's `docs/sprints/*` + goals-ledger via `gh api`).
+  Queued behind/alongside: **BBL cleanup lane** (loadEpics complexity extract · `BELT_WORD` delete ·
+  SotD deploy-scope-gate decision · WEKAF app-residue · Desi 3 LOW + Doug 2 P3).
 
 ## Close evidence
 
-<bow-out>
+**/ggr composite:** **9.1/10 — CLEARS** (≥9.0, ADR 0052 D6) · **Caps applied:** none (no behavior
+regression — render byte-identical; no Dirstarter bypass; new `vocab.ts` + yaml-data pattern
+documented in-file). **Systemic health:** CI = pending (runs on PR push) · findings routed 9/9 ·
+FS patterns: none re-fired (FS-0044 newly minted, mitigated).
+**Reviewer verdicts:** Doug **GO 9.2** (bulk `a9530dc0..3fb382bc`) + **GO 9.5** (TASK_05 delta
+`eb2cb782`) · Desi pass (2 blockers fixed: YAML truncation + epic-pill) · Giddy n/a (structure
+reviewed via the /ggr score).
+**Findings ≥ medium:** none open. loadEpics CRAP 306 (`state-of-project.ts:264`) = D3/D5 note →
+routed to the BBL cleanup lane. Doug 2×P3 (landedPanel guard symmetry · fpanel DOM order =
+intentional spec fidelity) → cleanup lane / no-action.
+**ADR / ubiquitous-language check:** no new ADR required — PL-032 session A executes the SESSION_0712
+grill decisions (SotD home = rdd-mono + per-brand; renderer-first; build-in-BBL-sync-up); D-055 flipped RESOLVED.
+
+| Step | Proof |
+| --- | --- |
+| Task log | PASS — 5 tasks + process guard, all landed |
+| Gates | arch 4/4 · tsc 0 · oxlint clean · wiki-lint 0 err/115 warn · 105 state-of-dojo tests · deterministic render |
+| /ggr composite | 9.1 CLEARS (Doug 9.2+9.5 · Desi pass · fallow MI 81.5) |
+| Runtime verification (Doug) + artifact | full-parity board proven byte-identical to spec; [artifact](https://claude.ai/code/artifact/76deeeae-b790-4c38-b306-c8a509a6d058) |
+| Finding router | D-055 RESOLVED · FS-0044 minted · 7 follow-ups → Next session cleanup lane + rdd-mono session |
+| Git hygiene | branch `session-0714-sotd-hygiene` · 8 commits · clean tree · single push at close (pending operator go) |
+| Graphify | full rebuild at close (below) |
+| Secret scan | PASS (clean) |
 
 ## Reflections
 
-<bow-out — ≤5 bullets, each routed>
+- **The plan under-specified fidelity and no one opened the operator's artifact — the expensive
+  miss.** PL-032 "bake panels" was built as flat sections; the fix was to reproduce the operator's
+  own 0712 artifact. → route: FS-0044 + CLAUDE.md/agent-systems-map §4/cody-preflight §0b guards (landed).
+- **The reproduction only worked because live vs bespoke was split cleanly:** live data stays live
+  (ledgers), bespoke narrative → yaml block scalars. Block scalars (`|-`) also killed the
+  `Bun.YAML` `#`-truncation trap outright (no quoting). → route: pattern in `fork-fanout.yml` header comment.
+- **Verification passed the wrong thing because it diffed the plan, not the operator's artifact** —
+  Doug/Desi both cleared the flat build. The guard now makes verification diff against the reference
+  artifact (Pillar 4∩5). → route: agent-systems-map §4 (landed).
+- **The portfolio-vs-brand-local SotD split is real and ratified:** cross-repo status can't come from
+  a brand-local repo (ADR 0059); the live aggregation is rdd-monorepo work. → route: Next session (PL-032 B).
+- **`vocab.ts` unification (D-055) is the quiet win** — it's why the belt-word change landed once and
+  the script could inherit the kernel vocabulary at all. → route: D-055 RESOLVED.
+
+## Goal verdict
+
+**EXTENDED → YES.** PL-032 session A (renderer unification / D-055 + PL-020 belt-words + BBL hygiene)
+hit and Doug-verified (GO 9.2). Mid-session the operator caught that the build had produced flat
+sections instead of reproducing the SESSION_0712 artifact they'd hand-built; `/grill-me` re-scoped
+to **full parity (A)** → the renderer now reproduces the 6-tab board deterministically from live data
+(Doug GO 9.5, byte-identical to spec). Plus **FS-0044 "no orphan front-end" guards** landed to
+prevent recurrence. `/ggr` composite **9.1 CLEARS**. Operator elected: push + PR + squash-merge when
+green; next lane = rdd-monorepo/PL-032 B (live cross-repo portfolio SotD).
