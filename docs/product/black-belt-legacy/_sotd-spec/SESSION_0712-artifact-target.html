@@ -1,0 +1,1528 @@
+<title>State of the Dojo — SESSION_0712 frozen snapshot</title>
+<style>
+:root{
+  --paper:#ffffff; --page:#f5f5f5; --ink:#1f1f1f; --muted:#737373; --line:#e0e0e0;
+  --good:#16794f; --warn:#b45309; --crit:#dc2626; --neutral:#52525b;
+  --accent:#3f3f46; /* rdd: neutral house graphite (default/umbrella tab) */
+}
+[data-brand="bbl"]{ --accent: hsl(1 79% 51%); --crit: hsl(1 60% 34%); } /* darkened crit — distinguishable from BBL's own crimson accent */
+[data-brand="mmb"]{ --accent: #ff6a1a; }
+*{box-sizing:border-box}
+html,body{margin:0;max-width:100%;overflow-x:hidden}
+body{background:var(--page);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.masthead{background:var(--paper);border-bottom:3px solid var(--accent);padding:20px 16px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{margin:4px 0 2px;font-size:clamp(22px,5vw,32px);letter-spacing:-.01em}
+.prov{font-size:12px;font-weight:400;color:var(--muted)}
+.meta{font-size:12px;color:var(--muted);margin-top:6px}
+.tabs{display:flex;gap:6px;margin-top:14px;flex-wrap:wrap}
+.tab{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:16px}
+section{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:16px;max-width:100%;overflow-x:auto}
+h2{font-size:16px;margin:0 0 10px}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 6px}
+.panel-meta{font-size:12px;color:var(--muted);margin-bottom:10px}
+.empty{color:var(--muted);font-size:13px;font-style:italic;margin:4px 0}
+.columns{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.col h3{display:flex;align-items:center;gap:6px}
+.count{background:var(--line);border-radius:10px;padding:1px 7px;font-size:11px;color:var(--ink)}
+.cards{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;min-height:24px}
+.card{border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;display:flex;flex-direction:column;gap:3px;word-break:break-word}
+.card-id{color:var(--muted);font-size:11px}
+.card-title{font-weight:600}
+.more{color:var(--muted);font-size:11px;font-style:italic;list-style:none;padding:2px 0}
+.pill{display:inline-block;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;width:fit-content}
+.pill-good{background:var(--good)}
+.pill-warn{background:var(--warn)}
+.pill-crit{background:var(--crit)}
+.pill-neutral{background:var(--neutral)}
+.muted{color:var(--muted);font-size:11px}
+.ladders{list-style:none;margin:0 0 14px;padding:0;display:flex;flex-direction:column;gap:10px}
+.ladder-row{border-bottom:1px solid var(--line);padding-bottom:8px}
+.ladder-head{font-size:13px;margin-bottom:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ladder-track{display:flex;gap:4px}
+.stop{flex:1;min-width:0;text-align:center;font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:5px 2px;border-radius:5px;color:#fff;opacity:.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stop.reached{opacity:1}
+.stop-planned{background:#fff;color:var(--ink);border:1px solid var(--line)} /* white belt: 1px edge so it never disappears on the paper bg (Desi) */
+.stop-in-flight{background:#1d4ed8}
+.stop-review{background:#7c3aed}
+.stop-held{background:#7a5230}
+.stop-done{background:#111111}
+.lbl-neutral{display:none}
+[data-brand="mmb"] .lbl-belt{display:none}
+[data-brand="mmb"] .lbl-neutral{display:inline}
+.ladder-table{width:100%;border-collapse:collapse;font-size:12px;min-width:520px}
+.ladder-table th,.ladder-table td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left}
+.ladder-table .tick{text-align:center;color:var(--muted)}
+.risk-row,.needs-you li{font-size:13px;margin-bottom:6px;list-style:none}
+.recently-added ul{margin:0;padding:0}
+.artifact-row{font-size:13px;margin-bottom:8px;list-style:none;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.artifact-title{font-weight:600}
+.artifact-row code{font-size:10px;word-break:break-all}
+.needs-you ul{margin:0;padding:0}
+footer{max-width:1100px;margin:0 auto;padding:16px;font-size:11px;color:var(--muted)}
+footer p{margin:4px 0}
+@media (max-width:700px){
+  .columns{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:480px){
+  .columns{grid-template-columns:1fr}
+  /* mobile order: triage what's moving + what needs you (held) before planned/done */
+  .col[data-phase="in-flight"]{order:-4}
+  .col[data-phase="held"]{order:-3}
+  .col[data-phase="review"]{order:-2}
+  .col[data-phase="planned"]{order:-1}
+  .col[data-phase="done"]{order:0}
+  .ladder-table{min-width:0}
+}
+
+/* --- Fan-out board (scoped) --- */
+#fanout-root{--accent:#3f3f46}
+#fanout-root[data-repo="bbl"]{--accent:hsl(1 79% 51%)}
+#fanout-root[data-repo="bma"]{--accent:#1d4ed8}
+#fanout-root[data-repo="mmb"]{--accent:#ff6a1a}
+#fanout-root[data-repo="usa"]{--accent:#16794f}
+#fanout-root[data-repo="acd"]{--accent:#7c3aed}
+#fanout-root[data-repo="tb"]{--accent:#0e7490}
+#fanout-root .ftabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+#fanout-root .ftab{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer}
+#fanout-root .ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#fanout-root .fpanel{display:none}
+#fanout-root .fpanel.active{display:block}
+#fanout-root .fpanel section{padding:0;border:none;margin:0}
+#fanout-root .fladder{display:flex;gap:4px;margin:8px 0 4px;flex-wrap:wrap}
+#fanout-root .fstop{flex:1 1 56px;min-width:52px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:6px 2px;border-radius:5px;color:#fff;background:var(--neutral);opacity:.32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fanout-root .fstop.done{background:#111;opacity:1}
+#fanout-root .fstop.now{background:var(--accent);opacity:1}
+#fanout-root .fstop.na{background:#fff;color:var(--muted);border:1px dashed var(--line);opacity:1}
+#fanout-root .steps{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+#fanout-root .steps th,#fanout-root .steps td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+#fanout-root .steps th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#fanout-root .steps td:first-child{white-space:nowrap;font-weight:700}
+#fanout-root .order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#fanout-root .order li{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+#fanout-root .order .n{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+#fanout-root .keepkill{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
+#fanout-root .kk{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;flex:1 1 240px}
+#fanout-root .kk strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+#fanout-root .kk.keep strong{color:var(--good)}
+#fanout-root .kk.kill strong{color:var(--crit)}
+#fanout-root .pill-accent{background:var(--accent)}
+#fanout-root code{background:var(--page);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11.5px;word-break:break-all}
+@media (max-width:480px){ #fanout-root .steps{min-width:0} #fanout-root .steps td:first-child{white-space:normal} }
+</style>
+<header class="masthead">
+  <div class="eyebrow">Ronin Dojo Design</div>
+  <h1>State of the Dojo</h1>
+  <nav class="tabs" role="tablist"><button class="tab active" data-tab="rdd" role="tab" aria-selected="true">RDD</button><button class="tab" data-tab="bbl" role="tab" aria-selected="false">BBL</button><button class="tab" data-tab="mmb" role="tab" aria-selected="false">MMB</button><button class="tab" data-tab="fanout" role="tab" aria-selected="false">Fan-out</button><button class="tab" data-tab="epics" role="tab" aria-selected="false">Epics</button><button class="tab" data-tab="landed" role="tab" aria-selected="false">What landed</button></nav>
+  <div class="meta">323 sessions · 32 goals · 0 open PR(s) · rendered 2026-07-26T18:02:10.718Z</div>
+</header>
+<main>
+<section class="brand-panel" data-panel="rdd" >
+    <div class="panel-meta">238 session card(s) · 21 goal(s)</div>
+    <section class="work-board"><h2>Work board</h2><div class="columns"><div class="col" data-phase="planned">
+      <h3>Planned <span class="count">19</span></h3>
+      <ul class="cards"><li class="card" data-phase="planned">
+    <span class="card-id">#0710</span>
+    <span class="card-title">Parallel lane: BBL email DRY_RUN system + Taskforge vault checklists</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0697</span>
+    <span class="card-title">WL-P2-43: kill the third revalidation idiom (2 seam-bypass files → oRPC)</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0693</span>
+    <span class="card-title">kernel guard against the inert-save-button class (WL-P2-44) (auto lane)</span>
+    <span class="pill pill-neutral">in-review</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0684</span>
+    <span class="card-title">SESSION_0684 — Mammoth GBP submission pack</span>
+    <span class="pill pill-neutral">open</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0683</span>
+    <span class="card-title">G-033 kernel extraction: inbox → packages/ui-kit feature-module (mount per brand)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0682</span>
+    <span class="card-title">Mammoth Build MVP plan session (PL-024; client secured, due 2026-08-07)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0680</span>
+    <span class="card-title">/process feature page — agent-OS showcase (pipeline SVG, roster, craft copy) (auto lane, wave 13/14)</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0671</span>
+    <span class="card-title">wave-10 Vercel deploy watchdog script (ntfy push, notify-only) (auto lane, wave 9/10 — final pair)</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0664</span>
+    <span class="card-title">auto-claude niche-handle availability audit (Ronin * Design family, #280 F5) (overnight auto lane, wave 7/8)</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0652</span>
+    <span class="card-title">Fable /rr — RDD social-media automation setup (agency presence + packageable client offering) (overnight auto lane, wave 4 — final)</span>
+    <span class="pill pill-neutral">complete</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0641</span>
+    <span class="card-title">AM Coffee Merge Review: overnight 5-lane wave + 0632/0633/0635 sweep</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0634</span>
+    <span class="card-title">CRM as a kernel feature-module (brand-agnostic, all brands)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0632</span>
+    <span class="card-title">Client-intake kernel: one module, three brand instances (WS-A/B/C)</span>
+    <span class="pill pill-neutral">done</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0623</span>
+    <span class="card-title">autonomous WL-clearing chain (gpt-5.5)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0605</span>
+    <span class="card-title">PLAN: /cas /car /cac scaffold commands + component-lifecycle (WS-E)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0596</span>
+    <span class="card-title">DBS pipeline: Codex Daily Bug Scan → DBS ledger → State-of-Dojo component (fresh Codex session)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0595</span>
+    <span class="card-title">PLAN: vault consolidation + SOT-per-brand vaults as repos</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0594</span>
+    <span class="card-title">PLAN: GLL_Epic (Giddy-lessons / Kaizen / /teach code-lessons)</span>
+    <span class="pill pill-neutral">staged</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0511</span>
+    <span class="card-title">Session 0511</span>
+    <span class="pill pill-neutral">unknown</span>
+  </li></ul>
+    </div><div class="col" data-phase="in-flight">
+      <h3>In flight <span class="count">11</span></h3>
+      <ul class="cards"><li class="card" data-phase="in-flight">
+    <span class="card-id">#0712</span>
+    <span class="card-title">Phase C: trim-to-brand fan-out (five-repo era)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0702</span>
+    <span class="card-title">Plan/grill: BBL vertical lineage timeline v2 + LineageProfileDrawer_v2 (PL-025)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0698</span>
+    <span class="card-title">WL-P2-23: wire the inert ancestry-timeline deep-links (claim-loop feeder)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0691</span>
+    <span class="card-title">Quality-suite hardening: merged inbox (G-033) + social-adjacent code</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0681</span>
+    <span class="card-title">Gold-standby orchestrator (daytime): waves 15+ social/brand launch runway</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0658</span>
+    <span class="card-title">auto-claude RDD founder-LinkedIn 4-week content calendar (continues #280) (overnight auto lane, wave 5/6)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0648</span>
+    <span class="card-title">auto-claude RDD industries pages (structurewebworks pattern, RDD style) (overnight auto lane, wave 2)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0619</span>
+    <span class="card-title">Wiring net: capture built-not-wired gaps + intake triage + queue</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0602</span>
+    <span class="card-title">PLAN: branded client-onboarding artifacts + interactive forms (G-028) (rdd)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0600</span>
+    <span class="card-title">WS-1: /app admin landing shell (Command Deck promotion + quick-action surface + loop-board embed)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0560</span>
+    <span class="card-title">apps/baseline typecheck red (SESSION_0555 FINDING_02) root-cause + fix</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li></ul>
+    </div><div class="col" data-phase="review">
+      <h3>Review <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="held">
+      <h3>Held <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="done">
+      <h3>Done <span class="count">208</span></h3>
+      <ul class="cards"><li class="card" data-phase="done">
+    <span class="card-id">#0709</span>
+    <span class="card-title">Staged-lane fan-out: run 0703–0708 (WL/QA six-pack)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0708</span>
+    <span class="card-title">WL-P2-69: the repo-wide format gate</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0707</span>
+    <span class="card-title">BUILD: WL-P3-35 brand-settings e2e serialization + WL-P3-36 ColorField interaction coverage</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0706</span>
+    <span class="card-title">WL-P3-63: certificate-issue + walk-in dialog cancel→reopen reset tests</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0705</span>
+    <span class="card-title">PL-027 slice: OG belt-color renderer graduation + fork F2 (publicity consent)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0704</span>
+    <span class="card-title">belt-order students on the BBL lineage tree (PL-026 quick fix)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0703</span>
+    <span class="card-title">WL triage sweep (4 rows)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0699</span>
+    <span class="card-title">WL-P2-51 bottom-nav hydration mismatch (mounted-guard fix, overnight auto lane)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0695</span>
+    <span class="card-title">WL-P3-39: active-tier-entitlement `where` dedup</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0694</span>
+    <span class="card-title">WL-P3-58 verify-first: already resolved by SESSION_0636 (overnight auto lane)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0692</span>
+    <span class="card-title">AM Coffee Merge Review (heir to 0641): the 0681 daytime wave-15/16 run</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0690</span>
+    <span class="card-title">RDD founder-LinkedIn content calendar (ready-to-run 4 weeks)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="more">+196 more — see docs/sprints/</li></ul>
+    </div></div></section>
+    <section class="goals">
+    <h2>Goal belt-ladders</h2>
+    <ul class="ladders"><li class="ladder-row">
+    <div class="ladder-head"><strong>G-002</strong> Per-product database separation </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-003</strong> Loop-of-Loops P3 Phase B (editable, DB-backed loop-board) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held reached" title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done reached" title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-005</strong> m-card consolidation: build `kind=&quot;generic&quot;` + rebase the kernel card on the Dirstarter L1 </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-006</strong> Per-brand PRD/story completion tracking </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-007</strong> PR-review automation: open PRs as a live Loop-of-Loops source </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held reached" title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done reached" title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-009</strong> Creator payout model for premium community content </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-012</strong> Count-neutral DB-backed verification (fixture-ownership module) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held reached" title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done reached" title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-014</strong> Obsidian Dashboard Epic — vault-kit + dashboard design/planning </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-015</strong> Hermes local automation + Model Option research-recommend </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-016</strong> Email Boards program (5 brands, phased) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-018</strong> Per-brand Command Center skins program (RDD · Baseline · WEKAF) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-020</strong> Desi-driven hallmark audit program — BBL public surfaces </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-023</strong> WORKFLOW_6.0: session-recipe OS + SOT_Cookbook + brand SOT cards </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-025</strong> GLL_Epic: Giddy-Lessons / Kaizen / /teach code-lessons system </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-026</strong> /app admin-surface consolidation (landing shell + nav + quick-actions + AdminCollection sweep) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-027</strong> RDD umbrella app deploy (ronindojodesign.com) + new-brand onboarding recipe family </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-028</strong> Branded client-onboarding artifacts + interactive forms (RDD agency) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-029</strong> Per-brand/client session overlay → SOT-Vault updates (generalize game-on/off) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-030</strong> Branded doc-rendering system (frontmatter → branded artifact) for SOPs / rituals / workflows / data-wiring </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-031</strong> Lean single-lane, baton-handoff session model (bow-in `/review-refine-refactor`) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-033</strong> Admin-dashboard inbox for all brands (Resend receiving → in-app surface) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li></ul>
+    <h3>Goal ladder table</h3>
+    <table class="ladder-table"><thead><tr>
+    <th>ID</th><th>Goal</th><th>Pri</th><th>Status</th>
+    <th>White</th><th>Blue</th><th>Purple</th><th>Brown</th><th>Black</th>
+  </tr></thead><tbody><tr>
+        <td>G-002</td>
+        <td>Per-product database separation</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-003</td>
+        <td>Loop-of-Loops P3 Phase B (editable, DB-backed loop-board)</td>
+        <td>P2</td>
+        <td>landed</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td>
+      </tr><tr>
+        <td>G-005</td>
+        <td>m-card consolidation: build `kind=&quot;generic&quot;` + rebase the kernel card on the Dirstarter L1</td>
+        <td>P1</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-006</td>
+        <td>Per-brand PRD/story completion tracking</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-007</td>
+        <td>PR-review automation: open PRs as a live Loop-of-Loops source</td>
+        <td>P1</td>
+        <td>done</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td>
+      </tr><tr>
+        <td>G-009</td>
+        <td>Creator payout model for premium community content</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-012</td>
+        <td>Count-neutral DB-backed verification (fixture-ownership module)</td>
+        <td>P2</td>
+        <td>landed</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td>
+      </tr><tr>
+        <td>G-014</td>
+        <td>Obsidian Dashboard Epic — vault-kit + dashboard design/planning</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-015</td>
+        <td>Hermes local automation + Model Option research-recommend</td>
+        <td>P1</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-016</td>
+        <td>Email Boards program (5 brands, phased)</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-018</td>
+        <td>Per-brand Command Center skins program (RDD · Baseline · WEKAF)</td>
+        <td>—</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-020</td>
+        <td>Desi-driven hallmark audit program — BBL public surfaces</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-023</td>
+        <td>WORKFLOW_6.0: session-recipe OS + SOT_Cookbook + brand SOT cards</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-025</td>
+        <td>GLL_Epic: Giddy-Lessons / Kaizen / /teach code-lessons system</td>
+        <td>—</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-026</td>
+        <td>/app admin-surface consolidation (landing shell + nav + quick-actions + AdminCollection sweep)</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-027</td>
+        <td>RDD umbrella app deploy (ronindojodesign.com) + new-brand onboarding recipe family</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-028</td>
+        <td>Branded client-onboarding artifacts + interactive forms (RDD agency)</td>
+        <td>—</td>
+        <td>planned —</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-029</td>
+        <td>Per-brand/client session overlay → SOT-Vault updates (generalize game-on/off)</td>
+        <td>—</td>
+        <td>queued</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-030</td>
+        <td>Branded doc-rendering system (frontmatter → branded artifact) for SOPs / rituals / workflows / data-wiring</td>
+        <td>—</td>
+        <td>queued</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-031</td>
+        <td>Lean single-lane, baton-handoff session model (bow-in `/review-refine-refactor`)</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-033</td>
+        <td>Admin-dashboard inbox for all brands (Resend receiving → in-app surface)</td>
+        <td>P1</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr></tbody></table>
+  </section>
+  </section><section class="brand-panel" data-panel="bbl" hidden>
+    <div class="panel-meta">51 session card(s) · 8 goal(s)</div>
+    <section class="work-board"><h2>Work board</h2><div class="columns"><div class="col" data-phase="planned">
+      <h3>Planned <span class="count">6</span></h3>
+      <ul class="cards"><li class="card" data-phase="planned">
+    <span class="card-id">RANKENTRY-UNIFICATION-EPIC · canon</span>
+    <span class="card-title">BBL Epic — Retire RankAward, unify on RankEntry (KISS the rank model)</span>
+    <span class="pill pill-neutral">proposed</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">RANK-ENTRY-UNIFIED-DATA-FLOW · canon</span>
+    <span class="card-title">BBL RankEntry Unified Domain and Data Flow</span>
+    <span class="pill pill-neutral">proposed</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">GI-BRAND-EXPERIENCE-AND-CONTENT-ATOMS · canon</span>
+    <span class="card-title">BBL Gi Brand Experience + Content Atoms (input, 2026-07-18)</span>
+    <span class="pill pill-neutral">proposed</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">DESIGN-EXPERIENCE-EPIC · canon</span>
+    <span class="card-title">BBL Epic — Design &amp; Experience push (galaxy · globe · directory/profile · technique · blog/dozen)</span>
+    <span class="pill pill-neutral">proposed</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">BBL-GALAXY-SPEC · canon</span>
+    <span class="card-title">BBL-Galaxy-spec</span>
+    <span class="pill pill-neutral">unknown</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0674</span>
+    <span class="card-title">brand-scoped state surfaces (SotD=BBL-only, SotB=MMB-only) — verify-first vs frozen kernel (auto lane, wave 11/12)</span>
+    <span class="pill pill-neutral">in-review</span>
+  </li></ul>
+    </div><div class="col" data-phase="in-flight">
+      <h3>In flight <span class="count">7</span></h3>
+      <ul class="cards"><li class="card" data-phase="in-flight">
+    <span class="card-id">SOCIAL-FLYWHEEL-APPROVAL-QUEUE-SPEC-DRAFT · canon</span>
+    <span class="card-title">BBL social-flywheel approval queue — build-ready design spec</span>
+    <span class="pill pill-neutral">draft-spec</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">SOCIAL-CONTENT-FLYWHEEL-DRAFT · canon</span>
+    <span class="card-title">BBL Social Content Flywheel — DRAFT (proposed event→content map + starter cadence)</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">PAYOUT-PHASE0-INSTRUMENTATION-SPEC-DRAFT · canon</span>
+    <span class="card-title">G-009 Phase 0 — entitled-read instrumentation (build-ready design spec)</span>
+    <span class="pill pill-neutral">draft-spec</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">GIFT-MEMBERSHIP-AND-TIER-GATING-EPIC · canon</span>
+    <span class="card-title">BBL — Gift/Comp Membership, RBAC Granting, and Tier-Gated Tree Visibility (Epic Spec)</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">BILLING-REFERENCE-DRAFT · canon</span>
+    <span class="card-title">BBL Billing Reference (Draft) — internal hours/valuation reference</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">BBL-PODS-FULL-IMPORT-SPEC · canon</span>
+    <span class="card-title">BBL Pods Full-Fidelity Re-Import — SPEC</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0639</span>
+    <span class="card-title">auto-claude G-033 slice 1 InboundEmail + /app/inbox AdminCollection (overnight auto lane)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li></ul>
+    </div><div class="col" data-phase="review">
+      <h3>Review <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="held">
+      <h3>Held <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="done">
+      <h3>Done <span class="count">38</span></h3>
+      <ul class="cards"><li class="card" data-phase="done">
+    <span class="card-id">STORIES · canon</span>
+    <span class="card-title">Black Belt Legacy Stories</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">SOT-ADR · canon</span>
+    <span class="card-title">SOT-ADR — Consolidated Architecture Decisions (Black Belt Legacy)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">PRD · canon</span>
+    <span class="card-title">Black Belt Legacy PRD</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">POST-LAUNCH-SOT · canon</span>
+    <span class="card-title">Post-Launch SOT — Black Belt Legacy</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">PHASE3-USER-CARRY-PREFLIGHT · canon</span>
+    <span class="card-title">Phase 3 User-Carry Identity Preflight Map (Black Belt Legacy)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">LINEAGE-DATA-WIRING-FLOW · canon</span>
+    <span class="card-title">Lineage Data Flows and Wiring Flows</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">LANDING-MOTION-SPIKE · canon</span>
+    <span class="card-title">BBL Landing Motion Spike — GSAP / Lenis / three.js direction</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">GAP-MATRIX · canon</span>
+    <span class="card-title">Black Belt Legacy — Implementation Gap Matrix</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">CUTOVER-CHECKLIST · canon</span>
+    <span class="card-title">Black Belt Legacy — Launch Cutover Checklist</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">BRAND-HEART-BEAT · canon</span>
+    <span class="card-title">Black Belt Legacy — Brand Heart Beat (BHB)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">BBL-STRIPE-PRODUCTS-SPEC · canon</span>
+    <span class="card-title">BBL — Stripe Products &amp; Prices Spec (lineage membership, BBL account)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">BBL-STRIPE-PRICING-RUNBOOK · canon</span>
+    <span class="card-title">BBL Stripe Pricing — Go-Live Runbook (executable form of the spec)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="more">+26 more — see docs/sprints/</li></ul>
+    </div></div></section>
+    <section class="goals">
+    <h2>Goal belt-ladders</h2>
+    <ul class="ladders"><li class="ladder-row">
+    <div class="ladder-head"><strong>G-001</strong> Land Brian Truelson (FI-001 — the P0 first tester) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-004</strong> BBLApp feature adaptation (N1 + N2) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held reached" title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done reached" title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-008</strong> BBL lineage/profile visual expansion (parked direction) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-010</strong> Instructor review queue for backfill promoter-changed reviews </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held reached" title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done reached" title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-011</strong> RankEntry unification (retire RankAward) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-013</strong> Finish the BJJ technique experience epic </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-022</strong> Technique graph out of beta (GA) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-024</strong> Feature + feedback widgets for all sites (idea-intake program) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li></ul>
+    <h3>Goal ladder table</h3>
+    <table class="ladder-table"><thead><tr>
+    <th>ID</th><th>Goal</th><th>Pri</th><th>Status</th>
+    <th>White</th><th>Blue</th><th>Purple</th><th>Brown</th><th>Black</th>
+  </tr></thead><tbody><tr>
+        <td>G-001</td>
+        <td>Land Brian Truelson (FI-001 — the P0 first tester)</td>
+        <td>P0</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-004</td>
+        <td>BBLApp feature adaptation (N1 + N2)</td>
+        <td>P1</td>
+        <td>done</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td>
+      </tr><tr>
+        <td>G-008</td>
+        <td>BBL lineage/profile visual expansion (parked direction)</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-010</td>
+        <td>Instructor review queue for backfill promoter-changed reviews</td>
+        <td>P1</td>
+        <td>done</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td>
+      </tr><tr>
+        <td>G-011</td>
+        <td>RankEntry unification (retire RankAward)</td>
+        <td>—</td>
+        <td>proposed</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-013</td>
+        <td>Finish the BJJ technique experience epic</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-022</td>
+        <td>Technique graph out of beta (GA)</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-024</td>
+        <td>Feature + feedback widgets for all sites (idea-intake program)</td>
+        <td>—</td>
+        <td>in-progress —</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr></tbody></table>
+  </section>
+  </section><section class="brand-panel" data-panel="mmb" hidden>
+    <div class="panel-meta">34 session card(s) · 3 goal(s)</div>
+    <section class="work-board"><h2>Work board</h2><div class="columns"><div class="col" data-phase="planned">
+      <h3>Planned <span class="count">2</span></h3>
+      <ul class="cards"><li class="card" data-phase="planned">
+    <span class="card-id">MICHAELS-NOTES-MEETING · canon</span>
+    <span class="card-title">Michaels_Notes_Meeting</span>
+    <span class="pill pill-neutral">captured-needs-grill</span>
+  </li><li class="card" data-phase="planned">
+    <span class="card-id">#0672</span>
+    <span class="card-title">Fable /rr — QuickBooks integration (Julie bookkeeping + Claude connector + invoice pipeline) (auto lane, wave 11/12)</span>
+    <span class="pill pill-neutral">review</span>
+  </li></ul>
+    </div><div class="col" data-phase="in-flight">
+      <h3>In flight <span class="count">9</span></h3>
+      <ul class="cards"><li class="card" data-phase="in-flight">
+    <span class="card-id">STORIES · canon</span>
+    <span class="card-title">Mammoth Build CRM Stories</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">SOCIAL-AUTOMATION-PLAYBOOK-DRAFT · canon</span>
+    <span class="card-title">Mammoth Metal Buildings — Social Media System Playbook (DRAFT)</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">PRD · canon</span>
+    <span class="card-title">Mammoth Build CRM PRD</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">PITCH-DECK-OUTLINE · canon</span>
+    <span class="card-title">Ronin Building Design × Mammoth Build</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">MEETING-PREP-BRIEF-DRAFT · canon</span>
+    <span class="card-title">Meeting Prep Brief — Michael Flores (Mammoth Metal Buildings)</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">FEATURE-INTAKE-BILLING-SPEC-DRAFT · canon</span>
+    <span class="card-title">Feature-intake → estimate → Client-Invoice pipeline (build-ready design spec, approval-gated)</span>
+    <span class="pill pill-neutral">draft-spec</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">ENGAGEMENT-KICKOFF-CHECKLIST-DRAFT · canon</span>
+    <span class="card-title">Engagement Kickoff — Access &amp; Info Checklist (DRAFT)</span>
+    <span class="pill pill-neutral">draft</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0665</span>
+    <span class="card-title">auto-claude engagement-kickoff access checklist (continues #284) (overnight auto lane, wave 7/8)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li><li class="card" data-phase="in-flight">
+    <span class="card-id">#0645</span>
+    <span class="card-title">auto-claude /rr services+pricing research + Michael one-pager (overnight auto lane, wave 2)</span>
+    <span class="pill pill-neutral">in-progress</span>
+  </li></ul>
+    </div><div class="col" data-phase="review">
+      <h3>Review <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="held">
+      <h3>Held <span class="count">0</span></h3>
+      <ul class="cards"><p class="empty">Nothing here.</p></ul>
+    </div><div class="col" data-phase="done">
+      <h3>Done <span class="count">23</span></h3>
+      <ul class="cards"><li class="card" data-phase="done">
+    <span class="card-id">RECOVERY-MANIFEST · canon</span>
+    <span class="card-title">Mammoth operating-context recovery manifest</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">OPERATING-SYSTEM · canon</span>
+    <span class="card-title">Mammoth Build operating system</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">GAP-MATRIX · canon</span>
+    <span class="card-title">Mammoth Build CRM — Brand Deploy Gap Matrix (vs the BBL shipped baseline)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">CUTOVER-CHECKLIST · canon</span>
+    <span class="card-title">Mammoth Build CRM (mammothmb.com) — Launch Cutover Checklist (Greenfield Attach)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">CONTEXT · canon</span>
+    <span class="card-title">Mammoth Build CONTEXT — bounded-context glossary</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">BRAND-HEART-BEAT · canon</span>
+    <span class="card-title">Mammoth Build — Brand Heart Beat (BHB)</span>
+    <span class="pill pill-neutral">active</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0687</span>
+    <span class="card-title">Mammoth drafts→approval posting pipeline (templates → PostingDraft, approve-never-posts) (overnight auto lane)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0685</span>
+    <span class="card-title">MMB review-request engine (draft/approval, consent-first)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0675</span>
+    <span class="card-title">feature-widget → hours-estimate → client-invoice pipeline spec (approval-gated) (auto lane, wave 11/12)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0673</span>
+    <span class="card-title">deck v2 — iPad fix + feature roster + cutover visual + family closing slide (stacks on #276) (auto lane, wave 11/12)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0667</span>
+    <span class="card-title">Fable wave-9 MMB billing pack — State of the Building + itemized hours + invoice (F&amp;F rate) (auto lane, wave 9/10 — final pair)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="card" data-phase="done">
+    <span class="card-id">#0662</span>
+    <span class="card-title">codex-sol MMB OG image + icon (closes #270 residual) (overnight auto lane, wave 7/8)</span>
+    <span class="pill pill-good">closed</span>
+  </li><li class="more">+11 more — see docs/sprints/</li></ul>
+    </div></div></section>
+    <section class="goals">
+    <h2>Goal belt-ladders</h2>
+    <ul class="ladders"><li class="ladder-row">
+    <div class="ladder-head"><strong>G-017</strong> Email Boards BBL pilot (then Mammoth) </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-019</strong> Mammoth landing resurrection + flesh-out </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight " title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review " title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li><li class="ladder-row">
+    <div class="ladder-head"><strong>G-021</strong> Mammoth lean operating shell + sales-cockpit tracer </div>
+    <div class="ladder-track"><span class="stop stop-planned reached" title="White / Planned">
+      <span class="lbl-belt">White</span><span class="lbl-neutral">Planned</span>
+    </span><span class="stop stop-in-flight reached" title="Blue / In flight">
+      <span class="lbl-belt">Blue</span><span class="lbl-neutral">In flight</span>
+    </span><span class="stop stop-review reached" title="Purple / Review">
+      <span class="lbl-belt">Purple</span><span class="lbl-neutral">Review</span>
+    </span><span class="stop stop-held " title="Brown / Held">
+      <span class="lbl-belt">Brown</span><span class="lbl-neutral">Held</span>
+    </span><span class="stop stop-done " title="Black / Done">
+      <span class="lbl-belt">Black</span><span class="lbl-neutral">Done</span>
+    </span></div>
+  </li></ul>
+    <h3>Goal ladder table</h3>
+    <table class="ladder-table"><thead><tr>
+    <th>ID</th><th>Goal</th><th>Pri</th><th>Status</th>
+    <th>White</th><th>Blue</th><th>Purple</th><th>Brown</th><th>Black</th>
+  </tr></thead><tbody><tr>
+        <td>G-017</td>
+        <td>Email Boards BBL pilot (then Mammoth)</td>
+        <td>P1</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-019</td>
+        <td>Mammoth landing resurrection + flesh-out</td>
+        <td>P2</td>
+        <td>open</td>
+        <td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td><td class="tick">·</td>
+      </tr><tr>
+        <td>G-021</td>
+        <td>Mammoth lean operating shell + sales-cockpit tracer</td>
+        <td>P1</td>
+        <td>in-progress</td>
+        <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">·</td><td class="tick">·</td>
+      </tr></tbody></table>
+  </section>
+  </section>
+<section class="brand-panel" data-panel="landed" hidden>
+  <div class="panel-meta">What SESSION_0712 accomplished — the per-session record the operator asked for (2026-07-26/27). Until PL-032 bakes this into the renderer, this tab is hand-maintained per snapshot.</div>
+  <section>
+    <h2>Phase C — black-belt-legacy trimmed to its brand</h2>
+    <table class="ladder-table"><thead><tr><th>What</th><th>Evidence</th></tr></thead><tbody>
+      <tr><td>C1 — apps/baseline, apps/rdd, clients/mammoth-build-crm removed; lockfile refreshed</td><td>PR #343 · tsc + <code>next build</code> green</td></tr>
+      <tr><td>C2 — 62 other-brand doc files removed; wiki-lint 0 errors</td><td>PR #343</td></tr>
+      <tr><td>C3 — CI pruned to apps/web + packages/*; clients-ci.yml deleted</td><td>PR #343 CI run = the green-run done-means (9/9, chromium 28m)</td></tr>
+      <tr><td>C4 — CLAUDE.md → 79-line brand router (all 34 cited paths verified)</td><td>PR #343</td></tr>
+      <tr><td>C5 — sprint spine 0304–0711 (282 files) → <code>_archive/monorepo-era/</code>; monotonic numbering + <code>sprint: S13</code> era (N1 call)</td><td>PR #343 · ledger-id-next mints 0713</td></tr>
+      <tr><td>C6 — live <code>docs/adr/</code> 0055–0059 confirmed the BBL-binding subset; #342 squash-reintroduced 0001–0004 dupes dropped, renumber finished</td><td>PR #343 · incident row</td></tr>
+      <tr><td>Doug full-diff verify GO 9.2/10 — 1923 tests / 0 fail</td><td>548 files, +379/−27,278</td></tr>
+    </tbody></table>
+  </section>
+  <section>
+    <h2>Portfolio operations</h2>
+    <table class="ladder-table"><thead><tr><th>What</th><th>Evidence</th></tr></thead><tbody>
+      <tr><td><code>main-pr-only</code> rulesets created ACTIVE on all sibling repos (+ amy-coaches-data at creation)</td><td>ruleset ids 19777563–66, 19779145</td></tr>
+      <tr><td>All 7 portfolio slots now LOCAL: 4 sibling clones + fresh amy-coaches-data repo created + TB slot = old ronin-dojo-monorepo (operator call, ADR 0051 intact)</td><td>clones at <code>ecefd008</code>, fetch-verified</td></tr>
+      <tr><td>Process-OS cherry-picked UP to rdd-monorepo immediately (operator call — no waiting on the unset weekly-sync day)</td><td>rdd-monorepo PR #1 merged</td></tr>
+      <tr><td>Canonical checkout renamed <code>ronin-dojo-app</code> → <code>black-belt-legacy</code> (compat symlink kept); 0413-era stale clone verified zero-unique + deleted</td><td>PR #344 · guards/settings/memory migrated</td></tr>
+      <tr><td>All stale worktrees pruned (6 registered + husks + caches + agent tree) after safety verification; unique bits backed up</td><td><code>~/dev/_secrets-parking/worktree-backups/</code></td></tr>
+      <tr><td>Repo names normalized — GitHub = local folder, lowercase; long-form monorepo renamed <code>rdd-monorepo</code></td><td>PR #345 · ADR 0055 amendment</td></tr>
+    </tbody></table>
+    <h3>Final naming map (folder = repo)</h3>
+    <table class="ladder-table"><thead><tr><th>~/dev/</th><th>GitHub (Ronin-Dojo-Design/)</th><th>Slot</th></tr></thead><tbody>
+      <tr><td><code>black-belt-legacy</code> (+ <code>ronin-dojo-app</code> symlink, transitional)</td><td><code>black-belt-legacy</code></td><td>BBL — canonical, trimmed ✅</td></tr>
+      <tr><td><code>baseline-martial-arts</code></td><td><code>baseline-martial-arts</code></td><td>Baseline — trim queued</td></tr>
+      <tr><td><code>mammoth-metal-buildings</code></td><td><code>mammoth-metal-buildings</code></td><td>Mammoth — NEXT (0713; 08-05 cutover)</td></tr>
+      <tr><td><code>usa-stickfighting</code></td><td><code>usa-stickfighting</code></td><td>USA-Stick — trim queued (lightest)</td></tr>
+      <tr><td><code>rdd-monorepo</code></td><td><code>rdd-monorepo</code></td><td>RDD — keeps everything; upstream-of-record</td></tr>
+      <tr><td><code>amy-coaches-data</code></td><td><code>amy-coaches-data</code></td><td>ACD — fresh repo, scope session first</td></tr>
+      <tr><td><code>ronin-dojo-monorepo</code></td><td><code>ronin-dojo-monorepo</code></td><td>Tuff Buffs legacy (WP-era; instance-of-Baseline later)</td></tr>
+    </tbody></table>
+  </section>
+  <section>
+    <h2>Riders, findings &amp; staging</h2>
+    <table class="ladder-table"><thead><tr><th>What</th><th>Evidence</th></tr></thead><tbody>
+      <tr><td>WL-P3-69 resolved — ui-kit oxfmt pinned zero-diff; comment-reorder bug REPRODUCED + reported upstream</td><td>oxc-project/oxc#24960 · guardrail G10</td></tr>
+      <tr><td>FS-0042 closed — bunx-fallow doc sweep + minter phantom-filter (+ the self-burning-ledger lesson)</td><td>failed-steps-log</td></tr>
+      <tr><td>SotD review — full invisible-work map (19 shipped · 7 in-flight · 14 never-started · 7 no-owner); D-055 renderer drift; PL-032 lane minted + grilled + planned</td><td>petey-plan-0712-sotd-usefulness.md</td></tr>
+      <tr><td>kepano/obsidian-skills installed user-level (5 skills, pinned)</td><td><code>~/.claude/vendor/obsidian-skills</code> @a1dc48e</td></tr>
+      <tr><td>This artifact consolidated: SotD + Fan-out + Epics + What-landed at ONE url</td><td>you're reading it</td></tr>
+      <tr><td>SESSION_0713 staged — Mammoth trim, from <code>~/dev/mammoth-metal-buildings</code></td><td>staged stub</td></tr>
+    </tbody></table>
+  </section>
+</section>
+<section class="brand-panel" data-panel="epics" hidden>
+  <div class="panel-meta">Every epic in one place — home, status, owning goal, next step · frozen at SESSION_0712. The reason this tab exists: epics were scattered across <code>docs/epics/</code>, <code>docs/product/*/</code>, goal rows, and staged session stubs.</div>
+  <section>
+    <h2>BBL product epics</h2>
+    <table class="ladder-table"><thead><tr><th>Epic</th><th>Status</th><th>Goal</th><th>Home / next step</th></tr></thead><tbody>
+      <tr><td>Technique graph out of beta (GA fan-out)</td><td><span class="pill pill-warn">in-progress</span></td><td>G-022</td><td><code>docs/epics/technique-graph-ga-fanout.md</code> — three parallel lanes; grappling-arts-only scope, graph PUBLIC + beta badge</td></tr>
+      <tr><td>BJJ technique experience (curriculum port)</td><td><span class="pill pill-warn">in-progress</span></td><td>G-013</td><td><code>docs/epics/technique-graph-curriculum-port.md</code> — cloud-session hand-off epic</td></tr>
+      <tr><td>Lineage-explorer quality epic (sort filter · hostile review · fallow pass · Expo readiness)</td><td><span class="pill pill-neutral">queued</span></td><td>PL-030</td><td>planning-ledger §PL-030 — operator-elected 0709; queued behind the fork work</td></tr>
+      <tr><td>RankEntry unification (retire RankAward)</td><td><span class="pill pill-neutral">proposed</span></td><td>G-011</td><td><code>docs/product/black-belt-legacy/rankentry-unification-epic.md</code> — read-collapse done; table-drop parked post-send (G-011)</td></tr>
+      <tr><td>Design &amp; Experience push (galaxy · globe · directory/profile · technique · blog)</td><td><span class="pill pill-neutral">proposed</span></td><td>—</td><td><code>docs/product/black-belt-legacy/design-experience-epic.md</code> — needs an election + plan session</td></tr>
+      <tr><td>Gift/Comp membership + RBAC granting + tier-gated tree</td><td><span class="pill pill-neutral">draft spec</span></td><td>—</td><td><code>docs/product/black-belt-legacy/GIFT_MEMBERSHIP_AND_TIER_GATING_EPIC.md</code> — spec updated 2026-07-26; build not scheduled</td></tr>
+      <tr><td>Gi brand experience + content atoms</td><td><span class="pill pill-neutral">captured input</span></td><td>—</td><td><code>docs/product/black-belt-legacy/gi-brand-experience-and-content-atoms.md</code> — needs grill → epic</td></tr>
+      <tr><td>BBL lineage/profile visual expansion</td><td><span class="pill pill-neutral">parked</span></td><td>G-008</td><td>parked direction — revisit after explorer epic (PL-030)</td></tr>
+    </tbody></table>
+  </section>
+  <section>
+    <h2>Cross-portfolio &amp; process epics</h2>
+    <table class="ladder-table"><thead><tr><th>Epic</th><th>Status</th><th>Goal</th><th>Home / next step</th></tr></thead><tbody>
+      <tr><td><strong>Obsidian Dashboard Epic</strong> — vault-kit · dashboard · Hermes automation · email boards</td><td><span class="pill pill-good">active</span></td><td>G-014 (+G-015 · G-016/17)</td><td><code>docs/product/obsidian-dashboard/Obsidian_Dashboard_Epic.md</code> — THE epic this tab answers to; kepano obsidian-skills now installed user-level (0712); next: dashboard design lanes + Bases/Canvas prototypes</td></tr>
+      <tr><td>North Star — Bubble Builder Bento Box (custom card catalog creator)</td><td><span class="pill pill-good">active ref</span></td><td>—</td><td><code>docs/product/north-star-bubble-builder-bento-box.md</code> — north-star reference feeding G-005 + WS-E</td></tr>
+      <tr><td>GLL_Epic — Giddy-Lessons / Kaizen / /teach code-lessons</td><td><span class="pill pill-neutral">staged plan</span></td><td>G-025</td><td>plan stub <code>SESSION_0594</code> (staged, never run) + PL-007 Kaizen-cards-on-SotD row</td></tr>
+      <tr><td>WS-E — /cas /car /cac scaffold commands + component-lifecycle recipes</td><td><span class="pill pill-neutral">staged plan</span></td><td>—</td><td>plan stub <code>SESSION_0605</code> (staged, never run — NOT trimmed, never built)</td></tr>
+      <tr><td>Vault consolidation + SOT-per-brand vaults as repos</td><td><span class="pill pill-neutral">staged plan</span></td><td>PL-008</td><td>plan stub <code>SESSION_0595</code> (staged) — per-brand vaults w/ own docs-nav + graphify HTML</td></tr>
+      <tr><td>Post-launch clean-repo (repo health)</td><td><span class="pill pill-neutral">superseded?</span></td><td>—</td><td><code>docs/epics/post-launch-clean-repo-001.md</code> — largely absorbed by the 0711 fork + trim; needs a close-or-archive call</td></tr>
+      <tr><td>Five-repo fork fan-out (Phase C/D)</td><td><span class="pill pill-warn">in-progress</span></td><td>—</td><td>see the <strong>Fan-out</strong> tab — BBL done, 4 repos + ACD + Tuff Buffs pending</td></tr>
+    </tbody></table>
+    <p class="muted" style="margin-top:8px">Sources: <code>docs/epics/</code> · <code>docs/product/*/</code> epic-plan/spec files · goals-ledger G-rows · planning-ledger PL-rows · staged SESSION stubs. Some of these already appear as scattered "canon" cards on the BBL/MMB tabs — this tab is the consolidated view.</p>
+  </section>
+</section>
+<section class="brand-panel" data-panel="fanout" hidden>
+  <div id="fanout-root" data-repo="rdd">
+    <div class="panel-meta">Fork Fan-out Board — what each portfolio slot still needs (ADR 0055/0059) · frozen at SESSION_0712 · plan of record: <code>docs/sprints/plans/petey-plan-0711-brand-repo-separation.md</code></div>
+    <nav class="ftabs">
+    <button class="ftab active" data-tab="overview">Overview</button>
+    <button class="ftab" data-tab="bbl">BBL</button>
+    <button class="ftab" data-tab="mmb">Mammoth</button>
+    <button class="ftab" data-tab="bma">Baseline</button>
+    <button class="ftab" data-tab="usa">USA-Stick</button>
+    <button class="ftab" data-tab="rdd">RDD-Mono</button>
+    <button class="ftab" data-tab="acd">ACD</button>
+    <button class="ftab" data-tab="tb">Tuff Buffs</button>
+  </nav>
+
+<div class="fpanel active" data-panel="overview">
+  <section>
+    <h2>Where the fork stands</h2>
+    <p style="font-size:13.5px;margin:0 0 10px">Seven portfolio slots: <strong>five sibling repos</strong> on GitHub (forked at <code>ecefd008</code> with full shared
+    history) plus <strong>ACD</strong> (ratified brand, no repo yet) and <strong>Tuff Buffs</strong> (white-label instance of Baseline, being absorbed). <strong>black-belt-legacy is the only one trimmed</strong> (SESSION_0712, PR #343 — merge held for green CI + operator word).
+    <strong>No sibling has a local clone yet.</strong> Every repo already has the <code>main-pr-only</code> server ruleset (done 0712) and,
+    once PR #343's <code>settings.shared.json</code> commit is cherry-picked/merged into each, the bow-in-gates hook registration survives
+    fresh clones via bootstrap.</p>
+    <ul class="order">
+      <li><span class="n">1</span><div><strong>black-belt-legacy</strong> — finish the landing: CI green → squash-merge PR #343 → Phase D (fresh-clone build · Vercel preview · smoke). <span class="pill pill-accent" data-repo="bbl" style="background:hsl(1 79% 51%)">Phase C done</span></div></li>
+      <li><span class="n">2</span><div><strong>mammoth-metal-buildings</strong> — next session: clone + trim. The 2026-08-05 client cutover (PL-024, MVP due 08-07) makes it first among the siblings. Its rescued <code>.env</code> is parked at <code>~/dev/_secrets-parking/mammoth-build-crm/</code>.</div></li>
+      <li><span class="n">3</span><div><strong>baseline-martial-arts</strong> — clone + trim (same recipe, roles reversed: keep <code>apps/baseline</code>, delete <code>apps/web</code>).</div></li>
+      <li><span class="n">4</span><div><strong>usa-stickfighting</strong> — clone + trim; lightest repo (keeps the WEKAF kits; also adopt the 3 WEKAF brand-kit PNGs still tracked in BBL).</div></li>
+      <li><span class="n">5</span><div><strong>rdd-monorepo</strong> — clone only, NO trim (keeps everything; upstream-of-record). Cherry-pick the 0712 process-OS commits down; start the weekly RDD sync cadence.</div></li>
+      <li><span class="n">6</span><div><strong>ACD — Amy Coaches Data</strong> — ratified brand slot (ADR 0051, amycoachesdata.com) with <strong>no repo, no app, no code yet</strong> — nothing existed to fork. Its lane starts with a brand-scope decision, not a trim.</div></li>
+      <li><span class="n">7</span><div><strong>Tuff Buffs</strong> — <strong>white-label instance of Baseline</strong> (ADR 0051: transitional, being absorbed — not a peer repo). WordPress today; becomes a Baseline-skinned app (own deploy + DB) after Baseline's trim lands.</div></li>
+    </ul>
+    <h3>The invariant per-repo sequence (ADR 0059: session = one repo)</h3>
+    <div class="fladder">
+      <span class="fstop done">Clone</span><span class="fstop done">Bootstrap</span>
+      <span class="fstop done">C1 apps</span><span class="fstop done">C2 docs</span><span class="fstop done">C3 CI</span>
+      <span class="fstop done">C4 router</span><span class="fstop done">C5 era</span><span class="fstop done">C6 ADR</span>
+      <span class="fstop now">D1 build</span><span class="fstop now">D2 preview</span><span class="fstop now">D3 smoke</span>
+    </div>
+    <p class="muted">Black = proven once (this session, BBL). Accent = still to prove. Ratified calls that carry to every sibling:
+    fork-don't-rewrite (ordinary <code>git rm</code>, never filter-repo) · monotonic session numbers, era via <code>sprint:</code> (N1) ·
+    ADRs 0055+ one global sequence · full Graphify rebuild after the trim (incremental keeps phantoms).</p>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="acd" data-repo="acd">
+  <section>
+    <h2>ACD — Amy Coaches Data <span class="pill pill-accent" style="background:#7c3aed">brand slot · no repo yet</span></h2>
+    <p style="font-size:13.5px;margin:0 0 8px">Ratified 6th brand (ADR 0051): <strong>data/analytics coaching</strong> — PowerBI / Tableau / SQL / Python;
+    courses, certification, consulting · <code>amycoachesdata.com</code>. <strong>Load-bearing evidence</strong> that the kernel + module
+    library stay domain-agnostic (courses/cert/consulting modules must serve ACD <em>and</em> Baseline <em>and</em> BBL).
+    Not in the five-repo fork because nothing existed to fork — no repo, app, or code anywhere in the portfolio.</p>
+    <div class="fladder">
+      <span class="fstop now">Scope</span><span class="fstop na">Repo</span><span class="fstop na">Scaffold</span>
+      <span class="fstop na">Brand docs</span><span class="fstop na">Deploy</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Scope decision</td><td>Operator-grilled brand scope + first offer (courses? cert? consulting funnel?) — an interview/plan lane (the G-027 new-brand onboarding recipe family), not a build.</td></tr>
+      <tr><td>Create repo</td><td><code>Ronin-Dojo-Design/Amy-Coaches-Data</code> + <code>main-pr-only</code> ruleset (the four siblings got theirs at 0712 — ACD gets it at creation). Portfolio law: process OS comes from RDD-Monorepo, not hand-copied.</td></tr>
+      <tr><td>Scaffold app</td><td>Own app + own DB (ADR 0057); consumes <code>packages/ui-kit</code> from RDD upstream. Non-dojo voice — first real test of brand-agnostic modules.</td></tr>
+      <tr><td>Brand docs + deploy</td><td>BHB / PRD seeds, own Vercel project on <code>amycoachesdata.com</code>.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="tb" data-repo="tb">
+  <section>
+    <h2>Tuff Buffs <span class="pill pill-accent" style="background:#0e7490">white-label instance · being absorbed</span></h2>
+    <p style="font-size:13.5px;margin:0 0 8px">Ratified as the <strong>pilot white-label instance of Baseline</strong> (ADR 0051) — transitional,
+    <em>not</em> a peer brand repo. Lives on WordPress today (Local Sites checkout on this machine); its own Stripe account exists
+    (the CLI-auth trap: <code>acct_1T065a…</code> is Tuff Buffs, not BBL). The instance model: each white-label customer = a
+    brand-skinned app with its own deploy + DB, produced by the Baseline brand.</p>
+    <div class="fladder">
+      <span class="fstop done">WP live</span><span class="fstop na">Baseline trim</span><span class="fstop na">Instance app</span>
+      <span class="fstop na">Content/commerce migrate</span><span class="fstop na">WP sunset</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Blocked on</td><td>baseline-martial-arts trim landing (repo #3 on this board) — the instance is produced FROM the Baseline app.</td></tr>
+      <tr><td>Instance app</td><td>Baseline-skinned deploy (own Vercel project + DB per ADR 0057), brand skin via the proven CSS-snippet/token pipeline. Lives in the Baseline repo unless/until a contractual handoff (ADR 0033 D1).</td></tr>
+      <tr><td>Migrate</td><td>Content + members + Stripe products off WordPress; keep the existing Tuff Buffs Stripe account.</td></tr>
+      <tr><td>Sunset</td><td>WordPress retired; domain cut over. Done-means: the WP Local Site is archive-only.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="bbl" data-repo="bbl">
+  <section>
+    <h2>black-belt-legacy <span class="pill pill-good">Phase C done · PR #343 open</span></h2>
+    <div class="keepkill">
+      <div class="kk keep"><strong>Keeps</strong><code>apps/web</code> · <code>packages/ui-kit</code> · <code>packages/api-client</code> · BBL product docs · process OS</div>
+      <div class="kk kill"><strong>Removed (0712)</strong><code>apps/baseline</code> · <code>apps/rdd</code> · <code>clients/mammoth-build-crm</code> · 62 other-brand doc files</div>
+    </div>
+    <div class="fladder">
+      <span class="fstop done">Clone</span><span class="fstop done">Bootstrap</span>
+      <span class="fstop done">C1</span><span class="fstop done">C2</span><span class="fstop done">C3</span>
+      <span class="fstop done">C4</span><span class="fstop done">C5</span><span class="fstop done">C6</span>
+      <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Status / done-means</th></tr></thead><tbody>
+      <tr><td>CI green</td><td><span class="pill pill-warn">in flight</span> PR #343 checks running — this run IS C3's "one green CI run" done-means.</td></tr>
+      <tr><td>Squash-merge</td><td><span class="pill pill-neutral">held</span> Operator word after green (ADR 0056 flow).</td></tr>
+      <tr><td>D1 fresh-clone build</td><td>Fresh clone → <code>bun install</code> → typecheck → build, all exit 0. (Local build already green; the fresh-clone form is the proof.)</td></tr>
+      <tr><td>D2 Vercel preview</td><td>Preview URL renders from the trimmed repo.</td></tr>
+      <tr><td>D3 smoke</td><td>Auth-gated or funnel page loads against BBL's own DB; recorded in the SESSION file.</td></tr>
+      <tr><td>Hygiene riders</td><td>Prune 6 stale pre-fork worktrees + 1 agent worktree · pre-0304 petey-plan/lanes archive sweep · WEKAF PNGs → USA-Stick · ADR 0055/0059 frontmatter · full <code>graphify update</code> rebuild at bow-out.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="mmb" data-repo="mmb">
+  <section>
+    <h2>mammoth-metal-buildings <span class="pill pill-crit">next · cutover 08-05</span></h2>
+    <div class="keepkill">
+      <div class="kk keep"><strong>Keeps</strong><code>clients/mammoth-build-crm</code> (its app — promote toward <code>apps/</code> at trim time) · <code>packages/*</code> · Mammoth product docs (restore from shared history: they were trimmed OUT of BBL, they live in every sibling's DAG)</div>
+      <div class="kk kill"><strong>Deletes</strong><code>apps/web</code> · <code>apps/baseline</code> · <code>apps/rdd</code> · BBL/Baseline/RDD product docs</div>
+    </div>
+    <div class="fladder">
+      <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+      <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+      <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+      <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Clone</td><td><code>git clone https://github.com/Ronin-Dojo-Design/mammoth-metal-buildings.git ~/dev/mammoth-metal-buildings</code></td></tr>
+      <tr><td>Restore .env</td><td>Move the parked secrets in: <code>~/dev/_secrets-parking/mammoth-build-crm/.env</code> → the client app dir. Then delete the parking copy.</td></tr>
+      <tr><td>Bootstrap</td><td>Run bootstrap (post-#343 it also copies <code>settings.shared.json</code> → hook registration). Ruleset already live ✅.</td></tr>
+      <tr><td>C1–C6</td><td>Reuse the SESSION_0712 recipe (task log in BBL's <code>docs/sprints/SESSION_0712.md</code>). C5: monotonic numbers + <code>sprint:</code> era per the N1 call.</td></tr>
+      <tr><td>D1–D3</td><td>Build · preview · smoke against Mammoth's own DB/Vercel project (mammothmb.com).</td></tr>
+      <tr><td>Watch out</td><td>PL-024 delivery pressure — trim must not eat the MVP runway; the trim session is small (repo has ONE app). Stripe CLI is authed to the Tuff Buffs account (memory: <code>[bbl]</code> profile trap) — verify before any payment work.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="bma" data-repo="bma">
+  <section>
+    <h2>baseline-martial-arts <span class="pill pill-neutral">queued</span></h2>
+    <div class="keepkill">
+      <div class="kk keep"><strong>Keeps</strong><code>apps/baseline</code> · <code>packages/*</code> · Baseline product docs (restore from shared history) · white-label runbooks</div>
+      <div class="kk kill"><strong>Deletes</strong><code>apps/web</code> · <code>apps/rdd</code> · <code>clients/mammoth-build-crm</code> · BBL/MMB/RDD product docs</div>
+    </div>
+    <div class="fladder">
+      <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+      <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+      <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+      <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Clone + bootstrap</td><td>Same as Mammoth; ruleset already live ✅. Needs its own <code>apps/baseline/.env</code> (the old bootstrap's baseline block was removed from BBL — recreate per its runbook).</td></tr>
+      <tr><td>C1–C6</td><td>SESSION_0712 recipe, roles reversed. Known pre-existing red: <code>apps/baseline</code> typecheck (SESSION_0555 FINDING_02, still open) — surfaces here, budget for it in D1.</td></tr>
+      <tr><td>D1–D3</td><td>Build · preview · smoke on its own DB (ADR 0057). Tuff Buffs pilot context lives with this brand.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="usa" data-repo="usa">
+  <section>
+    <h2>usa-stickfighting <span class="pill pill-neutral">queued · lightest</span></h2>
+    <div class="keepkill">
+      <div class="kk keep"><strong>Keeps</strong>WEKAF brand kits + any USA/WEKAF docs · <code>packages/*</code> (until it grows an app)</div>
+      <div class="kk kill"><strong>Deletes</strong>all four other brands' apps + docs</div>
+    </div>
+    <div class="fladder">
+      <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+      <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+      <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+      <span class="fstop na">D1</span><span class="fstop na">D2</span><span class="fstop na">D3</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Clone + trim</td><td>Smallest session of the fan-out — no app of its own yet, so C1 deletes ALL apps; C3 CI goes docs-gates-only; D1–D3 are N/A until an app exists.</td></tr>
+      <tr><td>Adopt assets</td><td>Pull the 3 WEKAF brand-kit PNGs still tracked in BBL (<code>docs/architecture/source/2026_04_28_WEKAF_USA_BRAND_KITS/</code>) — they're in shared history; just don't delete them here before USA's C2 confirms them present.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+<div class="fpanel" data-panel="rdd" data-repo="rdd">
+  <section>
+    <h2>rdd-monorepo <span class="pill pill-neutral">no trim — upstream-of-record</span></h2>
+    <div class="keepkill">
+      <div class="kk keep"><strong>Keeps</strong>EVERYTHING — all apps, all docs, ui-kit + process OS upstream. Portfolio law lands here first, syncs down by cherry-pick.</div>
+      <div class="kk kill"><strong>Deletes</strong>nothing (that's the point)</div>
+    </div>
+    <div class="fladder">
+      <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+      <span class="fstop na">C1</span><span class="fstop na">C2</span><span class="fstop na">C3</span>
+      <span class="fstop na">C4</span><span class="fstop na">C5</span><span class="fstop na">C6</span>
+      <span class="fstop now">Sync ritual</span>
+    </div>
+    <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+      <tr><td>Clone</td><td><code>~/dev/rdd-monorepo</code> — NOT the old <code>~/dev/ronin-dojo-monorepo</code> (that's the pre-fork WP repo, a different thing).</td></tr>
+      <tr><td>Cherry-pick up</td><td>Process-OS commits from BBL PR #343 that are portfolio law: <code>settings.shared.json</code> + bootstrap copy, ADR renumber fix, FS-0042 minter fix, G10 guardrail.</td></tr>
+      <tr><td>Weekly sync</td><td>ONE weekly RDD sync session (ADR 0059) incl. <code>scripts/vault-snapshot.sh</code>; unpinned days start with portfolio triage here.</td></tr>
+    </tbody></table>
+  </section>
+</div>
+
+    <div class="muted" style="margin-top:10px"><p><strong>Projection only</strong> — the plan of record is <code>petey-plan-0711-brand-repo-separation.md</code> + each repo's SESSION files.
+  Frozen at SESSION_0712; re-render by hand when a sibling lands its trim. Ratified calls baked in: ADR 0055 (fork-don't-rewrite) ·
+  ADR 0059 (session = one repo, RDD upstream) · N1 (monotonic numbers, era via <code>sprint:</code>) · ADR 0056 rulesets live on all five ✅.</p></div>
+  </div>
+</section>
+<section class="recently-added"><h2>Recently added</h2>
+    <h3>Recipe cards · templates · product assets</h3>
+    <ul><li class="artifact-row">
+        <span class="pill pill-neutral">asset</span>
+        <span class="artifact-title">slide 01 title</span>
+        <span class="muted">MMB · 2026-07-26 · <code>docs/product/mammoth-build/assets/slide-01-title.png</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">asset</span>
+        <span class="artifact-title">rdd mammoth pitch deck</span>
+        <span class="muted">MMB · 2026-07-25 · <code>docs/product/mammoth-build/assets/rdd-mammoth-pitch-deck.html</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — Overnight Orchestrator Waves (rolling multi-wave autonomous fan-out)</span>
+        <span class="muted">RDD · 2026-07-24 · <code>docs/protocols/recipes/overnight-orchestrator-waves.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — Client Meeting Intake (meeting notes → grilled, routed intake)</span>
+        <span class="muted">RDD · 2026-07-23 · <code>docs/protocols/recipes/client-meeting-intake.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — Desi Design Review (cross-brand consistency + reuse pass)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/desi-design-review.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — Live Fanout Sweep (one attended session: dispatch → review → merge N disjoint lanes)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/live-fanout-sweep.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — Quality Suite (merged-trunk code-quality pass)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/quality-suite.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — UI/UX Pass (hierarchy / friction / accessibility)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/ui-ux-pass.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — New-Brand Client Interview (client requirements + handoff)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/new-brand-interview-client.md</code></span>
+      </li><li class="artifact-row">
+        <span class="pill pill-neutral">recipe</span>
+        <span class="artifact-title">Recipe — State Sweep (assess repo-state + ledger status/clean + autonomous-lane prep)</span>
+        <span class="muted">RDD · 2026-07-21 · <code>docs/protocols/recipes/state-sweep.md</code></span>
+      </li><li class="more">+18 more artifact(s)</li></ul></section>
+<section class="risk-watch"><h2>Risk watch</h2><ul><li class="risk-row"><span class="pill pill-warn">P1</span> #4 — Optional production secrets — triaged, deferred (SESSION_0465) <span class="muted">(High)</span></li><li class="risk-row"><span class="pill pill-warn">P1</span> #6 — Private media boundary — triaged, confirmed real + deferred (SESSION_0465) <span class="muted">(High)</span></li><li class="risk-row"><span class="pill pill-warn">P1</span> #7 — PII/payment log leakage — triaged, no live leak + deferred guardrail (SESSION_0465) <span class="muted">(High → Medium)</span></li><li class="risk-row"><span class="pill pill-warn">P1</span> #8 — Payment/access drift <span class="muted">(Medium-high)</span></li><li class="risk-row"><span class="pill pill-warn">P1</span> #13 — Prod Neon DB credential exposed in session transcripts — rotation overdue (SESSION_0449/0450) <span class="muted">(High)</span></li><li class="risk-row"><span class="pill pill-neutral">P2</span> #9 — Dirstarter template model debt <span class="muted">(Medium)</span></li><li class="risk-row"><span class="pill pill-neutral">P2</span> #10 — AI/MCP data leakage <span class="muted">(Medium)</span></li><li class="risk-row"><span class="pill pill-neutral">P2</span> #11 — Platform-admin org super-user scope (SESSION_0448) <span class="muted">(Medium)</span></li><li class="risk-row"><span class="pill pill-neutral">P2</span> #12 — Public org-resolution owner-email PII exposure (SESSION_0448) <span class="muted">(Medium)</span></li></ul></section>
+<section class="needs-you"><h2>Needs you</h2><ul><li>Ratification pending — <strong>G-021</strong> Mammoth lean operating shell + sales-cockpit tracer</li></ul></section>
+</main>
+<footer>
+  <p><strong>Projection only</strong> — ledgers stay the source of truth. Sources:
+  <code>docs/sprints/SESSION_*.md</code> frontmatter · <code>docs/knowledge/wiki/goals-ledger.md</code> ·
+  <code>scripts/ledger-backlog.ts --json</code> (which also carries the live <code>gh pr list</code>
+  PR count folded in above). Regenerate: <code>bun scripts/state-of-project.ts</code>. See
+  <code>docs/protocols/state-of-project-projection.md</code> for the re-render ritual.</p>
+  <p>Rendered 2026-07-26T18:02:10.718Z</p>
+</footer>
+<script>
+document.documentElement.setAttribute("data-brand","rdd")
+document.querySelectorAll(".tab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var brand = btn.getAttribute("data-tab")
+    document.documentElement.setAttribute("data-brand", brand)
+    document.querySelectorAll(".tab").forEach(function(b){
+      var on = b === btn
+      b.classList.toggle("active", on)
+      b.setAttribute("aria-selected", String(on))
+    })
+    document.querySelectorAll(".brand-panel").forEach(function(p){
+      p.hidden = p.getAttribute("data-panel") !== brand
+    })
+  })
+})
+
+var fr = document.getElementById("fanout-root")
+if (fr) fr.querySelectorAll(".ftab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var t = btn.getAttribute("data-tab")
+    fr.querySelectorAll(".ftab").forEach(function(b){ b.classList.toggle("active", b===btn) })
+    fr.querySelectorAll(".fpanel").forEach(function(p){ p.classList.toggle("active", p.getAttribute("data-panel")===t) })
+    fr.setAttribute("data-repo", (t==="overview") ? "rdd" : t)
+  })
+})
+</script>
+

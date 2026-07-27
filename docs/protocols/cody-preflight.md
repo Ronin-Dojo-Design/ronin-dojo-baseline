@@ -44,6 +44,24 @@ Rules: a red gate blocks writing code — fix the breach or take it to the opera
 `max_count` or extend an allowlist to get green** (that is an operator/ADR decision). Record the
 gate result (`✓` or the breach id) in the pre-flight output.
 
+## §0b — No orphan front-end (UI / render / dashboard work — runs BEFORE code)
+
+If this task renders UI, a page, a dashboard, or any HTML/visual output, answer these in the
+pre-flight output **before writing a line** (FS-0044, SESSION_0714; agent-systems-map §4):
+
+1. **What LIVE data source feeds this render?** Name it (a ledger, a query, an API, a data file).
+   A render must be backed by its live/dynamic backend — never a disconnected flat front-end or a
+   hardcoded copy of sample data.
+2. **Does the operator have a reference artifact / mock for this?** If yes, **open it first** —
+   it is the **fidelity spec**, and "done" means *the renderer reproduces it from the live data*,
+   not a static copy. Cite the artifact file in the pre-flight. If unsure whether one exists, ask.
+3. **Live-vs-bespoke split:** state which parts come from live data (stay live) and which bespoke
+   narrative becomes structured data so it regenerates deterministically.
+
+A "yes, artifact exists" that you did not open, or a render with no named live source, is a red
+gate — resolve it or take it to the operator before building. Verification (Doug/Desi) diffs the
+result **against the reference artifact**, not just the plan's done-means.
+
 ## Scope
 
 This protocol covers three work types:

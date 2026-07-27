@@ -119,9 +119,18 @@ reads its operator-set order (`apps/web/scripts/board-backlog.ts`) and bow-out m
 | Mutate git **only** from the `ronin-dojo-app` cwd | Mutate from the read-only template cwd (guard blocks it) |
 | Rehearse prod flows off-prod (Stripe test-mode) | Touch **prod data** unrehearsed (Baseline prod is `sk_live`) |
 | Overwrite a file you created/read | Overwrite/delete something that contradicts how it was described — surface it first |
+| Build a render/UI from the **live** data source (name it); reproduce the operator's reference artifact from that data | **Ship an orphan front-end** — a static copy of a mock, or a UI not backed by the live data that feeds it; or build a UI when the operator has a reference artifact **without opening it first** (SESSION_0714, FS-0044) |
 
 > The senior framing the image gets right: design the **never-do** list first. Ours is enforced (shell-guards
 > + hooks), not just documented — see `CLAUDE.md` and [[explicit-push-authorization]] / [[operator-script-caution]].
+
+> **No orphan front-end (SESSION_0714, FS-0044) — a Pillar 4 ∩ Pillar 5 rule.** A render/UI is only "done"
+> when it is backed by its **live data source** (named), and — when the operator points at (or previously
+> hand-built) a reference artifact — when the renderer **reproduces that artifact from live data**. A static
+> mock is a *spec*, never the deliverable. The Pillar 5 half: **verification diffs the render against the
+> operator's reference artifact**, not just against the plan's done-means — else reviewers pass a well-built
+> *wrong* thing (the 0714 miss: flat sections shipped clean review, but they weren't the board the operator
+> asked for). Reviewer dispatch for any render lane names the reference artifact as the fidelity target.
 
 ## 5. Verification loops — "reliability is created after the code is written"
 

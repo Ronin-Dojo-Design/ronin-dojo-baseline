@@ -32,6 +32,10 @@ demand, not per turn.
 - **Default to Petey orchestration** for multi-part/unclear lanes (`docs/protocols/petey-plan.md`
   → Cody builds → Doug verifies). The 5-pillar map + task→workflow router + allowed-vs-never
   table: `docs/knowledge/wiki/agent-systems-map.md`.
+- **No orphan front-end** — every render/UI is backed by **live data from the SoT** (name the
+  source); if the operator has a reference artifact, **open it FIRST and reproduce it from live
+  data** — a mock is a spec, never the deliverable, and verification diffs against that artifact
+  (agent-systems-map §4 never-do; FS-0044, SESSION_0714).
 - **Bow-out = full close** (`docs/rituals/closing.md`): deep items, Graphify refresh, and the
   **finding router** (closing.md §6.7) — wiring→WL, drift→D, SOP miss→FS, unclean
   close→incidents, smoke boundary→MB, decision→ADR.

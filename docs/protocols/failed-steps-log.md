@@ -1096,6 +1096,35 @@ Read this section at bow-in instead of skimming every individual entry.
   not only the happy path.
 - **Status:** mitigated (lock synced + verified; recipe-gate routed this session).
 
+### FS-0044 — a render lane built a flat UI instead of reproducing the operator's reference artifact
+
+- **Session:** SESSION_0714 (PL-032 SotD-usefulness, session A).
+- **What happened:** the lane's plan said "bake Epics + Fan-out **panels** into
+  `scripts/state-of-project.ts`" and named the operator's SESSION_0712 hand-built artifact "the
+  mock." It was built as two **flat appended sections**, NOT a reproduction of the 6-tab board the
+  operator had hand-built and liked. Doug (GO 9.2) and Desi both **passed** it — because they
+  verified it was *well-built against the plan's done-means*, never against the operator's artifact.
+  The operator caught the gap on review: "the WHOLE POINT was to build the thing I said I wanted —
+  look at the 0712 artifact and build that." A full build + review cycle was spent on the wrong thing.
+- **Root cause (two layers):** (1) the plan under-specified **fidelity** — it never said "reproduce
+  the operator's artifact" or named it as the spec, so "panels" was read as *new flat sections*.
+  (2) **No agent opened the operator's existing artifact before building**, and the verification loop
+  (Pillar 5) diffed against the plan, not the reference. Same family as FS-0037 / LR 0007: the thing
+  that would have prevented it (open Brian's artifact, build to it) sat outside the executed read-path.
+- **Corrective action:** (1) this row; (2) **memory** `no-orphan-frontend` (feedback) + MEMORY.md
+  pointer; (3) **CLAUDE.md** standing directive "No orphan front-end" (read every session);
+  (4) **agent-systems-map §4** allowed-vs-never never-do row + the Pillar 4∩5 note (verification
+  diffs against the reference artifact); (5) **cody-preflight §0b** — a pre-code gate for any
+  UI/render task: name the live data source; if a reference artifact exists, open it and reproduce
+  it (a "yes, exists" you didn't open = red gate). (6) re-scoped the session (grill: A = full parity)
+  to reproduce the artifact deterministically; spec saved at
+  `docs/product/black-belt-legacy/_sotd-spec/SESSION_0712-artifact-target.html`.
+- **Lesson:** a render is "done" only when it is backed by live data AND reproduces the operator's
+  reference artifact; verification must diff against that artifact, not the plan's done-means. A mock
+  is a spec, never the deliverable.
+- **Status:** mitigated (memory + 4 read-path guards landed this session; the corrected build is in
+  flight).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
