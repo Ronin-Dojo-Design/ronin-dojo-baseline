@@ -8,6 +8,11 @@
 # prose — is the canonical fan-out source the renderer reads.
 #
 # status vocabulary: done · in-progress · pending · n-a · created
+#
+# NOTE: every free-text `note:` scalar is DOUBLE-QUOTED on purpose. `Bun.YAML.parse` (the renderer's
+# parser) treats an unquoted ` #` as an inline comment and SILENTLY truncates the value — a PR/issue
+# ref like `#343` would drop everything after it (Desi/Doug, SESSION_0714; see FAILED_STEPS). Keep
+# new notes quoted.
 title: Fork Fan-out Board
 recipe: docs/sprints/plans/petey-plan-0711-brand-repo-separation.md
 steps:
@@ -27,46 +32,46 @@ slots:
     source: rename of ronin-dojo-baseline
     domain: blackbeltlegacy.com
     status: done
-    note: Trim-to-brand complete (SESSION_0712, PR #343) — apps/web only, CI 9/9 green.
+    note: "Trim-to-brand complete (SESSION_0712, PR #343) — apps/web only, CI 9/9 green."
   - key: baseline
     label: Baseline Martial Arts
     repo: baseline-martial-arts
     source: fork of ronin-dojo-baseline
     domain: baselinemartialarts.com
     status: pending
-    note: Cloned at ecefd008, main-pr-only ruleset active; trim not started (own session).
+    note: "Cloned at ecefd008, main-pr-only ruleset active; trim not started (own session)."
   - key: mammoth
     label: Mammoth Metal Buildings
     repo: mammoth-metal-buildings
     source: fork of ronin-dojo-baseline
     domain: mammothmb.com
     status: in-progress
-    note: SESSION_0713 Mammoth trim (C1–C6 + D1–D3), 08-05 cutover pressure; .env restored from parking.
+    note: "SESSION_0713 Mammoth trim (C1–C6 + D1–D3), 08-05 cutover pressure; .env restored from parking."
   - key: usa-stickfighting
     label: USA Stickfighting
     repo: usa-stickfighting
     source: fork of ronin-dojo-baseline
     domain: per its app (WEKAF)
     status: pending
-    note: Cloned at ecefd008, ruleset active; trim not started; WEKAF brand-kit PNGs route here.
+    note: "Cloned at ecefd008, ruleset active; trim not started; WEKAF brand-kit PNGs route here."
   - key: rdd-monorepo
     label: RDD Monorepo
     repo: rdd-monorepo
     source: fork (keeps everything)
     domain: ronindojodesign.com
     status: n-a
-    note: Upstream-of-record for process OS + packages/ui-kit — keeps everything by design, never trimmed.
+    note: "Upstream-of-record for process OS + packages/ui-kit — keeps everything by design, never trimmed."
   - key: amy-coaches-data
     label: Amy Coaches Data
     repo: amy-coaches-data
     source: created fresh (no fork history)
     domain: amycoachesdata.com
     status: created
-    note: Ratified 6th brand; empty private repo + ruleset live, no app/code yet — scope/interview session pending.
+    note: "Ratified 6th brand; empty private repo + ruleset live, no app/code yet — scope/interview session pending."
   - key: tuff-buffs
     label: Tuff Buffs
     repo: (WordPress instance, no peer repo)
     source: pilot white-label instance of Baseline
     domain: tuffbuffs (WP today)
     status: pending
-    note: Transitional instance (ADR 0051) — WordPress today; path = Baseline-skinned instance app → migrate → WP sunset.
+    note: "Transitional instance (ADR 0051) — WordPress today; path = Baseline-skinned instance app → migrate → WP sunset."

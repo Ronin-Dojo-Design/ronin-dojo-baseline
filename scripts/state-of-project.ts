@@ -311,15 +311,24 @@ function statusPill(status: string): string {
   return "neutral"
 }
 
+/** A status pill holds ONE glanceable token. Ledger statuses carry qualifiers ("QUEUED · operator ask",
+ * "in-progress — P1") — split on middot/em-dash (NOT hyphen, so "in-progress" survives) and keep only the
+ * leading token; the full status moves to the muted meta line (Desi, SESSION_0714). */
+function pillToken(status: string): string {
+  return status.split(/[·—]/)[0].trim() || status
+}
+
 function epicsSection(items: Item[]): string {
   const epics = loadEpics(items)
-  const rows = epics.map(
-    e => `<li class="epic-row">
-      <span class="pill pill-${statusPill(e.status)}">${esc(e.status)}</span>
+  const rows = epics.map(e => {
+    const token = pillToken(e.status)
+    const qualifier = e.status !== token ? ` · ${esc(e.status)}` : ""
+    return `<li class="epic-row">
+      <span class="pill pill-${statusPill(e.status)}">${esc(token)}</span>
       <span class="epic-title">${esc(e.title)}</span>
-      <span class="muted"><span class="src-tag">${esc(e.source)}</span> · <code>${esc(e.path)}</code></span>
-    </li>`,
-  )
+      <span class="muted"><span class="src-tag">${esc(e.source)}</span> · <code>${esc(e.path)}</code>${qualifier}</span>
+    </li>`
+  })
   return `<section class="epics"><h2>Epics <span class="count">${epics.length}</span></h2>
     <h3>docs/epics · product epic-plans · staged plan stubs · epic-flagged ledger rows</h3>
     <ul class="epic-list">${listOrEmpty(rows, "No epics found across the parsed sources.")}</ul></section>`
