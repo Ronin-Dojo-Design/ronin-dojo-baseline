@@ -8,11 +8,11 @@ Target repos (all `Ronin-Dojo-Design/`, private):
 
 | Repo | Source of | Vercel project(s) |
 |---|---|---|
-| Black-Belt-Legacy | rename of `ronin-dojo-baseline` | bbl (`blackbeltlegacy.com`) |
-| Baseline-Martial-Arts | fork | baseline (`baselinemartialarts.com`) |
-| Mammoth-Metal-Buildings | fork | mammoth (`mammothmb.com`) |
-| USA-Stickfighting | fork | (per its app) |
-| Ronin-Dojo-Design-Monorepo | fork, keeps everything | rdd (`ronindojodesign.com`) |
+| black-belt-legacy | rename of `ronin-dojo-baseline` | bbl (`blackbeltlegacy.com`) |
+| baseline-martial-arts | fork | baseline (`baselinemartialarts.com`) |
+| mammoth-metal-buildings | fork | mammoth (`mammothmb.com`) |
+| usa-stickfighting | fork | (per its app) |
+| rdd-monorepo | fork, keeps everything | rdd (`ronindojodesign.com`) |
 
 ## Phase A — prerequisites (gate: all green before any fork)
 
@@ -27,19 +27,19 @@ A4. **Operator push authorization** — explicit go for the fork wave (standing
 ## Phase B — fork mechanics (one tiny commit-free infra step per repo)
 
 B1. `gh repo create Ronin-Dojo-Design/<name> --private` for the four new repos
-    (Baseline-Martial-Arts, Mammoth-Metal-Buildings, USA-Stickfighting,
-    Ronin-Dojo-Design-Monorepo). Done-means: four empty private repos exist.
+    (baseline-martial-arts, mammoth-metal-buildings, usa-stickfighting,
+    rdd-monorepo). Done-means: four empty private repos exist.
 B2. Push full history into each: `git push --mirror` (or push `main` + tags explicitly
     if mirror is too broad — decide per repo at execution). Done-means: `main` HEAD sha
     identical across all five.
-B3. Rename the current repo: `gh repo rename Black-Belt-Legacy` on
+B3. Rename the current repo: `gh repo rename black-belt-legacy` on
     `ronin-dojo-baseline`. GitHub redirects old remotes — nothing breaks immediately.
     Done-means: old remote URL still fetches via redirect.
 B4. Update local remotes (canonical checkout + any live worktrees) to the new URLs.
-    Done-means: `git remote -v` shows canonical → Black-Belt-Legacy.
+    Done-means: `git remote -v` shows canonical → black-belt-legacy.
 B5. Vercel: repoint each project's git connection —
-    bbl → Black-Belt-Legacy · baseline → Baseline-Martial-Arts ·
-    mammoth → Mammoth-Metal-Buildings · rdd → Ronin-Dojo-Design-Monorepo.
+    bbl → black-belt-legacy · baseline → baseline-martial-arts ·
+    mammoth → mammoth-metal-buildings · rdd → rdd-monorepo.
     Done-means: a preview deploy triggers from each new repo.
 B6. Per-repo secrets audit: GitHub Actions secrets + Vercel env vars copied/scoped per
     repo; no cross-brand keys (Stripe live keys, Resend domain-scoped keys, Neon URLs)

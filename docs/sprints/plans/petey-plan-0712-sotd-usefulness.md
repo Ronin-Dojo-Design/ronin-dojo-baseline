@@ -15,7 +15,7 @@ backlinks:
 # Petey plan — PL-032 SotD usefulness (session A)
 
 Grill outcomes (operator, SESSION_0712 bow-out): **SotD home = RDD-Mono + per-brand routes**
-(portfolio SotD lives in Ronin-Dojo-Design-Monorepo / the RDD app; each brand repo keeps its
+(portfolio SotD lives in rdd-monorepo / the RDD app; each brand repo keeps its
 brand-scoped `/app/state`; cross-repo data via the existing GitHub-API fetch pattern) ·
 **slice = renderer first** · **build home = BBL, cherry-pick up IMMEDIATELY** (not waiting on
 the RDD weekly sync — whose day is still unset; set it at the RDD-Mono bootstrap session).

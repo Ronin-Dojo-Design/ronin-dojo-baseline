@@ -1,6 +1,9 @@
 # 0055 — Brand repo separation (fork, don't rewrite)
 
-Status: accepted (ratified by the operator, SESSION_0711). Supersedes legacy ADR 0034
+Status: accepted (ratified by the operator, SESSION_0711). Amended SESSION_0712
+(operator-ratified): repo names normalized to lowercase matching the local dev-folder
+convention, and the everything-repo renamed `rdd-monorepo` (was Ronin-Dojo-Design-Monorepo,
+already the chat-parlance shorthand); GitHub redirects cover old names. Supersedes legacy ADR 0034
 (one-monorepo-hosts-all); amends ADR 0051 (kernel → brand → app taxonomy survives; the
 "one monorepo hosts every brand's apps" clause dies).
 
@@ -23,11 +26,11 @@ ratio, cross-brand blast radius, and per-session context bloat.
 Fork the monorepo into five sibling repos, each carrying FULL shared history
 (fork-don't-rewrite: trim by ordinary deletion commits, never `git filter-repo`):
 
-1. **Black-Belt-Legacy** — rename of `ronin-dojo-baseline` (GitHub redirects old remotes).
-2. **Baseline-Martial-Arts**
-3. **Mammoth-Metal-Buildings**
-4. **USA-Stickfighting**
-5. **Ronin-Dojo-Design-Monorepo** — keeps everything; upstream-of-record for
+1. **black-belt-legacy** — rename of `ronin-dojo-baseline` (GitHub redirects old remotes).
+2. **baseline-martial-arts**
+3. **mammoth-metal-buildings**
+4. **usa-stickfighting**
+5. **rdd-monorepo** — keeps everything; upstream-of-record for
    `packages/ui-kit` and the process OS. Brand repos cherry-pick from it — the shared
    DAG makes cherry-picks trivial (identical blobs, no rebase surgery).
 

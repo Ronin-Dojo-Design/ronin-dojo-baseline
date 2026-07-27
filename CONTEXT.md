@@ -67,11 +67,11 @@ _Avoid_: "design review" used to mean a generic PR review.
 ### Multi-repo era (post ADR-0055 fork, SESSION_0711)
 
 **Brand repo**:
-One of the five sibling repos (Black-Belt-Legacy · Baseline-Martial-Arts · Mammoth-Metal-Buildings · USA-Stickfighting), forked with full shared history, trimmed to its brand.
+One of the five sibling repos (black-belt-legacy · baseline-martial-arts · mammoth-metal-buildings · usa-stickfighting), forked with full shared history, trimmed to its brand.
 _Avoid_: "monorepo" for these — only RDD-Monorepo keeps everything.
 
 **Upstream (RDD-Monorepo)**:
-Ronin-Dojo-Design-Monorepo — upstream-of-record for the kernel (ui-kit) and the process OS. Brand repos cherry-pick from it; nothing auto-syncs.
+rdd-monorepo — upstream-of-record for the kernel (ui-kit) and the process OS. Brand repos cherry-pick from it; nothing auto-syncs.
 _Avoid_: pushing brand-specific work into it.
 
 **Portfolio triage**:

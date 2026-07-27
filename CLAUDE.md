@@ -1,4 +1,4 @@
-# CLAUDE.md — Black-Belt-Legacy
+# CLAUDE.md — black-belt-legacy
 
 Standing context for every Claude Code session in this repo. This is a **router, not a rulebook**:
 subjects point to their homes; the rules themselves live in the referenced docs and in the
@@ -8,9 +8,9 @@ demand, not per turn.
 ## The repo (five-repo era — ADR 0055/0059)
 
 - **This is the Black Belt Legacy brand repo** (`/Users/brianscott/dev/black-belt-legacy`, remote
-  `Ronin-Dojo-Design/Black-Belt-Legacy`) — one of five sibling repos forked at `ecefd008` with
-  full shared history (fork-don't-rewrite). Siblings: Baseline-Martial-Arts ·
-  Mammoth-Metal-Buildings · USA-Stickfighting · **Ronin-Dojo-Design-Monorepo** (keeps
+  `Ronin-Dojo-Design/black-belt-legacy`) — one of five sibling repos forked at `ecefd008` with
+  full shared history (fork-don't-rewrite). Siblings: baseline-martial-arts ·
+  mammoth-metal-buildings · usa-stickfighting · **rdd-monorepo** (keeps
   everything; upstream-of-record for `packages/ui-kit` + the process OS — portfolio-wide law
   lands there first and syncs down by cherry-pick).
 - **Session = one repo** (ADR 0059). Other brands' work happens in their own checkouts, never
