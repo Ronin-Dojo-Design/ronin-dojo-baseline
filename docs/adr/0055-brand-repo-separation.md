@@ -1,3 +1,13 @@
+---
+title: "ADR 0055 — Brand repo separation (fork, don't rewrite)"
+slug: adr-0055-brand-repo-separation
+type: decision
+status: accepted
+created: 2026-07-26
+updated: 2026-07-27
+last_agent: claude-session-0712
+---
+
 # 0055 — Brand repo separation (fork, don't rewrite)
 
 Status: accepted (ratified by the operator, SESSION_0711). Amended SESSION_0712

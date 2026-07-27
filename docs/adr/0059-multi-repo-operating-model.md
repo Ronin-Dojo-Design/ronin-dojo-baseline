@@ -1,3 +1,13 @@
+---
+title: "ADR 0059 — Multi-repo daily operating model"
+slug: adr-0059-multi-repo-operating-model
+type: decision
+status: accepted
+created: 2026-07-26
+updated: 2026-07-26
+last_agent: claude-session-0711
+---
+
 # 0059 — Multi-repo daily operating model
 
 **Status:** accepted (SESSION_0711 grill, operator-ratified)

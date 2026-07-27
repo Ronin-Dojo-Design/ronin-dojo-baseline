@@ -6,7 +6,7 @@ Typed client package for the Expo mobile app (`apps/mobile/`).
 
 Provides the mobile auth client following the same `createAuthClient` pattern used in the web app (`apps/web/lib/auth-client.ts`). See [ADR 0009](../../docs/architecture/decisions/0009-mobile-auth-strategy.md).
 
-> **Scope today: auth stub only.** This package currently ships *only* the Better-Auth mobile wrapper — no
+> **Scope today: auth stub only.** This package currently ships _only_ the Better-Auth mobile wrapper — no
 > data/API client. The original ADR 0002 plan (a typed client consuming `app/api/v1/*`) is **superseded**:
 > `app/api/v1/*` was never built, and the ratified native data contract is **oRPC-internal + a generated
 > versioned `/api/v1` OpenAPI facade, deferred until a native client ships** (Option C hybrid — see the
