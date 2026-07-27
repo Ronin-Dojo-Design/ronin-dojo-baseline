@@ -1,77 +1,214 @@
 # Fork Fan-out Board — per-slot brand-repo separation status (ADR 0055 / 0059).
 #
-# Single source of truth for the SotD renderer's Fan-out section (PL-032). The fork RECIPE
-# (per-repo trim/validate steps) is uniform across brand slots and lives once in `recipe` below;
-# per-slot `status` + `note` track live progress. Update a slot when its trim advances (e.g. a
-# sibling trim lands its PR). The 0711 petey-plan enumerates only the five sibling repos + generic
-# C1–C6/D1–D3 steps and carries no per-slot live status, so this structured file — not the plan
-# prose — is the canonical fan-out source the renderer reads.
+# Single source of truth for the SotD renderer's Fan-out TAB (PL-032). This drives the 8-sub-tab
+# board (#fanout-root) the operator hand-built at SESSION_0712: an Overview panel + one panel per
+# portfolio slot (BBL · Mammoth · Baseline · USA-Stick · RDD-Mono · ACD · Tuff Buffs). Each panel's
+# `body` is the verbatim inner HTML of its `.fpanel` — bespoke narrative (keep/kill, Phase-C step
+# tables, ordered next-steps) that regenerates deterministically because it lives here as DATA.
 #
-# status vocabulary: done · in-progress · pending · n-a · created
-#
-# NOTE: every free-text `note:` scalar is DOUBLE-QUOTED on purpose. `Bun.YAML.parse` (the renderer's
-# parser) treats an unquoted ` #` as an inline comment and SILENTLY truncates the value — a PR/issue
-# ref like `#343` would drop everything after it (Desi/Doug, SESSION_0714; see FAILED_STEPS). Keep
-# new notes quoted.
+# WHY BLOCK SCALARS (`|-`), not quoted flow scalars: `Bun.YAML.parse` treats an unquoted ` #` in a
+# FLOW scalar as an inline comment and SILENTLY truncates (a `#343` PR ref would drop the rest —
+# Desi/Doug, SESSION_0714, see FAILED_STEPS). Inside a block scalar, `#` and `"` are LITERAL — no
+# comment processing, no quote-escaping. Every HTML body below is a block scalar for exactly this
+# reason. Frozen at SESSION_0712; hand-edit a panel's `body` when a sibling lands its trim.
 title: Fork Fan-out Board
-recipe: docs/sprints/plans/petey-plan-0711-brand-repo-separation.md
-steps:
-  - C1 delete other brands' apps/* + clients/*
-  - C2 delete other-brand docs/seeds
-  - C3 CI matrix prune to surviving app
-  - C4 lean CLAUDE.md router (~150 lines)
-  - C5 fresh SESSION era → _archive/<era>/
-  - C6 ADR subset (only brand-binding)
-  - D1 fresh clone → install → build
-  - D2 Vercel preview deploy
-  - D3 primary-funnel smoke
-slots:
+plan: docs/sprints/plans/petey-plan-0711-brand-repo-separation.md
+meta: |-
+  Fork Fan-out Board — what each portfolio slot still needs (ADR 0055/0059) · frozen at SESSION_0712 · plan of record: <code>docs/sprints/plans/petey-plan-0711-brand-repo-separation.md</code>
+# Sub-tab order (left→right). `repo` sets the #fanout-root accent when the panel is active
+# (overview borrows rdd's graphite). Panels are matched to tabs by `key`.
+tabs:
+  - { key: overview, label: Overview, repo: rdd }
+  - { key: bbl, label: BBL, repo: bbl }
+  - { key: mmb, label: Mammoth, repo: mmb }
+  - { key: bma, label: Baseline, repo: bma }
+  - { key: usa, label: USA-Stick, repo: usa }
+  - { key: rdd, label: RDD-Mono, repo: rdd }
+  - { key: acd, label: ACD, repo: acd }
+  - { key: tb, label: Tuff Buffs, repo: tb }
+panels:
+  - key: overview
+    # overview .fpanel carries no data-repo in the spec — it inherits #fanout-root's data-repo="rdd".
+    repo: ""
+    body: |-
+      <section>
+        <h2>Where the fork stands</h2>
+        <p style="font-size:13.5px;margin:0 0 10px">Seven portfolio slots: <strong>five sibling repos</strong> on GitHub (forked at <code>ecefd008</code> with full shared
+        history) plus <strong>ACD</strong> (ratified brand, no repo yet) and <strong>Tuff Buffs</strong> (white-label instance of Baseline, being absorbed). <strong>black-belt-legacy is the only one trimmed</strong> (SESSION_0712, PR #343 — merge held for green CI + operator word).
+        <strong>No sibling has a local clone yet.</strong> Every repo already has the <code>main-pr-only</code> server ruleset (done 0712) and,
+        once PR #343's <code>settings.shared.json</code> commit is cherry-picked/merged into each, the bow-in-gates hook registration survives
+        fresh clones via bootstrap.</p>
+        <ul class="order">
+          <li><span class="n">1</span><div><strong>black-belt-legacy</strong> — finish the landing: CI green → squash-merge PR #343 → Phase D (fresh-clone build · Vercel preview · smoke). <span class="pill pill-accent" data-repo="bbl" style="background:hsl(1 79% 51%)">Phase C done</span></div></li>
+          <li><span class="n">2</span><div><strong>mammoth-metal-buildings</strong> — next session: clone + trim. The 2026-08-05 client cutover (PL-024, MVP due 08-07) makes it first among the siblings. Its rescued <code>.env</code> is parked at <code>~/dev/_secrets-parking/mammoth-build-crm/</code>.</div></li>
+          <li><span class="n">3</span><div><strong>baseline-martial-arts</strong> — clone + trim (same recipe, roles reversed: keep <code>apps/baseline</code>, delete <code>apps/web</code>).</div></li>
+          <li><span class="n">4</span><div><strong>usa-stickfighting</strong> — clone + trim; lightest repo (keeps the WEKAF kits; also adopt the 3 WEKAF brand-kit PNGs still tracked in BBL).</div></li>
+          <li><span class="n">5</span><div><strong>rdd-monorepo</strong> — clone only, NO trim (keeps everything; upstream-of-record). Cherry-pick the 0712 process-OS commits down; start the weekly RDD sync cadence.</div></li>
+          <li><span class="n">6</span><div><strong>ACD — Amy Coaches Data</strong> — ratified brand slot (ADR 0051, amycoachesdata.com) with <strong>no repo, no app, no code yet</strong> — nothing existed to fork. Its lane starts with a brand-scope decision, not a trim.</div></li>
+          <li><span class="n">7</span><div><strong>Tuff Buffs</strong> — <strong>white-label instance of Baseline</strong> (ADR 0051: transitional, being absorbed — not a peer repo). WordPress today; becomes a Baseline-skinned app (own deploy + DB) after Baseline's trim lands.</div></li>
+        </ul>
+        <h3>The invariant per-repo sequence (ADR 0059: session = one repo)</h3>
+        <div class="fladder">
+          <span class="fstop done">Clone</span><span class="fstop done">Bootstrap</span>
+          <span class="fstop done">C1 apps</span><span class="fstop done">C2 docs</span><span class="fstop done">C3 CI</span>
+          <span class="fstop done">C4 router</span><span class="fstop done">C5 era</span><span class="fstop done">C6 ADR</span>
+          <span class="fstop now">D1 build</span><span class="fstop now">D2 preview</span><span class="fstop now">D3 smoke</span>
+        </div>
+        <p class="muted">Black = proven once (this session, BBL). Accent = still to prove. Ratified calls that carry to every sibling:
+        fork-don't-rewrite (ordinary <code>git rm</code>, never filter-repo) · monotonic session numbers, era via <code>sprint:</code> (N1) ·
+        ADRs 0055+ one global sequence · full Graphify rebuild after the trim (incremental keeps phantoms).</p>
+      </section>
+  - key: acd
+    repo: acd
+    body: |-
+      <section>
+        <h2>ACD — Amy Coaches Data <span class="pill pill-accent" style="background:#7c3aed">brand slot · no repo yet</span></h2>
+        <p style="font-size:13.5px;margin:0 0 8px">Ratified 6th brand (ADR 0051): <strong>data/analytics coaching</strong> — PowerBI / Tableau / SQL / Python;
+        courses, certification, consulting · <code>amycoachesdata.com</code>. <strong>Load-bearing evidence</strong> that the kernel + module
+        library stay domain-agnostic (courses/cert/consulting modules must serve ACD <em>and</em> Baseline <em>and</em> BBL).
+        Not in the five-repo fork because nothing existed to fork — no repo, app, or code anywhere in the portfolio.</p>
+        <div class="fladder">
+          <span class="fstop now">Scope</span><span class="fstop na">Repo</span><span class="fstop na">Scaffold</span>
+          <span class="fstop na">Brand docs</span><span class="fstop na">Deploy</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Scope decision</td><td>Operator-grilled brand scope + first offer (courses? cert? consulting funnel?) — an interview/plan lane (the G-027 new-brand onboarding recipe family), not a build.</td></tr>
+          <tr><td>Create repo</td><td><code>Ronin-Dojo-Design/Amy-Coaches-Data</code> + <code>main-pr-only</code> ruleset (the four siblings got theirs at 0712 — ACD gets it at creation). Portfolio law: process OS comes from RDD-Monorepo, not hand-copied.</td></tr>
+          <tr><td>Scaffold app</td><td>Own app + own DB (ADR 0057); consumes <code>packages/ui-kit</code> from RDD upstream. Non-dojo voice — first real test of brand-agnostic modules.</td></tr>
+          <tr><td>Brand docs + deploy</td><td>BHB / PRD seeds, own Vercel project on <code>amycoachesdata.com</code>.</td></tr>
+        </tbody></table>
+      </section>
+  - key: tb
+    repo: tb
+    body: |-
+      <section>
+        <h2>Tuff Buffs <span class="pill pill-accent" style="background:#0e7490">white-label instance · being absorbed</span></h2>
+        <p style="font-size:13.5px;margin:0 0 8px">Ratified as the <strong>pilot white-label instance of Baseline</strong> (ADR 0051) — transitional,
+        <em>not</em> a peer brand repo. Lives on WordPress today (Local Sites checkout on this machine); its own Stripe account exists
+        (the CLI-auth trap: <code>acct_1T065a…</code> is Tuff Buffs, not BBL). The instance model: each white-label customer = a
+        brand-skinned app with its own deploy + DB, produced by the Baseline brand.</p>
+        <div class="fladder">
+          <span class="fstop done">WP live</span><span class="fstop na">Baseline trim</span><span class="fstop na">Instance app</span>
+          <span class="fstop na">Content/commerce migrate</span><span class="fstop na">WP sunset</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Blocked on</td><td>baseline-martial-arts trim landing (repo #3 on this board) — the instance is produced FROM the Baseline app.</td></tr>
+          <tr><td>Instance app</td><td>Baseline-skinned deploy (own Vercel project + DB per ADR 0057), brand skin via the proven CSS-snippet/token pipeline. Lives in the Baseline repo unless/until a contractual handoff (ADR 0033 D1).</td></tr>
+          <tr><td>Migrate</td><td>Content + members + Stripe products off WordPress; keep the existing Tuff Buffs Stripe account.</td></tr>
+          <tr><td>Sunset</td><td>WordPress retired; domain cut over. Done-means: the WP Local Site is archive-only.</td></tr>
+        </tbody></table>
+      </section>
   - key: bbl
-    label: Black Belt Legacy
-    repo: black-belt-legacy
-    source: rename of ronin-dojo-baseline
-    domain: blackbeltlegacy.com
-    status: done
-    note: "Trim-to-brand complete (SESSION_0712, PR #343) — apps/web only, CI 9/9 green."
-  - key: baseline
-    label: Baseline Martial Arts
-    repo: baseline-martial-arts
-    source: fork of ronin-dojo-baseline
-    domain: baselinemartialarts.com
-    status: pending
-    note: "Cloned at ecefd008, main-pr-only ruleset active; trim not started (own session)."
-  - key: mammoth
-    label: Mammoth Metal Buildings
-    repo: mammoth-metal-buildings
-    source: fork of ronin-dojo-baseline
-    domain: mammothmb.com
-    status: in-progress
-    note: "SESSION_0713 Mammoth trim (C1–C6 + D1–D3), 08-05 cutover pressure; .env restored from parking."
-  - key: usa-stickfighting
-    label: USA Stickfighting
-    repo: usa-stickfighting
-    source: fork of ronin-dojo-baseline
-    domain: per its app (WEKAF)
-    status: pending
-    note: "Cloned at ecefd008, ruleset active; trim not started; WEKAF brand-kit PNGs route here."
-  - key: rdd-monorepo
-    label: RDD Monorepo
-    repo: rdd-monorepo
-    source: fork (keeps everything)
-    domain: ronindojodesign.com
-    status: n-a
-    note: "Upstream-of-record for process OS + packages/ui-kit — keeps everything by design, never trimmed."
-  - key: amy-coaches-data
-    label: Amy Coaches Data
-    repo: amy-coaches-data
-    source: created fresh (no fork history)
-    domain: amycoachesdata.com
-    status: created
-    note: "Ratified 6th brand; empty private repo + ruleset live, no app/code yet — scope/interview session pending."
-  - key: tuff-buffs
-    label: Tuff Buffs
-    repo: (WordPress instance, no peer repo)
-    source: pilot white-label instance of Baseline
-    domain: tuffbuffs (WP today)
-    status: pending
-    note: "Transitional instance (ADR 0051) — WordPress today; path = Baseline-skinned instance app → migrate → WP sunset."
+    repo: bbl
+    body: |-
+      <section>
+        <h2>black-belt-legacy <span class="pill pill-good">Phase C done · PR #343 open</span></h2>
+        <div class="keepkill">
+          <div class="kk keep"><strong>Keeps</strong><code>apps/web</code> · <code>packages/ui-kit</code> · <code>packages/api-client</code> · BBL product docs · process OS</div>
+          <div class="kk kill"><strong>Removed (0712)</strong><code>apps/baseline</code> · <code>apps/rdd</code> · <code>clients/mammoth-build-crm</code> · 62 other-brand doc files</div>
+        </div>
+        <div class="fladder">
+          <span class="fstop done">Clone</span><span class="fstop done">Bootstrap</span>
+          <span class="fstop done">C1</span><span class="fstop done">C2</span><span class="fstop done">C3</span>
+          <span class="fstop done">C4</span><span class="fstop done">C5</span><span class="fstop done">C6</span>
+          <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Status / done-means</th></tr></thead><tbody>
+          <tr><td>CI green</td><td><span class="pill pill-warn">in flight</span> PR #343 checks running — this run IS C3's "one green CI run" done-means.</td></tr>
+          <tr><td>Squash-merge</td><td><span class="pill pill-neutral">held</span> Operator word after green (ADR 0056 flow).</td></tr>
+          <tr><td>D1 fresh-clone build</td><td>Fresh clone → <code>bun install</code> → typecheck → build, all exit 0. (Local build already green; the fresh-clone form is the proof.)</td></tr>
+          <tr><td>D2 Vercel preview</td><td>Preview URL renders from the trimmed repo.</td></tr>
+          <tr><td>D3 smoke</td><td>Auth-gated or funnel page loads against BBL's own DB; recorded in the SESSION file.</td></tr>
+          <tr><td>Hygiene riders</td><td>Prune 6 stale pre-fork worktrees + 1 agent worktree · pre-0304 petey-plan/lanes archive sweep · WEKAF PNGs → USA-Stick · ADR 0055/0059 frontmatter · full <code>graphify update</code> rebuild at bow-out.</td></tr>
+        </tbody></table>
+      </section>
+  - key: mmb
+    repo: mmb
+    body: |-
+      <section>
+        <h2>mammoth-metal-buildings <span class="pill pill-crit">next · cutover 08-05</span></h2>
+        <div class="keepkill">
+          <div class="kk keep"><strong>Keeps</strong><code>clients/mammoth-build-crm</code> (its app — promote toward <code>apps/</code> at trim time) · <code>packages/*</code> · Mammoth product docs (restore from shared history: they were trimmed OUT of BBL, they live in every sibling's DAG)</div>
+          <div class="kk kill"><strong>Deletes</strong><code>apps/web</code> · <code>apps/baseline</code> · <code>apps/rdd</code> · BBL/Baseline/RDD product docs</div>
+        </div>
+        <div class="fladder">
+          <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+          <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+          <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+          <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Clone</td><td><code>git clone https://github.com/Ronin-Dojo-Design/mammoth-metal-buildings.git ~/dev/mammoth-metal-buildings</code></td></tr>
+          <tr><td>Restore .env</td><td>Move the parked secrets in: <code>~/dev/_secrets-parking/mammoth-build-crm/.env</code> → the client app dir. Then delete the parking copy.</td></tr>
+          <tr><td>Bootstrap</td><td>Run bootstrap (post-#343 it also copies <code>settings.shared.json</code> → hook registration). Ruleset already live ✅.</td></tr>
+          <tr><td>C1–C6</td><td>Reuse the SESSION_0712 recipe (task log in BBL's <code>docs/sprints/SESSION_0712.md</code>). C5: monotonic numbers + <code>sprint:</code> era per the N1 call.</td></tr>
+          <tr><td>D1–D3</td><td>Build · preview · smoke against Mammoth's own DB/Vercel project (mammothmb.com).</td></tr>
+          <tr><td>Watch out</td><td>PL-024 delivery pressure — trim must not eat the MVP runway; the trim session is small (repo has ONE app). Stripe CLI is authed to the Tuff Buffs account (memory: <code>[bbl]</code> profile trap) — verify before any payment work.</td></tr>
+        </tbody></table>
+      </section>
+  - key: bma
+    repo: bma
+    body: |-
+      <section>
+        <h2>baseline-martial-arts <span class="pill pill-neutral">queued</span></h2>
+        <div class="keepkill">
+          <div class="kk keep"><strong>Keeps</strong><code>apps/baseline</code> · <code>packages/*</code> · Baseline product docs (restore from shared history) · white-label runbooks</div>
+          <div class="kk kill"><strong>Deletes</strong><code>apps/web</code> · <code>apps/rdd</code> · <code>clients/mammoth-build-crm</code> · BBL/MMB/RDD product docs</div>
+        </div>
+        <div class="fladder">
+          <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+          <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+          <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+          <span class="fstop now">D1</span><span class="fstop now">D2</span><span class="fstop now">D3</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Clone + bootstrap</td><td>Same as Mammoth; ruleset already live ✅. Needs its own <code>apps/baseline/.env</code> (the old bootstrap's baseline block was removed from BBL — recreate per its runbook).</td></tr>
+          <tr><td>C1–C6</td><td>SESSION_0712 recipe, roles reversed. Known pre-existing red: <code>apps/baseline</code> typecheck (SESSION_0555 FINDING_02, still open) — surfaces here, budget for it in D1.</td></tr>
+          <tr><td>D1–D3</td><td>Build · preview · smoke on its own DB (ADR 0057). Tuff Buffs pilot context lives with this brand.</td></tr>
+        </tbody></table>
+      </section>
+  - key: usa
+    repo: usa
+    body: |-
+      <section>
+        <h2>usa-stickfighting <span class="pill pill-neutral">queued · lightest</span></h2>
+        <div class="keepkill">
+          <div class="kk keep"><strong>Keeps</strong>WEKAF brand kits + any USA/WEKAF docs · <code>packages/*</code> (until it grows an app)</div>
+          <div class="kk kill"><strong>Deletes</strong>all four other brands' apps + docs</div>
+        </div>
+        <div class="fladder">
+          <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+          <span class="fstop now">C1</span><span class="fstop now">C2</span><span class="fstop now">C3</span>
+          <span class="fstop now">C4</span><span class="fstop now">C5</span><span class="fstop now">C6</span>
+          <span class="fstop na">D1</span><span class="fstop na">D2</span><span class="fstop na">D3</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Clone + trim</td><td>Smallest session of the fan-out — no app of its own yet, so C1 deletes ALL apps; C3 CI goes docs-gates-only; D1–D3 are N/A until an app exists.</td></tr>
+          <tr><td>Adopt assets</td><td>Pull the 3 WEKAF brand-kit PNGs still tracked in BBL (<code>docs/architecture/source/2026_04_28_WEKAF_USA_BRAND_KITS/</code>) — they're in shared history; just don't delete them here before USA's C2 confirms them present.</td></tr>
+        </tbody></table>
+      </section>
+  - key: rdd
+    repo: rdd
+    body: |-
+      <section>
+        <h2>rdd-monorepo <span class="pill pill-neutral">no trim — upstream-of-record</span></h2>
+        <div class="keepkill">
+          <div class="kk keep"><strong>Keeps</strong>EVERYTHING — all apps, all docs, ui-kit + process OS upstream. Portfolio law lands here first, syncs down by cherry-pick.</div>
+          <div class="kk kill"><strong>Deletes</strong>nothing (that's the point)</div>
+        </div>
+        <div class="fladder">
+          <span class="fstop now">Clone</span><span class="fstop now">Bootstrap</span>
+          <span class="fstop na">C1</span><span class="fstop na">C2</span><span class="fstop na">C3</span>
+          <span class="fstop na">C4</span><span class="fstop na">C5</span><span class="fstop na">C6</span>
+          <span class="fstop now">Sync ritual</span>
+        </div>
+        <table class="steps"><thead><tr><th>Step</th><th>Notes / done-means</th></tr></thead><tbody>
+          <tr><td>Clone</td><td><code>~/dev/rdd-monorepo</code> — NOT the old <code>~/dev/ronin-dojo-monorepo</code> (that's the pre-fork WP repo, a different thing).</td></tr>
+          <tr><td>Cherry-pick up</td><td>Process-OS commits from BBL PR #343 that are portfolio law: <code>settings.shared.json</code> + bootstrap copy, ADR renumber fix, FS-0042 minter fix, G10 guardrail.</td></tr>
+          <tr><td>Weekly sync</td><td>ONE weekly RDD sync session (ADR 0059) incl. <code>scripts/vault-snapshot.sh</code>; unpinned days start with portfolio triage here.</td></tr>
+        </tbody></table>
+      </section>
+footer: |-
+  <div class="muted" style="margin-top:10px"><p><strong>Projection only</strong> — the plan of record is <code>petey-plan-0711-brand-repo-separation.md</code> + each repo's SESSION files.
+    Frozen at SESSION_0712; re-render by hand when a sibling lands its trim. Ratified calls baked in: ADR 0055 (fork-don't-rewrite) ·
+    ADR 0059 (session = one repo, RDD upstream) · N1 (monotonic numbers, era via <code>sprint:</code>) · ADR 0056 rulesets live on all five ✅.</p></div>

@@ -318,60 +318,151 @@ function pillToken(status: string): string {
   return status.split(/[·—]/)[0].trim() || status
 }
 
-function epicsSection(items: Item[]): string {
-  const epics = loadEpics(items)
-  const rows = epics.map(e => {
-    const token = pillToken(e.status)
-    const qualifier = e.status !== token ? ` · ${esc(e.status)}` : ""
-    return `<li class="epic-row">
+/** One live epic row — the format the operator likes (SESSION_0714 STEER): status pill + title +
+ * source tag + path, with any status qualifier moved to the muted meta line. Live-sourced; only the
+ * GROUPING (below) comes from the 0712 spec. */
+function epicRow(e: EpicRow): string {
+  const token = pillToken(e.status)
+  const qualifier = e.status !== token ? ` · ${esc(e.status)}` : ""
+  return `<li class="epic-row">
       <span class="pill pill-${statusPill(e.status)}">${esc(token)}</span>
       <span class="epic-title">${esc(e.title)}</span>
       <span class="muted"><span class="src-tag">${esc(e.source)}</span> · <code>${esc(e.path)}</code>${qualifier}</span>
     </li>`
-  })
-  return `<section class="epics"><h2>Epics <span class="count">${epics.length}</span></h2>
-    <h3>docs/epics · product epic-plans · staged plan stubs · epic-flagged ledger rows</h3>
-    <ul class="epic-list">${listOrEmpty(rows, "No epics found across the parsed sources.")}</ul></section>`
 }
 
-// --- Fan-out section -------------------------------------------------------------------------
+// The 0712 spec's four epic groups. The LIVE 13-row list (loadEpics) stays — the operator likes it
+// (source tags + status pills + paths). Only the GROUPING is borrowed from the spec (SESSION_0714
+// STEER). `epicGroup` is an ordered, first-match-wins rule derived from each row's source + path;
+// it is the whole categorization contract, so it lives here as one readable function (reported in
+// the session record) rather than a data file — it operates on live-parsed rows, not static text.
+type EpicGroup = "bbl-product" | "cross-portfolio" | "portfolio-ops" | "riders-staging"
+const EPIC_GROUP_ORDER: readonly EpicGroup[] = [
+  "bbl-product",
+  "cross-portfolio",
+  "portfolio-ops",
+  "riders-staging",
+] as const
+const EPIC_GROUP_LABEL: Record<EpicGroup, string> = {
+  "bbl-product": "BBL product epics",
+  "cross-portfolio": "Cross-portfolio & process epics",
+  "portfolio-ops": "Portfolio operations",
+  "riders-staging": "Riders, findings & staging",
+}
+
+/** Ordered, first-match-wins categorization (SESSION_0714 STEER). Rule, top to bottom:
+ *   1. staged plan stubs (`docs/sprints/plans/*`) → Riders, findings & staging.
+ *   2. epic-flagged PL/GL ledger rows → Portfolio operations (program-level rows).
+ *   3. BBL product docs (`docs/product/black-belt-legacy/*`) → BBL product epics.
+ *   4. `docs/epics/*technique*` (BBL technique epics) → BBL product epics.
+ *   5. everything else (obsidian-dashboard, north-star, post-launch-clean-repo, …) → Cross-portfolio. */
+function epicGroup(e: EpicRow): EpicGroup {
+  if (e.source === "plan stub") return "riders-staging"
+  if (e.source === "ledger") return "portfolio-ops"
+  if (e.path.startsWith("docs/product/black-belt-legacy/")) return "bbl-product"
+  if (e.path.startsWith("docs/epics/") && /technique/i.test(e.path)) return "bbl-product"
+  return "cross-portfolio"
+}
+
+function epicsPanel(items: Item[]): string {
+  const epics = loadEpics(items)
+  const groups = EPIC_GROUP_ORDER.map(g => {
+    const rows = epics.filter(e => epicGroup(e) === g).map(epicRow)
+    return `<section><h2>${esc(EPIC_GROUP_LABEL[g])} <span class="count">${rows.length}</span></h2>
+    <ul class="epic-list">${listOrEmpty(rows, "None in this group.")}</ul></section>`
+  }).join("\n")
+  return `<section class="brand-panel" data-panel="epics" hidden>
+  <div class="panel-meta">Every epic in one place — live-sourced (${epics.length} rows) from <code>docs/epics/</code> · product epic-plans · staged plan stubs · epic-flagged PL/GL ledger rows, grouped into the SESSION_0712 categories. Rows carry a source tag + status pill + path.</div>
+  ${groups}
+  <p class="muted" style="margin-top:8px">Grouping rule (SESSION_0714): plan stubs → Riders/staging · ledger rows → Portfolio operations · <code>docs/product/black-belt-legacy/*</code> &amp; <code>docs/epics/*technique*</code> → BBL product · everything else → Cross-portfolio &amp; process.</p>
+</section>`
+}
+
+// --- Fan-out tab (the 8-sub-tab board) -------------------------------------------------------
 //
-// The Fork Fan-out Board (7 portfolio slots) — SoT is `docs/protocols/fork-fanout.yml` (structured,
-// canonical), read via Bun's built-in YAML parser (no dependency). The 0711 petey-plan enumerates
-// only the five sibling repos + uniform C1–C6/D1–D3 steps and carries no per-slot live status, so
-// the yml — not the plan prose — is the fan-out source. A missing/parse-failing yml degrades to an
-// honest empty section rather than a hard fail.
+// The Fork Fan-out Board — SoT is `docs/protocols/fork-fanout.yml` (structured, canonical), read
+// via Bun's built-in YAML parser (no dependency). The yml carries the operator's SESSION_0712
+// board: an Overview panel + one panel per portfolio slot, each panel's `body` a verbatim HTML
+// fragment (block scalar → `#`/`"` literal, no comment-truncation). This renderer emits those
+// bodies RAW (trusted transcribed narrative); only tab keys/labels/repo are escaped as attributes.
+// A missing/parse-failing yml degrades to an honest empty panel rather than a hard fail.
 
-type FanoutSlot = { key: string; label: string; repo: string; source: string; domain: string; status: string; note: string }
-type FanoutDoc = { title?: string; recipe?: string; steps?: string[]; slots?: FanoutSlot[] }
+type FanoutTab = { key: string; label: string; repo?: string }
+type FanoutPanel = { key: string; repo?: string; body: string }
+type FanoutBoard = { title?: string; meta?: string; footer?: string; tabs?: FanoutTab[]; panels?: FanoutPanel[] }
 
-function loadFanout(): FanoutDoc | null {
+function loadFanout(): FanoutBoard | null {
   try {
     const raw = readFileSync(resolve(ROOT, "docs/protocols/fork-fanout.yml"), "utf-8")
-    return Bun.YAML.parse(raw) as FanoutDoc
+    return Bun.YAML.parse(raw) as FanoutBoard
   } catch {
     return null
   }
 }
 
-function fanoutSection(): string {
-  const doc = loadFanout()
-  const slots = doc?.slots ?? []
-  const cards = slots.map(
-    s => `<li class="fanout-card" data-status="${esc(s.status)}">
-      <div class="fanout-head"><span class="pill pill-${statusPill(s.status)}">${esc(s.status)}</span> <strong>${esc(s.label)}</strong></div>
-      <div class="fanout-repo"><code>${esc(s.repo)}</code> · <span class="muted">${esc(s.domain)}</span></div>
-      <div class="fanout-src muted">${esc(s.source)}</div>
-      <div class="fanout-note">${esc(s.note)}</div>
-    </li>`,
-  )
-  const steps = (doc?.steps ?? []).map(st => `<li>${esc(st)}</li>`).join("")
-  const recipe = doc?.recipe ? `<span class="muted">recipe: <code>${esc(doc.recipe)}</code></span>` : ""
-  return `<section class="fanout"><h2>Fork fan-out <span class="count">${slots.length}</span></h2>
-    <h3>Per-slot brand-repo separation status (ADR 0055/0059) ${recipe}</h3>
-    <ul class="fanout-grid">${listOrEmpty(cards, "No fan-out slots — docs/protocols/fork-fanout.yml missing or unreadable.")}</ul>
-    ${steps ? `<details class="fanout-steps"><summary>Uniform trim recipe (C1–C6 · D1–D3)</summary><ol>${steps}</ol></details>` : ""}
-  </section>`
+function fanoutPanel(): string {
+  const board = loadFanout()
+  if (!board?.tabs?.length) {
+    return `<section class="brand-panel" data-panel="fanout" hidden>
+  <p class="empty">Fan-out board unavailable — docs/protocols/fork-fanout.yml missing or unreadable.</p>
+</section>`
+  }
+  const ftabs = board.tabs
+    .map(
+      (t, i) =>
+        `<button class="ftab${i === 0 ? " active" : ""}" data-tab="${esc(t.key)}">${esc(t.label)}</button>`,
+    )
+    .join("\n    ")
+  const panels = (board.panels ?? [])
+    .map((p, i) => {
+      const repoAttr = p.repo ? ` data-repo="${esc(p.repo)}"` : ""
+      return `<div class="fpanel${i === 0 ? " active" : ""}" data-panel="${esc(p.key)}"${repoAttr}>
+${p.body}
+</div>`
+    })
+    .join("\n")
+  const initRepo = board.tabs[0]?.repo ?? "rdd"
+  return `<section class="brand-panel" data-panel="fanout" hidden>
+  <div id="fanout-root" data-repo="${esc(initRepo)}">
+    <div class="panel-meta">${board.meta ?? ""}</div>
+    <nav class="ftabs">
+    ${ftabs}
+  </nav>
+${panels}
+    ${board.footer ?? ""}
+  </div>
+</section>`
+}
+
+// --- What-landed tab -------------------------------------------------------------------------
+//
+// Per-snapshot "what this session accomplished" record — SoT is `docs/protocols/sotd-landed.yml`
+// (block-scalar section bodies, emitted raw). Bespoke narrative, not live-derivable; a
+// missing/parse-failing yml degrades to an honest empty panel.
+
+type LandedDoc = { meta?: string; sections?: { body: string }[] }
+
+function loadLanded(): LandedDoc | null {
+  try {
+    const raw = readFileSync(resolve(ROOT, "docs/protocols/sotd-landed.yml"), "utf-8")
+    return Bun.YAML.parse(raw) as LandedDoc
+  } catch {
+    return null
+  }
+}
+
+function landedPanel(): string {
+  const doc = loadLanded()
+  if (!doc) {
+    return `<section class="brand-panel" data-panel="landed" hidden>
+  <p class="empty">What-landed unavailable — docs/protocols/sotd-landed.yml missing or unreadable.</p>
+</section>`
+  }
+  const sections = (doc.sections ?? []).map(s => s.body).join("\n  ")
+  return `<section class="brand-panel" data-panel="landed" hidden>
+  <div class="panel-meta">${doc.meta ?? ""}</div>
+  ${sections}
+</section>`
 }
 
 // --- CSS ------------------------------------------------------------------------------------
@@ -440,17 +531,6 @@ h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute
 .epic-title{font-weight:600}
 .epic-row code{font-size:10px;word-break:break-all}
 .src-tag{display:inline-block;background:var(--line);color:var(--ink);border-radius:6px;padding:0 6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
-.fanout-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.fanout-card{border:1px solid var(--line);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:5px}
-.fanout-head{display:flex;gap:6px;align-items:center;font-size:13px}
-.fanout-repo{font-size:11px}
-.fanout-repo code{font-size:11px;word-break:break-all}
-.fanout-src{font-size:11px}
-.fanout-note{font-size:12px;color:var(--ink)}
-.fanout-steps{margin-top:12px;font-size:12px}
-.fanout-steps summary{cursor:pointer;color:var(--muted);font-weight:600}
-.fanout-steps ol{margin:8px 0 0;padding-left:20px}
-.fanout-steps li{margin-bottom:2px}
 footer{max-width:1100px;margin:0 auto;padding:16px;font-size:11px;color:var(--muted)}
 footer p{margin:4px 0}
 @media (max-width:700px){
@@ -466,18 +546,66 @@ footer p{margin:4px 0}
   .col[data-phase="done"]{order:0}
   .ladder-table{min-width:0}
 }
+
+/* --- Fan-out board (scoped) — the 8-sub-tab tab (#fanout-root) --- */
+#fanout-root{--accent:#3f3f46}
+#fanout-root[data-repo="bbl"]{--accent:hsl(1 79% 51%)}
+#fanout-root[data-repo="bma"]{--accent:#1d4ed8}
+#fanout-root[data-repo="mmb"]{--accent:#ff6a1a}
+#fanout-root[data-repo="usa"]{--accent:#16794f}
+#fanout-root[data-repo="acd"]{--accent:#7c3aed}
+#fanout-root[data-repo="tb"]{--accent:#0e7490}
+#fanout-root .ftabs{display:flex;gap:6px;margin:0 0 12px;flex-wrap:wrap}
+#fanout-root .ftab{border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 12px;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer}
+#fanout-root .ftab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+#fanout-root .fpanel{display:none}
+#fanout-root .fpanel.active{display:block}
+#fanout-root .fpanel section{padding:0;border:none;margin:0}
+#fanout-root .fladder{display:flex;gap:4px;margin:8px 0 4px;flex-wrap:wrap}
+#fanout-root .fstop{flex:1 1 56px;min-width:52px;text-align:center;font-size:9px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;padding:6px 2px;border-radius:5px;color:#fff;background:var(--neutral);opacity:.32;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#fanout-root .fstop.done{background:#111;opacity:1}
+#fanout-root .fstop.now{background:var(--accent);opacity:1}
+#fanout-root .fstop.na{background:#fff;color:var(--muted);border:1px dashed var(--line);opacity:1}
+#fanout-root .steps{width:100%;border-collapse:collapse;font-size:12.5px;min-width:560px}
+#fanout-root .steps th,#fanout-root .steps td{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+#fanout-root .steps th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#fanout-root .steps td:first-child{white-space:nowrap;font-weight:700}
+#fanout-root .order{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+#fanout-root .order li{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:13px}
+#fanout-root .order .n{flex:0 0 auto;width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px}
+#fanout-root .keepkill{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0}
+#fanout-root .kk{border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;flex:1 1 240px}
+#fanout-root .kk strong{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+#fanout-root .kk.keep strong{color:var(--good)}
+#fanout-root .kk.kill strong{color:var(--crit)}
+#fanout-root .pill-accent{background:var(--accent)}
+#fanout-root code{background:var(--page);border:1px solid var(--line);border-radius:4px;padding:0 4px;font-size:11.5px;word-break:break-all}
+@media (max-width:480px){ #fanout-root .steps{min-width:0} #fanout-root .steps td:first-child{white-space:normal} }
 `
 
 // --- page ------------------------------------------------------------------------------------
+
+// The six top-level tabs (SESSION_0712 artifact structure): the three live brand skins
+// (RDD · BBL · MMB) followed by the three consolidated tabs (Fan-out · Epics · What landed).
+// RDD is the default-active tab (index 0).
+const TOP_TABS: readonly { key: string; label: string }[] = [
+  ...BRAND_SKINS.map(b => ({ key: b.key as string, label: b.label })),
+  { key: "fanout", label: "Fan-out" },
+  { key: "epics", label: "Epics" },
+  { key: "landed", label: "What landed" },
+] as const
 
 function page(feed: Feed): string {
   const { items, sessions, goals, artifacts } = feed
   const prCount = items.filter(i => i.ledger === "PR").length
   const renderedAt = new Date().toISOString()
-  const panels = BRAND_SKINS.map((b, i) => brandPanel(b.key, i === 0, sessions, goals)).join("")
-  const tabs = BRAND_SKINS.map(
-    (b, i) =>
-      `<button class="tab${i === 0 ? " active" : ""}" data-tab="${b.key}" role="tab" aria-selected="${i === 0}">${esc(b.label)}</button>`,
+  // Brand panels stay LIVE (work board + goal ladders). Landed/Epics/Fan-out are the consolidated
+  // tabs; recently/risk/needs-you stay GLOBAL (rendered once, below all tab panels — matching the
+  // 0712 artifact, where they sit outside the tab-switched region and show under every tab).
+  const brandPanels = BRAND_SKINS.map((b, i) => brandPanel(b.key, i === 0, sessions, goals)).join("")
+  const tabs = TOP_TABS.map(
+    (t, i) =>
+      `<button class="tab${i === 0 ? " active" : ""}" data-tab="${esc(t.key)}" role="tab" aria-selected="${i === 0}">${esc(t.label)}</button>`,
   ).join("")
 
   return `<!doctype html><html lang="en" data-brand="${BRAND_SKINS[0].key}"><head><meta charset="utf-8">
@@ -492,9 +620,10 @@ function page(feed: Feed): string {
   <div class="meta">${sessions.length} sessions · ${goals.length} goals · ${prCount} open PR(s) · rendered ${esc(renderedAt)}</div>
 </header>
 <main>
-${panels}
-${epicsSection(items)}
-${fanoutSection()}
+${brandPanels}
+${landedPanel()}
+${epicsPanel(items)}
+${fanoutPanel()}
 ${recentlyAdded(artifacts ?? [])}
 ${riskWatch(items)}
 ${needsYou(sessions, goals)}
@@ -503,13 +632,15 @@ ${needsYou(sessions, goals)}
   <p><strong>Projection only</strong> — ledgers stay the source of truth. Sources:
   <code>docs/sprints/SESSION_*.md</code> frontmatter · <code>docs/knowledge/wiki/goals-ledger.md</code> ·
   <code>scripts/ledger-backlog.ts --json</code> (which also carries the live <code>gh pr list</code>
-  PR count folded in above). Epics parsed from <code>docs/epics/</code> · product epic-plans ·
-  <code>docs/sprints/plans/</code> stubs · epic-flagged PL/GL ledger rows. Fan-out from
-  <code>docs/protocols/fork-fanout.yml</code>. Regenerate: <code>bun scripts/state-of-project.ts</code>. See
+  PR count folded in above). Epics parsed LIVE from <code>docs/epics/</code> · product epic-plans ·
+  <code>docs/sprints/plans/</code> stubs · epic-flagged PL/GL ledger rows, grouped by the
+  SESSION_0714 rule. Fan-out board from <code>docs/protocols/fork-fanout.yml</code>; What-landed from
+  <code>docs/protocols/sotd-landed.yml</code>. Regenerate: <code>bun scripts/state-of-project.ts</code>. See
   <code>docs/protocols/state-of-project-projection.md</code> for the re-render ritual.</p>
   <p>Rendered ${esc(renderedAt)}</p>
 </footer>
 <script>
+document.documentElement.setAttribute("data-brand","rdd")
 document.querySelectorAll(".tab").forEach(function(btn){
   btn.addEventListener("click", function(){
     var brand = btn.getAttribute("data-tab")
@@ -522,6 +653,16 @@ document.querySelectorAll(".tab").forEach(function(btn){
     document.querySelectorAll(".brand-panel").forEach(function(p){
       p.hidden = p.getAttribute("data-panel") !== brand
     })
+  })
+})
+
+var fr = document.getElementById("fanout-root")
+if (fr) fr.querySelectorAll(".ftab").forEach(function(btn){
+  btn.addEventListener("click", function(){
+    var t = btn.getAttribute("data-tab")
+    fr.querySelectorAll(".ftab").forEach(function(b){ b.classList.toggle("active", b===btn) })
+    fr.querySelectorAll(".fpanel").forEach(function(p){ p.classList.toggle("active", p.getAttribute("data-panel")===t) })
+    fr.setAttribute("data-repo", (t==="overview") ? "rdd" : t)
   })
 })
 </script>
