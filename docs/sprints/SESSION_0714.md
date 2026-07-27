@@ -2,7 +2,7 @@
 title: "SESSION 0714 — PL-032 SotD renderer unification + BBL hygiene"
 slug: session-0714
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-27
 updated: 2026-07-27
 last_agent: claude-session-0714

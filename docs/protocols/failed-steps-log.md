@@ -1125,6 +1125,34 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Status:** mitigated (memory + 4 read-path guards landed this session; the corrected build is in
   flight).
 
+### FS-0045 — SESSION_0714 merged with `status: in-progress`; the bow-out status-flip was unenforced
+
+- **Session:** SESSION_0714 (caught by the operator from the rdd-monorepo session, same day).
+- **What happened:** SESSION_0714 was fully closed (/ggr 9.1, Doug GO) and its PR #343→#347 squash-
+  merged to `main`, but its frontmatter still read `status: in-progress` — the bow-out never flipped
+  it to `closed`. A cross-repo consumer (the rdd-monorepo portfolio-SotD build) then used
+  `status:` as its oracle for "last landed," skipped the genuinely-merged 0714, and rubber-stamped
+  a regression against a stale signal.
+- **Root cause:** the flip lives in `closing.md` (~line 94, "Frontmatter `status: closed`") but was
+  **NOT in the executed read-path**. `bow-out-gates.sh` Gate 13 checks only `updated:`/`last_agent:`
+  staleness, never `status:`; the `/bow-out` skill body didn't carry the flip. Closing against the
+  gate-runner's remainder checklist (which I did) never surfaced it. **Exact FS-0037 / FS-0044 class**
+  — a real step sitting outside the executed path — and it fired in the *same session* that added the
+  FS-0044 guard for the identical failure shape.
+- **Second-order lesson (operator, rdd session):** frontmatter `status:` **lags merged reality**, so
+  it is the WRONG oracle for "what landed." Since `main` is PR-only, every landing == a merged
+  `SESSION_NNNN` PR — compute "last landed" from `gh pr list --state merged`, never from `status:`.
+  The rdd portfolio-SotD was corrected to do this.
+- **Corrective action:** (1) this row; (2) flipped SESSION_0714 → `status: closed` (this PR);
+  (3) **`bow-out-gates.sh` Gate 13b** — detect-only scan flags any non-archive SESSION file left
+  `status: in-progress` on the remainder checklist (staged stubs excluded); (4) **`/bow-out` skill
+  body** carries the explicit flip step (read-path placement, like `/ggr` + the three questions);
+  (5) consumer-side rule recorded: last-landed = merged PRs, not `status:`.
+- **Lesson:** a mutation a ritual requires (flip `status: closed`) must be *enforced in the executed
+  path*, not left in prose; and a lagging field (`status:`) must never be the oracle when an
+  authoritative event (merged PR) exists.
+- **Status:** mitigated (0714 flipped + Gate 13b + skill-body step land this PR).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
