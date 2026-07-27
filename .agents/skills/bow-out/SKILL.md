@@ -11,6 +11,12 @@ Repo defaults (full standing directives in `CLAUDE.md`):
   pass (task-log, format-fix, wiki:lint, build-if-app-code, graphify, git state, ledger cross-off + backlog +
   fallow delta + hostile-review trigger) and prints a pre-filled evidence table + an LLM-remainder checklist.
   Work the checklist remainder; don't re-run gates by hand.
+- **MANDATORY before the push gate: flip the closing SESSION's frontmatter `status: in-progress` → `closed`**
+  (frontmatter `status:` is the single source of truth — SESSION_0342 / closing.md). The gate runner's
+  remainder checklist now flags any non-archive SESSION file left `in-progress` (Gate 13b) — **a merged/closed
+  session must NEVER stay `in-progress`** (FS-0045: SESSION_0714 shipped un-flipped because the step lived only
+  in `closing.md` prose, outside the executed path — the same FS-0037 read-path class as `/ggr` and the three
+  questions above). A staged next-session stub legitimately stays `staged`. In the skill body on purpose so it fires.
 - Run the **full** close — the optional deep items (Reflections, evidence table, ADR check, memory sweep, and
   documenting new components in `docs/knowledge/wiki/custom-component-inventory.md`).
 - **MANDATORY: run `/ggr` (the QAR gate) as the close review** (this IS `closing.md` §6.5 — do NOT also run a

@@ -389,6 +389,20 @@ while IFS= read -r file; do
   if [ -n "$reasons" ]; then STALE_FM="${STALE_FM}  - $file ($reasons)\n"; fi
 done <<< "$TOUCHED"
 
+# ── Gate 13b — SESSION status-flip check (FS-0045, detect-only) ───────────────
+# A closing/merged session must NOT stay `status: in-progress`. The flip to
+# `closed` lives in closing.md (line ~94) but was NOT in the executed read-path,
+# so SESSION_0714 merged un-flipped (FS-0044/0037 read-path class). Flag any
+# non-archive SESSION file still in-progress so the flip can't be silently dropped.
+# Detect-only — this script never edits; the LLM makes the flip.
+INPROGRESS_SESS=""
+for f in docs/sprints/SESSION_[0-9][0-9][0-9][0-9].md; do
+  [ -e "$f" ] || continue
+  head -1 "$f" | grep -q '^---' || continue
+  st="$(awk 'NR==1{next} /^---/{exit} {print}' "$f" | grep -E '^status:' | head -1 | sed -E 's/^status:[[:space:]]*//; s/["'\'']//g')"
+  if [ "$st" = "in-progress" ]; then INPROGRESS_SESS="${INPROGRESS_SESS}  - $f\n"; fi
+done
+
 # ═══ Emit copy-pasteable block 1 — Full close evidence (pre-filled) ══════════
 section "Copy-paste block 1"
 cat <<EVIDENCE
@@ -433,6 +447,12 @@ if [ -n "$STALE_FM" ]; then
   printf "%b" "$STALE_FM" | sed 's/^  //; s/^/      /'
 else
   echo "- [ ] Frontmatter staleness — no touched docs with stale updated:/missing last_agent."
+fi
+if [ -n "$INPROGRESS_SESS" ]; then
+  echo "- [ ] **Status flip (FS-0045)** — SESSION file(s) still \`status: in-progress\`; flip the CLOSING session to \`status: closed\` BEFORE finalizing (a merged/closed session must never stay in-progress — SESSION_0714 shipped un-flipped). A staged next-stub legitimately stays \`staged\`:"
+  printf "%b" "$INPROGRESS_SESS" | sed 's/^  //; s/^/      /'
+else
+  echo "- [ ] Status flip — no SESSION file left \`status: in-progress\` (closing session flipped to \`closed\`, or none open)."
 fi
 echo "- [ ] Memory sweep — capture any durable learnings into MEMORY.md."
 echo "- [ ] Finding-router — route findings to their canonical ledger (closing.md §6.7)."
