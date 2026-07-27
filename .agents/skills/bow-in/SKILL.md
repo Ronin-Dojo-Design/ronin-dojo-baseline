@@ -16,7 +16,9 @@ Repo defaults (full standing directives in `CLAUDE.md`):
   `doug` (verify); clear build → `cody` → `doug`. Reserve fan-out for genuinely-disjoint work; a one-file
   change is a single inline Cody. Hold at the push gate for the operator's word (explicit-push-authorization).
 - **MANDATORY before you Begin work (opening.md step 6b / step 7): ask Petey's three bow-in questions via
-  `AskUserQuestion`** — do NOT skip to building. ① **What are we doing?** (surface the elected lane) ②
+  `AskUserQuestion`** — do NOT skip to building. ⓪ **Was the previous session's goal accomplished?** — state
+  the verdict (YES / NO / EXTENDED + one line) from its record before anything else; an unmet goal is
+  today's first lane candidate (operator ask, SESSION_0712). ① **What are we doing?** (surface the elected lane) ②
   **What's queued?** (the ledger/board + prior `Next session`) ③ **Are we pivoting?** — **plus the
   State-of-Dojo publish ask:** cite the live, zero-token route **`/app/state`**, and ask **"want a frozen
   State-of-Dojo snapshot published?"** Publish an Artifact (`/preview-artifacts`) → paste the URL into the

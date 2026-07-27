@@ -4,7 +4,7 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-26
+updated: 2026-07-27
 last_agent: claude-session-0711
 pairs_with:
   - docs/rituals/opening.md
@@ -69,7 +69,7 @@ Two judgment gates ride along with the runner's output (formerly standalone step
   docs/config/thin-wrapper diffs.
 - **State-of-Dojo (SESSION_0617).** The render is deterministic (`bun scripts/state-of-project.ts` →
   gitignored `out/state-of-project.html`; the live route `/app/state` reflects `main` for 0 agent tokens).
-  **Petey's bow-out three questions** — ① goal hit / what landed? ② next lane (stage the stub)? ③ **publish
+  **Petey's bow-out three questions** — ① goal hit / what landed? (record a one-line **`## Goal verdict`** — YES / NO / EXTENDED + why — in the SESSION file) ② next lane (stage the stub)? ③ **publish
   a frozen SotD snapshot + push?** — are enforced in the executed `/bow-out` skill body (FS-0037: prose the
   read-path never reaches does not fire). Only on a *yes* to ③ publish an Artifact (`/preview-artifacts`)
   and paste the URL into `## Artifacts`; otherwise cite `/app/state`. Projection-only — a stale status it

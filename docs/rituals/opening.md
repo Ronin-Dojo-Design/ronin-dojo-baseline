@@ -4,7 +4,7 @@ slug: opening
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-26
+updated: 2026-07-27
 last_agent: claude-session-0712
 pairs_with:
   - docs/rituals/closing.md
@@ -240,6 +240,9 @@ Before step 7, **ask the operator these via `AskUserQuestion`** — a hard step,
 answer ①–③ from the context already loaded, but the ask is what surfaces a course-correction and forces the
 SotD decision to be the operator's:
 
+0. **Was the previous session's goal accomplished?** — state the verdict (YES / NO / EXTENDED + one
+   line) from its record/`## Goal verdict`; an unmet goal is today's first lane candidate
+   (operator ask, SESSION_0712).
 1. **What are we doing?** — the elected lane for this session (one sentence).
 2. **What's queued?** — the ledger/board backlog (step 1b) + the prior `Next session` block.
 3. **Are we pivoting?** — is the elected lane still right, or has the operator changed direction?
