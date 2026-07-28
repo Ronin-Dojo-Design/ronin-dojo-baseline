@@ -2,7 +2,7 @@
 title: "SESSION 0716 — SotD-script hygiene (loadEpics CRAP extract + landedPanel guard + BELT_WORD delete)"
 slug: session-0716
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-28
 updated: 2026-07-28
 last_agent: claude-session-0716
@@ -11,7 +11,7 @@ lane: bbl
 recipe: "fallow-fix-loop"
 goal_ids: [G-023]
 tickets: []
-next_session:
+next_session: docs/sprints/SESSION_0717.md
 pairs_with:
   - docs/sprints/SESSION_0714.md
   - docs/sprints/SESSION_0715.md
@@ -150,6 +150,15 @@ None blocking. Deferred: WEKAF residue → WL/D (bounded scope); deploy-scope ga
   next board-top BBL lane (FI-001 first-tester onboarding).
 - **First task:** Read FS-0046 + `package.json` workspaces + `scripts/tsconfig.json`; decide CI-step vs
   pre-push-hook placement, then implement + prove it catches a seeded type error.
+
+## Goal verdict
+
+**EXTENDED → YES.** The three parked cleanup items landed + merged (PR #349 → `main` `cb902449`):
+`loadEpics` CRAP **306 → 42** (extract + DRY `frontmatterEpicRow`), landedPanel/fanoutPanel empty-state
+guard symmetry, `BELT_WORD` deleted. Scope extended beyond the original three: the DRY builder, the
+kernel-surface + drift-register doc truth-ups, and **FS-0046** (a real CI gate gap Doug surfaced — the
+root `scripts/` tree is untypechecked by CI). `/ggr` 9.6 cleared; deferred WEKAF residue + deploy-scope
+gate (closed, keep all-brand) as agreed.
 
 ## Close evidence
 
