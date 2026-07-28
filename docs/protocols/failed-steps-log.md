@@ -4,7 +4,7 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-25
+updated: 2026-07-28
 last_agent: claude-session-0711
 pairs_with:
   - docs/rituals/closing.md
@@ -1152,6 +1152,24 @@ Read this section at bow-in instead of skimming every individual entry.
   path*, not left in prose; and a lagging field (`status:`) must never be the oracle when an
   authoritative event (merged PR) exists.
 - **Status:** mitigated (0714 flipped + Gate 13b + skill-body step land this PR).
+
+### FS-0046 — CI typecheck skips the root `scripts/` tree (a type error would ship past gates)
+
+- **Session:** SESSION_0716 (found by Doug in the `/ggr` verify pass).
+- **What happened:** the SotD hygiene lane refactored `scripts/state-of-project.ts` (added the
+  `frontmatterEpicRow` helper). CI's `bun run --filter '*' typecheck` only covers the `apps/*` +
+  `packages/*` workspaces (`package.json` workspaces) — `scripts/` is **not** a workspace and has no
+  `package.json`, so **no gate typechecks it**. A `scripts/tsconfig.json` exists but nothing runs it.
+  Doug had to hand-run `tsc -p scripts/tsconfig.json --noEmit` to prove the new helper type-checks; a
+  type error in any root script would merge green. `bun` executing the script is NOT type-proof — it
+  transpiles without checking.
+- **Root cause:** the typecheck gate is workspace-scoped; the root `scripts/` tree — which the bow-out
+  gate runner (`state-of-project.ts`) and the `/app/state` build both depend on — sits outside it.
+  Same "real check outside the executed read-path" family as FS-0037 / FS-0044 / FS-0045.
+- **Corrective action:** (1) this row; (2) **proposed fix** — add a `scripts/` typecheck step
+  (`tsc -p scripts/tsconfig.json --noEmit`) to CI and/or the pre-push gate. Deliberately NOT folded
+  into this hygiene lane (keeps its blast radius to the SotD script) — routed as a follow-up.
+- **Status:** open (fix proposed, not yet landed).
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

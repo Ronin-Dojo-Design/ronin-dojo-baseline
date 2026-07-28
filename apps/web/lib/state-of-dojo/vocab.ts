@@ -24,15 +24,6 @@ export const PHASE_LABEL: Record<Phase, string> = {
   done: "Done",
 }
 
-/** Belt-ladder words (dojo skins — RDD/BBL). The 5 BJJ belts; `held` = brown (ready-to-ship). */
-export const BELT_WORD: Record<Phase, string> = {
-  planned: "White",
-  "in-flight": "Blue",
-  review: "Purple",
-  held: "Brown",
-  done: "Black",
-}
-
 /**
  * Belt-ladder stop color per phase. **Brand-INVARIANT** (projection protocol): identical across every
  * brand tab — only the accompanying WORD swaps per skin, never the hue. **Theme-INVARIANT** too: a
@@ -90,8 +81,8 @@ export const DEPLOY_BRAND_KEY: ProductLane = "bbl"
  * every State-of-Dojo surface (dojo RDD/BBL *and* MMB) now speaks ONE vocabulary, `PHASE_LABEL`
  * (Planned / In flight / Review / Held / Done). The `belts` flag is kept in the signature (call
  * sites still thread `skin.belts`, so a future re-divergence is one line here) but no longer selects
- * a vocabulary. `BELT_WORD` above is retained for reference only — it has no live consumer after this
- * change; flag for cleanup, do not delete without operator sign-off.
+ * a vocabulary. (The old `BELT_WORD` belt-color map was deleted as a zero-consumer in SESSION_0716
+ * once operator-signed-off; re-add it here if a dojo skin ever re-diverges from `PHASE_LABEL`.)
  */
 export function phaseWord(phase: Phase, _belts: boolean): string {
   return PHASE_LABEL[phase]

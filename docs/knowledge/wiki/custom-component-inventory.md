@@ -4,7 +4,7 @@ slug: custom-component-inventory
 type: reference
 status: active
 created: 2026-05-18
-updated: 2026-07-26
+updated: 2026-07-28
 last_agent: claude-session-0692
 pairs_with:
   - docs/sprints/SESSION_0398.md
@@ -642,7 +642,7 @@ in-app feed — never duplicated. Projection-only law: never writes back to a le
 | Component | Path | Notable behavior |
 | --- | --- | --- |
 | `ProjectionPanelProps` (frozen contract) | `apps/web/components/app/state-of-dojo/_kernel/contract.ts` | THE mount contract 0599 WS-3 + WS-B/C build against. `{ compact?: boolean }` — do NOT widen per-panel (a panel needing more context self-fetches it). Enumerates the 4 panel paths + their named exports. |
-| phase vocabulary + brand-skin registry | `apps/web/components/app/state-of-dojo/_kernel/phase.ts` | `PHASES`/`PHASE_LABEL`/`BELT_WORD` + `PHASE_STOP_CLASS` (belt colors **brand-INVARIANT** — only the word swaps per skin). `BRAND_SKINS` (PL-005 fixed-hue tint via `--sotd-accent`; 3 lanes today, extensible to the 7-brand umbrella behind the RDD deploy). `MASTHEAD_TITLE` per deploy-skin ("State of the Dojo" / "…Building"). |
+| phase vocabulary + brand-skin registry | `apps/web/components/app/state-of-dojo/_kernel/phase.ts` | `PHASES`/`PHASE_LABEL` + `PHASE_STOP_CLASS` (belt colors **brand-INVARIANT** — only the word swaps per skin; the belt-COLOR-word map `BELT_WORD` was deleted as a zero-consumer in SESSION_0716 after PL-020 unified every skin on `PHASE_LABEL`). `BRAND_SKINS` (PL-005 fixed-hue tint via `--sotd-accent`; 3 lanes today, extensible to the 7-brand umbrella behind the RDD deploy). `MASTHEAD_TITLE` per deploy-skin ("State of the Dojo" / "…Building"). |
 | projection UI (`ProjectionCard`/`WorkBoard`/`PhaseLadder`/`GoalLadders`/`GoalLadderTable`/`BrandTabs`/`ProjectionSection`/`PanelSkeleton`/`PanelPlaceholder`) | `apps/web/components/app/state-of-dojo/_kernel/projection.tsx` | Composes L1 `Card`/`Badge`/`Tabs`/`Skeleton`/`EmptyList`. `BrandTabs` = the only client boundary (the `Tabs` primitive); each tab statically wraps its content in `data-brand` + `--sotd-accent` (no JS for the tint). `WorkBoard` caps the `done` column to 12 (true count in the header). |
 | `StatePanel` (real reference panel) | `apps/web/components/app/state-of-dojo/state-panel.tsx` | The live projection (work board · goal belt-ladders · cross-brand risk-watch + needs-you). Self-fetches via `fetch-state.ts`; maps sessions→`BoardCard`, goals→`LadderRow` (the source-specific glue the kernel stays free of). Mounted at `/app/state` + importable by 0599's `DashboardLanding`. |
 | `{ComponentCatalog,CardCatalog,Cookbook}Panel` (placeholders) | `apps/web/components/app/state-of-dojo/{component-catalog,card-catalog,cookbook}-panel.tsx` | Placeholder-returning at the frozen path/signature so 0599 WS-3 mounts today; WS-B/C replace the body (copy `state-panel.tsx`'s Suspense+async shape). |
