@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-26
+updated: 2026-07-28
 last_agent: claude-session-0712
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
@@ -23,7 +23,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 
 ### D-055 — Two State-of-Dojo renderers diverged (script vs _kernel vocabulary/scope layer)
 
-- **Source A:** `apps/web/components/app/state-of-dojo/_kernel/phase.ts` — the frozen kernel: `PHASES`, `BELT_WORD`, `PHASE_STOP_CLASS`, deploy-scope `VISIBLE_BRAND_SKINS` (env-gated), per-skin `MASTHEAD_TITLE`.
+- **Source A:** `apps/web/components/app/state-of-dojo/_kernel/phase.ts` — the frozen kernel: `PHASES`, `BELT_WORD`, `PHASE_STOP_CLASS`, deploy-scope `VISIBLE_BRAND_SKINS` (env-gated), per-skin `MASTHEAD_TITLE`. *(Historical snapshot — `BELT_WORD` since deleted as a zero-consumer, SESSION_0716; the private-copy line-refs below are pre-0714 and stale.)*
 - **Source B:** `scripts/state-of-project.ts` — keeps private copies of PHASES/PHASE_LABEL/BELT_WORD/BRANDS (`:57-76`) and a hardcoded masthead (`:329`); no deploy-scope gate (renders all 3 brands — leaks cross-brand data the live route suppresses); no per-skin masthead. They share the parse core only.
 - **Consequence:** every vocabulary/scope fix (e.g. PL-020 belt action-words) must land twice; the bow-out gate renders the stale script every close.
 - **Decision:** unify the script on the kernel — first step of the PL-032 SotD-usefulness lane.

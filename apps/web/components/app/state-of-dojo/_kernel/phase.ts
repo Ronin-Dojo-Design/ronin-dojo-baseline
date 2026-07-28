@@ -18,7 +18,6 @@ import { BRAND_SKINS, type BrandSkin, DEPLOY_BRAND_KEY } from "~/lib/state-of-do
 import type { VariantProps } from "~/lib/utils"
 
 export {
-  BELT_WORD,
   BRAND_SKINS,
   type BrandSkin,
   CURRENT_DEPLOY_SKIN,

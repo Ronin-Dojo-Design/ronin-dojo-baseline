@@ -261,48 +261,80 @@ function proseStatus(body: string): string {
     .trim()
 }
 
+/** Read a repo-relative file, "" on any failure (a missing epic source is a skipped row, not a crash). */
+function readRel(rel: string): string {
+  try {
+    return readFileSync(resolve(ROOT, rel), "utf-8")
+  } catch {
+    return ""
+  }
+}
+
+/** Glob repo-relative paths, locale-sorted for a stable render order. */
+function globSorted(pattern: string): string[] {
+  return [...new Bun.Glob(pattern).scanSync({ cwd: ROOT })].sort((a, b) => a.localeCompare(b))
+}
+
+/** 1. Hand-off epic docs — no frontmatter; the H1 is the name, source is the folder. */
+function epicDocRows(): EpicRow[] {
+  return globSorted("docs/epics/*.md").map(rel => {
+    const body = readRel(rel)
+    return { id: rel.replace(/^docs\/epics\//, "").replace(/\.md$/, ""), title: firstH1(body) || rel, status: "epic doc", source: "docs/epics", path: rel }
+  })
+}
+
+/** Shared builder for the two frontmatter-driven epic sources (product plans + plan stubs): the
+ * id/title/status precedence is identical — frontmatter field first, then a source-specific fallback
+ * (`statusFallback` reads the body so plan stubs can fall back to their prose `Status:` line). */
+function frontmatterEpicRow(
+  rel: string,
+  source: string,
+  idFallback: string,
+  statusFallback: (body: string) => string,
+): EpicRow {
+  const body = readRel(rel)
+  return {
+    id: frontmatterField(body, "slug") || idFallback,
+    title: frontmatterField(body, "title") || firstH1(body) || rel,
+    status: frontmatterField(body, "status") || statusFallback(body) || "—",
+    source,
+    path: rel,
+  }
+}
+
+/** 2. Product epic-plans — frontmatter-driven (case-insensitive `epic` in the filename). */
+function productEpicRows(): EpicRow[] {
+  return globSorted("docs/product/**/*.md")
+    .filter(p => /epic/i.test(p.split("/").pop() ?? ""))
+    .map(rel => frontmatterEpicRow(rel, "product", rel, () => ""))
+}
+
+/** 3. Staged plan stubs — frontmatter status where present, else the prose `Status:` line. */
+function planStubRows(): EpicRow[] {
+  return globSorted("docs/sprints/plans/*.md").map(rel =>
+    frontmatterEpicRow(rel, "plan stub", rel.split("/").pop()?.replace(/\.md$/, "") || rel, proseStatus),
+  )
+}
+
+/** 4. Epic-flagged PL/GL ledger rows — already parsed in the feed (DRY: one ledger read, not two). */
+function ledgerEpicRows(items: Item[]): EpicRow[] {
+  return items
+    .filter(i => (i.ledger === "PL" || i.ledger === "GL") && /\bepic\b/i.test(i.summary))
+    .map(i => ({ id: i.id, title: i.summary, status: i.status, source: "ledger", path: `docs/knowledge/wiki/${i.ledger === "PL" ? "planning" : "goals"}-ledger.md` }))
+}
+
 function loadEpics(items: Item[]): EpicRow[] {
-  const rows: EpicRow[] = []
-  const read = (rel: string): string => {
-    try {
-      return readFileSync(resolve(ROOT, rel), "utf-8")
-    } catch {
-      return ""
-    }
-  }
-  const glob = (pattern: string): string[] =>
-    [...new Bun.Glob(pattern).scanSync({ cwd: ROOT })].sort((a, b) => a.localeCompare(b))
-
-  // 1. Hand-off epic docs — no frontmatter; the H1 is the name, source is the folder.
-  for (const rel of glob("docs/epics/*.md")) {
-    const body = read(rel)
-    rows.push({ id: rel.replace(/^docs\/epics\//, "").replace(/\.md$/, ""), title: firstH1(body) || rel, status: "epic doc", source: "docs/epics", path: rel })
-  }
-
-  // 2. Product epic-plans — frontmatter-driven (case-insensitive `epic` in the filename).
-  const productEpics = [...glob("docs/product/**/*.md")].filter(p => /epic/i.test(p.split("/").pop() ?? ""))
-  for (const rel of productEpics) {
-    const body = read(rel)
-    rows.push({ id: frontmatterField(body, "slug") || rel, title: frontmatterField(body, "title") || firstH1(body) || rel, status: frontmatterField(body, "status") || "—", source: "product", path: rel })
-  }
-
-  // 3. Staged plan stubs — frontmatter status where present, else the prose `Status:` line.
-  for (const rel of glob("docs/sprints/plans/*.md")) {
-    const body = read(rel)
-    rows.push({ id: frontmatterField(body, "slug") || rel.split("/").pop()?.replace(/\.md$/, "") || rel, title: frontmatterField(body, "title") || firstH1(body) || rel, status: frontmatterField(body, "status") || proseStatus(body) || "—", source: "plan stub", path: rel })
-  }
-
-  // 4. Epic-flagged PL/GL ledger rows — already parsed in the feed (DRY: one ledger read, not two).
-  for (const i of items.filter(i => (i.ledger === "PL" || i.ledger === "GL") && /\bepic\b/i.test(i.summary))) {
-    rows.push({ id: i.id, title: i.summary, status: i.status, source: "ledger", path: `docs/knowledge/wiki/${i.ledger === "PL" ? "planning" : "goals"}-ledger.md` })
-  }
-
-  return rows
+  return [...epicDocRows(), ...productEpicRows(), ...planStubRows(), ...ledgerEpicRows(items)]
 }
 
 /** Map a free-text epic/slot status to a pill class, matching the base renderer's semantics: green
  * is reserved for genuinely complete work; in-motion (active/in-progress/staged/queued) reads amber;
- * dropped/blocked reads critical; everything else (epic doc, draft, n-a) is neutral. */
+ * dropped/blocked reads critical; everything else (epic doc, draft, n-a) is neutral.
+ *
+ * Two color axes intentionally diverge (Desi LOW, SESSION_0714 → documented 0716): this HEALTH pill
+ * (good/warn/crit/neutral) is orthogonal to the belt-ladder PHASE color (`PHASE_STOP_CLASS` in
+ * vocab.ts — white→black by pipeline position). A "done"/black-belt phase is not the green health
+ * pill and that is not a bug: one answers "how far along," the other "is it healthy." */
 function statusPill(status: string): string {
   const s = status.toLowerCase()
   if (/\b(done|shipped|live|complete|closed)\b/.test(s)) return "good"
@@ -404,7 +436,7 @@ function fanoutPanel(): string {
   const board = loadFanout()
   if (!board?.tabs?.length) {
     return `<section class="brand-panel" data-panel="fanout" hidden>
-  <p class="empty">Fan-out board unavailable — docs/protocols/fork-fanout.yml missing or unreadable.</p>
+  <p class="empty">Fan-out board unavailable — docs/protocols/fork-fanout.yml missing, unreadable, or empty.</p>
 </section>`
   }
   const ftabs = board.tabs
@@ -453,12 +485,14 @@ function loadLanded(): LandedDoc | null {
 
 function landedPanel(): string {
   const doc = loadLanded()
-  if (!doc) {
+  // Guard symmetry with fanoutPanel (Doug P3, SESSION_0716): a doc that parses but carries zero
+  // sections is an orphan panel (FS-0044) — degrade to the honest empty state, not a meta-only shell.
+  if (!doc?.sections?.length) {
     return `<section class="brand-panel" data-panel="landed" hidden>
-  <p class="empty">What-landed unavailable — docs/protocols/sotd-landed.yml missing or unreadable.</p>
+  <p class="empty">What-landed unavailable — docs/protocols/sotd-landed.yml missing, unreadable, or empty.</p>
 </section>`
   }
-  const sections = (doc.sections ?? []).map(s => s.body).join("\n  ")
+  const sections = doc.sections.map(s => s.body).join("\n  ")
   return `<section class="brand-panel" data-panel="landed" hidden>
   <div class="panel-meta">${doc.meta ?? ""}</div>
   ${sections}
