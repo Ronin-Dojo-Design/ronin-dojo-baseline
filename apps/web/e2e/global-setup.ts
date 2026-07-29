@@ -14,6 +14,7 @@ interface PlaywrightGlobalSetupDependencies {
   databaseUrl: string | undefined
   directUrl: string | undefined
   isCi: boolean
+  seedBaseReference: () => void
   seedFixture: () => string
   writeFixture: (fixture: unknown) => void
 }
@@ -23,12 +24,18 @@ export function runPlaywrightGlobalSetup({
   databaseUrl,
   directUrl,
   isCi,
+  seedBaseReference,
   seedFixture,
   writeFixture,
 }: PlaywrightGlobalSetupDependencies): void {
-  // This assertion deliberately precedes the Bun fixture bridge. A raw `playwright test` must
-  // fail closed before `seed-tournament-cli.ts` can perform its first database write.
+  // This assertion deliberately precedes every Bun DB bridge. A raw `playwright test` must
+  // fail closed before any seed can perform its first database write.
   assertLiteralLocalE2eUrls(databaseUrl, directUrl, { isCi })
+
+  // Static reference data (BJJ discipline + belt ladder) the migrate-only e2e DB never had.
+  // Must precede any spec: getBjjDisciplineId() / threeAscendingBjjRanks() throw without it
+  // (SESSION_0717). Idempotent — no-op when a ≥3-rank BJJ ladder already exists.
+  seedBaseReference()
 
   const rawFixture = seedFixture()
   writeFixture(JSON.parse(rawFixture))
@@ -39,6 +46,11 @@ async function globalSetup() {
     databaseUrl: process.env.DATABASE_URL,
     directUrl: process.env.DIRECT_URL,
     isCi: process.env.CI === "true",
+    seedBaseReference: () =>
+      execFileSync("bun", ["e2e/helpers/seed-base-reference-db.ts", "seed"], {
+        cwd: process.cwd(),
+        encoding: "utf-8",
+      }),
     seedFixture: () =>
       execFileSync("bun", ["e2e/helpers/seed-tournament-cli.ts", "seed"], {
         cwd: process.cwd(),
