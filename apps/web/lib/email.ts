@@ -120,6 +120,14 @@ const prepareEmail = async (email: EmailParams): Promise<CreateEmailOptions> => 
  * @returns The response from Resend, or undefined in development
  */
 export const sendEmail = async (email: EmailParams): Promise<CreateEmailResponse | undefined> => {
+  // SESSION_0718 down-sync (P1): CI e2e runs against a prod build (NODE_ENV=production) with
+  // no RESEND key. Short-circuit BEFORE the isProd key-guard below — otherwise magic-link
+  // sends (registration/claim specs) would throw. The specs read the token straight from the
+  // DB, so a real send is never needed under this transport.
+  if (env.EMAIL_E2E_TRANSPORT === "noop") {
+    return undefined
+  }
+
   // Resend isn't configured (CI, or local without a key): the `resend` client is
   // null, so skip the send instead of crashing the calling flow (Stripe webhooks,
   // notifications, DSR). In production a missing key is a real misconfiguration we

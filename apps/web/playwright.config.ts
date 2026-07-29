@@ -46,7 +46,14 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "bun run dev",
+    // SESSION_0718 down-sync (P1) — e2e flake root cause: `next dev --turbo` JIT-compiles
+    // routes on first hit via Turbopack. Under the sharded chromium CI load, first-compile
+    // of dynamic routes blew the 40s anon→login redirect assertion — a real signal flaking
+    // even on `main` with no code change. Fix: in CI serve a PRODUCTION build (`next build`
+    // runs as its own CI step; here we only `next start` the precompiled output), so zero
+    // JIT at test time → redirects resolve deterministically. Locally, `reuseExistingServer`
+    // reuses whatever dev server is on :3000; only if none is running does this spawn dev.
+    command: process.env.CI ? "bun run start" : "bun run dev",
     url: process.env.PW_BASE_URL ?? "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

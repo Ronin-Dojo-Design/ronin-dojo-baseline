@@ -62,14 +62,24 @@ test.describe("Org-claim loop (WL-P2-13)", () => {
   test("teaser → claim → admin approve → ownerId set → CTA gone", async ({ page }) => {
     // 1. Signed-out teaser on the org lens: claim headline + funnel-first sign-in door.
     await page.goto(`/organizations/${org.slug}`)
-    await expect(page.getByText(`Claim ${ORG_NAME}`)).toBeVisible({ timeout: 30_000 })
+    // ListingDetail mounts the claim CTA in a responsive dup (desktop + mobile slot, one
+    // CSS-hidden), so the bare text matches 2 nodes under the prod build's SSR DOM — scope
+    // to the visible one (SESSION_0717 P1 down-sync).
+    await expect(page.getByText(`Claim ${ORG_NAME}`).filter({ visible: true })).toBeVisible({
+      timeout: 30_000,
+    })
     const signInCta = page.getByRole("link", { name: "Sign in to claim" })
     await expect(signInCta).toBeVisible()
     await expect(signInCta).toHaveAttribute("href", new RegExp(`/auth/login\\?next=.*${org.slug}`))
 
     // 1b. The same org (type DOJO) serves the school lens with the same teaser.
     await page.goto(`/schools/${org.slug}`)
-    await expect(page.getByText(`Claim ${ORG_NAME}`)).toBeVisible({ timeout: 30_000 })
+    // ListingDetail mounts the claim CTA in a responsive dup (desktop + mobile slot, one
+    // CSS-hidden), so the bare text matches 2 nodes under the prod build's SSR DOM — scope
+    // to the visible one (SESSION_0717 P1 down-sync).
+    await expect(page.getByText(`Claim ${ORG_NAME}`).filter({ visible: true })).toBeVisible({
+      timeout: 30_000,
+    })
     await expect(page.getByRole("link", { name: "Sign in to claim" })).toBeVisible()
 
     // 2. The claimant signs in — the CTA now renders the claim form.
