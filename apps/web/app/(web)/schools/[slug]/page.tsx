@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { getPageMetadata } from "~/lib/pages"
-import { findSchoolBySlug, findSchoolSlugs } from "~/server/web/schools/queries"
+import { findSchoolBySlug } from "~/server/web/schools/queries"
 import { SchoolDetail } from "./_components/school-detail"
 import { loadSchoolDetail } from "./_components/school-detail/school-detail-data"
 
@@ -9,10 +9,13 @@ interface Props {
   params: Promise<{ slug: string }>
 }
 
-export async function generateStaticParams() {
-  const schools = await findSchoolSlugs()
-  return schools.map(({ slug }) => ({ slug }))
-}
+// Down-synced from rdd-monorepo SESSION_0718 (#14) — BBL live-prod P0. The school lens is
+// auth-personalized (claim CTA + owner controls read the session), so it cannot be
+// statically prerendered. With generateStaticParams + on-demand params, any school NOT in
+// the last build's prerender set threw DYNAMIC_SERVER_USAGE (500) — breaking the claim front
+// door for newly-created schools until the next deploy. force-dynamic serves them
+// per-request; still full SSR HTML, so SEO/crawlability is unaffected.
+export const dynamic = "force-dynamic"
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
