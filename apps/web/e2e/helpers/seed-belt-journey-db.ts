@@ -27,7 +27,6 @@ const adapter = new PrismaPg({
 })
 const prisma = new PrismaClient({ adapter })
 
-const TEST_BRAND = "BBL" as const
 const TAG_PREFIX = "session-0482-belt-e2e"
 
 export type BeltJourneyFixture = {
@@ -78,9 +77,12 @@ async function seed(): Promise<BeltJourneyFixture> {
       emailVerified: true,
       passport: {
         create: {
-          brand: TEST_BRAND,
+          // SESSION_0718 (lane 2): reconciled to the drifted BBL Passport model — the
+          // post-fork schema dropped `brand` and moved `directorySlug` to the
+          // DirectoryProfile relation. Both were write-only here (never read by the
+          // spec, the fixture output, or the /app/profile belts read-path), so they
+          // are dropped rather than relocated — the belt spec needs no directory listing.
           displayName: `Belt E2E ${uid}`,
-          directorySlug: `${TAG_PREFIX}-${uid}`,
         },
       },
     },
@@ -132,6 +134,21 @@ async function seed(): Promise<BeltJourneyFixture> {
     select: { id: true },
   })
 
+  // SESSION_0718 (lane 2): ADR 0058 made RankEntry the belt read model — the
+  // /app/profile belts tab loads RankEntry rows (status != PENDING) and joins each
+  // entry's RankAward for authority/fact-lock (`belt-tab-loader.ts`). The 1:1 RankEntry
+  // anchor (`rankAwardId @unique`) is what surfaces an award as an OWNED card; without
+  // it the rung renders as an unowned ladder card and the authority-lock hint never
+  // shows (the SESSION_0482 fixture predates the read-collapse and seeded RankAward
+  // only). Mirror prod: one VERIFIED RankEntry per graded award (White self-backfill +
+  // Blue authority). Purple stays award-less (above the ceiling → promotion flow).
+  await prisma.rankEntry.createMany({
+    data: [
+      { passportId, rankId: white.id, rankAwardId: whiteAward.id, status: "VERIFIED" },
+      { passportId, rankId: blue.id, rankAwardId: blueAward.id, status: "VERIFIED" },
+    ],
+  })
+
   return {
     userId: user.id,
     passportId,
@@ -148,20 +165,30 @@ async function seed(): Promise<BeltJourneyFixture> {
 }
 
 async function cleanup(fixture?: BeltJourneyFixture) {
-  const users = await prisma.user.findMany({
-    where: { email: { contains: TAG_PREFIX } },
-    select: { id: true, passport: { select: { id: true } } },
-  })
-  const userIds = users.map(u => u.id)
-  const passportIds = users.map(u => u.passport?.id).filter((id): id is string => Boolean(id))
+  // SESSION_0718 (lane 2): retry-safe scoping. With a fixture (the normal afterAll
+  // path) delete ONLY that fixture's rows. A Playwright retry re-seeds a fresh
+  // fixture under the SAME TAG_PREFIX, so a prefix-wide delete from the prior
+  // attempt's afterAll would race-delete the retry's just-created passport
+  // (RankAward_passportId_fkey). CI drop+rebuilds per run, so orphans never persist;
+  // the prefix sweep stays only as a fallback for a manual `cleanup` with no fixture.
+  const userIds: string[] = []
+  const passportIds: string[] = []
   if (fixture) {
     userIds.push(fixture.userId, fixture.instructorUserId)
     passportIds.push(fixture.passportId)
+  } else {
+    const users = await prisma.user.findMany({
+      where: { email: { contains: TAG_PREFIX } },
+      select: { id: true, passport: { select: { id: true } } },
+    })
+    userIds.push(...users.map(u => u.id))
+    passportIds.push(...users.map(u => u.passport?.id).filter((id): id is string => Boolean(id)))
   }
   if (userIds.length === 0 && passportIds.length === 0) return
 
-  // RankMilestone + MediaAttachment cascade from RankAward (Slice 2); delete awards,
-  // then passports, then users. Sessions cascade on user delete.
+  // RankEntry + RankMilestone + MediaAttachment cascade from RankAward (and RankEntry
+  // also cascades on passport delete); delete awards, then passports, then users.
+  // Sessions cascade on user delete.
   await prisma.rankAward.deleteMany({ where: { passportId: { in: passportIds } } })
   await prisma.passport.deleteMany({ where: { id: { in: passportIds } } })
   await prisma.session.deleteMany({ where: { userId: { in: userIds } } })

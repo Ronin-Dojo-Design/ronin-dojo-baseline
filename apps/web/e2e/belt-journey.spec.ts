@@ -116,10 +116,12 @@ beltJourney("Belt journey — member gating (operator-side smoke)", () => {
     await expect(dialog.getByText("Prof. Fixture")).toBeVisible()
     // Locked-filled facts expose the lightweight correction affordance (Desi P1-7).
     await expect(dialog.getByRole("link", { name: "Request a correction" })).toBeVisible()
-    // …while the EMPTY school fact exposes a fill affordance (the combobox trigger —
-    // a `role="combobox"` Button whose accessible name is the placeholder when empty).
+    // …while the EMPTY school fact exposes a fill affordance: the `role="combobox"`
+    // trigger renders its placeholder as the VALUE (not the accessible name — a
+    // combobox's name comes from a label, so a name-based getByRole never matches the
+    // placeholder). Target the combobox by its visible placeholder text instead.
     await expect(
-      dialog.getByRole("combobox", { name: /select or type your school/i }),
+      dialog.getByRole("combobox").filter({ hasText: /select or type your school/i }),
     ).toBeVisible()
     // And the story textarea is present (milestone is always member-editable).
     await expect(dialog.getByLabel("Your story")).toBeVisible()
