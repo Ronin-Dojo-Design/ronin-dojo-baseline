@@ -84,6 +84,49 @@ Per Doug's SESSION_0717 review:
   `authenticated-lifecycle` / `users-account-actions` / `admin-collection-conformance` / `bracket` / `scoring` /
   `public-rank-redaction`. Re-measure `registration.spec.ts`'s 45s (partly cold-mutation, not pure JIT) before touching.
 
+### SESSION_0718_TASK_02 — Lane 2 belt-journey (drift-fix done; CI-enable BLOCKED by smoke — stop + report)
+
+**File:** `apps/web/e2e/helpers/seed-belt-journey-db.ts`. **Not committed** (held).
+
+**Drift-fix (done + DB-verified):** dropped `brand: TEST_BRAND` + `directorySlug` from the fixture's
+`passport.create` (both removed from BBL's `Passport` post-fork) and the now-dead `TEST_BRAND` const.
+Both were write-only (never read by the spec, fixture output, or `/app/profile` belts read-path), so
+dropped rather than relocated to `DirectoryProfile` — the belt spec needs no directory listing.
+Verified: reconciled seed runs clean end-to-end (no `Unknown argument`; 0717 BJJ base-ref ranks
+resolve; fixture created + cleaned up).
+
+**Not a migration.** Schema already dropped the columns in a prior session; this is a fixture-code
+reconcile, zero schema/DB change → "no data loss" is trivial. (Bow-in args said "migration" — the
+stub itself says "only the fixture is broken.")
+
+**Smoke — RESOLVED to 4/4 GREEN on a clean DB** (operator: CI-enable, smoke-green first). Ran
+against a LOCAL PROD BUILD (`next build` + `next start` — CI-faithful; the Turbopack `dev:e2e`
+`adapterFn is not a function` was a dev/crash artifact — the prod build compiled + served clean).
+
+**Root cause = the operator's hunch: ADR 0058 RankEntry read-collapse.** `belt-tab-loader.ts:117`
+reads `db.rankEntry.findMany` and joins each entry's `RankAward` (via the 1:1 `rankAwardId @unique`
+anchor) for authority/fact-lock. The SESSION_0482 fixture predates the collapse and seeded RankAward
+ONLY — so the Blue authority award rendered as an unowned ladder rung (no `AUTHORITY_*` → no
+locked-hint). Three fixes landed the 4/4:
+1. **Passport drift** — drop `brand`/`directorySlug`/dead `TEST_BRAND` (write-only, unread).
+2. **RankEntry seed** — one VERIFIED `RankEntry` per graded award (White + Blue), so the loader reads
+   them as OWNED cards with authority provenance. This is the ADR-0058 reconcile the fixture needed.
+3. **Spec selector** — the empty-school fill affordance is a `role="combobox"` whose placeholder is
+   its VALUE, not its accessible name (a name-based `getByRole` never matched). Retargeted by visible
+   text (`getByRole("combobox").filter({ hasText })`).
+Plus **retry-safe cleanup** — `afterAll` now deletes only the specific fixture (was a shared-prefix
+sweep that race-deleted a retry's re-seeded passport → the `RankAward_passportId_fkey` flake).
+
+Diagnostic dead-ends ruled out (all disproven, NOT the cause): the `adapterFn` dev error; a "duplicate
+Purple card" that was purely stale-data from ~6 iterative runs (in isolation + on a fresh drop+rebuilt
+DB the grid renders exactly 5 distinct cards). **Gates:** typecheck ✓ · oxlint ✓ (no new warnings) ·
+format ✓ · e2e 4/4 ✓.
+
+**Not committed / CI-enable pending decision.** Files: `e2e/helpers/seed-belt-journey-db.ts`,
+`e2e/belt-journey.spec.ts`. The last step — set `RUN_BELT_E2E=1` in `playwright.yml` so it runs in CI
+— touches the SAME workflow file Lane 1 (#357) restructured and is currently held; needs a
+branching/ordering call (fixes must be on `main` before the spec is required). Push held.
+
 ## Also apply in a merge sweep (SESSION_0717 findings — shared ledgers were frozen)
 
 - **Drift-register (D):** Passport dropped `brand`+`directorySlug`; stale `seed-belt-journey-db.ts`.
@@ -118,9 +161,18 @@ pass incl. mixed docs+code → run=true (never falsely skips) · gate logic fail
 **Live proof pending push:** the PR (a `.github/workflows` change → run=true) runs the full gates, so
 the two gate checks report green on a real code PR.
 
-**HOLD (operator-gated):** (a) push branch + open PR — awaiting explicit go; (b) the ruleset flip
-(require `CI complete` + `Playwright complete` on `main-pr-only` #19644183) — separate explicit ok,
-after live gates prove green. Both held per standing rules.
+**Pushed + LIVE-VERIFIED (operator go):** PR [#357](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/357)
+— **all checks green**, incl. both new gates: `CI complete` pass · `Playwright complete` pass ·
+Detect ✓ (both workflows) · Oxc/Typecheck/Unit ✓ · Playwright chromium 26m / firefox 9m / webkit 11m ✓.
+The live fails-closed proof is complete: on a real code PR (workflow change → run=true → full gates ran)
+both required gates registered + went green — no deadlock, machinery works end-to-end.
+
+**Still HELD (operator-gated), in this order:**
+1. **Merge #357** — I do not merge (SESSION_0641 = sole merge owner); held for operator/merge-owner.
+2. **Ruleset flip** — require `CI complete` + `Playwright complete` on `main-pr-only` (#19644183).
+   **Must sequence AFTER #357 merges**: for `pull_request`, GitHub runs the workflow from the PR
+   branch, so any PR branched from pre-#357 main lacks the gate jobs → those required checks never
+   report → deadlock. Flip only once the gate jobs are on `main`. Separate explicit ok.
 
 ## Next session
 
