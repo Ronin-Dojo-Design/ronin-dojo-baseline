@@ -7,32 +7,16 @@ name: Playwright E2E
 # push to main, and on demand.
 
 on:
-  # Skip on commits that only touch docs / agent context / IDE config.
-  # SESSION_0267 commit pattern shows ~30-50% of commits are docs-only
-  # (SESSION files, wiki updates, runbook edits). Path filters apply to
-  # both pull_request and push to keep behavior symmetric.
+  # SESSION_0718 (lane 1, required-check gate): workflow-level `paths-ignore`
+  # removed so the `Playwright complete` job always reports and can be a required check
+  # without deadlocking docs-only PRs (a path-skipped required check never
+  # reports → forever-pending). The docs/agent/tooling skip moved INTO the
+  # `changes` job below; the `test` matrix gates on it, so a docs-only PR still
+  # runs zero Playwright minutes. Same ignore set as ci.yml, kept symmetric.
   pull_request:
     branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.claude/**'
-      - '.github/copilot-instructions.md'
-      - '.github/prompts/**'
-      # Since the ADR 0055 brand-repo fork (Phase C3), apps/web is the ONLY app
-      # in this repo — the former clients/** + sibling apps/* filters are gone
-      # with the trees. `scripts/**` is root tooling apps/web does NOT import
-      # (verified SESSION_0465) — a scripts-only change can't change e2e behavior.
-      - 'scripts/**'
   push:
     branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.claude/**'
-      - '.github/copilot-instructions.md'
-      - '.github/prompts/**'
-      - 'scripts/**'
   workflow_dispatch:
 
 # Least privilege: the e2e job only needs to read the repo (SESSION_0335
@@ -46,8 +30,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # SESSION_0718 (lane 1): replaces workflow-level paths-ignore (see `on:` note).
+  # Same cheap always-run detector as ci.yml's `changes` job, kept in sync, so the
+  # `Playwright complete` gate always reports. Fail-safe: run=true on any ambiguity.
+  changes:
+    name: Detect relevant changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.detect.outputs.run }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: detect
+        name: Determine if apps/web (non-ignored) paths changed
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -uo pipefail
+          # Only skip when EVERY changed file is docs/agent-context or root tooling
+          # (docs/**, **.md, .claude/**, .github/copilot-instructions.md,
+          # .github/prompts/**, scripts/** — none affect apps/web e2e, SESSION_0465).
+          run=true
+          files=""
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(git diff --name-only "$BASE_SHA" HEAD 2>/dev/null || echo "__ERR__")
+          elif [ "$EVENT" = "push" ]; then
+            files=$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA" 2>/dev/null || echo "__ERR__")
+          else
+            files="__ERR__"
+          fi
+          if [ "$files" != "__ERR__" ] && [ -n "$files" ]; then
+            run=false
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              case "$f" in
+                docs/*|.claude/*|.github/copilot-instructions.md|.github/prompts/*|scripts/*|*.md) ;;
+                *) run=true ;;
+              esac
+            done <<< "$files"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "Playwright e2e relevant to this change: run=$run"
+
   test:
     name: Playwright (${{ matrix.project }})
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     # SESSION_0268: split browsers into parallel single-worker jobs. This
     # keeps the useful cross-browser signal from SESSION_0267 while reducing
@@ -191,3 +223,32 @@ jobs:
             -H "Tags: x,test_tube" \
             -d "Playwright ${{ matrix.project }} failed on ${{ github.ref_name }} (${{ github.sha }}). Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
             "https://ntfy.sh/${NTFY_TOPIC}" || true
+
+  # SESSION_0718 (lane 1): the single stable REQUIRED status check for this
+  # workflow (name matches the rdd-monorepo umbrella `Playwright complete`).
+  # Always runs (if: always()), so it reports on EVERY PR — including docs-only
+  # PRs where the `test` matrix skips (result=skipped, NOT a failure). Red iff a
+  # real Playwright job failed. Require THIS name in the ruleset, not the per-
+  # project matrix names (which are path-skipped). BBL keeps its single unsharded
+  # [chromium, firefox, webkit] matrix — the umbrella's 4-shard split was
+  # intentionally NOT ported (Doug, SESSION_0717: BBL ~28min < the 45min gate, no
+  # correctness gain); revisit only if BBL e2e wall-time approaches the timeout.
+  playwright-complete:
+    name: Playwright complete
+    needs: [changes, test]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify no Playwright job failed
+        run: |
+          echo "changes.run=${{ needs.changes.outputs.run }}"
+          echo "test=${{ needs.test.result }}"
+          # success + skipped (docs-only path skip) are OK; failure is not. A matrix
+          # job's aggregate result is `failure` if ANY leg failed, so this gate is
+          # red iff any of chromium/firefox/webkit failed.
+          if [ "${{ needs.test.result }}" = "failure" ]; then
+            echo "Playwright complete: FAILED — a required Playwright job failed."
+            exit 1
+          fi
+          echo "Playwright complete: OK (no failures)."
