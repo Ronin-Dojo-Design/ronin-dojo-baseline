@@ -6,33 +6,21 @@ name: CI
 # workflow runs the three fast quality gates on every PR/push to main.
 
 on:
+  # SESSION_0718 (lane 1, required-check gate): the workflow-level `paths-ignore`
+  # that used to skip docs-only PRs is GONE. A required status check that is
+  # skipped by workflow path-filtering never reports, and branch protection
+  # treats "never reported" as forever-pending → a docs-only PR would deadlock.
+  # The skip now lives INSIDE the workflow: the `changes` job computes whether
+  # non-doc code changed and the heavy jobs gate on it (`if: needs.changes...`),
+  # so a docs-only PR still burns zero heavy-job minutes but the `CI complete` job
+  # always runs and reports a green required check. The ignore SET is unchanged
+  # (docs/**, **.md, .claude/**, .github/prompts/**, scripts/**) — it moved from
+  # the trigger to the `changes` filter below, staying fail-safe (anything not
+  # listed still runs BBL's gate).
   pull_request:
     branches: [main]
-    # Quality gates don't depend on docs/agent-context; skip docs-only commits
-    # to match playwright.yml and save runner minutes. Since the ADR 0055
-    # brand-repo fork (Phase C3), apps/web is the ONLY app in this repo — the
-    # former clients/** + sibling apps/* filters (and their Products CI
-    # workflow, clients-ci.yml) are gone with the trees. `scripts/**` is
-    # root-level tooling apps/web does NOT import (verified SESSION_0465), so a
-    # scripts-only change can't break the build — ignore it (SESSION_0462 queued).
-    # Filters stay fail-safe: anything NOT listed (apps/web, packages, root config)
-    # still runs BBL's gate, so an unknown shared root is never silently skipped.
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.claude/**'
-      - '.github/copilot-instructions.md'
-      - '.github/prompts/**'
-      - 'scripts/**'
   push:
     branches: [main]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.claude/**'
-      - '.github/copilot-instructions.md'
-      - '.github/prompts/**'
-      - 'scripts/**'
   workflow_dispatch:
 
 # Least privilege: these jobs only read the repo (GitHub Actions security
@@ -55,8 +43,62 @@ env:
   SKIP_ENV_VALIDATION: '1'
 
 jobs:
+  # SESSION_0718 (lane 1): replaces the workflow-level `paths-ignore`. Mirrors the
+  # rdd-monorepo umbrella (upstream-of-record, SESSION_0716 A2) — a cheap always-run
+  # job that decides whether the quality gates are relevant, so `CI complete` always
+  # reports and can be a REQUIRED check without deadlocking docs-only PRs. Fail-safe:
+  # defaults to run=true on any ambiguity (diff error / dispatch / first push) so the
+  # gates are never silently skipped when they mattered. Ignore set is BBL's own — the
+  # ADR 0055 fork dropped the umbrella's clients/** + apps/{baseline,rdd} trees.
+  changes:
+    name: Detect relevant changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      run: ${{ steps.detect.outputs.run }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - id: detect
+        name: Determine if apps/web (non-ignored) paths changed
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -uo pipefail
+          # Only skip when EVERY changed file is docs/agent-context or root tooling
+          # (docs/**, **.md, .claude/**, .github/copilot-instructions.md,
+          # .github/prompts/**, scripts/** — none imported by apps/web, verified
+          # SESSION_0465). Anything else runs the gates. Mirrors the former
+          # paths-ignore set exactly.
+          run=true
+          files=""
+          if [ "$EVENT" = "pull_request" ]; then
+            files=$(git diff --name-only "$BASE_SHA" HEAD 2>/dev/null || echo "__ERR__")
+          elif [ "$EVENT" = "push" ]; then
+            files=$(git diff --name-only "$BEFORE_SHA" "$GITHUB_SHA" 2>/dev/null || echo "__ERR__")
+          else
+            files="__ERR__"
+          fi
+          if [ "$files" != "__ERR__" ] && [ -n "$files" ]; then
+            run=false
+            while IFS= read -r f; do
+              [ -z "$f" ] && continue
+              case "$f" in
+                docs/*|.claude/*|.github/copilot-instructions.md|.github/prompts/*|scripts/*|*.md) ;;
+                *) run=true ;;
+              esac
+            done <<< "$files"
+          fi
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+          echo "CI quality gates relevant to this change: run=$run"
+
   oxc:
     name: Oxc (lint + format)
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -80,6 +122,8 @@ jobs:
 
   typecheck:
     name: Typecheck (tsc)
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -102,6 +146,8 @@ jobs:
 
   unit:
     name: Unit tests (bun test)
+    needs: changes
+    if: needs.changes.outputs.run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     # DB-dependent unit tests need a real Postgres (mirrors playwright.yml).
@@ -154,3 +200,44 @@ jobs:
       - name: Unit tests
         run: bun run test
         working-directory: apps/web
+
+  # SESSION_0718 (lane 1): the single stable REQUIRED status check for this
+  # workflow (name matches the rdd-monorepo umbrella). Always runs (if: always())
+  # so it reports on EVERY PR — including docs-only PRs where the gates skip
+  # (result=skipped, NOT a failure). Red iff a real quality gate failed. Require
+  # THIS name in the ruleset, not the per-job names (which are path-skipped).
+  ci-complete:
+    name: CI complete
+    needs: [changes, oxc, typecheck, unit]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Job results reach the script through env, not inline `${{ }}` in `run:` — the
+    # values are GitHub-controlled result enums, but env-indirection is the hardened
+    # form (avoids the template-injection shell-expansion class; zizmor).
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      OXC_RESULT: ${{ needs.oxc.result }}
+      TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+      UNIT_RESULT: ${{ needs.unit.result }}
+    steps:
+      - name: Verify no quality gate failed
+        run: |
+          echo "changes=$CHANGES_RESULT oxc=$OXC_RESULT typecheck=$TYPECHECK_RESULT unit=$UNIT_RESULT"
+          # FAIL CLOSED. The detector must have SUCCEEDED — if `changes` errored (e.g.
+          # a checkout/infra failure, not the diff logic), the heavy jobs skip via
+          # `if: needs.changes.outputs.run` and would otherwise slip through as a green
+          # gate that ran ZERO checks. Then every required job must be `success` or the
+          # intentional docs-only `skipped`; ANY other state (failure, cancelled, or a
+          # missing/unknown result) fails the gate.
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "CI complete: FAILED — the changes detector did not succeed (result=$CHANGES_RESULT)."
+            exit 1
+          fi
+          for r in "$OXC_RESULT" "$TYPECHECK_RESULT" "$UNIT_RESULT"; do
+            if [ "$r" != "success" ] && [ "$r" != "skipped" ]; then
+              echo "CI complete: FAILED — a required quality gate did not pass (result=$r)."
+              exit 1
+            fi
+          done
+          echo "CI complete: OK (all required gates passed or were docs-only skips)."
