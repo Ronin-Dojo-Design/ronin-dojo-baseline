@@ -212,17 +212,32 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Job results reach the script through env, not inline `${{ }}` in `run:` — the
+    # values are GitHub-controlled result enums, but env-indirection is the hardened
+    # form (avoids the template-injection shell-expansion class; zizmor).
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      OXC_RESULT: ${{ needs.oxc.result }}
+      TYPECHECK_RESULT: ${{ needs.typecheck.result }}
+      UNIT_RESULT: ${{ needs.unit.result }}
     steps:
       - name: Verify no quality gate failed
         run: |
-          echo "changes.run=${{ needs.changes.outputs.run }}"
-          echo "oxc=${{ needs.oxc.result }}  typecheck=${{ needs.typecheck.result }}  unit=${{ needs.unit.result }}"
-          fail=0
-          for r in "${{ needs.oxc.result }}" "${{ needs.typecheck.result }}" "${{ needs.unit.result }}"; do
-            if [ "$r" = "failure" ]; then fail=1; fi
-          done
-          if [ "$fail" = "1" ]; then
-            echo "CI complete: FAILED — a required quality gate failed."
+          echo "changes=$CHANGES_RESULT oxc=$OXC_RESULT typecheck=$TYPECHECK_RESULT unit=$UNIT_RESULT"
+          # FAIL CLOSED. The detector must have SUCCEEDED — if `changes` errored (e.g.
+          # a checkout/infra failure, not the diff logic), the heavy jobs skip via
+          # `if: needs.changes.outputs.run` and would otherwise slip through as a green
+          # gate that ran ZERO checks. Then every required job must be `success` or the
+          # intentional docs-only `skipped`; ANY other state (failure, cancelled, or a
+          # missing/unknown result) fails the gate.
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "CI complete: FAILED — the changes detector did not succeed (result=$CHANGES_RESULT)."
             exit 1
           fi
-          echo "CI complete: OK (no failures)."
+          for r in "$OXC_RESULT" "$TYPECHECK_RESULT" "$UNIT_RESULT"; do
+            if [ "$r" != "success" ] && [ "$r" != "skipped" ]; then
+              echo "CI complete: FAILED — a required quality gate did not pass (result=$r)."
+              exit 1
+            fi
+          done
+          echo "CI complete: OK (all required gates passed or were docs-only skips)."

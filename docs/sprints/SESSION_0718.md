@@ -144,8 +144,14 @@ branching/ordering call (fixes must be on `main` before the spec is required). P
 skip into a cheap always-run `changes` job (git-diff bash, fail-safe `run=true` on any ambiguity —
 NOT dorny/paths-filter). Heavy jobs gate on `needs.changes.outputs.run`. Added two stable
 always-report gate jobs — **`CI complete`** (needs oxc/typecheck/unit) and **`Playwright complete`**
-(needs the test matrix) — each `if: always()`, red iff a real job `failure`, green on `skipped`
-(docs-only) or `success`. These are the two contexts to require in the ruleset.
+(needs the test matrix) — each `if: always()`. **Fail-closed (hardened per CodeRabbit review on #357):**
+the gate requires `needs.changes.result == 'success'` (a failed detector skips the heavy jobs, which
+must NOT slip through as a green gate that ran zero checks) AND every required job to be `success` or
+the intentional docs-only `skipped` — ANY other state (failure, cancelled, or a missing/unknown
+result) reds the gate. Results are read via `env:` (not inline `${{ }}` in `run:` — zizmor
+template-injection hardening). These are the two contexts to require in the ruleset. **Upstream note:**
+the rdd-monorepo umbrella gate has the SAME pre-hardening fail-open edge — the same fix should flow
+upstream so BBL + umbrella re-converge (finding-router).
 
 **Conformance:** matches the rdd-monorepo umbrella (upstream-of-record, SESSION_0716 A2) verbatim on
 machinery + gate names. **Deliberate BBL divergences (ratified):** (1) ignore-set is BBL's own — the

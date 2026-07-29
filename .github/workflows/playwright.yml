@@ -246,16 +246,26 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # Results via env, not inline `${{ }}` in `run:` (hardened form; zizmor).
+    env:
+      CHANGES_RESULT: ${{ needs.changes.result }}
+      TEST_RESULT: ${{ needs.test.result }}
     steps:
       - name: Verify no Playwright job failed
         run: |
-          echo "changes.run=${{ needs.changes.outputs.run }}"
-          echo "test=${{ needs.test.result }}"
-          # success + skipped (docs-only path skip) are OK; failure is not. A matrix
-          # job's aggregate result is `failure` if ANY leg failed, so this gate is
-          # red iff any of chromium/firefox/webkit failed.
-          if [ "${{ needs.test.result }}" = "failure" ]; then
-            echo "Playwright complete: FAILED — a required Playwright job failed."
+          echo "changes=$CHANGES_RESULT test=$TEST_RESULT"
+          # FAIL CLOSED (mirrors ci.yml's CI complete). The detector must have
+          # SUCCEEDED — a failed `changes` skips the matrix and must not slip through
+          # as a green gate that ran zero e2e. Then the `test` matrix must be `success`
+          # or the intentional docs-only `skipped`; ANY other state (failure —
+          # aggregate of a failed chromium/firefox/webkit leg — cancelled, or a
+          # missing/unknown result) fails the gate.
+          if [ "$CHANGES_RESULT" != "success" ]; then
+            echo "Playwright complete: FAILED — the changes detector did not succeed (result=$CHANGES_RESULT)."
             exit 1
           fi
-          echo "Playwright complete: OK (no failures)."
+          if [ "$TEST_RESULT" != "success" ] && [ "$TEST_RESULT" != "skipped" ]; then
+            echo "Playwright complete: FAILED — a required Playwright job did not pass (result=$TEST_RESULT)."
+            exit 1
+          fi
+          echo "Playwright complete: OK (all e2e passed or was a docs-only skip)."
