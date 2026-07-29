@@ -1171,6 +1171,41 @@ Read this section at bow-in instead of skimming every individual entry.
   into this hygiene lane (keeps its blast radius to the SotD script) — routed as a follow-up.
 - **Status:** open (fix proposed, not yet landed).
 
+### FS-0047 — a review agent flagged a live unit-test's fixture as a deletable "orphan"
+
+- **Session:** SESSION_0718 (Lane 3; the false-positive originated in Doug's SESSION_0717 review).
+- **What happened:** Doug's SESSION_0717 review listed the `seed-lineage-comp-fixture` + `-db` pair as
+  a "zero-importers orphan (~19KB), delete now", and it was staged into SESSION_0718's Lane 3 as a
+  delete-now item. A grep for importers **did** find one: `server/entitlements/lineage-comp-seed.test.ts`
+  imports `seedLineageCompFixture`/`cleanupLineageCompFixture`/`readLineageCompFixtureState` from it —
+  and that test is a **live, passing unit-gate test** (2 pass / 28 assertions; it lives under `server/`,
+  not `e2e/`, so `path-ignore='e2e/**'` does NOT skip it). Deleting the pair would have **broken CI**.
+- **Root cause:** the review's "orphan" call scoped its importer search too narrowly (missed a `server/`
+  unit test that imports an `e2e/helpers/` fixture — a cross-tree import). A downstream session that
+  blind-trusts a review's dead-code verdict inherits the false-positive.
+- **Corrective action:** (1) this row; (2) **verify-before-delete is mandatory** — a dead-code/orphan
+  claim (even from a review agent) must be re-verified with a repo-wide importer + symbol grep, including
+  cross-tree (`server/` ↔ `e2e/helpers/`), and ideally by running the suite, before acting. A review
+  verdict is a lead, not proof.
+- **Status:** mitigated (caught before any deletion; the pair is intact and CI green).
+
+### FS-0048 — down-sync reconcile-apply verified named getters but not the *fixture's* schema-validity
+
+- **Session:** SESSION_0718 (Lane 2; the gap originated in the SESSION_0717 down-sync).
+- **What happened:** the SESSION_0717 RDD→BBL down-sync reconciled belt/lineage code and checked that
+  named getters/reference contracts matched, but `e2e/helpers/seed-belt-journey-db.ts` still passed
+  `Passport.brand` + `Passport.directorySlug` — fields dropped from BBL's `Passport` post-fork — so the
+  belt-journey fixture threw `Unknown argument 'brand'` at runtime. The reconcile-apply pass didn't
+  catch it because the fixture *compiled against types* but wasn't *run against the drifted schema*.
+- **Root cause:** "reconcile-apply" scoping verified the named surfaces it was told about, not whether
+  every touched fixture actually seeds against the current schema. Same "real check outside the executed
+  path" family as FS-0037/0044/0045/0046.
+- **Corrective action:** (1) this row; (2) a down-sync / reconcile-apply pass must **run** each touched
+  e2e fixture's seed against the live schema (or typecheck it under the app tsconfig), not just diff
+  named getters. Enabling the spec in CI (SESSION_0718) is the durable guard — a drifted fixture now
+  reds the required Playwright gate.
+- **Status:** mitigated (fixture reconciled to ADR 0058; belt-journey now runs in the required gate).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
