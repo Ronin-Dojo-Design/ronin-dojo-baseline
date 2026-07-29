@@ -32,11 +32,14 @@ test.describe("Tournament registration E2E (free path)", () => {
     const checkbox = page.locator('button[role="checkbox"]').first()
     const hasCheckbox = (await checkbox.count()) > 0
 
-    if (!hasCheckbox) {
-      // No divisions or user might already be registered — still a valid page load
-      await expect(page.locator("body")).toBeVisible()
-      return
-    }
+    // SESSION_0718 (lane 3): an EXPLICIT skip (visible in the report) instead of a
+    // silent early-return that reported as a PASS without ever exercising registration
+    // (Doug's SESSION_0717 silent-conditional-skip finding). No registerable division
+    // means there's nothing to prove here — skip, don't fake-pass.
+    test.skip(
+      !hasCheckbox,
+      "No open division checkbox on this tournament — registration path needs seed data",
+    )
 
     // 5. Select a division and register
     await checkbox.click()
