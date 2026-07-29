@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0718 — required-check gate + belt-journey enable + e2e paper-over/dead-code cleanup"
 slug: session-0718
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-29
 updated: 2026-07-29
 last_agent: claude-session-0718
@@ -48,6 +48,16 @@ Close the three follow-ups the BBL down-sync (SESSION_0717) surfaced but deferre
 
 **Elected (operator, bow-in):** all 3 lanes, sequential L1→L2→L3. SotD snapshot: **no** — cite live
 `/app/state` (zero-token default). Ruleset flip (Lane 1 step 2) held for explicit operator ok.
+
+## Goal verdict
+
+**EXTENDED → YES.** All three staged lanes shipped to `main` (#358, #359, #357) **and the ruleset flip
+landed — the required-check gate is LIVE**: `main-pr-only` now requires `CI complete` + `Playwright
+complete`, so a red/mid-CI PR can no longer merge (the hole behind the claim-loop 500 is closed).
+Scope grew beyond the three lanes: a CodeRabbit review caught a real fail-**open** edge in the gate
+(inherited from the umbrella) → hardened to fail-closed (require `changes==success`; accept only
+`success`/`skipped`; env-indirection) + verified with a 7-case truth table; a `/ggr` QAR gate cleared
+both code lanes ≥9.0; and an RDD upstream baton was delivered so the umbrella gets the same fix.
 
 ## Lanes
 
@@ -180,8 +190,90 @@ both required gates registered + went green — no deadlock, machinery works end
    branch, so any PR branched from pre-#357 main lacks the gate jobs → those required checks never
    report → deadlock. Flip only once the gate jobs are on `main`. Separate explicit ok.
 
+### SESSION_0718_TASK_03 — Lane 3 e2e paper-over + dead-code cleanup
+
+**Branch:** `session-0718-e2e-cleanup` → PR [#359](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/359) (merged `d8a1fe4e`).
+
+- **register.spec.ts silent-skip → explicit `test.skip`.** `if (!hasCheckbox) { …; return }` reported a
+  PASS without exercising registration; now a report-visible skip.
+- **Flaky dnd-kit e2e → deterministic unit coverage.** Deleted `editor-drag-reorder.spec.ts` (216 lines;
+  it `test.fixme`'d itself whenever headless drag didn't persist → proved nothing) and added
+  `server/web/lineage/lineage-member-placement.test.ts` (2 pass / 7 assertions) covering the same
+  invariants directly against `applyLineageMemberPlacementUpdate`: intra-group reorder persists
+  `visualSortOrder` + keeps parentage; cross-group move changes `visualGroupId` but PRESERVES
+  `primaryVisualParentMemberId`. Net **−114 lines**. Reuses the lineage-lifecycle fixture.
+- **Doug's "orphan" was WRONG** — the `seed-lineage-comp-fixture` pair he flagged as deletable
+  (zero-importers) is imported by `server/entitlements/lineage-comp-seed.test.ts`, a live PASSING
+  unit-gate test. Verify-before-delete caught it; left intact (deleting would have broken CI).
+- **Deferred:** the 8 cold-compile timeout paper-overs need N green prod-build runs as evidence → next
+  session.
+
+## Shipped (all merged to `main`)
+
+| PR | Lane | Commit |
+| --- | --- | --- |
+| [#358](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/358) | 2 — belt-journey fixture reconcile (ADR 0058) | `841d2906` |
+| [#359](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/359) | 3 — e2e cleanup + reorder unit test | `d8a1fe4e` |
+| [#357](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/357) | 1 — required-check gate + belt CI-enable + hardened gates | `ca9c203e` |
+
+**Ruleset flip (operator "flip it"):** `main-pr-only` (#19644183) now requires `CI complete` +
+`Playwright complete` (rules: `pull_request` · `non_fast_forward` · `deletion` · `required_status_checks`,
+enforcement active, `strict_required_status_checks_policy: false`). Verified green on `main` first
+(belt-journey ran under `RUN_BELT_E2E=1` in the chromium suite + both gates green on `ca9c203e`).
+
+## Review log
+
+**`/ggr` (QAR close gate) — both code lanes CLEAR (≥9.0), no hard caps.** Objective metrics via
+`bunx fallow audit --changed-since origin/main`:
+- **#358 (Lane 2) — composite ~9.3 → CLEARS.** Fallow gate clean (0 new complexity/dead-code; the
+  `decodePayload`/dialog-open dups are pre-existing, gate-excluded). 4/4 e2e green; well-documented.
+- **#359 (Lane 3) — composite ~9.4 → CLEARS.** Fallow: 0 complexity/dup/dead-code in changed files;
+  net −114 lines; 2-pass deterministic test replaces a flaky e2e; follows sop-test-writing.
+- **Lane 1 (#357)** scored against gate-correctness (7-case fail-closed truth table + CodeRabbit
+  hardening), not fallow (CI YAML).
+
+**Systemic health:** CI = green (main `ca9c203e`: CI + Playwright E2E both success) · findings routed
+5/5 (below) · FS patterns: none newly fired.
+
+## Findings (routed — finding-router, closing.md §6.7)
+
+1. **Doug review false-positive** (review-SOP miss) → FS-0047. A review agent flagged a live unit-test's
+   fixture as a deletable orphan; blind-following would have broken CI. Verify-importers before an
+   orphan/dead-code call.
+2. **Down-sync reconcile-apply scoping** (SOP miss) → FS-0048. Reconcile-apply must verify the
+   *fixture's* schema-validity (does it compile/run against the drifted schema?), not just named getters.
+3. **Umbrella gate fail-open** (upstream drift) → D-register + **RDD baton delivered** (rdd-monorepo owns
+   the fix; ADR 0059). BBL hardened ahead of upstream; re-converge when the umbrella lands it.
+4. **lineage-lifecycle fixture stale-cleanup bug** → next-session lane. The shared
+   `cleanupTaggedLineageFixtures` deletes `Rank` before its `RankAward` (RESTRICT FK) → errors on
+   leftover data from an interrupted run. CI is clean (drop+rebuild per run); local-only hazard.
+5. **RankAward → RankEntry (ADR 0058)** is mid-flight (read-collapse done, table-drop = G-011). Context,
+   not a defect — the belt fixture drift was a symptom. New fixtures/reads should target RankEntry.
+
+## Reflections
+
+- **The systemic fix is the point.** The claim-loop 500 shipped because a red PR could merge; this
+  session closed that *class* of failure (required gate) rather than just the instance. Worth the depth.
+- **Verify-before-delete earned its keep twice** — Doug's "orphan" was a live test; the belt "duplicate
+  Purple" was stale-data noise, not a bug. Both would have been wrong to act on blindly.
+- **Conform-to-upstream has a limit: correctness.** The gate matched the umbrella verbatim — including
+  its fail-open edge. CodeRabbit was right to push past conformance; hardened BBL + sent the fix upstream.
+- **A laptop crash mid-session** cost re-establishing state but nothing was lost (PR #357 already green
+  on resume); the canonical-claim + PR-per-lane structure made recovery clean.
+
 ## Next session
 
 ### Goal
 
+Two staged lanes (operator elected both at bow-out): (1) **FS-0046** — root `scripts/` tree isn't
+typechecked in CI, so a type error there ships past gates; add a `scripts/` typecheck to the gate.
+(2) **Strip the cold-compile paper-overs** — now that prod-build e2e + the required gate are on `main`,
+strip the 8 timeout paper-overs (TFF-008 warm pre-hit, 20s→40s redirect bump, `test.slow()`/oversized
+timeouts) with N green prod-build runs as evidence; also fix the **lineage-lifecycle fixture
+stale-cleanup order** (finding 4 — delete `RankAward` before `Rank`).
+
 ### First task
+
+FS-0046: read `.github/workflows/ci.yml` typecheck job + `apps/web/tsconfig`/root tsconfig; add a
+`scripts/` typecheck step (or extend the existing `typecheck` job) so a type error in root `scripts/`
+reds the gate. Then measure the cold-compile timeouts against `main`'s prod-build runs before stripping.
