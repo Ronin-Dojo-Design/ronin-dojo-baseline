@@ -120,6 +120,13 @@ jobs:
       # skip real email delivery — registration/claim specs read magic-link tokens straight
       # from the DB. Short-circuits sendEmail before its prod RESEND_API_KEY guard (lib/email.ts).
       EMAIL_E2E_TRANSPORT: noop
+      # SESSION_0718 (lane 2): enable the belt-journey lifecycle spec in CI. The spec is
+      # `RUN_BELT_E2E`-gated (operator-only smoke by default, Petey Plan 0477); setting it here
+      # opts CI in. REQUIRES the lane-2 fixture reconcile (PR #358 — ADR 0058 RankEntry
+      # read-collapse) to be on `main` FIRST, or belt-journey runs red against the un-reconciled
+      # fixture. Do NOT flip the branch-protection ruleset to require Playwright until belt-journey
+      # is green on `main`.
+      RUN_BELT_E2E: "1"
 
     steps:
       - name: Checkout
