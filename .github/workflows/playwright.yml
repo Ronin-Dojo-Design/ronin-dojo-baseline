@@ -84,6 +84,10 @@ jobs:
       NEXT_PUBLIC_SITE_EMAIL: ci@ronindojo.test
       # Optional but consumed by some seed/auth paths
       CRON_SECRET: ci-cron-secret
+      # SESSION_0718 down-sync (P1): e2e runs against a prod build (NODE_ENV=production), so
+      # skip real email delivery — registration/claim specs read magic-link tokens straight
+      # from the DB. Short-circuits sendEmail before its prod RESEND_API_KEY guard (lib/email.ts).
+      EMAIL_E2E_TRANSPORT: noop
 
     steps:
       - name: Checkout
@@ -112,6 +116,20 @@ jobs:
       - name: Apply Prisma migrations
         run: bunx prisma migrate deploy
         working-directory: apps/web
+
+      # SESSION_0718 down-sync (P1): e2e runs against a PRODUCTION build, not the JIT dev
+      # server. `next build` precompiles every route so playwright.config's webServer
+      # (`next start` in CI) serves precompiled output with zero on-demand Turbopack
+      # compilation — the root-cause fix for the sharded-chromium cold-compile
+      # redirect-timeout flake. Job env (DATABASE_URL etc.) above feeds build-time DB access.
+      - name: Build production bundle (e2e server)
+        run: bun run build
+        working-directory: apps/web
+        # `next build` exceeds Node's default heap on the runner (V8 "Ineffective
+        # mark-compacts near heap limit" → OOM). Raise the ceiling; mirrors ci.yml's
+        # typecheck NODE_OPTIONS. Runner has 16 GB.
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
 
       - name: Cache Playwright browsers
         id: playwright-cache
