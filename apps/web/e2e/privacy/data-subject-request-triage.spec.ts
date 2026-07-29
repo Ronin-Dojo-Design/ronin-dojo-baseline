@@ -2,7 +2,7 @@
  * E2E: Admin DSR triage
  *
  * Covers:
- * 1. Non-admin is blocked from /admin/privacy/requests (404)
+ * 1. Non-admin is blocked from /app/privacy/requests (404)
  * 2. Admin can view DSR list and detail
  * 3. Admin can transition PENDING → IN_PROGRESS → FULFILLED
  *
@@ -33,7 +33,7 @@ test.describe("Admin DSR triage E2E", () => {
     }
   })
 
-  test("non-admin gets 404 on /admin/privacy/requests", async ({ page }) => {
+  test("non-admin gets 404 on /app/privacy/requests", async ({ page }) => {
     const user = await createAuthenticatedUser(page, {
       name: "Regular User",
       email: `dsr-nonadmin-${Date.now()}@e2e.test`,
@@ -41,7 +41,7 @@ test.describe("Admin DSR triage E2E", () => {
     })
     regularUserId = user.userId
 
-    await page.goto("/admin/privacy/requests")
+    await page.goto("/app/privacy/requests")
 
     // Admin layout redirects non-admins to /auth/login — should NOT see admin table
     const adminTable = page.locator("table").first()
@@ -79,7 +79,7 @@ test.describe("Admin DSR triage E2E", () => {
     adminUserId = admin.userId
 
     // Navigate to admin DSR list
-    await page.goto("/admin/privacy/requests")
+    await page.goto("/app/privacy/requests")
 
     // Should see the request
     await expect(page.locator("body")).toContainText(submitter.email, { timeout: 10_000 })

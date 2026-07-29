@@ -14,7 +14,7 @@ test.describe("Admin tournament list E2E", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "admin" })
     testUserId = userId
 
-    await page.goto("/admin/tournaments")
+    await page.goto("/app/tournaments")
 
     // §14e SESSION_0270: replaced networkidle with deterministic body anchor
     await expect(page.locator("body")).toBeVisible({ timeout: 30_000 })
@@ -29,7 +29,7 @@ test.describe("Admin tournament list E2E", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "user" })
     testUserId = userId
 
-    await page.goto("/admin/tournaments")
+    await page.goto("/app/tournaments")
 
     // §14e SESSION_0270: replaced networkidle with domcontentloaded (negative test)
     await page.waitForLoadState("domcontentloaded")
