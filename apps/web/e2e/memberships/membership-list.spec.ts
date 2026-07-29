@@ -20,7 +20,7 @@ test.describe("Admin membership list E2E", () => {
     testUserId = userId
     fixture = await seedMembership(userId)
 
-    await page.goto("/admin/memberships")
+    await page.goto("/app/memberships")
 
     // §14e SESSION_0270: replaced networkidle with deterministic table anchor
     await expect(page.locator("table").first()).toBeVisible({ timeout: 30_000 })
@@ -35,7 +35,7 @@ test.describe("Admin membership list E2E", () => {
     const { userId } = await createAuthenticatedUser(page, { role: "user" })
     testUserId = userId
 
-    await page.goto("/admin/memberships")
+    await page.goto("/app/memberships")
 
     // §14e SESSION_0270: replaced networkidle with domcontentloaded (negative test)
     await page.waitForLoadState("domcontentloaded")

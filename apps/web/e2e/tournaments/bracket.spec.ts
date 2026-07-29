@@ -19,7 +19,7 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     testUserId = userId
     const fixture = getFixture()
 
-    await page.goto(`/admin/tournaments/${fixture.tournamentId}`)
+    await page.goto(`/app/tournaments/${fixture.tournamentId}`)
 
     // SESSION_0266: `waitForLoadState("networkidle")` flakes under full-suite
     // load because Next dev-server background traffic from sibling specs keeps
@@ -34,11 +34,11 @@ test.describe("Admin tournament detail + bracket E2E", () => {
     testUserId = userId
     const fixture = getFixture()
 
-    await page.goto(`/admin/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
+    await page.goto(`/app/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
 
     // SESSION_0266: replaced `waitForLoadState("networkidle")` with the
     // bracket page's stable first-render heading (`<h2>Bracket: …</h2>` at
-    // `app/admin/tournaments/[id]/brackets/[bracketId]/page.tsx:57`).
+    // `app/app/tournaments/[id]/brackets/[bracketId]/page.tsx:57`).
     await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
       timeout: 30_000,
     })

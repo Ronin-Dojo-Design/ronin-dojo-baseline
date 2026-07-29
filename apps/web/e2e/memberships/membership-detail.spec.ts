@@ -25,7 +25,7 @@ test.describe("Admin membership detail E2E", () => {
 
   test("detail page renders member info and status badge", async ({ page }) => {
     await createAuthenticatedUser(page, { role: "admin" })
-    await page.goto(`/admin/memberships/${fixture.membershipId}`)
+    await page.goto(`/app/memberships/${fixture.membershipId}`)
 
     // §14e SESSION_0270: replaced networkidle with deterministic heading anchor
     await expect(page.getByRole("heading", { name: /Membership\s—/i, level: 3 })).toBeVisible({
@@ -47,7 +47,7 @@ test.describe("Admin membership detail E2E", () => {
 
   test("status transition buttons are visible for PENDING membership", async ({ page }) => {
     await createAuthenticatedUser(page, { role: "admin" })
-    await page.goto(`/admin/memberships/${fixture.membershipId}`)
+    await page.goto(`/app/memberships/${fixture.membershipId}`)
 
     // §14e SESSION_0270: replaced networkidle with deterministic heading anchor
     await expect(page.getByRole("heading", { name: /Membership\s—/i, level: 3 })).toBeVisible({
@@ -60,7 +60,7 @@ test.describe("Admin membership detail E2E", () => {
 
   test("clicking transition button updates status badge", async ({ page }) => {
     await createAuthenticatedUser(page, { role: "admin" })
-    await page.goto(`/admin/memberships/${fixture.membershipId}`)
+    await page.goto(`/app/memberships/${fixture.membershipId}`)
 
     // §14e SESSION_0270: replaced networkidle with deterministic heading anchor
     await expect(page.getByRole("heading", { name: /Membership\s—/i, level: 3 })).toBeVisible({
@@ -76,7 +76,7 @@ test.describe("Admin membership detail E2E", () => {
 
   test("role assignment panel renders", async ({ page }) => {
     await createAuthenticatedUser(page, { role: "admin" })
-    await page.goto(`/admin/memberships/${fixture.membershipId}`)
+    await page.goto(`/app/memberships/${fixture.membershipId}`)
 
     // §14e SESSION_0270: replaced networkidle with deterministic heading anchor
     await expect(page.getByRole("heading", { name: /Membership\s—/i, level: 3 })).toBeVisible({

@@ -17,7 +17,7 @@ test.describe("Admin match scoring E2E", () => {
     const fixture = getFixture()
 
     // Go directly to the bracket page with seeded matches
-    await page.goto(`/admin/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
+    await page.goto(`/app/tournaments/${fixture.tournamentId}/brackets/${fixture.bracketId}`)
 
     // SESSION_0267 (carries SESSION_0266_TASK_01 pattern): replaced
     // `waitForLoadState("networkidle")` + `getByText(/bracket:/i)` with the
