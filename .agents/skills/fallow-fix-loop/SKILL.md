@@ -10,7 +10,7 @@ given). The loop is goal-driven: **diagnose → review → fix → re-verify →
 diff is clean** (no new dead code, no new duplication you introduced, complexity not worse than before,
 all behavior still green).
 
-> Repo context: this is `ronin-dojo-app`. `fallow` is in `node_modules/.bin` — invoke via `bunx fallow …` (never bare `fallow`, FS-0042).
+> Repo context: a Ronin Dojo portfolio app. `fallow` is in `node_modules/.bin` — invoke via `bunx fallow …` (never bare `fallow`, FS-0042).
 > Run commands from `apps/web`. macOS has **no `timeout`** binary — don't wrap commands in it. Default DB
 > is `ronindojo_prodsnap`. The dev server runs on `localhost:3000` (FS-0002: `npx next dev --turbo`).
 
