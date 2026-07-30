@@ -3,12 +3,14 @@ import "server-only"
 import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
 import { isAdmin } from "~/lib/authz-predicates"
+import { treeAdminScopeWhere } from "~/server/admin/lineage/tree-admin-scope"
 import { db } from "~/services/db"
 
 /**
  * BBL-EDITOR-005 (viewer slice, SESSION_0726): read-only listing of the `LineageTreeAccess` grants
  * on a tree, for the admin lineage tree detail page. NO writes — grant/revoke is a deferred,
- * supervised slice. Row-scoping mirrors `findLineageTreeDetail` (server/admin/lineage/queries.ts):
+ * supervised slice. Row-scoping uses the shared `treeAdminScopeWhere` helper (SESSION_0726 ggr
+ * pass 1), the same predicate `findLineageTreeDetail` (server/admin/lineage/queries.ts) uses:
  * platform admins see every grant; non-admins are narrowed to trees they hold a TREE_ADMIN grant
  * on (identity-only "who am I" filter, not an action gate).
  */
@@ -24,19 +26,7 @@ export const findLineageTreeAccessGrants = async (treeId: string) => {
     where: {
       id: treeId,
       brand: Brand.BBL,
-      ...(isPlatformAdmin
-        ? {}
-        : {
-            accessGrants: {
-              some: {
-                // Non-null: the early return above bailed unless `isPlatformAdmin` OR a
-                // signed-in user id exists; this is the non-admin branch, so id is present.
-                userId: session!.user.id,
-                role: "TREE_ADMIN",
-                revokedAt: null,
-              },
-            },
-          }),
+      ...treeAdminScopeWhere(isPlatformAdmin, session?.user.id),
     },
     select: { id: true },
   })

@@ -9,6 +9,7 @@ import {
   runAdminListTransaction,
 } from "~/server/admin/list-query"
 import type { LineageTreesTableSchema } from "~/server/admin/lineage/schema"
+import { treeAdminScopeWhere } from "~/server/admin/lineage/tree-admin-scope"
 import { db } from "~/services/db"
 
 const claimStatusOrder = {
@@ -53,19 +54,7 @@ export const findLineageTrees = async (search: LineageTreesTableSchema) => {
   const where = buildAdminListWhere<Prisma.LineageTreeWhereInput>({
     baseWhere: {
       brand: Brand.BBL,
-      ...(isPlatformAdmin
-        ? {}
-        : {
-            accessGrants: {
-              some: {
-                // Non-null: the early return above bailed unless `isPlatformAdmin` OR a
-                // signed-in user id exists; this is the non-admin branch, so id is present.
-                userId: session!.user.id,
-                role: "TREE_ADMIN",
-                revokedAt: null,
-              },
-            },
-          }),
+      ...treeAdminScopeWhere(isPlatformAdmin, session?.user.id),
     },
     expressions,
     operator,
@@ -135,18 +124,7 @@ export const findLineageTreeDetail = async (treeId: string) => {
     where: {
       id: treeId,
       brand: Brand.BBL,
-      ...(isPlatformAdmin
-        ? {}
-        : {
-            accessGrants: {
-              some: {
-                // Non-null: see `findLineageTrees` — the early return guarantees a user id here.
-                userId: session!.user.id,
-                role: "TREE_ADMIN",
-                revokedAt: null,
-              },
-            },
-          }),
+      ...treeAdminScopeWhere(isPlatformAdmin, session?.user.id),
     },
     select: {
       id: true,

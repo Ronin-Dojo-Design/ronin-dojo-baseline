@@ -183,6 +183,80 @@ completes (push+PR) or is explicitly redirected. Recording what was verified thi
 | Diagnostic isolation of the test failure | `git stash` → single-file `bun test` re-run against baseline → identical failure → `git stash pop` — proof the 2 failures pre-date and are independent of this diff. |
 | Push / PR | **Not performed** — HELD per the pinned "no fix-loop, HOLD on gate-fail" rule. No push, no `gh pr create`, no merge. |
 
+### ggr auto-loop, pass 1 (Doug review fix-loop — PR #369)
+
+The lane was subsequently pushed and opened as PR #369 (`auto/session-0726-tree-acl-viewer` →
+`main`); Doug's review returned a clean launch-safe verdict with 2 ranked, non-blocking fixes.
+This pass implements both, behavior-preserving, on the same branch.
+
+**FIX 1 — DRY the triplicated non-admin `TREE_ADMIN` scope predicate.** The identical
+`accessGrants: { some: { userId, role: "TREE_ADMIN", revokedAt: null } }` where-fragment existed at
+three call sites: `tree-access-queries.ts:findLineageTreeAccessGrants`,
+`admin/lineage/queries.ts:findLineageTrees`, `admin/lineage/queries.ts:findLineageTreeDetail`.
+Extracted a single pure helper `treeAdminScopeWhere(isPlatformAdmin, userId)` into
+`apps/web/server/admin/lineage/tree-admin-scope.ts` (type-only Prisma import, no DB, no
+`server-only` — same shape as `server/web/lineage/tree-where.ts`'s `buildPublishedLineageTreeWhere`);
+all three call sites now spread its return value. Pure refactor — no semantic change to the where
+clause.
+
+**FIX 2 — security test for `findLineageTreeAccessGrants`.** New
+`apps/web/server/web/lineage/tree-access-queries.test.ts` pins the row-scoping matrix: (a) no
+session → `[]`; (b) non-admin/non-TREE_ADMIN caller → `[]` (incl. a caller holding TREE_ADMIN on a
+**different** tree — cross-tree isolation); (c) platform admin → every active grant on the tree;
+(d) TREE_ADMIN of the tree → every active grant on the tree. Mocks `~/lib/auth` with a mutable
+session (mirrors `node-profile-actions.test.ts`); stubs `server-only` + dynamic-imports the module
+under test (mirrors `claim-queries.test.ts`). Fixtures use `s0726-tacq-<TS>-<name>` tags (User /
+LineageTree / LineageTreeAccess only — no Discipline/Rank needed for this query, so no
+truncated-code collision surface); `afterAll` deletes access grants → trees → users.
+
+**Re-verify (foreground, real exit):**
+
+| Gate | Result |
+| --- | --- |
+| `bun run typecheck` | `@ronin-dojo/web` / `ui-kit` / `api-client` all clean · REAL_EXIT=0 |
+| `bun run lint` | only pre-existing warnings in unrelated files (none introduced) · REAL_EXIT=0 |
+| `cd apps/web && bun test --parallel=1 server/web/lineage/tree-access-queries.test.ts` | **5 pass / 0 fail** (re-run 3× for flake-check, identical result each time) · REAL_EXIT=0 |
+
+**Fallow before→after** (`bunx fallow health --complexity --format json`, full-repo, non-diff —
+isolated via `git stash -u` / `git stash pop` around the fix so "before" = the original triplicate,
+"after" = the refactor):
+
+| Function | Before (CRAP / cyc / cog / lines) | After |
+| --- | --- | --- |
+| `tree-access-queries.ts:findLineageTreeAccessGrants` | 42.0 / 6 / 4 / 57 | **dropped out of the high-complexity findings entirely** (below reporting threshold) |
+| `admin/lineage/queries.ts:findLineageTrees` | 42.0 / 6 / 4 / 88 | 30.0 / 5 / 3 / 76 |
+| `admin/lineage/queries.ts:findLineageTreeDetail` | 42.0 / 6 / 4 / 116 | 30.0 / 5 / 3 / 105 |
+
+`bunx fallow audit --changed-since origin/main` (default/mild-mode gate, the setting CI actually
+enforces) never flagged this triplicate as a formal clone group at either default thresholds
+before or after — the tool's default `--min-lines 5 --min-tokens 50` window didn't register cross-
+file object-literal matches this small. Confirmed the underlying duplication was real and is now
+gone via a loosened trace (`--mode weak --min-lines 3 --min-tokens 20`): **before**, 3 distinct
+clone pairs matched `admin/lineage/queries.ts` against `tree-access-queries.ts` at the exact
+`accessGrants`-block line ranges; **after**, those 3 pairs are gone — the only remaining matches
+are the trivial 2–11-line residue of calling the same shared helper the same way at each site
+(expected, not further reducible without over-abstracting a single call site). The one clone group
+`fallow audit` DID report both before and after (`app/app/lineage/[treeId]/page.tsx` ×
+`app/app/lineage/page.tsx`, 17 lines) is unrelated UI duplication pre-existing in the original PR
+commit — out of scope for this fix-loop, left alone per "don't expand scope." The pre-existing
+`AdminLineageTreeRow` unused-type-export finding in `queries.ts:112` (present in `origin/main`
+before this session too — confirmed via `git show origin/main:...`) is likewise pre-existing dead
+code surfaced only because `queries.ts` entered the diff scope; not fixed here, named for the
+finding router.
+
+**Full close evidence (FS-0004):**
+
+| Step | Proof |
+| --- | --- |
+| FS-0024 guard | `pwd` = `/Users/brianscott/dev/bbl-0726`; `git remote -v` = `Ronin-Dojo-Design/black-belt-legacy`; `git branch --show-current` = `auto/session-0726-tree-acl-viewer` — re-run at the top of this pass. |
+| Files touched (explicit, no `git add -A`) | `apps/web/server/admin/lineage/queries.ts` (modified), `apps/web/server/web/lineage/tree-access-queries.ts` (modified), `apps/web/server/admin/lineage/tree-admin-scope.ts` (new), `apps/web/server/web/lineage/tree-access-queries.test.ts` (new), `docs/sprints/SESSION_0726.md` (this file). |
+| Gate evidence | typecheck 0 · lint 0 · new test 5/5 pass in isolation — see table above. |
+| Fallow before→after | CRAP + duplication trace — see table/note above. |
+| Push | `git push` to `auto/session-0726-tree-acl-viewer` — same branch, updates PR #369. No merge, no deploy, no touch to `main`. |
+
+Both Doug fixes landed in this pass (FIX 1 shared helper + FIX 2 security test) — no fix was
+dropped or routed as a follow-up.
+
 ## Reflections
 
 - `components/common/table.tsx`'s raw `Table` root (`grid-cols-(--table-columns)`) has no CSS
