@@ -308,6 +308,54 @@ pre-existing flagged function, **no NEW fallow finding introduced**.
 **New HEAD:** `4c2f315b` — **pushed to PR #367**, same branch (`auto/session-0725-related-profiles`),
 no merge, no deploy, `main` untouched. Feature now ships **live (rail lit 78/78)**, not inert.
 
+## Close evidence — Lane B fix-loop (ggr: reconcile the e2e the rail legitimately broke)
+
+**What broke (real, not flake):** the disc-OR-tree related-profiles rail now renders peer roster
+MCards on every `/directory/[slug]` page. The paywall e2e `apps/web/e2e/directory/profile-paywall.spec.ts`
+seeds its FREE + PREMIUM fixtures under ONE published BBL lineage tree
+(`apps/web/e2e/helpers/seed-directory-paywall.ts`), so they relate to each other. Loading the FREE
+profile now renders the PREMIUM sibling as a related peer card, whose **public** roster card shows
+`fixture.locationCity`. The old **page-wide** assertion at line 51
+(`getByText(fixture.locationCity).toHaveCount(0)`) therefore saw 1, not 0. Chromium-only failure =
+the rail's `"use cache"` render-timing nondeterminism. **The feature is correct** (operator-approved
+disc-OR-tree; a peer card showing public directory-card location is not a paywall leak) — the
+**assertion was over-broad**. Fixed the TEST, not the feature.
+
+**Scoping approach (assertion-scoping, per the preferred path — seed shared-tree design untouched):**
+
+- Added a stable `data-testid="related-profiles"` to the rail wrapper (`Section` forwards it through
+  `Wrapper` onto the div) in
+  `apps/web/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section.tsx`.
+- Rewrote the FREE-profile location negative (`profile-paywall.spec.ts`) to assert **every** city
+  occurrence lives INSIDE the rail — mirrors the existing role-scoping at lines 42–45: wait on the
+  rail's own city first (`expect(relatedRail.getByText(city).first()).toBeVisible()` — this settles
+  the `"use cache"` render, killing the chromium flake), then
+  `expect(page.getByText(city)).toHaveCount(await relatedRail.getByText(city).count())`. Intent
+  preserved non-vacuously: if the FREE profile leaked ITS OWN location, total > rail-count → fail.
+
+**Other RICH negatives verified NON-colliding (not scoped, stay page-wide):** roster MCards render
+only avatar (alt = person name)/name (`<h3>`)/rank badge/location `<p>`, so cover-img (`/profile cover
+photo/i`, line 48), video-intro heading (49) and "Social" heading (50) can never match a peer card —
+confirmed against `components/web/m-card/m-card.tsx` + `lib/m-card/map-roster.ts` (schoolLabel is null
+for the facet mapper, so no org-link collision on line 45 either). ONLY location collided.
+
+**Other `/directory/[slug]` absence assertions at risk:** swept `apps/web/e2e/directory/` —
+`profiles-m-card.spec.ts` targets the `/directory/profiles` LISTING, not a `[slug]` detail page, and
+carries no absence assertions the rail could break. Nothing else to fix.
+
+**Re-verify (foreground, real exit — raw `bunx playwright test` trips the FS-0031 env guard, so ran
+via the canonical `bun run test:e2e:local` wrapper reusing the e2e-backed `:3000` dev server against
+the hermetic `ronindojo_e2e` DB):**
+`e2e/directory/profile-paywall.spec.ts --project=chromium` → **3 passed** (run 1, 1.2m) · **3 passed**
+(run 2, 57.3s, exit 0) — stable across the rail's cache timing. `bun run typecheck` = **0** ·
+`bun run lint` = **0** (only pre-existing repo-wide warnings; none in the two changed files) ·
+`bun run format:check` = **0** (both files already clean, no reflow needed).
+
+**Files changed (2):** `apps/web/e2e/directory/profile-paywall.spec.ts` +
+`apps/web/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section.tsx`
+(the `data-testid`). Test commit **`19c9d44a`**, this doc follows. **Pushed to PR #367**, same branch,
+no merge, no deploy, `main` untouched. **VERDICT: DONE.**
+
 ## Next session
 
 - **Goal:** PR review + merge for this lane (operator-gated); CI will re-run the full suite — the
