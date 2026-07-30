@@ -44,14 +44,13 @@ async function expectHiddenTextAbsentFromBody(page: Page, hiddenText: string[]) 
 }
 
 async function expectLoginRedirect(page: Page, nextPath: string) {
-  // SESSION_0267 (FINDING_03 closure): bumped 20s → 40s. Under full-suite
-  // chromium load, Next dev-server JIT-compile delay on the dynamic
-  // `/lineage/[slug]/edit/[nodeId]` route can push the unauth redirect
-  // past 20s. 40s provides slack without masking real regressions; in CI
-  // the chromium full suite typically resolves redirects in <2s.
+  // SESSION_0719: reverted the SESSION_0267 20s → 40s bump back to 20s. That bump masked the
+  // Next dev-server JIT-compile delay on the dynamic `/lineage/[slug]/edit/[nodeId]` route; CI
+  // now serves a PRODUCTION build (playwright.config webServer = `next start`, SESSION_0717/0718
+  // P1) so there is no JIT at test time and redirects resolve in <2s. 20s stays ample headroom.
   await expect(page).toHaveURL(
     url => url.pathname === "/auth/login" && url.searchParams.get("next") === nextPath,
-    { timeout: 40_000 },
+    { timeout: 20_000 },
   )
 }
 
@@ -59,10 +58,9 @@ async function expectAnonymousLoginRedirect(page: Page, nextPath: string) {
   await page.context().clearCookies()
   await page.context().clearPermissions()
   await page.goto("about:blank")
-  // TFF-008: this dynamic edit route can be cold-compiled by Turbopack while the
-  // browser assertion clock is already running. A request-context pre-hit warms
-  // the route and ignores the expected unauth redirect response.
-  await page.request.get(nextPath, { maxRedirects: 0, timeout: 60_000 }).catch(() => null)
+  // SESSION_0719: removed the TFF-008 Turbopack cold-compile pre-hit warm. CI now serves a
+  // PRODUCTION build (`next start`, SESSION_0717/0718 P1), so the dynamic edit route is
+  // precompiled and cannot cold-compile mid-assertion — a straight nav + redirect assertion holds.
   await page.goto(nextPath)
   await expectLoginRedirect(page, nextPath)
   await expect(page.getByRole("heading", { name: /sign in/i, level: 3 })).toBeVisible({
