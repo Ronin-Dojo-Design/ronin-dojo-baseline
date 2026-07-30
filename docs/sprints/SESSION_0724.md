@@ -200,7 +200,27 @@ test = HELD-then-authorized (pre-existing unrelated lineage-DB flake in
 coordinator against untouched `main`, filed as its own fix-lane — not a regression from this
 lane's diff). **Findings ≥ medium:** none in this lane's own diff. **Git hygiene:** owned paths
 only staged (`git status --porcelain` confirmed no drift outside the 4 owned files before commit);
-single push this session — see PR link below once opened.
+single push this session — PR: https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/368.
+
+**ggr pass 1 (post-Doug/Desi fix-loop).** Applied all 3 review findings: (1) Desi P1 —
+`RankStatusBadge` now wraps its `Badge` in the existing `Tooltip` primitive (`components/common/
+tooltip.tsx`) with the qualifier "Verification status for this specific rank award." so a public
+visitor can't misread the per-award badge as the hero's aggregate `LineageTrustBadge`; (2) Doug
+MINOR — `public-projection.test.ts` gained 2 cases (linked `RankEntry.status` threads to
+`rank.status`; entry-less award → `rank.status === null`), isolated run `8 pass / 0 fail`; (3) Doug
+MINOR (optional) — LANDED: hoisted the 3 literally-identical `{label,variant,icon}` rows
+(VERIFIED/UNVERIFIED/DISPUTED) shared between `RANK_STATUS_BADGE_CONFIG` and `TRUST_BADGE_CONFIG`
+into a new `components/web/lineage/trust-badge-status-rows.tsx` (`SHARED_TRUST_BADGE_ROWS`), both
+configs now reference it — `PENDING`/`claim-pending` stayed local (different label copy, not a true
+dup). Gates: typecheck 0 · lint 0 (no unintended `--fix` drift) · isolated
+`public-projection.test.ts` 8/8 pass. `fallow audit --changed-since origin/main` before/after: the
+`toRank` CRITICAL/116.3-CRAP finding is unchanged (pre-existing, inherited, confirmed via
+`git stash` diff against the prior pushed state — not moved by this pass); a transient
+unused-type-export flag on the new shared-rows file's `SharedTrustBadgeRow` type was fixed by
+dropping its `export` (type is only consumed internally via `satisfies`); one benign advisory-only
+"large function" note remains on the test file's `describe()` arrow (74 lines, driven by the 2
+required new cases) — not counted in fallow's gating `✗ N above threshold` line, so left as-is.
+Pushed to the same branch (updates PR #368), no merge/deploy.
 
 ## Reflections
 

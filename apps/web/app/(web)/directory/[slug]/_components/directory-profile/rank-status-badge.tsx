@@ -1,7 +1,11 @@
-import { BadgeCheckIcon, Clock3Icon, ShieldOffIcon, TriangleAlertIcon } from "lucide-react"
+"use client"
+
+import { Clock3Icon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 import type { RankEntryStatus } from "~/.generated/prisma/client"
 import { Badge } from "~/components/common/badge"
+import { Tooltip, TooltipContent, TooltipTrigger } from "~/components/common/tooltip"
+import { SHARED_TRUST_BADGE_ROWS } from "~/components/web/lineage/trust-badge-status-rows"
 
 /**
  * Per-rank verification badge (BBL-RANK-001 / WL-P2-47). Renders the raw `RankEntry.status`
@@ -11,11 +15,18 @@ import { Badge } from "~/components/common/badge"
  *
  * Label copy mirrors the wiring flow's public-projection table verbatim (§3): VERIFIED ->
  * Verified, UNVERIFIED -> Unverified, PENDING -> Pending verification, DISPUTED -> Disputed.
- * Icon + `Badge` variant tokens mirror `LineageTrustBadge`'s config
- * (`components/web/lineage/lineage-trust-badge.tsx`, the directory CARD's aggregate trust
- * badge) — same primitive, same color vocabulary, no new color system. This is a DISTINCT axis
- * from `LineageTrustStatus`: that type is the member-level aggregate (rank + claim + placeholder);
- * this badge is the single award's own `RankEntry.status`, unaggregated.
+ * Icon + `Badge` variant tokens for VERIFIED/UNVERIFIED/DISPUTED share
+ * `SHARED_TRUST_BADGE_ROWS` (`components/web/lineage/trust-badge-status-rows.tsx`) with
+ * `LineageTrustBadge`'s config (`components/web/lineage/lineage-trust-badge.tsx`, the directory
+ * CARD's aggregate trust badge) — same primitive, same color vocabulary, no new color system.
+ * This is a DISTINCT axis from `LineageTrustStatus`: that type is the member-level aggregate
+ * (rank + claim + placeholder); this badge is the single award's own `RankEntry.status`,
+ * unaggregated — PENDING has no `LineageTrustStatus` equivalent so it stays local.
+ *
+ * Desi P1 (SESSION_0724 ggr pass 1): visually identical to the hero's `LineageTrustBadge` but a
+ * DIFFERENT trust axis — wrapped in the existing `Tooltip` primitive (never hand-rolled) with a
+ * one-line qualifier so a public visitor can't misread a hero-vs-row mismatch as a bug. Hover/
+ * focus only — the row itself stays visually uncluttered.
  */
 
 type BadgeSize = NonNullable<ComponentProps<typeof Badge>["size"]>
@@ -28,26 +39,14 @@ type RankStatusBadgeConfig = {
 }
 
 const RANK_STATUS_BADGE_CONFIG = {
-  VERIFIED: {
-    label: "Verified",
-    variant: "success",
-    icon: <BadgeCheckIcon />,
-  },
-  UNVERIFIED: {
-    label: "Unverified",
-    variant: "outline",
-    icon: <ShieldOffIcon />,
-  },
+  VERIFIED: SHARED_TRUST_BADGE_ROWS.verified,
+  UNVERIFIED: SHARED_TRUST_BADGE_ROWS.unverified,
   PENDING: {
     label: "Pending verification",
     variant: "caution",
     icon: <Clock3Icon />,
   },
-  DISPUTED: {
-    label: "Disputed",
-    variant: "danger",
-    icon: <TriangleAlertIcon />,
-  },
+  DISPUTED: SHARED_TRUST_BADGE_ROWS.disputed,
 } satisfies Record<RankEntryStatus, RankStatusBadgeConfig>
 
 /** Renders nothing for a null/absent status — a rank with no linked `RankEntry` stays orphan-free. */
@@ -64,8 +63,15 @@ export function RankStatusBadge({
   const config = RANK_STATUS_BADGE_CONFIG[status]
 
   return (
-    <Badge variant={config.variant} size={size} prefix={config.icon} className={className}>
-      {config.label}
-    </Badge>
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Badge variant={config.variant} size={size} prefix={config.icon} className={className}>
+            {config.label}
+          </Badge>
+        }
+      />
+      <TooltipContent>Verification status for this specific rank award.</TooltipContent>
+    </Tooltip>
   )
 }
