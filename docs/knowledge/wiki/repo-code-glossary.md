@@ -4,8 +4,8 @@ slug: repo-code-glossary
 type: reference
 status: active
 created: 2026-06-06
-updated: 2026-07-26
-last_agent: claude-session-0582
+updated: 2026-07-30
+last_agent: claude-session-0720
 pairs_with:
   - docs/rituals/closing.md
   - docs/knowledge/wiki/index.md
@@ -283,6 +283,51 @@ commit) so the term is concrete, not abstract.
   frontmatter (work board, goal belt-ladders, risk watch; brand tab = skin × lane filter). Name
   pending operator ratification (Brandon pass, SESSION_0582). Projection only — the ledgers stay
   the source of truth; `/app/loop-board` stays the editable board.
+
+## Overnight orchestration (SESSION_0720)
+
+- **AFK (away from keyboard)** — the operator has stepped away. It flips the session into a cautious
+  autonomous posture: agents may prepare work and open it for review, but never merge, deploy, or take
+  any outward action without an explicit "go." All of SESSION_0720 ran AFK.
+- **Autonomous / overnight orchestration** — one long-lived *orchestrator* session dispatches batches of
+  independent work-lanes, collects their results, and holds everything at the merge gate for the
+  operator's review. Recipe:
+  [overnight-orchestrator-waves](../../protocols/recipes/overnight-orchestrator-waves.md).
+- **Lane** — one self-contained unit of work, run by its own agent in its own copy of the repo,
+  producing one PR. SESSION_0720 ran two lanes (0721 = a new test; 0722 = a docs fix).
+- **Wave** — a batch of lanes launched together; the next wave is planned from the last one's results.
+  The 0720 pilot was a single 2-lane wave.
+- **worktree** — a second working copy of the same repo checked out to a different branch
+  (`git worktree add`), so several agents can build side by side without colliding. Each lane gets its
+  own; nobody works in *canonical*.
+- **canonical (checkout)** — the primary repo copy (`/Users/brianscott/dev/black-belt-legacy`). During a
+  fan-out it is read-only reference; the edits happen in the per-lane worktrees.
+- **owned files (disjoint set)** — the exact list of files a lane is allowed to write. Before dispatch
+  the orchestrator proves no two lanes share a file ("pairwise-empty"), so their PRs can't collide.
+- **pinned fork** — an open decision the operator settles up front so lanes don't re-open it mid-run.
+  SESSION_0719's bow-in pinned four (push posture, what's safe to automate, failure = HOLD, completion
+  bar).
+- **HOLD** — the failure rule for an unattended lane: on any gate failure, conflict, or ambiguity, stop,
+  record it, and move on — never loop trying to fix it alone. Neither 0720 lane hit HOLD.
+- **REAL_EXIT** — the true pass/fail code of a check, captured directly. Piping a check through
+  `| tail` / `| grep` hides its real result (the PL-010 trap), so lanes record `REAL_EXIT` on every gate.
+- **push gate vs merge gate** — two separate approvals. Overnight lanes may *push* a branch and *open* a
+  PR (push gate open); nobody may *merge* it (merge gate held for the operator). Only merging to `main`
+  can reach the live site.
+- **staged stub / baton** — a session file written ahead of time carrying the whole dispatch plan, so the
+  next session or the morning review picks up the run without re-deriving it. SESSION_0720 was staged as
+  the baton by 0719.
+- **morning surface** — the attended pass after an overnight run: re-check each PR against current `main`,
+  confirm checks are green, and hand the operator a verdict table with the merge gate still held. The
+  full version is the
+  [AM_Coffee_Merge_Review](../../protocols/recipes/am-coffee-merge-review.md) recipe.
+- **required-check gate** — the server rule that `main` won't merge a PR until `CI complete` and
+  `Playwright complete` pass — the backstop that makes opening a PR unattended safe (SESSION_0718).
+  Example: PR #364 stayed "BLOCKED" until its checks went green.
+- **skill twin (`.agents` / `.claude`)** — the same skill file exposed under two folders
+  (`.agents/skills/…` and `.claude/skills/…`), kept byte-identical (one is a symlink into the other) so
+  one edit updates both (D-053). Fixing the stale `ronin-dojo-app` repo name in SESSION_0722 touched both
+  through the twin.
 
 ## Cross-references
 
