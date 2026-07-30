@@ -323,7 +323,7 @@ commit) so the term is concrete, not abstract.
   [AM_Coffee_Merge_Review](../../protocols/recipes/am-coffee-merge-review.md) recipe.
 - **required-check gate** — the server rule that `main` won't merge a PR until `CI complete` and
   `Playwright complete` pass — the backstop that makes opening a PR unattended safe (SESSION_0718).
-  Example: PR #364 stayed "BLOCKED" until its checks went green.
+  A PR reads as "BLOCKED" until its required checks go green.
 - **skill twin (`.agents` / `.claude`)** — the same skill file exposed under two folders
   (`.agents/skills/…` and `.claude/skills/…`), kept byte-identical (one is a symlink into the other) so
   one edit updates both (D-053). Fixing the stale `ronin-dojo-app` repo name in SESSION_0722 touched both
