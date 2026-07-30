@@ -54,7 +54,10 @@ export function MemberSettingsForm({ initialSettings }: MemberSettingsFormProps)
     },
   })
 
-  function updateGroup<G extends keyof MemberSettings>(group: G, value: Partial<MemberSettings[G]>) {
+  function updateGroup<G extends keyof MemberSettings>(
+    group: G,
+    value: Partial<MemberSettings[G]>,
+  ) {
     setSettings(current => ({ ...current, [group]: { ...current[group], ...value } }))
   }
 

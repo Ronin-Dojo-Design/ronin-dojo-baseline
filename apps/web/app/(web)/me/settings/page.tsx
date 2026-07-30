@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { Brand } from "~/.generated/prisma/client"
 import { getServerSession } from "~/lib/auth"
-import { getRequestBrand } from "~/lib/brand-context"
 import { getPageMetadata } from "~/lib/pages"
 import { getOwnMemberSettings } from "~/server/web/settings/queries"
 import { MemberSettingsView } from "./_components/settings"
@@ -24,10 +24,7 @@ export default async function MeSettingsPage() {
     redirect("/auth/login")
   }
 
-  const [brand, settings] = await Promise.all([
-    getRequestBrand(),
-    getOwnMemberSettings(session.user.id),
-  ])
+  const settings = await getOwnMemberSettings(session.user.id)
 
-  return <MemberSettingsView brand={brand} settings={settings} />
+  return <MemberSettingsView brand={Brand.BBL} settings={settings} />
 }
