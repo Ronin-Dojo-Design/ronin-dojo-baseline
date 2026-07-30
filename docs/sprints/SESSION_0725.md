@@ -243,6 +243,71 @@ findings introduced.**
 
 **New HEAD:** `d2040f5d` — **pushed to PR #367**, same branch, no merge, no deploy, `main` untouched.
 
+## Close evidence — ggr pass 3 (heuristic change: strict-AND → disc-OR-tree, operator-approved)
+
+**Operator decision:** the pinned strict-AND (discipline AND shared-tree) shipped DARK — the BBL
+roster has **0 `RankEntry` rows**, so the discipline branch of the AND matched nothing and every
+rail was empty (0/78, per pass-2). Operator approved relaxing the relation to **discipline OR
+shared-lineage-tree**: lights the rail NOW via the tree signal (78/78 BBL passports belong to a
+tree), and the discipline signal auto-activates once `RankEntry` data is backfilled — **no second
+code change needed** (the point of the OR).
+
+**Code changed — `apps/web/server/web/directory/related-profiles.ts` (the ONLY behavioral file):**
+
+1. Peer-match predicate: the two `passport` sub-keys (`rankEntries` disc-match + `lineageNode`
+   tree-match) changed from an implicit AND into an **OR** built from only the signals that exist —
+   `orBranches: Prisma.PassportWhereInput[]`, push the disc branch only when `topDisciplineId`,
+   push the tree branch only when `treeIds.length > 0`; the `where` uses `passport: { OR: orBranches }`
+   inside the same `AND:[baseWhere, {...}]` composition + `passportId: { not }` self-exclusion.
+   Never matches a null discipline or an empty `treeId in []`.
+2. Early-return gate flipped: `if (!topDisciplineId || treeIds.length === 0) return []` (both-required)
+   → `if (orBranches.length === 0) return []` (empty only when NEITHER signal exists). A profile with
+   only a tree — the BBL norm today — now proceeds.
+3. Everything else IDENTICAL: `RankEntry` usage (NOT reverted to `RankAward`), reused
+   `buildDirectoryProfileWhere({}, brand, null)` PUBLIC privacy predicate, self-exclusion, `take 6`,
+   `orderBy displayName asc`, select/render pipeline.
+4. Stale comments updated to OR semantics (doc-comment + inline). Paired comment-only fix in
+   `related-profiles-section.tsx` (its loader-behavior doc comment carried stale "shares both"
+   AND-wording) — no behavior change; the file is within this session's owned contract.
+
+**Lit-count (REAL prodsnap `ronindojo_prodsnap`, throwaway read-only script, deleted — never
+staged):** of the **78** PUBLIC BBL DirectoryProfiles (scoped denominator, unchanged from pass-2),
+**NON-EMPTY Related-Profiles rail (disc-OR-tree) = 78/78** — up from the prior **0/78**. All 78
+light via the **tree** signal; **0** via discipline (RankEntry backfill still pending, branch inert
+as designed).
+
+**Populated SSR smoke on REAL data (NO seed):** booted the worktree dev server
+(`apps/web && npx next dev --turbo -p 3191`, local prodsnap Postgres), `GET /directory/brian-scott`
+(a real PUBLIC BBL profile sharing the lineage tree with ≥1 other PUBLIC profile) → **HTTP 200**,
+338 KB, **no error boundary / digest** in body or server log. SSR HTML contains the **"Related
+Profiles"** `<h4>` heading followed by **6 `MCard kind="roster"` peer cards** (avatar initials +
+name + `/directory/<peer-slug>` "View profile" link + "Save" button):
+
+| # | Peer name | Peer link |
+| --- | --- | --- |
+| 1 | Alexander Martinez | `/directory/alexander-martinez` |
+| 2 | Allen Chambers | `/directory/allen-chambers` |
+| 3 | Andre Lima | `/directory/andre-lima` |
+| 4 | Arturo Aguilar | `/directory/arturo-aguilar` |
+| 5 | Ben Lowry | `/directory/ben-lowry` |
+| 6 | Bill Hosken | `/directory/bill-hosken` |
+
+(The alphabetically-first 6 PUBLIC BBL tree-peers — `orderBy displayName asc`, `take 6` — exactly
+matching the count query.) Server stopped after capture.
+
+**Gates (foreground, REAL exit, no pipe-mask):** `bun run typecheck` = **0** · `bun run lint` = **0**
+(only pre-existing repo-wide warnings; none in the changed files) · `bun run format:check` = **0**
+(the query file needed one `bunx oxfmt` reflow of the pushed disc branch, then clean; re-staged).
+
+**Fallow (`bunx fallow audit --changed-since origin/main`, before → after):** same total both runs —
+**1 dead-code finding + 3 complexity findings**, all inherited/gate-excluded (audit gate excluded 3
+inherited findings each run). `findRelatedProfiles` shifted `:34 → :45` and grew **108 → 119 lines**
+(the OR branches + expanded doc-comment), complexity ticked **6/4/42 CRAP → 7/5/56 CRAP** — the SAME
+pre-existing flagged function, **no NEW fallow finding introduced**.
+
+**New HEAD:** `4c2f315b` — **pushed to PR #367**, same branch (`auto/session-0725-related-profiles`),
+no merge, no deploy, `main` untouched. Feature now ships **live (rail lit 78/78)**, not inert.
+
 ## Next session
 
 - **Goal:** PR review + merge for this lane (operator-gated); CI will re-run the full suite — the
