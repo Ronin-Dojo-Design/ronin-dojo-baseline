@@ -67,15 +67,20 @@ shared-discipline `OR`, section renders a `Grid` of cards); `profile-where.ts`
 (`buildDirectoryProfileWhere` — the reused privacy predicate; `viewerUserId: null` → PUBLIC-only
 scope); `search-profiles.ts` + `facets.ts` (`peopleFacet`) — the proven
 `directoryProfileListPayload` → `projectDirectoryProfileListItem` → `mapPersonToFacet` →
-`DirectoryFacetResult` pipeline reused wholesale; `facet-result-card.tsx` (the ONE directory card,
-reused for people); `payloads.ts` / `public-payloads.ts` / `public-projection.ts` (payload shapes,
-top-rank ordering); schema confirmation of `LineageTreeMember.treeId`, `RankSystem.disciplineId`,
-`Passport.lineageNode` / `rankAwardsEarned`.
+`DirectoryFacetResult` pipeline reused wholesale; `facet-result-card.tsx` (**stale at time of
+writing** — believed to be "the ONE directory card, reused for people"; corrected in ggr pass 1:
+the live `/directory` people facet had already migrated to `MCard kind="roster"`
+(PWCC-002, on main before this session), so `related-profiles-section.tsx` was fixed to render
+through `MCard` + `mapFacetPersonToRosterCard` instead — see ggr pass-1 note below); `payloads.ts`
+/ `public-payloads.ts` / `public-projection.ts` (payload shapes, top-rank ordering); schema
+confirmation of `LineageTreeMember.treeId`, `RankSystem.disciplineId`, `Passport.lineageNode` /
+`rankAwardsEarned`.
 
 L1 pre-flight: no NEW UI primitive created — the section composes existing L1 pieces (`Section`,
-`H4`, `Grid`) and reuses `FacetResultCard` (the ONE directory card), matching the sibling profile
-sections' in-`ListingDetail` wrapper convention (bare `Section` + `H4`, per `ranks-section.tsx` /
-`organizations-section.tsx`).
+`H4`, `Grid`) and (as originally built) reused `FacetResultCard` — **stale**, see the ggr pass-1
+correction above: people cards now render via `MCard kind="roster"` (PWCC-002), matching the
+sibling profile sections' in-`ListingDetail` wrapper convention (bare `Section` + `H4`, per
+`ranks-section.tsx` / `organizations-section.tsx`).
 
 ## Delivered
 
@@ -128,11 +133,65 @@ concurrency flake, filed it as its own fix-lane, and AUTHORIZED the push.** Owne
 (typecheck 0, lint 0, both flaky files green in isolation). Staged the 4 owned paths, committed,
 pushed, and opened the PR per that authorization — see below.
 
+## ggr pass-1 (fix-loop) close evidence
+
+Doug held the score at ~7.7 on a Dirstarter-reuse cap; Desi found 2 P0 render defects. All 5
+findings (Desi P0×2, Doug MINOR, Desi P2, Desi P3) applied in this pass — see FIX 1–5 in the
+dispatch. Files touched (explicit paths, no `git add -A`):
+
+- `apps/web/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section.tsx`
+  — FIX 1 (dropped stale `FacetResultCard`, now `MCard kind="roster"` +
+  `mapFacetPersonToRosterCard`, mirroring the live `/directory` people facet, PWCC-002), FIX 2
+  (`Grid` gets `md:col-span-2`, exact `ancestry-section.tsx:34-36` precedent), FIX 3 (heading →
+  "Related Profiles").
+- `apps/web/server/web/directory/related-profiles.ts` — FIX 4 (typed `where` literal, `AND: [...]`
+  composition replacing the spread + blind `as Prisma.DirectoryProfileWhereInput` cast; privacy
+  predicate + heuristic left byte-identical — same PUBLIC-only gate, self-exclusion,
+  same-discipline-AND-shared-tree logic, `RELATED_PROFILE_LIMIT = 6`, unchanged).
+- `docs/sprints/SESSION_0725.md` — FIX 5 (corrected the stale "FacetResultCard is the ONE directory
+  card, reused for people" pre-flight claim; noted the PWCC-002 `MCard` migration) + this section.
+
+**Gates (foreground, real exit codes, from `apps/web`):**
+
+| Command | Result |
+| --- | --- |
+| `bun run typecheck` | REAL_EXIT=0 — clean |
+| `bun run lint` | REAL_EXIT=0 — only the same pre-existing repo-wide warnings noted in the original Verification table; `git status --porcelain` confirms `--fix` touched ONLY the 3 owned paths above |
+
+**Fallow (`bunx fallow audit --changed-since origin/main`, before → after this pass — captured via
+`git stash` around the pass-1 diff so "before" is the exact pre-fix code Doug/Desi reviewed):**
+
+- Before: 1 unused-type finding (`profile-view.ts:184 ClaimViewerState`, pre-existing/unrelated) +
+  3 complexity findings (`findRelatedProfiles` 97 lines, `loadProfileViewBySlug` 88 lines,
+  `PublicProfile` HIGH-complexity, all pre-existing) · maintainability 87.5.
+- After: SAME 1 unused-type finding (untouched file) + SAME 3 complexity findings
+  (`findRelatedProfiles` now 103 lines — grew 6 lines from the `AND` restructuring comment/code,
+  same pre-existing flagged function, not a new finding) · maintainability 87.3. **No new fallow
+  findings introduced by this pass.**
+
+**Runtime:** MCard/`mapFacetPersonToRosterCard` wiring confirmed via typecheck (0) AND a live
+worktree smoke — booted `next dev --turbo` in this worktree (port 3177, local prodsnap Postgres,
+already running), hit `GET /directory/bob-bass` (a real PUBLIC profile with a slug) → `200`, no
+error boundary/digest in the response body or server log, module graph (including the new `MCard`
+/ `map-roster` imports) compiled clean. **Could NOT exercise the "rail present" branch**: a
+throwaway read-only query against the local prodsnap snapshot found no pair of PUBLIC profiles
+sharing both a top discipline and a lineage tree (Doug's own pinned heuristic is a tight AND), so
+every real profile in this snapshot hits `profiles.length === 0` and short-circuits before ever
+rendering `MCard`. Did not seed synthetic data to force the case — this local Postgres instance is
+shared across worktrees on this machine and mutating it is out of this pass's scope/authorization.
+**Recommended pre-merge follow-up:** a visual smoke against a seeded pair (or prod) to confirm the
+populated-rail render, since this pass only proves the empty-branch + compile-time contract.
+
+**New HEAD:** see push confirmation in the hand-back below. **Pushed to PR #367**, same branch
+(`auto/session-0725-related-profiles`) — no merge, no deploy, `main` untouched.
+
 ## Next session
 
 - **Goal:** PR review + merge for this lane (operator-gated); CI will re-run the full suite — the
   same lineage concurrency flake may recur on the required check and needs the operator's judgment
-  there (or the separate flake fix-lane landing first).
+  there (or the separate flake fix-lane landing first). Recommend a visual smoke of the populated
+  "Related Profiles" rail (seeded pair or prod) before merge — this pass only exercised the
+  empty-branch + compile-time contract (see ggr pass-1 close evidence above).
 - **First task:** the separate stabilize-the-lineage-claim-reconcile-flake fix-lane (P2002/P2034
   under shared-DB full-suite load) — owned by that lane, not this one.
 

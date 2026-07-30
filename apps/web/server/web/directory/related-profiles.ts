@@ -67,26 +67,32 @@ export async function findRelatedProfiles({
   }
 
   // Reuse the directory privacy predicate for the PUBLIC-only visibility + brand scope, then AND in
-  // the related constraints (self-exclusion + same top-discipline + shared lineage tree).
-  const baseWhere = buildDirectoryProfileWhere({}, brand, null)
-  const basePassport = baseWhere.passport as Record<string, unknown>
+  // the related constraints (self-exclusion + same top-discipline + shared lineage tree). Composed
+  // via `AND` (never spread) so this function's own `passport` sub-filter can never clobber
+  // `baseWhere`'s `passport` sub-filter — including if `buildDirectoryProfileWhere` is ever called
+  // here with a non-empty search that populates `passport.rankAwardsEarned` itself. Each `AND`
+  // branch is its own typed literal, so TypeScript field-checks every key (no blind cast).
+  const baseWhere = buildDirectoryProfileWhere({}, brand, null) as Prisma.DirectoryProfileWhereInput
 
-  const where = {
-    ...baseWhere,
-    passportId: { not: passportId },
-    passport: {
-      ...basePassport,
-      rankAwardsEarned: {
-        some: { rank: { rankSystem: { disciplineId: topDisciplineId } } },
+  const where: Prisma.DirectoryProfileWhereInput = {
+    AND: [
+      baseWhere,
+      {
+        passportId: { not: passportId },
+        passport: {
+          rankAwardsEarned: {
+            some: { rank: { rankSystem: { disciplineId: topDisciplineId } } },
+          },
+          lineageNode: {
+            treeMembers: { some: { treeId: { in: treeIds } } },
+          },
+        },
       },
-      lineageNode: {
-        treeMembers: { some: { treeId: { in: treeIds } } },
-      },
-    },
+    ],
   }
 
   const profiles = await db.directoryProfile.findMany({
-    where: where as Prisma.DirectoryProfileWhereInput,
+    where,
     // Brand-filter the account-side memberships inside the shared list payload, identical to
     // `searchDirectoryProfiles`, so a cross-brand membership can never leak onto the card.
     select: {
