@@ -1099,6 +1099,11 @@ model Passport {
   // this is the one genuine new profile column the re-import needs. Enriched non-destructively.
   currentResidence          String?
   startedTrainingAt         DateTime? @db.Date
+  // @added member Settings parity (BBLApp BBLSettingsPage). The member-facing settings page
+  // (/me/settings) persists privacy/notification/security toggles + readiness text inputs as a
+  // single typed JSON blob (server/web/settings/member-settings.ts) — one additive nullable column
+  // on the identity SoT rather than a dozen scattered preference columns. `null` => all defaults.
+  memberPreferences         Json?
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
 
