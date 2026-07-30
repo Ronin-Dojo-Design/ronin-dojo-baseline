@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-28
-last_agent: claude-session-0712
+updated: 2026-07-30
+last_agent: claude-session-0720
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -20,6 +20,24 @@ backlinks:
 Track contradictions, stale claims, and unresolved tensions between sources. Each entry stays open until resolved by a session or ADR.
 
 ## Entries
+
+### D-057 — ".agents/.claude skill twins" canon says "hardlink" but they are symlinks
+
+- **Source A:** dispatch/canon wording — `docs/petey-plan-tier1-autonomous-lanes.md:161`, the SESSION_0720 dispatch stub, and the D-053 framing call the twins "hardlink twins / ONE inode."
+- **Source B:** disk reality — `.claude/skills/<name>` are directory **symlinks** into `.agents/skills/<name>` (`ls -la` confirmed); matching inodes are the symlink resolving to the same file, not two `ln`-linked inodes.
+- **Consequence:** an agent told to "re-establish the hardlink with `ln -f`" hunts for links that don't exist. Functionally the twins update together either way, but the terminology misleads a dispatched lane.
+- **Decision:** reconcile "hardlink" → "symlink" wording in D-053 + the citing docs; canonical fix upstream in rdd-monorepo (process-OS upstream-of-record).
+- **Status:** open — drift identified, wording fix routed (upstream).
+- **Found in:** SESSION_0722 (Lane B reflection) + SESSION_0720 AM sweep (Giddy F4).
+
+### D-056 — Synced kernel skills hardcode a repo name (re-drifts on every cherry-pick)
+
+- **Source A:** `.agents/skills/code-quality/SKILL.md` + `.agents/skills/fallow-fix-loop/SKILL.md` "Repo context" lines — historically named a single repo (`ronin-dojo-app`, then briefly `black-belt-legacy`).
+- **Source B:** the five-repo era (ADR 0055/0059) — these are process-OS skills cherry-picked from rdd-monorepo (upstream-of-record) across all five sibling forks; any hardcoded repo name is wrong in four of five and re-drifts on the next sync.
+- **Consequence:** a stale-name fix in one repo re-breaks on the next cherry-pick (the `ronin-dojo-app` → still-wrong loop).
+- **Decision:** **drop the name** — synced skills carry NO repo name; identity comes from the FS-0024 `git remote` guard only if ever needed (operator, SESSION_0720). Applied here as "a Ronin Dojo portfolio app" (#363, `a2cc9a62`).
+- **Status:** **RESOLVED in black-belt-legacy (SESSION_0720, #363).** Canonical rule ("synced skills are repo-agnostic") pending as an **ADR upstream in rdd-monorepo** — ADR 0059 kept SESSION_0720 out of that repo; routed follow-up.
+- **Found in:** SESSION_0722 (Lane B) + SESSION_0720 AM sweep (Giddy F2).
 
 ### D-055 — Two State-of-Dojo renderers diverged (script vs _kernel vocabulary/scope layer)
 
