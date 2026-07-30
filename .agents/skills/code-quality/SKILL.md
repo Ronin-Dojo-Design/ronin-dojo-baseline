@@ -12,7 +12,7 @@ that gathers evidence → classifies → scores → caps → fixes → re-verifi
 > Read the matrix doc first — this skill scores **against** it and cites `code-quality-matrix §N`. Don't
 > restate the rubric here; load it.
 
-> Repo context: `black-belt-legacy`. Run commands from `apps/web`. `fallow` is invoked via `npx fallow …`
+> Repo context: a Ronin Dojo portfolio app. Run commands from `apps/web`. `fallow` is invoked via `npx fallow …`
 > (confirm it resolves first — `npx fallow --help`; if it isn't installed, score D3/D5 from a manual
 > complexity/dupe read and say so). macOS has **no `timeout`** binary. Default DB is `ronindojo_prodsnap`.
 > Dev server: `npx next dev --turbo` on `localhost:3000` (FS-0002). Respect explicit-push: build, verify,
