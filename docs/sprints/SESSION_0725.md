@@ -185,6 +185,64 @@ populated-rail render, since this pass only proves the empty-branch + compile-ti
 **New HEAD:** see push confirmation in the hand-back below. **Pushed to PR #367**, same branch
 (`auto/session-0725-related-profiles`) — no merge, no deploy, `main` untouched.
 
+## Close evidence — ggr pass 2 (model-currency correctness fix, ADR-0058)
+
+**Operator-caught bug:** `findRelatedProfiles` derived the top-discipline signal from
+`rankAwardsEarned` (the `RankAward` model). Per **ADR 0058** (`docs/adr/0058-rankentry-is-rank-truth.md`)
+`RankEntry` is the ONE rank model — the `RankAward` read-collapse is DONE, `RankAward` is
+dead-but-present (table drop queued as G-011), so `rankAwardsEarned` returns stale/near-empty data.
+Fix = repoint the discipline signal to `RankEntry`; the pinned strict-AND heuristic is unchanged.
+
+**Only code file changed:** `apps/web/server/web/directory/related-profiles.ts` (+11/-5):
+
+1. Current-profile top-discipline derivation: `rankAwardsEarned` select → `rankEntries`
+   (`Passport.rankEntries RankEntry[]`, schema `:1131`). Same path `rank → rankSystem → disciplineId`.
+   `RankEntry` has no `awardedAt`, so secondary orderBy `{ awardedAt: "desc" }` → `{ createdAt: "desc" }`
+   (primary `{ rank: { sortOrder: "desc" } }`, `take: 1` kept). `topDisciplineId =
+   current?.rankEntries[0]?.rank?.rankSystem?.disciplineId ?? null`.
+2. Peer-match predicate: `passport.rankAwardsEarned.some` → `passport.rankEntries.some`
+   (same `rank.rankSystem.disciplineId` on `topDisciplineId`).
+3. Stale comments repointed to `rankEntries` (kept 3 explanatory mentions that name the retired
+   model to explain the ADR-0058 rationale).
+
+**No status filter added** (kept statusless, faithful to the original all-awards behavior).
+Justification: `grep -rn "rankEntries" apps/web/server apps/web/lib` returns nothing — there is NO
+canonical public passport payload that derives a top-discipline from `RankEntry` at all (the
+existing top-rank helpers in `disciplines/top-ranked-queries.ts` + `lineage/node-profile-queries.ts`
+still read `rankAwardsEarned`/`awardedAt`). So there was no status-filtered canonical to match.
+
+**Sparsity re-run (read-only, local `ronindojo_prodsnap`, throwaway scripts deleted, never staged):**
+
+- Denominator reconciliation: the actual BBL-scoped predicate
+  `buildDirectoryProfileWhere({}, "BBL", null)` yields **78** PUBLIC DirectoryProfiles. Doug's prior
+  **"89"** was the raw cross-brand `visibility=PUBLIC` count (`raw PUBLIC (any brand) = 89`;
+  `raw PUBLIC w/ BBL tree = 78`). Real scoped denominator = 78.
+- **RankEntry path (the fix):** pass gate (top-discipline + ≥1 tree) = **0/78**; NON-EMPTY rail = **0/78**.
+- **RankAward path (Doug's prior basis):** pass gate = **0/78**; NON-EMPTY rail = **0/78**.
+- Root cause — data, not model: **0 of 78** PUBLIC BBL passports have ANY `RankEntry`, and **0 of 78**
+  have ANY `RankAward`; all 78 DO have a lineage tree. Global prodsnap totals: **14 `RankEntry`
+  rows, 15 `RankAward` rows**, and **ZERO** of either belong to any BBL-tree passport
+  (`RankSystem.disciplineId` is NON-nullable, so a resolvable top-discipline == having ≥1 entry row).
+
+**Conclusion (LOUD — sends the decision back to the operator):** the repoint is CORRECT per ADR-0058
+and now reads the live rank model, but the rail stays **dark on today's snapshot because the BBL
+roster genuinely lacks rank data in BOTH models** — not because of the model choice. No seed was
+performed (out of authorization; and the "STILL 0" branch is instructed not to seed). No populated
+smoke was possible (nothing qualifies the strict-AND). The rail lights automatically once BBL
+passports acquire `RankEntry` rows in a shared top-discipline + tree. The feature ships correct but
+inert-until-data; whether to backfill BBL rank data is an operator decision.
+
+**Gates (foreground, real exit codes, no pipe-mask):** `bun run typecheck` = **0** · `bun run lint`
+= **0** (only pre-existing repo-wide warnings; none in the changed file) · `bun run format:check` =
+**0** (the changed file was already oxfmt-clean — no reformat needed).
+
+**Fallow (`bunx fallow audit --changed-since origin/main`, before → after):** unchanged — 1 dead-code
+finding + 3 complexity findings (`findRelatedProfiles`, `loadProfileViewBySlug`, `PublicProfile`),
+all inherited/gate-excluded (audit gate excluded 3 inherited findings both runs). **No new fallow
+findings introduced.**
+
+**New HEAD:** `d2040f5d` — **pushed to PR #367**, same branch, no merge, no deploy, `main` untouched.
+
 ## Next session
 
 - **Goal:** PR review + merge for this lane (operator-gated); CI will re-run the full suite — the
