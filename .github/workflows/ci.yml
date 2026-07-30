@@ -201,6 +201,36 @@ jobs:
         run: bun run test
         working-directory: apps/web
 
+  # SESSION_0719 (FS-0046): the workspace-scoped `typecheck` job above runs only in
+  # apps/web, and root `scripts/` is NOT a workspace, so no gate ran
+  # `tsc -p scripts/tsconfig.json` — a type error in any root script (e.g.
+  # state-of-project.ts, which the bow-out gate runner + /app/state depend on) merged
+  # green. This dedicated job closes that gap. CRITICALLY it is NOT gated on
+  # `needs.changes.outputs.run`: `scripts/**` is in the `changes` ignore-set, so a
+  # scripts-ONLY PR sets run=false and every gated job skips — extending the workspace
+  # `typecheck` job (which gates on changes.run) would STILL let a scripts-only type
+  # error merge green. Always-run + wired into `CI complete` below = the required check
+  # covers it. No Prisma generate / no Postgres service: no root script imports
+  # `~/.generated/prisma` (verified SESSION_0719); scripts/tsconfig.json's
+  # `include: ["*.ts"]` covers only the top-level scripts. `typescript` + `bun-types`
+  # resolve from the hoisted root node_modules after the workspace install.
+  scripts-typecheck:
+    name: Typecheck scripts (tsc)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Typecheck root scripts
+        run: bunx tsc -p scripts/tsconfig.json --noEmit
+
   # SESSION_0718 (lane 1): the single stable REQUIRED status check for this
   # workflow (name matches the rdd-monorepo umbrella). Always runs (if: always())
   # so it reports on EVERY PR — including docs-only PRs where the gates skip
@@ -208,7 +238,7 @@ jobs:
   # THIS name in the ruleset, not the per-job names (which are path-skipped).
   ci-complete:
     name: CI complete
-    needs: [changes, oxc, typecheck, unit]
+    needs: [changes, oxc, typecheck, unit, scripts-typecheck]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -220,10 +250,11 @@ jobs:
       OXC_RESULT: ${{ needs.oxc.result }}
       TYPECHECK_RESULT: ${{ needs.typecheck.result }}
       UNIT_RESULT: ${{ needs.unit.result }}
+      SCRIPTS_TYPECHECK_RESULT: ${{ needs.scripts-typecheck.result }}
     steps:
       - name: Verify no quality gate failed
         run: |
-          echo "changes=$CHANGES_RESULT oxc=$OXC_RESULT typecheck=$TYPECHECK_RESULT unit=$UNIT_RESULT"
+          echo "changes=$CHANGES_RESULT oxc=$OXC_RESULT typecheck=$TYPECHECK_RESULT unit=$UNIT_RESULT scripts-typecheck=$SCRIPTS_TYPECHECK_RESULT"
           # FAIL CLOSED. The detector must have SUCCEEDED — if `changes` errored (e.g.
           # a checkout/infra failure, not the diff logic), the heavy jobs skip via
           # `if: needs.changes.outputs.run` and would otherwise slip through as a green
@@ -240,4 +271,10 @@ jobs:
               exit 1
             fi
           done
+          # scripts-typecheck (FS-0046) is NOT gated on `changes` — it always runs, so unlike
+          # the docs-only-skippable gates above it must be `success`, never `skipped`/`cancelled`.
+          if [ "$SCRIPTS_TYPECHECK_RESULT" != "success" ]; then
+            echo "CI complete: FAILED — root scripts typecheck did not pass (result=$SCRIPTS_TYPECHECK_RESULT)."
+            exit 1
+          fi
           echo "CI complete: OK (all required gates passed or were docs-only skips)."

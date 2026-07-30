@@ -201,6 +201,34 @@ export async function cleanupOwnedTestRows(db: FixtureDb, owned: FixtureOwnershi
   if (treeIds.length) await db.lineageTree.deleteMany({ where: { id: { in: treeIds } } })
   if (nodeIds.length) await db.lineageNode.deleteMany({ where: { id: { in: nodeIds } } })
 
+  const rankNameFilters = containsOr(owned.rankNameContains)
+
+  // Rank has TWO EXPLICIT onDelete: Restrict children — RankAward.rankId (schema.prisma:2240) AND
+  // RankEntry.rankId (:2294) — so BOTH must be gone before the Rank delete below or Postgres
+  // raises a FK violation (P2003). (A third, IMPLICIT-Restrict child exists — required relation
+  // BeltTestRegistration.targetRankId → Rank, :1792 — but no fixture routed through this helper
+  // seeds belt-test rows against a name-matched Rank, so it never blocks here; add a
+  // rankId/name-scoped beltTestRegistration.deleteMany before the Rank delete if that ever changes.)
+  // RankEntry normally cascades from its RankAward
+  // (rankAwardId → onDelete: Cascade, :2298), but on LEFTOVER data from an interrupted run a
+  // RankEntry can reference a name-matched Rank whose owning RankAward wasn't in the discovered
+  // set — then the cascade never fires and the Rank delete throws. Delete RankEntry (and its
+  // own Cascade child RankEntryReview, :2327) EXPLICITLY first, mirroring the Rank targeting
+  // (ids + name-contains + owning passport/award), so the Rank delete is always safe. Children
+  // before parents: RankEntry + RankAward → Rank.
+  if (rankAwardIds.length || userIds.length || rankIds.length || rankNameFilters) {
+    await db.rankEntry.deleteMany({
+      where: {
+        OR: [
+          ...(rankAwardIds.length ? [{ rankAwardId: { in: rankAwardIds } }] : []),
+          ...(userIds.length ? [{ passport: { userId: { in: userIds } } }] : []),
+          ...(rankIds.length ? [{ rankId: { in: rankIds } }] : []),
+          ...(rankNameFilters ?? []).map(name => ({ rank: { name } })),
+        ],
+      },
+    })
+  }
+
   if (rankAwardIds.length || userIds.length) {
     await db.rankAward.deleteMany({
       where: {
@@ -209,7 +237,6 @@ export async function cleanupOwnedTestRows(db: FixtureDb, owned: FixtureOwnershi
     })
   }
 
-  const rankNameFilters = containsOr(owned.rankNameContains)
   if (rankIds.length || rankNameFilters) {
     await db.rank.deleteMany({
       where: { OR: [{ id: { in: rankIds } }, ...(rankNameFilters ?? []).map(name => ({ name }))] },

@@ -21,13 +21,13 @@ test.describe("Admin match scoring E2E", () => {
 
     // SESSION_0267 (carries SESSION_0266_TASK_01 pattern): replaced
     // `waitForLoadState("networkidle")` + `getByText(/bracket:/i)` with the
-    // bracket page's stable first-render heading. Same anchor as
-    // bracket.spec.ts:28; closes SESSION_0266_FINDING_03 for scoring.spec.
-    // 30s timeout chosen empirically: SESSION_0266's 20s passed isolation
-    // stress (6/6) but flaked under 30-spec full-suite load due to Next
-    // dev-server JIT-compile delay on dynamic routes.
+    // bracket page's stable first-render heading. Same anchor as bracket.spec.ts:28.
+    // SESSION_0719: reverted the SESSION_0267 20s → 30s bump back to 20s. The bump
+    // only covered the Next dev-server JIT-compile delay on dynamic routes under
+    // full-suite load; CI now serves a PRODUCTION build (`next start`, SESSION_0717/0718
+    // P1) so there is no JIT, and 20s already passed SESSION_0266's isolation stress (6/6).
     await expect(page.getByRole("heading", { name: /^Bracket:/i, level: 2 })).toBeVisible({
-      timeout: 30_000,
+      timeout: 20_000,
     })
 
     // SESSION_0267: tightened `/score/i` → `/^Score$/i` so the locator
