@@ -86,7 +86,8 @@ n/a — docs-only session, no code written (two-word string swap in doc prose, n
 | --- | --- | --- |
 | SESSION_0722_TASK_01 | landed | `.agents/skills/code-quality/SKILL.md:15` and `.agents/skills/fallow-fix-loop/SKILL.md:13` now read `black-belt-legacy` instead of `ronin-dojo-app`; `.claude/skills/*` twins are directory symlinks so they update identically with zero extra edits. Commit `65a9f6fb`. |
 
-**Decisions resolved:** None — the repo-agnostic question is deliberately unresolved (flagged, not decided).
+**Decisions resolved:** None *at lane time* — the repo-agnostic question was held here and later
+**RESOLVED by the operator in the SESSION_0720 AM sweep** (drop the name). See Open decisions / blockers.
 
 ## Verification
 
@@ -113,7 +114,14 @@ None.
   sibling repos, hardcoding any single repo name will re-drift on the next fork/sync. Proposed:
   a new D-row (design-system-and-cards.md ledger family, or a new skills-portability doc) deciding
   whether "Repo context" should read from git-remote at invocation time instead of being
-  hand-written prose. BLOCKED ON USER / Petey — not decided here.
+  hand-written prose.
+  - **RESOLVED (SESSION_0720 AM sweep, operator decision): drop the name.** The sweep superseded the
+    `black-belt-legacy` literal with a repo-agnostic line (*"a Ronin Dojo portfolio app"*) in commit
+    `a2cc9a62` on this branch — so the shipped net diff is `ronin-dojo-app` → agnostic, **not** →
+    `black-belt-legacy`. Rationale: a hardcoded name re-drifts on the next kernel cherry-pick.
+  - **Routed upstream:** the canonical ADR/D-row for "synced skills carry no repo name" belongs in
+    **rdd-monorepo** (process-OS upstream-of-record), cherry-picked down. ADR 0059 keeps this session
+    out of that repo, so it is a routed follow-up, not landed here.
 
 ## Next session
 
