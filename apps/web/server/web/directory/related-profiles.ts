@@ -105,8 +105,7 @@ export async function findRelatedProfiles({
               ...directoryProfileListPayload.passport.select.user.select,
               memberships: {
                 where: { organization: { brand } },
-                select:
-                  directoryProfileListPayload.passport.select.user.select.memberships.select,
+                select: directoryProfileListPayload.passport.select.user.select.memberships.select,
               },
             },
           },

@@ -57,9 +57,9 @@ const UpgradeSection = dynamic(() =>
 // BBL-DISCOVER-003: below-the-fold related-profile rail (ships the client Save button via
 // FacetResultCard), split off the initial bundle with SSR kept — self-hides on an empty list.
 const RelatedProfilesSection = dynamic(() =>
-  import(
-    "~/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section"
-  ).then(m => m.RelatedProfilesSection),
+  import("~/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section").then(
+    m => m.RelatedProfilesSection,
+  ),
 )
 
 export function PublicProfile({ view }: { view: PublicProfileView }) {
