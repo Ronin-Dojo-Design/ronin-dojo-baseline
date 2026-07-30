@@ -8,10 +8,12 @@ import {
 } from "~/server/web/claims/resolve-viewer-claim-state"
 import { findProfileBySlug } from "~/server/web/directory/queries"
 import { buildProfileMedia, type ProfileMedia } from "~/server/web/directory/profile-media"
+import { findRelatedProfiles } from "~/server/web/directory/related-profiles"
 import { getLineageAncestryForPassport } from "~/server/web/lineage/ancestry"
 import { getPublicPassportMedia } from "~/server/web/media/queries"
 import { isTechniqueViewerEntitled } from "~/server/web/techniques/technique-access"
 import { findAuthoredCurriculum } from "~/server/web/techniques/queries"
+import type { DirectoryFacetResult } from "~/lib/directory/facet-result"
 import type { DirectoryProfileView } from "~/app/(web)/directory/[slug]/_components/directory-profile/directory-profile-data"
 import { db } from "~/services/db"
 
@@ -36,6 +38,12 @@ export type PublicProfileView = DirectoryProfileView & {
    * section stays fetch-free; EMPTY on the free tier / placeholders (the gate is applied below).
    */
   profileMedia: ProfileMedia
+  /**
+   * Up to 6 PUBLIC related profiles (BBL-DISCOVER-003) — same top-discipline AND a shared lineage
+   * tree, self excluded. Already normalized to the directory card shape; EMPTY when the person has
+   * no relatable peers (the section self-hides). Fetched here so the section stays fetch-free.
+   */
+  relatedProfiles: DirectoryFacetResult[]
   viewerContext: { isOwner: false; renderPolicy: LineageProfileDetailRenderPolicy }
 }
 
@@ -117,6 +125,7 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     publicMedia,
     viewerEntitled,
     authoredCurriculum,
+    relatedProfiles,
   ] = await Promise.all([
     getRequestOrigin(),
     resolveViewerClaimState(db, { passportId: profile.passportId, viewerUserId }),
@@ -134,6 +143,9 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
     // SESSION_0529 Slice 3B — the profile's published AUTHORED techniques (ADR 0046: the profile
     // surface keys off `authorPassportId`) feed the "Curriculum" highlight rail.
     findAuthoredCurriculum(profile.passportId),
+    // BBL-DISCOVER-003 — PUBLIC related-profile suggestions (same top-discipline + shared lineage
+    // tree). Viewer-independent (PUBLIC-only), so it batches with the other reads.
+    findRelatedProfiles({ passportId: profile.passportId, brand: Brand.BBL }),
   ])
 
   return {
@@ -164,6 +176,7 @@ export async function loadProfileViewBySlug(slug: string): Promise<PublicProfile
         })),
       },
     }),
+    relatedProfiles,
     viewerContext: { isOwner: false, renderPolicy },
   }
 }

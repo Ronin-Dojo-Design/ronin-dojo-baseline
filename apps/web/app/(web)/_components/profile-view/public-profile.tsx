@@ -54,6 +54,13 @@ const UpgradeSection = dynamic(() =>
     m => m.UpgradeSection,
   ),
 )
+// BBL-DISCOVER-003: below-the-fold related-profile rail (ships the client Save button via
+// FacetResultCard), split off the initial bundle with SSR kept — self-hides on an empty list.
+const RelatedProfilesSection = dynamic(() =>
+  import(
+    "~/app/(web)/directory/[slug]/_components/directory-profile/related-profiles-section"
+  ).then(m => m.RelatedProfilesSection),
+)
 
 export function PublicProfile({ view }: { view: PublicProfileView }) {
   const { profile, profileUrl, locationLine, viewerClaimState, claimFunnelHref, ancestry } = view
@@ -103,6 +110,8 @@ export function PublicProfile({ view }: { view: PublicProfileView }) {
         {/* Upgrade CTA only for a CLAIMED-but-gated (free) profile; a placeholder's single CTA is
             the hero "Claim this profile" button (SESSION_0525 — no dual CTA). */}
         {!profile.canRenderFullProfile && !profile.isClaimablePlaceholder && <UpgradeSection />}
+        {/* BBL-DISCOVER-003: below-the-fold "Related profiles" rail — self-hides when empty. */}
+        <RelatedProfilesSection profiles={view.relatedProfiles} />
       </ListingDetail>
     </>
   )
