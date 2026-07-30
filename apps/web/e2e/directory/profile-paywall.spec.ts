@@ -44,11 +44,25 @@ test.describe("/directory/[slug] paywall field boundary", () => {
     // so an unscoped getByText resolves to multiple elements and trips strict mode.
     await expect(page.getByRole("link", { name: fixture.orgName })).toBeVisible()
 
-    // RICH — gated on the free tier even though every field is set in the DB.
+    // RICH — gated on the free tier even though every field is set in the DB. Cover/video/social
+    // never render in the below-the-fold "Related profiles" rail (roster cards show only
+    // avatar/name/rank/location), so these stay page-wide.
     await expect(page.getByRole("img", { name: /profile cover photo/i })).toHaveCount(0)
     await expect(page.getByRole("heading", { name: fixture.videoIntroTitle })).toHaveCount(0)
     await expect(page.getByRole("heading", { name: "Social" })).toHaveCount(0)
-    await expect(page.getByText(fixture.locationCity)).toHaveCount(0)
+
+    // Location is gated on the free tier too — but the "Related profiles" rail (BBL-DISCOVER-003)
+    // legitimately renders sibling directory cards, and the FREE + PREMIUM fixtures share ONE
+    // published lineage tree, so the PREMIUM sibling relates back and its PUBLIC roster card shows
+    // the premium city. That is a directory card, NOT a paywall leak, so the page-wide count is 1.
+    // Scope the "own location hidden" check to the profile body by EXCLUDING that rail (mirrors the
+    // role-scoping above): every city occurrence must live INSIDE the rail. Awaiting the rail's own
+    // city first also settles its `"use cache"` render (the chromium-only timing flake).
+    const relatedRail = page.getByTestId("related-profiles")
+    await expect(relatedRail.getByText(fixture.locationCity).first()).toBeVisible()
+    await expect(page.getByText(fixture.locationCity)).toHaveCount(
+      await relatedRail.getByText(fixture.locationCity).count(),
+    )
     // The media-locked upgrade badge is present on the gated (free) profile.
     await expect(page.getByText(/media locked/i)).toBeVisible()
   })

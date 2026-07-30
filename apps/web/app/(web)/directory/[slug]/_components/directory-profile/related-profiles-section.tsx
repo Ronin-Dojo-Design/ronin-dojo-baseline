@@ -24,7 +24,7 @@ export function RelatedProfilesSection({ profiles }: { profiles: DirectoryFacetR
   }
 
   return (
-    <Section>
+    <Section data-testid="related-profiles">
       <H4>Related Profiles</H4>
       {/* Section is md:grid-cols-3 — without the span the grid auto-places into ONE narrow column
           next to the heading (Desi P0, same class of bug as AncestrySection). Heading keeps col 1;
