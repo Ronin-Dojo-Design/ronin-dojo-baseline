@@ -210,7 +210,10 @@ DONE** in the stub, go quiet.
   [orchestrator](orchestrator.md) minimum-output contract before planning the continuation.
 - **At AM:** in-lane green predates the rebase — the merge owner re-runs full gates after rebase
   onto current main, per lane. Overnight gates are evidence, never a merge pass.
-- **The operator gate (LAW):** the run produces **branches + PRs only**. A lane that holds at
+- **The operator gate (LAW):** the run produces **branches + PRs only** — the MERGE gate, not the
+  push gate, is what's held (reconciled SESSION_0720). `main` is PR-only, server-enforced (ADR
+  0056); the SESSION_0718 required-check gate (`CI complete` + `Playwright complete`, fail-closed)
+  is the server backstop that makes an unattended PR-open safe. A lane that holds at
   the PR gate out of caution exhibits **CORRECT behavior** — the orchestrator opens the PR under
   the operator's standing word (proven: 0666/#294, where the lane held and the orchestrator
   opened). PRs whose merge would auto-deploy prod (e.g. `apps/rdd` → live ronindojodesign.com)

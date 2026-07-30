@@ -55,11 +55,17 @@ Proven at SESSION_0582 (four lanes + one orchestrator stub staged in one evening
 | **Cold headless driver** | the operator's session will close | `scripts/auto-session.sh N` (or the Codex variant) — one fresh process per session, reads the latest staged stub, closes, hands off via git. |
 | **ONE staged stub, zero pasting** (operator-ratified default) | either mechanism | Pre-stage a single orchestrator `SESSION_NNNN` stub (`status: staged`, `recipe: orchestrator`) carrying every lane's dispatch prompt verbatim + the dispatch instruction. The next fresh session's `/bow-in` finds it, adopts it, and dispatches — no re-planning, no pasting. |
 
-## No-overnight-push law
+## Overnight posture — PUSH branches + open PRs, hold MERGE (reconciled SESSION_0720)
 
-Every staged lane commits **locally only**. The push gate stays shut through the entire overnight
-run and through the morning sweep — see [AM_Coffee_Merge_Review](am-coffee-merge-review.md). This
-is unconditional: no lane, however green, pushes without the operator's explicit word.
+Under the operator's standing dispatch word, each lane **pushes its own branch and opens a PR**
+(never merges, never deploys); PRs stay open for the morning review. The gate held overnight is
+the **MERGE** gate, not the push gate — the reconciled posture across
+[overnight-orchestrator-waves](overnight-orchestrator-waves.md), [orchestrator](orchestrator.md),
+and [AM_Coffee_Merge_Review](am-coffee-merge-review.md). `main` is PR-only, server-enforced
+(ADR 0056); the SESSION_0718 required-check gate (`CI complete` + `Playwright complete`,
+fail-closed) is the server backstop that makes an unattended PR-open safe. With no standing word,
+hold at local-commit-only. (The cold headless driver `scripts/auto-session.sh` stays commit-only
+by script design.)
 
 ## Minimum-output contract
 

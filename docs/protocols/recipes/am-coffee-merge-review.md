@@ -48,12 +48,15 @@ scheduler can't reach local worktrees/DB, a separate process can't `SendMessage`
 lane, and a clock races completion (it either fires too early against a still-running lane or
 burns idle cycles polling). The trigger has to be the thing that knows the lanes actually finished.
 
-## No-overnight-push law (unconditional)
+## No-overnight-MERGE law (reconciled SESSION_0720)
 
-Every lane commits locally only ([PM_Planning_Lane](pm-planning-lane.md)). This sweep may merge
-lanes to **local** `main` and apply Proposed-ledger-edits, but the push gate stays **shut** through
-the entire sweep. The sweep's terminal state is always "verdicts ready, holding for your word" —
-never a pushed commit, however clean the run.
+Under the standing dispatch word, lanes push branches + open PRs overnight
+([PM_Planning_Lane](pm-planning-lane.md)); this sweep **reviews those open PRs** and applies
+Proposed-ledger-edits, but the **MERGE** gate stays **shut** through the entire sweep — no PR
+merges and nothing deploys without the operator's explicit morning word. `main` is PR-only,
+server-enforced (ADR 0056); the SESSION_0718 required-check gate (`CI complete` +
+`Playwright complete`, fail-closed) is the server backstop. The sweep's terminal state is always
+"verdicts ready, PRs open, holding for your word" — never a merged PR, however clean the run.
 
 ## Escalation valve
 
