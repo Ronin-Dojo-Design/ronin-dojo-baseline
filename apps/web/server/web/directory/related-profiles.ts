@@ -11,14 +11,25 @@ import { db } from "~/services/db"
 /**
  * "Related profiles" for a public profile detail page (BBL-DISCOVER-003).
  *
- * Operator-pinned heuristic (do NOT re-open): a related profile is one that
+ * Operator-approved heuristic (ggr pass 3 — strict-AND relaxed to disc-OR-tree): a related profile
+ * is one that
  *   (a) shares the current profile's TOP discipline (the discipline of the person's highest
  *       belt — approximated as "holds any rank in that discipline", the same way
  *       `findRelatedOrganizations` treats a shared discipline),
+ *   OR
  *   (b) shares at least ONE lineage tree with the current profile,
+ *   AND (always)
  *   (c) is not the current profile,
  *   (d) is PUBLIC-visibility only,
  * limited to 6.
+ *
+ * The (a)/(b) relation is an OR because the BBL roster has 0 `RankEntry` rows today, so a strict AND
+ * shipped dark (0/78). Relating by discipline OR shared-lineage-tree lights the rail now via the
+ * tree signal (78/78 BBL passports belong to a tree); the discipline signal is currently INERT and
+ * auto-activates once `RankEntry` data is backfilled — no further code change needed (that is the
+ * point of the OR). The OR branches are built from only the signals that actually exist on the
+ * current profile, so a null top-discipline or an empty tree list never contributes a branch (and
+ * therefore never matches on "everyone with no discipline" or similar).
  *
  * Privacy: the visibility + brand scope is REUSED from `buildDirectoryProfileWhere` (the ONE
  * directory privacy predicate). Passing `viewerUserId: null` pins the visibility scope to PUBLIC
@@ -64,18 +75,37 @@ export async function findRelatedProfiles({
   const topDisciplineId = current?.rankEntries[0]?.rank?.rankSystem?.disciplineId ?? null
   const treeIds = current?.lineageNode?.treeMembers.map(member => member.treeId) ?? []
 
-  // Both signals are required by the pinned heuristic — with no top discipline OR no lineage tree
-  // there is nothing to relate against, so render nothing (the section self-hides on an empty list).
-  if (!topDisciplineId || treeIds.length === 0) {
+  // Build the peer-match OR from only the signals that actually exist on the current profile — a
+  // null top-discipline or an empty tree list contributes NO branch, so we never match on
+  // "everyone with no discipline" or an empty `treeId in []`. (ggr pass 3 — operator-approved:
+  // relate by discipline OR shared lineage tree, not the old strict AND.)
+  const orBranches: Prisma.PassportWhereInput[] = []
+  if (topDisciplineId) {
+    // ADR 0058 — same-top-discipline peers derived from `rankEntries` (the ONE rank model), not the
+    // retired `rankAwardsEarned`. INERT on today's BBL snapshot (0 RankEntry rows); auto-activates
+    // once RankEntry data is backfilled — no further code change needed.
+    orBranches.push({
+      rankEntries: { some: { rank: { rankSystem: { disciplineId: topDisciplineId } } } },
+    })
+  }
+  if (treeIds.length > 0) {
+    orBranches.push({ lineageNode: { treeMembers: { some: { treeId: { in: treeIds } } } } })
+  }
+
+  // Relate only when at least ONE signal exists (discipline OR tree). With NEITHER there is nothing
+  // to relate against, so render nothing (the section self-hides on an empty list). A profile with
+  // only a tree — the BBL norm today — now proceeds (previously the strict-AND gate short-circuited
+  // it to dark).
+  if (orBranches.length === 0) {
     return []
   }
 
   // Reuse the directory privacy predicate for the PUBLIC-only visibility + brand scope, then AND in
-  // the related constraints (self-exclusion + same top-discipline + shared lineage tree). Composed
-  // via `AND` (never spread) so this function's own `passport` sub-filter can never clobber
-  // `baseWhere`'s `passport` sub-filter — including if `buildDirectoryProfileWhere` is ever called
-  // here with a non-empty search that populates `passport.rankEntries` itself. Each `AND`
-  // branch is its own typed literal, so TypeScript field-checks every key (no blind cast).
+  // the related constraints (self-exclusion + the disc-OR-tree peer match). Composed via `AND`
+  // (never spread) so this function's own `passport` sub-filter can never clobber `baseWhere`'s
+  // `passport` sub-filter — including if `buildDirectoryProfileWhere` is ever called here with a
+  // non-empty search that populates `passport.rankEntries` itself. Each `AND` branch is its own
+  // typed literal, so TypeScript field-checks every key (no blind cast).
   const baseWhere = buildDirectoryProfileWhere({}, brand, null) as Prisma.DirectoryProfileWhereInput
 
   const where: Prisma.DirectoryProfileWhereInput = {
@@ -83,16 +113,8 @@ export async function findRelatedProfiles({
       baseWhere,
       {
         passportId: { not: passportId },
-        passport: {
-          // ADR 0058 — same-top-discipline peers derived from `rankEntries` (the ONE rank model),
-          // not the retired `rankAwardsEarned`.
-          rankEntries: {
-            some: { rank: { rankSystem: { disciplineId: topDisciplineId } } },
-          },
-          lineageNode: {
-            treeMembers: { some: { treeId: { in: treeIds } } },
-          },
-        },
+        // Peer match: discipline OR shared lineage tree (built above from live signals only).
+        passport: { OR: orBranches },
       },
     ],
   }

@@ -13,8 +13,10 @@ import { mapFacetPersonToRosterCard } from "~/lib/m-card/map-roster"
  * `/directory` people facet uses (`directory-facet-results.tsx`) — via the live
  * `mapFacetPersonToRosterCard` adapter, so nothing new is exposed beyond a directory card.
  *
- * Empty → renders nothing (no orphan empty state): the loader returns `[]` when the person has no
- * top discipline / no lineage tree, or no other profile shares both.
+ * Empty → renders nothing (no orphan empty state): the loader returns `[]` when the person has
+ * NEITHER a top discipline NOR a lineage tree, or no other public profile shares either signal
+ * (ggr pass 3 — relates by discipline OR shared lineage tree; discipline is inert until RankEntry
+ * backfill, so today the rail lights via the shared-tree signal).
  */
 export function RelatedProfilesSection({ profiles }: { profiles: DirectoryFacetResult[] }) {
   if (profiles.length === 0) {
