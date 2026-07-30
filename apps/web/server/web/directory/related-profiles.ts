@@ -48,8 +48,12 @@ export async function findRelatedProfiles({
   const current = await db.passport.findUnique({
     where: { id: passportId },
     select: {
-      rankAwardsEarned: {
-        orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+      // ADR 0058 — `RankEntry` is the ONE rank model; the `RankAward` read-collapse is DONE and
+      // `rankAwardsEarned` is dead-but-present (table drop queued as G-011), so it returns
+      // stale/near-empty data. Derive the top discipline from `rankEntries` instead. `RankEntry`
+      // has no `awardedAt`, so the secondary tiebreak is `createdAt desc`.
+      rankEntries: {
+        orderBy: [{ rank: { sortOrder: "desc" } }, { createdAt: "desc" }],
         take: 1,
         select: { rank: { select: { rankSystem: { select: { disciplineId: true } } } } },
       },
@@ -57,7 +61,7 @@ export async function findRelatedProfiles({
     },
   })
 
-  const topDisciplineId = current?.rankAwardsEarned[0]?.rank?.rankSystem?.disciplineId ?? null
+  const topDisciplineId = current?.rankEntries[0]?.rank?.rankSystem?.disciplineId ?? null
   const treeIds = current?.lineageNode?.treeMembers.map(member => member.treeId) ?? []
 
   // Both signals are required by the pinned heuristic — with no top discipline OR no lineage tree
@@ -70,7 +74,7 @@ export async function findRelatedProfiles({
   // the related constraints (self-exclusion + same top-discipline + shared lineage tree). Composed
   // via `AND` (never spread) so this function's own `passport` sub-filter can never clobber
   // `baseWhere`'s `passport` sub-filter — including if `buildDirectoryProfileWhere` is ever called
-  // here with a non-empty search that populates `passport.rankAwardsEarned` itself. Each `AND`
+  // here with a non-empty search that populates `passport.rankEntries` itself. Each `AND`
   // branch is its own typed literal, so TypeScript field-checks every key (no blind cast).
   const baseWhere = buildDirectoryProfileWhere({}, brand, null) as Prisma.DirectoryProfileWhereInput
 
@@ -80,7 +84,9 @@ export async function findRelatedProfiles({
       {
         passportId: { not: passportId },
         passport: {
-          rankAwardsEarned: {
+          // ADR 0058 — same-top-discipline peers derived from `rankEntries` (the ONE rank model),
+          // not the retired `rankAwardsEarned`.
+          rankEntries: {
             some: { rank: { rankSystem: { disciplineId: topDisciplineId } } },
           },
           lineageNode: {
