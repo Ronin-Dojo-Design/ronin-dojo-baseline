@@ -4,7 +4,7 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-26
+updated: 2026-07-30
 last_agent: claude-session-0692
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
@@ -666,6 +666,23 @@ plan scope.
 - **Gap 3 — task orchestration/caching (turborepo/Nx-class):** gates fan out via hand-rolled
   scripts; research-recommend before adopting (CI + local gate minutes at 5 apps and growing).
 - **Lane:** repo/kernel. **Cross-refs:** WL-P3-69, WL-P2-69 (resolved format axis), ADR 0034/0038/0051.
+
+### PL-033 — Training journal + member Goal model (technique-graph-linked) — queued · operator-directed
+
+- **Status:** queued (operator-directed SESSION_0728). Net-new: the schema has **no** training journal
+  and **no** member `Goal`/`TrainingGoal` model — the SESSION_0728 schema sweep confirmed the
+  goals-ledger holds only operator G-NNN governance goals, not member training goals.
+- **Scope:** two additive models — (1) `TrainingLogEntry` (dated entries: rounds/drills/sparring notes,
+  bodyweight over time, camp/opponent, injuries), optionally linked to the `Technique`(s) drilled;
+  (2) `Goal`/`TrainingGoal` (target belt / technique mastery), which the journal keys to.
+- **Parent:** hangs off the technique-graph epic **G-022** (keyed to `Technique`/`TechniqueProgress`) —
+  NOT a standalone app. G-022's design waves carry a "no schema migration" constraint, so this is a
+  **new lane** sequenced after the current GA waves. Graduates to goal **G-035**.
+- **Tracked as:** ticket #395 on map #392 (BBL profile depth & records). Authority:
+  `../../product/black-belt-legacy/pods-schema-inventory.md`.
+- **Lane:** bbl / schema + feature. **Cross-refs:** G-022, G-035, #392, #395, SESSION_0728.
+- **Up-sync:** added in black-belt-legacy SESSION_0728; up-sync to the rdd-monorepo canonical copy
+  pending (operator, next day).
 
 ## Cross-references
 

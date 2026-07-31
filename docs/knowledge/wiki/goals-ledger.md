@@ -4,7 +4,7 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-26
+updated: 2026-07-30
 last_agent: claude-session-0635
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -782,3 +782,18 @@ aggregator reads it with no new parser logic.
      SEPARATE Resend accounts (BBL vs Baseline are) need a per-account secret — slice-2 follow-up.
 - **Cross-refs:** SESSION_0635 (`## Findings to route` — inbound-no-consumer blocker note), SESSION_0641
   (slice 1 + activation), `admin-collection-one-surface-law`, ADR 0051, `docs/runbooks/resend-setup-runbook.md`.
+
+### G-035 — Member Goal model + training journal (extends G-022)
+
+- **Status:** queued — P2 (Brian goal, opened SESSION_0728)
+- **Objective:** two net-new member-facing models the schema lacks today — a **`Goal`/`TrainingGoal`**
+  (target belt / technique mastery) and a **`TrainingLogEntry`** journal (dated entries: rounds/drills/
+  sparring notes, bodyweight over time, camp/opponent, injuries) — the journal keyed to goals and to the
+  `Technique`/`TechniqueProgress` graph. The SESSION_0728 schema sweep confirmed the goals-ledger holds
+  only operator G-NNN governance goals; there is **no member `Goal` model**.
+- **Parent:** **Extends G-022** (technique graph). Hangs off the graph, not a standalone app; G-022's
+  design waves are "no schema migration", so this is a NEW lane sequenced after the GA flip.
+- **Lane:** bbl / schema + feature. **Tracked as:** ticket #395 (map #392), PL-033.
+  **Cross-refs:** G-022, PL-033, #392/#395, `pods-schema-inventory.md`, SESSION_0728.
+- **Up-sync:** added in black-belt-legacy SESSION_0728; up-sync to the rdd-monorepo canonical ledger
+  copy pending (operator, next day).
