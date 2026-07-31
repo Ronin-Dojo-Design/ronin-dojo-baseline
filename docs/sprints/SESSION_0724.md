@@ -2,7 +2,7 @@
 title: "SESSION 0724 — verification-status badge on public profile rank rows"
 slug: session-0724
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-30
 updated: 2026-07-30
 last_agent: claude-session-0724
