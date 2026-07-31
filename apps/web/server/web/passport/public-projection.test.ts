@@ -10,10 +10,20 @@
 
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
+import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { PublicPassportRow } from "~/server/web/passport/public-payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 
-const award = (name: string, colorHex: string, discipline: string, year: number) => ({
+// `status` is optional and, when passed, threads a `rankEntry` onto the award (BBL-RANK-001 /
+// WL-P2-47) — omitted entirely (not just null) mirrors the real payload shape for an award with
+// no linked RankEntry.
+const award = (
+  name: string,
+  colorHex: string,
+  discipline: string,
+  year: number,
+  status?: RankEntryStatus,
+) => ({
   id: `award-${name}`,
   awardedAt: new Date(Date.UTC(year, 0, 1)),
   rank: {
@@ -27,6 +37,7 @@ const award = (name: string, colorHex: string, discipline: string, year: number)
       discipline: { id: "d", name: discipline, slug: "bjj", code: "BJJ" },
     },
   },
+  ...(status ? { rankEntry: { status } } : {}),
 })
 
 const row = (overrides: Partial<PublicPassportRow> = {}): PublicPassportRow =>
@@ -96,5 +107,23 @@ describe("projectPublicPassport", () => {
     )
     // resolveDisplayAvatar returns the brand default (or null if none configured) — never throws.
     expect(dto.avatarUrl === null || typeof dto.avatarUrl === "string").toBe(true)
+  })
+
+  it("threads a linked RankEntry.status onto the projected rank (BBL-RANK-001 / WL-P2-47)", () => {
+    const dto = projectPublicPassport(
+      row({
+        rankAwardsEarned: [award("Purple Belt", "#7c3aed", "Judo", 2020, "VERIFIED")],
+      } as Partial<PublicPassportRow>),
+    )
+    expect(dto.currentRank?.status).toBe("VERIFIED")
+  })
+
+  it("yields rank.status === null for an award with no linked RankEntry", () => {
+    const dto = projectPublicPassport(
+      row({
+        rankAwardsEarned: [award("Brown Belt", "#78350f", "Wrestling", 2018)],
+      } as Partial<PublicPassportRow>),
+    )
+    expect(dto.currentRank?.status).toBeNull()
   })
 })

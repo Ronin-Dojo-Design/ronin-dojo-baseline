@@ -1,13 +1,7 @@
-import {
-  BadgeCheckIcon,
-  Clock3Icon,
-  ImportIcon,
-  ShieldCheckIcon,
-  ShieldOffIcon,
-  TriangleAlertIcon,
-} from "lucide-react"
+import { Clock3Icon, ImportIcon, ShieldCheckIcon } from "lucide-react"
 import type { ComponentProps, ReactNode } from "react"
 import { Badge } from "~/components/common/badge"
+import { SHARED_TRUST_BADGE_ROWS } from "~/components/web/lineage/trust-badge-status-rows"
 import type { LineageClaimBadgeStatus, LineageTrustStatus } from "~/lib/lineage/trust-status"
 
 type BadgeSize = NonNullable<ComponentProps<typeof Badge>["size"]>
@@ -21,16 +15,8 @@ type BadgeConfig = {
 }
 
 const TRUST_BADGE_CONFIG = {
-  disputed: {
-    label: "Disputed",
-    variant: "danger",
-    icon: <TriangleAlertIcon />,
-  },
-  verified: {
-    label: "Verified",
-    variant: "success",
-    icon: <BadgeCheckIcon />,
-  },
+  disputed: SHARED_TRUST_BADGE_ROWS.disputed,
+  verified: SHARED_TRUST_BADGE_ROWS.verified,
   claimed: {
     label: "Claimed",
     variant: "info",
@@ -46,11 +32,7 @@ const TRUST_BADGE_CONFIG = {
     variant: "outline",
     icon: <ImportIcon />,
   },
-  unverified: {
-    label: "Unverified",
-    variant: "outline",
-    icon: <ShieldOffIcon />,
-  },
+  unverified: SHARED_TRUST_BADGE_ROWS.unverified,
 } satisfies Record<LineageTrustStatus, BadgeConfig>
 
 const CLAIM_BADGE_CONFIG = {

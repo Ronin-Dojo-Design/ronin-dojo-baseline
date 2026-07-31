@@ -1,3 +1,4 @@
+import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { BeltFamily } from "~/components/common/belt-swatch"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { PublicPassportRow } from "~/server/web/passport/public-payloads"
@@ -22,6 +23,13 @@ export type PublicPassportRank = {
   awardedAt: Date | null
   disciplineName: string | null
   disciplineSlug: string | null
+  /**
+   * @added BBL-RANK-001 / WL-P2-47 — the raw `RankEntry.status` enum (public MAY expose it per
+   * lineage-data-wiring-flow.md §3: VERIFIED | UNVERIFIED | PENDING | DISPUTED). Null when the
+   * award has no linked `RankEntry`. NEVER add reviewer / evidence / reporter fields here — the
+   * status enum is the only trust-presentation surface this projection may carry.
+   */
+  status: RankEntryStatus | null
 }
 
 export type PublicPassportDTO = {
@@ -53,6 +61,7 @@ const toRank = (award: PublicPassportRow["rankAwardsEarned"][number]): PublicPas
   awardedAt: award.awardedAt,
   disciplineName: award.rank?.rankSystem?.discipline?.name ?? null,
   disciplineSlug: award.rank?.rankSystem?.discipline?.slug ?? null,
+  status: award.rankEntry?.status ?? null,
 })
 
 const rankLabelOf = (rank: PublicPassportRank | null): string | null => {
