@@ -88,9 +88,9 @@ export function rankEntryStatusForAward(
   if (verificationStatus === "VERIFIED") return "VERIFIED"
   if (verificationStatus === "DISPUTED") return "DISPUTED"
   // IMPORTED = verified truth for BBL's established lineage (operator decision, SESSION_0522):
-  // imported awards render as VERIFIED entries. Provenance is retained on
-  // RankAward.verificationStatus, so belt-gate still treats IMPORTED awards as
-  // authority-owned / read-only — this only governs the member-facing RankEntry status.
+  // imported awards render as VERIFIED entries. Immutable origin remains separate on
+  // RankEntry.provenance, which belt-gate reads for authority-owned / read-only behavior;
+  // this function governs only the mutable member-facing RankEntry status.
   if (verificationStatus === "IMPORTED") return "VERIFIED"
   return "UNVERIFIED"
 }
