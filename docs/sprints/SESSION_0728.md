@@ -134,8 +134,9 @@ invariant honored throughout.
 - My "defer the inventory" recommendation was **overridden by the operator** (rightly — momentum + the
   ADR-0059 operator-override path made reading the sibling monorepo the unlock). Good reminder that the
   one-repo rule is a default, not a wall, when the operator authorizes.
-- **Ledger discipline:** did NOT edit the portfolio-shared goals/planning `.md` ledgers (drift risk —
-  canonical in rdd-monorepo); tracked via gh tickets + the BBL-local doc. The **absent `Goal` model**
+- **Ledger discipline:** initially deferred the portfolio-shared goals/planning `.md` edits (drift
+  risk — canonical in rdd-monorepo); operator then directed adding them here with an up-sync tomorrow,
+  so the journal/Goal lane landed as **PL-033** + **G-035** (Extends G-022). The **absent `Goal` model**
   is a genuine finding — the goals-ledger is operator-governance (G-NNN), not member training goals.
 
 ## Full close evidence

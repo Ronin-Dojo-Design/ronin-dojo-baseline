@@ -274,7 +274,7 @@ AgentOS, Bubble Builder) — not BBL member schema. BBL-relevant new findings:
 
 Maps: **#384** (Pods consolidation) · **#392** (profile depth & records) · belt-stripes on **#374**.
 
-> **Ledger note:** the goals-ledger + planning-ledger `.md` files were **not** edited this session —
-> they appear portfolio-shared (canonical in rdd-monorepo; "shared ledgers frozen"). Formal PL/G rows
-> for the journal/Goal lane should be added in an RDD-monorepo session to avoid drift. Tracked here
-> via the tickets above + this doc in the meantime.
+> **Ledger note:** the journal/Goal lane is now recorded as **PL-033** (planning-ledger) + **G-035**
+> (goals-ledger, Extends G-022), added in black-belt-legacy SESSION_0728 at operator direction.
+> These ledgers are portfolio-shared (canonical in rdd-monorepo) — **up-sync to the monorepo copy is
+> pending (operator, next day)** to reconcile drift.
