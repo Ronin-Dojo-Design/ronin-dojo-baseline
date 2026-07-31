@@ -1,20 +1,21 @@
 ---
 title: "SESSION 0727 — Chart the RankEntry-unification Wayfinder (HITL) + size the roster backfill"
 slug: session-0727
-type: session--staged
-status: staged
+type: session--plan
+status: in-progress
 created: 2026-07-30
 updated: 2026-07-30
-last_agent: claude-session-0723
+last_agent: claude-session-0727
 sprint: S13
 lane: bbl
 recipe: "wayfinder-epic-charting"
-goal_ids: []
-tickets: []
-next_session:
+goal_ids: ["G-011"]
+tickets: ["#372", "#374", "#375", "#376", "#377", "#378", "#379", "#380", "#381"]
+next_session: SESSION_0728
 pairs_with:
   - docs/sprints/SESSION_0723.md
   - docs/product/black-belt-legacy/rankentry-unification-epic.md
+  - docs/sprints/plans/petey-plan-0727-rankentry-wayfinder.md
 backlinks:
   - docs/knowledge/wiki/index.md
 ---
@@ -49,6 +50,30 @@ Chart the RankAward→RankEntry epic as a `wayfinder:map` (HITL), size the roste
 backfill against **real prod** state, and seed the autonomous `quick` tickets (ADR-0058 read-sweep,
 test-gate fix, backfill script — dry-run only) so they can fan out cold.
 
+## Bow-in
+
+- Adopted this staged stub (ADR 0049); canonical claimed for 0727 (FS-0035 check: free).
+  Githooks doctor FAILED at start → `install.sh` re-run, all checks now pass (ADR 0053/0056).
+- Prior sessions: 0726 (ACL viewer) **YES** — merged #369; staging parent 0723 **EXTENDED YES**.
+- Parallel-lane assessment (G-023): single-lane — only PR #361 open (settings parity, no
+  RankEntry overlap); no live 07xx branches/worktrees; no merge owner needed (docs-plan lane).
+- **FS-0048 read-before-build sweep** (schema-validity verified by opening the real files, not
+  names): spec [#372](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/372) ·
+  ADR 0058 · `rank-entry-unified-data-flow.md` · `prisma/schema.prisma` (RankEntry +
+  `rankAwardId` anchor + both status enums) · `server/belt/queries.ts`
+  (`rankEntryStatusForAward` IMPORTED→VERIFIED collapse) · `server/belt/belt-gate.ts` (authority
+  rule reads `award.verificationStatus` — the provenance dependency) ·
+  `rank-entry-compatibility.ts` (`syncRankEntryFromAward`) · `scripts/session-0522-belt-backfill.ts`
+  (the proven backfill pattern) · LineageNode/LineageTreeMember models (no belt fields on nodes;
+  promotion edges carry `rankAwardId`). Graphify query mapped the epic docs/goal nodes (G-011).
+- `/wayfinder` is vendored locally (`.claude/skills/wayfinder`) — used as the charting authority.
+
+## Bow-in verdict (Petey Qs)
+
+⓪ prev goal YES (0726, merged) · ① this lane = 0727 wayfinder charting · ② queue = FI-001/G-001
+P0, PL-024, PR #361, 125 open ledger items · ③ no pivot (operator confirmed) · SotD publish: NO
+(live `/app/state` cited).
+
 ## Resolved forks (operator, SESSION_0723 — do not re-open)
 
 - **Backfill rank status = VERIFIED** (session-0522 precedent: "everyone on the canonical tree is
@@ -63,14 +88,22 @@ test-gate fix, backfill script — dry-run only) so they can fan out cold.
 ## Tasks
 
 ### SESSION_0727_TASK_01 — Verify real prod RankEntry coverage (read-only)
+
 - **Agent:** Petey (HITL) · **Depends on:** nothing
 - **Steps:** Query **prod** (not the local snapshot) for how many BBL-tree passports carry a
   RankEntry; identify whose the existing ~14 RankEntry / ~15 RankAward rows are (did SESSION_0522 /
   SESSION_0524 belt-backfills actually apply?). Local snapshot showed **0/78** — confirm whether
   that's a stale-snapshot artifact or genuine.
 - **Done means:** a real prod number + a sizing verdict (already-done / small / full-roster backfill).
+- **✅ DONE (2026-07-30):** prod (via `DIRECT_URL` — pooler creds stale, P1000): **RankEntry 111**
+  (99 VERIFIED / 12 UNVERIFIED), RankAward 111 (27 VERIFIED / **72 IMPORTED** / 12 UNVERIFIED),
+  0 award-only orphans. **Canonical tree 95/95 covered — the 0522/0524 backfills applied; the
+  "0/78 dark roster" was a stale local prodsnap artifact.** Gap: 7 side-tree passports.
+  **Verdict: already-done** (canonical); sweep the 7 → ticket #379. Evidence + detail:
+  [petey-plan-0727-rankentry-wayfinder](plans/petey-plan-0727-rankentry-wayfinder.md).
 
 ### SESSION_0727_TASK_02 — Create the RankEntry-epic Wayfinder map (`/wayfinder`)
+
 - **Agent:** Petey + operator (HITL charting) · **Depends on:** TASK_01
 - **Steps:** New `wayfinder:map` GitHub issue from `rankentry-unification-epic.md` + ADR 0058 +
   `rank-entry-unified-data-flow.md` + TASK_01's numbers. **Destination:** *"RankAward retired,
@@ -89,8 +122,19 @@ test-gate fix, backfill script — dry-run only) so they can fan out cold.
   the backfill **script** (dry-run only until an attended `--apply`).
 - **Done means:** map issue exists; full/quick tickets enumerated with `Weight:`/`Agent:` lines;
   the two ready `quick` lanes below have paste-ready batons.
+- **✅ DONE (2026-07-30):** map = [#374](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/374)
+  (anchored on #372; `/to-spec` NOT re-run; `/to-issues` satisfied by the child tickets). 7 weighted
+  children: #375 provenance shape (`full`/prototype) · #376 seam+sweep (`quick`, blocked by #375) ·
+  #377 CI read-guard (`quick`, blocked by #376) · #378 test-gate fix (`quick`) · #379 straggler
+  sweep (`quick`, attended `--apply`) · #380 table-drop grill (`full`, blocked by #376+#377) ·
+  #381 env hygiene (`quick`, attended). Blocked-by wired create-then-in-order (one pass).
 
 ## Staged autonomous lanes (model-agnostic — dispatch after the map exists)
+
+> **Superseded by the map (2026-07-30):** Q-④ became [#376](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/376)
+> and is now **blocked by #375** (the seam exposes provenance — don't dispatch it early);
+> Q-⑤ became [#378](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/378) and stays
+> immediately dispatchable. The map's frontier is the dispatch truth, not this section.
 
 Both AFK-safe, provably-disjoint file sets — fan out to Claude OR codex:
 
@@ -110,6 +154,10 @@ Both AFK-safe, provably-disjoint file sets — fan out to Claude OR codex:
 ## Open decisions (route as `full` tickets — do NOT pre-resolve)
 
 - IMPORTED-provenance on RankEntry (belt-gate authority) · backfill scope · table-drop timing.
+- **✅ ALL GRILLED (operator one-word picks, 2026-07-30 — do not re-open):** provenance =
+  **COLUMN** (shape → #375) · backfill = canonical DONE + **sweep the 7** (#379) · table-drop =
+  **sequenced now** on the map with blockers (#380; still post-FI-001-send) · map home =
+  **GitHub issues now** (#374). Record: [petey-plan-0727-rankentry-wayfinder](plans/petey-plan-0727-rankentry-wayfinder.md).
 
 ## Risks
 
@@ -164,6 +212,20 @@ RESOLVED (don't re-open): backfill status = VERIFIED (0522 precedent); autonomou
 dry-run→attended --apply only; never self-answer a full ticket. Merge/prod actions HOLD for operator.
 ```
 
+## Artifacts
+
+- Wayfinder map: [#374 — Retire RankAward: RankEntry the ONE model](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/374)
+  (7 weighted children #375–#381; spec anchor #372).
+- Ratified plan: [petey-plan-0727-rankentry-wayfinder](plans/petey-plan-0727-rankentry-wayfinder.md).
+- Prod sizing script (scratchpad, read-only; not committed): `prod-rank-sizing.ts` — output
+  recorded in the plan doc.
+
 ## Next session
 
-<!-- staged by 0727 at its own bow-out -->
+- **Goal:** work the map's first `full` ticket — [#375 provenance field shape](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/375)
+  (HITL `/prototype`). Staged as [SESSION_0728](SESSION_0728.md) (ADR 0049 stub).
+- **First task:** claim #375 (self-assign), open the map #374 Decisions-so-far, then prototype
+  the provenance column shape against `belt-gate.ts` + `queries.ts` + the migration path.
+- Optional parallel fan-out (model-agnostic, AFK): #378 test-gate fix · #379 straggler-sweep
+  dry-run · #381 env hygiene (attended, secrets). Never resolve more than one non-research
+  ticket in the attended session (wayfinder discipline).
