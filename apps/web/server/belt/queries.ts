@@ -174,7 +174,7 @@ export function resolveAnchorAward(
 
 /**
  * The member's awards, pre-ordered by `rank.sortOrder desc` — the order
- * `pickTopAwardInDiscipline` / the gate rely on to read the ceiling as the
+ * the discipline-scoped rank-entry resolver / the gate rely on to read the ceiling as the
  * "first in discipline" row.
  */
 export async function getMemberAwards(
@@ -188,9 +188,9 @@ export async function getMemberAwards(
   })
 }
 
-/** Project one award row into the enriched belt card the mutations return. */
 /**
- * Project legacy compatibility fields through the canonical RankEntry status.
+ * Project one award row into the enriched belt card the mutations return, mapping
+ * legacy compatibility fields through the canonical RankEntry status.
  * Fact provenance/editability remains on RankAward during the additive cutover.
  */
 export function toBeltCard(

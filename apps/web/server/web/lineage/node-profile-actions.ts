@@ -7,7 +7,7 @@ import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import {
   findActiveLineageNodeProfileAccess,
-  pickTopAwardInDiscipline,
+  pickTopRankEntryInDiscipline,
 } from "~/server/web/lineage/node-profile-queries"
 import {
   type UpdateLineageNodeProfileInput,
@@ -144,7 +144,7 @@ export const applyLineageNodeProfileUpdate = async ({
       })
     }
 
-    const shownRankEntry = pickTopAwardInDiscipline(
+    const shownRankEntry = pickTopRankEntryInDiscipline(
       member.node.passport.rankEntries,
       tree.disciplineId,
     )

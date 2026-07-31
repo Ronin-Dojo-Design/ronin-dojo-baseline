@@ -15,11 +15,11 @@ import { db } from "~/services/db"
  * so the server edit-path callers — which select the lean scalar `rank.rankSystem.disciplineId`
  * — share the same rule as `memberTopRankEntry`. See SESSION_0475.
  */
-export function pickTopAwardInDiscipline<
+export function pickTopRankEntryInDiscipline<
   T extends { rank: { rankSystem: { disciplineId: string | null } | null } },
->(awards: T[], disciplineId: string | null): T | null {
-  if (!disciplineId) return awards[0] ?? null
-  return awards.find(award => award.rank.rankSystem?.disciplineId === disciplineId) ?? null
+>(entries: T[], disciplineId: string | null): T | null {
+  if (!disciplineId) return entries[0] ?? null
+  return entries.find(entry => entry.rank.rankSystem?.disciplineId === disciplineId) ?? null
 }
 
 export type EditableLineageNodeProfile = {
@@ -149,7 +149,7 @@ export const getEditableLineageNodeProfile = async ({
     return null
   }
 
-  const currentRankAward = pickTopAwardInDiscipline(
+  const currentRankEntry = pickTopRankEntryInDiscipline(
     member.node.passport.rankEntries,
     tree.disciplineId,
   )
@@ -183,8 +183,8 @@ export const getEditableLineageNodeProfile = async ({
     },
     member: {
       id: member.id,
-      currentRankAward: currentRankAward
-        ? { id: currentRankAward.rankAward.id, awardedAt: currentRankAward.rankAward.awardedAt }
+      currentRankAward: currentRankEntry
+        ? { id: currentRankEntry.rankAward.id, awardedAt: currentRankEntry.rankAward.awardedAt }
         : null,
     },
   }

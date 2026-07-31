@@ -3,8 +3,8 @@
  *
  * The IMMUTABLE origin axis is written from the anchor award's verificationStatus:
  * IMPORTED → IMPORTED; VERIFIED | UNVERIFIED | DISPUTED → EARNED (`awardedById` is
- * NOT consulted). DB-free: a fake client captures the `upsert` args so both the
- * Creation derives the origin once; updates must omit provenance so a later mutable-status
+ * NOT consulted). DB-free: a fake client captures the `upsert` args. Creation
+ * derives the origin once; updates must omit provenance so a later mutable-status
  * transition cannot rewrite history.
  *
  * Run: cd apps/web && bun run test server/belt/rank-entry-provenance.test.ts

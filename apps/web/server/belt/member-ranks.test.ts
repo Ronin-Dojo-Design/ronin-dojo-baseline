@@ -1,7 +1,7 @@
 /**
- * The canonical rank-read seam (#376) — behavior locked ONCE here (spec #372
- * Testing Decisions). Consumers repoint through `memberRanks` / `memberTopRank`
- * and are NOT re-tested for rank-read behavior.
+ * The compact rank-read seam (#376) — behavior locked once here (spec #372
+ * Testing Decisions). Rich nested consumers keep purpose-built selects while
+ * reusing the same `rankEntryDisplayOrder` contract.
  *
  * DB-free: a fake `rankEntry.findMany` captures the Prisma query and feeds fixture
  * rows in the selected shape, so the display-order/no-brand contract,

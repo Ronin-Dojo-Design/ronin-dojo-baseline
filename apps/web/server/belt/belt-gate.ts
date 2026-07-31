@@ -8,13 +8,13 @@ import type {
  * Pure belt-journey gating logic (Slice 3 — Petey Plan 0477 Locked #5).
  *
  * Kept DB-free and side-effect-free so every invariant is unit-testable in
- * isolation (mirrors `matchesPattern` / `pickTopAwardInDiscipline`). The oRPC
+ * isolation (mirrors `matchesPattern` / `pickTopRankEntryInDiscipline`). The oRPC
  * procedures in `./router.ts` are the ONLY caller — they resolve the member's
  * awards, then delegate every self-promotion / verified-fact / top-award
  * decision here. No self-service path may bypass these predicates.
  *
  * Ceiling = the member's highest AWARDED rank IN the discipline
- * (`pickTopAwardInDiscipline(...).rank.sortOrder`, BBL = BJJ). A member may only
+ * (`pickTopRankEntryInDiscipline(...).rank.sortOrder`, BBL = BJJ). A member may only
  * create/enrich a `RankAward` at `sortOrder <= ceiling`, so they can never
  * self-promote past what they have already been awarded.
  */
@@ -32,7 +32,7 @@ export type GateAward = {
 /**
  * The member's ceiling `sortOrder` in the given discipline — the highest AWARDED
  * belt they hold. `awards` must be pre-ordered by `rank.sortOrder desc` (the
- * Prisma read order), so `pickTopAwardInDiscipline`'s "first in discipline" rule
+ * Prisma read order), so the shared "first in discipline" rule
  * yields the ceiling. Returns `null` when the member holds no award in the
  * discipline (nothing is grantable — not even white belt — until they hold one,
  * which the onboarding/import path seeds).
