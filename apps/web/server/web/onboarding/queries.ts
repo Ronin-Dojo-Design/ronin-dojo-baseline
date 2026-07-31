@@ -57,8 +57,8 @@ export async function getOnboardingState({
     }),
     db.organization.findFirst({ where: { ownerId: userId, brand }, select: { id: true } }),
     db.passport
-      .findUnique({ where: { userId }, select: { _count: { select: { rankAwardsEarned: true } } } })
-      .then(p => p?._count.rankAwardsEarned ?? 0),
+      .findUnique({ where: { userId }, select: { _count: { select: { rankEntries: true } } } })
+      .then(p => p?._count.rankEntries ?? 0),
     // Cheap fallback: any ACTIVE membership at all → at least "premium".
   ])
 

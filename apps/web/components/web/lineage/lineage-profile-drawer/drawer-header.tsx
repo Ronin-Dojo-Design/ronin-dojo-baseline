@@ -186,7 +186,7 @@ export function DrawerIdentityHeader({
   const {
     displayName,
     avatarSrc,
-    panelAward,
+    panelEntry,
     panelRankColor,
     panelRankProgress,
     headerRankName,
@@ -227,9 +227,9 @@ export function DrawerIdentityHeader({
                   variant="belt"
                   size="lg"
                   colorHex={panelRankColor}
-                  secondaryColorHex={panelAward?.rank.secondaryColorHex ?? null}
-                  degree={panelAward?.rank.degree ?? null}
-                  beltFamily={panelAward?.rank.beltFamily ?? null}
+                  secondaryColorHex={panelEntry?.rank.secondaryColorHex ?? null}
+                  degree={panelEntry?.rank.degree ?? null}
+                  beltFamily={panelEntry?.rank.beltFamily ?? null}
                 />
                 <Note className="truncate">
                   {headerRankName}
@@ -239,7 +239,7 @@ export function DrawerIdentityHeader({
             )}
             <DrawerHeaderBadges
               claimBadgeStatus={claimBadgeStatus}
-              organizationName={panelAward?.organization?.name ?? null}
+              organizationName={panelEntry?.rankAward.organization?.name ?? null}
             />
           </Stack>
         </Stack>

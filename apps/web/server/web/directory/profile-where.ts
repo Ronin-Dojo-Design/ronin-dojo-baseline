@@ -44,8 +44,9 @@ export function buildDirectoryProfileWhere(
     : ["PUBLIC"]
 
   // Phase 3c: DirectoryProfile is Passport-rooted; memberships are account-side, reached
-  // through passport.user (SOT-ADR D1). RankAward earner is Passport-rooted directly, so a rank
-  // filter narrows on the Passport via `rankAwardsEarned`, alongside the account-side membership.
+  // through passport.user (SOT-ADR D1). RankEntry earner is Passport-rooted directly, so a rank
+  // filter narrows on the Passport via `rankEntries` (the ONE canonical rank model, #376),
+  // alongside the account-side membership.
   const passport: Record<string, unknown> = {
     // The roster is Passport-rooted, with TWO brand-membership paths that must both surface:
     //   1. account-side Membership → Organization (claimed members with a User account)
@@ -67,7 +68,7 @@ export function buildDirectoryProfileWhere(
     ],
     // rankId is globally unique, so it is brand-safe on its own; the UI scopes the
     // available ranks by the chosen discipline for usability, not for security.
-    ...(rank ? { rankAwardsEarned: { some: { rankId: rank } } } : {}),
+    ...(rank ? { rankEntries: { some: { rankId: rank } } } : {}),
   }
 
   const where: Record<string, unknown> = {

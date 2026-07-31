@@ -83,19 +83,41 @@ describe("isWithinCeiling — a member CANNOT create/edit a rank above their cei
 describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is editable", () => {
   it("ALLOWS editing a self-added backfill award (STATED, VERIFIED-by-implication, no approver)", () => {
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "VERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedById: null,
+      }),
     ).toBe(true)
   })
 
   it("ALLOWS editing a STATED UNVERIFIED self-report (no approver)", () => {
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "UNVERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "UNVERIFIED",
+        awardedById: null,
+      }),
     ).toBe(true)
   })
 
   it("ALLOWS editing ANY UNVERIFIED award the owner holds — even EARNED (SESSION_0540)", () => {
     expect(
-      isFactEditable({ source: "EARNED", verificationStatus: "UNVERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "EARNED",
+        verificationStatus: "UNVERIFIED",
+        awardedById: null,
+      }),
+    ).toBe(true)
+  })
+
+  it("ALLOWS editing the member's own IMPORTED self-report (SESSION_0730 — the WP Gravity-Form data is theirs)", () => {
+    expect(
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedById: null,
+      }),
     ).toBe(true)
   })
 
@@ -109,18 +131,23 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
     ).toBe(false)
   })
 
-  it("DENIES editing an IMPORTED or DISPUTED award (authority/legacy records, deny-by-default)", () => {
+  it("DENIES editing a DISPUTED award (contested record under review, deny-by-default)", () => {
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "IMPORTED", awardedById: null }),
-    ).toBe(false)
-    expect(
-      isFactEditable({ source: "STATED", verificationStatus: "DISPUTED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "DISPUTED",
+        awardedById: null,
+      }),
     ).toBe(false)
   })
 
   it("DENIES editing an EARNED award that is already VERIFIED without an approver (not a backfill)", () => {
     expect(
-      isFactEditable({ source: "EARNED", verificationStatus: "VERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "EARNED",
+        verificationStatus: "VERIFIED",
+        awardedById: null,
+      }),
     ).toBe(false)
   })
 })
@@ -187,11 +214,12 @@ describe("decideBackfillPromoterTransition (D-046 — active provenance first)",
 })
 
 describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the owner", () => {
-  /** An authority-owned (IMPORTED) award with every fact empty, overridable per test. */
-  const imported = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
-    source: "STATED",
-    verificationStatus: "IMPORTED",
-    awardedById: null,
+  /** An authority-owned award (instructor-stamped — the ONLY authority class since the
+   *  SESSION_0730 IMPORTED-lock lift) with every fact empty, overridable per test. */
+  const authority = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
+    source: "EARNED",
+    verificationStatus: "VERIFIED",
+    awardedById: "u-approver",
     awardedAt: null,
     awardedByPassportId: null,
     notes: null,
@@ -202,8 +230,9 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
 
   it("a self-added backfill keeps FULL editability (unchanged B1)", () => {
     const result = memberFactEditability(
-      imported({
-        verificationStatus: "VERIFIED",
+      authority({
+        source: "STATED",
+        awardedById: null, // member-authored → still fully editable...
         // even with every fact FILLED — the member authored it, so overwrite is fine
         awardedAt: new Date("2020-01-01"),
         notes: "Prof. Freetext",
@@ -214,35 +243,49 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
   })
 
+  it("the member's own IMPORTED self-report keeps FULL editability (SESSION_0730)", () => {
+    const result = memberFactEditability(
+      authority({
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedById: null, // the WP import never stamped an approver
+        awardedAt: new Date("2015-05-05"),
+        notes: "Prof. Legacy",
+      }),
+    )
+    expect(result.reason).toBe("SELF_BACKFILL")
+    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
+  })
+
   it("an authority award with EVERY fact empty is fully fillable (AUTHORITY_PARTIAL)", () => {
-    const result = memberFactEditability(imported())
+    const result = memberFactEditability(authority())
     expect(result.reason).toBe("AUTHORITY_PARTIAL")
     expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
   })
 
   it("a FILLED fact locks — per fact, not per card (date filled, others still fillable)", () => {
-    const result = memberFactEditability(imported({ awardedAt: new Date("2019-06-01") }))
+    const result = memberFactEditability(authority({ awardedAt: new Date("2019-06-01") }))
     expect(result.reason).toBe("AUTHORITY_PARTIAL")
     expect(result.facts).toEqual({ awardedAt: false, promoter: true, school: true })
   })
 
   it("promoter counts as filled via EITHER the Passport FK or freetext notes", () => {
-    expect(memberFactEditability(imported({ awardedByPassportId: "pp-1" })).facts.promoter).toBe(
+    expect(memberFactEditability(authority({ awardedByPassportId: "pp-1" })).facts.promoter).toBe(
       false,
     )
-    expect(memberFactEditability(imported({ notes: "Prof. Freetext" })).facts.promoter).toBe(false)
+    expect(memberFactEditability(authority({ notes: "Prof. Freetext" })).facts.promoter).toBe(false)
     // whitespace-only freetext is NOT a value
-    expect(memberFactEditability(imported({ notes: "   " })).facts.promoter).toBe(true)
+    expect(memberFactEditability(authority({ notes: "   " })).facts.promoter).toBe(true)
   })
 
   it("school counts as filled via EITHER the Organization FK or freetext location", () => {
-    expect(memberFactEditability(imported({ organizationId: "org-1" })).facts.school).toBe(false)
-    expect(memberFactEditability(imported({ location: "Some Academy" })).facts.school).toBe(false)
+    expect(memberFactEditability(authority({ organizationId: "org-1" })).facts.school).toBe(false)
+    expect(memberFactEditability(authority({ location: "Some Academy" })).facts.school).toBe(false)
   })
 
   it("every fact filled → AUTHORITY_LOCKED (nothing left for the owner)", () => {
     const result = memberFactEditability(
-      imported({
+      authority({
         awardedAt: new Date("2019-06-01"),
         awardedByPassportId: "pp-1",
         organizationId: "org-1",
@@ -252,16 +295,10 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })
 
-  it("a promotion-minted award (awardedById stamped) gets the same fill-blanks treatment", () => {
-    const result = memberFactEditability(
-      imported({ verificationStatus: "VERIFIED", awardedById: "u-approver" }),
-    )
-    expect(result.reason).toBe("AUTHORITY_PARTIAL")
-    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
-  })
-
   it("DISPUTED is fully locked for the owner even with empty facts (deny-by-default)", () => {
-    const result = memberFactEditability(imported({ verificationStatus: "DISPUTED" }))
+    const result = memberFactEditability(
+      authority({ source: "STATED", awardedById: null, verificationStatus: "DISPUTED" }),
+    )
     expect(result.reason).toBe("AUTHORITY_LOCKED")
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })

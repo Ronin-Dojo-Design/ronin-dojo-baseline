@@ -72,7 +72,7 @@ function member({
           visibility: "PUBLIC",
           showRanks: true,
         },
-        rankAwardsEarned: [],
+        rankEntries: [],
         affiliations: [],
       },
     },

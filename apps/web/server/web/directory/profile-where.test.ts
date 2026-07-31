@@ -30,11 +30,11 @@ function organization(where: Record<string, unknown>) {
 function lineageTree(where: Record<string, unknown>) {
   return passportOr(where)[1].lineageNode.treeMembers.some.tree
 }
-function rankAwardsEarned(where: Record<string, unknown>) {
+function rankEntries(where: Record<string, unknown>) {
   const passport = where.passport as {
-    rankAwardsEarned?: { some: { rankId: string } }
+    rankEntries?: { some: { rankId: string } }
   }
-  return passport.rankAwardsEarned
+  return passport.rankEntries
 }
 
 describe("buildDirectoryProfileWhere — brand scope", () => {
@@ -102,14 +102,14 @@ describe("buildDirectoryProfileWhere — filter narrowing", () => {
 
   it("narrows on the Passport's earned rank id, keeping the brand pin", () => {
     const where = buildDirectoryProfileWhere({ rank: "rank_bjj_black_1" }, BRAND)
-    expect(rankAwardsEarned(where)).toEqual({ some: { rankId: "rank_bjj_black_1" } })
+    expect(rankEntries(where)).toEqual({ some: { rankId: "rank_bjj_black_1" } })
     // Rank narrows on the Passport directly; the membership brand pin is untouched.
     expect(organization(where).brand).toBe(BRAND)
   })
 
   it("omits the rank clause when no rank is supplied", () => {
     const where = buildDirectoryProfileWhere({ discipline: "bjj" }, BRAND)
-    expect(rankAwardsEarned(where)).toBeUndefined()
+    expect(rankEntries(where)).toBeUndefined()
   })
 
   it("applies case-insensitive contains for city and region", () => {
@@ -125,7 +125,7 @@ describe("buildDirectoryProfileWhere — filter narrowing", () => {
     )
     expect(organization(where).slug).toBeUndefined()
     expect(membershipSome(where).discipline).toBeUndefined()
-    expect(rankAwardsEarned(where)).toBeUndefined()
+    expect(rankEntries(where)).toBeUndefined()
     expect(where.locationCity).toBeUndefined()
     expect(where.locationRegion).toBeUndefined()
     expect(where.OR).toBeUndefined()

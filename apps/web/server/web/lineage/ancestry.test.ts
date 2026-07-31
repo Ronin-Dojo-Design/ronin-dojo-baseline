@@ -60,13 +60,11 @@ const makeNode = ({
       socialLinks: null,
       directoryProfile: { slug: `${id}-dir`, visibility: "PUBLIC", showRanks },
       user: userImage ? { id: `${id}-user`, name: displayName, image: userImage } : null,
-      // Pre-ordered highest-first, mirroring the payload's orderBy.
-      rankAwardsEarned: awards.map((award, index) => ({
-        id: `${id}-award-${index}`,
-        awardedAt: new Date("2020-01-01"),
-        location: null,
-        awardedBy: null,
-        awardedByPassport: null,
+      // Pre-ordered highest-first, mirroring the payload's orderBy. #376: ranks read from
+      // `RankEntry`; the awarded date is a fact on the anchor award via the required relation.
+      rankEntries: awards.map((award, index) => ({
+        id: `${id}-entry-${index}`,
+        status: "VERIFIED",
         rank: {
           id: award.rankId,
           name: award.name,
@@ -83,6 +81,13 @@ const makeNode = ({
               code: "BJJ",
             },
           },
+        },
+        rankAward: {
+          id: `${id}-award-${index}`,
+          awardedAt: new Date("2020-01-01"),
+          location: null,
+          awardedBy: null,
+          awardedByPassport: null,
         },
       })),
       affiliations: [],

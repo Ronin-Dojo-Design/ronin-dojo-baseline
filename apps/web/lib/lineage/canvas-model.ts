@@ -4,7 +4,7 @@ import { nameInitials, passportDisplayName } from "~/lib/identity/passport-displ
 import {
   type LineageClaimBadgeStatus,
   type LineageTrustStatus,
-  type TrustRankAward,
+  type TrustRankEntry,
   pickLineageClaimStatus,
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
@@ -55,7 +55,7 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
 }
 
 /**
- * THE member's *shown* rank award. `rankAwardsEarned` is pre-ordered by Rank.sortOrder
+ * THE member's *shown* rank entry. `rankEntries` is pre-ordered by Rank.sortOrder
  * desc, so `[0]` is the member's highest awarded belt overall.
  *
  * **Discipline-scoped (ADR 0035 §3).** "Highest by sortOrder" is meaningless ACROSS rank
@@ -64,24 +64,27 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
  * to get the highest belt *within that discipline* (e.g. a BJJ tree shows the BJJ rank, not
  * a TKD dan that happens to sort higher). The multi-discipline surfaces (drawer, directory)
  * pass nothing → highest awarded overall. The single awarded-truth source every surface
- * reads — both for "what belt are you" (`.rank`) and "when were you promoted" (`.awardedAt`).
- * Null → no (matching) award.
+ * reads — both for "what belt are you" (`.rank`) and "when were you promoted"
+ * (`.rankAward.awardedAt`, via the anchor award until the table-drop). Null → no (matching) entry.
+ *
+ * @renamed SESSION_0729 (#376) — from `memberTopRankAward`; the returned row is now a `RankEntry`
+ * (the ONE canonical rank model), so callers read `.rankAward.awardedAt` for the promotion date.
  */
-export function memberTopRankAward(node: LineageNodeRow, disciplineId?: string | null) {
-  const awards = node.passport?.rankAwardsEarned ?? []
-  if (!disciplineId) return awards[0] ?? null
-  // Pre-sorted by sortOrder desc → the first award in this discipline is its top belt.
-  return awards.find(award => award.rank.rankSystem?.discipline?.id === disciplineId) ?? null
+export function memberTopRankEntry(node: LineageNodeRow, disciplineId?: string | null) {
+  const entries = node.passport?.rankEntries ?? []
+  if (!disciplineId) return entries[0] ?? null
+  // Pre-sorted by sortOrder desc → the first entry in this discipline is its top belt.
+  return entries.find(entry => entry.rank.rankSystem?.discipline?.id === disciplineId) ?? null
 }
 
 /**
  * THE member's *shown* rank = the rank of their top awarded belt (discipline-scoped when
- * a `disciplineId` is given — see `memberTopRankAward`). The single source for "what belt
+ * a `disciplineId` is given — see `memberTopRankEntry`). The single source for "what belt
  * are you" across every surface (card, rows, mobile, timeline, honor strip, canvas). Null
  * → no rank.
  */
 export function memberTopRank(node: LineageNodeRow, disciplineId?: string | null) {
-  return memberTopRankAward(node, disciplineId)?.rank ?? null
+  return memberTopRankEntry(node, disciplineId)?.rank ?? null
 }
 
 /**
@@ -95,13 +98,13 @@ export function memberTopRank(node: LineageNodeRow, disciplineId?: string | null
  */
 export function memberTrustStatus(
   node: {
-    passport?: { rankAwardsEarned?: readonly TrustRankAward[] } | null
+    passport?: { rankEntries?: readonly TrustRankEntry[] } | null
     isVerified?: boolean | null
     verificationStatus?: string | null
   },
   disciplineId?: string | null,
 ): RankEntryStatus | null {
-  return resolveMemberTrustStatus(node.passport?.rankAwardsEarned ?? [], node, disciplineId)
+  return resolveMemberTrustStatus(node.passport?.rankEntries ?? [], node, disciplineId)
 }
 
 /**

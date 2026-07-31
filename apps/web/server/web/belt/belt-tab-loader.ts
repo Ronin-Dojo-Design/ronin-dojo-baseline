@@ -12,6 +12,7 @@ import {
   resolveAnchorAward,
   toGateAward,
 } from "~/server/belt/queries"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { getBjjRanksForClaimPicker } from "~/server/web/lineage/rank-queries"
 import { getJoinWizardOptions } from "~/server/web/lineage/join-options"
@@ -134,7 +135,7 @@ export async function loadBeltTabData(userId: string): Promise<BeltTabData | nul
           take: 1,
         },
       },
-      orderBy: { rank: { sortOrder: "desc" } },
+      orderBy: rankEntryDisplayOrder,
     }),
     getMemberAwards(passport.id),
     getJoinWizardOptions(),

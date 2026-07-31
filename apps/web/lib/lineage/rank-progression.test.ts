@@ -10,7 +10,7 @@ import {
   totalProgressionPoints,
 } from "./rank-progression"
 
-type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
+type RankEntry = NonNullable<LineageNodeProfile["passport"]>["rankEntries"][number]
 
 const BJJ_RANKS = [
   { id: "rank-white", sortOrder: 1, name: "White Belt", shortName: "White", colorHex: "#ffffff" },
@@ -51,14 +51,15 @@ function makeAward(opts: {
   awardedAt?: Date | null
   awarderName?: string | null
   organizationName?: string | null
-}): RankAward {
+}): RankEntry {
   const systemId = opts.rankSystemId ?? "system-bjj"
   const systemName = opts.rankSystemName ?? "BJJ Adult Belt System"
   const disciplineName = opts.disciplineName ?? "Brazilian Jiu-Jitsu"
+  // #376: the row IS a RankEntry; the ceremony facts (id/awardedAt/awarder/org) live on the anchor
+  // award, reached via the required `rankAward` relation.
   return {
-    id: opts.id,
-    awardedAt: opts.awardedAt ?? null,
-    location: null,
+    id: `entry-${opts.id}`,
+    status: "VERIFIED",
     rank: {
       id: opts.rankId,
       name: opts.rankName,
@@ -74,18 +75,23 @@ function makeAward(opts: {
         ranks: opts.ranks ?? BJJ_RANKS,
       },
     },
-    awardedBy: opts.awarderName ? { id: "u-awarder", name: opts.awarderName, image: null } : null,
-    organization: opts.organizationName
-      ? {
-          id: "org-1",
-          name: opts.organizationName,
-          slug: "org",
-          city: null,
-          state: null,
-        }
-      : null,
-    promotionEvent: null,
-  } as unknown as RankAward
+    rankAward: {
+      id: opts.id,
+      awardedAt: opts.awardedAt ?? null,
+      location: null,
+      awardedBy: opts.awarderName ? { id: "u-awarder", name: opts.awarderName, image: null } : null,
+      organization: opts.organizationName
+        ? {
+            id: "org-1",
+            name: opts.organizationName,
+            slug: "org",
+            city: null,
+            state: null,
+          }
+        : null,
+      promotionEvent: null,
+    },
+  } as unknown as RankEntry
 }
 
 describe("buildBeltProgressions", () => {

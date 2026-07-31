@@ -276,17 +276,18 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
     expect(blue?.card?.verificationStatus).toBe("VERIFIED")
   })
 
-  it("ALLOWS enriching the IMPORTED ceiling belt (blue) — milestone editable, award stays read-only", async () => {
+  it("ALLOWS enriching the IMPORTED ceiling belt (blue) — milestone AND facts member-editable (SESSION_0730)", async () => {
     const card = await member().upsertBeltMilestone({
       rankId: fx.blueRankId,
       story: "my blue journey",
     })
     expect(card.rankId).toBe(fx.blueRankId)
-    // The award retains IMPORTED provenance (fact stays read-only), while the
-    // canonical member-facing RankEntry status derives to VERIFIED (SESSION_0522
-    // IMPORTED→VERIFIED mapping); enriching a milestone changes neither.
+    // The award retains IMPORTED provenance (historical origin), and the canonical
+    // member-facing RankEntry status derives to VERIFIED (SESSION_0522 mapping).
+    // SESSION_0730: the WP import was the member's own self-report, so the fact is
+    // fully member-editable — the IMPORTED lock is lifted.
     expect(card.verificationStatus).toBe("VERIFIED")
-    expect(card.isFactEditable).toBe(false)
+    expect(card.isFactEditable).toBe(true)
     expect(card.milestone?.story).toBe("my blue journey")
     expect(
       await db.rankEntry.findUniqueOrThrow({
@@ -527,57 +528,62 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     expect(lead).not.toBeNull()
   })
 
-  // SESSION_0501 ratified policy (fill-blanks): the OWNER may SET a currently-EMPTY
-  // fact on their own award of ANY source — including IMPORTED — but may NEVER
-  // modify a fact that already has a value on an authority-owned award.
-  it("ALLOWS the owner FILLING the EMPTY date on their own IMPORTED award (fill-blanks — SESSION_0501)", async () => {
+  // SESSION_0730 ratified policy: an IMPORTED award is the member's OWN WP-era
+  // self-report (Gravity Form → Pods → one-time import), so the verified claimant
+  // edits it exactly like a self-added backfill — set, overwrite, clear. The
+  // SESSION_0501 fill-blanks regime now applies only to instructor-stamped awards.
+  it("ALLOWS the owner SETTING the date on their own IMPORTED award — full-edit class (SESSION_0730)", async () => {
     const card = await member().updateRankAwardFact({
       rankAwardId: fx.blueAwardId,
       awardedAt: new Date("2020-01-01"),
     })
     expect(card.awardedAt?.toISOString().slice(0, 10)).toBe("2020-01-01")
-    // Still authority-owned: never flips into the full-edit (self-backfill) class,
-    // and the date fact is now FILLED → locked for the member.
-    expect(card.isFactEditable).toBe(false)
-    expect(card.factEditability.awardedAt).toBe(false)
+    // The member's own self-report: stays in the full-edit class after the write.
+    expect(card.isFactEditable).toBe(true)
+    expect(card.factEditability.awardedAt).toBe(true)
     expect(
       await db.rankEntry.findUniqueOrThrow({
         where: { rankAwardId: fx.blueAwardId },
         select: { status: true },
       }),
-      // IMPORTED award derives to a VERIFIED entry (SESSION_0522); the fill-blanks
-      // fact edit re-syncs the entry but leaves the award's IMPORTED provenance intact.
+      // IMPORTED award derives to a VERIFIED entry (SESSION_0522); the fact edit
+      // re-syncs the entry but leaves the award's IMPORTED origin intact.
     ).toEqual({ status: "VERIFIED" })
   })
 
-  it("DENIES the owner CHANGING the now-FILLED date on the IMPORTED award (no overwrite → FORBIDDEN)", async () => {
-    await expectCode(
-      member().updateRankAwardFact({
-        rankAwardId: fx.blueAwardId,
-        awardedAt: new Date("2021-12-31"),
-      }),
-      "FORBIDDEN",
-    )
+  it("ALLOWS the owner CHANGING the already-FILLED date on the IMPORTED award (SESSION_0730 — their own record)", async () => {
+    const card = await member().updateRankAwardFact({
+      rankAwardId: fx.blueAwardId,
+      awardedAt: new Date("2021-12-31"),
+    })
+    expect(card.awardedAt?.toISOString().slice(0, 10)).toBe("2021-12-31")
+    // The badge does not drop on a member edit of their imported record.
+    expect(card.verificationStatus).toBe("VERIFIED")
     const row = await db.rankAward.findUniqueOrThrow({
       where: { id: fx.blueAwardId },
-      select: { awardedAt: true },
+      select: { awardedAt: true, verificationStatus: true },
     })
-    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2020-01-01")
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2021-12-31")
+    expect(row.verificationStatus).toBe("IMPORTED")
   })
 
-  it("ALLOWS the owner filling the EMPTY promoter on the IMPORTED award with a REGISTERED passport (semantics preserved)", async () => {
+  it("ALLOWS the owner filling the EMPTY promoter on the IMPORTED award with a REGISTERED passport (badge intact)", async () => {
     const card = await member().updateRankAwardFact({
       rankAwardId: fx.blueAwardId,
       promoter: { awardedByPassportId: fx.otherPassportId },
     })
     expect(card.awardedByPassportId).toBe(fx.otherPassportId)
     expect(card.promoterName).toBe(tag("other-pp"))
-    expect(card.factEditability.promoter).toBe(false) // filled → locked
+    expect(card.factEditability.promoter).toBe(true) // full-edit class (SESSION_0730)
+    // Promoter transitions preserve IMPORTED: the OG's VERIFIED badge must not drop
+    // when the promoter doesn't match the anchor (SESSION_0730 guard).
+    expect(card.verificationStatus).toBe("VERIFIED")
     const row = await db.rankAward.findUniqueOrThrow({
       where: { id: fx.blueAwardId },
-      select: { notes: true },
+      select: { notes: true, verificationStatus: true },
     })
     expect(row.notes).toBeNull()
+    expect(row.verificationStatus).toBe("IMPORTED")
   })
 
   it("DENIES a fact edit on ANOTHER member's award (ownership → NOT_FOUND)", async () => {
@@ -1197,40 +1203,43 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
   const filledOwner = () => asMember({ id: filledUserId, role: "user" })
   const admin = () => asMember({ id: adminUserId, role: "admin" })
 
-  it("(a) DENIES the owner OVERWRITING the FILLED date on an authority-owned award (→ FORBIDDEN)", async () => {
-    await expectCode(
-      filledOwner().updateRankAwardFact({
-        rankAwardId: filledAwardId,
-        awardedAt: new Date("2011-11-11"),
-      }),
-      "FORBIDDEN",
-    )
+  it("(a) ALLOWS the owner OVERWRITING the FILLED date on their own IMPORTED award (SESSION_0730)", async () => {
+    const card = await filledOwner().updateRankAwardFact({
+      rankAwardId: filledAwardId,
+      awardedAt: new Date("2011-11-11"),
+    })
+    expect(card.awardedAt?.toISOString().slice(0, 10)).toBe("2011-11-11")
     const row = await db.rankAward.findUniqueOrThrow({
       where: { id: filledAwardId },
-      select: { awardedAt: true },
+      select: { awardedAt: true, verificationStatus: true },
     })
-    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe(FILLED_DATE)
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2011-11-11")
+    // The one-time-import origin is untouched by the member's own edit.
+    expect(row.verificationStatus).toBe("IMPORTED")
   })
 
-  it("(a) DENIES owner overwrite and rejects member-side promoter clearing, value intact", async () => {
-    await expectCode(
-      filledOwner().updateRankAwardFact({
-        rankAwardId: filledAwardId,
-        promoter: { name: "Impostor Prof" },
-      }),
-      "FORBIDDEN",
-    )
+  it("(a) ALLOWS replacing the imported freetext promoter; member-side CLEARING still rejected (D-046)", async () => {
     // D-046 makes member-side removal an explicit invalid command for every award; an admin
-    // correction is required instead of treating clear as an ordinary fill-once overwrite.
+    // correction is required instead of treating clear as an ordinary overwrite.
     await expectCode(
       filledOwner().updateRankAwardFact({ rankAwardId: filledAwardId, promoter: null }),
       "BAD_REQUEST",
     )
+    // Overwriting their own imported freetext promoter with a REGISTERED pick is the
+    // member's right (SESSION_0730); the badge does not drop (IMPORTED preserved).
+    const card = await filledOwner().updateRankAwardFact({
+      rankAwardId: filledAwardId,
+      promoter: { awardedByPassportId: fx.otherPassportId },
+    })
+    expect(card.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(card.verificationStatus).toBe("VERIFIED")
     const row = await db.rankAward.findUniqueOrThrow({
       where: { id: filledAwardId },
-      select: { notes: true },
+      select: { notes: true, awardedByPassportId: true, verificationStatus: true },
     })
-    expect(row.notes).toBe("Prof. Legacy")
+    expect(row.notes).toBeNull()
+    expect(row.awardedByPassportId).toBe(fx.otherPassportId)
+    expect(row.verificationStatus).toBe("IMPORTED")
   })
 
   it("(b) ALLOWS the owner filling the still-EMPTY school on the SAME award (per-fact granularity; freetext → lead)", async () => {
@@ -1240,9 +1249,9 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
       school: { name: schoolName, country: "US" },
     })
     expect(card.schoolName).toBe(schoolName)
-    // All three facts now filled on an authority award → fully locked for the member.
-    expect(card.factEditability).toEqual({ awardedAt: false, promoter: false, school: false })
-    expect(card.editabilityReason).toBe("AUTHORITY_LOCKED")
+    // SESSION_0730: the member's own imported record stays in the full-edit class.
+    expect(card.factEditability).toEqual({ awardedAt: true, promoter: true, school: true })
+    expect(card.editabilityReason).toBe("SELF_BACKFILL")
     // Freetext school semantics preserved on the fill-blanks path: outreach lead emitted.
     const org = await db.organization.findFirst({
       where: { name: schoolName, ownerId: null },
@@ -1264,7 +1273,8 @@ describe("belt fill-blanks + admin fact CRUD — SESSION_0501 ratified policy", 
       where: { id: filledAwardId },
       select: { awardedAt: true },
     })
-    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe(FILLED_DATE)
+    // (a) legitimately moved the date to 2011-11-11; the denied admin call wrote nothing.
+    expect(row.awardedAt?.toISOString().slice(0, 10)).toBe("2011-11-11")
   })
 
   it("(e) ALLOWS an admin OVERWRITING filled facts on ANOTHER member's IMPORTED award (+ audit row)", async () => {

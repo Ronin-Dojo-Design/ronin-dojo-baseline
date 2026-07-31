@@ -677,12 +677,14 @@ function makeMember(overrides: {
               user: null,
               directoryProfile: null,
               affiliations: [],
-              rankAwardsEarned:
+              // #376: ranks read from `RankEntry`; a PENDING status is SKIPPED by the trust resolver
+              // exactly like the old entry-less award, and the awarded date nests under `rankAward`.
+              rankEntries:
                 overrides.beltSortOrder != null
                   ? [
                       {
-                        id: `award-${overrides.id}`,
-                        awardedAt: null,
+                        id: `entry-${overrides.id}`,
+                        status: "PENDING",
                         rank: {
                           id: `rank-${overrides.beltSortOrder}`,
                           name: `Belt ${overrides.beltSortOrder}`,
@@ -693,6 +695,7 @@ function makeMember(overrides: {
                             discipline: { id: overrides.beltDisciplineId ?? "disc-1" },
                           },
                         },
+                        rankAward: { id: `award-${overrides.id}`, awardedAt: null },
                       },
                     ]
                   : [],

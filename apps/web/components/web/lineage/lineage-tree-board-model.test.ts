@@ -47,7 +47,11 @@ const members: LineageTreeMemberRow[] = [
 ]
 
 const profile = {
-  passport: { rankAwardsEarned: [{ id: "award-top" }, { id: "award-old" }] },
+  // #376: ranks read from `RankEntry`; the anchor award id (targeted by the promoter write) is on
+  // the required `rankAward` relation.
+  passport: {
+    rankEntries: [{ rankAward: { id: "award-top" } }, { rankAward: { id: "award-old" } }],
+  },
 } as unknown as LineageNodeProfile
 
 const editorCap = { canEditTree: true, canManageGroups: false } as LineageEditorCapability
@@ -186,14 +190,14 @@ describe("buildPromoterChangeContext", () => {
     expect(ctx?.memberId).toBe("a")
     // Awarded truth: defaults to the first (top) awarded rank id.
     expect(ctx?.currentRankAwardId).toBe("award-top")
-    expect(ctx?.rankAwards).toHaveLength(2)
+    expect(ctx?.rankEntries).toHaveLength(2)
     // Candidates exclude the member itself ("a") and its descendants ("a1", "a1x").
     const candidateIds = ctx?.candidates.map(c => c.memberId).sort()
     expect(candidateIds).toEqual(["b", "b1", "root"].sort())
   })
 
   it("defaults currentRankAwardId to null when there are no awards", () => {
-    const noAwards = { passport: { rankAwardsEarned: [] } } as unknown as LineageNodeProfile
+    const noAwards = { passport: { rankEntries: [] } } as unknown as LineageNodeProfile
     const ctx = buildPromoterChangeContext({
       treeId: "tree-1",
       capability: editorCap,
@@ -202,6 +206,6 @@ describe("buildPromoterChangeContext", () => {
       members,
     })
     expect(ctx?.currentRankAwardId).toBeNull()
-    expect(ctx?.rankAwards).toEqual([])
+    expect(ctx?.rankEntries).toEqual([])
   })
 })

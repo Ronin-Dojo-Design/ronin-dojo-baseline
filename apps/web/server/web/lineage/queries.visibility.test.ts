@@ -80,7 +80,7 @@ function member({
           visibility: "PUBLIC",
           showRanks,
         },
-        rankAwardsEarned: rankAwards,
+        rankEntries: rankAwards,
         affiliations: [],
       },
     },
@@ -189,12 +189,12 @@ describe("lineage public payload allowlists", () => {
   // cross-system sortOrder) → `.find(tree discipline)` misses → a BLANK belt for any
   // multi-discipline member whose top-sorting belt is in another discipline (e.g. Andre
   // Lima's TKD 8th Dan out-sorting his BJJ 3rd-degree). This guards the payload→resolver seam.
-  it("lineageNodeRowPayload.rankAwardsEarned loads ALL awards (no `take`) so discipline-scoping isn't truncated", () => {
+  it("lineageNodeRowPayload.rankEntries loads ALL ranks (no `take`) so discipline-scoping isn't truncated", () => {
     const passportSelect = (lineageNodeRowPayload.passport as { select: Record<string, unknown> })
       .select
-    const rankAwardsEarned = passportSelect.rankAwardsEarned as Record<string, unknown>
-    expect(rankAwardsEarned).toBeTruthy()
-    expect("take" in rankAwardsEarned).toBe(false)
+    const rankEntries = passportSelect.rankEntries as Record<string, unknown>
+    expect(rankEntries).toBeTruthy()
+    expect("take" in rankEntries).toBe(false)
   })
 })
 
@@ -236,7 +236,7 @@ describe("lineage tree visibility materialization", () => {
 
     const result = materializeLineageTreeResult(hiddenRankTree as never)
 
-    expect(result.members[0]?.node.passport?.rankAwardsEarned).toEqual([])
+    expect(result.members[0]?.node.passport?.rankEntries).toEqual([])
   })
 
   it("widens viewer scope without ever including PRIVATE in shared public paths", () => {
@@ -287,7 +287,14 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC",
           showRanks: false,
         },
-        rankAwardsEarned: [{ id: "ra-1", awardedAt: new Date(), rank: { name: "Hidden BB" } }],
+        rankEntries: [
+          {
+            id: "re-1",
+            status: "VERIFIED",
+            rank: { name: "Hidden BB" },
+            rankAward: { id: "ra-1", awardedAt: new Date() },
+          },
+        ],
         affiliations: [],
         user: {
           id: "user-hidden",
@@ -344,7 +351,27 @@ describe("lineage tree visibility materialization", () => {
           visibility: "PUBLIC",
           showRanks: true,
         },
-        rankAwardsEarned: [{ id: "ra-2", awardedAt: new Date(), rank: { name: "Visible BB" } }],
+        rankEntries: [
+          {
+            id: "re-2",
+            status: "VERIFIED",
+            rank: {
+              id: "rank-visible",
+              name: "Visible BB",
+              shortName: "BB",
+              colorHex: "#111111",
+              secondaryColorHex: null,
+              degree: null,
+              beltFamily: null,
+              rankSystem: {
+                id: "system-bjj",
+                name: "BJJ Belts",
+                discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+              },
+            },
+            rankAward: { id: "ra-2", awardedAt: new Date() },
+          },
+        ],
         affiliations: [],
         user: {
           id: "user-shown",

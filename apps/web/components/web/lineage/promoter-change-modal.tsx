@@ -37,7 +37,7 @@ export type PromoterChangeContext = {
   treeId: string
   memberId: string
   currentRankAwardId: string | null
-  rankAwards: NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"]
+  rankEntries: NonNullable<LineageNodeProfile["passport"]>["rankEntries"]
   candidates: PromoterCandidate[]
 }
 
@@ -69,7 +69,7 @@ export function PromoterChangeModal({
   const router = useRouter()
   const [internalOpen, setInternalOpen] = useState(false)
   const [rankAwardId, setRankAwardId] = useState(
-    context.currentRankAwardId ?? context.rankAwards[0]?.id ?? "",
+    context.currentRankAwardId ?? context.rankEntries[0]?.rankAward.id ?? "",
   )
   const [promoterMemberId, setPromoterMemberId] = useState(context.candidates[0]?.memberId ?? "")
   const [verificationStatus, setVerificationStatus] = useState<"PENDING" | "VERIFIED" | "DISPUTED">(
@@ -82,11 +82,11 @@ export function PromoterChangeModal({
 
   const rankOptions = useMemo(
     () =>
-      context.rankAwards.map(award => ({
-        id: award.id,
-        label: `${award.rank.name} (${formatDate(award.awardedAt)})`,
+      context.rankEntries.map(entry => ({
+        id: entry.rankAward.id,
+        label: `${entry.rank.name} (${formatDate(entry.rankAward.awardedAt)})`,
       })),
-    [context.rankAwards],
+    [context.rankEntries],
   )
 
   const { execute, isExecuting } = useAction(updateLineagePromotionRelationship, {

@@ -1,6 +1,7 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { resolveOwnedMedia } from "~/server/media/media-ownership"
-import { pickTopAwardInDiscipline } from "~/server/web/lineage/node-profile-queries"
+import { pickTopRankEntryInDiscipline } from "~/server/web/lineage/node-profile-queries"
 
 /**
  * Belt-promotion claim core (petey-plan-0477 Slice V2; ADR 0035 Amendment 1 / ADR 0036).
@@ -72,18 +73,21 @@ export async function submitRankPromotionClaim(
   input: SubmitRankPromotionClaimInput,
 ): Promise<{ claimId: string }> {
   // The caller's OWN Passport (identity SoT, ADR 0025) + their awarded belts, ordered
-  // highest-first so `pickTopAwardInDiscipline` reads the discipline ceiling directly.
+  // highest-first so `pickTopRankEntryInDiscipline` reads the discipline ceiling directly.
   const passport = await db.passport.findUnique({
     where: { userId: input.claimantUserId },
     select: {
       id: true,
-      rankAwardsEarned: {
+      // @changed SESSION_0729 (#376) — ceiling check reads the member's ranks from `RankEntry`
+      // (the ONE canonical rank model) instead of the retired `rankAwardsEarned`. The tiebreak
+      // date lives on the anchor award via the required `rankAward` relation.
+      rankEntries: {
         select: {
           rank: {
             select: { sortOrder: true, rankSystem: { select: { disciplineId: true } } },
           },
         },
-        orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+        orderBy: rankEntryDisplayOrder,
       },
     },
   })
@@ -103,13 +107,13 @@ export async function submitRankPromotionClaim(
   // (discipline-scoped, BBL = BJJ — the 0475 fix). No award in that discipline → the
   // member has no ceiling there, so a first-belt claim is a valid promotion.
   const disciplineId = claimedRank.rankSystem?.disciplineId ?? null
-  // `db` is the untyped Prisma/tx surface (convention), so type the awards at the call
-  // site — otherwise `pickTopAwardInDiscipline`'s generic falls back to its constraint,
+  // `db` is the untyped Prisma/tx surface (convention), so type the entries at the call
+  // site — otherwise `pickTopRankEntryInDiscipline`'s generic falls back to its constraint,
   // which omits `sortOrder`.
-  const awards = passport.rankAwardsEarned as Array<{
+  const entries = passport.rankEntries as Array<{
     rank: { sortOrder: number; rankSystem: { disciplineId: string | null } | null }
   }>
-  const topInDiscipline = pickTopAwardInDiscipline(awards, disciplineId)
+  const topInDiscipline = pickTopRankEntryInDiscipline(entries, disciplineId)
   const ceiling = topInDiscipline?.rank.sortOrder ?? Number.NEGATIVE_INFINITY
 
   // A promotion is strictly ABOVE the ceiling. At/below = a belt they already hold →

@@ -46,9 +46,12 @@ function profileFixture(): DirectoryProfileList {
         claimRequests: [{ status: "APPROVED" }],
       },
       affiliations: [],
-      rankAwardsEarned: [
+      // #376: the directory card reads ranks from `RankEntry`; trust is the entry `status` directly
+      // (WL-P2-46). The lean card payload carries no ceremony facts (no awardedAt on the roster card).
+      rankEntries: [
         {
-          id: "rank-award-1",
+          id: "rank-entry-1",
+          status: "VERIFIED",
           rank: {
             id: "rank-1",
             name: "Black Belt",
@@ -56,12 +59,10 @@ function profileFixture(): DirectoryProfileList {
             colorHex: "#000000",
             rankSystem: { id: "rank-system-1", name: "BJJ Belt System" },
           },
-          awardedAt: new Date("2026-01-01T00:00:00.000Z"),
-          // Trust source (WL-P2-46): the current rank's RankEntry status → "verified".
-          rankEntry: { status: "VERIFIED" },
         },
         {
-          id: "rank-award-2",
+          id: "rank-entry-2",
+          status: "VERIFIED",
           rank: {
             id: "rank-2",
             name: "Brown Belt",
@@ -69,8 +70,6 @@ function profileFixture(): DirectoryProfileList {
             colorHex: "#8B4513",
             rankSystem: { id: "rank-system-1", name: "BJJ Belt System" },
           },
-          awardedAt: new Date("2025-01-01T00:00:00.000Z"),
-          rankEntry: { status: "VERIFIED" },
         },
       ],
     },

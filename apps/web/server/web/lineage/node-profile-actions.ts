@@ -2,11 +2,12 @@
 
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import {
   findActiveLineageNodeProfileAccess,
-  pickTopAwardInDiscipline,
+  pickTopRankEntryInDiscipline,
 } from "~/server/web/lineage/node-profile-queries"
 import {
   type UpdateLineageNodeProfileInput,
@@ -66,12 +67,15 @@ export const applyLineageNodeProfileUpdate = async ({
               passport: {
                 select: {
                   // Pre-ordered by Rank.sortOrder desc; discipline filter applied in JS below.
-                  rankAwardsEarned: {
+                  // Ranks read from `RankEntry` (#376); the anchor award id (targeted by the
+                  // promotion-date write) comes via the required `rankAward` relation.
+                  rankEntries: {
                     select: {
                       id: true,
+                      rankAward: { select: { id: true } },
                       rank: { select: { rankSystem: { select: { disciplineId: true } } } },
                     },
-                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                    orderBy: rankEntryDisplayOrder,
                   },
                 },
               },
@@ -140,16 +144,18 @@ export const applyLineageNodeProfileUpdate = async ({
       })
     }
 
-    const shownRankAward = pickTopAwardInDiscipline(
-      member.node.passport.rankAwardsEarned,
+    const shownRankEntry = pickTopRankEntryInDiscipline(
+      member.node.passport.rankEntries,
       tree.disciplineId,
     )
-    if (input.promotionDate !== undefined && shownRankAward) {
+    if (input.promotionDate !== undefined && shownRankEntry) {
+      // Write anchor: the promotion date lives on the RankAward; the entry carries its id.
+      const shownRankAwardId = shownRankEntry.rankAward.id
       await tx.rankAward.update({
-        where: { id: shownRankAward.id },
+        where: { id: shownRankAwardId },
         data: { awardedAt: input.promotionDate },
       })
-      await syncRankEntryFromAward(tx, shownRankAward.id)
+      await syncRankEntryFromAward(tx, shownRankAwardId)
     }
   })
 

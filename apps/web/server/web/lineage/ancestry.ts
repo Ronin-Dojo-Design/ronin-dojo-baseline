@@ -1,7 +1,7 @@
 import { cacheLife, cacheTag } from "next/cache"
 import type { Prisma } from "~/.generated/prisma/client"
 import type { BeltFamily } from "~/components/common/belt-swatch"
-import { memberTopRankAward } from "~/lib/lineage/canvas-model"
+import { memberTopRankEntry } from "~/lib/lineage/canvas-model"
 import { type LineageNodeRow, lineageNodeRowPayload } from "~/server/web/lineage/payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
@@ -174,10 +174,10 @@ export const assembleAncestryEntries = (
     if (!node?.passport) break // truncate above the gap — never bridge a hidden node
 
     // The ONE public redaction audit point: empty dto.ranks (showRanks === false or no
-    // awards) → no rank shown. Otherwise the shown rank is the top awarded belt overall
-    // (multi-discipline surface → no disciplineId, per memberTopRankAward).
+    // ranks) → no rank shown. Otherwise the shown rank is the top awarded belt overall
+    // (multi-discipline surface → no disciplineId, per memberTopRankEntry).
     const dto = projectPublicPassport(node.passport, {})
-    const award = dto.ranks.length === 0 ? null : memberTopRankAward(node)
+    const topEntry = dto.ranks.length === 0 ? null : memberTopRankEntry(node)
     const scene = scenesByPassportId.get(node.passportId)
 
     memberUp.push({
@@ -185,18 +185,18 @@ export const assembleAncestryEntries = (
       slug: node.slug,
       displayName: dto.displayName,
       avatarUrl: dto.avatarUrl,
-      rank: award
+      rank: topEntry
         ? {
-            id: award.rank.id,
-            name: award.rank.name,
-            colorHex: award.rank.colorHex,
-            secondaryColorHex: award.rank.secondaryColorHex ?? null,
-            sortOrder: award.rank.sortOrder,
-            degree: award.rank.degree ?? null,
-            beltFamily: award.rank.beltFamily ?? null,
+            id: topEntry.rank.id,
+            name: topEntry.rank.name,
+            colorHex: topEntry.rank.colorHex,
+            secondaryColorHex: topEntry.rank.secondaryColorHex ?? null,
+            sortOrder: topEntry.rank.sortOrder,
+            degree: topEntry.rank.degree ?? null,
+            beltFamily: topEntry.rank.beltFamily ?? null,
           }
         : null,
-      disciplineLabel: award?.rank.rankSystem?.discipline?.name ?? null,
+      disciplineLabel: topEntry?.rank.rankSystem?.discipline?.name ?? null,
       narrative: step.narrative,
       story: scene
         ? {

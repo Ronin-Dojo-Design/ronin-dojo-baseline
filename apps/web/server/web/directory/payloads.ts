@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 // ---------------------------------------------------------------------------
@@ -52,29 +53,29 @@ export const directoryAffiliationPayload = {
   organization: { select: { id: true, name: true, slug: true } },
 } satisfies Prisma.AffiliationSelect
 
-export const directoryRankAwardPayload = {
+// @changed SESSION_0729 (#376) — the directory card reads the member's ranks from `RankEntry` (the
+// ONE canonical rank model, ADR 0058 / spec #372) instead of the retired `RankAward` read-model. The
+// card only needs the display rank + trust status; ceremony facts (awardedAt) are not shown on the
+// roster card, so no `rankAward` relation is joined here (kept lean).
+const directoryRankEntryPayload = {
   id: true,
+  // The canonical member-facing rank trust axis (WL-P2-46 / LR 0008) — the directory card's trust
+  // badge derives from the top entry's status (`pickTopTrustStatus`), the SAME source the lineage
+  // tree/drawer read, now straight off the RankEntry.
+  status: true,
   rank: {
     select: {
       id: true,
       name: true,
       sortOrder: true,
       // @added SESSION_0410 — colorHex is the brand-neutral belt tint (ADR 0026) for the BJJ Passport
-      // credential card on the public profile + lineage drawer. Passport-rooted (this select hangs off
-      // `passport.rankAwardsEarned`), so it is claim/attach-invariant. (Discipline eyebrow intentionally
+      // credential card on the public profile + lineage drawer. (Discipline eyebrow intentionally
       // not added here — the card's generic "Passport" label keeps the shared payload lean.)
       colorHex: true,
       rankSystem: { select: { id: true, name: true } },
     },
   },
-  awardedAt: true,
-  // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008).
-  // The directory card's trust badge derives from the top award's RankEntry status
-  // (`pickTopTrustStatus`), the SAME source the lineage tree/drawer read — not `node.isVerified`.
-  rankEntry: {
-    select: { status: true },
-  },
-} satisfies Prisma.RankAwardSelect
+} satisfies Prisma.RankEntrySelect
 
 export const directoryProfileListPayload = {
   id: true,
@@ -106,13 +107,13 @@ export const directoryProfileListPayload = {
           memberships: { select: directoryMembershipPayload },
         },
       },
-      // NOT `take: 1` — the trust resolver (`resolveMemberTrustStatus`) must see the full award
-      // set so it can skip a top award whose `RankEntry` is null/unsynced and read a lower verified
-      // belt's status, matching the detail page (WL-P2-46 — surfaces must AGREE, LR 0008). The
-      // DISPLAYED belt is still top-only via `.slice(0, 1)` in the projection.
-      rankAwardsEarned: {
-        select: directoryRankAwardPayload,
-        orderBy: { rank: { sortOrder: "desc" as const } },
+      // NOT `take: 1` — the trust resolver (`resolveMemberTrustStatus`) must see the full entry
+      // set so it reads the top non-PENDING belt's status, matching the detail page (WL-P2-46 —
+      // surfaces must AGREE, LR 0008). The DISPLAYED belt is still top-only via `.slice(0, 1)` in
+      // the projection.
+      rankEntries: {
+        select: directoryRankEntryPayload,
+        orderBy: rankEntryDisplayOrder,
       },
     },
   },
@@ -125,8 +126,8 @@ export type DirectoryProfileList = Prisma.DirectoryProfileGetPayload<{
 // ---------------------------------------------------------------------------
 // Detail payload — single profile page
 // @changed issue #134 surface-2 — now spreads publicPassportPayload for the
-// canonical identity core (displayName, avatarUrl, bio, socialLinks, rankAwardsEarned
-// ordered by awardedAt desc). Surface-specific extras (user email, memberships,
+// canonical identity core (displayName, avatarUrl, bio, socialLinks, rankEntries
+// ordered by rank.sortOrder desc). Surface-specific extras (user email, memberships,
 // techniqueProgress, lineageNode) are merged on top.
 // ---------------------------------------------------------------------------
 

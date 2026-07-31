@@ -5,6 +5,7 @@ import {
   getAdminListQueryParts,
   runAdminListTransaction,
 } from "~/server/admin/list-query"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { directoryProfileOnePayload, passportOnePayload } from "~/server/web/passport/payloads"
 import { db } from "~/services/db"
 import type { PeopleTableSchema } from "./schema"
@@ -18,9 +19,9 @@ import type { PeopleTableSchema } from "./schema"
  * the roster placeholders entirely — this query is what un-hides them.
  *
  * The member-column includes below mirror the exact shapes the canonical resolvers in
- * `lib/lineage/canvas-model.ts` read off `node.passport`: `rankAwardsEarned` pre-ordered
- * by `rank.sortOrder desc` (belt), `affiliations[0].organization` (school). See the
- * Passport-native mirrors in `../people/columns` (people-table-columns) that cite them.
+ * `lib/lineage/canvas-model.ts` read off `node.passport`: `rankEntries` (the ONE canonical rank
+ * model, #376) pre-ordered by `rank.sortOrder desc` (belt), `affiliations[0].organization`
+ * (school). See the Passport-native mirrors in `../people/columns` (people-table-columns).
  */
 export const peopleRowSelect = {
   id: true,
@@ -39,10 +40,10 @@ export const peopleRowSelect = {
       isPlaceholder: true,
     },
   },
-  // Belt/rank — highest awarded belt is `[0]` (canvas-model `memberTopRankAward`), so
+  // Belt/rank — highest awarded belt is `[0]` (canvas-model `memberTopRankEntry`), so
   // pre-order by Rank.sortOrder desc here to keep that invariant.
-  rankAwardsEarned: {
-    orderBy: { rank: { sortOrder: "desc" } },
+  rankEntries: {
+    orderBy: rankEntryDisplayOrder,
     select: {
       id: true,
       rank: {

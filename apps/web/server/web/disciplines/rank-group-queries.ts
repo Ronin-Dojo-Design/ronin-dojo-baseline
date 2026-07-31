@@ -1,9 +1,9 @@
 // @added   PWCC-002 slice 2 (m-card kind=rank) — belt-by-belt group projection.
 // @why     The rank/curriculum card page needs ranks-with-counts (+ optional curriculum) for a
 //          discipline. Mirrors getTopRankedMembersForDiscipline's brand scope (lineage tree OR
-//          org membership) so BBL lineage members (RankAward, no Membership) are counted — the
-//          same bug class fixed in SESSION_0357. RankAward is the canonical promotion fact
-//          (ADR 0016); belt tint is data-driven Rank.colorHex (ADR 0026).
+//          org membership) so BBL lineage members (RankEntry, no Membership) are counted — the
+//          same bug class fixed in SESSION_0357. RankEntry is the ONE canonical rank model
+//          (ADR 0058 / #376); belt tint is data-driven Rank.colorHex (ADR 0026).
 // @wired   apps/web/app/(web)/disciplines/[slug]/ranks/page.tsx → m-card(kind=rank)
 import { cacheLife, cacheTag } from "next/cache"
 import type { Brand } from "~/.generated/prisma/client"
@@ -43,7 +43,9 @@ export async function getRankGroupsForDiscipline({
       sortOrder: true,
       _count: {
         select: {
-          rankAwards: {
+          // @changed SESSION_0729 (#376) — belt-holder counts read `RankEntry` (the ONE canonical
+          // rank model) instead of the retired `RankAward` read-model; brand scope unchanged.
+          rankEntries: {
             where: {
               passport: {
                 OR: [
@@ -71,7 +73,7 @@ export async function getRankGroupsForDiscipline({
     name: rank.name,
     colorHex: rank.colorHex,
     disciplineCode,
-    count: rank._count.rankAwards,
+    count: rank._count.rankEntries,
     items:
       rank.techniqueBeltMin.length > 0
         ? rank.techniqueBeltMin.map(tech => ({ id: tech.id, label: tech.name }))

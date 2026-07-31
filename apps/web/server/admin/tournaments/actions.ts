@@ -5,6 +5,7 @@ import type { z } from "zod"
 import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { ensurePassportForUser } from "~/server/identity/person-service"
 import { seedEntries, type SeedableEntry } from "~/server/admin/tournaments/bracket-seeding"
 import {
@@ -42,7 +43,7 @@ type BracketEntryForSeeding = {
     user: {
       id: string
       passport: {
-        rankAwardsEarned: { rank: { sortOrder: number } }[]
+        rankEntries: { rank: { sortOrder: number } }[]
       } | null
     } | null
   }
@@ -185,7 +186,7 @@ async function buildSeedableEntries(
       tournamentRankingScore:
         seedUserId !== undefined ? (fightRecordMap.get(seedUserId) ?? null) : null,
       martialArtsRankOrdinal:
-        entry.registration.user?.passport?.rankAwardsEarned?.[0]?.rank?.sortOrder ?? null,
+        entry.registration.user?.passport?.rankEntries?.[0]?.rank?.sortOrder ?? null,
       manualSeed: manualSeedMap.get(entry.id) ?? null,
     }
   })
@@ -796,7 +797,7 @@ export const generateBracket = tournamentAdminActionClient
                 // Phase 3c: earned ranks are Passport-rooted.
                 passport: {
                   select: {
-                    rankAwardsEarned: {
+                    rankEntries: {
                       where: {
                         rank: {
                           rankSystem: {
@@ -805,7 +806,7 @@ export const generateBracket = tournamentAdminActionClient
                         },
                       },
                       select: { rank: { select: { sortOrder: true } } },
-                      orderBy: { awardedAt: "desc" },
+                      orderBy: rankEntryDisplayOrder,
                       take: 1,
                     },
                   },

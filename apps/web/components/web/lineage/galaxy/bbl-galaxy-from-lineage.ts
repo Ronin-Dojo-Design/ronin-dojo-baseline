@@ -1,4 +1,4 @@
-import { memberTopRankAward, memberTrustStatus } from "~/lib/lineage/canvas-model"
+import { memberTopRankEntry, memberTrustStatus } from "~/lib/lineage/canvas-model"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import type { LineageTreePublicResult } from "~/server/web/lineage/payloads"
 import type {
@@ -103,8 +103,9 @@ export const lineageTreeToGalaxyGraph = (result: LineageTreePublicResult): BblGa
     const orbitIndex = band.findIndex(candidate => candidate.id === member.id)
     const passport = member.node.passport
     const groupId = member.visualGroupId ?? undefined
-    // Timeline year = the awardedAt of the member's shown (top awarded) rank (ADR 0035).
-    const awardedAt = memberTopRankAward(member.node, disciplineId)?.awardedAt
+    // Timeline year = the awardedAt of the member's shown (top awarded) rank (ADR 0035) — read
+    // off the anchor award via the entry's required `rankAward` relation (#376).
+    const awardedAt = memberTopRankEntry(member.node, disciplineId)?.rankAward.awardedAt
 
     // Delegate identity to the canonical public passport projector (showRanks: true for
     // the public lineage galaxy view). `LineageNodeRow.passport` is a structural superset

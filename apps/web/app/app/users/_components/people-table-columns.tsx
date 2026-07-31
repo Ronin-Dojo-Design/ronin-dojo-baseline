@@ -15,17 +15,17 @@ import type { PersonRow } from "~/server/admin/people/queries"
 import { PersonActions } from "./person-actions"
 
 /**
- * Passport-native mirror of `memberTopRankAward` / `memberTopRank`
+ * Passport-native mirror of `memberTopRankEntry` / `memberTopRank`
  * (`lib/lineage/canvas-model.ts` — CANONICAL). The canvas resolvers read
- * `node.passport.rankAwardsEarned`; our row IS the passport, so we read
- * `passport.rankAwardsEarned` directly. Same rule: highest AWARDED belt is `[0]`
+ * `node.passport.rankEntries` (the ONE canonical rank model, #376); our row IS the passport,
+ * so we read `passport.rankEntries` directly. Same rule: highest AWARDED belt is `[0]`
  * because the query pre-orders by `rank.sortOrder desc`. Multi-discipline surface
  * (an admin list spans disciplines) → no `disciplineId` scoping, i.e. highest overall,
- * exactly like `memberTopRankAward(node)` with no discipline. Do NOT re-derive a
+ * exactly like `memberTopRankEntry(node)` with no discipline. Do NOT re-derive a
  * different rule — change `canvas-model.ts` and mirror it here.
  */
 function topRank(person: PersonRow) {
-  return person.rankAwardsEarned[0]?.rank ?? null
+  return person.rankEntries[0]?.rank ?? null
 }
 
 /**

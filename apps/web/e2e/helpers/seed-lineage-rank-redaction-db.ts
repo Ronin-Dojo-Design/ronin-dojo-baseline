@@ -9,6 +9,7 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
 import type { LineageRankRedactionFixture } from "./seed-lineage-rank-redaction"
+import { seedRankEntriesForAwards } from "./seed-rank-entries"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -331,6 +332,9 @@ async function seedFixture(): Promise<LineageRankRedactionFixture> {
     where: { id: tree.id },
     data: { defaultRootMemberId: memberA.id },
   })
+
+  // #376: rank reads resolve from RankEntry — an entry-less award renders no belt.
+  await seedRankEntriesForAwards(prisma, [rankAwardA.id, rankAwardATop.id, rankAwardB.id])
 
   return {
     treeId: tree.id,

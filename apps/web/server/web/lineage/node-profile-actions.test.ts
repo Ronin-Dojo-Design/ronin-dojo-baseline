@@ -145,6 +145,19 @@ beforeAll(async () => {
     },
   })
 
+  // The canonical rank read is `RankEntry` (#376), so the anchor award needs its synced entry —
+  // mirrors `syncRankEntryFromAward` for a default-UNVERIFIED award (status UNVERIFIED, EARNED
+  // origin). Without it, `getEditableLineageNodeProfile` reads an empty `rankEntries` set.
+  await db.rankEntry.create({
+    data: {
+      rankAwardId: rankAward.id,
+      passportId: rankAward.passportId,
+      rankId: rankAward.rankId,
+      status: "UNVERIFIED",
+      provenance: "EARNED",
+    },
+  })
+
   const node = await db.lineageNode.create({
     data: {
       id: tag("node"),

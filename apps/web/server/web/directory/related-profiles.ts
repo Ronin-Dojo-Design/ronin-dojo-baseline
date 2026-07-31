@@ -2,6 +2,7 @@ import { cacheLife, cacheTag } from "next/cache"
 import type { Brand, Prisma } from "~/.generated/prisma/client"
 import { FREE_LINEAGE_PROFILE_DETAIL_RENDER_POLICY } from "~/lib/entitlements/lineage-tier-policy"
 import { type DirectoryFacetResult, mapPersonToFacet } from "~/lib/directory/facet-result"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { directoryProfileListPayload } from "~/server/web/directory/payloads"
 import { projectDirectoryProfileListItem } from "~/server/web/directory/profile-projection"
 import { buildDirectoryProfileWhere } from "~/server/web/directory/profile-where"
@@ -62,9 +63,9 @@ export async function findRelatedProfiles({
       // ADR 0058 — `RankEntry` is the ONE rank model; the `RankAward` read-collapse is DONE and
       // `rankAwardsEarned` is dead-but-present (table drop queued as G-011), so it returns
       // stale/near-empty data. Derive the top discipline from `rankEntries` instead. `RankEntry`
-      // has no `awardedAt`, so the secondary tiebreak is `createdAt desc`.
+      // reaches the canonical awardedAt tiebreak through the required anchor relation.
       rankEntries: {
-        orderBy: [{ rank: { sortOrder: "desc" } }, { createdAt: "desc" }],
+        orderBy: rankEntryDisplayOrder,
         take: 1,
         select: { rank: { select: { rankSystem: { select: { disciplineId: true } } } } },
       },
@@ -82,8 +83,7 @@ export async function findRelatedProfiles({
   const orBranches: Prisma.PassportWhereInput[] = []
   if (topDisciplineId) {
     // ADR 0058 — same-top-discipline peers derived from `rankEntries` (the ONE rank model), not the
-    // retired `rankAwardsEarned`. INERT on today's BBL snapshot (0 RankEntry rows); auto-activates
-    // once RankEntry data is backfilled — no further code change needed.
+    // retired `rankAwardsEarned`.
     orBranches.push({
       rankEntries: { some: { rank: { rankSystem: { disciplineId: topDisciplineId } } } },
     })

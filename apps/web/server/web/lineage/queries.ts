@@ -115,7 +115,7 @@ export const getLineageRootForUser = async (userId: string): Promise<LineageNode
   if (node.passport) {
     const _dto = projectPublicPassport(node.passport, {})
     if (_dto.ranks.length === 0) {
-      return { ...node, passport: { ...node.passport, rankAwardsEarned: [] } }
+      return { ...node, passport: { ...node.passport, rankEntries: [] } }
     }
   }
   return node
@@ -169,7 +169,7 @@ export const getLineageTreeForUser = async (
     if (_root.passport) {
       const _dto = projectPublicPassport(_root.passport, {})
       if (_dto.ranks.length === 0) {
-        _root = { ..._root, passport: { ..._root.passport, rankAwardsEarned: [] } }
+        _root = { ..._root, passport: { ..._root.passport, rankEntries: [] } }
       }
     }
     nodeMap.set(_root.id, _root)
@@ -215,7 +215,7 @@ export const getLineageTreeForUser = async (
         if (_n.passport) {
           const _dto = projectPublicPassport(_n.passport, {})
           if (_dto.ranks.length === 0) {
-            _n = { ..._n, passport: { ..._n.passport, rankAwardsEarned: [] } }
+            _n = { ..._n, passport: { ..._n.passport, rankEntries: [] } }
           }
         }
         nodeMap.set(_n.id, _n)
@@ -280,7 +280,7 @@ export const getLineageProfile = cache(
           ...profile,
           passport: {
             ...profile.passport,
-            rankAwardsEarned: [],
+            rankEntries: [],
             user: profile.passport.user
               ? {
                   ...profile.passport.user,
@@ -351,7 +351,7 @@ export const getLineageProfilesByIds = cache(
               ...publicProfile,
               passport: {
                 ...publicProfile.passport,
-                rankAwardsEarned: [],
+                rankEntries: [],
                 user: publicProfile.passport.user
                   ? {
                       ...publicProfile.passport.user,
@@ -427,7 +427,7 @@ export const materializeLineageTreeResult = (
       if (_dto.ranks.length === 0) {
         redactedNode = {
           ...redactedNode,
-          passport: { ...redactedNode.passport, rankAwardsEarned: [] },
+          passport: { ...redactedNode.passport, rankEntries: [] },
         }
       }
     }

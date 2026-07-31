@@ -9,6 +9,7 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../.generated/prisma/client"
 import { cleanupOwnedTestRows, createFixtureRunIdentity } from "../../lib/test/fixture-ownership"
+import { seedRankEntriesForAwards } from "./seed-rank-entries"
 import { LINEAGE_PREMIUM_ENTITLEMENT_KEY } from "../../lib/entitlements/lineage-comp"
 import { grantComp } from "../../server/entitlements/comp-grants"
 import type { DirectoryPaywallSeedFixture } from "./seed-directory-paywall"
@@ -101,9 +102,11 @@ async function createProfile({
     },
   })
 
-  await prisma.rankAward.create({
+  const paywallRankAward = await prisma.rankAward.create({
     data: { passportId, rankId, awardedAt: new Date("2026-02-01T00:00:00.000Z"), organizationId },
   })
+  // #376: rank reads resolve from RankEntry — an entry-less award renders no belt.
+  await seedRankEntriesForAwards(prisma, [paywallRankAward.id])
 
   const node = await prisma.lineageNode.create({
     data: {

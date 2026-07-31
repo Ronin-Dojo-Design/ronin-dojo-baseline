@@ -82,9 +82,9 @@ export function rankEntryStatusForAward(
   if (verificationStatus === "VERIFIED") return "VERIFIED"
   if (verificationStatus === "DISPUTED") return "DISPUTED"
   // IMPORTED = verified truth for BBL's established lineage (operator decision, SESSION_0522):
-  // imported awards render as VERIFIED entries. Provenance is retained on
-  // RankAward.verificationStatus, so belt-gate still treats IMPORTED awards as
-  // authority-owned / read-only — this only governs the member-facing RankEntry status.
+  // imported awards render as VERIFIED entries. Immutable origin remains separate on
+  // RankEntry.provenance, which belt-gate reads for authority-owned / read-only behavior;
+  // this function governs only the mutable member-facing RankEntry status.
   if (verificationStatus === "IMPORTED") return "VERIFIED"
   return "UNVERIFIED"
 }
@@ -134,7 +134,11 @@ export async function getActingPassportId(userId: string, dbClient: BeltDb = db)
 /**
  * The member's promoter-match ANCHOR — their highest-sortOrder **authority-verified**
  * award in the discipline (`awards` are pre-ordered by `rank.sortOrder desc`). Authority
- * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). A
+ * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). IMPORTED is
+ * read off the award's own `verificationStatus` here — NOT the linked entry's provenance —
+ * because the anchor award may not have been (re)synced yet and the two never disagree
+ * (`verificationStatus` never crosses the IMPORTED boundary post-create); folding this read
+ * onto provenance is a #380 move, once the entry is primary. A
  * self-minted backfill (now minted UNVERIFIED, SESSION_0540) is deliberately NOT an anchor —
  * its promoter is exactly what the backfill-verification decision validates.
  * Shared by the write path (`promoter-proposal-core.applyMemberPromoterTransition`) and read path
@@ -156,7 +160,7 @@ export function resolveAnchorAward(
 
 /**
  * The member's awards, pre-ordered by `rank.sortOrder desc` — the order
- * `pickTopAwardInDiscipline` / the gate rely on to read the ceiling as the
+ * the discipline-scoped rank-entry resolver / the gate rely on to read the ceiling as the
  * "first in discipline" row.
  */
 export async function getMemberAwards(
@@ -170,9 +174,9 @@ export async function getMemberAwards(
   })
 }
 
-/** Project one award row into the enriched belt card the mutations return. */
 /**
- * Project legacy compatibility fields through the canonical RankEntry status.
+ * Project one award row into the enriched belt card the mutations return, mapping
+ * legacy compatibility fields through the canonical RankEntry status.
  * Fact provenance/editability remains on RankAward during the additive cutover.
  */
 export function toBeltCard(
@@ -184,8 +188,6 @@ export function toBeltCard(
   // card-level boolean keeps its B1 meaning for existing consumers.
   const editability = memberFactEditability({
     source: award.source,
-    // RankAward retains provenance (including IMPORTED) while RankEntry owns
-    // presentation status; fact authority remains a legacy compatibility rule.
     verificationStatus: award.verificationStatus,
     awardedById: award.awardedById,
     awardedAt: award.awardedAt,

@@ -45,7 +45,7 @@ const awardSummaryRow = {
   // Phase 3c (SOT-ADR D1): the promotee (earner) is Passport-rooted.
   // issue #134 surface-D: passport shape now mirrors promotionEventPassportPayload
   // (publicPassportPayload spread + lineageNode add-on); projectPublicPassport needs
-  // directoryProfile and rankAwardsEarned at runtime.
+  // directoryProfile and rankEntries at runtime (#376 — the ONE canonical rank read).
   passport: {
     id: "passport-1",
     displayName: "Erik Paulson",
@@ -54,7 +54,7 @@ const awardSummaryRow = {
     socialLinks: null,
     user: { id: "user-1", name: "Erik Paulson", image: null },
     directoryProfile: null,
-    rankAwardsEarned: [],
+    rankEntries: [],
     lineageNode: { slug: "erik-paulson" },
   },
   rank: {

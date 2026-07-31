@@ -7,7 +7,7 @@ import {
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
   resolveMemberTrustStatus,
-  type TrustRankAward,
+  type TrustRankEntry,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { DirectoryProfileDetail, DirectoryProfileList } from "~/server/web/directory/payloads"
@@ -20,10 +20,10 @@ type ProfileViewer = {
 
 type UserTrustSource = {
   isPlaceholder?: boolean | null
-  // The member's awarded belts, carrying each award's canonical `RankEntry.status` — the ONE
+  // The member's rank entries, each carrying its canonical `RankEntry.status` — the ONE
   // member-facing rank-trust source (LR 0008). Trust derives from the top non-PENDING entry, the
   // SAME source (and SAME `resolveMemberTrustStatus` choke point) the lineage tree/drawer read.
-  rankAwards?: readonly TrustRankAward[]
+  rankEntries?: readonly TrustRankEntry[]
   lineageNode?: {
     // Beltless fallback ONLY (WL-P2-46): a documented-but-beltless verified member still reads
     // verified. A present RankEntry always wins over these node fields.
@@ -58,11 +58,11 @@ function canRenderRichMediaForViewer({
   )
 }
 
-function rankSummaryForProfile<RankAward>(profile: {
+function rankSummaryForProfile<RankEntry>(profile: {
   showRanks?: boolean
-  rankAwards: RankAward[]
-}): RankAward[] {
-  return profile.showRanks === false ? [] : profile.rankAwards.slice(0, 1)
+  rankEntries: RankEntry[]
+}): RankEntry[] {
+  return profile.showRanks === false ? [] : profile.rankEntries.slice(0, 1)
 }
 
 type ProfileOrg = {
@@ -113,7 +113,7 @@ function trustSummaryForUser(user: UserTrustSource) {
     // Trust from the member's rank (top non-PENDING RankEntry), else the beltless node fallback
     // (WL-P2-46) — the SAME choke point the lineage surfaces read; claim axis still from the node.
     trustStatus: resolveLineageTrustStatus({
-      rankStatus: resolveMemberTrustStatus(user.rankAwards ?? [], user.lineageNode ?? {}),
+      rankStatus: resolveMemberTrustStatus(user.rankEntries ?? [], user.lineageNode ?? {}),
       isPlaceholder: user.isPlaceholder,
       claimStatus,
     }),
@@ -191,7 +191,7 @@ export function projectDirectoryDetailProfile({
     isOwnProfile: account != null && viewerUserId === account.id,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
-      rankAwards: profile.passport.rankAwardsEarned,
+      rankEntries: profile.passport.rankEntries,
       lineageNode: profile.passport.lineageNode,
     }),
     // RICH media — gated.
@@ -256,7 +256,7 @@ export function projectDirectoryProfileListItem({
     canRenderFullProfile,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
-      rankAwards: profile.passport.rankAwardsEarned,
+      rankEntries: profile.passport.rankEntries,
       lineageNode: profile.passport.lineageNode,
     }),
     // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
@@ -275,10 +275,10 @@ export function projectDirectoryProfileListItem({
         : [],
     ranks:
       cardShowsRich && policy.features.rankHistory && profile.showRanks
-        ? profile.passport.rankAwardsEarned
+        ? profile.passport.rankEntries
         : rankSummaryForProfile({
             showRanks: profile.showRanks,
-            rankAwards: profile.passport.rankAwardsEarned,
+            rankEntries: profile.passport.rankEntries,
           }),
   }
 }

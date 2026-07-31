@@ -64,20 +64,17 @@ describe("lineage trust status", () => {
     expect(resolveLineageTrustStatus({ rankStatus: null })).toBe("unverified")
   })
 
-  it("pickTopTrustStatus: first non-PENDING entry in the (pre-ordered) awards is the trust", () => {
-    const award = (
-      status: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" | null,
-      disc = "bjj",
-    ) => ({
+  it("pickTopTrustStatus: first non-PENDING entry in the (pre-ordered) entries is the trust", () => {
+    const award = (status: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED", disc = "bjj") => ({
+      status,
       rank: { rankSystem: { id: `rs-${disc}`, discipline: { id: disc } } },
-      rankEntry: status ? { status } : null,
     })
     // Highest belt PENDING → skip to the next non-PENDING entry (VERIFIED).
     expect(pickTopTrustStatus([award("PENDING"), award("VERIFIED")])).toBe("VERIFIED")
-    // Entry-less top award → skipped; the disputed lower entry wins.
-    expect(pickTopTrustStatus([award(null), award("DISPUTED")])).toBe("DISPUTED")
-    // No entries at all → null (→ unverified/imported at the resolver).
-    expect(pickTopTrustStatus([award(null), award(null)])).toBeNull()
+    // PENDING top entry → skipped; the disputed lower entry wins.
+    expect(pickTopTrustStatus([award("PENDING"), award("DISPUTED")])).toBe("DISPUTED")
+    // No non-PENDING entry → null (→ unverified/imported at the resolver).
+    expect(pickTopTrustStatus([award("PENDING"), award("PENDING")])).toBeNull()
     // Discipline scoping: only the matching-discipline entry counts.
     expect(pickTopTrustStatus([award("VERIFIED", "tkd"), award("UNVERIFIED", "bjj")], "bjj")).toBe(
       "UNVERIFIED",
@@ -86,7 +83,7 @@ describe("lineage trust status", () => {
 
   it("resolveMemberTrustStatus: RankEntry wins; beltless falls back to node membership verification", () => {
     const belt = (status: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED") => [
-      { rank: { rankSystem: { id: "rs-bjj", discipline: { id: "bjj" } } }, rankEntry: { status } },
+      { status, rank: { rankSystem: { id: "rs-bjj", discipline: { id: "bjj" } } } },
     ]
     // (3) VERIFIED belt + node NOT verified → VERIFIED (belt precedence — the intended fix stays).
     expect(resolveMemberTrustStatus(belt("VERIFIED"), { isVerified: false })).toBe("VERIFIED")

@@ -103,8 +103,8 @@ export function buildPromoterChangeContext(args: {
   return {
     treeId,
     memberId: selectedMember.id,
-    currentRankAwardId: selectedProfile.passport?.rankAwardsEarned?.[0]?.id ?? null,
-    rankAwards: selectedProfile.passport?.rankAwardsEarned ?? [],
+    currentRankAwardId: selectedProfile.passport?.rankEntries?.[0]?.rankAward.id ?? null,
+    rankEntries: selectedProfile.passport?.rankEntries ?? [],
     candidates,
   }
 }

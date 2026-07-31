@@ -5,7 +5,7 @@
  *
  * The Trophy.so-style rank-progression read model (`buildBeltProgressions`,
  * `buildAchievementsUnlocked`) is a *strict allowlist projection* over the
- * lineage profile payload's `RankAward[]` — it reads a fixed set of fields, never
+ * lineage profile payload's `RankEntry[]` — it reads a fixed set of fields, never
  * spreads the input. This test proves that by feeding awards adversarially
  * enriched with account PII (email/role/password/notes/phone) on every nested
  * object and asserting NONE of it survives into the public output, while the
@@ -33,11 +33,14 @@ const PII = {
 
 const PII_TOKENS = Object.values(PII)
 
+// #376: the row IS a RankEntry; ceremony facts (id/awardedAt/awarder/org) live on the anchor award
+// via the required `rankAward` relation. PII is smuggled onto EVERY level (entry, rank, rankSystem,
+// discipline, rankAward, awarder, organization) to prove the allowlist projection leaks none of it.
 function adversarialAward() {
   return {
-    id: "ra-1",
-    awardedAt: new Date("2021-06-01T00:00:00.000Z"),
-    ...PII, // adversarial: PII smuggled onto the award row itself
+    id: "re-1",
+    status: "VERIFIED",
+    ...PII, // adversarial: PII smuggled onto the entry row itself
     rank: {
       id: "rank-black",
       name: "Black Belt",
@@ -68,8 +71,13 @@ function adversarialAward() {
         ],
       },
     },
-    awardedBy: { id: "u-awarder", name: "Professor Helio", ...PII },
-    organization: { id: "o-1", name: "Gracie Academy", ...PII },
+    rankAward: {
+      id: "ra-1",
+      awardedAt: new Date("2021-06-01T00:00:00.000Z"),
+      ...PII, // adversarial: PII smuggled onto the anchor award row
+      awardedBy: { id: "u-awarder", name: "Professor Helio", ...PII },
+      organization: { id: "o-1", name: "Gracie Academy", ...PII },
+    },
   }
 }
 

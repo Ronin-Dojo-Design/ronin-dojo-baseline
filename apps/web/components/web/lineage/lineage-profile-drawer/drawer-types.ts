@@ -3,12 +3,13 @@ import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/line
 
 export type LineageProfileDrawerTab = "info" | "lineage" | "rank-history"
 
-// Phase 3c: identity is Passport-rooted. Earned rank awards hang off
-// `passport.rankAwardsEarned`; the attached account (memberships, CARRY) off
-// `passport.user`. Both `passport` and `passport.user` are nullable (accountless
-// placeholder), so callers narrow before indexing.
+// Phase 3c: identity is Passport-rooted. Ranks hang off `passport.rankEntries` (the ONE
+// canonical rank model, #376); the anchor award's ceremony facts (awardedAt, promoter,
+// organization) are reached via each entry's required `rankAward` relation. The attached
+// account (memberships, CARRY) hangs off `passport.user`. Both `passport` and `passport.user`
+// are nullable (accountless placeholder), so callers narrow before indexing.
 export type DrawerPassport = NonNullable<LineageNodeProfile["passport"]>
-export type DrawerRankAward = DrawerPassport["rankAwardsEarned"][number]
+export type DrawerRankEntry = DrawerPassport["rankEntries"][number]
 export type DrawerAccount = DrawerPassport["user"]
 
 export type LineageProfileDrawerProps = {
