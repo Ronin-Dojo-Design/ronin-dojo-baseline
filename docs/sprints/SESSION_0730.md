@@ -216,6 +216,14 @@ before pushing. **Result: every check on #397 green** incl. both required gates 
 matrix. Finding-router candidate for bow-out: "seed-creates-award-without-entry" = the same fixture
 class that bit the unit-test layer this session — one lesson, three surfaces.
 
+## MERGE GATE — CLEARED (2026-07-31, post-#381 rotation)
+
+Operator rotated the BBL `.env.prod` Neon credential; the read-only live-prod check (DIRECT_URL)
+ran clean: **111 RankAward / 111 RankEntry / 0 orphans** · 72 IMPORTED awards · entries 99 VERIFIED
++ 12 UNVERIFIED — identical to map #374's 2026-07-30 verification. No award vanishes under the
+entries-first reads. **PR #397 is merge-ready; the merge itself is the operator's action** (never
+this session's). #381's remaining scope (prodsnap refresh cadence) stays open.
+
 ## Next session
 
 <!-- staged by 0730 at its own bow-out -->
