@@ -72,22 +72,22 @@ export function rankProgressPercent(
  */
 export function deriveDrawerProfileView(profile: LineageNodeProfile) {
   const rankEntries = profile.passport?.rankEntries ?? []
-  const currentAward = rankEntries[0] ?? null
-  const currentRank = currentAward?.rank ?? null
+  const currentEntry = rankEntries[0] ?? null
+  const currentRank = currentEntry?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
-  const panelAward = currentAward
+  const panelEntry = currentEntry
   const panelRank = currentRank
   const claimStatus = pickLineageClaimStatus(profile.claimRequests)
 
   return {
     displayName: passportDisplayName(profile.passport) ?? "Unnamed",
     avatarSrc: profile.passport?.avatarUrl ?? profile.passport?.user?.image ?? null,
-    currentAward,
+    currentEntry,
     currentRank,
     discipline,
     latestMembership: profile.passport?.user?.memberships[0] ?? null,
     instructorRelationship: profile.relationshipsTo[0] ?? null,
-    panelAward,
+    panelEntry,
     panelRank,
     panelRankColor: panelRank?.colorHex ?? null,
     panelRankProgress: rankProgressPercent(panelRank),

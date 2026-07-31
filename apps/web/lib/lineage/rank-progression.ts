@@ -4,9 +4,9 @@ import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
  * Trophy.so-style rank-progression read model (SESSION_0332).
  *
  * Pure functions that derive a Points/Levels belt ladder + Achievements Unlocked
- * list from the lineage profile payload's existing `RankAward[]` data. No new
+ * list from the lineage profile payload's existing `RankEntry[]` data. No new
  * schema; no `GamificationEvent` writes. Points are derived by treating each
- * `RankAward` as worth `BELT_PROMOTION_POINTS`, mirroring the seeded
+ * awarded entry as worth `BELT_PROMOTION_POINTS`, mirroring the seeded
  * `GamificationEventType.BELT_PROMOTION.defaultPoints` value (see
  * `apps/web/prisma/seed-baseline-platform.ts:203`).
  *
@@ -16,8 +16,8 @@ import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
  *    created; data: RankAward + Rank models provide the progression data;
  *    Rank.colorHex for visual theming."
  *
- * ADR 0016 — `RankAward` remains the canonical promotion fact; this module
- * only reads.
+ * ADR 0058 — `RankEntry` is the canonical rank read; ceremony facts remain on
+ * its required RankAward anchor until #380.
  */
 
 export const BELT_PROMOTION_POINTS = 100
@@ -225,7 +225,7 @@ export function buildBeltProgressions(entries: readonly RankEntry[]): BeltProgre
 }
 
 /**
- * Flatten `RankAward[]` into per-award "Achievement Unlocked" records ordered
+ * Flatten `RankEntry[]` into per-award "Achievement Unlocked" records ordered
  * newest first. Null `awardedAt` entries sink to the bottom so the rail's lead
  * is always the most recent ceremony.
  */

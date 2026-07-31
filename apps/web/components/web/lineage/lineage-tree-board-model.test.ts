@@ -190,7 +190,7 @@ describe("buildPromoterChangeContext", () => {
     expect(ctx?.memberId).toBe("a")
     // Awarded truth: defaults to the first (top) awarded rank id.
     expect(ctx?.currentRankAwardId).toBe("award-top")
-    expect(ctx?.rankAwards).toHaveLength(2)
+    expect(ctx?.rankEntries).toHaveLength(2)
     // Candidates exclude the member itself ("a") and its descendants ("a1", "a1x").
     const candidateIds = ctx?.candidates.map(c => c.memberId).sort()
     expect(candidateIds).toEqual(["b", "b1", "root"].sort())
@@ -206,6 +206,6 @@ describe("buildPromoterChangeContext", () => {
       members,
     })
     expect(ctx?.currentRankAwardId).toBeNull()
-    expect(ctx?.rankAwards).toEqual([])
+    expect(ctx?.rankEntries).toEqual([])
   })
 })

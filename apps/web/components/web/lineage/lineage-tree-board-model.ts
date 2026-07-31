@@ -104,7 +104,7 @@ export function buildPromoterChangeContext(args: {
     treeId,
     memberId: selectedMember.id,
     currentRankAwardId: selectedProfile.passport?.rankEntries?.[0]?.rankAward.id ?? null,
-    rankAwards: selectedProfile.passport?.rankEntries ?? [],
+    rankEntries: selectedProfile.passport?.rankEntries ?? [],
     candidates,
   }
 }

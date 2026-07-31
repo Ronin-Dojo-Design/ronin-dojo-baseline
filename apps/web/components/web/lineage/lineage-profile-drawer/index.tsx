@@ -149,7 +149,7 @@ function DrawerBody({
 }) {
   const reduceMotion = useReducedMotion() ?? false
   const view = deriveDrawerProfileView(profile)
-  const { currentRank, currentAward, discipline, latestMembership, instructorRelationship } = view
+  const { currentRank, currentEntry, discipline, latestMembership, instructorRelationship } = view
   const claimState = effectiveClaimState(viewerClaimState, profile)
   // "View full profile" deep-link target — only for a PUBLIC directory slug (a
   // MEMBERS_ONLY/HIDDEN page 404s a guest via the directory route's visibility gate).
@@ -191,7 +191,7 @@ function DrawerBody({
           <InfoTab
             profile={profile}
             currentRank={currentRank}
-            currentAward={currentAward}
+            currentEntry={currentEntry}
             discipline={discipline}
             latestMembership={latestMembership}
             instructorRelationship={instructorRelationship}

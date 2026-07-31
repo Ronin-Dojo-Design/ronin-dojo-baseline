@@ -22,7 +22,7 @@ import { formatDate, initials } from "./use-drawer-profile"
 export function InfoTab({
   profile,
   currentRank,
-  currentAward,
+  currentEntry,
   discipline,
   latestMembership,
   instructorRelationship,
@@ -34,7 +34,7 @@ export function InfoTab({
 }: {
   profile: LineageNodeProfile
   currentRank: NonNullable<DrawerRankEntry>["rank"] | null
-  currentAward: DrawerRankEntry | null
+  currentEntry: DrawerRankEntry | null
   discipline: NonNullable<DrawerRankEntry["rank"]>["rankSystem"]["discipline"] | null
   latestMembership: NonNullable<DrawerAccount>["memberships"][number] | null
   instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
@@ -49,10 +49,10 @@ export function InfoTab({
   // The canonical member-facing rank status (IMPORTED awards derive to VERIFIED); the
   // "Unverified" badge + steward Verify affordance key off the RankEntry itself (#376 — the
   // current row IS the entry, so id + status read straight off it).
-  const rankEntryId = currentAward?.id ?? null
-  const isRankUnverified = currentAward?.status === "UNVERIFIED"
+  const rankEntryId = currentEntry?.id ?? null
+  const isRankUnverified = currentEntry?.status === "UNVERIFIED"
   // Promotion date is a ceremony fact → read off the anchor award via the entry's required relation.
-  const promotedOn = formatDate(currentAward?.rankAward.awardedAt ?? null)
+  const promotedOn = formatDate(currentEntry?.rankAward.awardedAt ?? null)
   const instructorName =
     instructorRelationship?.fromNode.passport?.displayName ??
     instructorRelationship?.fromNode.passport?.user?.name ??
@@ -60,12 +60,12 @@ export function InfoTab({
   // Awarded By = the promoter. Prefer an explicit historical promoter Passport (SESSION_0391,
   // set via "Change promoter"); otherwise the member's INSTRUCTOR is the awarder (operator
   // SESSION_0522: show the instructor, never the admin actor who keyed the record — that legacy
-  // `currentAward.awardedBy` User fallback surfaced e.g. the admin instead of Tony). No promoter
+  // legacy User fallback surfaced e.g. the admin instead of Tony). No promoter
   // and no instructor → the "lineage-unverified" note.
-  const awardedBy = currentAward?.rankAward.awardedByPassport
+  const awardedBy = currentEntry?.rankAward.awardedByPassport
     ? {
-        name: currentAward.rankAward.awardedByPassport.displayName,
-        image: currentAward.rankAward.awardedByPassport.avatarUrl,
+        name: currentEntry.rankAward.awardedByPassport.displayName,
+        image: currentEntry.rankAward.awardedByPassport.avatarUrl,
       }
     : instructorName
       ? { name: instructorName, image: null as string | null }

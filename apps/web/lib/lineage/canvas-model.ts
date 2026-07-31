@@ -79,7 +79,7 @@ export function memberTopRankEntry(node: LineageNodeRow, disciplineId?: string |
 
 /**
  * THE member's *shown* rank = the rank of their top awarded belt (discipline-scoped when
- * a `disciplineId` is given — see `memberTopRankAward`). The single source for "what belt
+ * a `disciplineId` is given — see `memberTopRankEntry`). The single source for "what belt
  * are you" across every surface (card, rows, mobile, timeline, honor strip, canvas). Null
  * → no rank.
  */

@@ -6,9 +6,8 @@
  * parent chain, orbit slotting, primary-lineage edges, public group labels, and the
  * display-name / rank-label / photo mapping. No private fields are read.
  *
- * TASK_06 update: identity derivation now delegates to `projectPublicPassport`, so the
- * mock passport shape uses `rankAwardsEarned` (not `selectedRankAward`) for rank data and
- * must include the `directoryProfile` field that `PublicPassportRow` requires.
+ * Identity derivation delegates to `projectPublicPassport`, so the mock passport
+ * carries canonical `rankEntries` plus the required `directoryProfile` field.
  *
  * Run: cd apps/web && bun test components/web/lineage/galaxy/bbl-galaxy-from-lineage.test.ts
  */
@@ -64,9 +63,9 @@ const member = (
       socialLinks: [],
       directoryProfile: null,
       user: opts.accountName ? { id: `user-${id}`, name: opts.accountName, image: null } : null,
-      // Belted members carry one award whose RankEntry status encodes `verified` (the belt-trust
-      // axis, LR 0008); `rankAwardsEarned` also feeds projectPublicPassport's rankLabel. A beltless
-      // member has NO award → trust resolves via the node fallback above.
+      // Belted members carry one RankEntry whose status encodes `verified` (the belt-trust
+      // axis, LR 0008) and whose rank feeds projectPublicPassport's rankLabel. A beltless
+      // member has no entry → trust resolves via the node fallback above.
       rankEntries: opts.beltless
         ? []
         : [
@@ -171,7 +170,7 @@ describe("lineageTreeToGalaxyGraph", () => {
     expect(node.displayName).toBe("Account Only")
     expect(node.initials).toBe("AO")
     expect(node.photoUrl).toBe("https://cdn/x.jpg")
-    // rankLabel comes from projectPublicPassport (rankAwardsEarned[0]) — same format
+    // rankLabel comes from projectPublicPassport (rankEntries[0]) — same format
     expect(node.rankLabel).toBe("Black Belt · Brazilian Jiu-Jitsu")
     expect(node.timelineYear).toBe(2018)
     expect(node.verifiedStatus).toBe("VERIFIED")

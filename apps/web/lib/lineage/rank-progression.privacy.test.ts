@@ -5,7 +5,7 @@
  *
  * The Trophy.so-style rank-progression read model (`buildBeltProgressions`,
  * `buildAchievementsUnlocked`) is a *strict allowlist projection* over the
- * lineage profile payload's `RankAward[]` — it reads a fixed set of fields, never
+ * lineage profile payload's `RankEntry[]` — it reads a fixed set of fields, never
  * spreads the input. This test proves that by feeding awards adversarially
  * enriched with account PII (email/role/password/notes/phone) on every nested
  * object and asserting NONE of it survives into the public output, while the
