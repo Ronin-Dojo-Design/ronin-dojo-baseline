@@ -355,7 +355,20 @@ describe("lineage tree visibility materialization", () => {
           {
             id: "re-2",
             status: "VERIFIED",
-            rank: { name: "Visible BB" },
+            rank: {
+              id: "rank-visible",
+              name: "Visible BB",
+              shortName: "BB",
+              colorHex: "#111111",
+              secondaryColorHex: null,
+              degree: null,
+              beltFamily: null,
+              rankSystem: {
+                id: "system-bjj",
+                name: "BJJ Belts",
+                discipline: { id: "d-1", name: "BJJ", slug: "bjj", code: "BJJ" },
+              },
+            },
             rankAward: { id: "ra-2", awardedAt: new Date() },
           },
         ],
