@@ -59,8 +59,9 @@ test-gate fix, backfill script — dry-run only) so they can fan out cold.
 - **Steps:** New `wayfinder:map` GitHub issue from `rankentry-unification-epic.md` + ADR 0058 +
   `rank-entry-unified-data-flow.md` + TASK_01's numbers. **Destination:** *"RankAward retired,
   RankEntry the ONE model, all reads migrated, roster ranks backfilled VERIFIED, IMPORTED-provenance
-  preserved, table-drop (G-011) sequenced."* Weight + agent-route every ticket. Then `/to-prd` +
-  `/prototype` become tickets **on** the map (not this session).
+  preserved, table-drop (G-011) sequenced."* Weight + agent-route every ticket. Then the Pocock
+  pipeline runs the destination through `/to-spec` → `/to-prd` → `/prototype` as tickets **on** the
+  map (not this session).
 - **`full` (HITL) tickets to seed:**
   1. **IMPORTED-provenance preservation** — `rankEntryStatusForAward` collapses `IMPORTED→VERIFIED`,
      discarding the provenance the belt-gate depends on (imported = authority-owned/read-only). Decide:
@@ -99,8 +100,11 @@ Both AFK-safe, provably-disjoint file sets — fan out to Claude OR codex:
 - **IMPORTED→VERIFIED collapse** silently drops belt-gate provenance — a decision ticket, never a
   backfill default.
 - Backfill = **prod-DB write = AFK-NEVER** → dry-run always; `--apply` only attended.
-- `/to-specs` is **not** a skill in this repo → "specs" = Wayfinder decision tickets + `/to-prd` +
-  `/to-issues`.
+- `/to-spec` (module-impact quiz → spec) lives in the **mattpocock-skills plugin** (upstream Pocock —
+  screenshot-confirmed SESSION_0723). The local `.agents/skills/` Pocock family is a **stale sync
+  missing it**; run `/plugin install mattpocock-skills` (interactive Claude Code) before 0727 to get
+  `/to-spec` + refreshed `/wayfinder` · `/to-prd` · `/prototype`. Pipeline = `/wayfinder` → `/to-spec`
+  → `/to-prd` → `/prototype`.
 - Local prodsnap may be stale vs SESSION_0522/0524 → TASK_01 is the guard.
 
 ## Scope guard
@@ -133,7 +137,8 @@ preserved, G-011 table-drop sequenced." Seed tickets with Weight:/Agent: lines �
     RankAward READERS→RankEntry incl. top-ranked-queries.ts; guard new RankAward reads; writes keep
     RankAward until G-011); (5) lineage test-gate fix (task_6beb8b80); (6) backfill SCRIPT (extend
     session-0522-belt-backfill.ts pattern; dry-run ONLY, --apply is a later attended ticket).
-Then /to-prd + /prototype the destination as tickets ON the map.
+Then run the destination through /to-spec → /to-prd → /prototype as tickets ON the map. (Requires
+/plugin install mattpocock-skills first — the local Pocock skills are a stale sync missing /to-spec.)
 
 RESOLVED (don't re-open): backfill status = VERIFIED (0522 precedent); autonomous exec = either
 (codex build-wall → gates on Claude/foreground). HITL invariant: prod backfill is AFK-NEVER —
