@@ -77,13 +77,16 @@ export async function submitRankPromotionClaim(
     where: { userId: input.claimantUserId },
     select: {
       id: true,
-      rankAwardsEarned: {
+      // @changed SESSION_0729 (#376) — ceiling check reads the member's ranks from `RankEntry`
+      // (the ONE canonical rank model) instead of the retired `rankAwardsEarned`. The tiebreak
+      // date lives on the anchor award via the required `rankAward` relation.
+      rankEntries: {
         select: {
           rank: {
             select: { sortOrder: true, rankSystem: { select: { disciplineId: true } } },
           },
         },
-        orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+        orderBy: [{ rank: { sortOrder: "desc" } }, { rankAward: { awardedAt: "desc" } }],
       },
     },
   })
@@ -106,7 +109,7 @@ export async function submitRankPromotionClaim(
   // `db` is the untyped Prisma/tx surface (convention), so type the awards at the call
   // site — otherwise `pickTopAwardInDiscipline`'s generic falls back to its constraint,
   // which omits `sortOrder`.
-  const awards = passport.rankAwardsEarned as Array<{
+  const awards = passport.rankEntries as Array<{
     rank: { sortOrder: number; rankSystem: { disciplineId: string | null } | null }
   }>
   const topInDiscipline = pickTopAwardInDiscipline(awards, disciplineId)

@@ -20,6 +20,7 @@ mock.module("next/cache", () => ({
   updateTag: () => {},
 }))
 
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { db } from "~/services/db"
 import {
   SUBMIT_RANK_PROMOTION_CLAIM_ERROR,
@@ -71,12 +72,21 @@ beforeAll(async () => {
       id: tag("passport-member"),
       displayName: tag("Member Person"),
       userId: member.id,
-      rankAwardsEarned: {
-        create: { rankId: mid.id, source: "EARNED", verificationStatus: "VERIFIED" },
-      },
     },
     select: { id: true },
   })
+  // #376: the promotion ceiling is read from `RankEntry` now — create the anchor award, then sync
+  // its canonical RankEntry (mirrors the production write path via `syncRankEntryFromAward`).
+  const midAward = await db.rankAward.create({
+    data: {
+      passportId: passport.id,
+      rankId: mid.id,
+      source: "EARNED",
+      verificationStatus: "VERIFIED",
+    },
+    select: { id: true },
+  })
+  await syncRankEntryFromAward(db, midAward.id)
 
   // A real Media row for the certificate-photo soft-gate (the evidence `mediaId` FK is
   // SetNull → it must point at an existing Media to link).

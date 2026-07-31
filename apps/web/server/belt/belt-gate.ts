@@ -1,4 +1,8 @@
-import type { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
+import type {
+  RankAwardSource,
+  RankAwardVerificationStatus,
+  RankEntryProvenance,
+} from "~/.generated/prisma/client"
 
 /**
  * Pure belt-journey gating logic (Slice 3 — Petey Plan 0477 Locked #5).
@@ -55,6 +59,10 @@ export type FactEditableAward = {
   source: RankAwardSource
   verificationStatus: RankAwardVerificationStatus
   awardedById: string | null
+  // @added SESSION_0729 (#376/#375) — the IMMUTABLE origin axis, read from the linked RankEntry.
+  // "Authority-owned / read-only" now keys off `provenance === "IMPORTED"` (immutable legacy truth),
+  // NOT the mutable `verificationStatus`, so a later status change can never re-open imported truth.
+  provenance: RankEntryProvenance
 }
 
 /**
@@ -64,7 +72,8 @@ export type FactEditableAward = {
  *
  * - **Locked (authority-owned truth)** — an approver stamped it (`awardedById !==
  *   null` → instructor-VERIFIED / promotion-minted), or it is **IMPORTED** legacy
- *   truth, or **DISPUTED** and under review. Never member-editable.
+ *   truth (read off the immutable `provenance` axis, #375), or **DISPUTED** and under
+ *   review (the mutable status axis). Never member-editable.
  * - **Fully editable by the owner** — a **self-added STATED backfill**, OR **any
  *   award still standing UNVERIFIED** (SESSION_0540: the member may freely revise
  *   their own un-verified belt, not just fill blanks). An auto-verified
@@ -76,7 +85,8 @@ export type FactEditableAward = {
  */
 export function isFactEditable(award: FactEditableAward): boolean {
   if (award.awardedById !== null) return false
-  if (award.verificationStatus === "IMPORTED" || award.verificationStatus === "DISPUTED") {
+  // IMPORTED reads the IMMUTABLE provenance axis (#375); DISPUTED stays on the status axis.
+  if (award.provenance === "IMPORTED" || award.verificationStatus === "DISPUTED") {
     return false
   }
   return award.source === "STATED" || award.verificationStatus === "UNVERIFIED"

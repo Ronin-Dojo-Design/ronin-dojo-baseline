@@ -62,10 +62,13 @@ function detailFixture(): DirectoryProfileDetail {
         visibility: "PUBLIC",
         claimRequests: [{ status: "APPROVED" }],
       },
-      rankAwardsEarned: [
+      // #376: the detail page reads ranks from `RankEntry` (via the canonical publicPassportPayload).
+      // Trust is the entry `status` directly (WL-P2-46); `awardedAt` is a fact on the anchor award,
+      // reached through the required `rankAward` relation.
+      rankEntries: [
         {
-          id: "rank-award-1",
-          awardedAt: new Date("2010-01-01T00:00:00.000Z"),
+          id: "rank-entry-1",
+          status: "VERIFIED",
           rank: {
             id: "rank-1",
             name: "Black Belt",
@@ -80,12 +83,11 @@ function detailFixture(): DirectoryProfileDetail {
               discipline: { id: "discipline-1", name: "BJJ", slug: "bjj", code: "bjj" },
             },
           },
-          // Trust source (WL-P2-46): the current rank's RankEntry status → "verified".
-          rankEntry: { status: "VERIFIED" },
+          rankAward: { id: "rank-award-1", awardedAt: new Date("2010-01-01T00:00:00.000Z") },
         },
         {
-          id: "rank-award-2",
-          awardedAt: new Date("2008-01-01T00:00:00.000Z"),
+          id: "rank-entry-2",
+          status: "VERIFIED",
           rank: {
             id: "rank-2",
             name: "Brown Belt",
@@ -100,7 +102,7 @@ function detailFixture(): DirectoryProfileDetail {
               discipline: { id: "discipline-1", name: "BJJ", slug: "bjj", code: "bjj" },
             },
           },
-          rankEntry: { status: "VERIFIED" },
+          rankAward: { id: "rank-award-2", awardedAt: new Date("2008-01-01T00:00:00.000Z") },
         },
       ],
     },

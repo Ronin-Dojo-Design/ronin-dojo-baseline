@@ -83,19 +83,34 @@ describe("isWithinCeiling — a member CANNOT create/edit a rank above their cei
 describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is editable", () => {
   it("ALLOWS editing a self-added backfill award (STATED, VERIFIED-by-implication, no approver)", () => {
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "VERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedById: null,
+        provenance: "EARNED",
+      }),
     ).toBe(true)
   })
 
   it("ALLOWS editing a STATED UNVERIFIED self-report (no approver)", () => {
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "UNVERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "UNVERIFIED",
+        awardedById: null,
+        provenance: "EARNED",
+      }),
     ).toBe(true)
   })
 
   it("ALLOWS editing ANY UNVERIFIED award the owner holds — even EARNED (SESSION_0540)", () => {
     expect(
-      isFactEditable({ source: "EARNED", verificationStatus: "UNVERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "EARNED",
+        verificationStatus: "UNVERIFIED",
+        awardedById: null,
+        provenance: "EARNED",
+      }),
     ).toBe(true)
   })
 
@@ -105,22 +120,40 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "STATED",
         verificationStatus: "VERIFIED",
         awardedById: "u-approver",
+        provenance: "EARNED",
       }),
     ).toBe(false)
   })
 
   it("DENIES editing an IMPORTED or DISPUTED award (authority/legacy records, deny-by-default)", () => {
+    // IMPORTED now denies via the IMMUTABLE provenance axis (#375), not the mutable status.
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "IMPORTED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "VERIFIED",
+        awardedById: null,
+        provenance: "IMPORTED",
+      }),
     ).toBe(false)
+    // DISPUTED stays on the status axis (provenance is EARNED — a real earned belt now contested).
     expect(
-      isFactEditable({ source: "STATED", verificationStatus: "DISPUTED", awardedById: null }),
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "DISPUTED",
+        awardedById: null,
+        provenance: "EARNED",
+      }),
     ).toBe(false)
   })
 
   it("DENIES editing an EARNED award that is already VERIFIED without an approver (not a backfill)", () => {
     expect(
-      isFactEditable({ source: "EARNED", verificationStatus: "VERIFIED", awardedById: null }),
+      isFactEditable({
+        source: "EARNED",
+        verificationStatus: "VERIFIED",
+        awardedById: null,
+        provenance: "EARNED",
+      }),
     ).toBe(false)
   })
 })
@@ -187,10 +220,13 @@ describe("decideBackfillPromoterTransition (D-046 — active provenance first)",
 })
 
 describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the owner", () => {
-  /** An authority-owned (IMPORTED) award with every fact empty, overridable per test. */
+  /** An authority-owned (IMPORTED) award with every fact empty, overridable per test. Authority is
+   *  keyed off the IMMUTABLE `provenance` axis now (#375), so the default carries `provenance:
+   *  "IMPORTED"`; the self-backfill / earned cases override it to "EARNED". */
   const imported = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
     source: "STATED",
     verificationStatus: "IMPORTED",
+    provenance: "IMPORTED",
     awardedById: null,
     awardedAt: null,
     awardedByPassportId: null,
@@ -204,6 +240,8 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     const result = memberFactEditability(
       imported({
         verificationStatus: "VERIFIED",
+        // member-authored (EARNED origin, not imported) → still fully editable...
+        provenance: "EARNED",
         // even with every fact FILLED — the member authored it, so overwrite is fine
         awardedAt: new Date("2020-01-01"),
         notes: "Prof. Freetext",
@@ -254,14 +292,17 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
 
   it("a promotion-minted award (awardedById stamped) gets the same fill-blanks treatment", () => {
     const result = memberFactEditability(
-      imported({ verificationStatus: "VERIFIED", awardedById: "u-approver" }),
+      imported({ verificationStatus: "VERIFIED", provenance: "EARNED", awardedById: "u-approver" }),
     )
     expect(result.reason).toBe("AUTHORITY_PARTIAL")
     expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
   })
 
   it("DISPUTED is fully locked for the owner even with empty facts (deny-by-default)", () => {
-    const result = memberFactEditability(imported({ verificationStatus: "DISPUTED" }))
+    // provenance EARNED so the lock is genuinely exercised via the DISPUTED status axis, not provenance.
+    const result = memberFactEditability(
+      imported({ verificationStatus: "DISPUTED", provenance: "EARNED" }),
+    )
     expect(result.reason).toBe("AUTHORITY_LOCKED")
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })

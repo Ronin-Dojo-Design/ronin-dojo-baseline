@@ -67,12 +67,12 @@ const member = (
       // Belted members carry one award whose RankEntry status encodes `verified` (the belt-trust
       // axis, LR 0008); `rankAwardsEarned` also feeds projectPublicPassport's rankLabel. A beltless
       // member has NO award → trust resolves via the node fallback above.
-      rankAwardsEarned: opts.beltless
+      rankEntries: opts.beltless
         ? []
         : [
             {
-              id: `award-${id}`,
-              awardedAt: opts.awardYear ? new Date(Date.UTC(opts.awardYear, 0, 1)) : null,
+              id: `entry-${id}`,
+              status: opts.verified === false ? "UNVERIFIED" : "VERIFIED",
               rank: {
                 id: `rank-${id}`,
                 name: opts.rankName ?? "Belt",
@@ -86,7 +86,10 @@ const member = (
                     : null,
                 },
               },
-              rankEntry: { status: opts.verified === false ? "UNVERIFIED" : "VERIFIED" },
+              rankAward: {
+                id: `award-${id}`,
+                awardedAt: opts.awardYear ? new Date(Date.UTC(opts.awardYear, 0, 1)) : null,
+              },
             },
           ],
     },

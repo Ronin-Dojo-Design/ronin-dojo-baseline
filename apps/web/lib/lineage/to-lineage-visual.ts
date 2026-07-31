@@ -7,7 +7,7 @@ import type {
 import {
   memberBeltColor,
   memberRankLabel,
-  memberTopRankAward,
+  memberTopRankEntry,
   resolveLineageMemberView,
 } from "~/lib/lineage/canvas-model"
 import type { LineageTrustStatus } from "~/lib/lineage/trust-status"
@@ -67,8 +67,9 @@ export function toLineageVisual(
     // Same single resolver every other surface uses — one person, one ruleset.
     const view = resolveLineageMemberView(node, { isClaimable: member.isClaimable, disciplineId })
     // Promotion date = the awardedAt of the member's shown (top awarded, discipline-scoped)
-    // rank — the same awarded-truth source the belt reads (ADR 0035).
-    const topAwardedAt = memberTopRankAward(node, disciplineId)?.awardedAt ?? null
+    // rank — the same awarded-truth source the belt reads (ADR 0035), read off the anchor award
+    // via the entry's required `rankAward` relation (#376).
+    const topAwardedAt = memberTopRankEntry(node, disciplineId)?.rankAward.awardedAt ?? null
 
     return {
       id: member.id,

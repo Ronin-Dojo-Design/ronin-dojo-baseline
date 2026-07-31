@@ -49,19 +49,22 @@ export type PublicPassportDTO = {
   rankLabel: string | null
 }
 
-const toRank = (award: PublicPassportRow["rankAwardsEarned"][number]): PublicPassportRank => ({
-  awardId: award.id,
-  rankId: award.rank?.id ?? "",
-  name: award.rank?.name ?? "",
-  shortName: award.rank?.shortName ?? null,
-  colorHex: award.rank?.colorHex ?? null,
-  secondaryColorHex: award.rank?.secondaryColorHex ?? null,
-  degree: award.rank?.degree ?? null,
-  beltFamily: award.rank?.beltFamily ?? null,
-  awardedAt: award.awardedAt,
-  disciplineName: award.rank?.rankSystem?.discipline?.name ?? null,
-  disciplineSlug: award.rank?.rankSystem?.discipline?.slug ?? null,
-  status: award.rankEntry?.status ?? null,
+const toRank = (entry: PublicPassportRow["rankEntries"][number]): PublicPassportRank => ({
+  // `awardId` stays the anchor award id (the join key surfaces rely on) — read off the
+  // required `RankEntry.rankAward` relation, not a separate RankAward query (#376).
+  awardId: entry.rankAward.id,
+  rankId: entry.rank?.id ?? "",
+  name: entry.rank?.name ?? "",
+  shortName: entry.rank?.shortName ?? null,
+  colorHex: entry.rank?.colorHex ?? null,
+  secondaryColorHex: entry.rank?.secondaryColorHex ?? null,
+  degree: entry.rank?.degree ?? null,
+  beltFamily: entry.rank?.beltFamily ?? null,
+  awardedAt: entry.rankAward.awardedAt,
+  disciplineName: entry.rank?.rankSystem?.discipline?.name ?? null,
+  disciplineSlug: entry.rank?.rankSystem?.discipline?.slug ?? null,
+  // Trust status now reads straight off the canonical RankEntry (never null for a real entry).
+  status: entry.status,
 })
 
 const rankLabelOf = (rank: PublicPassportRank | null): string | null => {
@@ -82,7 +85,7 @@ export const projectPublicPassport = (
   options: { brand?: string | null; showRanks?: boolean } = {},
 ): PublicPassportDTO => {
   const showRanks = options.showRanks ?? passport.directoryProfile?.showRanks !== false
-  const ranks = showRanks ? passport.rankAwardsEarned.map(toRank) : []
+  const ranks = showRanks ? passport.rankEntries.map(toRank) : []
   const currentRank = ranks[0] ?? null
 
   return {

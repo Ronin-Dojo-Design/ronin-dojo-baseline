@@ -43,9 +43,9 @@ function formatDate(date: Date | null): string | null {
 }
 
 export function LineageRankProgressionPanel({ profile }: { profile: LineageNodeProfile }) {
-  const awards = profile.passport?.rankAwardsEarned ?? []
-  const progressions = buildBeltProgressions(awards)
-  const achievements = buildAchievementsUnlocked(awards)
+  const entries = profile.passport?.rankEntries ?? []
+  const progressions = buildBeltProgressions(entries)
+  const achievements = buildAchievementsUnlocked(entries)
 
   if (progressions.length === 0 && achievements.length === 0) return null
 

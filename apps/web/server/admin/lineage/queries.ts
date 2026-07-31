@@ -164,11 +164,14 @@ export const findLineageTreeDetail = async (treeId: string) => {
                       archivedAt: true,
                     },
                   },
-                  rankAwardsEarned: {
-                    orderBy: [{ awardedAt: "desc" }, { createdAt: "desc" }],
+                  // @changed SESSION_0729 (#376) — ranks read from `RankEntry` (the ONE canonical
+                  // rank model); the awarded date is a fact on the anchor award, reached via the
+                  // required `rankAward` relation.
+                  rankEntries: {
+                    orderBy: [{ rankAward: { awardedAt: "desc" } }, { createdAt: "desc" }],
                     select: {
                       id: true,
-                      awardedAt: true,
+                      rankAward: { select: { awardedAt: true } },
                       rank: {
                         select: {
                           name: true,

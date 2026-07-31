@@ -10,7 +10,7 @@ import {
   memberRankLabel,
   memberSchool,
   memberTopRank,
-  memberTopRankAward,
+  memberTopRankEntry,
   memberTrustStatus,
   memberSchoolLabel,
   nodeDisplayName,
@@ -46,7 +46,7 @@ function makeNode({
       avatarUrl: null,
       user: name != null ? { id: `user-${id}`, name, image: null, memberships: [] } : null,
       directoryProfile: null,
-      rankAwardsEarned: [],
+      rankEntries: [],
       affiliations: [],
     },
   } as unknown as LineageNodeRow
@@ -135,7 +135,7 @@ function makeBeltMember({
 }): CanvasMember {
   const member = makeMember({ id, name })
   if (beltSortOrder != null) {
-    member.node.passport.rankAwardsEarned = [
+    member.node.passport.rankEntries = [
       {
         id: `award-${id}`,
         awardedAt: null,
@@ -194,7 +194,7 @@ describe("sortMembersByBeltOrder", () => {
   test("discipline-scoped: sorts by the belt IN the tree's discipline, not the global top (ADR 0035 §3)", () => {
     // TKD 8th dan (sortOrder 20) + BJJ blue (sortOrder 4) vs BJJ black (sortOrder 8).
     const multi = makeBeltMember({ id: "multi", name: "Multi", beltSortOrder: 4 })
-    multi.node.passport.rankAwardsEarned = [
+    multi.node.passport.rankEntries = [
       // Payload contract: pre-ordered by Rank.sortOrder desc → TKD first.
       {
         id: "award-multi-tkd",
@@ -318,7 +318,7 @@ describe("member view-model derivations", () => {
           memberships: [{ organization: { name: "Gracie Barra" } }],
         },
         directoryProfile: null,
-        rankAwardsEarned: [
+        rankEntries: [
           {
             verificationStatus: "VERIFIED",
             rank: {
@@ -346,14 +346,14 @@ describe("member view-model derivations", () => {
   test("memberBeltColor: highest awarded belt ([0]) — display = awarded truth (ADR 0035)", () => {
     const node = makeRichNode()
     assert.equal(memberBeltColor(node), "#111111")
-    node.passport.rankAwardsEarned = []
+    node.passport.rankEntries = []
     assert.equal(memberBeltColor(node), null)
   })
 
   test("memberRankLabel: highest awarded belt with discipline (ADR 0035)", () => {
     const node = makeRichNode()
     assert.equal(memberRankLabel(node), "Black Belt · Brazilian Jiu-Jitsu")
-    node.passport.rankAwardsEarned = []
+    node.passport.rankEntries = []
     assert.equal(memberRankLabel(node), null)
   })
 
@@ -363,7 +363,7 @@ describe("member view-model derivations", () => {
     return {
       passport: {
         // Payload contract: pre-ordered by Rank.sortOrder desc → TKD (20) before BJJ (8).
-        rankAwardsEarned: [
+        rankEntries: [
           {
             id: "ra-tkd",
             awardedAt: new Date(Date.UTC(2024, 0, 1)),
@@ -395,7 +395,7 @@ describe("member view-model derivations", () => {
     // Discipline-scoped surface (the BBL tree carries the BJJ discipline) → the BJJ rank,
     // NOT the globally-higher TKD dan.
     assert.equal(memberTopRank(node, "disc-bjj")?.name, "Black Belt")
-    assert.equal(memberTopRankAward(node, "disc-bjj")?.id, "ra-bjj")
+    assert.equal(memberTopRankEntry(node, "disc-bjj")?.id, "ra-bjj")
     assert.equal(memberBeltColor(node, "disc-bjj"), "#bjj")
     assert.equal(memberRankLabel(node, "disc-bjj"), "Black Belt · Brazilian Jiu-Jitsu")
 
@@ -404,7 +404,7 @@ describe("member view-model derivations", () => {
 
     // No discipline (drawer / directory — multi-discipline) → highest awarded overall (TKD).
     assert.equal(memberTopRank(node)?.name, "8th Dan")
-    assert.equal(memberTopRankAward(node)?.id, "ra-tkd")
+    assert.equal(memberTopRankEntry(node)?.id, "ra-tkd")
 
     // A discipline the member holds no award in → null (no leak from another system).
     assert.equal(memberTopRank(node, "disc-judo"), null)
@@ -485,15 +485,16 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
     color: string,
     entryStatus: "PENDING" | "UNVERIFIED" | "VERIFIED" | "DISPUTED" | null = null,
   ) {
-    node.passport.rankAwardsEarned = [
+    node.passport.rankEntries = [
       {
+        // #376: the current row IS the RankEntry, so `status` reads straight off it.
+        status: entryStatus,
         rank: {
           name,
           colorHex: color,
           sortOrder: 8,
           rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj", name: "Brazilian Jiu-Jitsu" } },
         },
-        rankEntry: entryStatus ? { status: entryStatus } : null,
       },
     ] as never
     return node
@@ -531,20 +532,20 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
 
   test("memberTrustStatus: top non-PENDING entry, discipline-scoped like memberTopRank", () => {
     const node = makeNode({ id: "t", name: "Trust" })
-    node.passport.rankAwardsEarned = [
+    node.passport.rankEntries = [
       {
+        status: "PENDING", // highest belt PENDING → skipped
         rank: {
           sortOrder: 8,
           rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj" } },
         },
-        rankEntry: { status: "PENDING" }, // highest belt PENDING → skipped
       },
       {
+        status: "VERIFIED", // next non-PENDING → the trust
         rank: {
           sortOrder: 6,
           rankSystem: { id: "rs-bjj", discipline: { id: "disc-bjj" } },
         },
-        rankEntry: { status: "VERIFIED" }, // next non-PENDING → the trust
       },
     ] as never
     assert.equal(memberTrustStatus(node), "VERIFIED")
@@ -552,14 +553,14 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
     // A discipline the member holds no entry in → null (node not verified → no fallback).
     assert.equal(memberTrustStatus(node, "disc-tkd"), null)
     // No awards → null (→ unverified/imported at the resolver).
-    node.passport.rankAwardsEarned = [] as never
+    node.passport.rankEntries = [] as never
     assert.equal(memberTrustStatus(node), null)
   })
 
   test("memberTrustStatus: BELTLESS member falls back to node membership verification (WL-P2-46)", () => {
     // A documented lineage member with NO belt → the node's membership verification carries trust.
     const node = makeNode({ id: "bl", name: "Beltless" })
-    node.passport.rankAwardsEarned = [] as never
+    node.passport.rankEntries = [] as never
     node.isVerified = true
     assert.equal(memberTrustStatus(node), "VERIFIED")
     node.isVerified = false
@@ -571,10 +572,10 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
     // member reads verified; a DISPUTED belt reads disputed).
     node.isVerified = true
     node.verificationStatus = "VERIFIED"
-    node.passport.rankAwardsEarned = [
+    node.passport.rankEntries = [
       {
+        status: "DISPUTED",
         rank: { sortOrder: 6, rankSystem: { id: "rs", discipline: { id: "d" } } },
-        rankEntry: { status: "DISPUTED" },
       },
     ] as never
     assert.equal(memberTrustStatus(node), "DISPUTED")
@@ -582,7 +583,7 @@ describe("resolveLineageMemberView — the one ruleset every surface shares", ()
 
   test("resolveLineageMemberView: beltless node-verified → verified badge (kept in galaxy)", () => {
     const node = makeNode({ id: "blv", name: "Beltless Verified" })
-    node.passport.rankAwardsEarned = [] as never
+    node.passport.rankEntries = [] as never
     node.isVerified = true
     assert.equal(resolveLineageMemberView(node).trustStatus, "verified")
     // Beltless + node not verified → the unchanged unverified path.

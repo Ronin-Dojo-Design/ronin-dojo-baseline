@@ -15,34 +15,34 @@ type ClaimSummary = {
 }
 
 /**
- * Minimal rank-award shape `pickTopTrustStatus` reads: the member's award carrying its canonical
- * `RankEntry.status` (the ONE member-facing rank-trust axis — LR 0008) plus the discipline id for
- * discipline-scoped surfaces. Structurally satisfied by every award payload (lineage row/profile,
- * public passport, directory), so ONE resolver reads them all instead of N surfaces each deriving
- * trust from the node-level flag.
+ * Minimal `RankEntry` shape `pickTopTrustStatus` reads: the member's canonical rank entry carrying
+ * its `status` (the ONE member-facing rank-trust axis — LR 0008) plus the discipline id for
+ * discipline-scoped surfaces. Structurally satisfied by every `rankEntries` payload (lineage
+ * row/profile, public passport, directory) since #376 collapsed every rank read onto `RankEntry`,
+ * so ONE resolver reads them all instead of N surfaces each deriving trust from the node-level flag.
  */
-export type TrustRankAward = {
-  // `rankSystem.id` is universal across the award payloads (it defeats the weak-type check for the
-  // directory's discipline-less `{ id, name }` rankSystem); `discipline.id` powers optional scoping.
+export type TrustRankEntry = {
+  status: RankEntryStatus
+  // `rankSystem.id` is universal across the `rankEntries` payloads (it defeats the weak-type check
+  // for the directory's discipline-less `{ id, name }` rankSystem); `discipline.id` powers optional
+  // discipline scoping.
   rank: { rankSystem?: { id: string; discipline?: { id: string } | null } | null }
-  rankEntry?: { status: RankEntryStatus } | null
 }
 
 /**
  * THE member's rank-trust = the status of their CURRENT rank = the highest non-PENDING RankEntry in
- * the (optionally discipline-scoped) award ordering (rank-entry-unified-data-flow.md: "current rank
- * is the highest non-pending entry"). `UNVERIFIED | VERIFIED | DISPUTED` count; `PENDING` — and any
- * entry-less award — does not. Awards arrive pre-ordered highest-belt-first, so the first qualifying
- * entry is the top one. Null → no verified rank on record (resolves to unverified/imported).
+ * the (optionally discipline-scoped) entry ordering (rank-entry-unified-data-flow.md: "current rank
+ * is the highest non-pending entry"). `UNVERIFIED | VERIFIED | DISPUTED` count; `PENDING` does not.
+ * Entries arrive pre-ordered highest-belt-first, so the first qualifying entry is the top one. Null →
+ * no verified rank on record (resolves to unverified/imported).
  */
 export function pickTopTrustStatus(
-  awards: readonly TrustRankAward[],
+  entries: readonly TrustRankEntry[],
   disciplineId?: string | null,
 ): RankEntryStatus | null {
-  for (const award of awards) {
-    if (disciplineId && award.rank.rankSystem?.discipline?.id !== disciplineId) continue
-    const status = award.rankEntry?.status
-    if (status && status !== "PENDING") return status
+  for (const entry of entries) {
+    if (disciplineId && entry.rank.rankSystem?.discipline?.id !== disciplineId) continue
+    if (entry.status !== "PENDING") return entry.status
   }
   return null
 }
@@ -66,11 +66,11 @@ export type NodeTrustFallback = {
  * Null → no rank AND no node verification → the caller's unverified/imported/claim path (unchanged).
  */
 export function resolveMemberTrustStatus(
-  awards: readonly TrustRankAward[],
+  entries: readonly TrustRankEntry[],
   node: NodeTrustFallback,
   disciplineId?: string | null,
 ): RankEntryStatus | null {
-  const rankStatus = pickTopTrustStatus(awards, disciplineId)
+  const rankStatus = pickTopTrustStatus(entries, disciplineId)
   if (rankStatus) return rankStatus
   // Beltless / all-PENDING → node membership verification (the only surviving use of these fields).
   if (node.verificationStatus === "DISPUTED") return "DISPUTED"

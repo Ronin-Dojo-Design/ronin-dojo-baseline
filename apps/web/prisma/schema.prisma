@@ -2200,6 +2200,15 @@ enum RankEntryStatus {
   DISPUTED
 }
 
+// @added SESSION_0729 (#375 ratified shape → #376 seam) — IMMUTABLE origin axis, set once at
+// creation. Distinct from `status` (mutable presentation trust): an IMPORTED belt stays IMPORTED
+// origin even as its status collapses to VERIFIED. Not `RankAwardSource` (STATED|EARNED can't
+// express IMPORTED) and not a fold-in to status (which must stay mutable).
+enum RankEntryProvenance {
+  IMPORTED
+  EARNED
+}
+
 enum RankEntryReviewStatus {
   PENDING
   APPROVED
@@ -2286,6 +2295,11 @@ model RankAward {
 model RankEntry {
   id        String          @id @default(cuid(2))
   status    RankEntryStatus @default(UNVERIFIED)
+  // @added SESSION_0729 (#375 → #376) — IMMUTABLE origin axis, set once at sync. Distinct from the
+  // mutable `status`: belt-gate reads `provenance == IMPORTED` for authority-owned / read-only,
+  // replacing the old `RankAward.verificationStatus == IMPORTED` reads. Backfill maps the anchor
+  // award's verificationStatus (IMPORTED → IMPORTED, else EARNED).
+  provenance RankEntryProvenance @default(EARNED)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 

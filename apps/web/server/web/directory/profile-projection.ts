@@ -7,7 +7,7 @@ import {
   resolveLineageClaimBadgeStatus,
   resolveLineageTrustStatus,
   resolveMemberTrustStatus,
-  type TrustRankAward,
+  type TrustRankEntry,
 } from "~/lib/lineage/trust-status"
 import { resolveDisplayAvatar } from "~/lib/media"
 import type { DirectoryProfileDetail, DirectoryProfileList } from "~/server/web/directory/payloads"
@@ -20,10 +20,10 @@ type ProfileViewer = {
 
 type UserTrustSource = {
   isPlaceholder?: boolean | null
-  // The member's awarded belts, carrying each award's canonical `RankEntry.status` — the ONE
+  // The member's rank entries, each carrying its canonical `RankEntry.status` — the ONE
   // member-facing rank-trust source (LR 0008). Trust derives from the top non-PENDING entry, the
   // SAME source (and SAME `resolveMemberTrustStatus` choke point) the lineage tree/drawer read.
-  rankAwards?: readonly TrustRankAward[]
+  rankAwards?: readonly TrustRankEntry[]
   lineageNode?: {
     // Beltless fallback ONLY (WL-P2-46): a documented-but-beltless verified member still reads
     // verified. A present RankEntry always wins over these node fields.
@@ -191,7 +191,7 @@ export function projectDirectoryDetailProfile({
     isOwnProfile: account != null && viewerUserId === account.id,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
-      rankAwards: profile.passport.rankAwardsEarned,
+      rankAwards: profile.passport.rankEntries,
       lineageNode: profile.passport.lineageNode,
     }),
     // RICH media — gated.
@@ -256,7 +256,7 @@ export function projectDirectoryProfileListItem({
     canRenderFullProfile,
     ...trustSummaryForUser({
       isPlaceholder: account == null,
-      rankAwards: profile.passport.rankAwardsEarned,
+      rankAwards: profile.passport.rankEntries,
       lineageNode: profile.passport.lineageNode,
     }),
     // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
@@ -275,10 +275,10 @@ export function projectDirectoryProfileListItem({
         : [],
     ranks:
       cardShowsRich && policy.features.rankHistory && profile.showRanks
-        ? profile.passport.rankAwardsEarned
+        ? profile.passport.rankEntries
         : rankSummaryForProfile({
             showRanks: profile.showRanks,
-            rankAwards: profile.passport.rankAwardsEarned,
+            rankAwards: profile.passport.rankEntries,
           }),
   }
 }

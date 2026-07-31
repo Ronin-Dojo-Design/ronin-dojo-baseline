@@ -22,10 +22,15 @@ export async function syncRankEntryFromAward(
   })
 
   const status = rankEntryStatusForAward(award.verificationStatus)
+  // Immutable origin axis (#375): IMPORTED legacy truth vs EARNED in-app award. Set the same way
+  // on create and update — the value never changes for a given anchor, but keeping it on both
+  // branches means an entry that predates this column is corrected the next time it syncs. Kept
+  // separate from `status`, which collapses IMPORTED → VERIFIED for presentation trust.
+  const provenance = award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED"
 
   await dbClient.rankEntry.upsert({
     where: { rankAwardId },
-    create: { rankAwardId, passportId: award.passportId, rankId: award.rankId, status },
-    update: { passportId: award.passportId, rankId: award.rankId, status },
+    create: { rankAwardId, passportId: award.passportId, rankId: award.rankId, status, provenance },
+    update: { passportId: award.passportId, rankId: award.rankId, status, provenance },
   })
 }

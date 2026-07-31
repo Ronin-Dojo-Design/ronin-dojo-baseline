@@ -14,7 +14,7 @@ import { nameInitials } from "~/lib/identity/passport-display"
 import { memberTrustStatus } from "~/lib/lineage/canvas-model"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
-type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
+type RankEntry = NonNullable<LineageNodeProfile["passport"]>["rankEntries"][number]
 
 function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "Unknown date"
@@ -54,9 +54,9 @@ function sourceBadge(profile: LineageNodeProfile) {
 }
 
 export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile }) {
-  const awards = profile.passport?.rankAwardsEarned ?? []
+  const entries = profile.passport?.rankEntries ?? []
 
-  if (awards.length === 0) {
+  if (entries.length === 0) {
     return (
       <Stack direction="column" size="sm" className="w-full py-8 text-center">
         <H6>No rank history yet</H6>
@@ -76,7 +76,7 @@ export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile
         <Stack size="xs" wrap>
           {sourceBadge(profile)}
           <Badge variant="soft" size="sm">
-            {awards.length} award{awards.length === 1 ? "" : "s"}
+            {entries.length} award{entries.length === 1 ? "" : "s"}
           </Badge>
         </Stack>
         <Note className="text-xs">
@@ -88,17 +88,20 @@ export function LineageRankHistoryTab({ profile }: { profile: LineageNodeProfile
       <Separator />
 
       <Stack direction="column" size="sm">
-        {awards.map(award => (
-          <RankAwardRow key={award.id} award={award} />
+        {entries.map(entry => (
+          <RankAwardRow key={entry.id} entry={entry} />
         ))}
       </Stack>
     </Stack>
   )
 }
 
-function RankAwardRow({ award }: { award: RankAward }) {
-  const rankStyle = award.rank.colorHex
-    ? ({ "--rank-color": award.rank.colorHex } as CSSProperties)
+function RankAwardRow({ entry }: { entry: RankEntry }) {
+  // Ceremony facts (awardedAt, promoter, organization, location, promotionEvent) live on the
+  // anchor RankAward, reached via the entry's required `rankAward` relation (#376).
+  const award = entry.rankAward
+  const rankStyle = entry.rank.colorHex
+    ? ({ "--rank-color": entry.rank.colorHex } as CSSProperties)
     : undefined
   // Promoter identity prefers the historical Passport promoter (SESSION_0391),
   // falling back to the real-account actor.
@@ -111,22 +114,22 @@ function RankAwardRow({ award }: { award: RankAward }) {
       className="relative overflow-hidden rounded-md border bg-background p-3"
       style={rankStyle}
     >
-      {award.rank.colorHex && (
+      {entry.rank.colorHex && (
         <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-(--rank-color)" />
       )}
       <Stack direction="column" size="sm">
         <Stack size="sm" wrap>
-          {award.rank.colorHex && (
+          {entry.rank.colorHex && (
             <span
               aria-hidden
               className="inline-block h-3 w-6 rounded-sm border bg-(--rank-color)"
-              style={{ "--rank-color": award.rank.colorHex } as React.CSSProperties}
+              style={{ "--rank-color": entry.rank.colorHex } as React.CSSProperties}
             />
           )}
-          <span className="font-medium text-sm">{award.rank.name}</span>
-          {award.rank.rankSystem.discipline?.name && (
+          <span className="font-medium text-sm">{entry.rank.name}</span>
+          {entry.rank.rankSystem.discipline?.name && (
             <Badge variant="outline" size="sm">
-              {award.rank.rankSystem.discipline.name}
+              {entry.rank.rankSystem.discipline.name}
             </Badge>
           )}
         </Stack>

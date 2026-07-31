@@ -65,13 +65,15 @@ function makeMember({
         avatarUrl,
         user: isPlaceholder ? null : { id: `user-${id}`, name, image: null, memberships: [] },
         directoryProfile: null,
-        rankAwardsEarned:
+        // #376: ranks read from `RankEntry`. A missing explicit status → PENDING, which the trust
+        // resolver SKIPS exactly like the old entry-less award (belt still shows, trust falls back to
+        // the node) — so behaviour is preserved. Ceremony facts nest under the anchor `rankAward`.
+        rankEntries:
           colorHex || rankEntryStatus
             ? [
                 {
-                  id: `ra-${id}`,
-                  awardedAt: new Date(),
-                  location: null,
+                  id: `re-${id}`,
+                  status: rankEntryStatus ?? "PENDING",
                   rank: {
                     id: `rank-${id}`,
                     name: rankName,
@@ -86,9 +88,13 @@ function makeMember({
                         : null,
                     },
                   },
-                  awardedBy: null,
-                  awardedByPassport: null,
-                  rankEntry: rankEntryStatus ? { status: rankEntryStatus } : null,
+                  rankAward: {
+                    id: `ra-${id}`,
+                    awardedAt: new Date(),
+                    location: null,
+                    awardedBy: null,
+                    awardedByPassport: null,
+                  },
                 },
               ]
             : [],

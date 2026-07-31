@@ -23,15 +23,25 @@ export const publicPassportPayload = {
   directoryProfile: {
     select: { slug: true, visibility: true, showRanks: true },
   },
-  rankAwardsEarned: {
-    // [0] is the headline "current rank" in projectPublicPassport. Order by highest
-    // belt (Rank.sortOrder) first, awardedAt as tiebreak, so a NULL-dated lower-belt
-    // award can't float to the top (Postgres NULLS-FIRST default). SESSION_0430 —
-    // matches server/web/disciplines/top-ranked-queries.ts.
-    orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
+  // @changed SESSION_0729 (#376) — read the member's ranks from `RankEntry` (the ONE canonical
+  // rank model, ADR 0058 / spec #372) instead of the retired `RankAward` read-model, so every
+  // public surface (profile, directory, lineage, rail, related-profiles) agrees on rank. Fact
+  // fields the rank card still shows (awardedAt) come from the anchor award via the required
+  // `RankEntry.rankAward` relation until the table-drop (G-011).
+  rankEntries: {
+    // [0] is the headline "current rank" in projectPublicPassport. Highest belt (Rank.sortOrder)
+    // first; the anchor award's `awardedAt` is the tiebreak so a NULL-dated lower belt can't float
+    // to the top (Postgres NULLS-FIRST default). SESSION_0430 order preserved.
+    orderBy: [
+      { rank: { sortOrder: "desc" as const } },
+      { rankAward: { awardedAt: "desc" as const } },
+    ],
     select: {
       id: true,
-      awardedAt: true,
+      // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008),
+      // now read straight off the RankEntry so the directory trust badge and the lineage surfaces
+      // share ONE source (`pickTopTrustStatus`).
+      status: true,
       rank: {
         select: {
           id: true,
@@ -51,12 +61,9 @@ export const publicPassportPayload = {
           },
         },
       },
-      // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008).
-      // Carries the RankEntry status alongside the award so the directory trust badge reads the
-      // SAME source (`pickTopTrustStatus`) as the lineage surfaces, retiring `node.isVerified`.
-      rankEntry: {
-        select: { status: true },
-      },
+      // Anchor read (fact domain): `awardedAt` + the award id live on RankAward until the
+      // table-drop. Reached via the required `rankAward` relation — NOT a top-level RankAward read.
+      rankAward: { select: { id: true, awardedAt: true } },
     },
   },
 } satisfies Prisma.PassportSelect

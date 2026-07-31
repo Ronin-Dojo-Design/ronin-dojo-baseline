@@ -95,10 +95,12 @@ const makePassport = (overrides: Record<string, unknown> = {}) => ({
   allowSocialCelebration: true,
   user: { id: "user-1", name: "Jane Doe", image: null },
   directoryProfile: { slug: "jane-doe", visibility: "PUBLIC", showRanks: true },
-  rankAwardsEarned: [
+  // #376: `projectPublicPassport` reads the member's ranks from `RankEntry`; trust is the entry
+  // `status` directly, and `awardedAt` nests under the anchor award's required `rankAward` relation.
+  rankEntries: [
     {
-      id: "ra-1",
-      awardedAt: new Date("2026-07-12T00:00:00Z"),
+      id: "re-1",
+      status: "VERIFIED",
       rank: {
         id: "rank-black",
         name: "Black Belt",
@@ -113,7 +115,7 @@ const makePassport = (overrides: Record<string, unknown> = {}) => ({
           discipline: { id: "d-1", name: "Brazilian Jiu-Jitsu", slug: "bjj", code: "BJJ" },
         },
       },
-      rankEntry: { status: "VERIFIED" },
+      rankAward: { id: "ra-1", awardedAt: new Date("2026-07-12T00:00:00Z") },
     },
   ],
   ...overrides,
@@ -314,7 +316,7 @@ describe("enqueueRankPromotionCelebration — the explicit trigger seam", () => 
   })
 
   it("no public awards at all → nothing is generated", async () => {
-    state.entry = makeEntry({ passport: makePassport({ rankAwardsEarned: [] }) })
+    state.entry = makeEntry({ passport: makePassport({ rankEntries: [] }) })
     const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
     expect(result).toEqual({ outcome: "skipped", reason: "rank-not-public" })
     expect(state.createCalls).toEqual([])

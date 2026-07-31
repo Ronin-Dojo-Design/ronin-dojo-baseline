@@ -66,12 +66,18 @@ export const applyLineageNodeProfileUpdate = async ({
               passport: {
                 select: {
                   // Pre-ordered by Rank.sortOrder desc; discipline filter applied in JS below.
-                  rankAwardsEarned: {
+                  // Ranks read from `RankEntry` (#376); the anchor award id (targeted by the
+                  // promotion-date write) comes via the required `rankAward` relation.
+                  rankEntries: {
                     select: {
                       id: true,
+                      rankAward: { select: { id: true } },
                       rank: { select: { rankSystem: { select: { disciplineId: true } } } },
                     },
-                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                    orderBy: [
+                      { rank: { sortOrder: "desc" } },
+                      { rankAward: { awardedAt: "desc" } },
+                    ],
                   },
                 },
               },
@@ -140,16 +146,18 @@ export const applyLineageNodeProfileUpdate = async ({
       })
     }
 
-    const shownRankAward = pickTopAwardInDiscipline(
-      member.node.passport.rankAwardsEarned,
+    const shownRankEntry = pickTopAwardInDiscipline(
+      member.node.passport.rankEntries,
       tree.disciplineId,
     )
-    if (input.promotionDate !== undefined && shownRankAward) {
+    if (input.promotionDate !== undefined && shownRankEntry) {
+      // Write anchor: the promotion date lives on the RankAward; the entry carries its id.
+      const shownRankAwardId = shownRankEntry.rankAward.id
       await tx.rankAward.update({
-        where: { id: shownRankAward.id },
+        where: { id: shownRankAwardId },
         data: { awardedAt: input.promotionDate },
       })
-      await syncRankEntryFromAward(tx, shownRankAward.id)
+      await syncRankEntryFromAward(tx, shownRankAwardId)
     }
   })
 

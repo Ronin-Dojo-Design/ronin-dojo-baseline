@@ -8,11 +8,11 @@ import { db } from "~/services/db"
  */
 
 /**
- * The member's shown award = the highest awarded belt (the array is pre-ordered by
+ * The member's shown rank = the highest awarded belt (the array is pre-ordered by
  * `Rank.sortOrder desc`) IN the given discipline (ADR 0035 §3), or the global highest
- * when no `disciplineId` is given. Operates on the award array (not a `LineageNodeRow`)
+ * when no `disciplineId` is given. Operates on the rank-row array (not a `LineageNodeRow`)
  * so the server edit-path callers — which select the lean scalar `rank.rankSystem.disciplineId`
- * — share the same rule as `memberTopRankAward`. See SESSION_0475.
+ * — share the same rule as `memberTopRankEntry`. See SESSION_0475.
  */
 export function pickTopAwardInDiscipline<
   T extends { rank: { rankSystem: { disciplineId: string | null } | null } },
@@ -124,13 +124,18 @@ export const getEditableLineageNodeProfile = async ({
                   directoryProfile: { select: { locationCountry: true } },
                   // Pre-ordered by Rank.sortOrder desc; the discipline filter happens in JS
                   // (Prisma can't reference the sibling `tree.disciplineId` in a nested where).
-                  rankAwardsEarned: {
+                  // Ranks read from `RankEntry` (#376); the award id + date the edit-form prefills
+                  // come from the anchor award via the required `rankAward` relation.
+                  rankEntries: {
                     select: {
                       id: true,
-                      awardedAt: true,
+                      rankAward: { select: { id: true, awardedAt: true } },
                       rank: { select: { rankSystem: { select: { disciplineId: true } } } },
                     },
-                    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+                    orderBy: [
+                      { rank: { sortOrder: "desc" } },
+                      { rankAward: { awardedAt: "desc" } },
+                    ],
                   },
                 },
               },
@@ -147,7 +152,7 @@ export const getEditableLineageNodeProfile = async ({
   }
 
   const currentRankAward = pickTopAwardInDiscipline(
-    member.node.passport.rankAwardsEarned,
+    member.node.passport.rankEntries,
     tree.disciplineId,
   )
 
@@ -181,7 +186,7 @@ export const getEditableLineageNodeProfile = async ({
     member: {
       id: member.id,
       currentRankAward: currentRankAward
-        ? { id: currentRankAward.id, awardedAt: currentRankAward.awardedAt }
+        ? { id: currentRankAward.rankAward.id, awardedAt: currentRankAward.rankAward.awardedAt }
         : null,
     },
   }

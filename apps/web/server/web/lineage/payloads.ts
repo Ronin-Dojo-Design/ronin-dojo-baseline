@@ -113,19 +113,24 @@ export const lineageNodeRowPayload = {
           },
         },
       },
-      // The member's awarded belts (ordered highest-first). Display reads the top
-      // one via `memberTopRank(node, disciplineId?)`; trust reads the top non-PENDING
-      // `rankEntry.status` via `memberTrustStatus` (LR 0008) and never filters the award shown here.
-      // ⚠ NO `take` — the discipline-scoped resolver `.find()`s the highest award
+      // @changed SESSION_0729 (#376) — the member's ranks read from `RankEntry` (the ONE canonical
+      // rank model, ADR 0058 / spec #372) instead of the retired `RankAward` read-model. Display
+      // reads the top one via `memberTopRank(node, disciplineId?)`; trust reads the top non-PENDING
+      // `RankEntry.status` via `memberTrustStatus` (LR 0008) and never filters the entry shown here.
+      // Fact fields the tree card still shows (awardedAt) + promoter identity come from the anchor
+      // award via the required `RankEntry.rankAward` relation until the table-drop (G-011).
+      // ⚠ NO `take` — the discipline-scoped resolver `.find()`s the highest entry
       //   IN the tree's discipline (ADR 0035 §3), so a `take: 1` here would hand it
-      //   only the GLOBAL top award and blank out any multi-discipline member whose
-      //   top belt is in another discipline. Rank awards per person are few, so
+      //   only the GLOBAL top entry and blank out any multi-discipline member whose
+      //   top belt is in another discipline. Rank entries per person are few, so
       //   loading all is cheap; the tree card still reads only `[0]` / the first match.
-      rankAwardsEarned: {
+      rankEntries: {
         select: {
           id: true,
-          awardedAt: true,
-          location: true,
+          // The canonical member-facing rank trust axis (WL-P2-46 / LR 0008) — now read straight
+          // off the RankEntry, retiring the node-level `isVerified`/`verificationStatus` read for
+          // the tree/board/cards/list/galaxy.
+          status: true,
           rank: {
             select: {
               id: true,
@@ -150,20 +155,26 @@ export const lineageNodeRowPayload = {
               },
             },
           },
-          ...rankAwardPromoterPayload,
-          // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis.
-          // `memberTrustStatus` reads the top non-PENDING entry status here (LR 0008), retiring
-          // the node-level `isVerified`/`verificationStatus` read for the tree/board/cards/list/galaxy.
-          rankEntry: {
-            select: { status: true },
+          // Anchor read (fact domain): `awardedAt` + `location` + promoter identity live on RankAward
+          // until the table-drop. Reached via the required `rankAward` relation — NOT a top-level read.
+          rankAward: {
+            select: {
+              id: true,
+              awardedAt: true,
+              location: true,
+              ...rankAwardPromoterPayload,
+            },
           },
         },
         // Ordered highest belt first (Rank.sortOrder desc, awardedAt as tiebreak — a plain
-        // `awardedAt desc` floats NULL-dated awards to [0] via Postgres NULLS-FIRST, which
+        // `awardedAt desc` floats NULL-dated entries to [0] via Postgres NULLS-FIRST, which
         // under-ranked 7/10 multi-award founders, SESSION_0430). NO `take` — see the comment
         // above: the discipline-scoped resolver `.find()`s within the tree's discipline, so
-        // truncating to the global top award blanks multi-discipline members.
-        orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
+        // truncating to the global top entry blanks multi-discipline members.
+        orderBy: [
+          { rank: { sortOrder: "desc" as const } },
+          { rankAward: { awardedAt: "desc" as const } },
+        ],
       },
       // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
       // Affiliation is display-only person↔org; `memberSchoolLabel` reads this first.
@@ -277,11 +288,20 @@ export const lineageNodeProfilePayload = {
           },
         },
       },
-      rankAwardsEarned: {
+      // @changed SESSION_0729 (#376) — the member's ranks + full promotion history read from
+      // `RankEntry` (the ONE canonical rank model, ADR 0058 / spec #372) instead of the retired
+      // `RankAward` read-model. The drawer's current-rank + trust read the entry directly; the Rank
+      // History / Belt Progression panels reach every ceremony fact (awardedAt, promoter,
+      // organization, promotionEvent, location) through the required `RankEntry.rankAward` relation,
+      // so no history data is lost (G-011 keeps the anchor award until the table-drop).
+      rankEntries: {
         select: {
+          // RankEntry id — the steward Verify affordance in the drawer keys off this (was
+          // `rankEntry.id`).
           id: true,
-          awardedAt: true,
-          location: true,
+          // The canonical member-facing RankEntry status. IMPORTED awards derive to VERIFIED, so
+          // the drawer keys the "Unverified" badge off the entry status, not the award's provenance.
+          status: true,
           rank: {
             select: {
               id: true,
@@ -318,27 +338,34 @@ export const lineageNodeProfilePayload = {
               },
             },
           },
-          ...rankAwardPromoterPayload,
-          organization: {
-            select: { id: true, name: true, slug: true, city: true, state: true },
-          },
-          // @added SESSION_0318 — read-only PromotionEvent (ceremony) link for Rank History.
-          promotionEvent: {
-            select: { id: true, title: true, slug: true, eventDate: true },
-          },
-          // @added SESSION_0522 — the canonical member-facing RankEntry status (id for the
-          // steward Verify affordance in the drawer). IMPORTED awards derive to VERIFIED, so
-          // the drawer keys the "Unverified" badge off the entry, not the award's provenance.
-          rankEntry: {
-            select: { id: true, status: true },
+          // Anchor read (fact domain): the RankAward id + all ceremony facts (awardedAt, location,
+          // promoter, organization, promotionEvent) live on RankAward until the table-drop. Reached
+          // via the required `rankAward` relation — NOT a top-level RankAward read.
+          rankAward: {
+            select: {
+              id: true,
+              awardedAt: true,
+              location: true,
+              ...rankAwardPromoterPayload,
+              organization: {
+                select: { id: true, name: true, slug: true, city: true, state: true },
+              },
+              // @added SESSION_0318 — read-only PromotionEvent (ceremony) link for Rank History.
+              promotionEvent: {
+                select: { id: true, title: true, slug: true, eventDate: true },
+              },
+            },
           },
         },
         // [0] is read as "current rank" by the drawer (deriveDrawerProfileView) +
         // canvas-model + students-carousel. Order by highest belt (Rank.sortOrder)
-        // first so a NULL-dated lower-belt award can't float to the top via the
+        // first so a NULL-dated lower-belt entry can't float to the top via the
         // Postgres NULLS-FIRST default (SESSION_0430). The rank-history + progression
         // panels are order-independent (they self-sort), so this is safe for them.
-        orderBy: [{ rank: { sortOrder: "desc" as const } }, { awardedAt: "desc" as const }],
+        orderBy: [
+          { rank: { sortOrder: "desc" as const } },
+          { rankAward: { awardedAt: "desc" as const } },
+        ],
       },
     },
   },

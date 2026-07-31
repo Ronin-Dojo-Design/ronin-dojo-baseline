@@ -239,7 +239,7 @@ export function DrawerIdentityHeader({
             )}
             <DrawerHeaderBadges
               claimBadgeStatus={claimBadgeStatus}
-              organizationName={panelAward?.organization?.name ?? null}
+              organizationName={panelAward?.rankAward.organization?.name ?? null}
             />
           </Stack>
         </Stack>

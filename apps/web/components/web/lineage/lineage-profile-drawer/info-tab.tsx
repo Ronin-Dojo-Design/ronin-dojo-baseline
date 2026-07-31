@@ -16,7 +16,7 @@ import { StudentsCarousel } from "~/components/web/lineage/students-carousel"
 import { StudentsCarouselV2 } from "~/components/web/lineage/students-carousel-v2"
 import { verifyRankEntry } from "~/server/belt/verify-rank-entry"
 import type { LineageNodeProfile, LineageTreeMemberRow } from "~/server/web/lineage/payloads"
-import type { DrawerAccount, DrawerRankAward } from "./drawer-types"
+import type { DrawerAccount, DrawerRankEntry } from "./drawer-types"
 import { formatDate, initials } from "./use-drawer-profile"
 
 export function InfoTab({
@@ -33,9 +33,9 @@ export function InfoTab({
   canVerifyRank,
 }: {
   profile: LineageNodeProfile
-  currentRank: NonNullable<DrawerRankAward>["rank"] | null
-  currentAward: DrawerRankAward | null
-  discipline: NonNullable<DrawerRankAward["rank"]>["rankSystem"]["discipline"] | null
+  currentRank: NonNullable<DrawerRankEntry>["rank"] | null
+  currentAward: DrawerRankEntry | null
+  discipline: NonNullable<DrawerRankEntry["rank"]>["rankSystem"]["discipline"] | null
   latestMembership: NonNullable<DrawerAccount>["memberships"][number] | null
   instructorRelationship: LineageNodeProfile["relationshipsTo"][number] | null
   students?: LineageTreeMemberRow[]
@@ -47,10 +47,12 @@ export function InfoTab({
   canVerifyRank?: boolean
 }) {
   // The canonical member-facing rank status (IMPORTED awards derive to VERIFIED); the
-  // "Unverified" badge + steward Verify affordance key off the RankEntry, not the award.
-  const rankEntry = currentAward?.rankEntry ?? null
-  const isRankUnverified = rankEntry?.status === "UNVERIFIED"
-  const promotedOn = formatDate(currentAward?.awardedAt ?? null)
+  // "Unverified" badge + steward Verify affordance key off the RankEntry itself (#376 — the
+  // current row IS the entry, so id + status read straight off it).
+  const rankEntryId = currentAward?.id ?? null
+  const isRankUnverified = currentAward?.status === "UNVERIFIED"
+  // Promotion date is a ceremony fact → read off the anchor award via the entry's required relation.
+  const promotedOn = formatDate(currentAward?.rankAward.awardedAt ?? null)
   const instructorName =
     instructorRelationship?.fromNode.passport?.displayName ??
     instructorRelationship?.fromNode.passport?.user?.name ??
@@ -60,10 +62,10 @@ export function InfoTab({
   // SESSION_0522: show the instructor, never the admin actor who keyed the record — that legacy
   // `currentAward.awardedBy` User fallback surfaced e.g. the admin instead of Tony). No promoter
   // and no instructor → the "lineage-unverified" note.
-  const awardedBy = currentAward?.awardedByPassport
+  const awardedBy = currentAward?.rankAward.awardedByPassport
     ? {
-        name: currentAward.awardedByPassport.displayName,
-        image: currentAward.awardedByPassport.avatarUrl,
+        name: currentAward.rankAward.awardedByPassport.displayName,
+        image: currentAward.rankAward.awardedByPassport.avatarUrl,
       }
     : instructorName
       ? { name: instructorName, image: null as string | null }
@@ -102,7 +104,7 @@ export function InfoTab({
                 <Badge variant="warning" size="sm" prefix={<ShieldOffIcon />}>
                   Unverified
                 </Badge>
-                {canVerifyRank && rankEntry && <RankVerifyButton rankEntryId={rankEntry.id} />}
+                {canVerifyRank && rankEntryId && <RankVerifyButton rankEntryId={rankEntryId} />}
               </>
             )}
           </Stack>

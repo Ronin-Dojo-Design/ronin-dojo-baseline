@@ -11,14 +11,14 @@ import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
 
 // DTO — the strict shape the rail consumes; no raw Prisma rows reach the component.
-const topRankedAwardSelect = {
+const topRankedEntrySelect = {
   passportId: true,
   rank: { select: { name: true, colorHex: true, sortOrder: true } },
   // Phase 3c / issue #134: use the canonical public passport payload so identity
   // derivation (displayName fallback, avatarUrl resolution) is centralised in
   // projectPublicPassport rather than repeated per-surface.
   passport: { select: publicPassportPayload },
-} satisfies Prisma.RankAwardSelect
+} satisfies Prisma.RankEntrySelect
 
 export type TopRankedMember = {
   id: string
@@ -30,7 +30,8 @@ export type TopRankedMember = {
 
 /**
  * Highest-ranked members of a discipline for the "Top Ranked" rail, read from
- * RankAward (the canonical promotion fact, ADR 0016).
+ * RankEntry (the ONE canonical rank model, ADR 0058 / #376) — the retired
+ * RankAward read caused the SESSION_0725 dark-rail defect this replaces.
  *
  * Brand scope = "this person belongs to this brand" via **lineage tree OR org
  * membership** — capturing BOTH BBL lineage people (no Membership) and Baseline
@@ -49,7 +50,7 @@ export async function getTopRankedMembersForDiscipline({
   brand: Brand
   take?: number
 }): Promise<TopRankedMember[]> {
-  const awards = await db.rankAward.findMany({
+  const entries = await db.rankEntry.findMany({
     where: {
       rank: { rankSystem: { disciplineId } },
       passport: {
@@ -59,23 +60,24 @@ export async function getTopRankedMembersForDiscipline({
         ],
       },
     },
-    select: topRankedAwardSelect,
-    orderBy: [{ rank: { sortOrder: "desc" } }, { awardedAt: "desc" }],
+    select: topRankedEntrySelect,
+    // Highest belt first; the anchor award's awardedAt is the tiebreak (RankEntry has no date).
+    orderBy: [{ rank: { sortOrder: "desc" } }, { rankAward: { awardedAt: "desc" } }],
   })
 
-  // First award per user wins (already ordered highest-rank-first) → one row per person.
+  // First entry per user wins (already ordered highest-rank-first) → one row per person.
   const seen = new Set<string>()
   const members: TopRankedMember[] = []
-  for (const award of awards) {
-    if (seen.has(award.passportId)) continue
-    seen.add(award.passportId)
-    const passportDto = projectPublicPassport(award.passport, { showRanks: true })
+  for (const entry of entries) {
+    if (seen.has(entry.passportId)) continue
+    seen.add(entry.passportId)
+    const passportDto = projectPublicPassport(entry.passport, { showRanks: true })
     members.push({
-      id: award.passportId,
+      id: entry.passportId,
       name: passportDto.displayName,
       image: passportDto.avatarUrl,
-      rankName: award.rank.name,
-      colorHex: award.rank.colorHex,
+      rankName: entry.rank.name,
+      colorHex: entry.rank.colorHex,
     })
     if (members.length >= take) break
   }

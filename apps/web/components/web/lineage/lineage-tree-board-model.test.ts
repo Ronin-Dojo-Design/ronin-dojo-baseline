@@ -47,7 +47,11 @@ const members: LineageTreeMemberRow[] = [
 ]
 
 const profile = {
-  passport: { rankAwardsEarned: [{ id: "award-top" }, { id: "award-old" }] },
+  // #376: ranks read from `RankEntry`; the anchor award id (targeted by the promoter write) is on
+  // the required `rankAward` relation.
+  passport: {
+    rankEntries: [{ rankAward: { id: "award-top" } }, { rankAward: { id: "award-old" } }],
+  },
 } as unknown as LineageNodeProfile
 
 const editorCap = { canEditTree: true, canManageGroups: false } as LineageEditorCapability
@@ -193,7 +197,7 @@ describe("buildPromoterChangeContext", () => {
   })
 
   it("defaults currentRankAwardId to null when there are no awards", () => {
-    const noAwards = { passport: { rankAwardsEarned: [] } } as unknown as LineageNodeProfile
+    const noAwards = { passport: { rankEntries: [] } } as unknown as LineageNodeProfile
     const ctx = buildPromoterChangeContext({
       treeId: "tree-1",
       capability: editorCap,

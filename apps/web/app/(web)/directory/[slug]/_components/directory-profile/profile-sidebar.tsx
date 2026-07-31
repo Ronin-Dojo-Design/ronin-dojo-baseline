@@ -4,9 +4,9 @@ import type { DirectoryProfile } from "./directory-profile-data"
 
 /**
  * The signature shareable BJJ Passport card (BBL_PARITY_SPEC Slice 1), REUSED (not
- * duplicated) from the public projection. Current belt = highest earned RankAward, read
- * Passport-rooted (`passport.rankAwardsEarned`, exposed as `user.ranks`), so it is
- * claim-invariant. Belt color stays data-driven (`Rank.colorHex` → `BeltSwatch` inside the
+ * duplicated) from the public projection. Current belt = highest earned RankEntry (the ONE
+ * canonical rank model, #376), read Passport-rooted (`passport.rankEntries`, exposed as
+ * `user.ranks`), so it is claim-invariant. Belt color stays data-driven (`Rank.colorHex` → `BeltSwatch` inside the
  * card). The founder → member lineage chain reuses the already-loaded ancestry walk
  * (SESSION_0501, Desi P2-11) — a < 2-entry walk is not a real up-chain (the
  * `AncestrySection` contract) and is omitted.

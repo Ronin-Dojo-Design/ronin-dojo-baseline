@@ -22,7 +22,10 @@ import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 export const BELT_PROMOTION_POINTS = 100
 
-type RankAward = NonNullable<LineageNodeProfile["passport"]>["rankAwardsEarned"][number]
+// @changed SESSION_0729 (#376) — the progression/achievements read model now reads `RankEntry`
+// rows (the ONE canonical rank model); each row's ceremony facts (awardedAt, awarder, organization)
+// are reached through the required `rankAward` relation, so the timeline is behaviour-identical.
+type RankEntry = NonNullable<LineageNodeProfile["passport"]>["rankEntries"][number]
 
 export type ProgressionLevel = {
   rank: {
@@ -74,9 +77,10 @@ type RankSystemAccumulator = {
   earnedAwards: Map<string, { awardedAt: Date | null; sortOrder: number }>
 }
 
-function awardDate(award: RankAward): Date | null {
-  if (!award.awardedAt) return null
-  const d = award.awardedAt instanceof Date ? award.awardedAt : new Date(award.awardedAt)
+function awardDate(entry: RankEntry): Date | null {
+  const awardedAt = entry.rankAward.awardedAt
+  if (!awardedAt) return null
+  const d = awardedAt instanceof Date ? awardedAt : new Date(awardedAt)
   return Number.isNaN(d.getTime()) ? null : d
 }
 
@@ -94,11 +98,11 @@ function compareDatesDesc(a: Date | null, b: Date | null): number {
  * below it that were *never awarded* remain "locked" — we do not infer skipped
  * promotions.
  */
-export function buildBeltProgressions(awards: readonly RankAward[]): BeltProgression[] {
+export function buildBeltProgressions(entries: readonly RankEntry[]): BeltProgression[] {
   const bySystem = new Map<string, RankSystemAccumulator>()
 
-  for (const award of awards) {
-    const rank = award.rank
+  for (const entry of entries) {
+    const rank = entry.rank
     if (!rank) continue
     const system = rank.rankSystem
     if (!system) continue
@@ -160,7 +164,7 @@ export function buildBeltProgressions(awards: readonly RankAward[]): BeltProgres
     }
 
     // Earned: keep the most recent awarded date per rank.
-    const date = awardDate(award)
+    const date = awardDate(entry)
     const prior = acc.earnedAwards.get(rank.id)
     if (!prior || compareDatesDesc(date, prior.awardedAt) < 0) {
       acc.earnedAwards.set(rank.id, { awardedAt: date, sortOrder: rank.sortOrder ?? 0 })
@@ -225,12 +229,14 @@ export function buildBeltProgressions(awards: readonly RankAward[]): BeltProgres
  * newest first. Null `awardedAt` entries sink to the bottom so the rail's lead
  * is always the most recent ceremony.
  */
-export function buildAchievementsUnlocked(awards: readonly RankAward[]): AchievementUnlock[] {
+export function buildAchievementsUnlocked(entries: readonly RankEntry[]): AchievementUnlock[] {
   const unlocks: AchievementUnlock[] = []
 
-  for (const award of awards) {
-    const rank = award.rank
+  for (const entry of entries) {
+    const rank = entry.rank
     if (!rank) continue
+    // Ceremony facts (award id, awarder, organization) via the entry's required `rankAward` relation.
+    const award = entry.rankAward
 
     unlocks.push({
       id: award.id,
@@ -243,7 +249,7 @@ export function buildAchievementsUnlocked(awards: readonly RankAward[]): Achieve
       },
       rankSystemName: rank.rankSystem?.name ?? null,
       disciplineName: rank.rankSystem?.discipline?.name ?? null,
-      awardedAt: awardDate(award),
+      awardedAt: awardDate(entry),
       awarderName: award.awardedBy?.name ?? null,
       organizationName: award.organization?.name ?? null,
       points: BELT_PROMOTION_POINTS,
@@ -269,8 +275,8 @@ export function totalProgressionPoints(progressions: readonly BeltProgression[])
  * and never auto-bills (promotion flips eligibility; the member opts in).
  *
  * "Verified" = awarded truth: this reads `BeltProgression`s built by
- * `buildBeltProgressions` from the passport's `rankAwardsEarned` (the AWARDED
- * `RankAward`s), so a self-declared / pending rank never qualifies. Scoped to BJJ
+ * `buildBeltProgressions` from the passport's `rankEntries` (the canonical rank
+ * model, #376), so a self-declared / pending rank never qualifies. Scoped to BJJ
  * (the lineage discipline); the degree tiers Black Belt → Coral Belt → Red Belt all
  * count as black-belt-or-above.
  */

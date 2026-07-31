@@ -48,11 +48,12 @@ const node = {
       visibility: "PUBLIC",
       showRanks: true,
     },
-    rankAwardsEarned: [
+    // #376: ranks read from `RankEntry`; the card's trust reads the entry `status` directly (WL-P2-46),
+    // and ceremony facts (awardedAt, promoter) come via the required `rankAward` relation.
+    rankEntries: [
       {
-        id: "rank-award-session-0347",
-        awardedAt: new Date("2026-01-01T00:00:00.000Z"),
-        location: null,
+        id: "rank-entry-session-0347",
+        status: "VERIFIED",
         rank: {
           id: "rank-session-0347",
           name: "Black Belt",
@@ -70,18 +71,21 @@ const node = {
             },
           },
         },
-        awardedBy: {
-          id: "promoter-session-0347",
-          name: "Promoter",
-          image: null,
+        rankAward: {
+          id: "rank-award-session-0347",
+          awardedAt: new Date("2026-01-01T00:00:00.000Z"),
+          location: null,
+          awardedBy: {
+            id: "promoter-session-0347",
+            name: "Promoter",
+            image: null,
+          },
+          awardedByPassport: null,
         },
-        awardedByPassport: null,
-        // WL-P2-46: trust sources from the top non-PENDING RankEntry, not `node.isVerified`.
-        rankEntry: { status: "VERIFIED" },
       },
     ],
   },
-} as LineageNodeRow
+} as unknown as LineageNodeRow
 
 describe("LineageNodeCard tier policy", () => {
   it("renders free listings with name, rank, avatar, and the verified badge (school gated; claim badge moved to drawer/directory; drawer opens for everyone)", () => {

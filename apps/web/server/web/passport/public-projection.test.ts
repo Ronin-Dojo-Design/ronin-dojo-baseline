@@ -14,30 +14,32 @@ import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { PublicPassportRow } from "~/server/web/passport/public-payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 
-// `status` is optional and, when passed, threads a `rankEntry` onto the award (BBL-RANK-001 /
-// WL-P2-47) — omitted entirely (not just null) mirrors the real payload shape for an award with
-// no linked RankEntry.
+// #376: the row IS a RankEntry — `status` reads straight off it (always present for a real entry),
+// and the ceremony fact `awardedAt` + the anchor award id come via the required `rankAward` relation.
 const award = (
   name: string,
   colorHex: string,
   discipline: string,
   year: number,
-  status?: RankEntryStatus,
+  status: RankEntryStatus = "VERIFIED",
 ) => ({
-  id: `award-${name}`,
-  awardedAt: new Date(Date.UTC(year, 0, 1)),
+  id: `entry-${name}`,
+  status,
   rank: {
     id: `rank-${name}`,
     name,
     shortName: null,
     colorHex,
+    secondaryColorHex: null,
+    degree: null,
+    beltFamily: null,
     rankSystem: {
       id: "rs",
       name: "BJJ",
       discipline: { id: "d", name: discipline, slug: "bjj", code: "BJJ" },
     },
   },
-  ...(status ? { rankEntry: { status } } : {}),
+  rankAward: { id: `award-${name}`, awardedAt: new Date(Date.UTC(year, 0, 1)) },
 })
 
 const row = (overrides: Partial<PublicPassportRow> = {}): PublicPassportRow =>
@@ -49,7 +51,7 @@ const row = (overrides: Partial<PublicPassportRow> = {}): PublicPassportRow =>
     socialLinks: null,
     user: { id: "u1", name: "Account Name", image: "https://cdn/u.jpg" },
     directoryProfile: { slug: "renzo", visibility: "PUBLIC", showRanks: true },
-    rankAwardsEarned: [award("Black Belt", "#111111", "Brazilian Jiu-Jitsu", 2015)],
+    rankEntries: [award("Black Belt", "#111111", "Brazilian Jiu-Jitsu", 2015)],
     ...overrides,
   }) as unknown as PublicPassportRow
 
@@ -109,21 +111,21 @@ describe("projectPublicPassport", () => {
     expect(dto.avatarUrl === null || typeof dto.avatarUrl === "string").toBe(true)
   })
 
-  it("threads a linked RankEntry.status onto the projected rank (BBL-RANK-001 / WL-P2-47)", () => {
+  it("threads the RankEntry.status onto the projected rank (BBL-RANK-001 / WL-P2-47)", () => {
     const dto = projectPublicPassport(
       row({
-        rankAwardsEarned: [award("Purple Belt", "#7c3aed", "Judo", 2020, "VERIFIED")],
+        rankEntries: [award("Purple Belt", "#7c3aed", "Judo", 2020, "VERIFIED")],
       } as Partial<PublicPassportRow>),
     )
     expect(dto.currentRank?.status).toBe("VERIFIED")
   })
 
-  it("yields rank.status === null for an award with no linked RankEntry", () => {
+  it("threads a non-verified RankEntry.status straight through (#376 — the row IS the entry)", () => {
     const dto = projectPublicPassport(
       row({
-        rankAwardsEarned: [award("Brown Belt", "#78350f", "Wrestling", 2018)],
+        rankEntries: [award("Brown Belt", "#78350f", "Wrestling", 2018, "UNVERIFIED")],
       } as Partial<PublicPassportRow>),
     )
-    expect(dto.currentRank?.status).toBeNull()
+    expect(dto.currentRank?.status).toBe("UNVERIFIED")
   })
 })

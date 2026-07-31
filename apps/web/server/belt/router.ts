@@ -14,6 +14,7 @@ import {
   getActingPassportId,
   getBjjDisciplineId,
   getMemberAwards,
+  rankAwardProvenance,
   toBeltCard,
   toGateAward,
 } from "~/server/belt/queries"
@@ -201,6 +202,8 @@ const factEditSelect = {
   notes: true,
   organizationId: true,
   location: true,
+  // @added SESSION_0729 (#376/#375) — the linked RankEntry's IMMUTABLE provenance for the fact gate.
+  rankEntry: { select: { provenance: true } },
 } as const
 
 type FactUpdateInput = Pick<UpdateRankAwardFactInput, "awardedAt" | "promoter" | "school">
@@ -433,7 +436,10 @@ const updateRankAwardFact = beltProcedure
         if (currentAward.passportId !== passportId) {
           throw new ORPCError("NOT_FOUND", { message: "Belt award not found" })
         }
-        const { facts, reason } = memberFactEditability(currentAward)
+        const { facts, reason } = memberFactEditability({
+          ...currentAward,
+          provenance: rankAwardProvenance(currentAward),
+        })
         const locked = requestedFactKeys(input).filter(key => !facts[key])
         if (locked.length > 0) {
           throw new ORPCError("FORBIDDEN", {
@@ -712,7 +718,7 @@ const deleteRankAward = beltProcedure
 
       // Delete must not exceed edit. Re-evaluate under the same award lock used by approve,
       // override, and member proposals so no pending review can be cascade-erased in a race.
-      if (!isFactEditable(target)) {
+      if (!isFactEditable({ ...target, provenance: rankAwardProvenance(target) })) {
         throw new ORPCError("FORBIDDEN", {
           message: "This belt was verified by an instructor and cannot be deleted",
         })
