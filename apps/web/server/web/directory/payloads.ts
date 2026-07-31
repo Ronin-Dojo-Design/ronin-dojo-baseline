@@ -57,7 +57,7 @@ export const directoryAffiliationPayload = {
 // ONE canonical rank model, ADR 0058 / spec #372) instead of the retired `RankAward` read-model. The
 // card only needs the display rank + trust status; ceremony facts (awardedAt) are not shown on the
 // roster card, so no `rankAward` relation is joined here (kept lean).
-export const directoryRankEntryPayload = {
+const directoryRankEntryPayload = {
   id: true,
   // The canonical member-facing rank trust axis (WL-P2-46 / LR 0008) — the directory card's trust
   // badge derives from the top entry's status (`pickTopTrustStatus`), the SAME source the lineage

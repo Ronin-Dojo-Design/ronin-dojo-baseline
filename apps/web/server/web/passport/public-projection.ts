@@ -24,12 +24,11 @@ export type PublicPassportRank = {
   disciplineName: string | null
   disciplineSlug: string | null
   /**
-   * @added BBL-RANK-001 / WL-P2-47 — the raw `RankEntry.status` enum (public MAY expose it per
-   * lineage-data-wiring-flow.md §3: VERIFIED | UNVERIFIED | PENDING | DISPUTED). Null when the
-   * award has no linked `RankEntry`. NEVER add reviewer / evidence / reporter fields here — the
-   * status enum is the only trust-presentation surface this projection may carry.
+   * The raw `RankEntry.status` enum (public MAY expose it per lineage-data-wiring-flow.md §3:
+   * VERIFIED | UNVERIFIED | PENDING | DISPUTED). NEVER add reviewer / evidence / reporter
+   * fields here — the status enum is the only trust-presentation surface this projection may carry.
    */
-  status: RankEntryStatus | null
+  status: RankEntryStatus
 }
 
 export type PublicPassportDTO = {
@@ -49,23 +48,27 @@ export type PublicPassportDTO = {
   rankLabel: string | null
 }
 
-const toRank = (entry: PublicPassportRow["rankEntries"][number]): PublicPassportRank => ({
-  // `awardId` stays the anchor award id (the join key surfaces rely on) — read off the
-  // required `RankEntry.rankAward` relation, not a separate RankAward query (#376).
-  awardId: entry.rankAward.id,
-  rankId: entry.rank?.id ?? "",
-  name: entry.rank?.name ?? "",
-  shortName: entry.rank?.shortName ?? null,
-  colorHex: entry.rank?.colorHex ?? null,
-  secondaryColorHex: entry.rank?.secondaryColorHex ?? null,
-  degree: entry.rank?.degree ?? null,
-  beltFamily: entry.rank?.beltFamily ?? null,
-  awardedAt: entry.rankAward.awardedAt,
-  disciplineName: entry.rank?.rankSystem?.discipline?.name ?? null,
-  disciplineSlug: entry.rank?.rankSystem?.discipline?.slug ?? null,
-  // Trust status now reads straight off the canonical RankEntry (never null for a real entry).
-  status: entry.status,
-})
+const toRank = (entry: PublicPassportRow["rankEntries"][number]): PublicPassportRank => {
+  const { rank, rankAward } = entry
+  const discipline = rank.rankSystem.discipline
+
+  return {
+    // `awardId` stays the anchor award id (the join key surfaces rely on) — read off the
+    // required `RankEntry.rankAward` relation, not a separate RankAward query (#376).
+    awardId: rankAward.id,
+    rankId: rank.id,
+    name: rank.name,
+    shortName: rank.shortName,
+    colorHex: rank.colorHex,
+    secondaryColorHex: rank.secondaryColorHex,
+    degree: rank.degree,
+    beltFamily: rank.beltFamily,
+    awardedAt: rankAward.awardedAt,
+    disciplineName: discipline?.name ?? null,
+    disciplineSlug: discipline?.slug ?? null,
+    status: entry.status,
+  }
+}
 
 const rankLabelOf = (rank: PublicPassportRank | null): string | null => {
   if (!rank?.name) return null
