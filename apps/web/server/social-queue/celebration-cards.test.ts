@@ -226,6 +226,12 @@ describe("canEnqueueMemberOptInDraft — delegates to 0686's consent gate, fails
 })
 
 describe("enqueueRankPromotionCelebration — the explicit trigger seam", () => {
+  const expectRankNotPublic = async () => {
+    const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
+    expect(result).toEqual({ outcome: "skipped", reason: "rank-not-public" })
+    expect(state.createCalls).toEqual([])
+  }
+
   it("VERIFIED promotion of a claimed, ranks-public member → ONE DRAFT with the full snapshot", async () => {
     state.entry = makeEntry()
     state.ancestry = [
@@ -310,16 +316,12 @@ describe("enqueueRankPromotionCelebration — the explicit trigger seam", () => 
         directoryProfile: { slug: "jane-doe", visibility: "PUBLIC", showRanks: false },
       }),
     })
-    const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
-    expect(result).toEqual({ outcome: "skipped", reason: "rank-not-public" })
-    expect(state.createCalls).toEqual([])
+    await expectRankNotPublic()
   })
 
   it("no public awards at all → nothing is generated", async () => {
     state.entry = makeEntry({ passport: makePassport({ rankEntries: [] }) })
-    const result = await enqueueRankPromotionCelebration({ rankEntryId: "re-1" })
-    expect(result).toEqual({ outcome: "skipped", reason: "rank-not-public" })
-    expect(state.createCalls).toEqual([])
+    await expectRankNotPublic()
   })
 
   it("unknown rankEntryId → skipped, zero writes", async () => {
