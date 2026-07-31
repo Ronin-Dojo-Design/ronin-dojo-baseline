@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0730 — Review + simplify the #376 rank-read seam (Fable → Codex); greenfield RankEntry"
 slug: session-0730
-type: session--staged
-status: staged
+type: session--open
+status: in-progress
 created: 2026-07-31
 updated: 2026-07-31
 last_agent: claude-session-0729
@@ -89,6 +89,96 @@ MERGE GATE (AFK-NEVER without it): re-run the live-prod orphan count (0 expected
 HOLD every push/merge for the operator's word. Also on deck (grill/plan only): the Baseline-cut
 de-scope + the SESSION_0711 CAND deepening candidates.
 ```
+
+## Bow-in
+
+Adopted the staged SESSION_0730 stub found on 0729's branch (elected via SESSION_0729's
+`next_session` pointer + this stub — not by highest-number, FS-0050). **Continuing in
+`wt-0729-rank-seam` / `auto/session-0729-rank-read-seam` per the stub's "do NOT create a new
+worktree"** — that supersedes the generic `worktree add ../ronin-0730` line in the bow-in prompt
+(the worktree already exists, is bootstrapped, and holds the WIP commit `a0c53b68`). Canonical
+claim: free (session runs here, not in canonical — FS-0035); githooks doctor PASS **run from this
+worktree** (FS-0040). Working tree clean at adoption. Orchestrator: Fable 5 (Petey role); heavy
+review/refactor hands off to Codex per the stub.
+
+**Prior goal (0729): EXTENDED** — the #376 seam is BUILT + Doug-verified LAUNCH-SAFE (9.2/10, no
+P1), 1953 tests green, unmerged/unpushed by design; reviews + merge gate deferred to this session.
+
+**FS-0048 read-before-build sweep (read, not name-matched):** map #374 incl. Decisions-so-far ·
+tickets #376 / #380 · SESSION_0729 close (Doug verdict, MERGE GATE, P2 orphan invariant) · ADR 0058
++ legacy ADR 0035/0036 truths (ratified — grill grades the model shape, never re-opens them) ·
+`server/belt/member-ranks.ts` (the seam) · `rank-entry-compatibility.ts` (`syncRankEntryFromAward`)
+· `belt-gate.ts` (provenance wiring, fact-editability) · `prisma/schema.prisma` RankEntry/RankAward
++ the 4 rank enums.
+
+**Parallel-lane assessment (G-023):** single continuation lane by design. Live sibling lanes noted
+(wayfinder RankEntry planner = map #374, already consumed as input; 0728 closed; North Star + 0720
+orchestrators untouched). No file overlap expected outside this branch's own diff; will flag if
+that changes.
+
+## Ratified forks (operator, 2026-07-31 — the greenfield grill)
+
+Grill inputs: map #374 Decisions-so-far · tickets #376/#380 · ADR 0058 + legacy 0035/0036 (truths
+untouched) · the seam/compat/gate/schema reads above. Grill finding that sharpened the tree:
+`RankAward` ALREADY carries `@@unique([passportId, rankId])` — state-not-history is landed law on
+BOTH tables, and today's `RankEntry` is a **derived projection** (status+provenance computed from
+the award; every fact + satellite still award-anchored).
+
+1. **FORK 1 — End-state = ONE TABLE.** At #380, `RankEntry` absorbs the promotion facts
+   (awardedAt / promoter pair / school pair / event link); satellites (milestone, lineage edges,
+   media, gamification) re-anchor entry-side. The two-table split was the accident; the columns
+   were right. (Feeds #380; ADR lands with #380's ratified drop plan.)
+2. **FORK 2 — Cardinality = STATE.** One row per (passport, rank) survives the drop; a re-award
+   updates facts. Doug's P2 guard = **alert on sync conflict**, never silent orphan → #380.
+3. **FORK 3 — Trust axes = FOLD.** `status` (mutable trust) + `provenance` (immutable origin)
+   survive; the authority FK migrates over; `verificationStatus` dies (absorbed); authorship
+   (`source`) kept only if not derivable. Exact minimal set = #380 grill; direction is ratified.
+4. **FORK 4 — 0730 scope = CODE-SHAPE ONLY.** Codex refactor touches no schema/migration; the
+   additive #376 migration + Doug's 9.2 stand. All model moves ride #380.
+
+## Petey plan
+
+- `SESSION_0730_TASK_01` — Greenfield grill → 4 forks ratified (above). **DONE**
+- `SESSION_0730_TASK_02` — Record picks on map #374 (Decisions-so-far comment).
+- `SESSION_0730_TASK_03` — Codex handoff (Claudex, commit-only): hostile review +
+  code-quality-matrix + simplification refactor of the #376 diff (`a0c53b68` vs `main`), hard
+  constraints encoded (no schema; ADR 0035/0058 display law; belt-gate contracts; technique-media
+  NO-LEAK; tests stay green).
+- `SESSION_0730_TASK_04` — Foreground verification on Claude: full gates (tsc / oxlint / oxfmt /
+  tests / next build) + `/fallow-fix-loop` metrics + `/ggr` (≥9.0 clears; 9.2 to beat/confirm).
+- `SESSION_0730_TASK_05` — Show the operator; **HOLD** push/PR/merge for the word. MERGE GATE
+  (live-prod orphan count) stays blocked on #381 credential rotation.
+
+**Deferrals registered (operator, 0730 correction message):** the **Graphify refresh WAITS until
+#376 actually merges** — do not refresh at bow-out if the branch is still unmerged. FI-001 drift
+corrections are ALREADY posted on #380 + map #374 (0729's close) — never re-post; this session's
+#374 comment is the NEW fork-decision record, distinct content. Baseline-cut de-scope stays a
+grill-first candidate lane (memory: [[cut-baseline-and-non-lineage-from-bbl-repo]]).
+
+## Review log (TASK_03/04 — Codex handoff + foreground verification)
+
+- **Codex** (exec sandbox, high reasoning, commit-only): 9 commits on top of `a0c53b68`; report =
+  3 P1 claims "fixed", self-score 8.9/10 GO-WITH-NOTE; its sandbox could NOT run the DB suite
+  (Postgres unavailable) — flagged honestly in its own gate report.
+- **Giddy /ggr adjudication (delta-scoped): 9.2 CLEARS** pre-gate — schema freeze respected, no
+  write repoint, #376 seam contract intact; ruled nulls-last ordering a safe ADR-0035 improvement;
+  caught 2 behavior changes Codex's summary hid (bracket seeding most-recent→highest-belt;
+  related-profiles tiebreak createdAt→awardedAt).
+- **Foreground full gate caught what both missed:** 9 DB-backed test failures. Root cause: two of
+  Codex's "P1 fixes" undid deliberate 0729 design —
+  (1) create-only provenance in `syncRankEntryFromAward` removed the update-branch HEAL, so a
+  column-default (EARNED) entry under an IMPORTED award made the award **member-editable**
+  (authority-truth regression, the exact inverse of the claimed fix);
+  (2) `rankAwardProvenance` null/fail-closed + provenance-keyed `resolveAnchorAward` broke the
+  SESSION_0501 fill-blanks policy and the SESSION_0540 promoter-anchor tree for unsynced awards.
+- **Parity fixes (this session, foreground):** restored the update-branch provenance write (+ pinned
+  the heal in `rank-entry-provenance.test.ts`), restored the derive-fallback read (bridge code that
+  dies with the award table at #380), reverted the anchor read to `verificationStatus`, removed the
+  two fail-closed pins. Domain invariant now documented at both sites: `verificationStatus` never
+  crosses the IMPORTED boundary post-create, so derive-on-sync/read is a no-op for correct rows and
+  heals mislabeled ones. KEPT from Codex: nulls-last display order, centralized
+  `rank-entry-display-order.ts`, renames, projection tightening, dedupes, doc fixes.
+- Belt files re-verified: belt-gate 29/29 · provenance 6/6 · router.integration 49/49 · tsc clean.
 
 ## Next session
 
