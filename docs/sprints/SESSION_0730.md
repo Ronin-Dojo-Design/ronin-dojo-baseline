@@ -180,6 +180,29 @@ grill-first candidate lane (memory: [[cut-baseline-and-non-lineage-from-bbl-repo
   `rank-entry-display-order.ts`, renames, projection tightening, dedupes, doc fixes.
 - Belt files re-verified: belt-gate 29/29 · provenance 6/6 · router.integration 49/49 · tsc clean.
 
+## IMPORTED-origin ratification (operator, 2026-07-31 — supersedes the B1 IMPORTED lock)
+
+**Domain correction from the operator:** the WP-era belt data was **self-reported by the members
+themselves** (Gravity Form → Pods → the one-time import scripts). IMPORTED ≠ curated-archive
+authority; it is the member's OWN record, and the claim flow (ADR 0036, Bob-is-Bob) is the identity
+gate. Import is one-time-historical — no path ever mints new IMPORTED rows. Ratified picks:
+
+1. **IMPORTED lock LIFTED** — the verified claimant fully edits (set/overwrite/clear-not-promoter)
+   their imported facts, exactly like a self-added backfill. Locked classes that REMAIN:
+   instructor-stamped (`awardedById`) fill-blanks-only, and DISPUTED fully locked.
+2. **Edits keep the VERIFIED badge** — a member edit never drops trust on their imported record;
+   new `promoter-proposal-core` guard: promoter transitions preserve `verificationStatus IMPORTED`
+   (no keep_unverified downgrade, no verify flip — badge + anchor + provenance all stable).
+3. **Provenance = pure historical metadata** — never rendered publicly (verified: no public payload
+   carries it), locks nothing; belt-gate no longer reads it at all. Final disposition rides #380.
+
+**Build:** `isFactEditable` drops the provenance clause (imported rows land in the full-edit class
+via `source: STATED`, which is literally true — member-stated); `rankAwardProvenance` + the gate's
+rankEntry joins deleted (dead once nothing locks on origin); promoter-core IMPORTED status guard;
+policy pins flipped in belt-gate + router.integration tests (incl. new badge-intact pins);
+prose-only comment updates in schema.prisma (zero DDL — no migration). Doug's parity baseline is
+superseded ON PURPOSE for this one policy axis, on the operator's explicit ratification.
+
 ## Next session
 
 <!-- staged by 0730 at its own bow-out -->
