@@ -2,7 +2,7 @@
 title: "SESSION 0725 — related-profile suggestions on public profile detail"
 slug: session-0725
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-30
 updated: 2026-07-30
 last_agent: claude-session-0725

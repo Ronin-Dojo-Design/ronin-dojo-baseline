@@ -1206,6 +1206,40 @@ Read this section at bow-in instead of skimming every individual entry.
   reds the required Playwright gate.
 - **Status:** mitigated (fixture reconciled to ADR 0058; belt-journey now runs in the required gate).
 
+### FS-0049 — review wave validated a query's *shape* against a retired model without flagging the deprecation
+
+- **Session:** SESSION_0723 (Lane B / #367; caught by the operator, not the review wave).
+- **What happened:** Lane B's `findRelatedProfiles` derived top-discipline from `rankAwardsEarned` — the
+  **retired `RankAward`** model (ADR 0058: RankEntry is the ONE rank model; no new code touches RankAward).
+  Cody built it; then Doug + Desi + a live sparsity analysis all validated the query's SHAPE (privacy
+  predicate, `AND` heuristic, self-exclusion) *against RankAward*, reporting "heuristic PASS" and "0/89 =
+  data gap" — none flagged that the model itself is deprecated and reads must use `RankEntry`. The operator
+  caught it on sight.
+- **Root cause:** reviewers verify a query's correctness against the model it *names*, not whether that
+  model is the *current* one. ADR 0058's "no new code touches RankAward" is prose, not an enforced gate.
+  Same "real check outside the executed path" family as FS-0037/0044/0045/0046/0048, plus a missing
+  model-currency lens on rank/belt diffs.
+- **Corrective action:** (1) this row; (2) **SESSION_0727 Q-④** adds a CI grep-guard that fails on new
+  `RankAward` *reads* (writes still use the required anchor until G-011); (3) reviewer briefs for
+  rank/belt-touching diffs carry an explicit "reads use `RankEntry`, not `RankAward` (ADR 0058)" check.
+- **Status:** open (guard staged in SESSION_0727 Q-④; not yet landed).
+
+### FS-0050 — subagent push-auth guard fired inconsistently across identical lanes
+
+- **Session:** SESSION_0723 (the 3-lane claim-loop wave).
+- **What happened:** after the operator authorized push+PR for all three lanes, the orchestrator *relayed*
+  that authorization to each lane's Cody. Lanes A and B self-executed `git push` + `gh pr create` on the
+  relay; Lane C's PreToolUse guard correctly **refused** to open a PR on a relayed (non-operator)
+  authorization and halted after pushing its branch — so the orchestrator opened C's PR itself. Identical
+  dispatch, divergent behavior.
+- **Root cause:** a coordinator's message is not operator consent (the guard's refusal is *correct*), but
+  the guard enforced it non-deterministically across identical subagents, and "orchestrator opens the PR on
+  the operator's real word" wasn't the default recovery path.
+- **Corrective action:** (1) this row; (2) for held lanes under an attended operator authorization, the
+  **orchestrator** (which holds the operator's real word) owns the push/PR — lanes build + gate + STOP, the
+  orchestrator pushes/opens the PR. Don't rely on relaying authorization into a subagent.
+- **Status:** open (operating-pattern change; no code gate).
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.

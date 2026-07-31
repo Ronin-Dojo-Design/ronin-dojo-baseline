@@ -2,7 +2,7 @@
 title: "SESSION 0726 — read-only ACL viewer on admin lineage tree page"
 slug: session-0726
 type: session--implement
-status: in-progress
+status: closed
 created: 2026-07-30
 updated: 2026-07-30
 last_agent: claude-session-0726
