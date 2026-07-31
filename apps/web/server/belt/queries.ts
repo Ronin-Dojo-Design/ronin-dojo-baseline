@@ -47,8 +47,7 @@ export const gateAwardSelect = {
   rankId: true,
   // @added SESSION_0729 (#376/#375) — the linked RankEntry's IMMUTABLE provenance, threaded into the
   // belt gate so "authority-owned / read-only" keys off provenance, not the mutable status. Nullable
-  // (an award whose entry isn't synced yet) → the belt gate fails closed rather than inferring
-  // immutable origin from the mutable award status.
+  // (an award whose entry isn't synced yet) → `rankAwardProvenance` falls back to the legacy derive.
   rankEntry: { select: { provenance: true } },
   rank: {
     select: {
@@ -96,14 +95,21 @@ export function rankEntryStatusForAward(
 }
 
 /**
- * The award's IMMUTABLE provenance (#375), read only from the linked RankEntry. A missing entry
- * returns null so every belt gate can fail closed; mutable `verificationStatus` must never be used
- * to reconstruct origin at read time.
+ * The award's IMMUTABLE provenance (#375) — read from the linked RankEntry, or derived from the
+ * legacy `verificationStatus` for an award whose entry isn't synced yet. The derive is
+ * behaviour-identical to `syncRankEntryFromAward` (`IMPORTED → IMPORTED`, else `EARNED`) and
+ * `verificationStatus` never crosses the IMPORTED boundary post-create, so this is a no-op for
+ * synced rows and a safe bridge for the rest (SESSION_0501 fill-blanks stays owner-fillable on an
+ * unsynced award). The fallback dies with the award table at #380 — the belt gate reads this, not
+ * the mutable status, for "authority-owned / read-only".
  */
 export function rankAwardProvenance(award: {
+  verificationStatus: RankAwardVerificationStatus
   rankEntry?: { provenance: RankEntryProvenance } | null
-}): RankEntryProvenance | null {
-  return award.rankEntry?.provenance ?? null
+}): RankEntryProvenance {
+  return (
+    award.rankEntry?.provenance ?? (award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED")
+  )
 }
 
 /** The gate only needs status + discipline-scoped sortOrder. */
@@ -151,8 +157,11 @@ export async function getActingPassportId(userId: string, dbClient: BeltDb = db)
 /**
  * The member's promoter-match ANCHOR — their highest-sortOrder **authority-verified**
  * award in the discipline (`awards` are pre-ordered by `rank.sortOrder desc`). Authority
- * = IMPORTED legacy truth (from immutable RankEntry provenance), or an instructor-stamped
- * VERIFIED (`awardedById` set). A
+ * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). IMPORTED is
+ * read off the award's own `verificationStatus` here — NOT the linked entry's provenance —
+ * because the anchor award may not have been (re)synced yet and the two never disagree
+ * (`verificationStatus` never crosses the IMPORTED boundary post-create); folding this read
+ * onto provenance is a #380 move, once the entry is primary. A
  * self-minted backfill (now minted UNVERIFIED, SESSION_0540) is deliberately NOT an anchor —
  * its promoter is exactly what the backfill-verification decision validates.
  * Shared by the write path (`promoter-proposal-core.applyMemberPromoterTransition`) and read path
@@ -166,7 +175,7 @@ export function resolveAnchorAward(
     awards.find(
       award =>
         award.rank.rankSystem?.disciplineId === disciplineId &&
-        (rankAwardProvenance(award) === "IMPORTED" ||
+        (award.verificationStatus === "IMPORTED" ||
           (award.verificationStatus === "VERIFIED" && award.awardedById !== null)),
     ) ?? null
   )

@@ -22,16 +22,18 @@ export async function syncRankEntryFromAward(
   })
 
   const status = rankEntryStatusForAward(award.verificationStatus)
-  // Immutable origin axis (#375): IMPORTED legacy truth vs EARNED in-app award. It is derived
-  // exactly once, when the compatibility entry is created. Existing rows were backfilled by the
-  // additive provenance migration, so an update must never recompute origin from the award's
-  // mutable verification status. Kept separate from `status`, which may continue to change and
-  // collapses IMPORTED → VERIFIED for presentation trust.
+  // Immutable origin axis (#375): IMPORTED legacy truth vs EARNED in-app award. Derived on BOTH
+  // branches on purpose: `verificationStatus` never crosses the IMPORTED boundary after creation
+  // (importers set it at create; `verifyRankEntryInTransaction` skips IMPORTED), so the re-derive
+  // is a no-op for a correctly-set row and HEALS a row created outside this seam with the column
+  // default (the migration-mirror fixture/backfill case — dropping the update write silently made
+  // such IMPORTED awards member-editable). "Immutable" = no path may write a non-derived value.
+  // Kept separate from `status`, which stays mutable and collapses IMPORTED → VERIFIED.
   const provenance = award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED"
 
   await dbClient.rankEntry.upsert({
     where: { rankAwardId },
     create: { rankAwardId, passportId: award.passportId, rankId: award.rankId, status, provenance },
-    update: { passportId: award.passportId, rankId: award.rankId, status },
+    update: { passportId: award.passportId, rankId: award.rankId, status, provenance },
   })
 }

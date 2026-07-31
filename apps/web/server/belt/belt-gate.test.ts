@@ -157,16 +157,6 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
     ).toBe(false)
   })
 
-  it("DENIES editing when the immutable provenance row is missing (fail closed)", () => {
-    expect(
-      isFactEditable({
-        source: "STATED",
-        verificationStatus: "UNVERIFIED",
-        awardedById: null,
-        provenance: null,
-      }),
-    ).toBe(false)
-  })
 })
 
 describe("decideBackfillPromoterTransition (D-046 — active provenance first)", () => {
@@ -318,13 +308,6 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })
 
-  it("missing immutable provenance is fully locked rather than derived from mutable status", () => {
-    const result = memberFactEditability(
-      imported({ verificationStatus: "UNVERIFIED", provenance: null }),
-    )
-    expect(result.reason).toBe("AUTHORITY_LOCKED")
-    expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
-  })
 })
 
 describe("isTopAward — a member CANNOT delete their top award", () => {

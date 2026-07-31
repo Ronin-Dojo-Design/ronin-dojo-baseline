@@ -3,9 +3,10 @@
  *
  * The IMMUTABLE origin axis is written from the anchor award's verificationStatus:
  * IMPORTED → IMPORTED; VERIFIED | UNVERIFIED | DISPUTED → EARNED (`awardedById` is
- * NOT consulted). DB-free: a fake client captures the `upsert` args. Creation
- * derives the origin once; updates must omit provenance so a later mutable-status
- * transition cannot rewrite history.
+ * NOT consulted). DB-free: a fake client captures the `upsert` args. BOTH branches
+ * derive provenance: `verificationStatus` never crosses the IMPORTED boundary after
+ * creation, so the update-branch re-derive is a no-op for correct rows and heals a
+ * column-default row minted outside the seam (see rank-entry-compatibility.ts).
  *
  * Run: cd apps/web && bun run test server/belt/rank-entry-provenance.test.ts
  */
@@ -44,7 +45,8 @@ describe("syncRankEntryFromAward — provenance", () => {
     const { calls, dbClient } = captor("IMPORTED")
     await syncRankEntryFromAward(dbClient, "award-1")
     expect(calls[0]?.create.provenance).toBe("IMPORTED")
-    expect(calls[0]?.update).not.toHaveProperty("provenance")
+    // The update branch heals a column-default row toward award-derived truth.
+    expect(calls[0]?.update.provenance).toBe("IMPORTED")
   })
 
   for (const status of ["VERIFIED", "UNVERIFIED", "DISPUTED"] as const) {
@@ -52,18 +54,23 @@ describe("syncRankEntryFromAward — provenance", () => {
       const { calls, dbClient } = captor(status)
       await syncRankEntryFromAward(dbClient, "award-1")
       expect(calls[0]?.create.provenance).toBe("EARNED")
-      expect(calls[0]?.update).not.toHaveProperty("provenance")
+      expect(calls[0]?.update.provenance).toBe("EARNED")
     })
   }
 })
 
 describe("rankAwardProvenance — belt-gate read", () => {
-  it("reads immutable origin only from RankEntry", () => {
-    expect(rankAwardProvenance({ rankEntry: { provenance: "IMPORTED" } })).toBe("IMPORTED")
-    expect(rankAwardProvenance({ rankEntry: { provenance: "EARNED" } })).toBe("EARNED")
+  it("prefers the linked RankEntry's immutable origin over any derive", () => {
+    expect(
+      rankAwardProvenance({ verificationStatus: "UNVERIFIED", rankEntry: { provenance: "IMPORTED" } }),
+    ).toBe("IMPORTED")
+    expect(
+      rankAwardProvenance({ verificationStatus: "IMPORTED", rankEntry: { provenance: "EARNED" } }),
+    ).toBe("EARNED")
   })
 
-  it("returns null when RankEntry is missing instead of deriving from mutable award status", () => {
-    expect(rankAwardProvenance({ rankEntry: null })).toBeNull()
+  it("bridges a missing RankEntry with the sync-identical derive (dies with the award table, #380)", () => {
+    expect(rankAwardProvenance({ verificationStatus: "IMPORTED", rankEntry: null })).toBe("IMPORTED")
+    expect(rankAwardProvenance({ verificationStatus: "UNVERIFIED", rankEntry: null })).toBe("EARNED")
   })
 })
