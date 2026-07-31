@@ -12,6 +12,7 @@ import {
   createFixtureRunIdentity,
 } from "../../lib/test/fixture-ownership"
 import type { LineageLifecycleFixture, LineageLifecycleState } from "./seed-lineage-lifecycle"
+import { seedRankEntriesForAwards } from "./seed-rank-entries"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -219,6 +220,8 @@ async function seedLineageLifecycleFixture(): Promise<LineageLifecycleFixture> {
       awardedAt: new Date(Date.UTC(2020, 0, 1)),
     },
   })
+  // #376: rank reads resolve from RankEntry — an entry-less award renders no belt.
+  await seedRankEntriesForAwards(prisma, [rankAward.id])
 
   const tree = await prisma.lineageTree.create({
     data: {

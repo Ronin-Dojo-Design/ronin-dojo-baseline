@@ -16,6 +16,7 @@ import type {
   LineageCompSeedStudent,
   LineageCompTierState,
 } from "./seed-lineage-comp-fixture"
+import { seedRankEntriesForAwards } from "./seed-rank-entries"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -349,6 +350,9 @@ async function seedLineageCompFixture(): Promise<LineageCompSeedFixture> {
       }
     }
   }
+
+  // #376: rank reads resolve from RankEntry — an entry-less award renders no belt.
+  await seedRankEntriesForAwards(prisma, rankAwardIds)
 
   return {
     runId,

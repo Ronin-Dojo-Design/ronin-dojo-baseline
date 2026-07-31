@@ -110,10 +110,7 @@ describe("memberRanks", () => {
       row({ id: "black", sortOrder: 9, disciplineId: BJJ }),
       row({ id: "blue", sortOrder: 2, disciplineId: BJJ }),
     ])
-    const views = await memberRanks(
-      "p1",
-      dbClient,
-    )
+    const views = await memberRanks("p1", dbClient)
     expect(views.map(v => v.sortOrder)).toEqual([9, 2])
     expect(views[0]?.rankEntryId).toBe("black")
   })
@@ -135,10 +132,7 @@ describe("memberRanks", () => {
         provenance: "EARNED",
       }),
     ])
-    const views = await memberRanks(
-      "p1",
-      dbClient,
-    )
+    const views = await memberRanks("p1", dbClient)
     expect(views.map(v => [v.status, v.provenance])).toEqual([
       ["VERIFIED", "IMPORTED"],
       ["UNVERIFIED", "EARNED"],
@@ -168,11 +162,7 @@ describe("memberTopRank", () => {
       row({ id: "top-unverified", sortOrder: 9, disciplineId: BJJ, status: "UNVERIFIED" }),
       row({ id: "lower-verified", sortOrder: 2, disciplineId: BJJ, status: "VERIFIED" }),
     ])
-    const top = await memberTopRank(
-      "p1",
-      BJJ,
-      dbClient,
-    )
+    const top = await memberTopRank("p1", BJJ, dbClient)
     expect(top?.rankEntryId).toBe("top-unverified")
   })
 
