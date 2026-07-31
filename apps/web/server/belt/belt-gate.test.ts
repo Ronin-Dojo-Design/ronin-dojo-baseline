@@ -87,7 +87,6 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "STATED",
         verificationStatus: "VERIFIED",
         awardedById: null,
-        provenance: "EARNED",
       }),
     ).toBe(true)
   })
@@ -98,7 +97,6 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "STATED",
         verificationStatus: "UNVERIFIED",
         awardedById: null,
-        provenance: "EARNED",
       }),
     ).toBe(true)
   })
@@ -109,7 +107,16 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "EARNED",
         verificationStatus: "UNVERIFIED",
         awardedById: null,
-        provenance: "EARNED",
+      }),
+    ).toBe(true)
+  })
+
+  it("ALLOWS editing the member's own IMPORTED self-report (SESSION_0730 — the WP Gravity-Form data is theirs)", () => {
+    expect(
+      isFactEditable({
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedById: null,
       }),
     ).toBe(true)
   })
@@ -120,28 +127,16 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "STATED",
         verificationStatus: "VERIFIED",
         awardedById: "u-approver",
-        provenance: "EARNED",
       }),
     ).toBe(false)
   })
 
-  it("DENIES editing an IMPORTED or DISPUTED award (authority/legacy records, deny-by-default)", () => {
-    // IMPORTED now denies via the IMMUTABLE provenance axis (#375), not the mutable status.
-    expect(
-      isFactEditable({
-        source: "STATED",
-        verificationStatus: "VERIFIED",
-        awardedById: null,
-        provenance: "IMPORTED",
-      }),
-    ).toBe(false)
-    // DISPUTED stays on the status axis (provenance is EARNED — a real earned belt now contested).
+  it("DENIES editing a DISPUTED award (contested record under review, deny-by-default)", () => {
     expect(
       isFactEditable({
         source: "STATED",
         verificationStatus: "DISPUTED",
         awardedById: null,
-        provenance: "EARNED",
       }),
     ).toBe(false)
   })
@@ -152,7 +147,6 @@ describe("isFactEditable (loosened SESSION_0540) — self-added OR unverified is
         source: "EARNED",
         verificationStatus: "VERIFIED",
         awardedById: null,
-        provenance: "EARNED",
       }),
     ).toBe(false)
   })
@@ -221,14 +215,12 @@ describe("decideBackfillPromoterTransition (D-046 — active provenance first)",
 })
 
 describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the owner", () => {
-  /** An authority-owned (IMPORTED) award with every fact empty, overridable per test. Authority is
-   *  keyed off the IMMUTABLE `provenance` axis now (#375), so the default carries `provenance:
-   *  "IMPORTED"`; the self-backfill / earned cases override it to "EARNED". */
-  const imported = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
-    source: "STATED",
-    verificationStatus: "IMPORTED",
-    provenance: "IMPORTED",
-    awardedById: null,
+  /** An authority-owned award (instructor-stamped — the ONLY authority class since the
+   *  SESSION_0730 IMPORTED-lock lift) with every fact empty, overridable per test. */
+  const authority = (overrides: Partial<FactValueAward> = {}): FactValueAward => ({
+    source: "EARNED",
+    verificationStatus: "VERIFIED",
+    awardedById: "u-approver",
     awardedAt: null,
     awardedByPassportId: null,
     notes: null,
@@ -239,10 +231,9 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
 
   it("a self-added backfill keeps FULL editability (unchanged B1)", () => {
     const result = memberFactEditability(
-      imported({
-        verificationStatus: "VERIFIED",
-        // member-authored (EARNED origin, not imported) → still fully editable...
-        provenance: "EARNED",
+      authority({
+        source: "STATED",
+        awardedById: null, // member-authored → still fully editable...
         // even with every fact FILLED — the member authored it, so overwrite is fine
         awardedAt: new Date("2020-01-01"),
         notes: "Prof. Freetext",
@@ -253,35 +244,49 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
   })
 
+  it("the member's own IMPORTED self-report keeps FULL editability (SESSION_0730)", () => {
+    const result = memberFactEditability(
+      authority({
+        source: "STATED",
+        verificationStatus: "IMPORTED",
+        awardedById: null, // the WP import never stamped an approver
+        awardedAt: new Date("2015-05-05"),
+        notes: "Prof. Legacy",
+      }),
+    )
+    expect(result.reason).toBe("SELF_BACKFILL")
+    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
+  })
+
   it("an authority award with EVERY fact empty is fully fillable (AUTHORITY_PARTIAL)", () => {
-    const result = memberFactEditability(imported())
+    const result = memberFactEditability(authority())
     expect(result.reason).toBe("AUTHORITY_PARTIAL")
     expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
   })
 
   it("a FILLED fact locks — per fact, not per card (date filled, others still fillable)", () => {
-    const result = memberFactEditability(imported({ awardedAt: new Date("2019-06-01") }))
+    const result = memberFactEditability(authority({ awardedAt: new Date("2019-06-01") }))
     expect(result.reason).toBe("AUTHORITY_PARTIAL")
     expect(result.facts).toEqual({ awardedAt: false, promoter: true, school: true })
   })
 
   it("promoter counts as filled via EITHER the Passport FK or freetext notes", () => {
-    expect(memberFactEditability(imported({ awardedByPassportId: "pp-1" })).facts.promoter).toBe(
+    expect(memberFactEditability(authority({ awardedByPassportId: "pp-1" })).facts.promoter).toBe(
       false,
     )
-    expect(memberFactEditability(imported({ notes: "Prof. Freetext" })).facts.promoter).toBe(false)
+    expect(memberFactEditability(authority({ notes: "Prof. Freetext" })).facts.promoter).toBe(false)
     // whitespace-only freetext is NOT a value
-    expect(memberFactEditability(imported({ notes: "   " })).facts.promoter).toBe(true)
+    expect(memberFactEditability(authority({ notes: "   " })).facts.promoter).toBe(true)
   })
 
   it("school counts as filled via EITHER the Organization FK or freetext location", () => {
-    expect(memberFactEditability(imported({ organizationId: "org-1" })).facts.school).toBe(false)
-    expect(memberFactEditability(imported({ location: "Some Academy" })).facts.school).toBe(false)
+    expect(memberFactEditability(authority({ organizationId: "org-1" })).facts.school).toBe(false)
+    expect(memberFactEditability(authority({ location: "Some Academy" })).facts.school).toBe(false)
   })
 
   it("every fact filled → AUTHORITY_LOCKED (nothing left for the owner)", () => {
     const result = memberFactEditability(
-      imported({
+      authority({
         awardedAt: new Date("2019-06-01"),
         awardedByPassportId: "pp-1",
         organizationId: "org-1",
@@ -291,18 +296,9 @@ describe("memberFactEditability (SESSION_0501) — per-fact fill-blanks for the 
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })
   })
 
-  it("a promotion-minted award (awardedById stamped) gets the same fill-blanks treatment", () => {
-    const result = memberFactEditability(
-      imported({ verificationStatus: "VERIFIED", provenance: "EARNED", awardedById: "u-approver" }),
-    )
-    expect(result.reason).toBe("AUTHORITY_PARTIAL")
-    expect(result.facts).toEqual({ awardedAt: true, promoter: true, school: true })
-  })
-
   it("DISPUTED is fully locked for the owner even with empty facts (deny-by-default)", () => {
-    // provenance EARNED so the lock is genuinely exercised via the DISPUTED status axis, not provenance.
     const result = memberFactEditability(
-      imported({ verificationStatus: "DISPUTED", provenance: "EARNED" }),
+      authority({ source: "STATED", awardedById: null, verificationStatus: "DISPUTED" }),
     )
     expect(result.reason).toBe("AUTHORITY_LOCKED")
     expect(result.facts).toEqual({ awardedAt: false, promoter: false, school: false })

@@ -22,13 +22,13 @@ export async function syncRankEntryFromAward(
   })
 
   const status = rankEntryStatusForAward(award.verificationStatus)
-  // Immutable origin axis (#375): IMPORTED legacy truth vs EARNED in-app award. Derived on BOTH
-  // branches on purpose: `verificationStatus` never crosses the IMPORTED boundary after creation
-  // (importers set it at create; `verifyRankEntryInTransaction` skips IMPORTED), so the re-derive
-  // is a no-op for a correctly-set row and HEALS a row created outside this seam with the column
-  // default (the migration-mirror fixture/backfill case — dropping the update write silently made
-  // such IMPORTED awards member-editable). "Immutable" = no path may write a non-derived value.
-  // Kept separate from `status`, which stays mutable and collapses IMPORTED → VERIFIED.
+  // Immutable origin axis (#375): IMPORTED (one-time WP self-report migration) vs EARNED in-app.
+  // Derived on BOTH branches on purpose: `verificationStatus` never crosses the IMPORTED boundary
+  // after creation (importers set it at create; `verifyRankEntryInTransaction` skips IMPORTED;
+  // member promoter transitions preserve IMPORTED — SESSION_0730), so the re-derive is a no-op for
+  // a correctly-set row and HEALS a row created outside this seam with the column default.
+  // "Immutable" = no path may write a non-derived value. Historical metadata only — it locks
+  // nothing (SESSION_0730). Kept separate from `status` (mutable; collapses IMPORTED → VERIFIED).
   const provenance = award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED"
 
   await dbClient.rankEntry.upsert({

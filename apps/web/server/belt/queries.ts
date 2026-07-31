@@ -1,7 +1,6 @@
 import type {
   Prisma,
   RankAwardVerificationStatus,
-  RankEntryProvenance,
   RankEntryStatus,
 } from "~/.generated/prisma/client"
 import { type GateAward, memberFactEditability } from "~/server/belt/belt-gate"
@@ -45,10 +44,6 @@ export const gateAwardSelect = {
   },
   organizationId: true,
   rankId: true,
-  // @added SESSION_0729 (#376/#375) — the linked RankEntry's IMMUTABLE provenance, threaded into the
-  // belt gate so "authority-owned / read-only" keys off provenance, not the mutable status. Nullable
-  // (an award whose entry isn't synced yet) → `rankAwardProvenance` falls back to the legacy derive.
-  rankEntry: { select: { provenance: true } },
   rank: {
     select: {
       name: true,
@@ -92,24 +87,6 @@ export function rankEntryStatusForAward(
   // this function governs only the mutable member-facing RankEntry status.
   if (verificationStatus === "IMPORTED") return "VERIFIED"
   return "UNVERIFIED"
-}
-
-/**
- * The award's IMMUTABLE provenance (#375) — read from the linked RankEntry, or derived from the
- * legacy `verificationStatus` for an award whose entry isn't synced yet. The derive is
- * behaviour-identical to `syncRankEntryFromAward` (`IMPORTED → IMPORTED`, else `EARNED`) and
- * `verificationStatus` never crosses the IMPORTED boundary post-create, so this is a no-op for
- * synced rows and a safe bridge for the rest (SESSION_0501 fill-blanks stays owner-fillable on an
- * unsynced award). The fallback dies with the award table at #380 — the belt gate reads this, not
- * the mutable status, for "authority-owned / read-only".
- */
-export function rankAwardProvenance(award: {
-  verificationStatus: RankAwardVerificationStatus
-  rankEntry?: { provenance: RankEntryProvenance } | null
-}): RankEntryProvenance {
-  return (
-    award.rankEntry?.provenance ?? (award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED")
-  )
 }
 
 /** The gate only needs status + discipline-scoped sortOrder. */
@@ -211,9 +188,7 @@ export function toBeltCard(
   // card-level boolean keeps its B1 meaning for existing consumers.
   const editability = memberFactEditability({
     source: award.source,
-    // RankEntry owns presentation status; the IMMUTABLE provenance (#375) drives fact authority.
     verificationStatus: award.verificationStatus,
-    provenance: rankAwardProvenance(award),
     awardedById: award.awardedById,
     awardedAt: award.awardedAt,
     awardedByPassportId: award.awardedByPassportId,

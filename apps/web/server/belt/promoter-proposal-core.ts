@@ -297,7 +297,7 @@ async function writeBackfillStatusAudit(
   tx: PromoterProposalTx,
   rankAwardId: string,
   current: RankAwardVerificationStatus,
-  target: "VERIFIED" | "UNVERIFIED",
+  target: RankAwardVerificationStatus,
   actingUserId: string,
 ) {
   if (current === target) return
@@ -432,7 +432,16 @@ export async function applyMemberPromoterTransition({
     return { transition, reviewId: review.id }
   }
 
-  const targetStatus = transition === "verify" ? "VERIFIED" : "UNVERIFIED"
+  // An IMPORTED award never leaves IMPORTED via a member promoter edit (SESSION_0730: the
+  // IMPORTED-lock lift makes these rows member-editable, but the one-time-import origin is
+  // history and the OG's VERIFIED badge must not drop on a keep_unverified promoter). The
+  // status transition is for member-minted backfills only.
+  const targetStatus =
+    currentAward.verificationStatus === "IMPORTED"
+      ? "IMPORTED"
+      : transition === "verify"
+        ? "VERIFIED"
+        : "UNVERIFIED"
   await tx.rankAward.update({
     where: { id: currentAward.id },
     data: { ...siblingFacts, ...promoterData, verificationStatus: targetStatus },

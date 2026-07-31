@@ -2296,9 +2296,10 @@ model RankEntry {
   id        String          @id @default(cuid(2))
   status    RankEntryStatus @default(UNVERIFIED)
   // @added SESSION_0729 (#375 → #376) — IMMUTABLE origin axis, set once at sync. Distinct from the
-  // mutable `status`: belt-gate reads `provenance == IMPORTED` for authority-owned / read-only,
-  // replacing the old `RankAward.verificationStatus == IMPORTED` reads. Backfill maps the anchor
-  // award's verificationStatus (IMPORTED → IMPORTED, else EARNED).
+  // mutable `status`. Historical metadata only (SESSION_0730): IMPORTED = the one-time WP
+  // Gravity-Form self-report migration; it locks NOTHING (the member owns their imported
+  // self-report) and never renders publicly. Backfill maps the anchor award's verificationStatus
+  // (IMPORTED → IMPORTED, else EARNED). Final disposition rides #380.
   provenance RankEntryProvenance @default(EARNED)
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt

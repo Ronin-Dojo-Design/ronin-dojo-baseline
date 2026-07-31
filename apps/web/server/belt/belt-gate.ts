@@ -1,8 +1,4 @@
-import type {
-  RankAwardSource,
-  RankAwardVerificationStatus,
-  RankEntryProvenance,
-} from "~/.generated/prisma/client"
+import type { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 
 /**
  * Pure belt-journey gating logic (Slice 3 — Petey Plan 0477 Locked #5).
@@ -59,36 +55,32 @@ export type FactEditableAward = {
   source: RankAwardSource
   verificationStatus: RankAwardVerificationStatus
   awardedById: string | null
-  // @added SESSION_0729 (#376/#375) — the IMMUTABLE origin axis, read from the linked RankEntry.
-  // "Authority-owned / read-only" now keys off `provenance === "IMPORTED"` (immutable legacy truth),
-  // NOT the mutable `verificationStatus`, so a later status change can never re-open imported truth.
-  provenance: RankEntryProvenance
 }
 
 /**
  * May the promotion FACT (date / promoter / school) be fully edited by the OWNER?
- * (B1 — ADR 0035 Amendment 1; loosened SESSION_0540.) The rule keys off **who
- * authored the award** and **whether it is still unverified**:
+ * (B1 — ADR 0035 Amendment 1; loosened SESSION_0540; IMPORTED lock lifted
+ * SESSION_0730.) The rule keys off **who authored the award** and **whether it is
+ * still unverified**:
  *
  * - **Locked (authority-owned truth)** — an approver stamped it (`awardedById !==
- *   null` → instructor-VERIFIED / promotion-minted), or it is **IMPORTED** legacy
- *   truth (read off the immutable `provenance` axis, #375), or **DISPUTED** and under
- *   review (the mutable status axis). Never member-editable.
+ *   null` → instructor-VERIFIED / promotion-minted), or it is **DISPUTED** and
+ *   under review. Never member-editable.
  * - **Fully editable by the owner** — a **self-added STATED backfill**, OR **any
  *   award still standing UNVERIFIED** (SESSION_0540: the member may freely revise
- *   their own un-verified belt, not just fill blanks). An auto-verified
- *   same-promoter backfill (STATED, no approver stamp) stays editable; a
- *   differently-authored / authority award does not.
+ *   their own un-verified belt, not just fill blanks). **IMPORTED rows are this
+ *   class too** (operator, SESSION_0730): the WP-era import was the member's OWN
+ *   Gravity-Form self-report mapped to Pods — same authorship as a backfill; the
+ *   claim flow (ADR 0036) is the identity gate, so the verified claimant edits
+ *   their own record freely. Import is one-time-historical; no path mints new
+ *   IMPORTED rows.
  *
  * The member's own promoter edit writes `awardedByPassportId` / `notes`, never
  * `awardedById`, so editing a fact never flips an award out of the editable class.
  */
 export function isFactEditable(award: FactEditableAward): boolean {
   if (award.awardedById !== null) return false
-  // IMPORTED reads the IMMUTABLE provenance axis (#375); DISPUTED stays on the status axis.
-  if (award.provenance === "IMPORTED" || award.verificationStatus === "DISPUTED") {
-    return false
-  }
+  if (award.verificationStatus === "DISPUTED") return false
   return award.source === "STATED" || award.verificationStatus === "UNVERIFIED"
 }
 
@@ -166,19 +158,20 @@ const isBlank = (value: string | null): boolean => value === null || value.trim(
 
 /**
  * Per-fact editability for the award OWNER (SESSION_0501 ratified policy — the
- * fill-blanks amendment to B1):
+ * fill-blanks amendment to B1; IMPORTED lock lifted SESSION_0730):
  *
- * - A **self-added STATED backfill** keeps today's FULL editability (unchanged —
- *   `isFactEditable`): set, overwrite, clear.
- * - On an **authority-owned** award (promotion-minted / IMPORTED / EARNED) the owner
- *   may FILL a fact that is currently EMPTY, but may NEVER modify or clear a fact
- *   that already has a value. "Empty" is per-fact:
+ * - A **self-added STATED award** keeps FULL editability (unchanged —
+ *   `isFactEditable`): set, overwrite, clear. Since SESSION_0730 this includes
+ *   **IMPORTED** rows — they are the member's own WP Gravity-Form self-report.
+ * - On an **authority-owned** award (promotion-minted / instructor-stamped) the
+ *   owner may FILL a fact that is currently EMPTY, but may NEVER modify or clear a
+ *   fact that already has a value. "Empty" is per-fact:
  *     - date:     `awardedAt` is null
  *     - promoter: no `awardedByPassportId` AND no freetext `notes`
  *     - school:   no `organizationId` AND no freetext `location`
  * - **DISPUTED** awards are contested records under review — fully locked for the
- *   owner (deny-by-default; the ratified policy names IMPORTED/authority-owned, not
- *   disputed). Admins edit via the admin path, which bypasses this gate entirely.
+ *   owner (deny-by-default). Admins edit via the admin path, which bypasses this
+ *   gate entirely.
  *
  * Server-authoritative: the router enforces this per requested fact, and the card
  * output carries the same matrix so the client only renders what the server says.

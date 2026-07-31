@@ -13,9 +13,11 @@ import { db } from "~/services/db"
  * Two axes travel on every row and must never be conflated:
  * - `status`     — MUTABLE presentation trust (PENDING → UNVERIFIED → VERIFIED …).
  *                  IMPORTED awards collapse to VERIFIED here (`rankEntryStatusForAward`).
- * - `provenance` — IMMUTABLE origin (#375): IMPORTED legacy truth vs EARNED in-app.
- *                  This is what belt-gate reads for "authority-owned / read-only",
- *                  replacing the old `verificationStatus === "IMPORTED"` reads.
+ * - `provenance` — IMMUTABLE origin (#375): IMPORTED (the one-time WP Gravity-Form
+ *                  self-report migration) vs EARNED in-app. Pure historical metadata
+ *                  since SESSION_0730 — it locks nothing (the member owns their
+ *                  imported self-report; ADR 0036's claim flow is the identity gate)
+ *                  and is never rendered publicly. Final disposition rides #380.
  *
  * ADR 0035 display law (unchanged): top rank = the highest AWARDED rank by
  * `rank.sortOrder`; NEVER scope by `rank.brand`.
