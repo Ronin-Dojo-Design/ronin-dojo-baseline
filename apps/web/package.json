@@ -17,7 +17,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
-    "prebuild": "bun run db:migrate:deploy",
+    "prebuild": "bun scripts/prebuild-migrate.ts",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "postinstall": "bun run db:generate",
     "test:e2e": "bun --env-file=.env.e2e scripts/run-e2e-local.ts",

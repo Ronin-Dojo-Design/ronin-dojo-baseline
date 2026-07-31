@@ -105,7 +105,29 @@ bunx prisma generate
 
 #### Option B: versioned migration (shipping change)
 
-Best for adding columns/models to an existing schema where you want a versioned migration file. Production uses `prisma migrate deploy` (see `package.json` `prebuild`), so migration files are needed for production deploys.
+Best for adding columns/models to an existing schema where you want a versioned migration file. Production uses `prisma migrate deploy` (see `package.json` `prebuild` → `scripts/prebuild-migrate.ts`), so migration files are needed for production deploys.
+
+#### When migrations ACTUALLY apply (read this before pushing a migration in a PR)
+
+`prebuild` fires on **every** `bun run build` — locally AND on every Vercel build. Until
+SESSION_0730 it ran `migrate deploy` unconditionally, so **a migration file in any pushed
+branch reached the DB named by that environment's `DATABASE_URL` at FIRST PREVIEW BUILD —
+hours before merge or review**. With preview env sharing the prod Neon URL, that meant
+PR migrations hit PROD at PR-open (discovered when #397's migration `finished_at` predated
+its merge by ~2h; survivable only because the migration was additive — the same path would
+have executed a table-drop). The gate now (`scripts/prebuild-migrate.ts`):
+
+| Build | `migrate deploy`? |
+| --- | --- |
+| Local `bun run build` (no `VERCEL` env) | ✅ applies to the local `.env` DB (unchanged) |
+| Vercel **production** (`VERCEL_ENV=production`) | ✅ the ONE sanctioned prod-apply path |
+| Vercel **preview / development** | ⛔ SKIP, loudly |
+
+**Completing the fix (operator, Vercel dashboard):** scope the prod `DATABASE_URL` /
+`DIRECT_URL` values to the Production environment ONLY and point the Preview environment at
+a **Neon branch** DB. Until that lands, a preview whose code depends on a new column 500s at
+runtime — that is the intended safe failure, never a silent prod write. Never "fix" a
+broken preview by widening the gate or copying prod creds into preview scope.
 
 ```bash
 cd /Users/brianscott/dev/black-belt-legacy/apps/web

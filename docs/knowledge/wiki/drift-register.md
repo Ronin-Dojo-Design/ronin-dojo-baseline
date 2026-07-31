@@ -861,3 +861,20 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   keyboard-nav + pointer handlers) into a `GraphNodeLayer` sub-component; behavior-preserving, re-verify
   with the C5 touch pass. A focused refactor lane, NOT a quality-suite inline fix.
 - **Status: OPEN.**
+
+### D-055 — "Prod applies on merge" was never true: prebuild migrated on EVERY Vercel build (previews included)
+
+- **Discovered:** SESSION_0730 (post-merge verification of PR #397). The provenance migration's
+  `_prisma_migrations.finished_at` (13:29Z) predated the merge (15:16Z) by ~2h — the FIRST PREVIEW
+  build at PR-open had applied it to prod Neon. Mechanism: `package.json` `prebuild` ran
+  `prisma migrate deploy` unconditionally on every `bun run build`, and the Vercel preview
+  environment carried the prod `DATABASE_URL`. The docs (`schema-migration.md`,
+  `prisma-workflow.md`, the prisma edit-hook) all described the INTENT ("production uses migrate
+  deploy") — the doc-vs-mechanism drift class (LR 0007 sibling): prose narrower than the firing set.
+  Invisible until now because every migration to date was additive; the queued G-011 RankAward
+  table-drop (#380) would have executed IN PROD at PR-open, pre-review.
+- **Fix:** SESSION_0730 — `apps/web/scripts/prebuild-migrate.ts` gates on `VERCEL_ENV`
+  (production/local apply; preview/development SKIP loudly); docs + hook corrected; RISK row 16;
+  #380 carries an explicit blocker until the operator scopes preview env creds to a Neon branch.
+- **Status: MITIGATED (gate live)** — residual (prod creds in preview scope at runtime) tracked as
+  risk-register row 16; CLOSES when the operator lands the Vercel env-scoping + Neon preview branch.
