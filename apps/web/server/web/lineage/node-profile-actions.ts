@@ -2,6 +2,7 @@
 
 import { Brand } from "~/.generated/prisma/client"
 import { userActionClient } from "~/lib/safe-actions"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { LINEAGE_NODE_PROFILE_ERROR } from "~/server/web/lineage/node-profile-errors"
 import {
@@ -74,10 +75,7 @@ export const applyLineageNodeProfileUpdate = async ({
                       rankAward: { select: { id: true } },
                       rank: { select: { rankSystem: { select: { disciplineId: true } } } },
                     },
-                    orderBy: [
-                      { rank: { sortOrder: "desc" } },
-                      { rankAward: { awardedAt: "desc" } },
-                    ],
+                    orderBy: rankEntryDisplayOrder,
                   },
                 },
               },

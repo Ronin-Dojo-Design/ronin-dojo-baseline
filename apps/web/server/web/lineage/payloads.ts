@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 /**
@@ -171,10 +172,7 @@ export const lineageNodeRowPayload = {
         // under-ranked 7/10 multi-award founders, SESSION_0430). NO `take` — see the comment
         // above: the discipline-scoped resolver `.find()`s within the tree's discipline, so
         // truncating to the global top entry blanks multi-discipline members.
-        orderBy: [
-          { rank: { sortOrder: "desc" as const } },
-          { rankAward: { awardedAt: "desc" as const } },
-        ],
+        orderBy: rankEntryDisplayOrder,
       },
       // Current affiliation → the canonical school/affiliation axis (Passport model, SESSION_0357).
       // Affiliation is display-only person↔org; `memberSchoolLabel` reads this first.
@@ -362,10 +360,7 @@ export const lineageNodeProfilePayload = {
         // first so a NULL-dated lower-belt entry can't float to the top via the
         // Postgres NULLS-FIRST default (SESSION_0430). The rank-history + progression
         // panels are order-independent (they self-sort), so this is safe for them.
-        orderBy: [
-          { rank: { sortOrder: "desc" as const } },
-          { rankAward: { awardedAt: "desc" as const } },
-        ],
+        orderBy: rankEntryDisplayOrder,
       },
     },
   },

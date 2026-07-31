@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 
 // ---------------------------------------------------------------------------
@@ -112,7 +113,7 @@ export const directoryProfileListPayload = {
       // the projection.
       rankEntries: {
         select: directoryRankEntryPayload,
-        orderBy: { rank: { sortOrder: "desc" as const } },
+        orderBy: rankEntryDisplayOrder,
       },
     },
   },

@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { resolveOwnedMedia } from "~/server/media/media-ownership"
 import { pickTopAwardInDiscipline } from "~/server/web/lineage/node-profile-queries"
 
@@ -86,7 +87,7 @@ export async function submitRankPromotionClaim(
             select: { sortOrder: true, rankSystem: { select: { disciplineId: true } } },
           },
         },
-        orderBy: [{ rank: { sortOrder: "desc" } }, { rankAward: { awardedAt: "desc" } }],
+        orderBy: rankEntryDisplayOrder,
       },
     },
   })

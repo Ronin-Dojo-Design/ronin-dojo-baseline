@@ -6,6 +6,7 @@
 //          Membership is Baseline enrollment, not the rank source (passport-and-shells.md).
 // @wired   apps/web/app/(web)/disciplines/_components/black-belt-rail.tsx
 import type { Brand, Prisma } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { publicPassportPayload } from "~/server/web/passport/public-payloads"
 import { projectPublicPassport } from "~/server/web/passport/public-projection"
 import { db } from "~/services/db"
@@ -62,7 +63,7 @@ export async function getTopRankedMembersForDiscipline({
     },
     select: topRankedEntrySelect,
     // Highest belt first; the anchor award's awardedAt is the tiebreak (RankEntry has no date).
-    orderBy: [{ rank: { sortOrder: "desc" } }, { rankAward: { awardedAt: "desc" } }],
+    orderBy: rankEntryDisplayOrder,
   })
 
   // First entry per user wins (already ordered highest-rank-first) → one row per person.

@@ -5,6 +5,7 @@ import {
   getAdminListQueryParts,
   runAdminListTransaction,
 } from "~/server/admin/list-query"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { directoryProfileOnePayload, passportOnePayload } from "~/server/web/passport/payloads"
 import { db } from "~/services/db"
 import type { PeopleTableSchema } from "./schema"
@@ -42,7 +43,7 @@ export const peopleRowSelect = {
   // Belt/rank — highest awarded belt is `[0]` (canvas-model `memberTopRankEntry`), so
   // pre-order by Rank.sortOrder desc here to keep that invariant.
   rankEntries: {
-    orderBy: { rank: { sortOrder: "desc" } },
+    orderBy: rankEntryDisplayOrder,
     select: {
       id: true,
       rank: {

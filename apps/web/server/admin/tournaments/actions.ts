@@ -5,6 +5,7 @@ import type { z } from "zod"
 import { notifyUserOfTournamentRegistration } from "~/lib/notifications"
 import { tournamentAdminActionClient } from "~/lib/safe-actions"
 import { idSchema, idsSchema } from "~/server/admin/shared/schema"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { ensurePassportForUser } from "~/server/identity/person-service"
 import { seedEntries, type SeedableEntry } from "~/server/admin/tournaments/bracket-seeding"
 import {
@@ -805,7 +806,7 @@ export const generateBracket = tournamentAdminActionClient
                         },
                       },
                       select: { rank: { select: { sortOrder: true } } },
-                      orderBy: { rankAward: { awardedAt: "desc" } },
+                      orderBy: rankEntryDisplayOrder,
                       take: 1,
                     },
                   },

@@ -1,4 +1,5 @@
 import type { Brand } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { db } from "~/services/db"
 
 /**
@@ -132,10 +133,7 @@ export const getEditableLineageNodeProfile = async ({
                       rankAward: { select: { id: true, awardedAt: true } },
                       rank: { select: { rankSystem: { select: { disciplineId: true } } } },
                     },
-                    orderBy: [
-                      { rank: { sortOrder: "desc" } },
-                      { rankAward: { awardedAt: "desc" } },
-                    ],
+                    orderBy: rankEntryDisplayOrder,
                   },
                 },
               },

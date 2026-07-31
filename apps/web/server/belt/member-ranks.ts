@@ -1,13 +1,14 @@
 import type { Prisma, RankEntryProvenance, RankEntryStatus } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import { db } from "~/services/db"
 
 /**
- * The ONE canonical rank-read seam (#376, map #374 / G-011).
+ * The canonical compact rank-read seam (#376, map #374 / G-011).
  *
- * Every non-write rank read goes through here. Reads resolve from `RankEntry`
- * (the canonical member-rank aggregate, ADR 0035) — NOT from `RankAward`, which
- * stays the write anchor only until the table-drop (#380). Callers stop querying
- * rank models directly; they consume the projected {@link RankEntryView}.
+ * Compact member-rank reads resolve from `RankEntry` (the canonical member-rank
+ * aggregate, ADR 0058) — NOT from `RankAward`, which stays the write anchor only
+ * until the table-drop (#380). Rich nested payloads select their own fields but
+ * reuse `rankEntryDisplayOrder`, keeping the display law in one place.
  *
  * Two axes travel on every row and must never be conflated:
  * - `status`     — MUTABLE presentation trust (PENDING → UNVERIFIED → VERIFIED …).
@@ -20,8 +21,8 @@ import { db } from "~/services/db"
  * `rank.sortOrder`; NEVER scope by `rank.brand`.
  */
 
-/** RankEntry selected in the shape every rank reader consumes. */
-export const rankEntryViewSelect = {
+/** RankEntry selected for this seam's compact view. */
+const rankEntryViewSelect = {
   id: true,
   rankAwardId: true,
   passportId: true,
@@ -57,7 +58,7 @@ export type RankEntryView = {
 }
 
 /** Project one selected RankEntry row into the flat seam view. */
-export function projectRankEntry(row: RankEntryRow): RankEntryView {
+function projectRankEntry(row: RankEntryRow): RankEntryView {
   return {
     rankEntryId: row.id,
     rankAwardId: row.rankAwardId,
@@ -75,19 +76,6 @@ export function projectRankEntry(row: RankEntryRow): RankEntryView {
 type MemberRanksDb = Pick<typeof db, "rankEntry">
 
 /**
- * `orderBy` shared by every seam read: highest belt first. `rank.sortOrder desc`
- * yields the ceiling as the first row (the order `memberTopRank` and belt-gate's
- * `ceilingSortOrder` rely on). The tiebreak is the anchor award's `awardedAt` — the
- * SAME contract the retired `rankAwardsEarned` reads used (SESSION_0430), so a
- * NULL-dated lower belt can't float up and the seam matches the public projection +
- * rail exactly. RankEntry carries no date of its own, hence the relation hop.
- */
-const rankEntryOrder: Prisma.RankEntryOrderByWithRelationInput[] = [
-  { rank: { sortOrder: "desc" } },
-  { rankAward: { awardedAt: "desc" } },
-]
-
-/**
  * All of a member's ranks, highest belt first. Every entry carries `status` and
  * immutable `provenance`. This is the canonical replacement for `getMemberAwards`
  * at every read (display, gate, directory, promotion history) — the write path
@@ -100,7 +88,7 @@ export async function memberRanks(
   const rows = await dbClient.rankEntry.findMany({
     where: { passportId },
     select: rankEntryViewSelect,
-    orderBy: rankEntryOrder,
+    orderBy: rankEntryDisplayOrder,
   })
   return rows.map(projectRankEntry)
 }

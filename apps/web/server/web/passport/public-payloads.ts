@@ -1,4 +1,5 @@
 import type { Prisma } from "~/.generated/prisma/client"
+import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 
 /**
  * Canonical PUBLIC Passport identity payload (issue #134, ADR 0025 — Passport is the
@@ -32,10 +33,7 @@ export const publicPassportPayload = {
     // [0] is the headline "current rank" in projectPublicPassport. Highest belt (Rank.sortOrder)
     // first; the anchor award's `awardedAt` is the tiebreak so a NULL-dated lower belt can't float
     // to the top (Postgres NULLS-FIRST default). SESSION_0430 order preserved.
-    orderBy: [
-      { rank: { sortOrder: "desc" as const } },
-      { rankAward: { awardedAt: "desc" as const } },
-    ],
+    orderBy: rankEntryDisplayOrder,
     select: {
       id: true,
       // @added SESSION_0523 (WL-P2-46) — the canonical member-facing rank trust axis (LR 0008),
