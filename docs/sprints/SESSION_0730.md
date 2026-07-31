@@ -203,6 +203,19 @@ policy pins flipped in belt-gate + router.integration tests (incl. new badge-int
 prose-only comment updates in schema.prisma (zero DDL — no migration). Doug's parity baseline is
 superseded ON PURPOSE for this one policy axis, on the operator's explicit ratification.
 
+## CI watch-and-fix (PR #397)
+
+Pushed on the operator's word; first CI wave went red on: (1) oxfmt drift in 2 test files (edited
+after the last repo-wide format pass), (2) Playwright firefox/webkit — **four e2e seeds created
+`RankAward` rows with NO `RankEntry`**, so the #376 entries-first reads rendered no belt (the
+rank-redaction positive control + the lifecycle drawer flow). Fix `b2025e26`: new shared
+`e2e/helpers/seed-rank-entries.ts` (mirrors `syncRankEntryFromAward`) wired into the lifecycle /
+rank-redaction / comp-fixture / paywall seeds (belt-journey + belt-review already seeded entries —
+the SESSION_0482 lesson, now applied repo-wide); both specs proven 8/8 on the hermetic local e2e DB
+before pushing. **Result: every check on #397 green** incl. both required gates + full Playwright
+matrix. Finding-router candidate for bow-out: "seed-creates-award-without-entry" = the same fixture
+class that bit the unit-test layer this session — one lesson, three surfaces.
+
 ## Next session
 
 <!-- staged by 0730 at its own bow-out -->
