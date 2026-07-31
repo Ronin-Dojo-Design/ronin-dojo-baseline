@@ -47,7 +47,8 @@ export const gateAwardSelect = {
   rankId: true,
   // @added SESSION_0729 (#376/#375) — the linked RankEntry's IMMUTABLE provenance, threaded into the
   // belt gate so "authority-owned / read-only" keys off provenance, not the mutable status. Nullable
-  // (an award whose entry isn't synced yet) → `rankAwardProvenance` falls back to the legacy derive.
+  // (an award whose entry isn't synced yet) → the belt gate fails closed rather than inferring
+  // immutable origin from the mutable award status.
   rankEntry: { select: { provenance: true } },
   rank: {
     select: {
@@ -95,19 +96,14 @@ export function rankEntryStatusForAward(
 }
 
 /**
- * The award's IMMUTABLE provenance (#375) — read from the linked RankEntry, or derived from the
- * legacy `verificationStatus` for an award whose entry isn't synced yet. The derive is
- * behaviour-identical to `syncRankEntryFromAward` (`IMPORTED → IMPORTED`, else `EARNED`), so this is
- * a no-op for synced rows and a safe fallback for the rest — the belt gate reads this, not the
- * mutable status, for "authority-owned / read-only".
+ * The award's IMMUTABLE provenance (#375), read only from the linked RankEntry. A missing entry
+ * returns null so every belt gate can fail closed; mutable `verificationStatus` must never be used
+ * to reconstruct origin at read time.
  */
 export function rankAwardProvenance(award: {
-  verificationStatus: RankAwardVerificationStatus
   rankEntry?: { provenance: RankEntryProvenance } | null
-}): RankEntryProvenance {
-  return (
-    award.rankEntry?.provenance ?? (award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED")
-  )
+}): RankEntryProvenance | null {
+  return award.rankEntry?.provenance ?? null
 }
 
 /** The gate only needs status + discipline-scoped sortOrder. */
@@ -155,7 +151,8 @@ export async function getActingPassportId(userId: string, dbClient: BeltDb = db)
 /**
  * The member's promoter-match ANCHOR — their highest-sortOrder **authority-verified**
  * award in the discipline (`awards` are pre-ordered by `rank.sortOrder desc`). Authority
- * = IMPORTED legacy truth, or an instructor-stamped VERIFIED (`awardedById` set). A
+ * = IMPORTED legacy truth (from immutable RankEntry provenance), or an instructor-stamped
+ * VERIFIED (`awardedById` set). A
  * self-minted backfill (now minted UNVERIFIED, SESSION_0540) is deliberately NOT an anchor —
  * its promoter is exactly what the backfill-verification decision validates.
  * Shared by the write path (`promoter-proposal-core.applyMemberPromoterTransition`) and read path
@@ -169,7 +166,7 @@ export function resolveAnchorAward(
     awards.find(
       award =>
         award.rank.rankSystem?.disciplineId === disciplineId &&
-        (award.verificationStatus === "IMPORTED" ||
+        (rankAwardProvenance(award) === "IMPORTED" ||
           (award.verificationStatus === "VERIFIED" && award.awardedById !== null)),
     ) ?? null
   )

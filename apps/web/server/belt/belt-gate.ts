@@ -62,7 +62,7 @@ export type FactEditableAward = {
   // @added SESSION_0729 (#376/#375) — the IMMUTABLE origin axis, read from the linked RankEntry.
   // "Authority-owned / read-only" now keys off `provenance === "IMPORTED"` (immutable legacy truth),
   // NOT the mutable `verificationStatus`, so a later status change can never re-open imported truth.
-  provenance: RankEntryProvenance
+  provenance: RankEntryProvenance | null
 }
 
 /**
@@ -85,8 +85,9 @@ export type FactEditableAward = {
  */
 export function isFactEditable(award: FactEditableAward): boolean {
   if (award.awardedById !== null) return false
-  // IMPORTED reads the IMMUTABLE provenance axis (#375); DISPUTED stays on the status axis.
-  if (award.provenance === "IMPORTED" || award.verificationStatus === "DISPUTED") {
+  // IMPORTED reads the IMMUTABLE provenance axis (#375); a missing entry has no trustworthy
+  // origin and therefore fails closed. DISPUTED stays on the mutable status axis.
+  if (award.provenance !== "EARNED" || award.verificationStatus === "DISPUTED") {
     return false
   }
   return award.source === "STATED" || award.verificationStatus === "UNVERIFIED"
@@ -187,7 +188,7 @@ export function memberFactEditability(award: FactValueAward): FactEditability {
   if (isFactEditable(award)) {
     return { facts: { awardedAt: true, promoter: true, school: true }, reason: "SELF_BACKFILL" }
   }
-  if (award.verificationStatus === "DISPUTED") {
+  if (award.provenance === null || award.verificationStatus === "DISPUTED") {
     return {
       facts: { awardedAt: false, promoter: false, school: false },
       reason: "AUTHORITY_LOCKED",
