@@ -2,7 +2,7 @@
 title: "SESSION 0727 — Chart the RankEntry-unification Wayfinder (HITL) + size the roster backfill"
 slug: session-0727
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-07-30
 updated: 2026-07-30
 last_agent: claude-session-0727
@@ -212,6 +212,76 @@ RESOLVED (don't re-open): backfill status = VERIFIED (0522 precedent); autonomou
 dry-run→attended --apply only; never self-answer a full ticket. Merge/prod actions HOLD for operator.
 ```
 
+## Goal verdict
+
+**EXTENDED — YES + more** (operator-confirmed at bow-out): the map (#374, 7 weighted tickets) and
+the sizing both landed, PLUS the sizing overturned the epic's premise (backfill already done —
+95/95), spec #372 was corrected in place, and all 4 open forks got operator picks — more than the
+stub asked. Next lane confirmed: SESSION_0728 → #375.
+
+## Delivered
+
+| Task | Status | What landed |
+| --- | --- | --- |
+| SESSION_0727_TASK_01 | ✅ done | Prod sizing (read-only, `DIRECT_URL`): RankEntry 111 (99 VERIFIED); canonical tree **95/95 covered** — backfill ALREADY DONE; "0/78" was a stale local prodsnap. Gap = 7 side-tree passports. Pooler URL creds stale (P1000) → #381. |
+| SESSION_0727_TASK_02 | ✅ done | Wayfinder map [#374](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/374) anchored on #372; 7 weighted children #375–#381, Blocked-by wired in one create-in-dependency-order pass; spec #372 corrected (banner + comment) so no cold agent runs the dead full-roster backfill. |
+
+**Decisions resolved (operator one-word picks):** provenance = COLUMN (#375 shapes it) · canonical
+backfill CLOSED-as-done + sweep-the-7 (#379) · table-drop sequenced with blockers (#380) · map home
+= GitHub issues. **Key files:** [petey-plan-0727-rankentry-wayfinder](plans/petey-plan-0727-rankentry-wayfinder.md)
+(evidence + dispatch order) · [SESSION_0728](SESSION_0728.md) (staged stub, ADR 0049).
+
+## Reflections
+
+- A **stale local prodsnap seeded a whole epic premise** (0/78 dark roster vs prod 95/95 covered) —
+  size against prod before charting, every time. → route: ticket #381 + the #372 correction banner
+  (FS-row append deferred — shared ledgers frozen this session per operator directive).
+- **Neon pooler `DATABASE_URL` creds are stale (P1000)** and `channel_binding=require` is unusable
+  from node-postgres — prod reads go via `DIRECT_URL` with the param stripped. → route: #381
+  (runbook note queued on the ticket).
+- A **`ready-for-agent` spec carrying a dead premise is a live hazard** — an AFK agent could have
+  run the obsolete full-roster backfill; corrected #372 in place before fan-out. → route: #372
+  banner + comment (applied this session).
+- **Create-tickets-in-dependency-order wires `Blocked by:` in one pass** — no second edit pass;
+  wayfinder charting on `gh` cost one session comfortably. → route: no-action (skill preamble
+  already documents the tracker mapping; pattern confirmed).
+- The **greedy-sed trap bit again** (double-applied rename in a scratch script) — rewrite files
+  instead of sed for multi-substitution edits. → route: no-action (operator-rules memory already
+  carries it; obeyed after one bite, zero repo impact).
+
+## Close evidence
+
+**/ggr (plan lane — plan-quality rubric): composite 9.3 → CLEARS (≥9.0).** Decomposition 9.5
+(epic → 7 one-session tickets, 3 waves, Weight/Agent on every body) · done-means 9.0 (explicit on
+all tickets; #376's added at review) · disjointness 9.5 (frontier tickets own disjoint file sets;
+blocking edges serialize the rest) · forks grilled 9.5 (4 operator one-word picks, recorded on the
+map + plan doc; sub-forks deferred to #375 HITL, never self-answered) · evidence grounding 9.5
+(prod-verified premise BEFORE baking; spec corrected). No caps: docs-only (no behavior/Dirstarter
+surface); no undocumented pattern. Giddy verdict: cleared to the push gate.
+
+**Systemic health:** CI = green (PR #382 merged, docs fast-path) · findings routed 2/2 (#381 env
+hygiene; #372 dead-premise correction — FS-row append deferred, ledgers frozen this session) ·
+FS patterns: none fired (FS-0048 sweep complied; FS-0035 claim held; FS-0025 single-push order held).
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter sweep | SESSION_0727/0728 + plan doc: `created/updated 2026-07-30`, `last_agent claude-session-0727`; pairs_with wired both directions (0727 ↔ plan doc ↔ 0728) |
+| Backlinks/index sweep | no new wiki pages (sprint + plan files live on the SESSION spine, not the wiki index) |
+| Wiki lint | `bun run wiki:lint` — 0 errors / 115 warnings, all pre-existing; session files warning-free |
+| Reflections routing receipt | 5 lessons → 5 routes (#381 ×2, #372 ×1, no-action ×2 with reasons) |
+| Hostile close review | n/a — docs-only plan lane; `/ggr` plan-quality composite 9.3 recorded above |
+| Code-quality gate (Class-A) | no Class-A custom code this session (docs only; scratch read-script not committed) |
+| Runtime verification (Doug) | no runtime surface touched |
+| Evidence-artifact URL | n/a — no runtime surface touched |
+| Review & Recommend | yes — SESSION_0728 staged (work #375); AFK fan-out listed in Next session |
+| Memory sweep | rank-belt-truth memory updated (epic state: backfill DONE 95/95, map #374, provenance=COLUMN) |
+| Next session unblock check | unblocked — 0728 baton is paste-ready; #375 is HITL by design (operator presence is the input) |
+| Git hygiene | close branch `docs/0727-close`; single push at close (FS-0025) — hash reported at bow-out; no sibling files staged |
+| Graphify update | nodes=15084 · edges=33709 · communities=1761 (gate runner, pre-commit) |
+| Ledger cross-off | none flipped: G-011 advanced (charted) not resolved; FS-0048 complied-with not resolved; shared ledgers frozen this session (operator directive) |
+| Deferral guard | 1 flag — P2002/P2034 line in the superseded staged-lanes block: dismissed as tracked (ticket #378 + SESSION_0728 stub carries the map frontier into the bow-in read-path) |
+| ADR / ubiquitous language | no new/changed ADR (all picks live on map #374 tickets; ADR 0058/0035/0036 untouched); no new domain terms |
+
 ## Artifacts
 
 - Wayfinder map: [#374 — Retire RankAward: RankEntry the ONE model](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/374)
@@ -219,6 +289,7 @@ dry-run→attended --apply only; never self-answer a full ticket. Merge/prod act
 - Ratified plan: [petey-plan-0727-rankentry-wayfinder](plans/petey-plan-0727-rankentry-wayfinder.md).
 - Prod sizing script (scratchpad, read-only; not committed): `prod-rank-sizing.ts` — output
   recorded in the plan doc.
+- No claude.ai Artifacts published — SotD cited live at `/app/state` (operator: no snapshot).
 
 ## Next session
 
