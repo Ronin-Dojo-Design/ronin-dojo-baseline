@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { LineageAvatarAction } from "~/app/app/lineage/_components/lineage-avatar-action"
 import { LineageClaimabilityToggle } from "~/app/app/lineage/_components/lineage-claimability-toggle"
+import { TreeAccessList } from "~/app/app/lineage/[treeId]/_components/tree-access-list"
 import { Badge } from "~/components/common/badge"
 import { Button } from "~/components/common/button"
 import { Card } from "~/components/common/card"
@@ -9,6 +10,7 @@ import { Note } from "~/components/common/note"
 import { Stack } from "~/components/common/stack"
 import { requireLineageManagementAccess } from "~/lib/auth-guard"
 import { type AdminLineageTreeMember, findLineageTreeDetail } from "~/server/admin/lineage/queries"
+import { findLineageTreeAccessGrants } from "~/server/web/lineage/tree-access-queries"
 
 function displayName(member: AdminLineageTreeMember) {
   return member.node.passport?.displayName ?? member.node.passport?.user?.name ?? "Unnamed profile"
@@ -66,6 +68,8 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
   if (!tree) {
     notFound()
   }
+
+  const accessGrants = await findLineageTreeAccessGrants(treeId)
 
   return (
     <Stack direction="column" className="gap-6">
@@ -227,6 +231,8 @@ export default async ({ params }: PageProps<"/app/lineage/[treeId]">) => {
           </div>
         </div>
       </Stack>
+
+      <TreeAccessList rows={accessGrants} />
     </Stack>
   )
 }
