@@ -30,6 +30,19 @@ backlinks:
 > `Weight: full|quick` ticket routing. **This is a PLAN/CHART-first HITL session — do NOT run the
 > prod backfill here.** Adopt: flip `status:` → `in-progress`.
 
+## ⚡ Done ahead in SESSION_0723 (read this first — don't redo it)
+
+- **`/to-spec` already ran** → the epic spec is **published: issue #372** (`ready-for-agent`) —
+  problem/solution, 22 user stories, implementation + testing decisions, out-of-scope. **Do NOT re-run
+  `/to-spec`.** 0727 starts FROM #372.
+- **Seam decided (operator):** **one canonical rank-read seam** — collapse all rank READS onto a single
+  `memberRanks`/`memberTopRank` module built on `RankEntry` (LR-0008 "one source read everywhere"),
+  repointing the **~29** current `RankAward` readers (identity · belt · directory · passport ·
+  promotion-events · lineage — NOT the "one surface" the stale July-10 epic doc claims).
+- **Revised pipeline:** `/wayfinder` map (anchored on #372) → **`/to-issues` #372** into the AFK lanes →
+  **`/prototype`** the one open shape (the `RankEntry` provenance field vs. the belt-gate). `/to-spec` +
+  `/to-prd` are satisfied by #372.
+
 ## Goal
 
 Chart the RankAward→RankEntry epic as a `wayfinder:map` (HITL), size the roster VERIFIED-status
@@ -43,6 +56,9 @@ test-gate fix, backfill script — dry-run only) so they can fan out cold.
 - **Autonomous executor = either** — write the `quick` batons model-agnostic (Claude OR codex).
   Codex Keychain **build wall**: codex may edit, but final `next build`/gate verification runs on
   Claude or a foreground gate. Note the hand-off in each baton.
+- **Read seam = one canonical rank-read** (SESSION_0723 to-spec checkpoint) — build a single
+  `memberRanks`/`memberTopRank` module on `RankEntry` and repoint all ~29 readers through it; test
+  behavior once at that seam. (Rejected: repoint-in-place, which keeps the sprawl.) See #372.
 
 ## Tasks
 
@@ -59,9 +75,9 @@ test-gate fix, backfill script — dry-run only) so they can fan out cold.
 - **Steps:** New `wayfinder:map` GitHub issue from `rankentry-unification-epic.md` + ADR 0058 +
   `rank-entry-unified-data-flow.md` + TASK_01's numbers. **Destination:** *"RankAward retired,
   RankEntry the ONE model, all reads migrated, roster ranks backfilled VERIFIED, IMPORTED-provenance
-  preserved, table-drop (G-011) sequenced."* Weight + agent-route every ticket. Then the Pocock
-  pipeline runs the destination through `/to-spec` → `/to-prd` → `/prototype` as tickets **on** the
-  map (not this session).
+  preserved, table-drop (G-011) sequenced."* Weight + agent-route every ticket. The spec is already
+  published (**#372**, `ready-for-agent`) — anchor the map on it; then `/to-issues` #372 → `/prototype`
+  (the provenance shape) become tickets **on** the map. Do NOT re-run `/to-spec`.
 - **`full` (HITL) tickets to seed:**
   1. **IMPORTED-provenance preservation** — `rankEntryStatusForAward` collapses `IMPORTED→VERIFIED`,
      discarding the provenance the belt-gate depends on (imported = authority-owned/read-only). Decide:
@@ -100,11 +116,11 @@ Both AFK-safe, provably-disjoint file sets — fan out to Claude OR codex:
 - **IMPORTED→VERIFIED collapse** silently drops belt-gate provenance — a decision ticket, never a
   backfill default.
 - Backfill = **prod-DB write = AFK-NEVER** → dry-run always; `--apply` only attended.
-- `/to-spec` (module-impact quiz → spec) lives in the **mattpocock-skills plugin** (upstream Pocock —
-  screenshot-confirmed SESSION_0723). The local `.agents/skills/` Pocock family is a **stale sync
-  missing it**; run `/plugin install mattpocock-skills` (interactive Claude Code) before 0727 to get
-  `/to-spec` + refreshed `/wayfinder` · `/to-prd` · `/prototype`. Pipeline = `/wayfinder` → `/to-spec`
-  → `/to-prd` → `/prototype`.
+- `/to-spec` already ran (SESSION_0723, via `npx skills use ".../mattpocock/skills" --skill to-spec`) →
+  spec **#372** published. 0727 still needs **`/to-issues`** + **`/prototype`** from the mattpocock-skills
+  family; the local `.agents/skills/` copy is a **stale sync**, so install/refresh first via
+  `/plugin install mattpocock-skills` (interactive) or `npx skills use "https://github.com/mattpocock/skills"
+  --skill "<name>"`. Effective pipeline now = `/wayfinder` (anchor #372) → `/to-issues` → `/prototype`.
 - Local prodsnap may be stale vs SESSION_0522/0524 → TASK_01 is the guard.
 
 ## Scope guard
@@ -137,11 +153,14 @@ preserved, G-011 table-drop sequenced." Seed tickets with Weight:/Agent: lines �
     RankAward READERS→RankEntry incl. top-ranked-queries.ts; guard new RankAward reads; writes keep
     RankAward until G-011); (5) lineage test-gate fix (task_6beb8b80); (6) backfill SCRIPT (extend
     session-0522-belt-backfill.ts pattern; dry-run ONLY, --apply is a later attended ticket).
-Then run the destination through /to-spec → /to-prd → /prototype as tickets ON the map. (Requires
-/plugin install mattpocock-skills first — the local Pocock skills are a stale sync missing /to-spec.)
+The spec is ALREADY published: issue #372 (ready-for-agent) — do NOT re-run /to-spec. Anchor the
+wayfinder:map on #372, then /to-issues #372 into the AFK lanes + /prototype the RankEntry provenance
+shape. (If /to-issues or /prototype are missing here, install via /plugin install mattpocock-skills or
+npx skills use "https://github.com/mattpocock/skills" --skill "<name>" — the local copy is a stale sync.)
 
 RESOLVED (don't re-open): backfill status = VERIFIED (0522 precedent); autonomous exec = either
-(codex build-wall → gates on Claude/foreground). HITL invariant: prod backfill is AFK-NEVER —
+(codex build-wall → gates on Claude/foreground); read seam = ONE canonical rank-read on RankEntry
+(repoint ~29 readers, per #372). HITL invariant: prod backfill is AFK-NEVER —
 dry-run→attended --apply only; never self-answer a full ticket. Merge/prod actions HOLD for operator.
 ```
 
