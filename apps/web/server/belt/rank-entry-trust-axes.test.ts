@@ -13,10 +13,7 @@ import {
 
 describe("deriveRankEntryTrustAxesFromAwardStatus", () => {
   const cases: Array<
-    [
-      RankAwardVerificationStatus,
-      ReturnType<typeof deriveRankEntryTrustAxesFromAwardStatus>,
-    ]
+    [RankAwardVerificationStatus, ReturnType<typeof deriveRankEntryTrustAxesFromAwardStatus>]
   > = [
     ["IMPORTED", { status: "VERIFIED", provenance: "IMPORTED" }],
     ["VERIFIED", { status: "VERIFIED", provenance: "EARNED" }],

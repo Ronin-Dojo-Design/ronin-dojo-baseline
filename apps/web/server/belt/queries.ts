@@ -3,10 +3,7 @@
  * @why     Bridge RankAward write facts into belt cards and canonical RankEntry presentation status
  * @wired   server/belt/router.ts, server/belt/belt-gate.ts, server/belt/profile-projection.ts, server/belt/rank-entry-trust-axes.ts
  */
-import type {
-  Prisma,
-  RankEntryStatus,
-} from "~/.generated/prisma/client"
+import type { Prisma, RankEntryStatus } from "~/.generated/prisma/client"
 import { type GateAward, memberFactEditability } from "~/server/belt/belt-gate"
 import { rankEntryStatusForAward } from "~/server/belt/rank-entry-trust-axes"
 import type { BeltCardOutput } from "~/server/belt/schemas"

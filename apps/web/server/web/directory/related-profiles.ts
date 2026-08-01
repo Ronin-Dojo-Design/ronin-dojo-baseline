@@ -24,13 +24,11 @@ import { db } from "~/services/db"
  *   (d) is PUBLIC-visibility only,
  * limited to 6.
  *
- * The (a)/(b) relation is an OR because the BBL roster has 0 `RankEntry` rows today, so a strict AND
- * shipped dark (0/78). Relating by discipline OR shared-lineage-tree lights the rail now via the
- * tree signal (78/78 BBL passports belong to a tree); the discipline signal is currently INERT and
- * auto-activates once `RankEntry` data is backfilled — no further code change needed (that is the
- * point of the OR). The OR branches are built from only the signals that actually exist on the
- * current profile, so a null top-discipline or an empty tree list never contributes a branch (and
- * therefore never matches on "everyone with no discipline" or similar).
+ * The (a)/(b) relation is an OR because shared discipline and shared lineage are independent
+ * affinity signals; strict AND would discard a legitimate match that has only one. The OR branches
+ * are built from only the signals that actually exist on the current profile, so a null top
+ * discipline or an empty tree list never contributes a branch (and therefore never matches on
+ * "everyone with no discipline" or similar).
  *
  * Privacy: the visibility + brand scope is REUSED from `buildDirectoryProfileWhere` (the ONE
  * directory privacy predicate). Passing `viewerUserId: null` pins the visibility scope to PUBLIC
@@ -60,10 +58,9 @@ export async function findRelatedProfiles({
   const current = await db.passport.findUnique({
     where: { id: passportId },
     select: {
-      // ADR 0058 — `RankEntry` is the ONE rank model; the `RankAward` read-collapse is DONE and
-      // `rankAwardsEarned` is dead-but-present (table drop queued as G-011), so it returns
-      // stale/near-empty data. Derive the top discipline from `rankEntries` instead. `RankEntry`
-      // reaches the canonical awardedAt tiebreak through the required anchor relation.
+      // ADR 0058 — RankEntry is the canonical member-rank display model. RankAward remains the
+      // populated write/promotion-fact anchor until #380, but it is not a display source. RankEntry
+      // reaches the canonical awardedAt tiebreak through that required transitional relation.
       rankEntries: {
         orderBy: rankEntryDisplayOrder,
         take: 1,
@@ -82,8 +79,8 @@ export async function findRelatedProfiles({
   // relate by discipline OR shared lineage tree, not the old strict AND.)
   const orBranches: Prisma.PassportWhereInput[] = []
   if (topDisciplineId) {
-    // ADR 0058 — same-top-discipline peers derived from `rankEntries` (the ONE rank model), not the
-    // retired `rankAwardsEarned`.
+    // ADR 0058 — same-top-discipline peers derive from canonical RankEntry display truth, not the
+    // transitional RankAward fact anchor.
     orBranches.push({
       rankEntries: { some: { rank: { rankSystem: { disciplineId: topDisciplineId } } } },
     })

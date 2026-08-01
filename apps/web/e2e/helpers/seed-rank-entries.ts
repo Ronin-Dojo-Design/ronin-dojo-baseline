@@ -21,9 +21,7 @@ export async function seedRankEntriesForAwards(
     select: { id: true, passportId: true, rankId: true, verificationStatus: true },
   })
   for (const award of awards) {
-    const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(
-      award.verificationStatus,
-    )
+    const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(award.verificationStatus)
     await prisma.rankEntry.upsert({
       where: { rankAwardId: award.id },
       create: {

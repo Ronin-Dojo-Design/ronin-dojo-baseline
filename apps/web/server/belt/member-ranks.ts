@@ -55,15 +55,15 @@ type RankEntryRow = Prisma.RankEntryGetPayload<{ select: typeof rankEntryViewSel
 /** The flat, render-ready rank view. No raw Prisma row reaches a consumer. */
 export type TransitionalRankAwardAnchoredMemberRank = TransitionalRankAwardAnchor &
   RankEntryTrustAxes & {
-  rankEntryId: string
-  passportId: string
-  rankId: string
-  rankName: string
-  colorHex: string | null
-  sortOrder: number
-  /** Non-null: `Rank.rankSystem` and `RankSystem.disciplineId` are both required relations. */
-  disciplineId: string
-}
+    rankEntryId: string
+    passportId: string
+    rankId: string
+    rankName: string
+    colorHex: string | null
+    sortOrder: number
+    /** Non-null: `Rank.rankSystem` and `RankSystem.disciplineId` are both required relations. */
+    disciplineId: string
+  }
 
 export type RankEntryView = TransitionalRankAwardAnchoredMemberRank
 

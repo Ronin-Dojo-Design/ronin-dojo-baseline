@@ -26,9 +26,7 @@ export async function syncRankEntryFromAward(
     select: { passportId: true, rankId: true, verificationStatus: true },
   })
 
-  const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(
-    award.verificationStatus,
-  )
+  const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(award.verificationStatus)
   // Immutable origin axis (#375): IMPORTED (one-time WP self-report migration) vs EARNED in-app.
   // Derived on BOTH branches on purpose: `verificationStatus` never crosses the IMPORTED boundary
   // after creation (importers set it at create; `verifyRankEntryInTransaction` skips IMPORTED;

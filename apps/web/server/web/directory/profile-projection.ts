@@ -126,10 +126,7 @@ function trustSummaryForUser(user: UserTrustSource) {
 type DetailAccount = DirectoryProfileDetail["passport"]["user"]
 type ListAccount = DirectoryProfileList["passport"]["user"]
 
-function projectDetailOrganizations(
-  profile: DirectoryProfileDetail,
-  account: DetailAccount,
-) {
+function projectDetailOrganizations(profile: DirectoryProfileDetail, account: DetailAccount) {
   if (!profile.showOrgs || !account) return []
   return account.memberships
     .filter(membership => membership.organization)
