@@ -1,7 +1,7 @@
 /**
  * @added   SESSION_0542 (2026-07-16)
- * @why     Enforce immutable promoter proposals and steward decisions under one transaction lock law
- * @wired   server/belt/router.ts, server/admin/rank-reviews/actions.ts
+ * @why     Serialize immutable promoter proposals and steward decisions while preserving award trust/provenance
+ * @wired   server/belt/router.ts, server/belt/verify-rank-entry.ts, server/admin/rank-reviews/actions.ts
  */
 import "server-only"
 
@@ -325,6 +325,15 @@ async function applySiblingFactsIfPresent(
   await syncRankEntryFromAward(tx, rankAwardId)
 }
 
+function promoterEditTargetStatus(
+  currentStatus: RankAwardVerificationStatus,
+  transition: "verify" | "keep_unverified",
+): RankAwardVerificationStatus {
+  // @why SESSION_0730 — member edits preserve IMPORTED origin and its VERIFIED presentation badge.
+  if (currentStatus === "IMPORTED") return "IMPORTED"
+  return transition === "verify" ? "VERIFIED" : "UNVERIFIED"
+}
+
 /**
  * Apply one member promoter edit after the target award and editability gate have been locked and
  * re-read. Capture side effects have already resolved `promoterData` inside the same transaction.
@@ -432,16 +441,7 @@ export async function applyMemberPromoterTransition({
     return { transition, reviewId: review.id }
   }
 
-  // An IMPORTED award never leaves IMPORTED via a member promoter edit (SESSION_0730: the
-  // IMPORTED-lock lift makes these rows member-editable, but the one-time-import origin is
-  // history and the OG's VERIFIED badge must not drop on a keep_unverified promoter). The
-  // status transition is for member-minted backfills only.
-  const targetStatus =
-    currentAward.verificationStatus === "IMPORTED"
-      ? "IMPORTED"
-      : transition === "verify"
-        ? "VERIFIED"
-        : "UNVERIFIED"
+  const targetStatus = promoterEditTargetStatus(currentAward.verificationStatus, transition)
   await tx.rankAward.update({
     where: { id: currentAward.id },
     data: { ...siblingFacts, ...promoterData, verificationStatus: targetStatus },

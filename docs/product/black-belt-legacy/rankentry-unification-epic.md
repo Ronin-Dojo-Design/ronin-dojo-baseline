@@ -4,8 +4,8 @@ slug: rankentry-unification-epic
 type: epic-plan
 status: proposed
 created: 2026-07-10
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/product/black-belt-legacy/rank-entry-unified-data-flow.md
   - docs/architecture/decisions/0016-lineage-promotion-source-of-truth.md
@@ -26,30 +26,31 @@ backlinks:
 > course/curriculum-vs-lineage separation designed for **Baseline** is over-engineering for **BBL**, where
 > it's just lineage + belt + verified-or-not. This epic collapses the rank model to a single table.
 >
-> **Sequencing verdict: the read-collapse lands now (SESSION_0523); the table-drop is a post-FI-001-send
-> epic.** Dropping `RankAward` pre-send would rewire the verified-lineage graph (the moat) + belt-gate
-> authority for zero launch-visible benefit — display already works via the projection + a join.
+> **Current sequencing (SESSION_0730 ratification):** #397 completed the read-collapse. #380 folds
+> the model and drops `RankAward` **before the FI-001 send**, after #377 and the #398 environment
+> blocker. Until then, RankEntry owns reads while RankAward remains the write/fact compatibility
+> anchor. Imported WP rows are member self-reports; their IMPORTED lock is lifted.
 
 ## Critical schema ground-truth (governs everything below)
 
 - `RankAwardSource { STATED, EARNED }` (NOT "STATED/IMPORTED/AWARDED").
-- `RankAwardVerificationStatus { UNVERIFIED, VERIFIED, DISPUTED, IMPORTED }` — **`IMPORTED` is a
-  verification-status value**, load-bearing for belt-gate (imported = authority-owned / member-read-only).
+- `RankAwardVerificationStatus { UNVERIFIED, VERIFIED, DISPUTED, IMPORTED }` — `IMPORTED` is the
+  historical marker on the temporary award anchor. Promoter transitions preserve it, but it does
+  not lock the member's self-reported facts.
 - `RankEntryStatus { PENDING, UNVERIFIED, VERIFIED, DISPUTED }` — **no `IMPORTED`**; `rankEntryStatusForAward`
-  (`queries.ts:81`) collapses IMPORTED→VERIFIED, which **discards the provenance belt-gate depends on**.
-  ⇒ Retiring RankAward requires preserving IMPORTED provenance on RankEntry (a `provenance`/`source` column,
-  **not** adding IMPORTED to the display enum — keeps 4 clean display states; avoids the LR 0008 second-axis trap).
+  collapses IMPORTED→VERIFIED for presentation while immutable `RankEntry.provenance` preserves the
+  origin axis. Provenance is private historical metadata; the belt-gate does not read it.
 
 ## Display gap (= steps 6-7)
 
-Exactly **one** surface reads RankEntry today: `/app/profile` belt tab (`server/web/belt/belt-tab-loader.ts:104`).
-**Every** public / lineage / directory / admin display still reads `passport.rankAwardsEarned` (RankAward-direct)
-via `lib/lineage/canvas-model.ts:66` `memberTopRankAward` and `server/web/lineage/payloads.ts`. Closing that
-gap IS migration steps 6-7.
+**Closed by #397 (SESSION_0730).** The shared `memberRanks` / `memberTopRank` seam and
+`rankEntryDisplayOrder` now root rank display in RankEntry across public, lineage, directory,
+passport, admin, tournament, claim, onboarding, and belt readers. Rich fact payloads still join the
+temporary RankAward anchor until #380.
 
 ## Phasing
 
-### This session (SESSION_0523) — read-collapse only. NO fold, NO belt-gate rewire, NO table drop.
+### Landed read-collapse — #397. No schema fold or table drop.
 
 - **Slice A — WL-P2-46:** retire `node.isVerified`/`node.verificationStatus` trust axis → derive from the
   verified `RankEntry.status` through ONE resolver, across canvas/directory/m-card/mobile-list/carousel/galaxy
@@ -61,7 +62,7 @@ gap IS migration steps 6-7.
 - **Slice C — step 7:** delete the dead owner-arm/split-path (`me-profile/*`, `owner-profile.tsx`,
   `loadProfileViewForOwner`) — **after Doug data + browser proofs** (spec line 123).
 
-### Post-send epic — fold, rewire, drop.
+### Pre-send endgame — #377 guard, then #380 fold, rewire, drop.
 
 - **D — expand (additive, safe anytime):** add fact/provenance cols to RankEntry (`awardedAt`, `source`,
   `provenance`, `awardedById`, `awardedByPassportId`, `notes`, `location`, `organizationId`, `promotionEventId`)
@@ -69,9 +70,10 @@ gap IS migration steps 6-7.
   (`LineageRelationship`, `RankMilestone`, `MediaAttachment`, `GamificationEvent`) + backfill.
   Preserve the immutable expected-prior/proposed-promoter snapshot and decision history on `RankEntryReview`
   (ADR 0047 D7); proposal data is not an active RankEntry fact.
-- **E — belt-gate rewire:** `ceilingSortOrder`/`isWithinCeiling`/`isTopAward` port cleanly (rank.sortOrder only);
-  `isFactEditable`/`memberFactEditability` need `source` + `awardedById` + the IMPORTED distinction on RankEntry
-  (§ critical schema). Without it, imported founder awards become member-editable = authority regression.
+- **E — belt-gate rewire:** `ceilingSortOrder`/`isWithinCeiling`/`isTopAward` port cleanly
+  (`rank.sortOrder` only). Fact editability keeps `source`, `awardedById`, and DISPUTED rules;
+  provenance locks nothing. Imported self-reports remain member-editable, and promoter transitions
+  preserve their IMPORTED compatibility status.
 - **F — moat/edge FK repoint:** `LineageRelationship.rankAwardId → rankEntryId` (rename + FK swap; preserve the
   `@@unique` PROMOTED_BY mirror = repeated-promotion semantics, ADR 0016). ⚠ `rankAwardId` is `SetNull` today —
   dropping RankAward before this repoint silently orphans the whole PROMOTED_BY graph (the moat-rip).
@@ -109,16 +111,19 @@ Migration discipline: use hand-authored SQL for data-sensitive changes; never ru
    a member's rank, not which of N instructor edges is canonical) — but **strip its member-facing badges** (the
    drawer instructor-edge "Unverified", lineage-tab) which duplicate the RankEntry axis. Its one surface story =
    zero public badges + a steward-only provenance chip in the editor.
-2. **Provenance representation for the fold (ADR decision, post-send):** a dedicated `provenance`/`source` column,
-   NOT adding IMPORTED to `RankEntryStatus`. Keeps 4 clean display states; avoids the second-display-axis bug.
-3. **Table-drop timing:** after the FI-001 Brian send. (Recommended — moat + belt-gate blast radius, zero launch benefit.)
+2. **Provenance representation for the fold (ratified):** the dedicated immutable `provenance`
+   column remains separate from mutable `RankEntryStatus`; exact DB enforcement rides #380.
+3. **Table-drop timing (ratified):** before the FI-001 Brian send; #380 remains blocked on #398
+   and follows #377.
 
 ## ADR skeleton (to write when the epic starts)
 
-New ADR supersedes 0016 / 0035 / 0043 and revises `rank-entry-unified-data-flow.md` line 51 ("migration anchor
-is the existing RankAward row" → "RankEntry is standalone; RankAward retired"). Decision: RankEntry is the one
+The #380 ADR supersedes 0016 / 0035 / 0043 and revises `rank-entry-unified-data-flow.md` from
+"migration anchor is the existing RankAward row" to "RankEntry is standalone; RankAward retired."
+Decision: RankEntry is the one
 durable rank record — member status + promotion fact + provenance. Invariants preserved: display = highest
-non-PENDING entry by sortOrder (ADR 0035); provenance locks imported/authority facts read-only (belt-gate); the
+awarded entry by sortOrder with the shared nulls-last tiebreak (ADR 0035); status is mutable,
+provenance is immutable/private and locks nothing; the
 PROMOTED_BY mirror keys off `rankEntryId` (ADR 0016 repeated-promotion semantics); `@@unique([passportId, rankId])`
 = one standard entry per rank; an established-coach proposal never mutates active provenance before approval, and
 its immutable expected-prior/proposed-target snapshot survives the fold (ADR 0047 D7).

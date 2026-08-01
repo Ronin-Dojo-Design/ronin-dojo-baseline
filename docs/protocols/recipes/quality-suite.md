@@ -4,8 +4,8 @@ slug: recipe-quality-suite
 type: protocol
 status: active
 created: 2026-07-20
-updated: 2026-07-21
-last_agent: claude-session-0609
+updated: 2026-07-31
+last_agent: codex-session-0731
 pairs_with:
   - docs/protocols/page-code-review.md
   - .claude/skills/fallow-fix-loop/SKILL.md
@@ -91,7 +91,10 @@ This is the review sibling of the build fanout — same roster, same disjointnes
    fix). Affected e2e for UI-contract changes; typecheck + oxlint + **`format:check`**
    (`cd apps/web && bun run format:check` — oxfmt; read-only `oxlint` does **not** catch formatting, so run it
    whenever any `apps/web` file was **touched**, not just added — the SESSION_0610 miss reddened CI's Oxc job) +
-   `bun run test --parallel=1` on the touched set; `clients/*` gates run in-client.
+   `bun run test --parallel=1` on the touched set; `clients/*` gates run in-client. **FS-0051:** if the diff
+   changes a canonical read model, payload, projection, or fixture contract, record an affected-E2E manifest
+   even when no `e2e/**` file changed: named specs, seed-prerequisite audit, run evidence or an explicit
+   environment waiver. Zero selected specs requires file:line proof.
 5. **Prove the delta + log.** Re-run fallow on the same range; prove CRAP/dupes/dead-code down (or
    non-worse, justified). Log baseline→final + `/code-quality` scores in the SESSION file. Push gate:
    HOLD, split by deploy unit.

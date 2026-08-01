@@ -77,6 +77,16 @@ type RankSystemAccumulator = {
   earnedAwards: Map<string, { awardedAt: Date | null; sortOrder: number }>
 }
 
+type EntryRank = NonNullable<RankEntry["rank"]>
+type EntryRankSystem = NonNullable<EntryRank["rankSystem"]>
+type WidenedSystemRank = {
+  id: string
+  sortOrder: number
+  name?: string | null
+  shortName?: string | null
+  colorHex?: string | null
+}
+
 function awardDate(entry: RankEntry): Date | null {
   const awardedAt = entry.rankAward.awardedAt
   if (!awardedAt) return null
@@ -91,6 +101,122 @@ function compareDatesDesc(a: Date | null, b: Date | null): number {
   return b.getTime() - a.getTime()
 }
 
+function progressionRankFromSystemRank(rank: WidenedSystemRank): ProgressionLevel["rank"] {
+  return {
+    id: rank.id,
+    sortOrder: rank.sortOrder,
+    name: rank.name ?? "",
+    shortName: rank.shortName ?? null,
+    colorHex: rank.colorHex ?? null,
+  }
+}
+
+function createRankSystemAccumulator(system: EntryRankSystem): RankSystemAccumulator {
+  const rankById = new Map<string, ProgressionLevel["rank"]>()
+  for (const rank of system.ranks ?? []) {
+    rankById.set(rank.id, progressionRankFromSystemRank(rank as WidenedSystemRank))
+  }
+
+  return {
+    rankSystem: {
+      id: system.id,
+      name: system.name,
+      // Strict allowlist projection beyond the payload allowlist (SESSION_0334 privacy test).
+      discipline: system.discipline
+        ? {
+            id: system.discipline.id,
+            name: system.discipline.name,
+            slug: system.discipline.slug,
+            code: system.discipline.code ?? null,
+          }
+        : null,
+    },
+    rankById,
+    earnedAwards: new Map(),
+  }
+}
+
+function recordEarnedRank(
+  accumulator: RankSystemAccumulator,
+  entry: RankEntry,
+  rank: EntryRank,
+): void {
+  if (!accumulator.rankById.has(rank.id)) {
+    accumulator.rankById.set(rank.id, {
+      id: rank.id,
+      sortOrder: rank.sortOrder ?? 0,
+      name: rank.name,
+      shortName: rank.shortName ?? null,
+      colorHex: rank.colorHex ?? null,
+    })
+  }
+
+  const date = awardDate(entry)
+  const prior = accumulator.earnedAwards.get(rank.id)
+  if (!prior || compareDatesDesc(date, prior.awardedAt) < 0) {
+    accumulator.earnedAwards.set(rank.id, {
+      awardedAt: date,
+      sortOrder: rank.sortOrder ?? 0,
+    })
+  }
+}
+
+function collectRankSystems(entries: readonly RankEntry[]): Map<string, RankSystemAccumulator> {
+  const bySystem = new Map<string, RankSystemAccumulator>()
+  for (const entry of entries) {
+    const rank = entry.rank
+    const system = rank?.rankSystem
+    if (!rank || !system) continue
+
+    const accumulator = bySystem.get(system.id) ?? createRankSystemAccumulator(system)
+    if (!bySystem.has(system.id)) bySystem.set(system.id, accumulator)
+    recordEarnedRank(accumulator, entry, rank)
+  }
+  return bySystem
+}
+
+function highestEarnedSortOrder(accumulator: RankSystemAccumulator): number | null {
+  let highest: number | null = null
+  for (const earned of accumulator.earnedAwards.values()) {
+    if (highest === null || earned.sortOrder > highest) highest = earned.sortOrder
+  }
+  return highest
+}
+
+function progressionFromAccumulator(accumulator: RankSystemAccumulator): BeltProgression {
+  const sortedRanks = Array.from(accumulator.rankById.values()).sort(
+    (a, b) => a.sortOrder - b.sortOrder,
+  )
+  const currentSortOrder = highestEarnedSortOrder(accumulator)
+  let currentLevelIndex: number | null = null
+  const levels = sortedRanks.map((rank, index): ProgressionLevel => {
+    const earned = accumulator.earnedAwards.get(rank.id)
+    if (!earned) return { rank, status: "locked", awardedAt: null }
+
+    const status = rank.sortOrder === currentSortOrder ? "current" : "earned"
+    if (status === "current") currentLevelIndex = index
+    return { rank, status, awardedAt: earned.awardedAt }
+  })
+  const earnedCount = accumulator.earnedAwards.size
+
+  return {
+    rankSystem: accumulator.rankSystem,
+    levels,
+    currentLevelIndex,
+    earnedCount,
+    totalLevels: sortedRanks.length,
+    points: earnedCount * BELT_PROMOTION_POINTS,
+  }
+}
+
+function compareProgressions(a: BeltProgression, b: BeltProgression): number {
+  const disciplineDelta = (a.rankSystem.discipline?.name ?? "").localeCompare(
+    b.rankSystem.discipline?.name ?? "",
+  )
+  if (disciplineDelta !== 0) return disciplineDelta
+  return a.rankSystem.name.localeCompare(b.rankSystem.name)
+}
+
 /**
  * Group awards by rank-system and project the system's full ranks list (from
  * the widened payload) into a Points/Levels ladder. The "current" level is the
@@ -99,129 +225,9 @@ function compareDatesDesc(a: Date | null, b: Date | null): number {
  * promotions.
  */
 export function buildBeltProgressions(entries: readonly RankEntry[]): BeltProgression[] {
-  const bySystem = new Map<string, RankSystemAccumulator>()
-
-  for (const entry of entries) {
-    const rank = entry.rank
-    if (!rank) continue
-    const system = rank.rankSystem
-    if (!system) continue
-
-    let acc = bySystem.get(system.id)
-    if (!acc) {
-      acc = {
-        rankSystem: {
-          id: system.id,
-          name: system.name,
-          // Pick discipline fields explicitly rather than passing the object
-          // through — keeps this a strict allowlist projection (defense-in-depth
-          // beyond the payload allowlist; SESSION_0334 privacy test).
-          discipline: system.discipline
-            ? {
-                id: system.discipline.id,
-                name: system.discipline.name,
-                slug: system.discipline.slug,
-                code: system.discipline.code ?? null,
-              }
-            : null,
-        },
-        rankById: new Map(),
-        earnedAwards: new Map(),
-      }
-      // Pre-populate the rank ladder from the system's full ranks list.
-      for (const r of system.ranks ?? []) {
-        // `r` from the payload has the widened shape (id, sortOrder, name, shortName, colorHex)
-        // but TypeScript may infer the narrower legacy shape if Prisma typegen has not yet
-        // regenerated; coerce to the expected shape here.
-        const widened = r as {
-          id: string
-          sortOrder: number
-          name?: string | null
-          shortName?: string | null
-          colorHex?: string | null
-        }
-        acc.rankById.set(widened.id, {
-          id: widened.id,
-          sortOrder: widened.sortOrder,
-          name: widened.name ?? "",
-          shortName: widened.shortName ?? null,
-          colorHex: widened.colorHex ?? null,
-        })
-      }
-      bySystem.set(system.id, acc)
-    }
-
-    // Ensure the awarded rank itself is in the ladder even if the rankSystem.ranks
-    // list happened to omit it (defensive — should not happen for seeded data).
-    if (!acc.rankById.has(rank.id)) {
-      acc.rankById.set(rank.id, {
-        id: rank.id,
-        sortOrder: rank.sortOrder ?? 0,
-        name: rank.name,
-        shortName: rank.shortName ?? null,
-        colorHex: rank.colorHex ?? null,
-      })
-    }
-
-    // Earned: keep the most recent awarded date per rank.
-    const date = awardDate(entry)
-    const prior = acc.earnedAwards.get(rank.id)
-    if (!prior || compareDatesDesc(date, prior.awardedAt) < 0) {
-      acc.earnedAwards.set(rank.id, { awardedAt: date, sortOrder: rank.sortOrder ?? 0 })
-    }
-  }
-
-  const progressions: BeltProgression[] = []
-
-  for (const acc of bySystem.values()) {
-    const sortedRanks = Array.from(acc.rankById.values()).sort((a, b) => a.sortOrder - b.sortOrder)
-
-    // Highest earned sortOrder defines the "current" rank.
-    let currentSortOrder: number | null = null
-    for (const earned of acc.earnedAwards.values()) {
-      if (currentSortOrder === null || earned.sortOrder > currentSortOrder) {
-        currentSortOrder = earned.sortOrder
-      }
-    }
-
-    let currentLevelIndex: number | null = null
-    const levels: ProgressionLevel[] = sortedRanks.map((rank, index) => {
-      const earned = acc.earnedAwards.get(rank.id)
-      let status: ProgressionLevel["status"]
-      if (earned) {
-        status =
-          currentSortOrder !== null && rank.sortOrder === currentSortOrder ? "current" : "earned"
-        if (status === "current") currentLevelIndex = index
-      } else {
-        status = "locked"
-      }
-      return {
-        rank,
-        status,
-        awardedAt: earned?.awardedAt ?? null,
-      }
-    })
-
-    const earnedCount = acc.earnedAwards.size
-    progressions.push({
-      rankSystem: acc.rankSystem,
-      levels,
-      currentLevelIndex,
-      earnedCount,
-      totalLevels: sortedRanks.length,
-      points: earnedCount * BELT_PROMOTION_POINTS,
-    })
-  }
-
-  progressions.sort((a, b) => {
-    const aDiscipline = a.rankSystem.discipline?.name ?? ""
-    const bDiscipline = b.rankSystem.discipline?.name ?? ""
-    const disciplineDelta = aDiscipline.localeCompare(bDiscipline)
-    if (disciplineDelta !== 0) return disciplineDelta
-    return a.rankSystem.name.localeCompare(b.rankSystem.name)
-  })
-
-  return progressions
+  return Array.from(collectRankSystems(entries).values())
+    .map(progressionFromAccumulator)
+    .sort(compareProgressions)
 }
 
 /**

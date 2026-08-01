@@ -4,8 +4,8 @@ slug: closing
 type: protocol
 status: active
 created: 2026-04-25
-updated: 2026-07-27
-last_agent: claude-session-0711
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -192,6 +192,12 @@ before it ships (FS-0031: three red-`main` pushes from assertions "verified by i
 `bun run dev:e2e` (a Node launcher — NEVER run `next` under the bun runtime; it poisons Turbopack's PostCSS
 worker) → `bun run test:e2e:local -- <spec> --project=chromium` (writes `apps/web/.e2e-run-evidence.json`) →
 gate the close with `bun run e2e:evidence:check` (override only with a real `--waiver="…"`).
+
+**Affected selection is contract-driven (FS-0051), not test-diff-driven.** A change to a canonical
+read model, payload, projection, or fixture prerequisite must record an affected-E2E manifest even
+when no `e2e/**` file changed. Name each spec, audit its seeds against the new read prerequisites,
+and run it or record an explicit environment waiver. Zero selected specs requires file:line proof;
+the current executable guard does not infer this dependency graph for you.
 
 Hook policy (SESSION_0624, ADR 0053): hook logic lives in `scripts/githooks/` (tracked, PR-reviewed, never
 hand-written into `.git/hooks/`); inert until `install.sh` runs once per clone; prove guards live with

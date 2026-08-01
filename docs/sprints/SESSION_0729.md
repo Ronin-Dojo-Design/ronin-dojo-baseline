@@ -4,8 +4,8 @@ slug: session-0729
 type: session--closed
 status: closed
 created: 2026-07-30
-updated: 2026-07-30
-last_agent: claude-session-0728
+updated: 2026-07-31
+last_agent: codex-session-0731
 sprint: S13
 lane: bbl
 recipe: "seq-lane-build"
@@ -20,6 +20,11 @@ backlinks:
 ---
 
 # SESSION 0729 — Canonical rank-read seam (#376)
+
+> **Historical-build correction (SESSION_0730):** this file records the pre-ratification build.
+> The later operator decision lifted the IMPORTED lock: imported WP rows are member self-reports,
+> provenance locks nothing, and belt-gate no longer reads it. #397 contains the corrected policy;
+> current authority is map #374 + ADR 0058.
 
 > **Staged by SESSION_0728.** #375 (provenance shape) is **RATIFIED + closed**, which unblocks this
 > Wave-2 lane. Adopt: flip `status:` → `in-progress`.
@@ -74,6 +79,7 @@ baton + worktree-isolation law. No lane collision (only open PR is #361, unrelat
 EARNED}`), merged as #396; that unblocked this Wave-2 lane.
 
 **FS-0048 read-before-build sweep** (read the ground truth, not names):
+
 - `server/belt/queries.ts` (getMemberAwards/toBeltCard/`rankEntryStatusForAward` IMPORTED→VERIFIED
   collapse) · `belt-gate.ts` (the two `verificationStatus==="IMPORTED"` reads) ·
   `rank-entry-compatibility.ts` (`syncRankEntryFromAward`) · `prisma/schema.prisma` (RankEntry model
@@ -119,6 +125,7 @@ session closes.
 
 **LAUNCH-SAFE, 9.2/10, no P1.** Trust-resolver no-flip, belt-gate identical, ordering parity, no
 crash, kept read justified, migration safe. Findings:
+
 - **P2 (follow-up, not a #376 blocker):** the **0-orphan invariant is load-bearing + unguarded** —
   reading `rankEntries` silently drops any award without a synced entry, and `@@unique([passportId,
   rankId])` means a 2nd award at an already-entried rank can never sync (permanent orphan, no alert).

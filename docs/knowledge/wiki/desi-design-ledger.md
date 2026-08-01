@@ -4,8 +4,8 @@ slug: desi-design-ledger
 type: protocol
 status: active
 created: 2026-07-21
-updated: 2026-07-21
-last_agent: claude-session-0612
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/protocols/recipes/desi-design-review.md
   - docs/protocols/recipes/mobile-optimization-pass.md
@@ -146,6 +146,66 @@ is an operator-ratified, logged exception** (same contract as the code passes).
 - **Recommendation:** replace the hidden badge on small screens with a lighter bare parenthetical `(N)` `text-2xs` span (keeps the count without the badge's width), then live-verify it still fits 5 triggers at 375px.
 - **Status:** open — **SESSION_0612 deferred: NOT built.** The proposed change reverses SESSION_0610's *live-verified* 375px overflow fix; shipping it blind risks re-introducing the overflow, and the win (P3 count on mobile) doesn't justify that without a fresh 375px live check. Kept open as a watch — build only behind a live 375px verification.
 - **Found in:** SESSION_0612. **Resolved in:** —
+
+### DES-009 — Rank progression chips cannot guarantee belt-color contrast
+
+- **Surface:** `apps/web/components/web/lineage/lineage-rank-progression-panel.tsx:145-149` — rank
+  chips place `text-background` directly on arbitrary `--rank-color` values.
+- **Pass:** review-wave
+- **Severity:** P1
+- **Finding:** white/light belts in light mode and black/dark belts in dark mode can collapse text
+  contrast. SESSION_0730 changed only data reads, so this is inherited and not a #397 regression.
+- **Recommendation:** keep the rank color as a swatch/rail; render chip copy on semantic
+  background/foreground tokens. Verify white/yellow/black in both themes with axe/contrast tools.
+- **Status:** open — documented deviation under SESSION_0731's behavior-parity/Tier-3 freeze; no
+  visual-output change in the rank-seam polish.
+- **Found in:** SESSION_0731. **Resolved in:** —
+
+### DES-010 — Rank-adjacent page/dialog semantics have unlabelled or weakly announced states
+
+- **Surface:** tournament detail `app/app/tournaments/[id]/page.tsx:121-129`; seeding
+  `_components/divisions-editor.tsx:488-517` (label/trigger `:495-506`); shared
+  `components/web/listing/listing-detail.tsx:59-64`; lineage
+  `components/web/lineage/promoter-change-modal.tsx:230`.
+- **Pass:** review-wave
+- **Severity:** P1 (seeding control name) + P2
+- **Finding:** tournament detail has no H1; Seeding Method's Label is not associated with its
+  trigger; the shared semantic H1 uses the H2 visual ladder; promoter client errors lack live
+  announcement; the seeding dialog lacks a description. All predate #397.
+- **Recommendation:** associate `htmlFor`/`id`, restore one H1/page with the H1 primitive, add an
+  appropriate dialog description, and announce validation errors with alert/live semantics.
+- **Status:** open — documented deviation under SESSION_0731's behavior-parity/Tier-3 freeze; route
+  as one accessibility/hierarchy lane with live accessibility-tree proof.
+- **Found in:** SESSION_0731. **Resolved in:** —
+
+### DES-011 — Rank surfaces bypass shared card, CTA, and severity hierarchy
+
+- **Surface:** lineage rank history `lineage-rank-history-tab.tsx:113-115`; progression
+  `lineage-rank-progression-panel.tsx:93,178-180`; drawer actions
+  `lineage-profile-drawer/info-tab.tsx:232-240` + `index.tsx:293-303`; belt grid
+  `belt/belt-edit-card.tsx:92-100`; admin people `people-table-columns.tsx:113-115`.
+- **Pass:** review-wave
+- **Severity:** P2
+- **Finding:** three raw card twins bypass L1 Card; multiple belt cards can each render a primary
+  CTA; drawer Verify and Claim can both be primary; the Banned badge hand-patches a raw red class.
+  All markup/class strings are inherited; #397 repointed data expressions only.
+- **Recommendation:** compose the shared Card, demote card-local/Verify actions so the view has one
+  primary, and use the semantic danger Badge variant. Recheck conditional combinations live.
+- **Status:** open — documented deviation under SESSION_0731's behavior-parity/Tier-3 freeze; no
+  visual-output change in this polish.
+- **Found in:** SESSION_0731. **Resolved in:** —
+
+### DES-012 — Rank progression micro-layout leaves the 4px/type token ladder
+
+- **Surface:** `apps/web/components/web/lineage/lineage-rank-progression-panel.tsx:107,162`.
+- **Pass:** review-wave
+- **Severity:** P3
+- **Finding:** `gap-1.5`, `ml-0.5`, and `text-[0.6rem]` introduce 6px/2px/ad-hoc type values
+  outside the documented 4px spacing and type ladders. The classes predate #397.
+- **Recommendation:** use 4px-scale spacing and the shared `text-2xs` token during the same lane as
+  DES-009/011; verify 390px density before accepting the replacement.
+- **Status:** open — documented deviation under SESSION_0731's behavior-parity/Tier-3 freeze.
+- **Found in:** SESSION_0731. **Resolved in:** —
 
 ## Cross-references
 

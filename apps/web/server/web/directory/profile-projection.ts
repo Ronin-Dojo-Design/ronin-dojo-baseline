@@ -123,6 +123,104 @@ function trustSummaryForUser(user: UserTrustSource) {
   }
 }
 
+type DetailAccount = DirectoryProfileDetail["passport"]["user"]
+type ListAccount = DirectoryProfileList["passport"]["user"]
+
+function projectDetailOrganizations(profile: DirectoryProfileDetail, account: DetailAccount) {
+  if (!profile.showOrgs || !account) return []
+  return account.memberships
+    .filter(membership => membership.organization)
+    .map(membership => ({
+      id: membership.organization.id,
+      name: membership.organization.name,
+      slug: membership.organization.slug,
+      discipline: membership.discipline,
+      joinedAt: membership.joinedAt,
+    }))
+}
+
+function projectDetailRichFields(
+  profile: DirectoryProfileDetail,
+  account: DetailAccount,
+  canRenderRichMedia: boolean,
+) {
+  if (!canRenderRichMedia) {
+    return {
+      coverPhotoUrl: null,
+      videoIntroUrl: null,
+      locationCity: null,
+      locationRegion: null,
+      locationCountry: null,
+      socialLinks: null,
+      email: null,
+      techniqueProgress: [],
+    }
+  }
+
+  return {
+    coverPhotoUrl: profile.coverPhotoUrl,
+    videoIntroUrl: profile.videoIntroUrl,
+    locationCity: profile.locationCity,
+    locationRegion: profile.locationRegion,
+    locationCountry: profile.locationCountry,
+    socialLinks: profile.passport.socialLinks ?? null,
+    email: profile.showEmail ? (account?.email ?? null) : null,
+    techniqueProgress: account?.techniqueProgress ?? [],
+  }
+}
+
+function projectListLocations(
+  profile: DirectoryProfileList,
+  policy: LineageProfileDetailRenderPolicy,
+  cardShowsRich: boolean,
+) {
+  if (!cardShowsRich || !policy.features.location) {
+    return { locationCity: null, locationRegion: null, locationCountry: null }
+  }
+  return {
+    locationCity: profile.locationCity,
+    locationRegion: profile.locationRegion,
+    locationCountry: profile.locationCountry,
+  }
+}
+
+function projectListEmail(
+  profile: DirectoryProfileList,
+  account: ListAccount,
+  policy: LineageProfileDetailRenderPolicy,
+  cardShowsRich: boolean,
+): string | null {
+  if (!cardShowsRich || !policy.features.email || !profile.showEmail) return null
+  return account?.email ?? null
+}
+
+function projectListOrganizations(
+  profile: DirectoryProfileList,
+  account: ListAccount,
+  policy: LineageProfileDetailRenderPolicy,
+  cardShowsRich: boolean,
+): ProfileOrg[] {
+  if (!cardShowsRich || !policy.features.organizations || !profile.showOrgs) return []
+  return projectProfileOrganizations({
+    affiliations: profile.passport.affiliations,
+    memberships: account?.memberships ?? [],
+  })
+}
+
+function projectListRanks(
+  profile: DirectoryProfileList,
+  policy: LineageProfileDetailRenderPolicy,
+  cardShowsRich: boolean,
+) {
+  if (cardShowsRich && policy.features.rankHistory && profile.showRanks) {
+    return profile.passport.rankEntries
+  }
+  return rankSummaryForProfile({
+    showRanks: profile.showRanks,
+    rankEntries: profile.passport.rankEntries,
+  })
+}
+
 // ---------------------------------------------------------------------------
 // Public directory DETAIL projection (`/directory/[slug]`) — SESSION_0502 (TASK_03).
 //
@@ -164,19 +262,8 @@ export function projectDirectoryDetailProfile({
     brand,
     showRanks: profile.showRanks ?? undefined,
   })
-
-  const organizations =
-    profile.showOrgs && account
-      ? account.memberships
-          .filter(m => m.organization)
-          .map(m => ({
-            id: m.organization.id,
-            name: m.organization.name,
-            slug: m.organization.slug,
-            discipline: m.discipline,
-            joinedAt: m.joinedAt,
-          }))
-      : []
+  const organizations = projectDetailOrganizations(profile, account)
+  const rich = projectDetailRichFields(profile, account, canRenderRichMedia)
 
   return {
     id: profile.id,
@@ -195,11 +282,11 @@ export function projectDirectoryDetailProfile({
       lineageNode: profile.passport.lineageNode,
     }),
     // RICH media — gated.
-    coverPhotoUrl: canRenderRichMedia ? profile.coverPhotoUrl : null,
-    videoIntroUrl: canRenderRichMedia ? profile.videoIntroUrl : null,
-    locationCity: canRenderRichMedia ? profile.locationCity : null,
-    locationRegion: canRenderRichMedia ? profile.locationRegion : null,
-    locationCountry: canRenderRichMedia ? profile.locationCountry : null,
+    coverPhotoUrl: rich.coverPhotoUrl,
+    videoIntroUrl: rich.videoIntroUrl,
+    locationCity: rich.locationCity,
+    locationRegion: rich.locationRegion,
+    locationCountry: rich.locationCountry,
     user: {
       id: account?.id ?? null,
       // BASIC identity — always published for a claimed profile.
@@ -209,9 +296,9 @@ export function projectDirectoryDetailProfile({
       organizations,
       ranks: passportDto.ranks,
       // RICH media — gated.
-      socialLinks: canRenderRichMedia ? (profile.passport.socialLinks ?? null) : null,
-      email: canRenderRichMedia && profile.showEmail ? (account?.email ?? null) : null,
-      techniqueProgress: canRenderRichMedia ? (account?.techniqueProgress ?? []) : [],
+      socialLinks: rich.socialLinks,
+      email: rich.email,
+      techniqueProgress: rich.techniqueProgress,
     },
   }
 }
@@ -243,6 +330,7 @@ export function projectDirectoryProfileListItem({
   // on the TIER's rich access (`policy.canRenderRichMedia`), which is false-on-free regardless
   // of viewer. (Previously this rode `features.organizations/rankHistory` being false-on-free.)
   const cardShowsRich = policy.canRenderRichMedia
+  const locations = projectListLocations(profile, policy, cardShowsRich)
 
   return {
     id: profile.id,
@@ -261,24 +349,11 @@ export function projectDirectoryProfileListItem({
     }),
     // Prefer the promoted Passport avatar, fall back to the account image, then the brand default.
     image: resolveDisplayAvatar(profile.passport.avatarUrl ?? account?.image, brand),
-    locationCity: cardShowsRich && policy.features.location ? profile.locationCity : null,
-    locationRegion: cardShowsRich && policy.features.location ? profile.locationRegion : null,
-    locationCountry: cardShowsRich && policy.features.location ? profile.locationCountry : null,
-    email:
-      cardShowsRich && policy.features.email && profile.showEmail ? (account?.email ?? null) : null,
-    organizations:
-      cardShowsRich && policy.features.organizations && profile.showOrgs
-        ? projectProfileOrganizations({
-            affiliations: profile.passport.affiliations,
-            memberships: account?.memberships ?? [],
-          })
-        : [],
-    ranks:
-      cardShowsRich && policy.features.rankHistory && profile.showRanks
-        ? profile.passport.rankEntries
-        : rankSummaryForProfile({
-            showRanks: profile.showRanks,
-            rankEntries: profile.passport.rankEntries,
-          }),
+    locationCity: locations.locationCity,
+    locationRegion: locations.locationRegion,
+    locationCountry: locations.locationCountry,
+    email: projectListEmail(profile, account, policy, cardShowsRich),
+    organizations: projectListOrganizations(profile, account, policy, cardShowsRich),
+    ranks: projectListRanks(profile, policy, cardShowsRich),
   }
 }

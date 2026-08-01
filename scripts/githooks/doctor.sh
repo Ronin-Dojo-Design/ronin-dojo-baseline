@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# doctor.sh — prove the push guards are actually live FROM THE ENVIRONMENT THEY GUARD.
+# doctor.sh — prove the tracked git guards are actually live FROM THE ENVIRONMENT THEY GUARD.
 #
 # WHY THIS EXISTS
 # ---------------
-# Four consecutive failures say the same thing (FS-0035 → FS-0036 → FS-0037 → FS-0040):
+# The repeated hook failures (FS-0035 → FS-0036 → FS-0037 → FS-0040) and recurring FS-0028 say
+# the same thing:
 # a guard that cannot prove it is live is not a guard.
 #   FS-0035  the rule was prose, so it never ran.
 #   FS-0036  the script ran but was a silent no-op on the default path.
@@ -24,7 +25,7 @@
 
 set -uo pipefail
 
-REPO='Ronin-Dojo-Design/ronin-dojo-baseline'
+EXPECTED_REPO='Ronin-Dojo-Design/black-belt-legacy'
 fails=0
 warns=0
 
@@ -40,6 +41,7 @@ fi
 # The canonical checkout is the parent of the SHARED git dir — correct from a worktree too,
 # where --show-toplevel would give the worktree root instead.
 canonical="$(cd "$(dirname "$(cd "$common_dir" && pwd)")" && pwd)"
+expected_hooks="$canonical/scripts/githooks"
 git_dir="$(cd "$(git rev-parse --git-dir)" && pwd)"
 in_worktree='no'
 [ "$git_dir" != "$(cd "$common_dir" && pwd)" ] && in_worktree='yes'
@@ -48,6 +50,24 @@ echo ""
 echo "githooks doctor — $(pwd)"
 echo "  context: $([ "$in_worktree" = yes ] && echo 'LANE WORKTREE' || echo 'canonical checkout')"
 echo ""
+
+# ---- 0. this is the intended repository (FS-0024) ---------------------------------------------
+origin_url="$(git remote get-url origin 2>/dev/null || true)"
+case "$origin_url" in
+  https://github.com/*) origin_repo="${origin_url#https://github.com/}" ;;
+  git@github.com:*) origin_repo="${origin_url#git@github.com:}" ;;
+  ssh://git@github.com/*) origin_repo="${origin_url#ssh://git@github.com/}" ;;
+  *) origin_repo="" ;;
+esac
+origin_repo="${origin_repo%/}"
+origin_repo="${origin_repo%.git}"
+if [ "$origin_repo" = "$EXPECTED_REPO" ]; then
+  ok "origin = $origin_repo (FS-0024)"
+else
+  bad "origin is not $EXPECTED_REPO — refusing a false repository green." \
+      "observed: ${origin_url:-(missing origin)}" \
+      "fix: run this doctor only in the black-belt-legacy clone and repair origin first."
+fi
 
 # ---- 1. core.hooksPath set, and ABSOLUTE ------------------------------------------------------
 hp="$(git config --get core.hooksPath 2>/dev/null || true)"
@@ -59,27 +79,47 @@ elif [ "${hp#/}" = "$hp" ]; then
       "It resolves per-worktree, so lanes on a branch without that directory get NO hook," \
       "and git skips a missing hooksPath silently." \
       "fix:  bash $canonical/scripts/githooks/install.sh"
+elif [ "$hp" != "$expected_hooks" ]; then
+  bad "core.hooksPath points outside the canonical checkout: $hp" \
+      "A linked-worktree path disappears when that lane is removed (FS-0040)." \
+      "expected: $expected_hooks" \
+      "fix:  bash $canonical/scripts/githooks/install.sh"
 else
-  ok "core.hooksPath = $hp (absolute)"
+  ok "core.hooksPath = $hp (canonical + absolute)"
 fi
 
-# ---- 2. the hook is present where that path points, and executable ----------------------------
+# ---- 2. the hooks are present where that path points, executable, and current -----------------
 if [ -n "$hp" ]; then
   case "$hp" in /*) resolved="$hp" ;; *) resolved="$(pwd)/$hp" ;; esac
   if [ ! -d "$resolved" ]; then
     bad "hooks dir does not exist: $resolved" \
         "git treats a missing hooksPath as 'no hooks' — silently, exit 0." \
         "fix:  bash $canonical/scripts/githooks/install.sh"
-  elif [ ! -x "$resolved/pre-push" ]; then
-    bad "pre-push missing or not executable in $resolved" \
-        "fix:  chmod +x $resolved/pre-push"
   else
-    ok "pre-push present and executable"
-    grep -q 'RULE B' "$resolved/pre-push" 2>/dev/null \
-      && ok "pre-push carries RULE B (main is PR-only)" \
-      || bad "pre-push predates RULE B — it blocks only non-fast-forward pushes to main," \
-             "so a plain 'git push origin HEAD:main' from a lane still gets through." \
-             "fix: update scripts/githooks/pre-push from main."
+    if [ ! -x "$resolved/pre-commit" ]; then
+      bad "pre-commit missing or not executable in $resolved" \
+          "fix:  chmod +x $resolved/pre-commit"
+    else
+      ok "pre-commit present and executable"
+      grep -q 'git show ":\$file"' "$resolved/pre-commit" 2>/dev/null \
+        && grep -q 'cmp -s "\$staged_blob" "\$formatted_blob"' "$resolved/pre-commit" 2>/dev/null \
+        && ok "pre-commit checks staged INDEX blobs (FS-0028)" \
+        || bad "pre-commit is stale — it does not prove the would-be commit is Oxfmt-clean." \
+               "A worktree-only format check can be bypassed by partial staging." \
+               "fix: update scripts/githooks/pre-commit from main."
+    fi
+
+    if [ ! -x "$resolved/pre-push" ]; then
+      bad "pre-push missing or not executable in $resolved" \
+          "fix:  chmod +x $resolved/pre-push"
+    else
+      ok "pre-push present and executable"
+      grep -q 'RULE B' "$resolved/pre-push" 2>/dev/null \
+        && ok "pre-push carries RULE B (main is PR-only)" \
+        || bad "pre-push predates RULE B — it blocks only non-fast-forward pushes to main," \
+               "so a plain 'git push origin HEAD:main' from a lane still gets through." \
+               "fix: update scripts/githooks/pre-push from main."
+    fi
   fi
 fi
 
@@ -133,12 +173,14 @@ else
 fi
 
 # ---- 4. the SERVER ruleset — the only layer a local mistake cannot defeat ----------------------
-if ! command -v gh >/dev/null 2>&1; then
+if [ "$origin_repo" != "$EXPECTED_REPO" ]; then
+  warn "server ruleset not queried because origin validation failed."
+elif ! command -v gh >/dev/null 2>&1; then
   warn "gh not on PATH — cannot verify the server ruleset (the layer that actually enforces)."
 elif ! gh auth status >/dev/null 2>&1; then
   warn "gh not authenticated — cannot verify the server ruleset."
 else
-  rules_json="$(gh api "repos/$REPO/rules/branches/main" 2>/dev/null || true)"
+  rules_json="$(gh api "repos/$origin_repo/rules/branches/main" 2>/dev/null || true)"
   if [ -z "$rules_json" ]; then
     warn "could not read branch rules for main (offline, or insufficient token scope)."
   elif printf '%s' "$rules_json" | grep -q '"type":"pull_request"'; then
@@ -159,6 +201,10 @@ if [ "$fails" -gt 0 ]; then
   echo ""
   exit 1
 fi
-echo "githooks doctor: all checks passed${warns:+ ($warns warning(s))}."
+if [ "$warns" -gt 0 ]; then
+  echo "githooks doctor: all checks passed ($warns warning(s))."
+else
+  echo "githooks doctor: all checks passed."
+fi
 echo ""
 exit 0

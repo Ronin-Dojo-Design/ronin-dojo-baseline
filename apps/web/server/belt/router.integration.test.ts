@@ -13,9 +13,9 @@
  * end-to-end:
  *
  *   1. a member CANNOT create/enrich a rank ABOVE their ceiling (no self-promotion);
- *      a backfill at/below the ceiling mints VERIFIED-by-implication, never UNVERIFIED (B1)
- *   2. a member CANNOT edit an authority-owned award's fact (IMPORTED / promotion-minted);
- *      a self-added backfill's fact IS editable
+ *      a new backfill at/below the ceiling mints UNVERIFIED (SESSION_0540)
+ *   2. a member CANNOT overwrite an instructor-stamped award's fact; their self-added and
+ *      imported WP self-report facts ARE editable
  *   3. a member CANNOT delete their TOP award
  *   4. a member edits ONLY their own Passport (no cross-Passport reach)
  *   + rankId is never changed by an update (the fact edit has no rankId input)
@@ -40,6 +40,7 @@ mock.module("next/cache", () => ({
 mock.module("server-only", () => ({}))
 
 import { Brand } from "~/.generated/prisma/client"
+import { seededBjjRankId } from "~/lib/test/seeded-bjj-rank"
 import { projectProfileBeltEntries } from "~/server/belt/profile-projection"
 import { gateAwardSelect, getMemberAwards, toGateAward } from "~/server/belt/queries"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
@@ -59,15 +60,6 @@ const asMember = (user: SessionUser) =>
     context: { user: user as never, source: "rsc" as const, brand: Brand.BBL },
   }).belt
 
-/** Resolve a seeded BJJ rank id by exact name. */
-async function bjjRankId(name: string): Promise<string> {
-  const rank = await db.rank.findFirstOrThrow({
-    where: { name, rankSystem: { discipline: { code: "bjj" } } },
-    select: { id: true },
-  })
-  return rank.id
-}
-
 type Fixtures = {
   memberUserId: string
   memberPassportId: string
@@ -79,8 +71,8 @@ type Fixtures = {
   purpleRankId: string
   brownRankId: string
   // member awards
-  whiteAwardId: string // VERIFIED-by-implication self-backfill (fact EDITABLE, B1)
-  blueAwardId: string // IMPORTED awarded truth = member's BJJ top (the ceiling; fact READ-ONLY)
+  whiteAwardId: string // legacy VERIFIED-by-implication self-backfill (fact EDITABLE, B1)
+  blueAwardId: string // IMPORTED awarded truth = member's editable BJJ top (the ceiling)
   // another passport's award + milestone (ownership boundary)
   otherAwardId: string
   otherMilestoneId: string
@@ -103,14 +95,14 @@ beforeAll(async () => {
     data: { displayName: tag("other-pp"), userId: otherUser.id },
   })
 
-  const whiteRankId = await bjjRankId("White Belt")
-  const blueRankId = await bjjRankId("Blue Belt")
-  const purpleRankId = await bjjRankId("Purple Belt")
-  const brownRankId = await bjjRankId("Brown Belt")
+  const whiteRankId = await seededBjjRankId("White Belt")
+  const blueRankId = await seededBjjRankId("Blue Belt")
+  const purpleRankId = await seededBjjRankId("Purple Belt")
+  const brownRankId = await seededBjjRankId("Brown Belt")
 
-  // Member's belts (B1): blue is the IMPORTED awarded-truth ceiling (read-only);
-  // white is a self-added VERIFIED-by-implication backfill below it (fact editable).
-  // No `awardedById` on white → self-added; the IMPORTED status alone locks blue.
+  // Member's belts (B1): blue is the member's editable IMPORTED self-report ceiling;
+  // white is a legacy VERIFIED-by-implication backfill below it. Neither carries an
+  // instructor `awardedById`, so both stay in the member-owned edit class.
   const whiteAward = await db.rankAward.create({
     data: {
       passportId: memberPassport.id,
@@ -162,6 +154,7 @@ beforeAll(async () => {
         // IMPORTED award → VERIFIED entry (SESSION_0522): the backfill this fixture
         // mirrors now derives an IMPORTED award to a VERIFIED member-facing RankEntry.
         status: "VERIFIED",
+        provenance: "IMPORTED",
       },
       {
         passportId: otherPassport.id,
@@ -297,11 +290,11 @@ describe("belt.upsertBeltMilestone — ceiling gate (cannot self-promote)", () =
     ).toEqual({ status: "VERIFIED" })
   })
 
-  it("enriches a self-added backfill BELOW the ceiling (white) — VERIFIED-by-implication, fact editable (B1)", async () => {
+  it("enriches a legacy VERIFIED-by-implication backfill below the ceiling (white)", async () => {
     const card = await member().upsertBeltMilestone({ rankId: fx.whiteRankId, story: "day one" })
     expect(card.rankId).toBe(fx.whiteRankId)
-    // B1: a backfill at/below the ceiling is VERIFIED-by-implication, never UNVERIFIED,
-    // and — being self-added (no approver) — its facts remain member-editable.
+    // Legacy compatibility: this pre-0540 VERIFIED self-backfill stays verified and,
+    // being self-added (no approver), its facts remain member-editable.
     expect(card.verificationStatus).toBe("VERIFIED")
     expect(card.isFactEditable).toBe(true)
     expect(card.milestone?.story).toBe("day one")
@@ -578,12 +571,19 @@ describe("belt.updateRankAwardFact — self-backfill-only + never-changes-rankId
     // Promoter transitions preserve IMPORTED: the OG's VERIFIED badge must not drop
     // when the promoter doesn't match the anchor (SESSION_0730 guard).
     expect(card.verificationStatus).toBe("VERIFIED")
-    const row = await db.rankAward.findUniqueOrThrow({
-      where: { id: fx.blueAwardId },
-      select: { notes: true, verificationStatus: true },
-    })
-    expect(row.notes).toBeNull()
-    expect(row.verificationStatus).toBe("IMPORTED")
+    const [awardRow, entryRow] = await Promise.all([
+      db.rankAward.findUniqueOrThrow({
+        where: { id: fx.blueAwardId },
+        select: { notes: true, verificationStatus: true },
+      }),
+      db.rankEntry.findUniqueOrThrow({
+        where: { rankAwardId: fx.blueAwardId },
+        select: { status: true, provenance: true },
+      }),
+    ])
+    expect(awardRow.notes).toBeNull()
+    expect(awardRow.verificationStatus).toBe("IMPORTED")
+    expect(entryRow).toEqual({ status: "VERIFIED", provenance: "IMPORTED" })
   })
 
   it("DENIES a fact edit on ANOTHER member's award (ownership → NOT_FOUND)", async () => {

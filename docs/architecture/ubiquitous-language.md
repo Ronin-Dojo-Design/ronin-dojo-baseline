@@ -4,8 +4,8 @@ slug: ubiquitous-language
 type: concept
 status: active
 created: 2026-04-25
-updated: 2026-07-26
-last_agent: claude-session-0582
+updated: 2026-08-01
+last_agent: codex-session-0731
 version: 2
 pairs_with:
   - docs/architecture/s1-schema-design.md
@@ -287,16 +287,18 @@ Former name: `Progress`.
 
 Do not use `Progress` in new code.
 
-**Being retired:** read paths now resolve a member's rank from `RankEntry` (below); the `RankAward`
-table-drop is a tracked post-launch epic. Prefer `RankEntry` for new rank reads/writes.
+**Being retired:** read paths now resolve a member's rank from `RankEntry` (below). Until #380,
+`RankAward` remains the explicit write/promotion-fact compatibility anchor; do not create a new
+display read from it. #380 folds facts/writers/satellite FKs into RankEntry and drops RankAward
+before FI-001, after #377 and the #398 environment blocker.
 
 ### RankEntry
 
-The current single model for a member's rank/belt standing. It supersedes `RankAward` — member-facing
-lineage-trust reads were collapsed onto `RankEntry` (SESSION_0519–0523), and it is the model new code
-should use for "what rank does this member hold." `RankEntryReview` carries its verification workflow.
-`RankAward` still exists in the schema during the transition; its removal is a tracked post-launch epic
-(`rankentry-unification-epic.md`), not new-code surface.
+The canonical read model for a member's rank/belt standing and #380's destination single table. It
+supersedes `RankAward` for "what rank does this member hold"; #397 completed the shared read seam.
+`RankEntryReview` carries its verification workflow. During the bridge, RankAward still owns writes
+and promotion facts. `RankEntry.status` is mutable trust; `RankEntry.provenance` is immutable/private
+origin. IMPORTED means a member WP self-report, locks nothing, and is never a public display state.
 
 ### Belt Journey
 

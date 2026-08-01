@@ -1,4 +1,9 @@
-import { rankEntryStatusForAward } from "~/server/belt/queries"
+/**
+ * @added   SESSION_0520 (2026-07-09)
+ * @why     Mirror transitional RankAward writes into RankEntry while keeping trust axes distinct
+ * @wired   server/belt/router.ts, server/belt/promoter-proposal-core.ts, server/belt/rank-entry-trust-axes.ts, e2e/helpers/seed-rank-entries.ts
+ */
+import { deriveRankEntryTrustAxesFromAwardStatus } from "~/server/belt/rank-entry-trust-axes"
 import type { db } from "~/services/db"
 
 export type RankEntryCompatibilityDb = Pick<typeof db, "rankAward" | "rankEntry">
@@ -21,7 +26,7 @@ export async function syncRankEntryFromAward(
     select: { passportId: true, rankId: true, verificationStatus: true },
   })
 
-  const status = rankEntryStatusForAward(award.verificationStatus)
+  const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(award.verificationStatus)
   // Immutable origin axis (#375): IMPORTED (one-time WP self-report migration) vs EARNED in-app.
   // Derived on BOTH branches on purpose: `verificationStatus` never crosses the IMPORTED boundary
   // after creation (importers set it at create; `verifyRankEntryInTransaction` skips IMPORTED;
@@ -29,8 +34,6 @@ export async function syncRankEntryFromAward(
   // a correctly-set row and HEALS a row created outside this seam with the column default.
   // "Immutable" = no path may write a non-derived value. Historical metadata only — it locks
   // nothing (SESSION_0730). Kept separate from `status` (mutable; collapses IMPORTED → VERIFIED).
-  const provenance = award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED"
-
   await dbClient.rankEntry.upsert({
     where: { rankAwardId },
     create: { rankAwardId, passportId: award.passportId, rankId: award.rankId, status, provenance },

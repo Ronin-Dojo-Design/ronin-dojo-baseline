@@ -4,8 +4,8 @@ slug: lineage-data-wiring-flow
 type: runbook
 status: active
 created: 2026-06-06
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/runbooks/sops/sop-data-and-wiring-flows.md
   - docs/runbooks/domain-features/lineage-listing-runbook.md
@@ -68,22 +68,31 @@ Passport (identity source of truth)
           +--> LineageRelationship (PROMOTED_BY / INSTRUCTOR_STUDENT mirror)
           +--> LineageTreeAccess (TREE_ADMIN / TREE_EDITOR)
 
-LineageRelationship may reference the RankEntry that explains the relationship,
-but it does not own rank truth.
+The diagram is the #380 destination. Today LineageRelationship and promotion facts remain
+RankAward-anchored while all display reads resolve through RankEntry. The edge does not own rank
+truth in either state.
 ```
 
 ### RankEntry rules
 
 - `RankEntry` is the cross-discipline backend concept. BJJ UI may call it a belt; other disciplines may use rank or
   level terminology.
-- Existing `RankAward` storage is the migration anchor. `RankMilestone` is being absorbed into the same rank-entry
-  aggregate and is not a separate member-facing concept.
+- Existing `RankAward` storage is the temporary write/fact anchor. #397 completed the RankEntry
+  read-collapse; #380 re-anchors facts and satellites, cuts writers over, and drops RankAward
+  before the FI-001 send (blocked on #398; after #377).
+- One row per `(passportId, rankId)` is state, not award history. At #380, RankEntry absorbs
+  promotion facts; `status` remains mutable trust and `provenance` immutable private origin.
+- IMPORTED identifies a one-time member WP self-report. It is member-editable, locks nothing, and
+  is never a public display state; promoter transitions preserve the temporary award status.
+- `RankMilestone` is being absorbed into the same rank-entry aggregate and is not a separate
+  member-facing concept.
 - Members choose an initial rank during onboarding. It is immediately `UNVERIFIED` and editable.
 - Entries at or below the member's current rank are freely addable and editable, even when unverified.
 - A higher entry can be created as `PENDING`, but does not count as current, unlock another rank, or qualify for an
   official certificate until approved.
-- Current rank is the highest non-pending entry in the discipline's ordering. `UNVERIFIED`, `VERIFIED`, and `DISPUTED`
-  count; `PENDING` does not.
+- Current display rank is the highest awarded entry in the discipline's ordering, with
+  `awardedAt DESC NULLS LAST` as the same-rank tiebreak. Mutable trust status does not choose the
+  held rank; trust-specific callers filter explicitly.
 - One standard entry exists per member/rank. Multiple custom entries are allowed and carry a label plus placement
   relative to the default ladder.
 - Promotion date edits are always immediate. Replacing an established promoter creates one immutable pending
@@ -194,7 +203,9 @@ evidence are not public.
   shared RankEntry read model; no rank editor
 ```
 
-There is one write surface and one shared rank-entry read model. `/me` is not a second owner profile implementation.
+There is one shared rank-entry read model. The target has one RankEntry write surface; until #380,
+compatibility writers remain RankAward-anchored and synchronize RankEntry. `/me` is not a second
+owner profile implementation.
 
 ## 5. Directory dispatch
 

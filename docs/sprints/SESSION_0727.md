@@ -4,8 +4,8 @@ slug: session-0727
 type: session--plan
 status: closed
 created: 2026-07-30
-updated: 2026-07-30
-last_agent: claude-session-0727
+updated: 2026-07-31
+last_agent: codex-session-0731
 sprint: S13
 lane: bbl
 recipe: "wayfinder-epic-charting"
@@ -21,6 +21,11 @@ backlinks:
 ---
 
 # SESSION 0727 — Chart the RankEntry-unification Wayfinder + size the roster backfill
+
+> **Historical-plan correction (SESSION_0730):** later operator provenance review supersedes this
+> session's IMPORTED-lock and post-send assumptions. IMPORTED rows are member WP self-reports;
+> provenance locks nothing and belt-gate no longer reads it. #380 is before FI-001 and blocked on
+> #398. Current authority is map #374 + ADR 0058.
 
 > **Staged by SESSION_0723** (the 3-lane claim-loop wave). SESSION_0725's related-profiles rail
 > exposed that the entire BBL public roster has **0 rank rows in either model** (RankEntry or

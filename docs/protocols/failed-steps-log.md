@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-28
-last_agent: claude-session-0711
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -512,6 +512,10 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   - **Companion:** `~/.claude/hooks/dirstarter-readonly-guard.sh` (PreToolUse:Write|Edit|NotebookEdit) blocks any write whose `file_path` is inside the dirstarter_template.
 
 - **Follow-up:** Reinforced in operator memory. ~Consider adding a hook in `~/.claude/settings.json` that gates `git push` to `origin/main` behind a cwd allowlist~ — done (SESSION_0210). See `.claude/hooks/README.md` for the full install + hook map.
+- **Recurrence (SESSION_0731.5, caught before push):** `githooks/doctor.sh` hardcoded the retired
+  `Ronin-Dojo-Design/ronin-dojo-baseline` repository, so its green server-rules result said nothing
+  about `black-belt-legacy`. The doctor now derives and validates the actual `origin` as
+  `Ronin-Dojo-Design/black-belt-legacy` before querying rules; a mismatch is a loud FS-0024 failure.
 
 ### FS-0025 — Two-pass commit on close: graphify stats + commit hash chased with a second "fill close evidence" push
 
@@ -595,7 +599,31 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   ALL gates from scratch (which is exactly what caught it).
 - **Verification:** `bunx oxfmt --check .` → "All matched files use the correct format" (1,784 files) after
   `01bb94a5`.
-- **Status:** mitigated.
+- **Recurrence (SESSION_0730):** two test files changed after the last format claim; CI's Oxc job
+  caught both. The same rule applies: every gate claim is final-SHA evidence, and any later edit
+  invalidates it. SESSION_0731 re-runs lint/format after the batched fix and before the held push.
+- **Recurrence (SESSION_0731):** Cody committed six touched app files after tsc/lint without the
+  quality-suite's mandatory `format:check`. The hostile close caught them before push and Oxfmt
+  repaired them, but the same final-state coverage gap fired again; Giddy therefore applies the
+  systemic 8.9 recurring-FS cap even after the gates return green.
+- **Corrective action (SESSION_0731 keep-improving checkpoint / 0731.5):** a tracked `pre-commit`
+  hook materializes eligible staged workspace blobs **and their staged Oxfmt configs** into two
+  scratch trees, batch-formats one copy, and compares exact paths without touching the real index or
+  worktree. A formatted source or config in the worktree therefore cannot conceal an unformatted
+  partial stage. A staged config change/deletion additionally materializes and checks the entire
+  affected workspace from the index, so a new formatting law cannot strand untouched files. The
+  installer and doctor now install and prove the canonical hook path; the integration harness is
+  wired into `bun run test`.
+- **Verification:** the historical six missed blobs are rejected 6/6 and their repaired versions
+  pass 6/6. The defeat suite also proves both partial-stage directions, per-workspace configs, paths
+  containing spaces, staged deletions, staged-config/worktree-config divergence, docs-only operation
+  without Oxfmt, config-only semantic expansion/config deletion, an actual commit through installed
+  `core.hooksPath`, and no index/worktree mutation. A linked-lane installer fixture plus
+  `bash scripts/githooks/doctor.sh` prove the live canonical path.
+- **Status:** mitigated (SESSION_0731.5; defeat-tested) — the tracked guard is index-authoritative
+  for both staged sources and formatter configuration, checks config-wide semantic expansion, and
+  remains read-only. SESSION_0731's recurrence and systemic 8.9 remain historical; this mitigation
+  does not retroactively rewrite them.
 
 ### FS-0029 — Deferred work escaped the ledger; invisible for ~11 sessions
 
@@ -1029,6 +1057,12 @@ Read this section at bow-in instead of skimming every individual entry.
   tested against the bypass, not the happy path.** `doctor.sh` is that principle made executable — and the
   reason enforcement now lives on a server that cannot be silently uninstalled.
 - **Status:** mitigated (absolute hooksPath + RULE B + doctor.sh + server ruleset; all four verified).
+- **Recurrence (SESSION_0731.5, caught before push):** the absolute-path fix still derived its path
+  from `git rev-parse --show-toplevel`. Running the installer inside a disposable linked lane
+  therefore pinned the shared config to that lane; deleting it silently removed hooks everywhere,
+  while doctor accepted any absolute path. `install.sh` now derives canonical from
+  `--git-common-dir`, doctor requires that exact canonical hook path, and a linked-worktree fixture
+  proves lane-side installation writes the canonical path. Status remains mitigated.
 
 ### FS-0041 — RDD deploy ignore-gate (`git diff HEAD^ HEAD`) silently skipped every build; `/clients` never deployed
 
@@ -1076,6 +1110,12 @@ Read this section at bow-in instead of skimming every individual entry.
   are now written mangled (`FS-` NNNN) unless the row IS the claim; mangling the offending prose
   released the accidentally-claimed number (verified post-fix: minter mints it as next free again). `--prefix=SESSION` unchanged (highest SESSION_0712 / next 0713); `--check` unchanged;
   `tsc -p scripts` green. Archived SESSION_0575 untouched (append-only history).
+- **Recurrence / expanded rule (SESSION_0730 → 0731):** Codex refactored before any Fallow
+  baseline was captured, so the post-edit audit could not prove what the refactor introduced. The
+  failure is the same read-path class: knowing the command is insufficient if the baseline step is
+  not executed before mutation. Before the first refactor edit, record the immutable base SHA, exact
+  `bunx fallow` command, and clone/dead/complexity/CRAP/MI counts. A post-edit audit is final evidence,
+  never a reconstruction of baseline. Petey owns the handoff gate; Cody owns the artifact.
 
 ### FS-0043 — write-lane edited a workspace package.json without lockfile sync; verify suite had no install gate
 
@@ -1239,6 +1279,65 @@ Read this section at bow-in instead of skimming every individual entry.
   **orchestrator** (which holds the operator's real word) owns the push/PR — lanes build + gate + STOP, the
   orchestrator pushes/opens the PR. Don't rely on relaying authorization into a subagent.
 - **Status:** open (operating-pattern change; no code gate).
+
+### FS-0051 — affected E2E selection followed test-file diffs, not the changed reader contract
+
+- **Session:** SESSION_0730 (#397); caught by CI after the operator-authorized push.
+- **What happened:** three lineage seed helpers plus one directory-paywall helper created
+  `RankAward` without the newly required `RankEntry`.
+  The entries-first read seam therefore rendered no belt in authenticated lifecycle and public-rank
+  redaction flows. The same fixture-contract gap hit the unit layer, two browser specs, and the
+  public render, but no E2E file changed, so the diff-only evidence guard selected zero specs.
+- **Root cause:** affected-E2E selection used `e2e/**` file changes as its trigger rather than the
+  changed canonical read model, payload/projection, and fixture prerequisites consumed by E2E.
+- **Codified rule:** any canonical read-model, payload, projection, or fixture-contract change must
+  declare an affected-E2E manifest before push. Select by changed consumer contract, not E2E-file
+  diff. Name the specs, audit their seeds against new prerequisites, then run them or record an
+  explicit environment waiver. Zero selected specs requires file:line proof.
+- **Owners:** Doug is accountable for selection; Petey records the manifest; Cody repairs fixtures.
+- **Wired into:** `verification-and-testing.md`, `quality-suite.md` Step 4, `closing.md` §4c.
+- **Status:** mitigated in #397 by seeding RankEntry; process rule codified SESSION_0731. A future
+  executable dependency selector remains a separate guard improvement, not part of #377.
+
+### FS-0052 — Desi ledger required an allocator prefix the allocator rejected
+
+- **Session:** SESSION_0731; caught while routing the design review before any DES id was minted.
+- **What happened:** `desi-design-ledger.md` mandates
+  `bun scripts/ledger-id-next.ts --prefix=DES`, but the allocator's supported prefix list and
+  ledger map omitted DES. Following the canonical command returned “Unknown prefix”; manual
+  tail-numbering would have violated FS-0030.
+- **Root cause:** the design ledger and generic allocator landed in different sessions without an
+  executable contract check between the documented command and supported prefix registry.
+- **Corrective action:** add DES to the allocator prefix list and map it to
+  `knowledge/wiki/desi-design-ledger.md`; run the allocator before writing SESSION_0731 rows and
+  run duplicate-check after.
+- **Status:** mitigated SESSION_0731; allocator proof recorded in the session close.
+
+### FS-0053 — Bow-out and wiki lint used different calendar clocks
+
+- **Session:** SESSION_0731; caught during the hostile bow-out before commit/push.
+- **What happened:** `wiki:lint` derives its ISO date in UTC while `bow-out-gates.sh` used the
+  workstation local date. Between UTC midnight and Denver midnight, the same touched frontmatter
+  was simultaneously current to one gate and stale to the other.
+- **Corrective action:** make the bow-out frontmatter gate use `date -u`, matching the executable
+  wiki contract; pin the script with `bash -n` and a UTC/local boundary proof.
+- **Status:** mitigated SESSION_0731.
+
+### FS-0054 — Bow-out runner selected the staged next session instead of the active closing session
+
+- **Session:** SESSION_0731; caught by the operator-authorized final bow-out before push.
+- **What happened:** `bow-out-gates.sh` selected the highest numeric session (`SESSION_0732`, already
+  staged under ADR 0049) instead of the active `SESSION_0731`. It therefore reported zero task rows,
+  inspected the wrong ledger IDs, and classified the already-committed branch as a zero-file docs close.
+- **Root cause:** Gate 1 equates “highest session number” with “session being closed,” while the same
+  closing ritual requires N+1 to exist as a staged stub before N closes.
+- **Codified fix:** prefer the highest non-archive session whose frontmatter is `status: in-progress`;
+  retain highest-numeric fallback only when no active session exists, and add an explicit session-path
+  override for recovery closes. Pin both active-N/staged-N+1 and fallback cases in a shell fixture.
+- **Owner / route:** Doug owns the verification-runner correction; `scripts/bow-out-gates.sh` plus its
+  executable fixture. Product push is not blocked because the session-specific gates and `/ggr` were
+  already captured against SESSION_0731.
+- **Status:** open — routed before the SESSION_0731 close push.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

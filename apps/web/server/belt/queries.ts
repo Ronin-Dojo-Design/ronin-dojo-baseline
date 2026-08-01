@@ -1,9 +1,11 @@
-import type {
-  Prisma,
-  RankAwardVerificationStatus,
-  RankEntryStatus,
-} from "~/.generated/prisma/client"
+/**
+ * @added   SESSION_0492 (2026-07-02)
+ * @why     Bridge RankAward write facts into belt cards and canonical RankEntry presentation status
+ * @wired   server/belt/router.ts, server/belt/belt-gate.ts, server/belt/profile-projection.ts, server/belt/rank-entry-trust-axes.ts
+ */
+import type { Prisma, RankEntryStatus } from "~/.generated/prisma/client"
 import { type GateAward, memberFactEditability } from "~/server/belt/belt-gate"
+import { rankEntryStatusForAward } from "~/server/belt/rank-entry-trust-axes"
 import type { BeltCardOutput } from "~/server/belt/schemas"
 import { isRecruitedCoachIdentity } from "~/server/identity/promoter-classification"
 import { db } from "~/services/db"
@@ -75,19 +77,10 @@ export const gateAwardSelect = {
 
 export type MemberAward = Prisma.RankAwardGetPayload<{ select: typeof gateAwardSelect }>
 
+export { rankEntryStatusForAward }
+
 /** Explicit bridge from legacy award provenance to canonical member status. */
-export function rankEntryStatusForAward(
-  verificationStatus: RankAwardVerificationStatus,
-): RankEntryStatus {
-  if (verificationStatus === "VERIFIED") return "VERIFIED"
-  if (verificationStatus === "DISPUTED") return "DISPUTED"
-  // IMPORTED = verified truth for BBL's established lineage (operator decision, SESSION_0522):
-  // imported awards render as VERIFIED entries. Immutable origin remains separate on
-  // RankEntry.provenance, which belt-gate reads for authority-owned / read-only behavior;
-  // this function governs only the mutable member-facing RankEntry status.
-  if (verificationStatus === "IMPORTED") return "VERIFIED"
-  return "UNVERIFIED"
-}
+// IMPORTED renders VERIFIED while immutable origin remains separately on RankEntry.provenance.
 
 /** The gate only needs status + discipline-scoped sortOrder. */
 export function toGateAward(

@@ -201,6 +201,46 @@ describe("buildBeltProgressions", () => {
     assert.equal(progression.earnedCount, 1)
     assert.equal(progression.points, BELT_PROMOTION_POINTS)
   })
+
+  test("keeps the newest ceremony date when duplicate entries reference the same rank", () => {
+    const older = makeAward({
+      id: "a-blue-old",
+      rankId: "rank-blue",
+      rankName: "Blue Belt",
+      rankSortOrder: 2,
+      awardedAt: new Date("2020-01-01"),
+    })
+    const newer = makeAward({
+      id: "a-blue-new",
+      rankId: "rank-blue",
+      rankName: "Blue Belt",
+      rankSortOrder: 2,
+      awardedAt: new Date("2024-01-01"),
+    })
+
+    const [progression] = buildBeltProgressions([older, newer])
+    const blue = progression?.levels.find(level => level.rank.id === "rank-blue")
+    assert.equal(blue?.status, "current")
+    assert.equal(blue?.awardedAt?.toISOString(), "2024-01-01T00:00:00.000Z")
+    assert.equal(progression?.earnedCount, 1)
+  })
+
+  test("adds the awarded rank when a widened system ladder omits it", () => {
+    const purpleAward = makeAward({
+      id: "a-purple-missing",
+      rankId: "rank-purple",
+      rankName: "Purple Belt",
+      rankSortOrder: 3,
+      ranks: BJJ_RANKS.filter(rank => rank.id !== "rank-purple"),
+      awardedAt: new Date("2024-01-01"),
+    })
+
+    const [progression] = buildBeltProgressions([purpleAward])
+    const purple = progression?.levels.find(level => level.rank.id === "rank-purple")
+    assert.equal(purple?.status, "current")
+    assert.equal(progression?.currentLevelIndex, 2)
+    assert.equal(progression?.totalLevels, BJJ_RANKS.length)
+  })
 })
 
 describe("buildAchievementsUnlocked", () => {

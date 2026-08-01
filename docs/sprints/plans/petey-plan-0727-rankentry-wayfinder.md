@@ -4,8 +4,8 @@ slug: petey-plan-0727-rankentry-wayfinder
 type: plan
 status: ratified
 created: 2026-07-30
-updated: 2026-07-30
-last_agent: claude-session-0727
+updated: 2026-07-31
+last_agent: codex-session-0731
 pairs_with:
   - docs/sprints/SESSION_0727.md
   - docs/product/black-belt-legacy/rankentry-unification-epic.md
@@ -46,7 +46,8 @@ Read-only query against **prod** (via `DIRECT_URL`; the pooler `DATABASE_URL` cr
 2. **Backfill = sweep the 7** side-tree stragglers (script + dry-run; `--apply` attended) →
    [#379](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/379). Canonical-tree
    lane closed as done.
-3. **Table-drop = sequenced now** on the map with explicit blockers (still post-FI-001-send) →
+3. **Table-drop = sequenced now** on the map with explicit blockers (**corrected SESSION_0730:
+   before FI-001; blocked on #398**) →
    [#380](https://github.com/Ronin-Dojo-Design/black-belt-legacy/issues/380).
 4. **Map home = GitHub issues now** (skill-canonical); this doc + the SESSION file are the
    in-repo record.

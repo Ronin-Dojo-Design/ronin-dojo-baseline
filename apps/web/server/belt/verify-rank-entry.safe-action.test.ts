@@ -30,6 +30,7 @@ import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
 // IMPORTANT: install safe-action mocks BEFORE any module that touches `~/server`,
 // `~/lib/auth`, `next/headers`, or `next/cache` is imported.
 import { installSafeActionMocks, setTestSession } from "~/lib/test/safe-action-env"
+import { seededBjjRankId } from "~/lib/test/seeded-bjj-rank"
 
 installSafeActionMocks({ brand: "BBL" })
 // The production core is correctly marked `server-only`; Bun's test resolver does not
@@ -44,15 +45,6 @@ const { verifyRankEntry } = await import("~/server/belt/verify-rank-entry")
 const TS = Date.now()
 const PREFIX = `verify-rank-entry-${TS}`
 const tag = (name: string) => `${PREFIX}-${name}`
-
-/** Resolve a seeded BJJ rank id by exact name (the ladder the app rides — never a fork). */
-async function bjjRankId(name: string): Promise<string> {
-  const rank = await db.rank.findFirstOrThrow({
-    where: { name, rankSystem: { discipline: { code: "bjj" } } },
-    select: { id: true },
-  })
-  return rank.id
-}
 
 type Fixture = {
   adminUserId: string
@@ -138,10 +130,10 @@ beforeAll(async () => {
     select: { id: true },
   })
 
-  const whiteRankId = await bjjRankId("White Belt")
-  const blueRankId = await bjjRankId("Blue Belt")
-  const purpleRankId = await bjjRankId("Purple Belt")
-  const brownRankId = await bjjRankId("Brown Belt")
+  const whiteRankId = await seededBjjRankId("White Belt")
+  const blueRankId = await seededBjjRankId("Blue Belt")
+  const purpleRankId = await seededBjjRankId("Purple Belt")
+  const brownRankId = await seededBjjRankId("Brown Belt")
 
   const verify = await makeAwardWithEntry(memberPassport.id, whiteRankId, "UNVERIFIED")
   const reject = await makeAwardWithEntry(memberPassport.id, purpleRankId, "UNVERIFIED")

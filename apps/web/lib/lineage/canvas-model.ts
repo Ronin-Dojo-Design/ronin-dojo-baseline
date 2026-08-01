@@ -253,6 +253,8 @@ export function sortMembers(a: CanvasMember, b: CanvasMember): number {
  *
  * NOTE (rank-brand invariant): ordering scopes by `disciplineId` only — never by
  * `rank.brand` (BBL BJJ ranks carry `brand: null`; a brand filter silently breaks it).
+ *
+ * @why SESSION_0730 — bracket/tree seeding follows highest awarded belt, never most-recent award.
  */
 export function sortMembersByBeltOrder<T extends { node: LineageNodeRow }>(
   members: readonly T[],

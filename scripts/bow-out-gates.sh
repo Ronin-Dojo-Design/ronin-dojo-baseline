@@ -370,7 +370,8 @@ fi
 # ── Gate 13 — Frontmatter staleness (touched docs, detect-only) ──────────────
 # (surfaced in the remainder checklist below; computed here so it's inline)
 STALE_FM=""
-TODAY="$(date +%Y-%m-%d)"
+# Match wiki-lint's ISO/UTC calendar. Local midnight differs for evening closes in western zones.
+TODAY="$(date -u +%Y-%m-%d)"
 while IFS= read -r file; do
   [ -n "$file" ] || continue
   case "$file" in

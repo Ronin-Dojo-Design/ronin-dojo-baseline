@@ -143,4 +143,20 @@ describe("projectDirectoryProfileListItem", () => {
     expect(projected.email).toBeNull()
     expect(projected.organizations).toEqual([])
   })
+
+  it("honors profile-level email, organization, and rank redaction on premium cards", () => {
+    const profile = profileFixture()
+    profile.showEmail = false
+    profile.showOrgs = false
+    profile.showRanks = false
+
+    const projected = projectDirectoryProfileListItem({
+      profile,
+      policy: PREMIUM_LINEAGE_PROFILE_DETAIL_RENDER_POLICY,
+    })
+
+    expect(projected.email).toBeNull()
+    expect(projected.organizations).toEqual([])
+    expect(projected.ranks).toEqual([])
+  })
 })

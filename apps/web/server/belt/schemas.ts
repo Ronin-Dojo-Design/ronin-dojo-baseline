@@ -104,8 +104,8 @@ const beltCardOutput = z.object({
   trustState: z.enum(["verified", "unverified", "pending_review"]).optional(),
   /**
    * B1 (ADR 0035 Amendment 1): may the member edit this award's promotion facts?
-   * True only for self-added STATED backfills; false for promotion-minted /
-   * imported / disputed awards (authority-owned). The card renders read-only when false.
+   * True for member-authored STATED backfills, including their imported WP self-report;
+   * false for instructor-stamped or disputed awards. The card renders read-only when false.
    */
   isFactEditable: z.boolean(),
   /**
