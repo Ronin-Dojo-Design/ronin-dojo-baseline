@@ -313,7 +313,10 @@ none fired (FS-0027/0035/0040/0048/0050 honored).
 
 ## Next session
 
-→ [SESSION_0731](SESSION_0731.md) — **#377 CI read-guard** (operator pick at close): fail any NEW
-`RankAward` READ outside the seam/compat/write-anchor allowlist, locking the #376 repoint in place.
-Quick AFK lane. (FI-001 launch-prep noted as newly unblocked — its correctness gate cleared with
-#397 — but the operator sequenced the guard first.)
+→ [SESSION_0731](SESSION_0731.md) — **all-hands polish pass (pre-#377)**: Petey orchestrates TWO
+improvement passes per roster agent over this session's touched files (#397 + #399 diffs) to lift
+the /ggr composite from **9.2 → 9.8+** before the seam is locked — Cody (code+schema +
+`/fallow-fix-loop`, Apple/Pocock/Jetty bar), Desi (golden-ratio design review of touched surfaces),
+Doug (grade 0730's verification process step-by-step), Petey (grade plans/docs), Giddy (final
+`/ggr` ≥9.8). **#377 CI read-guard moves to SESSION_0732** (correctness gate for FI-001 already
+cleared with #397; operator sequenced the polish floor first).
