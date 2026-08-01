@@ -132,6 +132,8 @@ wiring-ledger WL row via closing.md §6.7, never a section here. -->
 
 - **Goal:** <one sentence>
 - **First task:** <first concrete step; cite inputs to read (3–5 paths max)>
+- **Kickoff prompt:** fill `_template/PROMPT_TEMPLATE.md` and embed the paste-ready body below in a
+  fenced block — this section IS the baton the operator pastes (SESSION_0734 convention)
 
 ## Close evidence
 

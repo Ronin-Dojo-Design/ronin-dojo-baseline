@@ -404,6 +404,26 @@ for f in docs/sprints/SESSION_[0-9][0-9][0-9][0-9].md; do
   if [ "$st" = "in-progress" ]; then INPROGRESS_SESS="${INPROGRESS_SESS}  - $f\n"; fi
 done
 
+# ── Gate 13c — Next-session kickoff baton (PROMPT_TEMPLATE, detect-only) ──────
+# closing.md §2: the closing SESSION's `## Next session` section IS the filled
+# docs/sprints/_template/PROMPT_TEMPLATE.md baton (SESSION_0734 convention) — Goal +
+# First task lines, then the paste-ready kickoff prompt in a fenced block. Detected by
+# the template body's invariant opening (`/bow-in — SESSION_`). A lane that explicitly
+# ends waives it with a `Kickoff prompt: n/a — <why>` line. Detect-only — the LLM fills.
+EV_BATON="(no SESSION file)"
+if [ -n "$SESSION_FILE" ]; then
+  NEXT_SECTION="$(awk '/^## Next session/{f=1;next} /^## /{f=0} f' "$SESSION_FILE")"
+  if [ -z "$NEXT_SECTION" ]; then
+    EV_BATON="REQUIRED — no ## Next session section yet"
+  elif printf '%s' "$NEXT_SECTION" | grep -q '/bow-in — SESSION_'; then
+    EV_BATON="PASS (filled PROMPT_TEMPLATE baton present)"
+  elif printf '%s' "$NEXT_SECTION" | grep -qiE 'Kickoff prompt:.*n/a'; then
+    EV_BATON="waived (lane ends — Kickoff prompt: n/a)"
+  else
+    EV_BATON="REQUIRED — ## Next session lacks the filled PROMPT_TEMPLATE baton"
+  fi
+fi
+
 # ═══ Emit copy-pasteable block 1 — Full close evidence (pre-filled) ══════════
 section "Copy-paste block 1"
 cat <<EVIDENCE
@@ -421,6 +441,7 @@ cat <<EVIDENCE
 | Git state | $EV_GITSTATE |
 | Secret scan | $EV_SECRETS |
 | Evidence-artifact URL | $EV_ARTIFACT_STATE |
+| Next-session baton | $EV_BATON |
 | Touched | $TOUCHED_COUNT files (docs=$DOCS_COUNT · app=$APP_COUNT · other=$OTHER_COUNT) |
 EVIDENCE
 
@@ -455,6 +476,10 @@ if [ -n "$INPROGRESS_SESS" ]; then
 else
   echo "- [ ] Status flip — no SESSION file left \`status: in-progress\` (closing session flipped to \`closed\`, or none open)."
 fi
+case "$EV_BATON" in
+  REQUIRED*) echo "- [ ] **Next-session baton** — $EV_BATON. Fill docs/sprints/_template/PROMPT_TEMPLATE.md into \`## Next session\` (closing.md §2), or waive with \`Kickoff prompt: n/a — <why>\` when the lane explicitly ends." ;;
+  *) echo "- [ ] Next-session baton — $EV_BATON." ;;
+esac
 echo "- [ ] Memory sweep — capture any durable learnings into MEMORY.md."
 echo "- [ ] Finding-router — route findings to their canonical ledger (closing.md §6.7)."
 if [ -n "$FALLOW_REMAINDER" ]; then
