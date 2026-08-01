@@ -512,6 +512,10 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   - **Companion:** `~/.claude/hooks/dirstarter-readonly-guard.sh` (PreToolUse:Write|Edit|NotebookEdit) blocks any write whose `file_path` is inside the dirstarter_template.
 
 - **Follow-up:** Reinforced in operator memory. ~Consider adding a hook in `~/.claude/settings.json` that gates `git push` to `origin/main` behind a cwd allowlist~ — done (SESSION_0210). See `.claude/hooks/README.md` for the full install + hook map.
+- **Recurrence (SESSION_0731.5, caught before push):** `githooks/doctor.sh` hardcoded the retired
+  `Ronin-Dojo-Design/ronin-dojo-baseline` repository, so its green server-rules result said nothing
+  about `black-belt-legacy`. The doctor now derives and validates the actual `origin` as
+  `Ronin-Dojo-Design/black-belt-legacy` before querying rules; a mismatch is a loud FS-0024 failure.
 
 ### FS-0025 — Two-pass commit on close: graphify stats + commit hash chased with a second "fill close evidence" push
 
@@ -595,8 +599,6 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   ALL gates from scratch (which is exactly what caught it).
 - **Verification:** `bunx oxfmt --check .` → "All matched files use the correct format" (1,784 files) after
   `01bb94a5`.
-- **Status:** open — recurring final-state format misses require the builder handoff to include
-  `format:check`, not only lint, before this pattern can be considered mitigated again.
 - **Recurrence (SESSION_0730):** two test files changed after the last format claim; CI's Oxc job
   caught both. The same rule applies: every gate claim is final-SHA evidence, and any later edit
   invalidates it. SESSION_0731 re-runs lint/format after the batched fix and before the held push.
@@ -604,6 +606,24 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   quality-suite's mandatory `format:check`. The hostile close caught them before push and Oxfmt
   repaired them, but the same final-state coverage gap fired again; Giddy therefore applies the
   systemic 8.9 recurring-FS cap even after the gates return green.
+- **Corrective action (SESSION_0731 keep-improving checkpoint / 0731.5):** a tracked `pre-commit`
+  hook materializes eligible staged workspace blobs **and their staged Oxfmt configs** into two
+  scratch trees, batch-formats one copy, and compares exact paths without touching the real index or
+  worktree. A formatted source or config in the worktree therefore cannot conceal an unformatted
+  partial stage. A staged config change/deletion additionally materializes and checks the entire
+  affected workspace from the index, so a new formatting law cannot strand untouched files. The
+  installer and doctor now install and prove the canonical hook path; the integration harness is
+  wired into `bun run test`.
+- **Verification:** the historical six missed blobs are rejected 6/6 and their repaired versions
+  pass 6/6. The defeat suite also proves both partial-stage directions, per-workspace configs, paths
+  containing spaces, staged deletions, staged-config/worktree-config divergence, docs-only operation
+  without Oxfmt, config-only semantic expansion/config deletion, an actual commit through installed
+  `core.hooksPath`, and no index/worktree mutation. A linked-lane installer fixture plus
+  `bash scripts/githooks/doctor.sh` prove the live canonical path.
+- **Status:** mitigated (SESSION_0731.5; defeat-tested) — the tracked guard is index-authoritative
+  for both staged sources and formatter configuration, checks config-wide semantic expansion, and
+  remains read-only. SESSION_0731's recurrence and systemic 8.9 remain historical; this mitigation
+  does not retroactively rewrite them.
 
 ### FS-0029 — Deferred work escaped the ledger; invisible for ~11 sessions
 
@@ -1037,6 +1057,12 @@ Read this section at bow-in instead of skimming every individual entry.
   tested against the bypass, not the happy path.** `doctor.sh` is that principle made executable — and the
   reason enforcement now lives on a server that cannot be silently uninstalled.
 - **Status:** mitigated (absolute hooksPath + RULE B + doctor.sh + server ruleset; all four verified).
+- **Recurrence (SESSION_0731.5, caught before push):** the absolute-path fix still derived its path
+  from `git rev-parse --show-toplevel`. Running the installer inside a disposable linked lane
+  therefore pinned the shared config to that lane; deleting it silently removed hooks everywhere,
+  while doctor accepted any absolute path. `install.sh` now derives canonical from
+  `--git-common-dir`, doctor requires that exact canonical hook path, and a linked-worktree fixture
+  proves lane-side installation writes the canonical path. Status remains mitigated.
 
 ### FS-0041 — RDD deploy ignore-gate (`git diff HEAD^ HEAD`) silently skipped every build; `/clients` never deployed
 

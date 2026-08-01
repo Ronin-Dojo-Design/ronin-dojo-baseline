@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+#
+# pre-commit — reject staged workspace code that is not Oxfmt-clean (FS-0028).
+#
+# This hook reads each blob from Git's INDEX, not from the worktree. That distinction is the guard:
+# a partially staged file can have a formatted worktree while its would-be commit is still stale.
+# It is read-only; the failure message names the files the author must format and explicitly restage.
+
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+formatter="$repo_root/node_modules/.bin/oxfmt"
+staged_code=()
+changed_config_workspaces=()
+cd "$repo_root"
+
+while IFS= read -r -d '' file; do
+  case "$file" in
+    apps/web/*|packages/api-client/*|packages/ui-kit/*) ;;
+    *) continue ;;
+  esac
+  case "$file" in
+    *.js|*.jsx|*.mjs|*.cjs|*.ts|*.tsx|*.mts|*.cts|*.json|*.jsonc|*.css|*.scss|*.md|*.mdx|*.html|*.yaml|*.yml)
+      staged_code+=("$file")
+      ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z --)
+
+while IFS= read -r -d '' config; do
+  case "$config" in
+    apps/web/.oxfmtrc.json) changed_config_workspaces+=("apps/web") ;;
+    packages/api-client/.oxfmtrc.json) changed_config_workspaces+=("packages/api-client") ;;
+    packages/ui-kit/.oxfmtrc.json) changed_config_workspaces+=("packages/ui-kit") ;;
+  esac
+done < <(
+  git diff --cached --name-only --diff-filter=ACMRD -z -- \
+    apps/web/.oxfmtrc.json \
+    packages/api-client/.oxfmtrc.json \
+    packages/ui-kit/.oxfmtrc.json
+)
+
+[ "${#staged_code[@]}" -eq 0 ] && [ "${#changed_config_workspaces[@]}" -eq 0 ] && exit 0
+
+if [ ! -x "$formatter" ]; then
+  echo "" >&2
+  echo "  ⛔ pre-commit BLOCKED — staged workspace code cannot be format-checked." >&2
+  echo "     Missing formatter: $formatter" >&2
+  echo "     Run 'bun install', then commit again." >&2
+  echo "" >&2
+  exit 1
+fi
+
+temp_base="${TMPDIR:-/tmp}"
+scratch="$(mktemp -d "$temp_base/ronin-pre-commit.XXXXXX")"
+original_root="$scratch/original"
+formatted_root="$scratch/formatted"
+mkdir -p "$original_root" "$formatted_root"
+cleanup() {
+  case "$scratch" in
+    "$temp_base"/ronin-pre-commit.*) rm -rf "$scratch" ;;
+    *) echo "pre-commit: refusing to clean unexpected scratch path: $scratch" >&2 ;;
+  esac
+}
+trap cleanup EXIT
+
+unformatted=()
+if [ "${#staged_code[@]}" -gt 0 ]; then
+  format_targets=()
+  for file in "${staged_code[@]}"; do
+    case "$file" in
+      apps/web/*) config_path="apps/web/.oxfmtrc.json" ;;
+      packages/api-client/*) config_path="packages/api-client/.oxfmtrc.json" ;;
+      packages/ui-kit/*) config_path="packages/ui-kit/.oxfmtrc.json" ;;
+    esac
+
+    staged_config="$original_root/$config_path"
+    formatted_config="$formatted_root/$config_path"
+    if [ ! -f "$staged_config" ]; then
+      mkdir -p "$(dirname "$staged_config")" "$(dirname "$formatted_config")"
+      if ! git show ":$config_path" > "$staged_config" 2>/dev/null; then
+        echo "" >&2
+        echo "  ⛔ pre-commit BLOCKED — staged workspace config is unavailable." >&2
+        echo "     Expected '$config_path' in the would-be commit." >&2
+        echo "" >&2
+        exit 1
+      fi
+      cp "$staged_config" "$formatted_config"
+    fi
+
+    staged_blob="$original_root/$file"
+    formatted_blob="$formatted_root/$file"
+    mkdir -p "$(dirname "$staged_blob")" "$(dirname "$formatted_blob")"
+    git show ":$file" > "$staged_blob"
+    cp "$staged_blob" "$formatted_blob"
+    format_targets+=("$formatted_blob")
+  done
+
+  # Format one materialized INDEX tree in a single process. The copied staged configs—not dirty
+  # worktree configs—govern the copied staged sources, and only scratch files are ever written.
+  if ! "$formatter" "${format_targets[@]}" >/dev/null; then
+    echo "" >&2
+    echo "  ⛔ pre-commit BLOCKED — Oxfmt could not parse one or more staged files." >&2
+    echo "     Fix the staged sources, restage those explicit paths, then commit again." >&2
+    echo "" >&2
+    exit 1
+  fi
+
+  for file in "${staged_code[@]}"; do
+    staged_blob="$original_root/$file"
+    formatted_blob="$formatted_root/$file"
+    if ! cmp -s "$staged_blob" "$formatted_blob"; then
+      unformatted+=("$file")
+    fi
+  done
+fi
+
+if [ "${#unformatted[@]}" -eq 0 ]; then
+  # A config-only commit can change the expected formatting of untouched files. Materialize each
+  # affected workspace from the INDEX and run its full check; CI would do the same after checkout.
+  if [ "${#changed_config_workspaces[@]}" -gt 0 ]; then
+    for workspace in "${changed_config_workspaces[@]}"; do
+      case "$workspace" in
+        apps/web) workspace_key="web" ;;
+        packages/api-client) workspace_key="api-client" ;;
+        packages/ui-kit) workspace_key="ui-kit" ;;
+      esac
+      index_root="$scratch/index-$workspace_key"
+      mkdir -p "$index_root"
+      if ! git ls-files -z --cached -- "$workspace" \
+        | git checkout-index --stdin -z --prefix="$index_root/"; then
+        echo "" >&2
+        echo "  ⛔ pre-commit BLOCKED — could not materialize staged '$workspace'." >&2
+        echo "" >&2
+        exit 1
+      fi
+      if ! "$formatter" --check "$index_root/$workspace" >/dev/null; then
+        echo "" >&2
+        echo "  ⛔ pre-commit BLOCKED — staged Oxfmt config changes '$workspace' formatting." >&2
+        echo "     The would-be commit leaves at least one workspace file inconsistent." >&2
+        echo "     Review 'git diff --cached -- $workspace/.oxfmtrc.json', make the worktree" >&2
+        echo "     config match that intent, then run '(cd $workspace && bun run format:check)'." >&2
+        echo "" >&2
+        exit 1
+      fi
+    done
+  fi
+  exit 0
+fi
+
+echo "" >&2
+echo "  ⛔ pre-commit BLOCKED — staged code is not Oxfmt-clean (FS-0028)." >&2
+echo "     The commit would contain these unformatted blobs:" >&2
+for file in "${unformatted[@]}"; do
+  printf '       - %s\n' "$file" >&2
+done
+echo "" >&2
+echo "     Format only those explicit paths, then restage them:" >&2
+printf '       bunx oxfmt' >&2
+for file in "${unformatted[@]}"; do
+  printf ' %q' "$file" >&2
+done
+echo "" >&2
+echo "     If a path has intentional unstaged hunks, use 'git add -p -- <path>' instead of" >&2
+echo "     whole-file 'git add' so the formatter fix does not widen the commit." >&2
+printf '       git add --' >&2
+for file in "${unformatted[@]}"; do
+  printf ' %q' "$file" >&2
+done
+echo "" >&2
+echo "" >&2
+exit 1

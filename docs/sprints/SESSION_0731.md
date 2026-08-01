@@ -131,6 +131,9 @@ Codex also hostile-reviews this plan and the implementation; inherited scores ca
 - `SESSION_0731_TASK_06` — Giddy final `/ggr`, delta verification, findings routing,
   bow-out, and hold at the single explicit push gate. **DONE LOCALLY — three-pass; weighted code
   9.8, systemic composite 8.9 (FS-0028 cap); operator decision pending**
+- `SESSION_0731_TASK_07` — Operator-elected keep-improving loop: turn FS-0028's repeated prose gate
+  into an index-accurate tracked pre-commit guard, prove defeat cases, and serialize the generic
+  hook infrastructure ahead of #377. **DONE LOCALLY — 0731.5 remediation; historical 8.9 retained**
 
 ### Codex hostile plan review — three-pass loop
 
@@ -342,9 +345,10 @@ required at final Giddy close. Zero selected specs is rejected with the importer
 ## Goal verdict
 
 **EXTENDED — weighted code quality reached 9.8 and the production build is green, but systemic 9.8
-was not earned: recurring FS-0028 caps `/ggr` at 8.9.** The session remains in-progress at the
-operator accept/try-again gate; no push or Graphify refresh has occurred, CI has no URL, and live
-DOM/AA proof remains manual.
+was not earned: recurring FS-0028 caps the historical `/ggr` at 8.9.** The elected keep-improving
+loop has since mitigated FS-0028 mechanically; it does not rewrite the occurrence or score. The
+session remains in-progress at the operator gate; no push or Graphify refresh has occurred, CI has
+no URL, and live DOM/AA proof remains manual.
 
 ## Delivered
 
@@ -356,6 +360,7 @@ DOM/AA proof remains manual.
 | SESSION_0731_TASK_04 | DONE | Desi three-pass static sweep over all eight named surfaces; inherited deviations routed DES-009..012; operator live DOM/AA checklist prepared. |
 | SESSION_0731_TASK_05 | DONE | Doug three-pass verification audit; affected-E2E, pre-refactor Fallow, final-SHA, allocator, and clock rules routed with owners and executable wiring. |
 | SESSION_0731_TASK_06 | OPERATOR GATE | Giddy three-pass close; weighted code 9.8, systemic 8.9 FS-0028 cap; every local gate/build green; push/CI authorization held. |
+| SESSION_0731_TASK_07 | DONE LOCALLY | 0731.5 FS-0028 remediation: staged-source/config Oxfmt pre-commit guard, live canonical installer/doctor proof, defeat harness wired into the full unit suite; Cody 9.9 / Giddy 9.8. |
 
 ### Decisions resolved
 
@@ -366,6 +371,8 @@ DOM/AA proof remains manual.
   schema-level immutability remains #380-owned.
 - #397 changed no render markup/classes. Inherited visual debt is routed, not mixed into a
   behavior-parity data-seam refactor.
+- FS-0028 is mechanically mitigated after the historical score: the tracked hook judges the index,
+  remains read-only, and is kept semantically separate from #377's forthcoming RankAward scanner.
 
 ### Key files
 
@@ -377,6 +384,8 @@ DOM/AA proof remains manual.
 - ADR 0058, BBL SOT docs, map/spec issues — one current two-table bridge story and four #380 forks.
 - `quality-suite.md`, verification runbook, closing ritual, failed-steps/drift/design ledgers —
   executable verification/routing corrections.
+- `scripts/githooks/pre-commit` + its shell/Bun defeat harness — staged-format prevention that
+  covers partial staging and is mechanically exercised by `bun run test`.
 
 ## Artifacts
 
@@ -385,8 +394,9 @@ merge. Graphify refresh is intentionally post-merge only.
 
 ## Findings routed / proposed ledger edits
 
-**14/14 routed:** FS-0051 (contract-driven affected E2E), FS-0042 recurrence (pre-edit Fallow
-baseline), FS-0028 recurrence (final-SHA gates), D-058 + RISK-16/#398 (preview migration/runtime
+**16/16 routed:** FS-0051 (contract-driven affected E2E), FS-0042 recurrence (pre-edit Fallow
+baseline), FS-0028 recurrence (now mitigated by the staged-source/config hook), FS-0024 (doctor
+queried the retired repo), FS-0040 (installer pinned a disposable lane), D-058 + RISK-16/#398 (preview migration/runtime
 credential split), FS-0052 (DES allocator), DES-009/010/011/012 (contrast, semantics, hierarchy,
 spacing), D-059 (two stale out-of-scope IMPORTED-lock comments), and FS-0053 (UTC/local close-clock
 split), D-060 (Turbopack/NFT root trace), and D-061 (pg query-overlap deprecation). No finding lives
@@ -439,6 +449,7 @@ For `RankEntry` immediately above the model/fields:
 | Doug verification process | 8.6 | 9.7 | 9.8 | PASS; historical process score stays 8.6. |
 | Codex hostile plan/implementation | 8.8 | 9.7 | 9.8 | PASS; duplicate Jetty/date-clock/next-ticket drift caught. |
 | Giddy `/ggr` | 8.9 | 9.7 | weighted 9.8 / systemic 8.9 | CODE PASS; systemic cap = reopened FS-0028. Operator Phase-3 gate. |
+| 0731.5 FS-0028 remediation | 8.2 | 9.8 | Cody 9.9 / Giddy 9.8 | PASS; staged source/config and config-wide defeat paths green; historical 8.9 unchanged. |
 
 ### Full close evidence
 
@@ -451,6 +462,7 @@ For `RankEntry` immediately above the model/fields:
 | Hostile close review | Giddy 8-question + Kaizen triage complete; three-pass result = weighted code 9.8, systemic 8.9 FS-0028 cap. |
 | Code-quality gate (Class-A) | Weighted code-quality 9.8; Fallow new-only 0 introduced findings across 114 changed files. Systemic FS-0028 cap recorded separately. |
 | Runtime verification (Doug) | Tsc clean; 1962/0 tests, 5366 assertions, 245 files; lint/button guard/format green; production build generated 305/305 pages. Live DOM/Playwright remains MANUAL STEP REQUIRED. |
+| 0731.5 remediation gates | Final-SHA tsc clean; 1963/0 tests, 5367 assertions, 246 files; lint/button guard green; production app build not repeated because remediation changes only hooks, docs, and their test. |
 | Evidence-artifact URL | n/a pre-push — no live UAT artifact exists; live checklist is recorded above. |
 | Review & Recommend | SESSION_0732 staged for #377 with corrected live issue body. |
 | Memory sweep | Durable rules routed into FS/protocol/ADR/SOT docs; no separate memory dump needed. |
@@ -479,15 +491,40 @@ The code-quality residual 0.2 is solely #380-owned: RankAward remains the transi
 and the compact member-rank seam remains contract-only until #377. Separately, the session-wide
 composite is capped at **8.9** because six committed Cody-touched files missed mandatory
 `format:check`, firing the recurring FS-0028 pattern. Oxfmt and all reruns are green, but remediation
-cannot erase a process occurrence; FS-0028 is reopened.
+cannot erase a process occurrence. FS-0028 was reopened at this historical close; SESSION_0731.5
+later mitigated it without changing that score.
 
-**Systemic health:** CI = PENDING (no run URL; operator-held push) · findings routed 14/14
-(FS-0028, FS-0042, FS-0051/52/53, D-058/59/60/61, RISK-16/#398,
-DES-009/010/011/012) · FS patterns: FS-0028 OPEN recurrence
+**Systemic health (historical 0731 close):** CI = PENDING (no run URL; operator-held push) ·
+findings routed 14/14 (FS-0028/0042/0051/0052/0053, D-058/59/60/61, RISK-16/#398,
+DES-009/010/011/012) · FS patterns: FS-0028 OPEN at this score
 
 **Verdict:** code is ready for the push gate; systemic 9.8 was not earned. `/ggr` Phase 3 offers the
 operator: accept the transparent 8.9 cap and authorize push, try again, or keep improving. Another
 loop cannot erase this session's FS-0028 occurrence.
+
+### Keep-improving checkpoint — SESSION_0731.5
+
+The operator elected keep-improving. Cody's first hostile implementation pass scored **8.2** and
+caught three real guard-framework defects: worktree-owned formatter config, a disposable-lane
+installer path, and doctor querying the retired repository. The corrected guard materializes staged
+sources and staged configs into scratch, batch-formats only the copy, compares exact paths, and runs
+a full index-workspace check when formatter config changes or is deleted. Installer derives canonical
+from `--git-common-dir`; doctor validates the BBL origin and exact canonical hook path.
+
+A final Cody pass scored **9.9 GO**; Giddy scored the bounded remediation **9.8 CLEARS LOCALLY**.
+Defeat coverage includes both source partial-stage directions, staged/worktree config divergence,
+config-only semantic expansion, config deletion/default behavior, spaces, ordinary deletions,
+missing Oxfmt, no index/worktree mutation, actual Git hook invocation, linked-lane installation, and
+the historical pre-fix/repaired **6/6 reject / 6/6 pass** proof. The harness is exercised by
+`bun run test`; final full-suite proof is **1963 pass / 0 fail, 5367 assertions, 246 files**. CI
+remains behind the explicit push wall.
+
+**Systemic health:** CI = PENDING (operator-held push; no run URL) · findings routed 1/1 (FS-0028) ·
+FS patterns: FS-0028 mitigated (SESSION_0731.5 defeat-test)
+
+The bounded line counts FS-0028; the wider session router additionally fixed/routed the hostile
+FS-0024 and FS-0040 recurrences and therefore remains 16/16. SESSION_0731's historical systemic
+8.9 is unchanged.
 
 ## Reflections
 
@@ -512,9 +549,19 @@ loop cannot erase this session's FS-0028 occurrence.
 - **Dirstarter docs check:** live docs checked
 - **Sources:** `https://dirstarter.com/docs/theming`, `https://dirstarter.com/docs/deployment`,
   `https://dirstarter.com/docs/environment-setup`, local component inventory, ADR 0040, ADR 0058
-- **Verdict:** Weighted code quality is 9.8 and every local gate/build is green; systemic `/ggr` is
-  capped at 8.9 by reopened FS-0028. Merge remains forbidden until the operator accepts that cap,
+- **Verdict:** Weighted code quality was 9.8 and every local gate/build was green; systemic `/ggr`
+  was capped at 8.9 while FS-0028 was open. SESSION_0731.5 later mitigated the pattern without
+  rewriting that score. Merge remains forbidden until the operator accepts the historical cap,
   authorizes the push, and own-lane CI returns green.
+
+**SESSION_0731_REVIEW_02 — Keep-improving FS-0028 defeat loop**
+
+- **Reviewed task:** SESSION_0731_TASK_07
+- **Dirstarter docs check:** not applicable; this is the repo's tracked custom hook framework.
+- **Sources:** staged-index Git behavior, local Oxfmt configs, FS-0024/0028/0040, installer/doctor,
+  and executable shell/Bun fixtures.
+- **Verdict:** Cody 9.9 GO; Giddy 9.8 CLEARS LOCALLY. FS-0028 is defeat-tested and mitigated;
+  historical SESSION_0731 remains 8.9, and push/CI remains operator-held.
 
 ## Hostile close review
 

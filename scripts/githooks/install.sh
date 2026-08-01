@@ -7,14 +7,19 @@
 #
 #   bash scripts/githooks/install.sh
 #
-# Installs: pre-push (FS-0039 — blocks the worktree cross-lane push accident).
+# Installs: pre-commit (FS-0028 staged-format guard), pre-push (FS-0039 cross-lane push guard),
+# and post-checkout (WL-P3-65 linked-worktree detection backstop).
 
 set -euo pipefail
 
-repo_root="$(git rev-parse --show-toplevel)"
-hooks_dir="$repo_root/scripts/githooks"
+common_dir="$(git rev-parse --git-common-dir)"
+common_abs="$(cd "$common_dir" && pwd)"
+# The canonical checkout owns the shared .git directory. Deriving from --show-toplevel here would
+# pin core.hooksPath to a disposable linked worktree when installation runs from a lane (FS-0040).
+canonical="$(cd "$(dirname "$common_abs")" && pwd)"
+hooks_dir="$canonical/scripts/githooks"
 
-chmod +x "$hooks_dir"/pre-push
+chmod +x "$hooks_dir"/pre-commit "$hooks_dir"/pre-push "$hooks_dir"/post-checkout
 
 # ABSOLUTE, not "scripts/githooks" (FS-0040). git resolves a RELATIVE core.hooksPath against the
 # directory git runs in, so a relative value silently means "this worktree's own copy". A lane

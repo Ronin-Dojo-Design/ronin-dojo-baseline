@@ -33,8 +33,10 @@ classify the contract-only `member-ranks.ts` seam; keep the ADR 0035/0058 displa
    githook framework, and current CI jobs.
 2. Inventory every existing `RankAward` reference and classify allowed write/bridge/fact-anchor
    uses versus forbidden member-rank display reads.
-3. Build the tracked hook + CI guard with a negative fixture that proves a new forbidden read fails;
-   run hook doctor, unit/type/lint/build gates, then hold the push for operator authorization.
+3. Reuse the SESSION_0731.5 pre-commit guard/test harness, but keep its generic staged-format
+   policy separate from #377's RankAward scanner. Build the tracked hook + CI guard with a negative
+   fixture that proves a new forbidden read fails; run hook doctor, unit/type/lint/build gates, then
+   hold the push for operator authorization.
 
 ## Next session
 

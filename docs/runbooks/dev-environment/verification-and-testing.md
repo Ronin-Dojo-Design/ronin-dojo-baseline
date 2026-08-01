@@ -42,7 +42,7 @@ surface here is narrower than it looks.
 | Layer | Command (from `apps/web`) | Proves | Runs automatically in… |
 | --- | --- | --- | --- |
 | Typecheck | `bun run typecheck` (`next typegen && tsc --noEmit`) | Types compile | **GitHub Actions** (`ci.yml` → `typecheck`) + Vercel build |
-| Lint/format | `bun run lint:check` + `bun run format:check` (drop `:check` to fix locally) | oxlint correctness/best-practice + oxfmt formatting | **GitHub Actions** (`ci.yml` → `oxc`) |
+| Lint/format | `bun run lint:check` + `bun run format:check` (drop `:check` to fix locally) | oxlint correctness/best-practice + oxfmt formatting | Installed tracked **pre-commit** Oxfmt guard (staged workspace files) + **GitHub Actions** (`ci.yml` → `oxc`) |
 | Unit tests | `bun run test` (package script ignores `e2e/**`) | Pure logic + the guards below | **GitHub Actions** (`ci.yml` → `unit`, Postgres 16 service) |
 | E2E | Local: `bun run dev:e2e`, then `bun run test:e2e:local -- …`; CI: workflow-pinned `bunx playwright test` | Real browser flows against a real DB | **GitHub Actions** (`playwright.yml`): chromium full + firefox/webkit lineage subset, 3 parallel jobs, Postgres 16 service |
 | Wiki lint | `bun run wiki:lint` (repo root) | Doc links/backlinks/frontmatter (see [wiki-lint](../../protocols/wiki-lint.md)) | Local only (close gate) |
@@ -63,8 +63,12 @@ surface here is narrower than it looks.
   A new client product is picked up automatically — **no workflow edit** (mirrors the per-product deploy
   model, ADR 0034). Matrix details: [new-client-runbook §10](../onboarding/new-client-runbook.md).
 - **Vercel** runs `bun run --filter @ronin-dojo/web build` on deploy — a second `next build` typecheck.
-- **No git hooks.** There is no husky/lefthook/pre-commit; the gates run in CI, not at commit time. Run
-  `bun test` + `bun run lint:check` + `bun run format:check` locally before a close so you don't discover a red gate after pushing.
+- **Tracked git hooks.** Run `bash scripts/githooks/install.sh` once per clone, then
+  `bash scripts/githooks/doctor.sh` to prove the absolute shared-worktree hook path is live. The
+  pre-commit hook compares Oxfmt output with each eligible **staged index blob** (not the worktree),
+  so partial staging cannot conceal an unformatted commit; pre-push enforces the local PR-only and
+  own-branch guards. Hooks are the fast local failure, while CI/server rules remain authoritative.
+  Still run `bun test` + `bun run lint:check` + `bun run format:check` from `apps/web` before close.
 
 > **Resolved (SESSION_0335):** `bun test` (incl. the guards below) and `biome` previously ran on no
 > automated gate — only e2e + Vercel's build typecheck existed, so SESSION_0334's "the guard is
