@@ -11,8 +11,9 @@ Use:
    worse than no heading.
 2. Placeholders are {CURLY_CAPS}. Multi-line placeholders say so. Nothing outside braces should need
    editing — if it does, the template drifted: fix it HERE, not in the filled copy.
-3. The filled copy is disposable (the SESSION file is the state — single-state-file doctrine). Do not
-   commit filled copies as standalone files; embed in the staging SESSION's record if a trace is wanted.
+3. The filled copy is never a standalone file (single-state-file doctrine): it IS the closing
+   SESSION record's `## Next session` section — Goal + First task lines, then the filled prompt in
+   a fenced block (SESSION_0734 convention, operator-directed).
 
 House-style anchors (extend, never fork): petey-plan.md (tasks carry done-means), review-wave.md
 (per-lens graders; reviewers verify, builders fix), quality-suite.md (diff-bounded scope; behavior-
@@ -113,8 +114,9 @@ anything unreached routes to a ledger row, never silently dropped.
 
 BOW-OUT (closing.md, full close): findings routed N/N with ids (§6.7 router) · Graphify refresh
 POST-MERGE ONLY · re-run `bun run wiki:lint` after writing close content · stage
-SESSION_{SESSION_N+1} stub + its kickoff prompt from this template · HOLD the one close push for
-Brian's explicit word — /bow-out is NOT push authorization.
+SESSION_{SESSION_N+1} stub + fill this template for it — the filled prompt IS the closing record's
+`## Next session` section · HOLD the one close push for Brian's explicit word — /bow-out is NOT
+push authorization.
 
 STANDING RULES: you NEVER merge (no active merge owner, 0641 closed) · `main` is PR-only,
 server-enforced — never push to main from a worktree · hand-authored migrations only · SotD kernel +

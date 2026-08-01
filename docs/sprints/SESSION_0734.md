@@ -109,10 +109,14 @@ laws. Template + record only.
 
 n/a — no code written (docs/governance session).
 
-## Dogfood — SESSION_0733 kickoff prompt (filled from PROMPT_TEMPLATE v1)
+## Next session
 
-Precondition before pasting: **merge PR #401 first** (it carries the staged SESSION_0733.md stub
-and the #377 guard; the prompt below assumes both are on `main`).
+- **Goal:** Run SESSION_0733 (#398 preview-DB isolation proof) via the kickoff prompt below.
+- **First task:** Paste the fenced prompt below into a fresh desktop session. PR #401 is merged —
+  its precondition is satisfied. Inputs: issue #398, #380, D-058, RISK-16,
+  `apps/web/scripts/prebuild-migrate.ts`.
+- **Kickoff prompt** (dogfood-filled from PROMPT_TEMPLATE v1 — this section IS the baton,
+  operator-directed convention):
 
 ```text
 /bow-in — SESSION_0733 = #398 Preview DB isolation proof (unblock #380) (ops/proof lane). Act as
@@ -205,7 +209,7 @@ the #398 current-state map + fork list.
 | ID | Status | What landed |
 | --- | --- | --- |
 | SESSION_0734_TASK_01 | landed | `docs/sprints/_template/PROMPT_TEMPLATE.md` v1 — placeholder legend + scissors-delimited paste body; house location = sibling of SESSION_TEMPLATE.md (record-template + kickoff-template pair). |
-| SESSION_0734_TASK_02 | landed | Filled SESSION_0733 (#398) kickoff prompt embedded in `## Dogfood` above; paste-ready for the desktop session, precondition = PR #401 merged. |
+| SESSION_0734_TASK_02 | landed | Filled SESSION_0733 (#398) kickoff prompt embedded as this record's `## Next session` section (the section IS the baton — operator-directed convention, encoded in both templates); paste-ready for the desktop session. |
 | SESSION_0734_TASK_03 | landed | wiki:lint 0 errors / 115 warnings (all inherited, 0 in new files); pushed on operator word as PR #402; operator-authorized squash-merge of PR #401 executed (issue #377 auto-closed); `origin/main` merged back into the branch pre-Graphify (post-merge refresh law). |
 
 **Decisions resolved:** Template home = `docs/sprints/_template/` (no `_templates`/`90_TEMPLATES`
@@ -231,16 +235,9 @@ PR #401 squash-merged on the operator's explicit word (issue #377 closed — the
 ## Open decisions / blockers
 
 - #398 run = desktop session (operator-manual Vercel/Neon dashboard steps) — BLOCKED ON USER by
-  design; the paste-ready kickoff prompt is in `## Dogfood` above.
+  design; the paste-ready kickoff prompt is the `## Next session` section above.
 - PR #402 (this session) merges on CI green — reds fixed in-lane per the operator's standing word
   this session.
-
-## Next session
-
-- **Goal:** Run SESSION_0733 (#398 preview-DB isolation proof) via the dogfooded kickoff prompt.
-- **First task:** Paste the `## Dogfood` prompt above into a fresh desktop session (PR #401 is
-  merged — its precondition is satisfied). Inputs: issue #398, #380, D-058, RISK-16,
-  `apps/web/scripts/prebuild-migrate.ts`.
 
 ## Close evidence
 
