@@ -47,7 +47,7 @@ Everything below the scissors line is the template. Placeholder legend:
 | --- | --- |
 | `{SESSION_N}` / `{SESSION_N+1}` | 4-digit session number (verify with `bun scripts/ledger-id-next.ts --prefix=SESSION`) |
 | `{LANE_TITLE}` | one-line lane name, e.g. `#377 CI rank-read guard (build lane)` |
-| `{MODEL}` | orchestrator model, e.g. `Fable 5` |
+| `{MODEL}` | orchestrator model. Routing rec (TRIAL, SESSION_0734 — strip this row if not proving helpful): docs/governance/template lanes → `Sonnet 5` or `Opus 5 (fast mode)` (baton + Gate 13c make them near-mechanical) · ops/prod-adjacent lanes (env scoping, creds, deploys) → `Opus 5` · judgment-dense lanes (schema grills, hostile reviews, irreversible-adjacent forks) → `Fable 5` · heavy refactor/review → Codex handoff per CODEX ENV |
 | `{RECIPE}` | the named protocol card/skill this session hydrates from (`seq-lane-build`, `seq-review-wave`, `quality-suite`, `pp`, …) |
 | `{WHY_THIS_SESSION}` | 2–4 lines: map node (`#NNN`), what the last session left, what this one must prove, "done" in one sentence |
 | `{BRANCH_NAME}` | `session-{SESSION_N}-<lane-slug>` |
