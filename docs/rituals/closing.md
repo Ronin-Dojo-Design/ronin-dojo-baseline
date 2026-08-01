@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-25
 updated: 2026-08-01
-last_agent: codex-session-0731
+last_agent: claude-session-0734
 pairs_with:
   - docs/rituals/opening.md
   - docs/protocols/code-guardrails.md
@@ -88,6 +88,11 @@ Open the current `docs/sprints/SESSION_NNNN.md`. Fill in:
 - **ADR 0049 pre-stage:** mint N+1 (`bun scripts/ledger-id-next.ts --prefix=SESSION`), create the real
   `SESSION_NNNN+1.md` stub with `status: staged` + Goal/First-task copied from your `Next session` block,
   and set `next_session:` in this session's frontmatter. Skip only when the lane explicitly ends.
+- **Next-session baton (SESSION_0734, operator-directed):** the `## Next session` section IS the filled
+  [`PROMPT_TEMPLATE.md`](../sprints/_template/PROMPT_TEMPLATE.md) — the Goal + First-task lines, then the
+  paste-ready kickoff prompt in a fenced block. Enforced by `bow-out-gates.sh` **Gate 13c**, which detects
+  the template's invariant `/bow-in — SESSION_` opening inside that section; a lane that explicitly ends
+  waives it with a `Kickoff prompt: n/a — <why>` line.
 - `Close evidence` — the `/ggr` composite + Systemic-health line + reviewer verdicts + evidence table
   (template v2 merges the old `Review log` / `Hostile close review` / `Full close evidence`), plus the
   ADR / ubiquitous-language line

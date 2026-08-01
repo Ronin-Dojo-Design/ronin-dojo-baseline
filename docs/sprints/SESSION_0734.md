@@ -211,6 +211,7 @@ the #398 current-state map + fork list.
 | SESSION_0734_TASK_01 | landed | `docs/sprints/_template/PROMPT_TEMPLATE.md` v1 — placeholder legend + scissors-delimited paste body; house location = sibling of SESSION_TEMPLATE.md (record-template + kickoff-template pair). |
 | SESSION_0734_TASK_02 | landed | Filled SESSION_0733 (#398) kickoff prompt embedded as this record's `## Next session` section (the section IS the baton — operator-directed convention, encoded in both templates); paste-ready for the desktop session. |
 | SESSION_0734_TASK_03 | landed | wiki:lint 0 errors / 115 warnings (all inherited, 0 in new files); pushed on operator word as PR #402; operator-authorized squash-merge of PR #401 executed (issue #377 auto-closed); `origin/main` merged back into the branch pre-Graphify (post-merge refresh law). |
+| SESSION_0734_TASK_04 | landed | Operator-directed post-close addendum: baton convention enforced — closing.md §2 "Next-session baton" step + `bow-out-gates.sh` Gate 13c (detects `/bow-in — SESSION_` in `## Next session`; `Kickoff prompt: n/a — <why>` waiver); map #374 audited current, #377 row moved to Landed. |
 
 **Decisions resolved:** Template home = `docs/sprints/_template/` (no `_templates`/`90_TEMPLATES`
 dir exists; the kickoff prompt is the SESSION record's natural twin). Filled prompts are embedded
