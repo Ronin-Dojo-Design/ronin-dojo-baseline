@@ -4,8 +4,8 @@ slug: verification-and-testing
 type: runbook
 status: active
 created: 2026-06-03
-updated: 2026-07-20
-last_agent: claude-session-0587
+updated: 2026-08-01
+last_agent: codex-session-0731
 domain: docs-system
 pairs_with:
   - docs/protocols/wiki-lint.md
@@ -135,6 +135,16 @@ bun run e2e:db:setup
 The practical rule when your worktree can't run affected e2e: don't fake a green. Record the local blocker and,
 after the operator separately authorizes the push, watch CI as the authoritative e2e verifier (see
 [[e2e-db-hermetic-not-prodsnap]]).
+
+### Affected-E2E manifest (FS-0051)
+
+Selection follows changed consumer contracts, not only changed test files. Any canonical read-model,
+payload, projection, or fixture-contract change must name its affected Playwright specs before push,
+audit those specs' seeds against the new prerequisites, and record local run evidence or an explicit
+environment waiver. A zero-spec decision requires file:line proof. Doug owns selection accountability,
+Petey records the manifest, and Cody repairs fixture drift. SESSION_0730 is the reference failure: four
+lineage seeds minted RankAward without RankEntry, so the entries-first seam rendered no belt across a
+unit fixture, authenticated lifecycle, public redaction, and the final browser surface.
 
 ## Guard registry (executable invariants)
 

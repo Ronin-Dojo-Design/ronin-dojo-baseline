@@ -4,8 +4,8 @@ slug: goals-ledger
 type: reference
 status: active
 created: 2026-06-27
-updated: 2026-07-30
-last_agent: claude-session-0635
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
   - docs/rituals/opening.md
@@ -213,7 +213,7 @@ aggregator reads it with no new parser logic.
   `RankEntryProvenance` + the IMPORTED-lock lift are **MERGED + LIVE on prod** (#397 / #376 closed;
   111/111 entries, 0 orphans verified). Sequence: SESSION_0731 all-hands polish pass (9.2→9.8+ over
   the touched files) → SESSION_0732 #377 CI read-guard → #380 drop-sequencing grill
-  (**blocked on #398** — preview env-scoping — after D-055's preview-builds-migrate-prod discovery).
+  (**blocked on #398** — preview env-scoping — after D-058's preview-builds-migrate-prod discovery).
 - **Objective:** collapse `RankAward` + `RankEntry` into ONE rank model — delete the compatibility Seam,
   the dual-write call sites, and every `RankAward`-direct reader. The result is a single `RankEntry` Module
   that hides rank fact, provenance, trust, and proposal-preservation rules.

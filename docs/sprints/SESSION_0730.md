@@ -5,7 +5,7 @@ type: session--implement
 status: closed
 created: 2026-07-31
 updated: 2026-07-31
-last_agent: claude-fable-session-0730
+last_agent: codex-session-0731
 next_session: docs/sprints/SESSION_0731.md
 sprint: S13
 lane: bbl
@@ -106,10 +106,10 @@ P1), 1953 tests green, unmerged/unpushed by design; reviews + merge gate deferre
 
 **FS-0048 read-before-build sweep (read, not name-matched):** map #374 incl. Decisions-so-far ·
 tickets #376 / #380 · SESSION_0729 close (Doug verdict, MERGE GATE, P2 orphan invariant) · ADR 0058
-+ legacy ADR 0035/0036 truths (ratified — grill grades the model shape, never re-opens them) ·
+and legacy ADR 0035/0036 truths (ratified — grill grades the model shape, never re-opens them) ·
 `server/belt/member-ranks.ts` (the seam) · `rank-entry-compatibility.ts` (`syncRankEntryFromAward`)
 · `belt-gate.ts` (provenance wiring, fact-editability) · `prisma/schema.prisma` RankEntry/RankAward
-+ the 4 rank enums.
+and the 4 rank enums.
 
 **Parallel-lane assessment (G-023):** single continuation lane by design. Live sibling lanes noted
 (wayfinder RankEntry planner = map #374, already consumed as input; 0728 closed; North Star + 0720
@@ -220,11 +220,15 @@ class that bit the unit-test layer this session — one lesson, three surfaces.
 
 Operator rotated the BBL `.env.prod` Neon credential; the read-only live-prod check (DIRECT_URL)
 ran clean: **111 RankAward / 111 RankEntry / 0 orphans** · 72 IMPORTED awards · entries 99 VERIFIED
-+ 12 UNVERIFIED — identical to map #374's 2026-07-30 verification. No award vanishes under the
+and 12 UNVERIFIED — identical to map #374's 2026-07-30 verification. No award vanishes under the
 entries-first reads. **PR #397 is merge-ready; the merge itself is the operator's action** (never
 this session's). #381's remaining scope (prodsnap refresh cadence) stays open.
 
 ## Post-merge lane — preview-migration guard (D-055 / RISK-16 / #398)
+
+> **ID correction (SESSION_0731):** this section's migration drift was accidentally assigned the
+> already-owned D-055. Its canonical ID is **D-058**; D-055 remains the State-of-Dojo renderer drift.
+> Historical references below are retained as written and corrected by this note (FS-0030).
 
 Post-merge verification exposed that the provenance migration hit prod at FIRST PREVIEW BUILD
 (PR-open, ~2h pre-merge): `prebuild` ran `migrate deploy` on every Vercel build and preview env
@@ -264,6 +268,7 @@ merge, the D-055 preview-migration hole discovered + gated, and 4 model forks re
 ## Review log — /ggr close composite
 
 **Session composite: 9.2 — CLEARS (≥9.0).** Two units:
+
 - **Merged lane #397** (seam + IMPORTED-lock lift): Doug 9.2 LAUNCH-SAFE (0729) · Giddy delta
   adjudication **9.2 CLEARS** · foreground full gates (1954/0) · CI matrix green ·
   merged `1c13dac9` · prod-verified (migration applied, 72/39 provenance, 0 orphans).

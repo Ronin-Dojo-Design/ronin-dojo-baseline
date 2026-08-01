@@ -4,8 +4,8 @@ slug: bbl-rank-entry-unified-data-flow
 type: architecture-spec
 status: proposed
 created: 2026-07-09
-updated: 2026-07-16
-last_agent: codex-session-0542
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/product/black-belt-legacy/lineage-data-wiring-flow.md
   - docs/product/black-belt-legacy/rankentry-unification-epic.md
@@ -55,6 +55,18 @@ The migration anchor is the existing `RankAward` row. The member-owned fields fr
 the same rank-entry aggregate, and `RankMilestone` is retired as a separate member-facing concept. Existing certificate
 template/issuance records remain related artifacts, not competing rank records.
 
+### Current expand/contract state (SESSION_0730)
+
+- #397 completed the read-collapse: display readers use the shared RankEntry seam and ordering law.
+- Writes and promotion-fact reads remain RankAward-anchored until #380. This is transitional, not
+  a second canonical read model.
+- #380's ratified end-state is one RankEntry table: promotion facts and the four satellite FK
+  families move entry-side; one row per `(passportId, rankId)` remains state, not award history.
+- `status` is mutable presentation trust. `provenance` is immutable origin; IMPORTED means the
+  member's one-time WP self-report, is private, and never locks member edits. The compatibility
+  award's IMPORTED status is preserved during promoter transitions until the fold.
+- #380 is schema/migration work, blocked on #398 and sequenced after #377 but before the FI-001 send.
+
 ## Status and review
 
 `RankEntryStatus` is the only member-facing rank status:
@@ -98,9 +110,11 @@ explicit override atomically denies it, applies the override under admin authori
 Legacy `PENDING/PROMOTER_CHANGED` rows remain visible for operator inventory but fail closed because they have no
 captured proposal; the preceding release's PENDING-only reviewer cannot action a new `PROPOSAL_PENDING` row.
 
-The current rank is the highest non-pending entry in the discipline's ordering. `UNVERIFIED`, `VERIFIED`, and
-`DISPUTED` count; `PENDING` does not. One standard entry exists per member/rank. Multiple custom entries are allowed,
-with a label and placement relative to the default IBJJF ladder.
+The current display rank is the highest awarded entry in the discipline's ordering, with
+`awardedAt DESC NULLS LAST` as the same-rank tiebreak. Mutable trust status does not choose the
+held rank; callers that require a particular trust state filter it explicitly. One standard entry
+exists per member/rank. Multiple custom entries are allowed, with a label and placement relative
+to the default IBJJF ladder.
 
 ## Surfaces
 
@@ -115,7 +129,8 @@ with a label and placement relative to the default IBJJF ladder.
   public read-only profile using the shared RankEntry projection
 ```
 
-There is one rank-entry write surface and one shared read model. Member/reviewer views may show an established-coach
+The target has one rank-entry write surface; during the #380 bridge, writers mint/update RankAward
+and synchronize RankEntry. There is already one shared RankEntry read model. Member/reviewer views may show an established-coach
 proposal as **Pending review**. Public views continue to show the accepted promoter and may show only the permitted
 trust label; they never expose the proposed promoter, reviewer identity, reporter identity, or private evidence.
 
@@ -134,13 +149,13 @@ Member-uploaded certificates are evidence on the RankEntry. Official generated c
 
 ## Migration order
 
-1. Add target fields/relations and a compatibility read model.
-2. Backfill `RankAward` + `RankMilestone` data into the unified projection; preserve IDs and media.
-3. Switch `/app/profile` reads and writes to RankEntry behavior.
+1. Add target fields/relations and a compatibility read model. **Landed.**
+2. Backfill `RankAward` + `RankMilestone` data into the unified projection; preserve IDs and media. **RankEntry coverage landed; #380 owns the final fact/media fold.**
+3. Switch `/app/profile` reads to RankEntry behavior; keep compatibility writes until #380. **Read side landed.**
 4. Move reviews, media/evidence, and certificate creation/download into the rank-entry workspace.
 5. Retire `/me` via redirect and migrate links/tests.
-6. Switch public profile reads to the shared RankEntry projection.
-7. Remove legacy milestone and split-path code only after data and browser proofs.
+6. Switch public profile and all rank-adjacent reads to the shared RankEntry projection. **Landed in #397.**
+7. After #377, use #380 to repoint writers and satellites, prove data/rollback, then remove RankAward.
 
 No destructive deletion belongs in the first read/write cutover.
 

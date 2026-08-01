@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-30
-last_agent: claude-session-0720
+updated: 2026-08-01
+last_agent: codex-session-0731
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -862,7 +862,7 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   with the C5 touch pass. A focused refactor lane, NOT a quality-suite inline fix.
 - **Status: OPEN.**
 
-### D-055 — "Prod applies on merge" was never true: prebuild migrated on EVERY Vercel build (previews included)
+### D-058 — "Prod applies on merge" was never true: prebuild migrated on EVERY Vercel build (previews included)
 
 - **Discovered:** SESSION_0730 (post-merge verification of PR #397). The provenance migration's
   `_prisma_migrations.finished_at` (13:29Z) predated the merge (15:16Z) by ~2h — the FIRST PREVIEW
@@ -876,5 +876,48 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix:** SESSION_0730 — `apps/web/scripts/prebuild-migrate.ts` gates on `VERCEL_ENV`
   (production/local apply; preview/development SKIP loudly); docs + hook corrected; RISK row 16;
   #380 carries an explicit blocker until the operator scopes preview env creds to a Neon branch.
-- **Status: MITIGATED (gate live)** — residual (prod creds in preview scope at runtime) tracked as
-  risk-register row 16; CLOSES when the operator lands the Vercel env-scoping + Neon preview branch.
+- **Status: MITIGATED (migration gate live); runtime risk OPEN** — residual prod creds in preview
+  scope are risk-register row 16 / #398. `prebuild-migrate.ts` deliberately skips previews, so a
+  preview Neon branch also needs an explicit, reviewed migration mechanism. Close only after a
+  throwaway additive PR proves DB identity, branch migration, successful render, and the recorded
+  Deployment Protection decision.
+
+### D-059 — Two out-of-scope belt comments still assert the superseded IMPORTED authority lock
+
+- **Source A:** `apps/web/server/belt/router.ts:371` describes IMPORTED as authority-owned and
+  fill-blanks-only.
+- **Source B:** `apps/web/server/belt/verify-rank-entry.ts:28` describes IMPORTED as
+  authority-owned/read-only.
+- **Current law/code:** SESSION_0730 operator ratification + #397: imported WP facts are member
+  self-reports, member-editable after claim; provenance locks nothing. Runtime policy/tests are
+  correct; these comments are stale.
+- **Decision:** do not expand SESSION_0731 beyond the operator-defined #397/#399 touched set. Carry
+  the two comment-only corrections as a proposed rider for SESSION_0732/#377 or the next belt-doc
+  sweep; no behavior change.
+- **Status:** open. **Found in:** SESSION_0731 hostile implementation close.
+
+### D-060 — Storage monitoring still makes Turbopack trace the project root during production build
+
+- **Source:** `apps/web/server/admin/storage/monitoring/queries.ts:124-151` resolves public assets
+  from `process.cwd()` via dynamic filesystem paths. Both root joins carry `turbopackIgnore`, but
+  Next 16.2.9 still reports an unexpected NFT file and says the whole project may be traced through
+  `next.config.ts → storage/monitoring/queries.ts → /app/storage/monitoring`.
+- **Impact:** the production build passes, but its server trace may be larger or less deterministic
+  than intended; the warning can hide a later trace regression.
+- **Required follow-up:** capture the emitted NFT list, replace cwd-shape probing with a statically
+  scoped asset-root contract (or a proven supported ignore), and pin a warning-free production build.
+- **Status:** open; inherited warning observed and routed by SESSION_0731 Giddy close.
+
+### D-061 — Production build emits pg client.query overlap deprecation during static generation
+
+- **Source:** `bun run build` under Next 16.2.9/PrismaPg completes, but page-data collection emits
+  the pg warning that `client.query()` was called while that client was already executing a query;
+  pg 9 will remove this deprecated overlap behavior. Existing comments in
+  `server/belt/promoter-proposal-core.ts` acknowledge the same adapter limitation for locked writes,
+  but the static-generation caller has no captured trace.
+- **Impact:** no current failure, but a future pg/adapter upgrade can turn a warning into a build or
+  prerender failure, and the missing stack leaves the owning query unknown.
+- **Required follow-up:** reproduce the production build with deprecation tracing, identify the
+  overlapping page-data query, serialize it or upgrade/fix the adapter contract, and pin a
+  warning-free build before pg 9 adoption.
+- **Status:** open; inherited warning observed and routed by SESSION_0731 Giddy close.

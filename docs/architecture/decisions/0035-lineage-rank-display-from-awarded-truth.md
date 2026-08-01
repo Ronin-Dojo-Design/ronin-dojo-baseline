@@ -4,8 +4,8 @@ slug: adr-0035-lineage-rank-display-from-awarded-truth
 type: adr
 status: accepted
 created: 2026-06-22
-updated: 2026-07-05
-last_agent: claude-session-0501
+updated: 2026-07-31
+last_agent: codex-session-0731
 pairs_with:
   - docs/architecture/decisions/0025-passport-identity-source-of-truth.md
   - docs/architecture/decisions/0036-unified-passport-claim.md
@@ -21,7 +21,11 @@ backlinks:
   - docs/sprints/SESSION_0479.md
 ---
 
-> **TOMBSTONE (SESSION_0711):** the law now lives at [`docs/adr/0058-rankentry-is-rank-truth.md`](../../adr/0058-rankentry-is-rank-truth.md) — this file is historical record only. Written once, never maintained.
+> **TOMBSTONE (SESSION_0711; policy correction SESSION_0730):** the law now lives at
+> [`docs/adr/0058-rankentry-is-rank-truth.md`](../../adr/0058-rankentry-is-rank-truth.md) — this file
+> is historical record only. Its later IMPORTED/authority prose is superseded: imported WP facts
+> are member self-reports, member-editable after claim; provenance is private origin and locks
+> nothing. Read current policy in ADR 0058 and map #374, not the historical amendments below.
 
 # ADR 0035 — Lineage rank display from awarded truth; `selectedRankAward` → pending claim
 

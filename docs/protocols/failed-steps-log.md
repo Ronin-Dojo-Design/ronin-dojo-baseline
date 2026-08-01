@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-07-28
-last_agent: claude-session-0711
+updated: 2026-08-01
+last_agent: codex-session-0731
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -595,7 +595,15 @@ This log is **read during bow-in** (Tier 1 loading). If an agent has a prior fai
   ALL gates from scratch (which is exactly what caught it).
 - **Verification:** `bunx oxfmt --check .` → "All matched files use the correct format" (1,784 files) after
   `01bb94a5`.
-- **Status:** mitigated.
+- **Status:** open — recurring final-state format misses require the builder handoff to include
+  `format:check`, not only lint, before this pattern can be considered mitigated again.
+- **Recurrence (SESSION_0730):** two test files changed after the last format claim; CI's Oxc job
+  caught both. The same rule applies: every gate claim is final-SHA evidence, and any later edit
+  invalidates it. SESSION_0731 re-runs lint/format after the batched fix and before the held push.
+- **Recurrence (SESSION_0731):** Cody committed six touched app files after tsc/lint without the
+  quality-suite's mandatory `format:check`. The hostile close caught them before push and Oxfmt
+  repaired them, but the same final-state coverage gap fired again; Giddy therefore applies the
+  systemic 8.9 recurring-FS cap even after the gates return green.
 
 ### FS-0029 — Deferred work escaped the ledger; invisible for ~11 sessions
 
@@ -1076,6 +1084,12 @@ Read this section at bow-in instead of skimming every individual entry.
   are now written mangled (`FS-` NNNN) unless the row IS the claim; mangling the offending prose
   released the accidentally-claimed number (verified post-fix: minter mints it as next free again). `--prefix=SESSION` unchanged (highest SESSION_0712 / next 0713); `--check` unchanged;
   `tsc -p scripts` green. Archived SESSION_0575 untouched (append-only history).
+- **Recurrence / expanded rule (SESSION_0730 → 0731):** Codex refactored before any Fallow
+  baseline was captured, so the post-edit audit could not prove what the refactor introduced. The
+  failure is the same read-path class: knowing the command is insufficient if the baseline step is
+  not executed before mutation. Before the first refactor edit, record the immutable base SHA, exact
+  `bunx fallow` command, and clone/dead/complexity/CRAP/MI counts. A post-edit audit is final evidence,
+  never a reconstruction of baseline. Petey owns the handoff gate; Cody owns the artifact.
 
 ### FS-0043 — write-lane edited a workspace package.json without lockfile sync; verify suite had no install gate
 
@@ -1239,6 +1253,49 @@ Read this section at bow-in instead of skimming every individual entry.
   **orchestrator** (which holds the operator's real word) owns the push/PR — lanes build + gate + STOP, the
   orchestrator pushes/opens the PR. Don't rely on relaying authorization into a subagent.
 - **Status:** open (operating-pattern change; no code gate).
+
+### FS-0051 — affected E2E selection followed test-file diffs, not the changed reader contract
+
+- **Session:** SESSION_0730 (#397); caught by CI after the operator-authorized push.
+- **What happened:** three lineage seed helpers plus one directory-paywall helper created
+  `RankAward` without the newly required `RankEntry`.
+  The entries-first read seam therefore rendered no belt in authenticated lifecycle and public-rank
+  redaction flows. The same fixture-contract gap hit the unit layer, two browser specs, and the
+  public render, but no E2E file changed, so the diff-only evidence guard selected zero specs.
+- **Root cause:** affected-E2E selection used `e2e/**` file changes as its trigger rather than the
+  changed canonical read model, payload/projection, and fixture prerequisites consumed by E2E.
+- **Codified rule:** any canonical read-model, payload, projection, or fixture-contract change must
+  declare an affected-E2E manifest before push. Select by changed consumer contract, not E2E-file
+  diff. Name the specs, audit their seeds against new prerequisites, then run them or record an
+  explicit environment waiver. Zero selected specs requires file:line proof.
+- **Owners:** Doug is accountable for selection; Petey records the manifest; Cody repairs fixtures.
+- **Wired into:** `verification-and-testing.md`, `quality-suite.md` Step 4, `closing.md` §4c.
+- **Status:** mitigated in #397 by seeding RankEntry; process rule codified SESSION_0731. A future
+  executable dependency selector remains a separate guard improvement, not part of #377.
+
+### FS-0052 — Desi ledger required an allocator prefix the allocator rejected
+
+- **Session:** SESSION_0731; caught while routing the design review before any DES id was minted.
+- **What happened:** `desi-design-ledger.md` mandates
+  `bun scripts/ledger-id-next.ts --prefix=DES`, but the allocator's supported prefix list and
+  ledger map omitted DES. Following the canonical command returned “Unknown prefix”; manual
+  tail-numbering would have violated FS-0030.
+- **Root cause:** the design ledger and generic allocator landed in different sessions without an
+  executable contract check between the documented command and supported prefix registry.
+- **Corrective action:** add DES to the allocator prefix list and map it to
+  `knowledge/wiki/desi-design-ledger.md`; run the allocator before writing SESSION_0731 rows and
+  run duplicate-check after.
+- **Status:** mitigated SESSION_0731; allocator proof recorded in the session close.
+
+### FS-0053 — Bow-out and wiki lint used different calendar clocks
+
+- **Session:** SESSION_0731; caught during the hostile bow-out before commit/push.
+- **What happened:** `wiki:lint` derives its ISO date in UTC while `bow-out-gates.sh` used the
+  workstation local date. Between UTC midnight and Denver midnight, the same touched frontmatter
+  was simultaneously current to one gate and stale to the other.
+- **Corrective action:** make the bow-out frontmatter gate use `date -u`, matching the executable
+  wiki contract; pin the script with `bash -n` and a UTC/local boundary proof.
+- **Status:** mitigated SESSION_0731.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

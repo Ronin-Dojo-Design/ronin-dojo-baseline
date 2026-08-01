@@ -4,8 +4,8 @@ slug: sot-adr
 type: decision
 status: active
 created: 2026-06-10
-updated: 2026-06-29
-last_agent: claude-session-0472
+updated: 2026-07-31
+last_agent: codex-session-0731
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/BBL-SOT-Spec.md
@@ -357,7 +357,8 @@ refreshed into `dirstarter_template` at SESSION_0359.
 - **The registration→verify claim loop** (the growth engine; ~70% modeled in `PassportClaimRequest`): register
   → declare rank (`claimedRank`) + instructor (`trainedUnderNode`) + evidence → node placed under the
   instructor on submit (pending/unverified badge) → **instructor-delegated** review (branch-head
-  `LineageTreeAccess`, admin fallback) → approve mints the `VERIFIED` `RankAward`. Off-platform instructor →
+  `LineageTreeAccess`, admin fallback) → approve currently mints the `VERIFIED` `RankAward` anchor
+  and synchronized RankEntry; #380 moves the writer to RankEntry. Off-platform instructor →
   placeholder + invite (viral); dedup → route to claim, reviewer confirms.
 - **Instructor Hub = one graduated `/app` dashboard + an `InstructorRail`** (not a separate app); ~all 7 tabs
   reuse existing `/app` routes (lineage editor already instructor-scoped via `LineageTreeAccess`). **Seminar =
@@ -367,13 +368,26 @@ refreshed into `dirstarter_template` at SESSION_0359.
 - **Carries forward unchanged:** D1 (Passport person-rooted), D3 (oRPC), **D4** (resource-scoped RBAC = the
   Hub scope seam), D6 (RBAC-reviewed verification). No Dirstarter baseline layer changed.
 
+### D13 amendment — RankEntry read truth and one-table end state *(SESSION_0730)*
+
+- #397 completed the canonical RankEntry read seam; RankAward remains only the temporary
+  write/promotion-fact anchor. #377 guards against new award reads.
+- #380 preserves state cardinality (one row per passport/rank), absorbs promotion facts and the
+  four satellite FK families, repoints writers, then drops RankAward. It is blocked on #398 and
+  runs before the FI-001 send.
+- `RankEntry.status` is mutable trust; `RankEntry.provenance` is immutable private origin.
+  IMPORTED is a one-time member WP self-report, not archive authority: it locks nothing and remains
+  member-editable. Promoter transitions preserve the compatibility award's IMPORTED status until
+  #380 folds the axes.
+
 ---
 
 ## Superseded / historical ADRs
 
 Read only for backstory — **not** current law:
 
-- ADR 0016 (lineage promotion SoT) — RankAward canonical still holds; folded into D1.
+- ADR 0016 (lineage promotion SoT) — superseded by ADR 0058: RankEntry owns reads now and becomes
+  the sole table at #380; RankAward is the temporary write/fact anchor only.
 - ADR 0019 (membership lifecycle) — Membership = community/account state; consistent with D1 (Membership stays account-side).
 - ADR 0020 (registration recipient nullable/guest) — pattern generalized by D1.
 - ADR 0022 (brand-neutral primitives) — retained, see D7.

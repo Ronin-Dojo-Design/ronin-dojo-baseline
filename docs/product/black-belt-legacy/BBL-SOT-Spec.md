@@ -4,8 +4,8 @@ slug: bbl-sot-spec
 type: spec
 status: active
 created: 2026-06-10
-updated: 2026-06-15
-last_agent: codex-session-0391
+updated: 2026-08-01
+last_agent: codex-session-0731
 author: Brian + Petey
 pairs_with:
   - docs/product/black-belt-legacy/PRD.md
@@ -83,6 +83,15 @@ CLAIM (BBL core loop, ALWAYS RBAC-reviewed):
      → APPROVE → attach account: set Passport.userId = claimant + scoped edit rights + Membership
        → propagates across EVERY surface automatically (all satellites point at the Passport)
 ```
+
+**Rank-model transition (ADR 0058; SESSION_0730 ratification):** RankEntry is the canonical read
+model; RankAward remains the temporary write/promotion-fact anchor until #380. #397 completed the
+read-collapse, and #377 mechanically guards it. #380, blocked on #398 and sequenced before the
+FI-001 send, preserves one row per `(passportId, rankId)`, folds promotion facts and satellite FKs
+onto RankEntry, cuts writers over, then drops RankAward. `RankEntry.status` is mutable trust;
+`RankEntry.provenance` is immutable/private origin. IMPORTED is a one-time member WP self-report,
+locks nothing, and stays member-editable; the temporary award status is preserved during promoter
+transitions. Schema enforcement and the one-table end state belong to #380, not this polish pass.
 
 - **Name fields:** `Passport.legalFirstName`/`legalLastName` = legal SoT (columns already exist, schema.prisma:959–961). `Passport.displayName` = user-pickable label (default `First Last`). `User.name` = **derived** mirror `displayName ?? "${first} ${last}"` (Better-Auth needs non-null; not unique), written only via the identity service. Uniqueness/@handle = the **existing** unique `DirectoryProfile.slug` / `LineageNode.slug` (`brian-scott`, `brian-scott-2`); no new column; `User.id` (cuid2) is the PK.
 - **One identity service** (`server/identity/`): `createPassport(identity)` (admin/import, no account) + `attachAccount(passportId, userId)` (sign-up / claim-approve). Collapses the **4** hand-rolled minters → one door: `lib/auth.ts:49–55`, `server/admin/users/actions.ts:88`, `server/web/lead/actions.ts:375–391`, `server/web/lineage/node-profile-actions.ts:90`.
@@ -275,7 +284,11 @@ Where a file list is upstream-derived and not yet captured, it says **[pin in ca
 
 ### Phase 6 — WP-parity owner writes + drawer
 
-- **Goal:** The original WP-parity arc on the correct base: **Promote Rank** (promotion workflow → RankAward + PROMOTED_BY) and **Move Node** (structured re-parent), plus profile-drawer parity (Belt Story; Tournaments/Achievements live on the profile page, not the drawer — operator decision). Students-by-belt roster.
+- **Goal:** The original WP-parity arc on the correct base: **Promote Rank** (current bridge:
+  promotion workflow → RankAward + synchronized RankEntry + PROMOTED_BY; #380 destination:
+  RankEntry-native) and **Move Node** (structured re-parent), plus profile-drawer parity (Belt
+  Story; Tournaments/Achievements live on the profile page, not the drawer — operator decision).
+  Students-by-belt roster.
 - **Done means:** owner can run their tree (promote/move) on `bbl.local`, browser-proven; drawer matches WP function (not pixels).
 - **Depends on:** Phases 3–4.
 
