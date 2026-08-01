@@ -1,15 +1,10 @@
 /**
  * @added   SESSION_0542 (2026-07-16)
- * @why     Enforce immutable promoter proposals and steward decisions under one transaction lock law
- * @wired   server/belt/router.ts, server/admin/rank-reviews/actions.ts
+ * @why     Serialize immutable promoter proposals and steward decisions while preserving award trust/provenance
+ * @wired   server/belt/router.ts, server/belt/verify-rank-entry.ts, server/admin/rank-reviews/actions.ts
  */
 import "server-only"
 
-/**
- * @added   SESSION_0542 (2026-07-16)
- * @why     Serialize promoter proposal transitions and preserve accepted award trust/provenance
- * @wired   server/belt/router.ts, server/belt/verify-rank-entry.ts, server/belt/rank-entry-compatibility.ts
- */
 import { ORPCError } from "@orpc/server"
 import {
   Brand,

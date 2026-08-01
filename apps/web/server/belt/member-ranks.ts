@@ -1,7 +1,7 @@
 /**
  * @added   SESSION_0729 (2026-07-30)
  * @why     Provide the compact RankEntry-first member-rank read contract for the additive cutover
- * @wired   server/belt/member-ranks.test.ts, SESSION_0732 #377 read guard
+ * @wired   server/belt/member-ranks.test.ts; first runtime adoption is SESSION_0732 #377 read guard
  */
 import type { Prisma } from "~/.generated/prisma/client"
 import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"

@@ -6,7 +6,10 @@
 // @ts-expect-error - bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
 import { describe, expect, it } from "bun:test"
 import type { RankAwardVerificationStatus } from "~/.generated/prisma/client"
-import { deriveRankEntryTrustAxesFromAwardStatus } from "~/server/belt/rank-entry-trust-axes"
+import {
+  deriveRankEntryTrustAxesFromAwardStatus,
+  type RankEntryTrustAxes,
+} from "~/server/belt/rank-entry-trust-axes"
 
 describe("deriveRankEntryTrustAxesFromAwardStatus", () => {
   const cases: Array<
@@ -26,4 +29,12 @@ describe("deriveRankEntryTrustAxesFromAwardStatus", () => {
       expect(deriveRankEntryTrustAxesFromAwardStatus(awardStatus)).toEqual(axes)
     })
   }
+
+  it("keeps status writable on a trust-axis snapshot", () => {
+    const axes: RankEntryTrustAxes = deriveRankEntryTrustAxesFromAwardStatus("UNVERIFIED")
+
+    axes.status = "DISPUTED"
+
+    expect(axes).toEqual({ status: "DISPUTED", provenance: "EARNED" })
+  })
 })

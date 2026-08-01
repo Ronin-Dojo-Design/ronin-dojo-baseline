@@ -14,11 +14,11 @@ export type ImmutableRankEntryProvenance = RankEntryProvenance
 
 export type RankEntryTrustAxes = {
   status: MutableRankEntryStatus
-  provenance: ImmutableRankEntryProvenance
+  readonly provenance: ImmutableRankEntryProvenance
 }
 
 export type TransitionalRankAwardAnchor = {
-  rankAwardId: string
+  readonly rankAwardId: string
 }
 
 export function deriveRankEntryTrustAxesFromAwardStatus(
