@@ -1323,6 +1323,22 @@ Read this section at bow-in instead of skimming every individual entry.
   wiki contract; pin the script with `bash -n` and a UTC/local boundary proof.
 - **Status:** mitigated SESSION_0731.
 
+### FS-0054 — Bow-out runner selected the staged next session instead of the active closing session
+
+- **Session:** SESSION_0731; caught by the operator-authorized final bow-out before push.
+- **What happened:** `bow-out-gates.sh` selected the highest numeric session (`SESSION_0732`, already
+  staged under ADR 0049) instead of the active `SESSION_0731`. It therefore reported zero task rows,
+  inspected the wrong ledger IDs, and classified the already-committed branch as a zero-file docs close.
+- **Root cause:** Gate 1 equates “highest session number” with “session being closed,” while the same
+  closing ritual requires N+1 to exist as a staged stub before N closes.
+- **Codified fix:** prefer the highest non-archive session whose frontmatter is `status: in-progress`;
+  retain highest-numeric fallback only when no active session exists, and add an explicit session-path
+  override for recovery closes. Pin both active-N/staged-N+1 and fallback cases in a shell fixture.
+- **Owner / route:** Doug owns the verification-runner correction; `scripts/bow-out-gates.sh` plus its
+  executable fixture. Product push is not blocked because the session-specific gates and `/ggr` were
+  already captured against SESSION_0731.
+- **Status:** open — routed before the SESSION_0731 close push.
+
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.

@@ -1,8 +1,8 @@
 ---
 title: "SESSION 0731 — All-hands polish pass on the 0730 diff (pre-#377): 9.2 → 9.8"
 slug: session-0731
-type: session--open
-status: in-progress
+type: session--review
+status: closed
 created: 2026-07-31
 updated: 2026-08-01
 last_agent: codex-session-0731
@@ -344,11 +344,8 @@ required at final Giddy close. Zero selected specs is rejected with the importer
 
 ## Goal verdict
 
-**EXTENDED — weighted code quality reached 9.8 and the production build is green, but systemic 9.8
-was not earned: recurring FS-0028 caps the historical `/ggr` at 8.9.** The elected keep-improving
-loop has since mitigated FS-0028 mechanically; it does not rewrite the occurrence or score. The
-session remains in-progress at the operator gate; no push or Graphify refresh has occurred, CI has
-no URL, and live DOM/AA proof remains manual.
+**YES — weighted code quality reached 9.8, FS-0028 is mechanically mitigated, Giddy cleared the final
+delta at 9.8, and the operator authorized the single close push; historical systemic 8.9 remains.**
 
 ## Delivered
 
@@ -359,8 +356,8 @@ no URL, and live DOM/AA proof remains manual.
 | SESSION_0731_TASK_03 | DONE | Petey three-pass doc-truth review; rank seam, four #380 forks, IMPORTED ratification, pre-send sequencing, and #398 preview mechanism corrected locally and in issues #372/#374/#377/#380/#398. |
 | SESSION_0731_TASK_04 | DONE | Desi three-pass static sweep over all eight named surfaces; inherited deviations routed DES-009..012; operator live DOM/AA checklist prepared. |
 | SESSION_0731_TASK_05 | DONE | Doug three-pass verification audit; affected-E2E, pre-refactor Fallow, final-SHA, allocator, and clock rules routed with owners and executable wiring. |
-| SESSION_0731_TASK_06 | OPERATOR GATE | Giddy three-pass close; weighted code 9.8, systemic 8.9 FS-0028 cap; every local gate/build green; push/CI authorization held. |
-| SESSION_0731_TASK_07 | DONE LOCALLY | 0731.5 FS-0028 remediation: staged-source/config Oxfmt pre-commit guard, live canonical installer/doctor proof, defeat harness wired into the full unit suite; Cody 9.9 / Giddy 9.8. |
+| SESSION_0731_TASK_06 | DONE | Giddy three-pass close; weighted code 9.8, historical systemic 8.9 FS-0028 cap; every local gate/build green; operator accepted the push recommendation. |
+| SESSION_0731_TASK_07 | DONE | 0731.5 FS-0028 remediation: staged-source/config Oxfmt pre-commit guard, live canonical installer/doctor proof, defeat harness wired into the full unit suite; Cody 9.9 / Giddy 9.8. |
 
 ### Decisions resolved
 
@@ -394,9 +391,10 @@ merge. Graphify refresh is intentionally post-merge only.
 
 ## Findings routed / proposed ledger edits
 
-**16/16 routed:** FS-0051 (contract-driven affected E2E), FS-0042 recurrence (pre-edit Fallow
+**17/17 routed:** FS-0051 (contract-driven affected E2E), FS-0042 recurrence (pre-edit Fallow
 baseline), FS-0028 recurrence (now mitigated by the staged-source/config hook), FS-0024 (doctor
-queried the retired repo), FS-0040 (installer pinned a disposable lane), D-058 + RISK-16/#398 (preview migration/runtime
+queried the retired repo), FS-0040 (installer pinned a disposable lane), FS-0054 (bow-out runner
+selected staged N+1 instead of active N), D-058 + RISK-16/#398 (preview migration/runtime
 credential split), FS-0052 (DES allocator), DES-009/010/011/012 (contrast, semantics, hierarchy,
 spacing), D-059 (two stale out-of-scope IMPORTED-lock comments), and FS-0053 (UTC/local close-clock
 split), D-060 (Turbopack/NFT root trace), and D-061 (pg query-overlap deprecation). No finding lives
@@ -409,14 +407,15 @@ environment blocker for #380. Do not touch #380 schema until that proof exists.
 
 ## Open decisions / blockers
 
-- **Push/CI wall:** local `next build` is green; the one branch push still requires the operator's
-  explicit word. Merge remains blocked until own-lane CI/Playwright is green and its run URL exists.
+- **CI/merge wall:** the operator authorized the one branch push. Merge remains blocked until
+  own-lane CI/Playwright is green; the run URL is reported in the bow-out result because it cannot
+  exist inside the pre-push close commit.
+- **FS-0054:** the close runner selects staged N+1 over active N; Doug owns the routed runner fix.
+  This does not block the product push because SESSION_0731's direct gates and `/ggr` are complete.
 - **Live design proof:** run the recorded 390/1440 light/dark DOM/axe/contrast/screen-reader checklist;
   expected inherited failure DES-010 is not a #397 regression. DES-009..012 remain open.
 - **#380:** blocked on #398 environment isolation/preview-migration proof. Frozen schema and the
   RankAward anchor remain untouched here.
-- **D-059:** two comment-only IMPORTED-lock corrections remain a proposed SESSION_0732/#377 rider;
-  runtime policy is already correct.
 - **D-060/D-061:** production build passes, but the NFT root trace and pg overlap deprecation remain
   open, owned warning-removal lanes before the relevant bundler/pg upgrade.
 
@@ -458,8 +457,9 @@ For `RankEntry` immediately above the model/fields:
 | JETTY/frontmatter sweep | Tier-1 headers and three behavior-site `@why` annotations checked; touched current docs carry UTC-current `updated` + `last_agent`. |
 | Backlinks/index sweep | SESSION_0731↔0732 pairing is symmetric; no new wiki page/status row; session spine remains outside wiki index. |
 | Wiki lint | `bun run wiki:lint`: 0 errors / 115 inherited warnings; no warning on the corrected current seam docs. |
+| Bow-out runner | Executed before the close edit; its highest-number heuristic selected staged SESSION_0732 instead of active SESSION_0731, routed as FS-0054. |
 | Reflections routing receipt | 5 lessons → 5 stable routes below. |
-| Hostile close review | Giddy 8-question + Kaizen triage complete; three-pass result = weighted code 9.8, systemic 8.9 FS-0028 cap. |
+| Hostile close review | Giddy 8-question + Kaizen triage complete; three-pass result = weighted code 9.8, historical systemic 8.9 FS-0028 cap; bow-out runner defect routed FS-0054. |
 | Code-quality gate (Class-A) | Weighted code-quality 9.8; Fallow new-only 0 introduced findings across 114 changed files. Systemic FS-0028 cap recorded separately. |
 | Runtime verification (Doug) | Tsc clean; 1962/0 tests, 5366 assertions, 245 files; lint/button guard/format green; production build generated 305/305 pages. Live DOM/Playwright remains MANUAL STEP REQUIRED. |
 | 0731.5 remediation gates | Final-SHA tsc clean; 1963/0 tests, 5367 assertions, 246 files; lint/button guard green; production app build not repeated because remediation changes only hooks, docs, and their test. |
@@ -467,7 +467,8 @@ For `RankEntry` immediately above the model/fields:
 | Review & Recommend | SESSION_0732 staged for #377 with corrected live issue body. |
 | Memory sweep | Durable rules routed into FS/protocol/ADR/SOT docs; no separate memory dump needed. |
 | Next session unblock check | #377 unblocked (#376 merged); #380 remains blocked on #398. |
-| Git hygiene | `polish/0731-rank-seam`; explicit-path commits/staging only; no push; final status check pending. |
+| ADR + ubiquitous-language check | ADR 0058/SOT rank clauses now match the seam; no new domain term requires a glossary entry. |
+| Git hygiene | `polish/0731-rank-seam`; explicit-path commits/staging only; clean before close edit; one operator-authorized push; close hash reported in bow-out. |
 | Graphify update | Operator sequence under FS-0025: refresh only after the polish PR merges; no refresh performed. |
 
 ### Giddy `/ggr`
@@ -523,8 +524,8 @@ remains behind the explicit push wall.
 FS patterns: FS-0028 mitigated (SESSION_0731.5 defeat-test)
 
 The bounded line counts FS-0028; the wider session router additionally fixed/routed the hostile
-FS-0024 and FS-0040 recurrences and therefore remains 16/16. SESSION_0731's historical systemic
-8.9 is unchanged.
+FS-0024 and FS-0040 recurrences, then routed the bow-out-runner mismatch as FS-0054, and therefore
+remains 17/17. SESSION_0731's historical systemic 8.9 is unchanged.
 
 ## Reflections
 
@@ -561,7 +562,17 @@ FS-0024 and FS-0040 recurrences and therefore remains 16/16. SESSION_0731's hist
 - **Sources:** staged-index Git behavior, local Oxfmt configs, FS-0024/0028/0040, installer/doctor,
   and executable shell/Bun fixtures.
 - **Verdict:** Cody 9.9 GO; Giddy 9.8 CLEARS LOCALLY. FS-0028 is defeat-tested and mitigated;
-  historical SESSION_0731 remains 8.9, and push/CI remains operator-held.
+  historical SESSION_0731 remains 8.9. The operator accepted Giddy's push recommendation; CI remains
+  the merge gate.
+
+**SESSION_0731_REVIEW_03 — Operator-authorized bow-out**
+
+- **Reviewed tasks:** SESSION_0731_TASK_01 through SESSION_0731_TASK_07
+- **Composite:** Giddy final delta **9.8/10 — CLEARS LOCALLY**; historical session systemic **8.9**
+  remains unchanged.
+- **Verdict:** PUSH RECOMMENDED and accepted by the operator. The mandatory runner exposed FS-0054
+  by selecting staged SESSION_0732; all SESSION_0731-specific gates were already green and the
+  product diff is not blocked. Merge still requires green own-lane CI.
 
 ## Hostile close review
 
@@ -599,11 +610,11 @@ FS-0024 and FS-0040 recurrences and therefore remains 16/16. SESSION_0731's hist
 6. **Verification honesty — no sandbox theatre.** Fallow has a real before/after, tests exercise DB
    fixtures, and `next build` completed 305 pages. Browser/CI claims remain MANUAL/PENDING until run.
 7. **Workflow honesty — passed with explicit exceptions.** Canonical branch, task IDs, explicit
-   staging, three-pass escalation, no frozen edits, explicit paths, no push, and routed findings are
-   present. The monolithic bow-out runner was not executed because it would violate the operator's
-   build/Graphify boundaries; equivalent permissible gates are recorded individually.
-8. **Merge readiness — ready to push, not yet ready to merge.** Local build is green. Final full
-   gates, operator authorization, own-lane CI/Playwright, and the resulting URL are hard walls.
+   staging, three-pass escalation, no frozen edits, explicit paths, and routed findings are present.
+   The final bow-out runner executed with Graphify mutation blocked per operator order; its staged-N+1
+   selection defect is routed as FS-0054, while SESSION_0731-specific gates remain recorded above.
+8. **Merge readiness — push authorized, merge still gated.** Local build and full gates are green;
+   own-lane CI/Playwright and the resulting URL remain hard merge walls.
 
 #### Findings
 
@@ -651,3 +662,10 @@ on #398. HOLD every push. #377 is NEXT session (0732) — do not build the guard
 ## Next session
 
 → SESSION_0732 — **#377 CI read-guard** (build lane; stub staged by 0730, carried forward).
+
+- **Goal:** make contract-only RankAward display reads fail locally and in CI without touching the
+  still-valid write/bridge/fact-anchor paths.
+- **First task:** adopt SESSION_0732, run FS-0024, inventory every RankAward reference, then classify
+  allowed and forbidden uses before writing the scanner.
+- **Inputs:** #377, ADR 0058, `member-ranks.ts`, this session's affected-E2E manifest, and the
+  SESSION_0731.5 pre-commit guard harness. #377 is unblocked; #380 remains separately blocked on #398.
