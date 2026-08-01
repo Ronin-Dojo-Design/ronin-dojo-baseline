@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-08-01
-last_agent: codex-session-0731
+last_agent: codex-session-0732
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -1262,7 +1262,8 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Corrective action:** (1) this row; (2) **SESSION_0727 Q-④** adds a CI grep-guard that fails on new
   `RankAward` *reads* (writes still use the required anchor until G-011); (3) reviewer briefs for
   rank/belt-touching diffs carry an explicit "reads use `RankEntry`, not `RankAward` (ADR 0058)" check.
-- **Status:** open (guard staged in SESSION_0727 Q-④; not yet landed).
+- **Status:** mitigated (SESSION_0732 / #377 landed the tracked AST guard in pre-commit + CI with
+  adversarial direct/relation/alias/cross-file defeat proofs).
 
 ### FS-0050 — subagent push-auth guard fired inconsistently across identical lanes
 
@@ -1338,6 +1339,22 @@ Read this section at bow-in instead of skimming every individual entry.
   executable fixture. Product push is not blocked because the session-specific gates and `/ggr` were
   already captured against SESSION_0731.
 - **Status:** open — routed before the SESSION_0731 close push.
+
+### FS-0055 — Bow-out touched-file and Fallow gates omitted untracked implementation files
+
+- **Session:** SESSION_0732 (#377); caught by the mandatory `/ggr` after `bow-out-gates.sh` reported
+  a docs-only/no-code close with zero introduced findings.
+- **What happened:** the close runner counted only five tracked modified files and omitted the new,
+  untracked Class-C scanner, tests, and fixtures. Its hostile-review classification therefore said
+  “docs-only,” and its Fallow delta missed three introduced complexity findings in the scanner.
+- **Root cause:** touched-file discovery is based on `git diff` without unioning `git ls-files
+  --others --exclude-standard`; Fallow's normal changed-since discovery has the same blind spot.
+- **Corrective action:** make `bow-out-gates.sh` union tracked diffs with non-ignored untracked paths,
+  classify those paths for build/GGR, and feed new source through a no-index/diff-stdin audit (or an
+  equivalent temporary-index-safe mechanism). Add a shell fixture proving an untracked source file
+  changes touched counts and triggers code-quality/Fallow classification.
+- **Status:** open — SESSION_0732 manually audited the scanner via no-index diff, fixed all three
+  findings, and routed the runner defect before push.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
