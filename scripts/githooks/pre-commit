@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pre-commit — reject staged workspace code that is not Oxfmt-clean (FS-0028).
+# pre-commit — enforce staged RankAward-read policy (#377) and Oxfmt cleanliness (FS-0028).
 #
 # This hook reads each blob from Git's INDEX, not from the worktree. That distinction is the guard:
 # a partially staged file can have a formatted worktree while its would-be commit is still stale.
@@ -13,6 +13,10 @@ formatter="$repo_root/node_modules/.bin/oxfmt"
 staged_code=()
 changed_config_workspaces=()
 cd "$repo_root"
+
+# #377 / ADR 0058: this domain guard is deliberately independent of formatting policy. It reads
+# the candidate INDEX and fails before Oxfmt work when staged code adds a direct RankAward read root.
+bun "$repo_root/scripts/rank-award-read-guard.ts" --staged
 
 while IFS= read -r -d '' file; do
   case "$file" in
