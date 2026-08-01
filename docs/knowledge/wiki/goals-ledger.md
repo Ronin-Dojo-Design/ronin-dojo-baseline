@@ -207,8 +207,13 @@ aggregator reads it with no new parser logic.
 
 ### G-011 — RankEntry unification (retire RankAward)
 
-- **Status:** proposed · **Blocked-by: G-001 / FI-001** (post-send epic; do not start before Brian
-  Truelson's email ships and the moat is live)
+- **Status:** in-progress · **Sequencing (operator, SESSION_0729 — REVERSES the old post-send framing):**
+  RankAward correctness (#376 → cutover → #380 drop) lands **BEFORE** the FI-001 send, never after
+  ([[fi001-send-gated-on-correct-site]]). **Progress (SESSION_0730):** the canonical rank-read seam +
+  `RankEntryProvenance` + the IMPORTED-lock lift are **MERGED + LIVE on prod** (#397 / #376 closed;
+  111/111 entries, 0 orphans verified). Sequence: SESSION_0731 all-hands polish pass (9.2→9.8+ over
+  the touched files) → SESSION_0732 #377 CI read-guard → #380 drop-sequencing grill
+  (**blocked on #398** — preview env-scoping — after D-055's preview-builds-migrate-prod discovery).
 - **Objective:** collapse `RankAward` + `RankEntry` into ONE rank model — delete the compatibility Seam,
   the dual-write call sites, and every `RankAward`-direct reader. The result is a single `RankEntry` Module
   that hides rank fact, provenance, trust, and proposal-preservation rules.

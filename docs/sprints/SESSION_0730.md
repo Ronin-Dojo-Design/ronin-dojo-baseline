@@ -1,17 +1,17 @@
 ---
 title: "SESSION 0730 — Review + simplify the #376 rank-read seam (Fable → Codex); greenfield RankEntry"
 slug: session-0730
-type: session--open
-status: in-progress
+type: session--implement
+status: closed
 created: 2026-07-31
 updated: 2026-07-31
-last_agent: claude-session-0729
+last_agent: claude-fable-session-0730
+next_session: docs/sprints/SESSION_0731.md
 sprint: S13
 lane: bbl
 recipe: "seq-review-wave"
 goal_ids: ["G-011"]
-tickets: ["#376", "#380"]
-next_session:
+tickets: ["#376", "#380", "#397", "#398"]
 pairs_with:
   - docs/sprints/SESSION_0729.md
 backlinks:
@@ -224,6 +224,99 @@ ran clean: **111 RankAward / 111 RankEntry / 0 orphans** · 72 IMPORTED awards �
 entries-first reads. **PR #397 is merge-ready; the merge itself is the operator's action** (never
 this session's). #381's remaining scope (prodsnap refresh cadence) stays open.
 
+## Post-merge lane — preview-migration guard (D-055 / RISK-16 / #398)
+
+Post-merge verification exposed that the provenance migration hit prod at FIRST PREVIEW BUILD
+(PR-open, ~2h pre-merge): `prebuild` ran `migrate deploy` on every Vercel build and preview env
+carries prod creds. Operator directed the fix lane: `apps/web/scripts/prebuild-migrate.ts`
+(`VERCEL_ENV`-gated: production/local apply, preview/development SKIP loudly) + corrected
+`schema-migration.md` ("When migrations ACTUALLY apply") / `prisma-workflow.md` / the prisma
+edit-hook + drift **D-055** + risk-register **row 16** + ticket **#398** (operator env-scoping +
+Neon preview branch) + an explicit **blocker comment on #380**. Verified: 3-mode guard sims, tsc,
+wiki:lint 0 err, full `bun run build` through the new prebuild chain (exit 0), fallow 0 issues in
+changed files. Sits on `fix/preview-migration-guard`, unpushed — the session's ONE close push.
+
+Also this lane: operator guidance recorded — repo returns PRIVATE after the org upgrades to GitHub
+Team (rulesets/required checks don't enforce on private repos under org Free — upgrade FIRST, flip,
+then re-run `githooks/doctor.sh` + a push probe); Vercel Deployment Protection recommended for
+preview URLs until #398 lands.
+
+## Goal verdict
+
+**YES** (operator-confirmed at close). The staged goal — review/simplify the #376 seam via Codex +
+the greenfield ratification — landed and was exceeded: #397 **merged + prod-verified** (migration
+applied, 72/39 provenance, 0 orphans), the IMPORTED policy pivot ratified + shipped in the same
+merge, the D-055 preview-migration hole discovered + gated, and 4 model forks recorded for #380.
+
+## Task log
+
+| Task | Status |
+| --- | --- |
+| SESSION_0730_TASK_01 — greenfield grill → 4 forks ratified | DONE |
+| SESSION_0730_TASK_02 — record picks on map #374 | DONE (2 comments: forks + IMPORTED amendment) |
+| SESSION_0730_TASK_03 — Codex handoff (hostile review + score + simplify) | DONE (9 commits; 2 false P1s reverted) |
+| SESSION_0730_TASK_04 — foreground gates + fallow + /ggr | DONE (9.2 CLEARS; caught Codex's DB-blind regressions) |
+| SESSION_0730_TASK_05 — show + HOLD; merge gate | DONE (operator pushed/merged #397; live-prod 0 orphans) |
+| (unplanned) IMPORTED-origin ratification + lock lift | DONE (merged in #397) |
+| (unplanned) CI watch-and-fix (oxfmt + e2e seed RankEntry gap) | DONE (#397 all green) |
+| (unplanned) preview-migration guard lane | DONE (unpushed branch, close push) |
+
+## Review log — /ggr close composite
+
+**Session composite: 9.2 — CLEARS (≥9.0).** Two units:
+- **Merged lane #397** (seam + IMPORTED-lock lift): Doug 9.2 LAUNCH-SAFE (0729) · Giddy delta
+  adjudication **9.2 CLEARS** · foreground full gates (1954/0) · CI matrix green ·
+  merged `1c13dac9` · prod-verified (migration applied, 72/39 provenance, 0 orphans).
+- **Guard lane** (`fix/preview-migration-guard`, 1 commit): matrix ≈ **9.3** — D1 9.5 (3-mode sims
+  + full build via the real prebuild chain; exit-code propagation per PL-010), D2 9.5 (the change
+  IS a fail-safe security control), D3 9.5 (fallow: 0 issues in changed files; ~20 lines of logic,
+  0 deps), D4/D5 9 (history + intent in the doc-comment; docs/hook updated in lockstep), D7 9
+  (extends the existing scripts/ pattern; documented — no undocumented-primitive cap). No hard caps:
+  the preview-behavior change is the ratified fix (documented + risk-routed), not a regression.
+**Systemic health:** CI = green on the session's merged lane
+(https://github.com/Ronin-Dojo-Design/black-belt-legacy/actions/runs/30636155515) — guard lane
+pre-push (CI runs at PR); findings routed 4/4 (D-055, RISK-16, #398, #380-blocker); FS patterns:
+none fired (FS-0027/0035/0040/0048/0050 honored).
+
+## Full close evidence
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS (table above) |
+| Format-fix (code) | oxfmt clean (guard lane); merged lane formatted pre-merge |
+| wiki:lint | 0 err (re-run post-close-content below) |
+| Build | `bun run build` PASS through the NEW prebuild chain (exit 0) |
+| /ggr | 9.2 composite — CLEARS (runner said "no code" from a clean tree; corrected above) |
+| Graphify | refreshed post-merge (nodes 15130 · edges 33686) — bow-out re-run not doubled per /gu |
+| Git state | branch=fix/preview-migration-guard · clean · 1 commit ahead of main |
+| Secret scan | PASS |
+| Prod state | #397 live: migration applied 13:29Z, deploy SUCCESS, 111/111, 0 orphans |
+
+## Reflections
+
+1. **The foreground DB gate out-caught two reviewers.** Codex (DB-blind sandbox) AND a read-only
+   Giddy pass both approved "P1 fixes" that inverted deliberate design — only `bun run test`
+   against a real DB exposed the member-editable-IMPORTED regression. Verification tiers are not
+   interchangeable; the gate that can execute the pinned behavior is the only clearer (memory:
+   orchestration-and-lanes → Codex-is-DB-blind rule).
+2. **A wrong premise survives until someone asks where the data came from.** The IMPORTED lock was
+   built on "curated archive authority"; one operator sentence ("members filled a Gravity Form")
+   inverted the policy. The grill surfaced the fork only because the fork question got asked at all
+   — domain provenance beats model elegance.
+3. **Docs describe intent; mechanisms have a firing set.** "Production uses migrate deploy" was
+   true AND fatally incomplete (D-055). The fix pattern that works: correct the doc, THEN encode
+   the constraint where it executes (the prebuild script + the edit-hook), THEN route the residual
+   to a ledger row with an owner.
+4. **The one-time dry-run framing held** — merge → deploy → prod verification landed with zero
+   surprises *because* every surprise had already been forced out pre-merge (9 CI test failures,
+   2 reverted refactors, 1 policy inversion, 1 infra hole).
+
 ## Next session
 
-<!-- staged by 0730 at its own bow-out -->
+→ [SESSION_0731](SESSION_0731.md) — **all-hands polish pass (pre-#377)**: Petey orchestrates TWO
+improvement passes per roster agent over this session's touched files (#397 + #399 diffs) to lift
+the /ggr composite from **9.2 → 9.8+** before the seam is locked — Cody (code+schema +
+`/fallow-fix-loop`, Apple/Pocock/Jetty bar), Desi (golden-ratio design review of touched surfaces),
+Doug (grade 0730's verification process step-by-step), Petey (grade plans/docs), Giddy (final
+`/ggr` ≥9.8). **#377 CI read-guard moves to SESSION_0732** (correctness gate for FI-001 already
+cleared with #397; operator sequenced the polish floor first).

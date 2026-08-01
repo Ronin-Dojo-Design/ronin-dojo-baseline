@@ -51,7 +51,7 @@ the same `env … bunx prisma …` child command and verify its datasource banne
 | Author a shipping migration | Follow `schema-migration.md`; use an explicitly pinned scratch authoring DB or hand-author data-sensitive SQL. |
 | Prototype destructive schema ideas | Named disposable scratch DB with **both** URLs pinned; `db push` is allowed only there. |
 | Rebuild Playwright fixture | Literal `dropdb ... ronindojo_e2e`, then guarded `bun run e2e:db:setup`. |
-| Deploy production | Commit the migration file; Vercel prebuild runs `migrate deploy` against Neon. Manual apply is exceptional and operator-controlled. |
+| Deploy production | Commit the migration file; the Vercel **production** build's prebuild runs `migrate deploy` against Neon (`scripts/prebuild-migrate.ts` gates on `VERCEL_ENV` — preview builds SKIP, SESSION_0730). Manual apply is exceptional and operator-controlled. |
 
 ## Never on prodsnap
 
