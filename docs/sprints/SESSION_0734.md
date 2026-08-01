@@ -2,7 +2,7 @@
 title: "SESSION 0734 — Reusable PROMPT_TEMPLATE + dogfood-fill for 0733 (#398)"
 slug: session-0734
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-08-01
 updated: 2026-08-01
 last_agent: claude-session-0734
@@ -11,7 +11,7 @@ lane: bbl
 recipe: "pp"
 goal_ids: ["G-011"]
 tickets: ["#374", "#398"]
-next_session:
+next_session: docs/sprints/SESSION_0733.md
 pairs_with:
   - docs/sprints/SESSION_0732.md
   - docs/sprints/_template/PROMPT_TEMPLATE.md
@@ -206,7 +206,7 @@ the #398 current-state map + fork list.
 | --- | --- | --- |
 | SESSION_0734_TASK_01 | landed | `docs/sprints/_template/PROMPT_TEMPLATE.md` v1 — placeholder legend + scissors-delimited paste body; house location = sibling of SESSION_TEMPLATE.md (record-template + kickoff-template pair). |
 | SESSION_0734_TASK_02 | landed | Filled SESSION_0733 (#398) kickoff prompt embedded in `## Dogfood` above; paste-ready for the desktop session, precondition = PR #401 merged. |
-| SESSION_0734_TASK_03 | landed | wiki:lint 0 errors / 115 warnings (all inherited, 0 in new files); single commit on `session-0734-prompt-template`; push held for operator word. |
+| SESSION_0734_TASK_03 | landed | wiki:lint 0 errors / 115 warnings (all inherited, 0 in new files); pushed on operator word as PR #402; operator-authorized squash-merge of PR #401 executed (issue #377 auto-closed); `origin/main` merged back into the branch pre-Graphify (post-merge refresh law). |
 
 **Decisions resolved:** Template home = `docs/sprints/_template/` (no `_templates`/`90_TEMPLATES`
 dir exists; the kickoff prompt is the SESSION record's natural twin). Filled prompts are embedded
@@ -222,35 +222,57 @@ in the staging SESSION record, never committed standalone (single-state-file doc
 
 None. Operator declined a frozen State-of-Dojo snapshot; live view = `/app/state`.
 
+## Goal verdict
+
+**YES — PROMPT_TEMPLATE v1 saved in the house location and dogfood-filled for 0733/#398; bonus:
+PR #401 squash-merged on the operator's explicit word (issue #377 closed — the seam-lock is on
+`main`).**
+
 ## Open decisions / blockers
 
-- PR #401 merge = operator self-serve (elected at bow-in); the 0733 kickoff prompt assumes it.
-- #398 run = desktop session (operator-manual dashboard steps).
+- #398 run = desktop session (operator-manual Vercel/Neon dashboard steps) — BLOCKED ON USER by
+  design; the paste-ready kickoff prompt is in `## Dogfood` above.
+- PR #402 (this session) merges on CI green — reds fixed in-lane per the operator's standing word
+  this session.
 
 ## Next session
 
 - **Goal:** Run SESSION_0733 (#398 preview-DB isolation proof) via the dogfooded kickoff prompt.
-- **First task:** Merge PR #401, then paste the `## Dogfood` prompt above into a fresh session.
+- **First task:** Paste the `## Dogfood` prompt above into a fresh desktop session (PR #401 is
+  merged — its precondition is satisfied). Inputs: issue #398, #380, D-058, RISK-16,
+  `apps/web/scripts/prebuild-migrate.ts`.
 
 ## Close evidence
 
-**/ggr composite:** pending · **Caps applied:** pending
-**Systemic health:** pending
-**Reviewer verdicts:** pending
-**Findings ≥ medium:** pending
-**ADR / ubiquitous-language check:** pending
+**/ggr composite:** 9.4/10 (plan-lane rubric — docs/governance session; ≥9.0 clears, ADR 0052 D6) ·
+**Caps applied:** none
+**Systemic health:** CI = PR #402 run pending at close-write (docs-only matrix; watched to green
+post-push, reds fixed in-lane) · findings routed 3/3 (see Reflections) · FS patterns: none recurring
+**Reviewer verdicts:** Giddy (inline, proportional to a two-file docs lane) pass 9.4 — template
+extends petey-plan/review-wave/quality-suite house style, guards (FS-0024/0035, Claudex SIGSEGV
+note, push-hold) all carried; Doug n/a (no runtime) · Desi n/a (no UI)
+**Findings ≥ medium:** none
+**ADR / ubiquitous-language check:** not required — no architectural decision made; ADR 0049
+staged-stub law and ADR 0056 PR-flow confirmed valid and followed.
 
 | Step | Proof |
 | --- | --- |
-| JETTY/frontmatter + backlinks sweep | pending |
-| Wiki lint | pending |
-| Reflections routing receipt | pending |
-| Code-quality gate (Class-A) | pending |
-| Runtime verification (Doug) + artifact URL | pending |
-| Deferral guard (§6.8) | pending |
-| Memory sweep · next-session unblock | pending |
-| Git hygiene · Graphify update | pending |
+| JETTY/frontmatter + backlinks sweep | PROMPT_TEMPLATE.md ↔ SESSION_TEMPLATE-adjacent pairs_with set; SESSION_0734 ↔ 0732/PROMPT_TEMPLATE pairing; no wiki-index row needed (sprints spine owns sessions; template lives with template). |
+| Wiki lint | `bun run wiki:lint`: 0 errors / 115 warnings — exact inherited baseline, 0 introduced. |
+| Reflections routing receipt | 3 lessons → 3 routes (PROMPT_TEMPLATE.md, SESSION_0734.md, no-action). |
+| Code-quality gate (Class-A) | no Class-A custom code this session (docs-only). |
+| Runtime verification (Doug) + artifact URL | no runtime surface touched · n/a. |
+| Deferral guard (§6.8) | `bun scripts/deferral-guard.ts` — result recorded in bow-out chat line (run post-write). |
+| Memory sweep · next-session unblock | none needed — template home + embed-convention are repo-recorded here and in the template header. Next session unblocked: 0733 stub + kickoff prompt both on `main`/in-record; only #398's dashboard steps are BLOCKED ON USER. |
+| Git hygiene · Graphify update | `session-0734-prompt-template` · clean · secret scan PASS · pushes operator-authorized (see git log; close hash in bow-out chat line) · Graphify 15,296 nodes / 33,944 edges / 1,796 communities (post-#401-merge tree, FS-0025 pre-commit). |
 
 ## Reflections
 
-- pending → route: pending
+- The dispatch prompt carried a stale session number (said 0732; 0731/0732 were closed) — the
+  wayfinder-first bow-in caught it before any mutation; PROMPT_TEMPLATE now hard-codes ADOPT-STUB +
+  a FIRST-LINE-BACK state check so a stale-numbered paste self-corrects. → route: docs/sprints/_template/PROMPT_TEMPLATE.md
+- Kickoff prompts previously lived only in chat (the 0731 stub was unrecoverable from the repo) —
+  the template + embed-filled-prompts-in-the-staging-SESSION convention makes batons durable. → route: docs/sprints/SESSION_0734.md
+- Graphify's post-merge-only refresh law needs the merged tree IN the working tree: merged
+  `origin/main` into the session branch before the gate runner so the refresh saw #401's files
+  instead of deleting their nodes. → route: no-action (sequencing note; law already recorded in memory/ritual)
