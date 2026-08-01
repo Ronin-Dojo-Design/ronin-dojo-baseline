@@ -107,6 +107,15 @@ if [ -n "$hp" ]; then
         || bad "pre-commit is stale — it does not prove the would-be commit is Oxfmt-clean." \
                "A worktree-only format check can be bypassed by partial staging." \
                "fix: update scripts/githooks/pre-commit from main."
+      if [ ! -f "$canonical/scripts/rank-award-read-guard.ts" ]; then
+        bad "RankAward read scanner is missing from the canonical checkout (#377)." \
+            "fix: restore scripts/rank-award-read-guard.ts from main."
+      elif grep -q 'rank-award-read-guard.ts.*--staged' "$resolved/pre-commit" 2>/dev/null; then
+        ok "pre-commit carries the staged RankAward read guard (#377)"
+      else
+        bad "pre-commit does not invoke the staged RankAward read guard (#377)." \
+            "fix: update scripts/githooks/pre-commit from main."
+      fi
     fi
 
     if [ ! -x "$resolved/pre-push" ]; then

@@ -9,6 +9,7 @@ unset -f git 2>/dev/null || true
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/../.." && pwd)"
 source_formatter="$repo_root/node_modules/.bin/oxfmt"
+source_typescript="$repo_root/node_modules/typescript"
 scratch="$(mktemp -d "${TMPDIR:-/tmp}/ronin-pre-commit-test.XXXXXX")"
 
 cleanup() {
@@ -41,11 +42,13 @@ assert_unchanged() {
 }
 
 [ -x "$source_formatter" ] || fail "source formatter is unavailable: $source_formatter"
+[ -d "$source_typescript" ] || fail "source TypeScript runtime is unavailable: $source_typescript"
 
 fixture="$scratch/repo"
 mkdir -p \
   "$fixture/apps/web" \
   "$fixture/packages/ui-kit" \
+  "$fixture/scripts" \
   "$fixture/node_modules/.bin" \
   "$fixture/no-hooks"
 git init -q "$fixture"
@@ -53,7 +56,9 @@ git -C "$fixture" config user.email "guard-test@ronindojo.invalid"
 git -C "$fixture" config user.name "Ronin guard test"
 git -C "$fixture" config core.hooksPath "$fixture/no-hooks"
 ln -s "$source_formatter" "$fixture/node_modules/.bin/oxfmt"
+ln -s "$source_typescript" "$fixture/node_modules/typescript"
 cp "$script_dir/pre-commit" "$fixture/pre-commit"
+cp "$repo_root/scripts/rank-award-read-guard.ts" "$fixture/scripts/rank-award-read-guard.ts"
 chmod +x "$fixture/pre-commit"
 
 printf '{"semi":false}\n' > "$fixture/apps/web/.oxfmtrc.json"
@@ -61,15 +66,22 @@ printf '{"semi":false}\n' > "$fixture/packages/ui-kit/.oxfmtrc.json"
 rank_file="$fixture/apps/web/member-ranks.ts"
 deleted_file="$fixture/apps/web/deleted.ts"
 existing_ui_file="$fixture/packages/ui-kit/existing.ts"
+rank_read_file="$fixture/apps/web/rank-read.ts"
+legacy_read_file="$fixture/apps/web/legacy-fact.ts"
 hook_output="$scratch/hook-output"
 
 printf 'const rank = { value: 0 }\n' > "$rank_file"
 printf 'export const deleted = true\n' > "$deleted_file"
 printf 'export const existingUi = 1\n' > "$existing_ui_file"
+printf 'export const rankSeed = 1\n' > "$rank_read_file"
+printf 'export const loadLegacy = async (db: any) => db.rankAward.findMany({ where: { promotionEventId: "event" } })\n' > "$legacy_read_file"
+(cd "$fixture" && "$source_formatter" apps/web/legacy-fact.ts >/dev/null)
 git -C "$fixture" add \
   apps/web/.oxfmtrc.json \
   apps/web/deleted.ts \
   apps/web/member-ranks.ts \
+  apps/web/legacy-fact.ts \
+  apps/web/rank-read.ts \
   packages/ui-kit/.oxfmtrc.json \
   packages/ui-kit/existing.ts
 git -C "$fixture" commit -qm "fixture baseline"
@@ -123,6 +135,84 @@ grep -q 'apps/web/member ranks.ts' "$hook_output" \
 (cd "$fixture" && "$source_formatter" "apps/web/member ranks.ts" >/dev/null)
 git -C "$fixture" add "apps/web/member ranks.ts"
 git -C "$fixture" commit -qm "source guard fixtures"
+
+# A pure rename preserves its semantic read occurrence globally. Replacing that grandfathered
+# findMany with a different findMany is a NEW semantic root and must fail (Doug P1-A).
+git -C "$fixture" mv apps/web/legacy-fact.ts apps/web/renamed-fact.ts
+if ! (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "pure rename of an unchanged legacy read was blocked"
+fi
+git -C "$fixture" commit -qm "rename legacy read"
+legacy_read_file="$fixture/apps/web/renamed-fact.ts"
+printf 'export const loadDisplayed = async (db: any) => db.rankAward.findMany({ where: { passportId: "p1" }, orderBy: { rank: { sortOrder: "desc" } } })\n' > "$legacy_read_file"
+git -C "$fixture" add apps/web/renamed-fact.ts
+if (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "same-kind semantic replacement bypassed the installed hook"
+fi
+git -C "$fixture" restore --staged apps/web/renamed-fact.ts
+git -C "$fixture" restore apps/web/renamed-fact.ts
+
+# The installed hook invokes the standalone domain scanner: writes pass, while a formatted direct
+# RankAward read fails independently of Oxfmt and identifies the policy violation.
+printf 'export const writeRank = async (db: any) => db.rankAward.create({ data: {} })\n' > "$rank_read_file"
+git -C "$fixture" add apps/web/rank-read.ts
+if ! (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "transitional RankAward write was blocked"
+fi
+git -C "$fixture" commit -qm "allowed rank write"
+
+printf 'export const readRank = async (db: any) => db.rankAward.findMany({})\n' > "$rank_read_file"
+git -C "$fixture" add apps/web/rank-read.ts
+if (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "new direct RankAward read passed the installed hook"
+fi
+grep -q 'new direct RankAward read root' "$hook_output" \
+  || fail "RankAward read failure omitted the domain-policy message"
+git -C "$fixture" restore --staged apps/web/rank-read.ts
+git -C "$fixture" restore apps/web/rank-read.ts
+
+# A diff-listed candidate whose INDEX blob cannot be read must fail closed, never become empty
+# source and pass. This deliberately installs an object id absent from the disposable fixture DB.
+missing_oid='1111111111111111111111111111111111111111'
+git -C "$fixture" update-index \
+  --add --cacheinfo "100644,$missing_oid,apps/web/missing-blob.ts"
+if (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "missing candidate INDEX blob produced a false green"
+fi
+grep -q 'git show :apps/web/missing-blob.ts failed' "$hook_output" \
+  || fail "missing candidate blob did not surface the strict git-show failure"
+git -C "$fixture" update-index --force-remove apps/web/missing-blob.ts
+
+# Cross-file aliases are guarded at the exported query-constant boundary: neither changed file is
+# sufficient alone, but staging both must still expose the RankAward relation root (Doug P1).
+shared_select_file="$fixture/apps/web/rank-select.ts"
+shared_query_file="$fixture/apps/web/query.ts"
+printf 'export const passportSelect = { rankAwardsEarned: { select: { id: true, rank: true } } } as const\n' > "$shared_select_file"
+printf 'import { passportSelect } from "./rank-select"\nexport const load = async (db: any) => db.passport.findMany({ select: passportSelect })\n' > "$shared_query_file"
+(cd "$fixture" && "$source_formatter" apps/web/rank-select.ts apps/web/query.ts >/dev/null)
+git -C "$fixture" add apps/web/rank-select.ts apps/web/query.ts
+if (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "cross-file shared RankAward select bypassed the installed hook"
+fi
+grep -q 'relation:rankAwardsEarned' "$hook_output" \
+  || fail "cross-file shared select failure omitted its RankAward relation root"
+git -C "$fixture" rm --cached -q apps/web/rank-select.ts apps/web/query.ts
+rm -f "$shared_select_file" "$shared_query_file"
+
+# The same cross-file boundary applies when the shared export is the delegate itself.
+delegate_export_file="$fixture/apps/web/rank-award-delegate.ts"
+delegate_query_file="$fixture/apps/web/delegate-query.ts"
+printf 'export const awards = db.rankAward\n' > "$delegate_export_file"
+printf 'import { awards } from "./rank-award-delegate"\nexport const load = async () => awards.findMany({})\n' > "$delegate_query_file"
+(cd "$fixture" && "$source_formatter" apps/web/rank-award-delegate.ts apps/web/delegate-query.ts >/dev/null)
+git -C "$fixture" add apps/web/rank-award-delegate.ts apps/web/delegate-query.ts
+if (cd "$fixture" && ./pre-commit > "$hook_output" 2>&1); then
+  fail "cross-file exported RankAward delegate bypassed the installed hook"
+fi
+grep -q 'delegate-alias:rankAward' "$hook_output" \
+  || fail "cross-file delegate failure omitted its RankAward alias root"
+git -C "$fixture" rm --cached -q apps/web/rank-award-delegate.ts apps/web/delegate-query.ts
+rm -f "$delegate_export_file" "$delegate_query_file"
 
 # A config-only change must check untouched files under the would-be formatting law.
 printf '{\n  "semi": true\n}\n' > "$fixture/packages/ui-kit/.oxfmtrc.json"
