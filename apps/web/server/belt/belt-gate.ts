@@ -1,3 +1,8 @@
+/**
+ * @added   SESSION_0477 (2026-07-01)
+ * @why     Keep member rank ceilings and fact editability as pure, unit-testable policy
+ * @wired   server/belt/router.ts, server/belt/queries.ts, server/belt/profile-projection.ts, server/belt/promoter-proposal-core.ts, server/web/claims/submit-rank-promotion-claim.ts
+ */
 import type { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
 
 /**

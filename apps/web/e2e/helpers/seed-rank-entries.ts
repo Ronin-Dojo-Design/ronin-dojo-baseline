@@ -1,4 +1,5 @@
 import type { PrismaClient } from "../../.generated/prisma/client"
+import { deriveRankEntryTrustAxesFromAwardStatus } from "../../server/belt/rank-entry-trust-axes"
 
 /**
  * Mirror `syncRankEntryFromAward` for e2e seeds (#376): the app's rank reads
@@ -20,13 +21,9 @@ export async function seedRankEntriesForAwards(
     select: { id: true, passportId: true, rankId: true, verificationStatus: true },
   })
   for (const award of awards) {
-    const status =
-      award.verificationStatus === "VERIFIED" || award.verificationStatus === "IMPORTED"
-        ? ("VERIFIED" as const)
-        : award.verificationStatus === "DISPUTED"
-          ? ("DISPUTED" as const)
-          : ("UNVERIFIED" as const)
-    const provenance = award.verificationStatus === "IMPORTED" ? "IMPORTED" : "EARNED"
+    const { status, provenance } = deriveRankEntryTrustAxesFromAwardStatus(
+      award.verificationStatus,
+    )
     await prisma.rankEntry.upsert({
       where: { rankAwardId: award.id },
       create: {

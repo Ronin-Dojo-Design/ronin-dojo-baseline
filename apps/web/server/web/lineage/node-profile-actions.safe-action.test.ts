@@ -24,6 +24,7 @@ installSafeActionMocks({ brand: "BBL" })
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 
 import { updateLineageNodeProfile } from "~/server/web/lineage/node-profile-actions"
+import { seedNodeProfileActionCoreFixture } from "~/server/web/lineage/node-profile-actions.test-fixture"
 import { db } from "~/services/db"
 
 const TEST_BRAND = "BBL" as const
@@ -46,113 +47,8 @@ type Fixtures = {
 let fx: Fixtures | null = null
 
 beforeAll(async () => {
-  const approvedClaimant = await db.user.create({
-    data: {
-      id: tag("approved-claimant"),
-      name: tag("Approved Claimant"),
-      email: `${tag("approved-claimant")}@test.local`,
-    },
-  })
-
-  await db.passport.create({
-    data: {
-      userId: approvedClaimant.id,
-      displayName: "Original Display Name",
-      avatarUrl: "https://example.com/original-avatar.jpg",
-    },
-  })
-
-  const discipline = await db.discipline.create({
-    data: {
-      id: tag("discipline"),
-      brand: TEST_BRAND,
-      name: tag("Discipline"),
-      slug: tag("discipline"),
-      code: tag("DISC").slice(0, 16),
-    },
-  })
-
-  const rankSystem = await db.rankSystem.create({
-    data: {
-      id: tag("rank-system"),
-      brand: TEST_BRAND,
-      name: tag("Rank System"),
-      disciplineId: discipline.id,
-    },
-  })
-
-  const rank = await db.rank.create({
-    data: {
-      id: tag("rank"),
-      brand: TEST_BRAND,
-      rankSystemId: rankSystem.id,
-      sortOrder: 1,
-      name: tag("Black Belt"),
-      shortName: "BB",
-    },
-  })
-
-  const rankAward = await db.rankAward.create({
-    data: {
-      id: tag("rank-award"),
-      passport: {
-        connectOrCreate: {
-          where: { userId: approvedClaimant.id },
-          create: { userId: approvedClaimant.id },
-        },
-      },
-      rank: { connect: { id: rank.id } },
-      awardedAt: new Date(Date.UTC(2020, 0, 1)),
-    },
-  })
-
-  const node = await db.lineageNode.create({
-    data: {
-      id: tag("node"),
-      passport: {
-        connectOrCreate: {
-          where: { userId: approvedClaimant.id },
-          create: { userId: approvedClaimant.id },
-        },
-      },
-      slug: tag("node-slug"),
-      bio: "Original lineage bio",
-      visibility: "PUBLIC",
-      verificationStatus: "PENDING",
-    },
-  })
-
-  const tree = await db.lineageTree.create({
-    data: {
-      id: tag("tree"),
-      brand: TEST_BRAND,
-      slug: tag("tree-slug"),
-      name: tag("Test Lineage Tree"),
-      visibility: "PUBLIC",
-      isPublished: true,
-      scopeType: "DISCIPLINE",
-    },
-  })
-
-  const member = await db.lineageTreeMember.create({
-    data: {
-      id: tag("member"),
-      treeId: tree.id,
-      nodeId: node.id,
-      visualSortOrder: 0,
-    },
-  })
-
-  await db.lineageTreeAccess.create({
-    data: {
-      id: tag("node-editor-grant"),
-      treeId: tree.id,
-      userId: approvedClaimant.id,
-      role: "NODE_EDITOR",
-      nodeId: node.id,
-      memberId: member.id,
-    },
-  })
+  const { approvedClaimant, discipline, rankSystem, rank, rankAward, node, tree, member } =
+    await seedNodeProfileActionCoreFixture({ brand: TEST_BRAND, tag })
 
   fx = {
     treeId: tree.id,

@@ -12,15 +12,10 @@
  */
 
 // @ts-expect-error — bun:test is a Bun runtime module; @types/bun is not a repo dep yet.
-import { afterAll, beforeAll, describe, expect, it, mock } from "bun:test"
+import { afterAll, beforeAll, describe, expect, it } from "bun:test"
+import { installNextCacheMock } from "~/lib/test/next-cache-mock"
 
-mock.module("next/cache", () => ({
-  cacheLife: () => {},
-  cacheTag: () => {},
-  revalidatePath: () => {},
-  revalidateTag: () => {},
-  updateTag: () => {},
-}))
+installNextCacheMock()
 
 import { db } from "~/services/db"
 import { backfillPassportClaims } from "./backfill-passport-claims"

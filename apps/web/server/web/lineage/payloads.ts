@@ -55,6 +55,36 @@ const rankAwardPromoterPayload = {
   },
 } satisfies Prisma.RankAwardSelect
 
+const lineageRankDisplayPayload = {
+  id: true,
+  name: true,
+  shortName: true,
+  colorHex: true,
+  sortOrder: true,
+  degree: true,
+  secondaryColorHex: true,
+  beltFamily: true,
+} satisfies Prisma.RankSelect
+
+const lineageRankSystemIdentityPayload = {
+  id: true,
+  name: true,
+  discipline: {
+    select: { id: true, name: true, slug: true, code: true },
+  },
+} satisfies Prisma.RankSystemSelect
+
+const lineageRankEntryDisplayPayload = {
+  id: true,
+  status: true,
+  rank: {
+    select: {
+      ...lineageRankDisplayPayload,
+      rankSystem: { select: lineageRankSystemIdentityPayload },
+    },
+  },
+} satisfies Prisma.RankEntrySelect
+
 // ---------------------------------------------------------------------------
 // Row payload — used for tree nodes (tree section in TASK_03).
 //
@@ -127,35 +157,7 @@ export const lineageNodeRowPayload = {
       //   loading all is cheap; the tree card still reads only `[0]` / the first match.
       rankEntries: {
         select: {
-          id: true,
-          // The canonical member-facing rank trust axis (WL-P2-46 / LR 0008) — now read straight
-          // off the RankEntry, retiring the node-level `isVerified`/`verificationStatus` read for
-          // the tree/board/cards/list/galaxy.
-          status: true,
-          rank: {
-            select: {
-              id: true,
-              name: true,
-              shortName: true,
-              colorHex: true,
-              sortOrder: true,
-              // @added SESSION_0493 — degree stripes + coral panels for the
-              // ancestry-timeline `belt` swatch.
-              degree: true,
-              secondaryColorHex: true,
-              // @added SESSION_0539 — belt-family drives the rank-bar treatment.
-              beltFamily: true,
-              rankSystem: {
-                select: {
-                  id: true,
-                  name: true,
-                  discipline: {
-                    select: { id: true, name: true, slug: true, code: true },
-                  },
-                },
-              },
-            },
-          },
+          ...lineageRankEntryDisplayPayload,
           // Anchor read (fact domain): `awardedAt` + `location` + promoter identity live on RankAward
           // until the table-drop. Reached via the required `rankAward` relation — NOT a top-level read.
           rankAward: {
@@ -294,31 +296,13 @@ export const lineageNodeProfilePayload = {
       // so no history data is lost (G-011 keeps the anchor award until the table-drop).
       rankEntries: {
         select: {
-          // RankEntry id — the steward Verify affordance in the drawer keys off this (was
-          // `rankEntry.id`).
-          id: true,
-          // The canonical member-facing RankEntry status. IMPORTED awards derive to VERIFIED, so
-          // the drawer keys the "Unverified" badge off the entry status, not the award's provenance.
-          status: true,
+          ...lineageRankEntryDisplayPayload,
           rank: {
             select: {
-              id: true,
-              name: true,
-              shortName: true,
-              colorHex: true,
-              sortOrder: true,
-              // @added SESSION_0539 — belt render-model fields (degree marks + coral
-              // panels + family-driven bar) for the drawer's refined belt swatch.
-              degree: true,
-              secondaryColorHex: true,
-              beltFamily: true,
+              ...lineageRankDisplayPayload,
               rankSystem: {
                 select: {
-                  id: true,
-                  name: true,
-                  discipline: {
-                    select: { id: true, name: true, slug: true, code: true },
-                  },
+                  ...lineageRankSystemIdentityPayload,
                   ranks: {
                     // @added SESSION_0332 — Trophy.so rank-progression proof.
                     // Widened from {id, sortOrder} so the belt-ladder can render unearned levels

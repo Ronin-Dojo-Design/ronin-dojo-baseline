@@ -5,6 +5,11 @@
  */
 import "server-only"
 
+/**
+ * @added   SESSION_0542 (2026-07-16)
+ * @why     Serialize promoter proposal transitions and preserve accepted award trust/provenance
+ * @wired   server/belt/router.ts, server/belt/verify-rank-entry.ts, server/belt/rank-entry-compatibility.ts
+ */
 import { ORPCError } from "@orpc/server"
 import {
   Brand,
@@ -325,6 +330,15 @@ async function applySiblingFactsIfPresent(
   await syncRankEntryFromAward(tx, rankAwardId)
 }
 
+function promoterEditTargetStatus(
+  currentStatus: RankAwardVerificationStatus,
+  transition: "verify" | "keep_unverified",
+): RankAwardVerificationStatus {
+  // @why SESSION_0730 — member edits preserve IMPORTED origin and its VERIFIED presentation badge.
+  if (currentStatus === "IMPORTED") return "IMPORTED"
+  return transition === "verify" ? "VERIFIED" : "UNVERIFIED"
+}
+
 /**
  * Apply one member promoter edit after the target award and editability gate have been locked and
  * re-read. Capture side effects have already resolved `promoterData` inside the same transaction.
@@ -432,16 +446,7 @@ export async function applyMemberPromoterTransition({
     return { transition, reviewId: review.id }
   }
 
-  // An IMPORTED award never leaves IMPORTED via a member promoter edit (SESSION_0730: the
-  // IMPORTED-lock lift makes these rows member-editable, but the one-time-import origin is
-  // history and the OG's VERIFIED badge must not drop on a keep_unverified promoter). The
-  // status transition is for member-minted backfills only.
-  const targetStatus =
-    currentAward.verificationStatus === "IMPORTED"
-      ? "IMPORTED"
-      : transition === "verify"
-        ? "VERIFIED"
-        : "UNVERIFIED"
+  const targetStatus = promoterEditTargetStatus(currentAward.verificationStatus, transition)
   await tx.rankAward.update({
     where: { id: currentAward.id },
     data: { ...siblingFacts, ...promoterData, verificationStatus: targetStatus },

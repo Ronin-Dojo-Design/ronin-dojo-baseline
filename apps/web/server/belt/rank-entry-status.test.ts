@@ -2,9 +2,9 @@
  * `rankEntryStatusForAward` — the legacy-award → member-facing RankEntry status bridge.
  *
  * Pure mapping (no DB). Locks the SESSION_0522 operator decision that an IMPORTED award
- * — BBL's established, authority-owned lineage — surfaces as a VERIFIED member RankEntry,
- * while immutable origin stays separately on `RankEntry.provenance` so the belt-gate still
- * treats it as authority-owned / read-only without conflating the mutable status.
+ * surfaces as a VERIFIED member RankEntry while immutable origin stays separately on
+ * `RankEntry.provenance`. Provenance is historical metadata and locks nothing; the imported
+ * WP self-report remains member-editable after the SESSION_0730 ratification.
  *
  * Run: cd apps/web && bun run test server/belt/rank-entry-status.test.ts
  */

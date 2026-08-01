@@ -1,5 +1,14 @@
-import type { Prisma, RankEntryProvenance, RankEntryStatus } from "~/.generated/prisma/client"
+/**
+ * @added   SESSION_0729 (2026-07-30)
+ * @why     Provide the compact RankEntry-first member-rank read contract for the additive cutover
+ * @wired   server/belt/member-ranks.test.ts, SESSION_0732 #377 read guard
+ */
+import type { Prisma } from "~/.generated/prisma/client"
 import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
+import type {
+  RankEntryTrustAxes,
+  TransitionalRankAwardAnchor,
+} from "~/server/belt/rank-entry-trust-axes"
 import { db } from "~/services/db"
 
 /**
@@ -44,10 +53,9 @@ const rankEntryViewSelect = {
 type RankEntryRow = Prisma.RankEntryGetPayload<{ select: typeof rankEntryViewSelect }>
 
 /** The flat, render-ready rank view. No raw Prisma row reaches a consumer. */
-export type RankEntryView = {
+export type TransitionalRankAwardAnchoredMemberRank = TransitionalRankAwardAnchor &
+  RankEntryTrustAxes & {
   rankEntryId: string
-  /** The compatibility-anchor award id — the join key for fact-level reads (date/promoter/milestone). */
-  rankAwardId: string
   passportId: string
   rankId: string
   rankName: string
@@ -55,9 +63,9 @@ export type RankEntryView = {
   sortOrder: number
   /** Non-null: `Rank.rankSystem` and `RankSystem.disciplineId` are both required relations. */
   disciplineId: string
-  status: RankEntryStatus
-  provenance: RankEntryProvenance
 }
+
+export type RankEntryView = TransitionalRankAwardAnchoredMemberRank
 
 /** Project one selected RankEntry row into the flat seam view. */
 function projectRankEntry(row: RankEntryRow): RankEntryView {

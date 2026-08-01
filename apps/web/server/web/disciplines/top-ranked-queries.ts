@@ -1,8 +1,8 @@
 // @added   SESSION_0357 (2026-06-08) — TASK_01 black-belt-rail repoint.
 // @why     The discipline "Top Ranked" rail read `Membership.rank`, so BBL lineage
-//          members (who hold RankAwards but no Membership) rendered as an empty
+//          members (who hold RankEntries but no Membership) rendered as an empty
 //          "No ranked members yet" while the lineage tree below was full of black
-//          belts. RankAward is the canonical promotion fact (ADR 0016); read it.
+//          belts. RankEntry is canonical rank truth (ADR 0058); read it.
 //          Membership is Baseline enrollment, not the rank source (passport-and-shells.md).
 // @wired   apps/web/app/(web)/disciplines/_components/black-belt-rail.tsx
 import type { Brand, Prisma } from "~/.generated/prisma/client"
@@ -39,7 +39,7 @@ export type TopRankedMember = {
  * members. A Membership-only boundary (what the directory uses) renders empty
  * for BBL, which is the bug this replaces.
  *
- * Deduped to each person's single highest award. No hardcoded belt threshold —
+ * Deduped to each person's single highest rank entry. No hardcoded belt threshold —
  * ordered by `rank.sortOrder` desc and capped at `take`.
  */
 export async function getTopRankedMembersForDiscipline({
