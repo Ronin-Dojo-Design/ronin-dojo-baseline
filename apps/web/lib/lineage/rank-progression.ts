@@ -1,3 +1,4 @@
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 
 /**
@@ -34,6 +35,9 @@ export type ProgressionLevel = {
     shortName: string | null
     colorHex: string | null
     sortOrder: number
+    // @added SESSION_0735 (D-062) — structured belt-family signal the Black-Belt-rate
+    // eligibility gate keys off (never the display name). Null for non-BJJ / unseeded ranks.
+    beltFamily: BeltFamily | null
   }
   status: "earned" | "current" | "locked"
   awardedAt: Date | null
@@ -85,6 +89,7 @@ type WidenedSystemRank = {
   name?: string | null
   shortName?: string | null
   colorHex?: string | null
+  beltFamily?: BeltFamily | null
 }
 
 function awardDate(entry: RankEntry): Date | null {
@@ -108,6 +113,7 @@ function progressionRankFromSystemRank(rank: WidenedSystemRank): ProgressionLeve
     name: rank.name ?? "",
     shortName: rank.shortName ?? null,
     colorHex: rank.colorHex ?? null,
+    beltFamily: rank.beltFamily ?? null,
   }
 }
 
@@ -148,6 +154,9 @@ function recordEarnedRank(
       name: rank.name,
       shortName: rank.shortName ?? null,
       colorHex: rank.colorHex ?? null,
+      // Fallback path (system ladder omits this awarded rank): source `beltFamily`
+      // from the entry's own rank so eligibility still keys off the structured field.
+      beltFamily: rank.beltFamily ?? null,
     })
   }
 
@@ -283,15 +292,22 @@ export function totalProgressionPoints(progressions: readonly BeltProgression[])
  * "Verified" = awarded truth: this reads `BeltProgression`s built by
  * `buildBeltProgressions` from the passport's `rankEntries` (the canonical rank
  * model, #376), so a self-declared / pending rank never qualifies. Scoped to BJJ
- * (the lineage discipline); the degree tiers Black Belt → Coral Belt → Red Belt all
- * count as black-belt-or-above.
+ * (the lineage discipline); the `beltFamily` tiers BLACK → CORAL → RED all count
+ * as black-belt-or-above (COLORED = white/blue/purple/brown does not).
+ *
+ * D-062 (SESSION_0735): this gates a PRICE, so it keys off the structured
+ * `Rank.beltFamily` enum — NOT the rank's display name. A renamed or localized
+ * black-belt rank (e.g. "Faixa Preta") still prices correctly because the
+ * display string never enters the decision.
  */
 const BLACK_BELT_RATE_DISCIPLINE_KEYS = new Set(["bjj"])
 
-function isBlackBeltOrAbove(rank: { name: string }): boolean {
-  // BJJ black-belt-and-above rank names: "Black Belt[ - Nth Degree]",
-  // "Coral Belt (...)", "Red Belt - Nth Degree". White/Blue/Purple/Brown never match.
-  return /\b(black|coral|red)\s+belt\b/i.test(rank.name)
+// BJJ black-belt-and-above families (COLORED is below black belt). Keyed off the
+// structured `Rank.beltFamily` enum so a renamed/localized rank never misprices.
+const BLACK_BELT_OR_ABOVE_FAMILIES = new Set<BeltFamily>(["BLACK", "CORAL", "RED"])
+
+function isBlackBeltOrAbove(rank: { beltFamily: BeltFamily | null }): boolean {
+  return rank.beltFamily !== null && BLACK_BELT_OR_ABOVE_FAMILIES.has(rank.beltFamily)
 }
 
 export function isBlackBeltRateEligible(progressions: readonly BeltProgression[]): boolean {

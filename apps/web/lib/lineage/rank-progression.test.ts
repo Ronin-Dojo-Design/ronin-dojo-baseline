@@ -1,5 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, test } from "node:test"
+import type { BeltFamily } from "~/components/common/belt-swatch"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
 import {
   type BeltProgression,
@@ -13,23 +14,73 @@ import {
 type RankEntry = NonNullable<LineageNodeProfile["passport"]>["rankEntries"][number]
 
 const BJJ_RANKS = [
-  { id: "rank-white", sortOrder: 1, name: "White Belt", shortName: "White", colorHex: "#ffffff" },
-  { id: "rank-blue", sortOrder: 2, name: "Blue Belt", shortName: "Blue", colorHex: "#1d4ed8" },
+  {
+    id: "rank-white",
+    sortOrder: 1,
+    name: "White Belt",
+    shortName: "White",
+    colorHex: "#ffffff",
+    beltFamily: "COLORED",
+  },
+  {
+    id: "rank-blue",
+    sortOrder: 2,
+    name: "Blue Belt",
+    shortName: "Blue",
+    colorHex: "#1d4ed8",
+    beltFamily: "COLORED",
+  },
   {
     id: "rank-purple",
     sortOrder: 3,
     name: "Purple Belt",
     shortName: "Purple",
     colorHex: "#7c3aed",
+    beltFamily: "COLORED",
   },
-  { id: "rank-brown", sortOrder: 4, name: "Brown Belt", shortName: "Brown", colorHex: "#92400e" },
-  { id: "rank-black", sortOrder: 5, name: "Black Belt", shortName: "Black", colorHex: "#0f172a" },
+  {
+    id: "rank-brown",
+    sortOrder: 4,
+    name: "Brown Belt",
+    shortName: "Brown",
+    colorHex: "#92400e",
+    beltFamily: "COLORED",
+  },
+  {
+    id: "rank-black",
+    sortOrder: 5,
+    name: "Black Belt",
+    shortName: "Black",
+    colorHex: "#0f172a",
+    beltFamily: "BLACK",
+  },
 ] as const
 
 const KARATE_RANKS = [
-  { id: "k-white", sortOrder: 1, name: "White", shortName: "White", colorHex: "#ffffff" },
-  { id: "k-yellow", sortOrder: 2, name: "Yellow", shortName: "Yellow", colorHex: "#facc15" },
-  { id: "k-black", sortOrder: 3, name: "Black", shortName: "Black", colorHex: "#0f172a" },
+  {
+    id: "k-white",
+    sortOrder: 1,
+    name: "White",
+    shortName: "White",
+    colorHex: "#ffffff",
+    beltFamily: "COLORED",
+  },
+  {
+    id: "k-yellow",
+    sortOrder: 2,
+    name: "Yellow",
+    shortName: "Yellow",
+    colorHex: "#facc15",
+    beltFamily: "COLORED",
+  },
+  {
+    id: "k-black",
+    sortOrder: 3,
+    name: "Black",
+    shortName: "Black",
+    colorHex: "#0f172a",
+    beltFamily: "BLACK",
+  },
 ] as const
 
 function makeAward(opts: {
@@ -38,6 +89,10 @@ function makeAward(opts: {
   rankName: string
   rankColorHex?: string | null
   rankSortOrder?: number
+  // Structured belt-family for the entry's own rank. Only consulted for eligibility
+  // when the widened system ladder omits this rank (the recordEarnedRank fallback);
+  // otherwise the level's beltFamily comes from `ranks` (default: BJJ_RANKS).
+  rankBeltFamily?: BeltFamily | null
   rankSystemId?: string
   rankSystemName?: string
   disciplineName?: string | null
@@ -47,6 +102,7 @@ function makeAward(opts: {
     name: string
     shortName: string | null
     colorHex: string | null
+    beltFamily?: BeltFamily | null
   }>
   awardedAt?: Date | null
   awarderName?: string | null
@@ -66,6 +122,7 @@ function makeAward(opts: {
       shortName: opts.rankName,
       colorHex: opts.rankColorHex ?? "#000000",
       sortOrder: opts.rankSortOrder ?? 1,
+      beltFamily: opts.rankBeltFamily ?? null,
       rankSystem: {
         id: systemId,
         name: systemName,
@@ -319,12 +376,19 @@ describe("totalProgressionPoints", () => {
 })
 
 // SESSION_0473 TASK_03 — BBL "Black Belt rate" eligibility predicate.
-// `makeAward` always stamps slug "bjj", so the discipline-scoping branches use a
-// minimal direct `prog()` fixture; the happy path runs the real buildBeltProgressions.
-function prog(
-  disciplineSlug: string | null,
-  levels: Array<[name: string, status: "earned" | "current" | "locked"]>,
-): BeltProgression {
+// D-062 (SESSION_0735): the gate keys off the structured `Rank.beltFamily` enum, NOT
+// the display name — so `prog()` fixtures carry an explicit `beltFamily` per level and
+// a deliberately DECOUPLED display `name`. `makeAward` always stamps slug "bjj", so the
+// discipline-scoping branches use the minimal direct `prog()` fixture; the happy path
+// runs the real buildBeltProgressions.
+type ProgLevel = {
+  beltFamily: BeltFamily | null
+  status: "earned" | "current" | "locked"
+  /** Display name — deliberately independent of `beltFamily` (proves the gate ignores it). */
+  name?: string
+}
+
+function prog(disciplineSlug: string | null, levels: ProgLevel[]): BeltProgression {
   return {
     rankSystem: {
       id: "rs",
@@ -334,13 +398,20 @@ function prog(
           ? null
           : { id: "d", name: "Discipline", slug: disciplineSlug, code: null },
     },
-    levels: levels.map(([name, status], i) => ({
-      rank: { id: `r${i}`, name, shortName: null, colorHex: null, sortOrder: i },
-      status,
+    levels: levels.map((level, i) => ({
+      rank: {
+        id: `r${i}`,
+        name: level.name ?? `Rank ${i}`,
+        shortName: null,
+        colorHex: null,
+        sortOrder: i,
+        beltFamily: level.beltFamily,
+      },
+      status: level.status,
       awardedAt: null,
     })),
     currentLevelIndex: null,
-    earnedCount: levels.filter(([, status]) => status !== "locked").length,
+    earnedCount: levels.filter(level => level.status !== "locked").length,
     totalLevels: levels.length,
     points: 0,
   }
@@ -359,15 +430,18 @@ describe("isBlackBeltRateEligible", () => {
   })
 
   test("false when the highest awarded BJJ rank is brown", () => {
-    assert.equal(isBlackBeltRateEligible([prog("bjj", [["Brown Belt", "current"]])]), false)
+    assert.equal(
+      isBlackBeltRateEligible([prog("bjj", [{ beltFamily: "COLORED", status: "current" }])]),
+      false,
+    )
   })
 
   test("false when a black belt exists but was never awarded (locked)", () => {
     assert.equal(
       isBlackBeltRateEligible([
         prog("bjj", [
-          ["Brown Belt", "current"],
-          ["Black Belt", "locked"],
+          { beltFamily: "COLORED", status: "current" },
+          { beltFamily: "BLACK", status: "locked" },
         ]),
       ]),
       false,
@@ -376,21 +450,27 @@ describe("isBlackBeltRateEligible", () => {
 
   test("true for BJJ coral and red belts (black-belt-and-above)", () => {
     assert.equal(
-      isBlackBeltRateEligible([prog("bjj", [["Coral Belt (Red/Black) - 7th Degree", "current"]])]),
+      isBlackBeltRateEligible([prog("bjj", [{ beltFamily: "CORAL", status: "current" }])]),
       true,
     )
     assert.equal(
-      isBlackBeltRateEligible([prog("bjj", [["Red Belt - 10th Degree (Grand Master)", "earned"]])]),
+      isBlackBeltRateEligible([prog("bjj", [{ beltFamily: "RED", status: "earned" }])]),
       true,
     )
   })
 
   test("false for a black belt in a non-BJJ discipline", () => {
-    assert.equal(isBlackBeltRateEligible([prog("karate", [["Black Belt", "current"]])]), false)
+    assert.equal(
+      isBlackBeltRateEligible([prog("karate", [{ beltFamily: "BLACK", status: "current" }])]),
+      false,
+    )
   })
 
   test("false when the rank system has no discipline", () => {
-    assert.equal(isBlackBeltRateEligible([prog(null, [["Black Belt", "current"]])]), false)
+    assert.equal(
+      isBlackBeltRateEligible([prog(null, [{ beltFamily: "BLACK", status: "current" }])]),
+      false,
+    )
   })
 
   test("false for empty progressions", () => {
@@ -400,10 +480,50 @@ describe("isBlackBeltRateEligible", () => {
   test("multi-system: eligible if ANY BJJ system has an awarded black belt", () => {
     assert.equal(
       isBlackBeltRateEligible([
-        prog("karate", [["Black Belt", "current"]]),
-        prog("bjj", [["Black Belt", "current"]]),
+        prog("karate", [{ beltFamily: "BLACK", status: "current" }]),
+        prog("bjj", [{ beltFamily: "BLACK", status: "current" }]),
       ]),
       true,
+    )
+  })
+
+  // --- D-062 regression: eligibility keys off `beltFamily`, never the display name ---
+
+  test("D-062: a RENAMED/localized black belt still prices correctly (name never gates)", () => {
+    // Display name does NOT match the retired /\b(black|coral|red)\s+belt\b/ regex —
+    // this returned false (mispriced to $65) before the re-key. Structured family = BLACK.
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("bjj", [{ beltFamily: "BLACK", status: "current", name: "Faixa Preta" }]),
+      ]),
+      true,
+    )
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("bjj", [{ beltFamily: "RED", status: "earned", name: "Faixa Vermelha 10º grau" }]),
+      ]),
+      true,
+    )
+  })
+
+  test("D-062: a COLORED rank merely NAMED 'Black Belt' is NOT eligible", () => {
+    // Old name-regex would have matched this and granted the $45 rate (revenue leak /
+    // wrong discount). The structured family (COLORED) is what decides.
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("bjj", [{ beltFamily: "COLORED", status: "current", name: "Black Belt Prep" }]),
+      ]),
+      false,
+    )
+  })
+
+  test("D-062: an unseeded rank (null beltFamily) named like a black belt is NOT eligible", () => {
+    // Fails closed on the safe side — an unseeded rank never unlocks the discount rate.
+    assert.equal(
+      isBlackBeltRateEligible([
+        prog("bjj", [{ beltFamily: null, status: "current", name: "Black Belt" }]),
+      ]),
+      false,
     )
   })
 })
