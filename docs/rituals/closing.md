@@ -53,7 +53,9 @@ bash scripts/bow-out-gates.sh
 It runs every gate in one shot — task-log check, format-fix on touched files, `wiki:lint`, `next build` (only
 if `apps/web/**` changed), `graphify update` (capturing the node/edge/community count), git state, ledger
 cross-off **candidate detection**, the board-backlog next-pick list, the fallow introduced-findings delta,
-the deterministic State-of-Dojo render, and the hostile-review trigger — then prints a **pre-filled
+the deterministic State-of-Dojo render, the hostile-review trigger, and the **session telemetry
+readout** (`bun scripts/session-cost.ts --latest` — token split, est. cost, and elapsed time; lifted
+from MMB's /game-off step 5 at SESSION_0734) — then prints a **pre-filled
 `## Full close evidence` table** and an **`## LLM remainder checklist`** of only the judgment work left. It is
 read-mostly (auto-fixes formatting only) and **never commits or pushes**. Spend your tokens on the checklist
 remainder, not on re-running gates by hand. (If a build is mid-flight, let it finish first; note any abandoned

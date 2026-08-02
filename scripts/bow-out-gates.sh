@@ -424,6 +424,26 @@ if [ -n "$SESSION_FILE" ]; then
   fi
 fi
 
+# ── Gate 14 — Session telemetry (token/cost + elapsed; SESSION_0734) ──────────
+# Lifted from mammoth-metal-buildings' /game-off step 5 (SESSION_0574 mechanized
+# token/cost; elapsed-time mechanized here). Report-only, never blocking — the
+# statusline tee is CLI-only, so desktop/web sessions resolve via the newest
+# transcript fallback and may attribute a concurrent session's transcript;
+# treat the numbers as session-scale telemetry, not billing.
+section "Gate 14 — Session telemetry"
+EV_TELEMETRY="skipped (session-cost.ts or bun unavailable)"
+if [ -f scripts/session-cost.ts ] && command -v bun >/dev/null 2>&1; then
+  COST_OUT="$(bun scripts/session-cost.ts --latest 2>/dev/null || true)"
+  COST_LINE="$(printf '%s\n' "$COST_OUT" | grep -E '^[[:space:]]*TOTAL:' | head -1 | sed 's/^[[:space:]]*//')"
+  if [ -n "$COST_LINE" ]; then
+    printf '%s\n' "$COST_OUT" | sed '/^$/d'
+    EV_TELEMETRY="$COST_LINE"
+  else
+    echo "no transcript/payload resolved — telemetry unavailable this run."
+    EV_TELEMETRY="unavailable (no transcript/payload resolved)"
+  fi
+fi
+
 # ═══ Emit copy-pasteable block 1 — Full close evidence (pre-filled) ══════════
 section "Copy-paste block 1"
 cat <<EVIDENCE
@@ -442,6 +462,7 @@ cat <<EVIDENCE
 | Secret scan | $EV_SECRETS |
 | Evidence-artifact URL | $EV_ARTIFACT_STATE |
 | Next-session baton | $EV_BATON |
+| Session telemetry | $EV_TELEMETRY |
 | Touched | $TOUCHED_COUNT files (docs=$DOCS_COUNT · app=$APP_COUNT · other=$OTHER_COUNT) |
 EVIDENCE
 
