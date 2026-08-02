@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-08-02
-last_agent: claude-session-0736
+last_agent: claude-session-0737
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -974,8 +974,14 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
     `rank-entry-trust-axes.ts`, re-exported via `queries.ts` (test imports from `queries`).
   - **`canvas-model.ts` cyc-89 verdict:** ESSENTIAL breadth (≈15 tiny pure projection fns, each with
     real `?? null` business-rule fallbacks), not a reducible hotspot — **leave it**.
-- **Status:** partially resolved — **the billing-regex item is FIXED (SESSION_0736 / PR #405)**; its
-  carried-forward launch gate is **WL-P2-83** (prod `beltFamily` coverage proof). The remaining items
-  (dup `memberTopRank`, `use-drawer-profile` test/dead-export, stale `drawer-types` doc, `:117`
-  cast+enum-mirror F2, `schemas.ts` open string, refactor debt) stay **open** — routed, not fixed
-  (review-only lane); actionable when the frozen seam lifts (#380) or as a dedicated belt/lineage polish lane.
+- **Status:** mostly resolved. **Billing-regex item FIXED (SESSION_0736 / PR #405).** Its carried
+  launch gate **WL-P2-83** proved **GATE CLEAR** at SESSION_0737 (read-only prod proof: 11/11 eligible
+  BJJ black belts have `beltFamily`; the 2 null-`beltFamily` black belts are non-BJJ, discipline-excluded
+  so they cannot misprice — gate holds only while eligibility keeps its `discipline=bjj` scope; the
+  wiring stays a separate, later, operator-gated step). **SESSION_0737 / PR #406** cleared the 4 staged
+  behavior-preserving clusters: async `memberTopRank` → `memberTopRankView`; `use-drawer-profile`
+  colocated test + redundant-`?.` drop + `rankProgressPercent` un-export; stale `drawer-types` comment;
+  `:117` cast → payload-derived `SystemLadderRank` + F2 `Equals<BeltFamily, Prisma.BeltFamily>` mirror.
+  **Still OPEN (carried to SESSION_0738 fan-out lane B):** `schemas.ts:98` `z.string()`→enum (verify no
+  valid trust value excluded first), the first-in-discipline accessor extraction, `buildDescendantCounts`
+  O(depth) perf, the non-UTC `formatDate` off-by-one, cosmetics. `canvas-model.ts` cyc-89 stays ESSENTIAL.
