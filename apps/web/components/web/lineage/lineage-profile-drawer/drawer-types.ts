@@ -6,8 +6,10 @@ export type LineageProfileDrawerTab = "info" | "lineage" | "rank-history"
 // Phase 3c: identity is Passport-rooted. Ranks hang off `passport.rankEntries` (the ONE
 // canonical rank model, #376); the anchor award's ceremony facts (awardedAt, promoter,
 // organization) are reached via each entry's required `rankAward` relation. The attached
-// account (memberships, CARRY) hangs off `passport.user`. Both `passport` and `passport.user`
-// are nullable (accountless placeholder), so callers narrow before indexing.
+// account (memberships, CARRY) hangs off `passport.user`. `passport` is a REQUIRED relation
+// (LineageNode.passport, non-null); only `passport.user` is nullable (accountless placeholder),
+// so callers narrow `user` before indexing. `NonNullable` below is a defensive no-op kept so the
+// alias survives any future payload-shape change.
 export type DrawerPassport = NonNullable<LineageNodeProfile["passport"]>
 export type DrawerRankEntry = DrawerPassport["rankEntries"][number]
 export type DrawerAccount = DrawerPassport["user"]

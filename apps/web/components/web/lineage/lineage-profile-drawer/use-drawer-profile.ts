@@ -40,7 +40,9 @@ export function formatDate(date: Date | string | null | undefined): string | nul
   }).format(d)
 }
 
-export function rankProgressPercent(
+// Module-private (D-062): only `deriveDrawerProfileView` below consumes it — no external importer,
+// so it is not part of the module's public surface.
+function rankProgressPercent(
   rank:
     | {
         id: string
@@ -71,7 +73,9 @@ export function rankProgressPercent(
  * member's shown (highest awarded) rank — awarded truth, ADR 0035.
  */
 export function deriveDrawerProfileView(profile: LineageNodeProfile) {
-  const rankEntries = profile.passport?.rankEntries ?? []
+  // `profile.passport` is a REQUIRED relation (LineageNode.passport, non-null) — only
+  // `passport.user` is nullable (accountless placeholder). No `?.` on `.passport` itself.
+  const rankEntries = profile.passport.rankEntries ?? []
   const currentEntry = rankEntries[0] ?? null
   const currentRank = currentEntry?.rank ?? null
   const discipline = currentRank?.rankSystem?.discipline ?? null
@@ -81,11 +85,11 @@ export function deriveDrawerProfileView(profile: LineageNodeProfile) {
 
   return {
     displayName: passportDisplayName(profile.passport) ?? "Unnamed",
-    avatarSrc: profile.passport?.avatarUrl ?? profile.passport?.user?.image ?? null,
+    avatarSrc: profile.passport.avatarUrl ?? profile.passport.user?.image ?? null,
     currentEntry,
     currentRank,
     discipline,
-    latestMembership: profile.passport?.user?.memberships[0] ?? null,
+    latestMembership: profile.passport.user?.memberships[0] ?? null,
     instructorRelationship: profile.relationshipsTo[0] ?? null,
     panelEntry,
     panelRank,
@@ -99,7 +103,7 @@ export function deriveDrawerProfileView(profile: LineageNodeProfile) {
     // multi-discipline, so no disciplineId scoping (highest-overall).
     trustStatus: resolveLineageTrustStatus({
       rankStatus: memberTrustStatus(profile),
-      isPlaceholder: profile.passport?.user == null,
+      isPlaceholder: profile.passport.user == null,
       claimStatus,
     }),
   }

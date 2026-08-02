@@ -110,7 +110,7 @@ export async function memberRanks(
  * counts (callers that only want verified filter on `status` themselves).
  * Returns `null` when the member holds no rank (in the discipline).
  */
-export async function memberTopRank(
+export async function memberTopRankView(
   passportId: string,
   disciplineId?: string | null,
   dbClient: MemberRanksDb = db,
