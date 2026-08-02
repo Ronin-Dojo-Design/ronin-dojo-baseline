@@ -2,7 +2,7 @@
 title: "SESSION 0735 — retrospective quality sweep of recently-merged code (#403/#400/#397)"
 slug: session-0735
 type: session--review
-status: in-progress
+status: closed
 created: 2026-08-02
 updated: 2026-08-02
 last_agent: claude-session-0735
@@ -133,17 +133,59 @@ None. Operator declined a frozen State-of-Dojo snapshot; live view = `/app/state
 
 ## Next session
 
-- **Goal:** Run SESSION_0733 (#398 preview-DB isolation proof) via the staged kickoff baton — a
-  desktop session (operator-manual Vercel/Neon dashboard steps).
-- **First task:** Paste the fenced prompt from `SESSION_0734.md` `## Next session` into a fresh
-  desktop session. Inputs: issue #398, #380, D-058, RISK-16, `apps/web/scripts/prebuild-migrate.ts`.
-- **Kickoff prompt:** n/a — the #398 baton already lives filled in `SESSION_0734.md` `## Next session`
-  (0733 stays the staged twin); nothing new to author here.
+- **Goal (dependency stated as fact — Giddy close-call):** the FI-001 critical path is
+  #398 → #380 → cutover, and #398 is BLOCKED ON USER (Vercel/Neon dashboard steps only Brian can
+  run). **PRIMARY:** operator unblocks #398, then run the staged **0733** #398 proof lane.
+  **FALLBACK (if #398 still blocked):** #361 rebase-review (member-settings build, stale vs new
+  `main`, mergeable-pending) **or** a belt/lineage polish lane burning down **D-062** — start with
+  the `rank-progression.ts:291` billing-off-a-display-name-regex chip (highest-value item).
+- **First task:** if #398 unblocked → paste the fenced prompt from `SESSION_0734.md` `## Next session`
+  (inputs: #398, #380, D-058, RISK-16, `apps/web/scripts/prebuild-migrate.ts`). Else → pick a fallback
+  lane above and read D-062 + the target PR/files first.
+- **Kickoff prompt:** n/a — the #398 baton is already filled in `SESSION_0734.md` `## Next session`
+  (0733 stays the staged twin); fallback lanes are scoped above, not yet a filled baton.
 
 ## Close evidence
 
-_Filled at bow-out (TASK_04)._
+**/ggr composite:** 9.2/10 (review-lane touching process-OS tooling; ≥9.0 clears, ADR 0052 D6) ·
+**Caps applied:** none
+**Systemic health:** CI = PR #404 green (CLEAN/MERGEABLE — CI complete, Playwright complete,
+Typecheck scripts, RankAward guard all pass) · findings routed **all → D-062** (+ 1 background chip
+for the billing-regex item) · FS patterns: none recurring
+**Reviewer verdicts:** Giddy ×2 (review-only #400 belt seam / #397 lineage — both healthy B
+~8.2–8.4, no blockers, no rank-read/IMPORTED touches) + Giddy close-call (bow-out sequencing:
+close-then-merge to dodge FS-0045) · Doug n/a (tooling behavior verified via tsc / `bash -n` /
+`--latest` smoke) · Desi n/a (no UI)
+**Findings ≥ medium:** all D-062 med items — `rank-progression.ts:291` display-name price regex
+(billing-fragile) · `memberTopRank` name-clash (canvas-model vs member-ranks) · `use-drawer-profile`
+over-defensive `?.` on non-null `passport` + dead export — routed to D-062, none blocking, all
+frozen-seam-adjacent (fix when #380 lifts / dedicated lane).
+**ADR / ubiquitous-language check:** not required — no architectural decision; ADR 0049 staged-stub
++ ADR 0056 PR-flow followed.
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter + backlinks sweep | SESSION_0735 `pairs_with` 0734; `drift-register.md` `updated`→2026-08-02 + `last_agent`→claude-session-0735 (D-062 added). |
+| Wiki lint | `bun run wiki:lint`: 0 errors / 115 warnings — exact inherited baseline, 0 introduced. |
+| Reflections routing receipt | 4 lessons → 4 routes (D-062 ×2, no-action ×2). |
+| Code-quality gate (Class-A) | APPLY delta (2 tooling guards) self-scored ~9.2, behavior-preserving, fallow 0-introduced; no Class-A app code touched (tooling + docs only). |
+| Runtime verification (Doug) + artifact URL | no runtime surface touched — tooling scripts + a ledger doc; n/a. |
+| Deferral guard (§6.8) | run at close — result in bow-out chat line. |
+| Memory sweep · next-session unblock | no new durable memory (lane outcome is repo-recorded in D-062 + PR #404). Next-session unblocked: baton states the #398 dependency + #361/D-062 fallbacks. |
+| Git hygiene · Graphify update | `session-0735-quality-sweep` · explicit-path stage (never `git add -A`) · secret scan PASS · single close push = merge of PR #404 (operator-authorized) · **Graphify refresh POST-MERGE only** (deferred to after #404 lands). |
 
 ## Reflections
 
-_Filled at bow-out._
+- Retrospective sweep found **2 real latent bugs in already-merged, already-green tooling**
+  (empty-`wd` payload misattribution; new untracked files skip the close secret-scan) — green CI ≠
+  quality-gauntleted; a periodic pass over merged-but-not-gauntleted PRs earns its keep. → route:
+  no-action (lane outcome; PR #404 is the durable record)
+- fallow CRAP/dead-code flags on **entrypoint CLI scripts** (fan-in 0) and **provably-non-null
+  relations** (`use-drawer-profile`'s `passport` is a REQUIRED relation, `schema.prisma:2829`) are
+  METRIC ARTIFACTS — read the schema/entrypoint context before trusting a crap score. → route:
+  drift-register D-062
+- The **highest-value find** (a membership price keyed off a rank *display-name* regex) surfaced
+  from READING the pricing logic, not from any fallow metric — objective tools miss semantic /
+  business-rule defects; the review-wave is not optional. → route: drift-register D-062 + task chip
+- `TD` in this repo = **teardown/data**, not code tech-debt; no code-tech-debt ledger exists, so
+  refactor findings route to drift-register D. → route: no-action (routing clarification, recorded in D-062)
