@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-08-01
-last_agent: codex-session-0731
+updated: 2026-08-02
+last_agent: claude-session-0735
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -921,3 +921,45 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   overlapping page-data query, serialize it or upgrade/fix the adapter contract, and pin a
   warning-free build before pg 9 adoption.
 - **Status:** open; inherited warning observed and routed by SESSION_0731 Giddy close.
+
+### D-062 — Retrospective quality-sweep findings on recently-merged belt/lineage seam (#400/#397)
+
+- **Source:** SESSION_0735 review-only quality sweep (2 Giddy reviewers) of merged PR #400
+  ("Polish rank-read seam") + #397 ("canonical RankEntry rank-read seam"). Both PRs land ~8.2–8.4
+  (healthy B; A-grade small pure modules). No P1s, no security, no correctness/data-loss defects,
+  nothing touching frozen rank-read semantics. All items below are behavior-preserving and route
+  here rather than being fixed inline (frozen RankAward/#380 seam adjacency).
+- **Findings (file:line — issue — fix direction):**
+  - `apps/web/lib/lineage/rank-progression.ts:291` — **billing-fragile**: `isBlackBeltRateEligible`
+    gates a PRICE off a display-name regex `/\b(black|coral|red)\s+belt\b/i`; a renamed/localized rank
+    misprices silently → key off structured `beltFamily`/`degree`/sortOrder. **Highest-value item;
+    a background task chip was spawned.** (do NOT touch inline — pricing adjacent to frozen seam)
+  - `canvas-model.ts:86` vs `member-ranks.ts:113` — two exported `memberTopRank`, different
+    modules/return-types/sync-vs-async → import confusion; rename one (`memberTopRankView`).
+  - `use-drawer-profile.ts` (#397) — crap_max ~600 is a **metric artifact**, not an algorithmic
+    hotspot: over-defensive `?.`/`??` on `profile.passport`, which is a REQUIRED relation
+    (`schema.prisma:2829` `LineageNode.passport Passport @relation`, non-null) + one genuinely-dead
+    export `rankProgressPercent:43` + the only untested pure projector in the PR. Fix: colocated test
+    (collapses the crap³ term) + drop redundant `?.` on `passport` + un-export the dead symbol.
+  - `drawer-types.ts:9-10` — comment claims `passport` nullable; schema makes it REQUIRED (only
+    `passport.user` nullable); `info-tab.tsx:78` already derefs non-optionally → stale contract doc.
+  - `rank-progression.ts:117` — `rank as WidenedSystemRank` hand-rolled cast lets payload-shape drift
+    past tsc at a frozen seam; derive the widened type from the payload.
+  - `schemas.ts:98` — `verificationStatus: z.string()` open string on a trust field while siblings
+    use `z.enum`; tighten to the status enum.
+  - **Refactor debt (code-shape, no behavior):** "first-in-discipline-else-[0]" pick triplicated
+    across `belt-gate.ts:41,209` / `member-ranks.ts:119` / `canvas-model.ts:77` (extract one
+    accessor); `promoter-proposal-core.ts` 722 lines + 3× duplicated verify-block (153-179) + plain
+    `Error` vs `ORPCError` at mutation guards (→ generic 500s); 4× divergent `formatDate` helpers
+    (use-drawer-profile:31, rank-history:19, progression:34, promoter-change-modal:55 — the last
+    **non-UTC**, off-by-one near midnight; defer, display-adjacent); `canvas-model.ts:336`
+    `buildDescendantCounts` copies `new Set(seen)` per node (O(depth)/call vs the documented O(n)).
+  - **Cosmetic/none:** `queries.ts:82` orphan doc-comment; `schemas.ts:11` `cuid` const does no cuid
+    check (misnomer); `promoter-proposal-core.ts:216` `while(true)` anchor loop lacks a max-iter guard;
+    `Brand.BBL` hardcoded in 4 audit rows (harmless under brand-per-deploy).
+  - **Scope note:** the review list named `rank-entry-status.ts` — a **phantom**; the bridge lives in
+    `rank-entry-trust-axes.ts`, re-exported via `queries.ts` (test imports from `queries`).
+  - **`canvas-model.ts` cyc-89 verdict:** ESSENTIAL breadth (≈15 tiny pure projection fns, each with
+    real `?? null` business-rule fallbacks), not a reducible hotspot — **leave it**.
+- **Status:** open — routed, not fixed (review-only lane). Actionable when the frozen seam lifts
+  (#380) or as a dedicated belt/lineage polish lane; the billing-regex item is chip-tracked separately.
