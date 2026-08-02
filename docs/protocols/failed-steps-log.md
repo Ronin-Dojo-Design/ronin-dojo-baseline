@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-08-01
-last_agent: codex-session-0732
+updated: 2026-08-02
+last_agent: claude-session-0736
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -1355,6 +1355,47 @@ Read this section at bow-in instead of skimming every individual entry.
   changes touched counts and triggers code-quality/Fallow classification.
 - **Status:** open — SESSION_0732 manually audited the scanner via no-index diff, fixed all three
   findings, and routed the runner defect before push.
+
+### FS-0056 — A billing gate was re-keyed to a nullable backfilled column without proving the column is populated for the live cohort
+
+- **Session:** SESSION_0736 (#405, D-062 fix); surfaced by Doug in the `/ggr` close review (Finding 1).
+- **What happened:** `isBlackBeltRateEligible` (the $45-vs-$65 price gate) was re-keyed off the structured
+  `Rank.beltFamily` enum — correct and rename-proof — but `beltFamily` is a **nullable column backfilled
+  by migration `20260714010000_rank_belt_family` for only ONE named rank system** (`IBJJF Belt System`,
+  `shortName ~ ^BK[0-6]$|CB7|CB8|R9|R10`). A legitimate black-belt-or-above rank outside that pattern has
+  `beltFamily = null` → gate returns false → the member is silently mispriced **up** ($65). The change is
+  correct and safe *as code*, but it moves the money decision onto a data-coverage assumption that was
+  never verified against the live cohort.
+- **Root cause:** re-keying a revenue gate to a structured column implicitly assumes the column is
+  populated wherever the gate fires; a code review + unit tests prove the *logic*, not the *prod data
+  coverage* (DB-blind from a worktree). The verification step lagged the code.
+- **Corrective action:** when a gate (especially billing/entitlement) is re-keyed onto a
+  backfilled/seeded column, attach a **prod coverage proof** as a blocking prerequisite BEFORE the gate
+  is wired live — here routed as **WL-P2-83** (prove every member-held black-belt-or-above Rank has
+  `beltFamily ∈ {BLACK,CORAL,RED}`; reconcile nulls). Fail-closed direction (over-charge, never
+  under-charge) is the safe default but is not a substitute for the coverage proof.
+- **Status:** open — mitigated by design (fail-closed) + gate is UNWIRED today (zero live blast radius);
+  the coverage proof is the WL-P2-83 launch gate, pre-FI-001-send.
+
+### FS-0057 — A worktree session edited the canonical `main` checkout via absolute paths (FS-0034/0035 class recurrence)
+
+- **Session:** SESSION_0736 (#405); caught by Giddy (F1) + Doug in the `/ggr` close review, before any
+  commit landed on `main`.
+- **What happened:** the lane ran in worktree `infallible-proskuriakova-161b46` but the operator's request
+  named canonical absolute paths (`/Users/brianscott/dev/black-belt-legacy/apps/web/...`), and every
+  Read/Edit used them — so the whole D-062 diff accumulated as uncommitted changes on the canonical `main`
+  working tree while the assigned worktree stayed clean. `main` is PR-only; the work could not enter the
+  merge ladder from there.
+- **Root cause:** the FS-0035/0036 canonical-occupancy guard detects a *parallel session squatting*
+  canonical, not a *single session editing canonical files via absolute paths* — a blind spot. Absolute
+  paths in the task prompt silently overrode the worktree cwd.
+- **Corrective action:** in a worktree session, resolve edits against the **worktree root**, not the
+  canonical absolute path, even when the prompt quotes canonical paths. Recovery pattern (used here,
+  clean): `git diff > patch` on canonical → `git restore` canonical → `git apply` in the worktree →
+  commit on the lane branch. Consider extending the guard to flag a dirty canonical working tree when an
+  active worktree lane exists.
+- **Status:** open — recovered cleanly this session (canonical restored to clean `main`; diff relocated +
+  committed on the lane branch `01de3eed`); guard-extension is the residual.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 

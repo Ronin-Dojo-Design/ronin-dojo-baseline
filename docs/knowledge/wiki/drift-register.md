@@ -5,7 +5,7 @@ type: protocol
 status: active
 created: 2026-04-27
 updated: 2026-08-02
-last_agent: claude-session-0735
+last_agent: claude-session-0736
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -934,6 +934,14 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
     gates a PRICE off a display-name regex `/\b(black|coral|red)\s+belt\b/i`; a renamed/localized rank
     misprices silently → key off structured `beltFamily`/`degree`/sortOrder. **Highest-value item;
     a background task chip was spawned.** (do NOT touch inline — pricing adjacent to frozen seam)
+    **✅ RESOLVED SESSION_0736 (PR #405):** re-keyed `isBlackBeltOrAbove` off the structured
+    `Rank.beltFamily` enum (`{BLACK,CORAL,RED}` = black-belt-or-above); `degree` rejected as ambiguous
+    (COLORED belts share the 0–4 range) and `sortOrder` as system-relative — `beltFamily` is the only
+    rename-proof signal. Threaded through `ProgressionLevel["rank"]` + both accumulator paths + the
+    widened `rankSystem.ranks` payload select; +3 regression tests proven fail-before/pass-after. No new
+    RankAward read (pre-commit `rank-award-read-guard: PASS`) — migration-safe re #380. `/ggr` code ≈9.3
+    (Giddy CLEARS, Doug ships the diff). **Carried-forward launch gate → WL-P2-83** (prove prod
+    `beltFamily` coverage before the gate is wired; Doug Finding 1).
   - `canvas-model.ts:86` vs `member-ranks.ts:113` — two exported `memberTopRank`, different
     modules/return-types/sync-vs-async → import confusion; rename one (`memberTopRankView`).
   - `use-drawer-profile.ts` (#397) — crap_max ~600 is a **metric artifact**, not an algorithmic
@@ -944,7 +952,12 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   - `drawer-types.ts:9-10` — comment claims `passport` nullable; schema makes it REQUIRED (only
     `passport.user` nullable); `info-tab.tsx:78` already derefs non-optionally → stale contract doc.
   - `rank-progression.ts:117` — `rank as WidenedSystemRank` hand-rolled cast lets payload-shape drift
-    past tsc at a frozen seam; derive the widened type from the payload.
+    past tsc at a frozen seam; derive the widened type from the payload. **Now money-stakes (F2,
+    SESSION_0736 `/ggr`):** the D-062 fix routes the `Rank.beltFamily` **price** signal through this cast,
+    and `BeltFamily` itself is a hand-maintained mirror union in `components/common/belt-swatch.ts:46`
+    (kept off `@prisma/client` for the client component) — so a schema↔mirror **rename** on a revenue
+    field wouldn't be caught by the compiler. Fix when taken up: derive `WidenedSystemRank` from the
+    payload (`Prisma.RankGetPayload`) AND add a compile-time `Equals<local, Prisma.BeltFamily>` assertion.
   - `schemas.ts:98` — `verificationStatus: z.string()` open string on a trust field while siblings
     use `z.enum`; tighten to the status enum.
   - **Refactor debt (code-shape, no behavior):** "first-in-discipline-else-[0]" pick triplicated
@@ -961,5 +974,8 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
     `rank-entry-trust-axes.ts`, re-exported via `queries.ts` (test imports from `queries`).
   - **`canvas-model.ts` cyc-89 verdict:** ESSENTIAL breadth (≈15 tiny pure projection fns, each with
     real `?? null` business-rule fallbacks), not a reducible hotspot — **leave it**.
-- **Status:** open — routed, not fixed (review-only lane). Actionable when the frozen seam lifts
-  (#380) or as a dedicated belt/lineage polish lane; the billing-regex item is chip-tracked separately.
+- **Status:** partially resolved — **the billing-regex item is FIXED (SESSION_0736 / PR #405)**; its
+  carried-forward launch gate is **WL-P2-83** (prod `beltFamily` coverage proof). The remaining items
+  (dup `memberTopRank`, `use-drawer-profile` test/dead-export, stale `drawer-types` doc, `:117`
+  cast+enum-mirror F2, `schemas.ts` open string, refactor debt) stay **open** — routed, not fixed
+  (review-only lane); actionable when the frozen seam lifts (#380) or as a dedicated belt/lineage polish lane.
