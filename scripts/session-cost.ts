@@ -78,7 +78,9 @@ function pickPayload(): any | null {
     try {
       const p = JSON.parse(readFileSync(f, "utf-8"));
       const wd = p.workspace?.current_dir ?? p.cwd ?? "";
-      if (wd === cwd || wd.startsWith(cwd) || cwd.startsWith(wd)) return p;
+      // Guard the empty case: `cwd.startsWith("")` is always true, so a payload missing BOTH
+      // workspace.current_dir and cwd (wd="") would falsely match any repo (SESSION_0735).
+      if (wd && (wd === cwd || wd.startsWith(cwd) || cwd.startsWith(wd))) return p;
     } catch {
       /* skip unparseable */
     }

@@ -73,7 +73,10 @@ fi
 
 # ── Gate 3 — Touched files (classify) ────────────────────────────────────────
 section "Gate 3 — Touched files"
-TOUCHED="$( { git diff --name-only HEAD; git diff --cached --name-only; } 2>/dev/null | sort -u )"
+# tracked (staged+unstaged) + NEW untracked files. A close pass runs PRE-commit, so a
+# brand-new script/doc is still untracked; without the ls-files leg it would skip the
+# secret-scan (12b), format-fix (4), and hostile-review (12) gates below (SESSION_0735).
+TOUCHED="$( { git diff --name-only HEAD; git diff --cached --name-only; git ls-files --others --exclude-standard; } 2>/dev/null | sort -u )"
 TOUCHED_COUNT=0; DOCS_COUNT=0; APP_COUNT=0; OTHER_COUNT=0
 APP_TOUCHED=0
 CODE_FILES=()   # touched .ts/.tsx for the format-fix gate
