@@ -307,12 +307,17 @@ export const lineageNodeProfilePayload = {
                     // @added SESSION_0332 — Trophy.so rank-progression proof.
                     // Widened from {id, sortOrder} so the belt-ladder can render unearned levels
                     // with canonical name + colorHex. No schema change.
+                    // @added SESSION_0735 (D-062) — `beltFamily` so the Black-Belt-rate eligibility
+                    // gate (`isBlackBeltRateEligible`) keys off the structured belt-family enum
+                    // instead of a display-name regex. Earned levels source their rank object from
+                    // THIS list, so the field must be present here (not just on the entry rank).
                     select: {
                       id: true,
                       sortOrder: true,
                       name: true,
                       shortName: true,
                       colorHex: true,
+                      beltFamily: true,
                     },
                     orderBy: { sortOrder: "asc" as const },
                   },
