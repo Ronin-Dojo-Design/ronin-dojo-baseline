@@ -1,5 +1,15 @@
+import type { BeltFamily as PrismaBeltFamily } from "~/.generated/prisma/client"
 import type { BeltFamily } from "~/components/common/belt-swatch"
 import type { LineageNodeProfile } from "~/server/web/lineage/payloads"
+
+// F2 (D-062, money-mirror): `BeltFamily` above is the belt-swatch *local* literal union — belt-swatch
+// stays Prisma-free on purpose (importing the generated module breaks Turbopack inside a "use client"
+// file). This compile-time assertion FAILS THE BUILD if that hand-maintained mirror ever drifts from
+// the Prisma enum, because Black-Belt-rate ELIGIBILITY (a $45-vs-$65 price) keys off `beltFamily`.
+type Equals<A, B> =
+  (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false
+const _beltFamilyMirrorsPrisma: Equals<BeltFamily, PrismaBeltFamily> = true
+void _beltFamilyMirrorsPrisma
 
 /**
  * Trophy.so-style rank-progression read model (SESSION_0332).
@@ -83,14 +93,10 @@ type RankSystemAccumulator = {
 
 type EntryRank = NonNullable<RankEntry["rank"]>
 type EntryRankSystem = NonNullable<EntryRank["rankSystem"]>
-type WidenedSystemRank = {
-  id: string
-  sortOrder: number
-  name?: string | null
-  shortName?: string | null
-  colorHex?: string | null
-  beltFamily?: BeltFamily | null
-}
+// @changed SESSION_0737 (D-062) — derived from the payload's ladder select
+// (`payloads.ts` rankEntries.rank.rankSystem.ranks) instead of a hand-rolled all-optional shape.
+// tsc now catches any drift between the projection and the actual selected fields at this frozen seam.
+type SystemLadderRank = NonNullable<EntryRankSystem["ranks"]>[number]
 
 function awardDate(entry: RankEntry): Date | null {
   const awardedAt = entry.rankAward.awardedAt
@@ -106,21 +112,21 @@ function compareDatesDesc(a: Date | null, b: Date | null): number {
   return b.getTime() - a.getTime()
 }
 
-function progressionRankFromSystemRank(rank: WidenedSystemRank): ProgressionLevel["rank"] {
+function progressionRankFromSystemRank(rank: SystemLadderRank): ProgressionLevel["rank"] {
   return {
     id: rank.id,
     sortOrder: rank.sortOrder,
-    name: rank.name ?? "",
-    shortName: rank.shortName ?? null,
-    colorHex: rank.colorHex ?? null,
-    beltFamily: rank.beltFamily ?? null,
+    name: rank.name,
+    shortName: rank.shortName,
+    colorHex: rank.colorHex,
+    beltFamily: rank.beltFamily,
   }
 }
 
 function createRankSystemAccumulator(system: EntryRankSystem): RankSystemAccumulator {
   const rankById = new Map<string, ProgressionLevel["rank"]>()
   for (const rank of system.ranks ?? []) {
-    rankById.set(rank.id, progressionRankFromSystemRank(rank as WidenedSystemRank))
+    rankById.set(rank.id, progressionRankFromSystemRank(rank))
   }
 
   return {

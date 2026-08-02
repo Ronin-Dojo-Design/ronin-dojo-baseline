@@ -15,7 +15,7 @@
 import { describe, expect, it } from "bun:test"
 import type { RankEntryProvenance, RankEntryStatus } from "~/.generated/prisma/client"
 import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
-import { memberRanks, memberTopRank } from "~/server/belt/member-ranks"
+import { memberRanks, memberTopRankView } from "~/server/belt/member-ranks"
 
 const BJJ = "disc-bjj"
 const FMA = "disc-fma"
@@ -140,7 +140,7 @@ describe("memberRanks", () => {
   })
 })
 
-describe("memberTopRank", () => {
+describe("memberTopRankView", () => {
   const rows = [
     row({ id: "bjj-black", sortOrder: 9, disciplineId: BJJ }),
     row({ id: "fma-hi", sortOrder: 7, disciplineId: FMA }),
@@ -148,12 +148,12 @@ describe("memberTopRank", () => {
   ]
 
   it("returns the global ceiling (highest sortOrder) when no discipline is given", async () => {
-    const top = await memberTopRank("p1", undefined, fakeDb(rows).dbClient)
+    const top = await memberTopRankView("p1", undefined, fakeDb(rows).dbClient)
     expect(top?.rankEntryId).toBe("bjj-black")
   })
 
   it("scopes the ceiling to a discipline (ADR 0035 — highest awarded in-discipline)", async () => {
-    const top = await memberTopRank("p1", FMA, fakeDb(rows).dbClient)
+    const top = await memberTopRankView("p1", FMA, fakeDb(rows).dbClient)
     expect(top?.rankEntryId).toBe("fma-hi")
   })
 
@@ -162,12 +162,12 @@ describe("memberTopRank", () => {
       row({ id: "top-unverified", sortOrder: 9, disciplineId: BJJ, status: "UNVERIFIED" }),
       row({ id: "lower-verified", sortOrder: 2, disciplineId: BJJ, status: "VERIFIED" }),
     ])
-    const top = await memberTopRank("p1", BJJ, dbClient)
+    const top = await memberTopRankView("p1", BJJ, dbClient)
     expect(top?.rankEntryId).toBe("top-unverified")
   })
 
   it("returns null when the member holds no rank in the discipline", async () => {
-    const top = await memberTopRank("p1", "disc-none", fakeDb(rows).dbClient)
+    const top = await memberTopRankView("p1", "disc-none", fakeDb(rows).dbClient)
     expect(top).toBeNull()
   })
 })
