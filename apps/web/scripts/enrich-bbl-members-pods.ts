@@ -657,9 +657,12 @@ async function main() {
           totalRankEnriched++
           if (!isDryRun) {
             await db.rankAward.update({ where: { id: existingAward.id }, data: awardUpdate })
-            // Heals entry-less awards on re-runs — display-invisible since the #397 read collapse.
-            await syncRankEntryFromAward(db, existingAward.id)
           }
+        }
+        if (!isDryRun) {
+          // Heals entry-less awards on EVERY re-run (even with nothing to enrich) —
+          // display-invisible since the #397 read collapse.
+          await syncRankEntryFromAward(db, existingAward.id)
         }
       } else {
         plan.rankAwardsCreated++

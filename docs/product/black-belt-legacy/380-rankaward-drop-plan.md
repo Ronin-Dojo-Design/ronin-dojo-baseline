@@ -57,8 +57,11 @@ an order of magnitude above the snapshot. Therefore:
   migration below against the refreshed snapshot before any prod merge.
 - The catch-up backfill (§4 PR1-B0) is mandatory and idempotent precisely because awards without
   entries demonstrably occur — the inventory explains the mechanism: every RUNTIME writer syncs
-  through `syncRankEntryFromAward`, but the five seed/import script writers (§7b) do not; the
-  snapshot's 22 entry-less awards carry 7/30–31 import-run timestamps.
+  through `syncRankEntryFromAward`, but the five seed/import script writers (§7b) did not; the
+  snapshot's 22 entry-less awards carry 7/30–31 import-run timestamps. *(Sync wired into all
+  five by SESSION_0739 TASK_04 — same PR as this ratification; scratch-DB seed run proved
+  awards==entries, 0 orphans. The §7 `file:line` refs were minted pre-TASK_04 and drift a few
+  lines; the PR2 RankEntry-native port remains real and distinct from the sync wiring.)*
 
 ## 1. Final RankEntry columns (end-state)
 
@@ -339,7 +342,8 @@ every statement batch (#398 recipe).
 
 ## 7. Writer-cutover inventory (TASK_01, SESSION_0739 Explore sweep)
 
-No `// rank-read-guard: allow` escapes exist anywhere in `apps/web` (verified by sweep).
+One `// rank-read-guard: allow` escape exists: the `seed-baseline-owner.ts` transitional cleanup
+probe (added by the SESSION_0739 sweep itself, dies with PR2); none predate this plan.
 
 ### 7a. The 7 runtime write flows (all funnel through `syncRankEntryFromAward` — `rank-entry-compatibility.ts:37`)
 
@@ -353,11 +357,12 @@ No `// rank-read-guard: allow` escapes exist anywhere in `apps/web` (verified by
 | Add-person (admin) | `createPerson` `orpc/routers/users.ts:181→205` | mint STATED/UNVERIFIED on accountless Passport |
 | Non-minting mutators | `applyLineageNodeProfileUpdate` `node-profile-actions.ts:154` (awardedAt) · `savePromotionEvent` `promotion-events/editor-actions.ts:272,281` (**no sync today**) · identity merge repoint/restore `repoint-promoter-identity.ts:285/356` | targeted fact updates |
 
-### 7b. No-sync writers (write RankAward with NO RankEntry — the silent-zero-rows risk post-cutover)
+### 7b. No-sync writers (wrote RankAward with NO RankEntry — closed by SESSION_0739 TASK_04, same PR)
 
-`prisma/seed.ts:1625,1729` · `prisma/seed-baseline-owner.ts:264,285` (probe at `:260` still
-filters the long-dropped `userId` column — latent bug) · `prisma/seed-baseline-lineage.ts`
+`prisma/seed.ts:1625,1729` · `prisma/seed-baseline-owner.ts:264,285` (probe at `:260` filtered
+the long-dropped `userId` column — fixed same PR) · `prisma/seed-baseline-lineage.ts`
 (8 write sites) · `scripts/import-bbl-members-full.ts:543` · `scripts/enrich-bbl-members-pods.ts:658,665`.
+All now call `syncRankEntryFromAward`; the PR2 port to RankEntry-NATIVE writes is still required.
 One-shots `scripts/session-0522/0523/0524-*.ts` are historical (0522 carries an inlined,
 drift-prone copy of the sync) — retire/annotate, never port.
 

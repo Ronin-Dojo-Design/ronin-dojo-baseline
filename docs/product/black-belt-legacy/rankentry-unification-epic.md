@@ -4,7 +4,7 @@ slug: rankentry-unification-epic
 type: epic-plan
 status: proposed
 created: 2026-07-10
-updated: 2026-08-01
+updated: 2026-08-03
 last_agent: codex-session-0731
 pairs_with:
   - docs/product/black-belt-legacy/rank-entry-unified-data-flow.md
@@ -78,8 +78,11 @@ temporary RankAward anchor until #380.
   `@@unique` PROMOTED_BY mirror = repeated-promotion semantics, ADR 0016). ⚠ `rankAwardId` is `SetNull` today —
   dropping RankAward before this repoint silently orphans the whole PROMOTED_BY graph (the moat-rip).
 - **G — writers RankEntry-native:** place-lead/claim-finalize/add-person/router/node-profile-actions/verify
-  write RankEntry directly; delete `syncRankEntryFromAward` + `rankEntryStatusForAward` (10 call-sites). ⚠ the
-  seed/import/enrich scripts create RankAward *without* the sync seam — audit for orphan awards first.
+  write RankEntry directly; delete `syncRankEntryFromAward` + `rankEntryStatusForAward` (~21 call-sites after
+  SESSION_0739 wired the seeds/scripts — count at cutover time). ⚠ ~~the seed/import/enrich scripts create
+  RankAward *without* the sync seam~~ **closed SESSION_0739 (PR #411):** all five now call the seam
+  (scratch-proof awards==entries/0 orphans); their RankEntry-NATIVE port still rides this phase. The ratified
+  execution sequence for the whole drop is [`380-rankaward-drop-plan.md`](380-rankaward-drop-plan.md).
   ⚠ **Belt trust/proposal compatibility writers (SESSION_0540–0542, FINDING_06 → ADR 0047 D6):**
   `decideBackfillPromoterTransition` / `applyMemberPromoterTransition`
   (`server/belt/{belt-gate,promoter-proposal-core}.ts`) write `RankAward.verificationStatus` and re-read promoter

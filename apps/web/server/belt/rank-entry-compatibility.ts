@@ -4,7 +4,7 @@
  *          `PrismaClient` that seeds/import scripts use, which is why script-created awards
  *          skipped the sync and were display-invisible after the #397 read collapse.
  * @why     Mirror transitional RankAward writes into RankEntry while keeping trust axes distinct
- * @wired   server/belt/router.ts, server/belt/promoter-proposal-core.ts, server/belt/rank-entry-trust-axes.ts, e2e/helpers/seed-rank-entries.ts, prisma/seed.ts, prisma/seed-baseline-lineage.ts, scripts/import-bbl-members-full.ts, scripts/enrich-bbl-members-pods.ts
+ * @wired   server/belt/router.ts, server/belt/promoter-proposal-core.ts, server/belt/rank-entry-trust-axes.ts, e2e/helpers/seed-rank-entries.ts, prisma/seed.ts, prisma/seed-baseline-lineage.ts, prisma/seed-baseline-owner.ts, scripts/import-bbl-members-full.ts, scripts/enrich-bbl-members-pods.ts
  */
 import type {
   RankAwardVerificationStatus,
@@ -52,10 +52,11 @@ export type RankEntryCompatibilityDb = {
  * Synchronize the canonical RankEntry aggregate from its temporary RankAward
  * compatibility anchor.
  *
- * Callers must pass their current Prisma transaction client. Requiring the
- * client keeps the legacy fact write and canonical aggregate update atomic;
- * this helper deliberately has no default connection that could escape the
- * caller's transaction.
+ * Runtime flows must pass their current Prisma transaction client — that keeps
+ * the legacy fact write and canonical aggregate update atomic, and this helper
+ * deliberately has no default connection that could escape the caller's
+ * transaction. Idempotent seeds/import scripts (non-transactional by design)
+ * may pass a plain client; their heal-on-rerun branches cover crash windows.
  */
 export async function syncRankEntryFromAward(
   dbClient: RankEntryCompatibilityDb,

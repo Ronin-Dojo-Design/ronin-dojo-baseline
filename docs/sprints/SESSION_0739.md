@@ -53,6 +53,17 @@ Frontmatter `status:` is the single source of truth (`in-progress` → `closed`,
   → #380 unblocked. (B) Model-fit: Fable 5 confirmed by operator (Fable 5 is the Mythos-class
   tier above Opus 4.8; plan-only lane besides).
 
+### Graphify check (backlink sweep, operator-requested)
+
+`graphify query "rank-entry-compatibility syncRankEntryFromAward …"` + docs-scoped rg on the
+touched filenames → 5 live docs needed updates (applied): `rankentry-unification-epic.md` (stale
+10-call-site count + closed §G script warning), `wiring-ledger.md` WL-P2-42 (runtime-only scope
+addendum), `BBL_PODS_FULL_IMPORT_SPEC.md` (importers now sync entries),
+`lineage-rank-promotion-sync-rules.md` (stale-banner: dropped `RankAward.userId`, RankEntry era,
+plan pointer), `lineage-hub.md` (new Rank-truth row → ADR 0058 + the ratified plan).
+`sop-test-writing.md` checked at operator ask — NO update needed (its RankAward refs are fixture
+history, untouched by this session). Archives/closed sessions left alone by policy.
+
 ### Grill outcome (crux forks — operator one-word picks, 2026-08-03)
 
 - **Fork A `source` column:** **Evidence** — TASK_01 counts real code readers + prodsnap data
@@ -141,13 +152,19 @@ are sequential on it. Single lane, canonical checkout — no worktree fan-out.
 
 ### Scope guard
 
-NO schema edit, NO migration file, NO writer-code change, NO push without explicit word. #380
+NO schema edit, NO migration file, NO writer-code change (*amended by the operator's TASK_04
+rider: the seed/script no-sync fix was pulled in-lane; app-runtime writer flows remain
+untouched*), NO push without explicit word. #380
 execution (PR1–PR3) is a separate attended lane. WL-P2-83 beltFamily price-gate stays read-only
 proof — do not wire. Pre-#380 code polish is out of scope (issue rule 4).
 
 ## Cody pre-flight
 
-n/a — no code written (plan-only session; TASK_02 output is a docs file).
+TASK_01–03: n/a — no code written (plan outputs are docs files). TASK_04 (operator-added
+mid-session): inline Cody; pre-flight compressed into the TASK_02 inventory it executed against —
+reuse check = the existing `syncRankEntryFromAward` seam (no new primitive; structural-type
+precedent `SyncTx`/`VerifyRankEntryTx`); arch-gate = plan §7b named these exact writers; gates
+run twice (tsc/lint/full suite per commit).
 
 ## Delivered
 
@@ -155,7 +172,8 @@ n/a — no code written (plan-only session; TASK_02 output is a docs file).
 | --- | --- | --- |
 | SESSION_0739_TASK_01 | landed | Explore sweep (7 runtime flows via ONE sync seam `rank-entry-compatibility.ts:37`; 5 no-sync seed/import writers; GamificationEvent FK dead; no read-guard escapes) + prodsnap evidence (stale snapshot caveat: 14 entries vs prod's recorded 111; 22 orphan awards = 7/30–31 import runs). Fork A RESOLVED: keep `source` (real reader `belt-gate.ts:88`). |
 | SESSION_0739_TASK_02 | landed | `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` — full ratifiable plan (3-PR sequence, trigger DDL, B0–B2 backfill SQL, V1–V9 + P1–P5, rollback per stage, PR3 point-of-no-return, §7 writer-cutover inventory). Giddy verdict PASS-WITH-FIXES; all 12 findings (1 blocker: relax `RankEntry.rankAwardId` NOT NULL/Cascade at PR2 · 3 majors: delete-orphan awards, post-swap fact-sync gap, V2/V7 PR3-unsatisfiability · 8 minors) applied to the doc. wiki-lint 0 errors. |
-| SESSION_0739_TASK_03 | landed | Operator RATIFIED the plan 2026-08-03 (one-word pick); doc flipped `draft → ratified`; PR1-execution baton staged in Next session. Push still HELD. |
+| SESSION_0739_TASK_03 | landed | Operator RATIFIED the plan 2026-08-03 (one-word pick); doc flipped `draft → ratified`; PR1-execution baton staged in Next session. |
+| SESSION_0739_TASK_04 | landed | No-sync writer sweep: seam type widened structurally (`rank-entry-compatibility.ts`), 11 sync sites wired across seed.ts / seed-baseline-lineage.ts / seed-baseline-owner.ts / both BBL import scripts; owner probe repointed `userId → passportId` (runtime thrower); chip commit `62f90c12` cherry-picked (Tool.tierPriority + FS-0058). Commits `0732f622`, `ee7184bf`, `d9fe6a45`; PR #411 opened on operator grant. |
 
 **Decisions resolved:** Forks A–D picked at bow-in (Evidence · Trigger · Direct · 3-PR); Fable 5
 model-fit confirmed.
@@ -165,8 +183,13 @@ model-fit confirmed.
 | Command / smoke | Result |
 | --- | --- |
 | read-only evidence queries vs `ronindojo_prodsnap` (scratchpad `380-evidence.ts`) | ran clean; snapshot flagged stale (14 entries vs prod's recorded 111) |
-| `bun run wiki:lint` | 0 errors / 115 warnings, all pre-existing (0 on the two new files) |
+| `bun run wiki:lint` | 0 errors / 115 warnings, all pre-existing (0 on session files) |
 | Giddy architecture review (subagent) | PASS-WITH-FIXES → all 12 findings applied |
+| `bunx tsc --noEmit` ×3 (per code commit) | 0 errors each |
+| `bun run test --parallel=1` ×3 (per code commit) | 1972 pass / 0 fail each run |
+| Scratch-DB seed proof (`ronindojo_scratch_0739`, dropped after) | seed.ts + seed-baseline-lineage: **25 awards / 25 entries / 0 orphans**; provenance/status derivation correct; owner seed blocked by design (needs Brian's live Better-Auth user) |
+| `bunx fallow audit --changed-since origin/main` + `health` | neutral delta — flagged complexity all inherited in one-shot scripts; maintainability 89.8 (good) |
+| PR #411 CI | read-guard/tsc/scripts-tsc/oxc/unit/`CI complete` green; Playwright pending at record time |
 
 ## Artifacts
 
@@ -179,8 +202,8 @@ model-fit confirmed.
 - Plan RATIFIED 2026-08-03. Push of this session's branch still HELD for explicit authorization.
 - Pre-execution action carried into the plan: refresh `ronindojo_prodsnap` (stale: 14 entries vs
   prod's recorded 111) before shadow-replay rehearsal.
-- Latent bug routed out-of-lane: `seed-baseline-owner.ts:260` probes the dropped `userId` column
-  (spawn-task chip issued this session).
+- ~~Latent bug routed out-of-lane~~ — superseded: the `seed-baseline-owner.ts` probe fix came
+  back in-lane (TASK_04 consolidation rider) and landed in `d9fe6a45`.
 
 ## Next session
 
@@ -209,11 +232,22 @@ model-fit confirmed.
 
 ## Close evidence
 
-**/ggr composite:** · **Caps applied:**
-**Systemic health:** CI = · findings routed · FS patterns:
-**Reviewer verdicts:** Giddy · Doug · Desi
-**Findings ≥ medium:**
-**ADR / ubiquitous-language check:**
+**/ggr composite:** **9.15/10** — Unit 1 seam 9.14 · Unit 2 wiring 8.98 → 9.16 after the
+scratch-DB proof lifted D1 (Giddy's stated lift) · Plan lane PASS (all 4 rubric criteria) ·
+**Caps applied:** none binding — 9.4 no-credible-verification cleared by the scratch run;
+Dirstarter-bypass + undocumented-pattern + regression explicitly ruled out with evidence.
+**Systemic health:** CI = green on `CI complete` (run 30841802727; job 91781870311); `Playwright
+complete` pending at score time — re-polled before merge word · findings routed 9/9 (Giddy 4×P3
+hygiene + Doug 1×P2 + 4×P3, ALL fixed in-session same PR) · FS patterns: none recurred
+(FS-0058 new + closed on the cherry-picked branch).
+**Reviewer verdicts:** Giddy pass (9.06 → 9.15 with lifts) · Doug pass (9.2/10, no hard cap;
+independent gates: tsc 0, suite 1972/0, all 11 sync sites scope+dry-run verified, owner probe
+proven a runtime crash trap pre-fix) · Desi n/a — no UI touched.
+**Findings ≥ medium:** Doug P2 (plan-doc §0/§7b present-tense staleness vs same-PR TASK_04) —
+fixed in-session; nothing residual ≥ medium.
+**ADR / ubiquitous-language check:** ADR 0058 confirmed valid + preserved (display law,
+provenance immutability, IMPORTED ratification); no new ADR needed — #380 plan doc is the
+ratified decision record.
 
 | Step | Proof |
 | --- | --- |
