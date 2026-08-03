@@ -4,7 +4,7 @@ slug: bbl-pods-full-import-spec
 type: spec
 status: draft
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-08-03
 last_agent: claude-session-0409
 sprint: S6
 pairs_with:
@@ -144,7 +144,8 @@ Code written; **not** applied to prod, importer **not** run for real, `BBL_COUNT
   Generated locally; **left un-applied** to prod (never `migrate deploy` against prod Neon here).
 - **Phase 2 importer** — `apps/web/scripts/enrich-bbl-members-pods.ts` consumes
   `/tmp/bbl-export/reconciled-full.json`: matches accountless Passports by `displayName` within
-  `bbl-lineage`, fills NULL profile fields, upserts per-belt `RankAward` rows (date/promoter/school/pics),
+  `bbl-lineage`, fills NULL profile fields, upserts per-belt `RankAward` rows (date/promoter/school/pics)
+  **+ syncs each award's `RankEntry` read model — heal-on-every-rerun (SESSION_0739; both importers)**,
   attaches galleries as `MediaAttachment`, and writes home/representing affiliations. Idempotent,
   `--dry-run`, gated behind `BBL_COUNTDOWN`. A reproducible dry-run sample against a seeded local DB lives
   in `apps/web/scripts/fixtures/` (sample input + captured output).

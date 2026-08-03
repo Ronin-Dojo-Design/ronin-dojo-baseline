@@ -2,6 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { addDays } from "date-fns"
 import { PrismaClient, ToolStatus, ToolTier, type UserRole } from "~/.generated/prisma/client"
 import { assertSafeSeedTarget } from "~/scripts/seed-target-guard"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
@@ -21,10 +22,41 @@ For martial arts directory workflows, each listing should make the relationship 
 
 Automated content generation can enrich this text later with screenshots, favicons, and structured descriptions. Human review remains required before launch for brand accuracy, lineage claims, sanctioning claims, and payment-related listing benefits.`
 
+// Tool.tierPriority is a Postgres STORED generated column (migration
+// 20260520004112_uplift_L3_schema_wave), which Prisma can only model as
+// `@default(dbgenerated())` — so `prisma db push` creates it as a plain
+// NOT NULL column with no default, and every tool insert dies with P2011
+// ("null constraint violation"). Databases created via `prisma migrate deploy`
+// have the real generated column and are left untouched.
+async function ensureToolTierPriorityGenerated() {
+  const [column] = await db.$queryRaw<{ isGenerated: string }[]>`
+    SELECT is_generated AS "isGenerated"
+    FROM information_schema.columns
+    WHERE table_schema = current_schema()
+      AND table_name = 'Tool'
+      AND column_name = 'tierPriority'
+  `
+  if (column?.isGenerated !== "NEVER") return
+
+  console.log("Repairing Tool.tierPriority (db-push database) to its generated-column shape...")
+  await db.$transaction([
+    db.$executeRawUnsafe(`ALTER TABLE "Tool" DROP COLUMN "tierPriority"`),
+    db.$executeRawUnsafe(
+      `ALTER TABLE "Tool" ADD COLUMN "tierPriority" INTEGER GENERATED ALWAYS AS (CASE WHEN "tier" = 'Premium' THEN 0 ELSE 1 END) STORED`,
+    ),
+    db.$executeRawUnsafe(`ALTER TABLE "Tool" ALTER COLUMN "tierPriority" SET NOT NULL`),
+    db.$executeRawUnsafe(
+      `CREATE INDEX "Tool_tierPriority_publishedAt_idx" ON "Tool"("tierPriority", "publishedAt")`,
+    ),
+  ])
+}
+
 async function main() {
   const now = new Date()
 
   console.log("Starting seeding...")
+
+  await ensureToolTierPriorityGenerated()
 
   await db.user.createMany({
     data: [
@@ -1622,13 +1654,15 @@ async function main() {
       else if (tu.disciplineId === eskrima.id) awardRank = eskrimaL3
 
       if (awardRank) {
-        await db.rankAward.create({
+        // An award without its RankEntry is display-invisible since the #397 read collapse.
+        const award = await db.rankAward.create({
           data: {
             passportId: passport.id,
             rankId: awardRank.id,
             awardedAt: now,
           },
         })
+        await syncRankEntryFromAward(db, award.id)
         // Update membership with current rank
         await db.membership.update({
           where: { id: membership.id },
@@ -1726,9 +1760,10 @@ async function main() {
     },
   })
   if (muayThaiPrajioud) {
-    await db.rankAward.create({
+    const mtAward = await db.rankAward.create({
       data: { passportId: mtMikePassport.id, rankId: muayThaiPrajioud.id, awardedAt: now },
     })
+    await syncRankEntryFromAward(db, mtAward.id)
   }
   console.log("Created Muay Thai Mike (PUBLIC, ACTIVE, ranked)")
 

@@ -58,6 +58,7 @@ import { readFileSync } from "node:fs"
 import { PrismaPg } from "@prisma/adapter-pg"
 
 import { PrismaClient } from "../.generated/prisma/client"
+import { syncRankEntryFromAward } from "../server/belt/rank-entry-compatibility"
 
 const adapter = new PrismaPg({
   connectionString:
@@ -658,11 +659,16 @@ async function main() {
             await db.rankAward.update({ where: { id: existingAward.id }, data: awardUpdate })
           }
         }
+        if (!isDryRun) {
+          // Heals entry-less awards on EVERY re-run (even with nothing to enrich) —
+          // display-invisible since the #397 read collapse.
+          await syncRankEntryFromAward(db, existingAward.id)
+        }
       } else {
         plan.rankAwardsCreated++
         totalRankCreated++
         if (!isDryRun) {
-          await db.rankAward.create({
+          const created = await db.rankAward.create({
             data: {
               passportId,
               rankId,
@@ -676,6 +682,7 @@ async function main() {
               verificationStatus: "IMPORTED",
             },
           })
+          await syncRankEntryFromAward(db, created.id)
         }
       }
     }

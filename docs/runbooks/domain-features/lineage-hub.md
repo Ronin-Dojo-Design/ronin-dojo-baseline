@@ -4,7 +4,7 @@ slug: lineage-hub
 type: runbook
 status: active
 created: 2026-05-30
-updated: 2026-07-01
+updated: 2026-08-03
 last_agent: claude-session-0491
 domain: lineage
 pairs_with:
@@ -130,6 +130,7 @@ So a session can open the right file directly instead of grepping. Components ar
 | **Mutations + RBAC** | `server/web/lineage/editor-actions.ts` / `editor-queries.ts` / `editor-graph.ts` (placement edits, `assertPlacementEditorAccess`, audit-on-mutation); `node-profile-actions.ts`; `claim-actions.ts`. **Claim submit (unified):** `server/web/claims/submit-passport-claim.ts` (writes `PassportClaimRequest` incl. `claimedRankId` + the SESSION_0441 `claimedSchoolId`/`trainedUnderNodeId`/`representTreeId` refs); the join-wizard lead door is `server/web/lead/public-actions.ts` `createJoinLegacyInterest`. Review/finalize: `server/admin/lineage/claim-finalize.ts` (claim→RankAward). |
 | **Pure libs (presentation-agnostic)** | `apps/web/lib/lineage/canvas-model.ts` (normalization), `tree-layout.ts`, `rank-progression.ts`, `search.ts`, `bbl-bjj-rank-map.ts` |
 | **Schema + seeds** | `apps/web/prisma/schema.prisma` (`Lineage*` models, `RankAward`, `PassportClaimRequest` + claim-ref columns); seeds `prisma/seed-baseline-lineage.ts`, `seed-bbl-org.ts` |
+| **Rank truth + RankAward retirement** | `RankEntry` is the canonical rank read model (ADR 0058: [`0058-rankentry-is-rank-truth.md`](../../adr/0058-rankentry-is-rank-truth.md)); writes stay on `RankAward` until #380 executes. Ratified drop plan: [`380-rankaward-drop-plan.md`](../../product/black-belt-legacy/380-rankaward-drop-plan.md) — includes the `LineageRelationship.rankAwardId → rankEntryId` repoint (the PROMOTED_BY moat edge). Seeds/imports sync entries via `syncRankEntryFromAward` since SESSION_0739. |
 
 ## Open work & invariants (read before changing read-models)
 

@@ -4,8 +4,8 @@ slug: lineage-rank-promotion-sync-rules
 type: spec
 status: active
 created: 2026-05-17
-updated: 2026-06-06
-last_agent: codex-session-0351
+updated: 2026-08-03
+last_agent: claude-fable-session-0739
 backlinks:
   - docs/sprints/SESSION_0177.md
   - docs/sprints/SESSION_0178.md
@@ -16,6 +16,15 @@ backlinks:
 # Lineage Rank Promotion Sync Rules
 
 ## Summary
+
+> **⚠ PARTIALLY STALE (flagged SESSION_0739, doc predates the RankEntry era):** `RankAward.userId`
+> was dropped in SESSION_0392 — the earner FK is `passportId`; step lists below that say
+> "Set `RankAward.userId`" read as `passportId`. `RankEntry` is now the canonical rank READ model
+> (ADR 0058); RankAward remains the transitional write/fact anchor only until #380 executes. The
+> ratified retirement plan — including the `LineageRelationship.rankAwardId → rankEntryId` repoint
+> these rules depend on — is
+> [`380-rankaward-drop-plan.md`](../../product/black-belt-legacy/380-rankaward-drop-plan.md).
+> The PROMOTED_BY mirror/conflict rules themselves remain valid.
 
 `RankAward` is the canonical promotion fact. `LineageRelationship(type=PROMOTED_BY)` is the graph mirror used for lineage traversal, profile drawer relationship display, and visual tree adapters.
 
