@@ -1,5 +1,6 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 
 /**
  * seed-baseline-owner.ts
@@ -257,8 +258,10 @@ async function main() {
     },
   })
   if (incorrectEskRank) {
+    // Earner FK is passportId since the SESSION_0392 Phase-3c userId drop.
+    // rank-read-guard: allow -- transitional cleanup probe locating the incorrect award to delete; RankAward is still the write anchor until #380 PR2
     const bad = await db.rankAward.findFirst({
-      where: { userId: ownerId, rankId: incorrectEskRank.id },
+      where: { passportId: ownerPassport.id, rankId: incorrectEskRank.id },
     })
     if (bad) {
       await db.rankAward.delete({ where: { id: bad.id } })
@@ -282,11 +285,14 @@ async function main() {
       where: { passportId: ownerPassport.id, rankId: rank.id },
     })
     if (!existing) {
-      await db.rankAward.create({
+      // An award without its RankEntry is display-invisible since the #397 read collapse.
+      const created = await db.rankAward.create({
         data: { passportId: ownerPassport.id, rankId: rank.id, awardedAt: now, notes, location },
       })
+      await syncRankEntryFromAward(db, created.id)
       console.log(`   ✅ RankAward: ${label}`)
     } else {
+      await syncRankEntryFromAward(db, existing.id)
       console.log(`   RankAward ${label}: already exists`)
     }
     // Update membership with current rank

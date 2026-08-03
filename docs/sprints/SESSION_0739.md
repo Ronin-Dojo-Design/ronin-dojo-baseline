@@ -109,6 +109,12 @@ Frontmatter `status:` is the single source of truth (`in-progress` → `closed`,
   session (branch `claude/interesting-haibt-c75613`); its sync wiring follows after that merge.
 - **Done means:** tsc 0 errors · lint clean · `bun run test --parallel=1` green · commit shown,
   push HELD for the word.
+- **Consolidation rider (operator, mid-session):** the parallel branch
+  `claude/interesting-haibt-c75613` turned out to carry a DIFFERENT fix (Tool.tierPriority
+  seed repair + FS-0058 row) — cherry-picked here (`-x`) so everything lands as ONE PR; the
+  `seed-baseline-owner.ts` chip therefore came back to this lane (probe repointed
+  `userId → passportId` + sync wired; chip dismissed). Push + PR-open granted by the operator;
+  merge stays the operator's.
 
 #### SESSION_0739_TASK_03 — Operator ratification + execution baton
 
