@@ -1,5 +1,9 @@
 import { z } from "zod"
 
+// Browser-safe enum entry (no PrismaClient) — schemas.ts is imported type-only by
+// client belt components, so keep its one runtime dependency off the server client.
+import { RankEntryStatus } from "~/.generated/prisma/browser"
+
 /**
  * Belt-journey oRPC in/out schemas (Slice 3 — Petey Plan 0477).
  *
@@ -8,7 +12,10 @@ import { z } from "zod"
  * row, they don't move it.
  */
 
-const cuid = z.string().min(1).max(191)
+// A non-empty id string bounded by the DB id-column length (191). Deliberately NOT a
+// cuid-format check — ids identify rows, they are never re-minted here, and the picker
+// id-spaces differ (passport / organization / media), so no single format is enforced.
+const nonEmptyId = z.string().min(1).max(191)
 
 /**
  * Media purpose convention (Locked #2) — a shared-column string, not an enum.
@@ -19,7 +26,7 @@ const MILESTONE_MEDIA_PURPOSES = ["belt", "instructor", "certificate", "competit
 export type MilestoneMediaPurpose = (typeof MILESTONE_MEDIA_PURPOSES)[number]
 
 export const upsertBeltMilestoneInput = z.object({
-  rankId: cuid,
+  rankId: nonEmptyId,
   story: z.string().max(5000).nullish(),
 })
 
@@ -33,18 +40,18 @@ const promoterFactInput = z
     // A **Passport id** (the belt promoter picker is keyed by passport to match the
     // `awardedByPassportId` FK — SESSION_0497). The handler verifies it exists before
     // writing the FK. Freetext instead → `name`.
-    awardedByPassportId: cuid.nullish(),
+    awardedByPassportId: nonEmptyId.nullish(),
     name: z.string().max(200).nullish(),
   })
   .nullable()
 
 export const updateRankAwardFactInput = z.object({
-  rankAwardId: cuid,
+  rankAwardId: nonEmptyId,
   awardedAt: z.coerce.date().nullish(),
   promoter: promoterFactInput.optional(),
   school: z
     .object({
-      organizationId: cuid.nullish(),
+      organizationId: nonEmptyId.nullish(),
       name: z.string().max(200).nullish(),
       /**
        * ISO 3166-1 alpha-2 country for the school (Locked #7 — country belongs to
@@ -65,23 +72,23 @@ export type UpdateRankAwardFactInput = z.infer<typeof updateRankAwardFactInput>
  * both resolve a pending proposal and apply an intentional correction.
  */
 export const overrideRankAwardPromoterAsAdminInput = z.object({
-  rankAwardId: cuid,
+  rankAwardId: nonEmptyId,
   promoter: promoterFactInput,
 })
 
 export const attachMilestoneMediaInput = z.object({
-  rankMilestoneId: cuid,
-  mediaId: cuid,
+  rankMilestoneId: nonEmptyId,
+  mediaId: nonEmptyId,
   purpose: z.enum(MILESTONE_MEDIA_PURPOSES),
 })
 
 export const detachMilestoneMediaInput = z.object({
-  rankMilestoneId: cuid,
-  mediaId: cuid,
+  rankMilestoneId: nonEmptyId,
+  mediaId: nonEmptyId,
 })
 
 export const deleteRankAwardInput = z.object({
-  rankAwardId: cuid,
+  rankAwardId: nonEmptyId,
 })
 
 /**
@@ -95,7 +102,11 @@ const beltCardOutput = z.object({
   rankName: z.string(),
   rankSortOrder: z.number(),
   colorHex: z.string().nullable(),
-  verificationStatus: z.string(),
+  // Carries the canonical mutable RankEntry *presentation* status (via `toBeltCard` →
+  // `rankEntryStatusForAward`/`entry.status`), NOT the RankAward origin axis — so IMPORTED
+  // is already collapsed to VERIFIED and never appears here. D-062: tightened from open
+  // `z.string()` to the reused `RankEntryStatus` enum (produced set is exactly its members).
+  verificationStatus: z.nativeEnum(RankEntryStatus),
   /**
    * Present on mutation responses so the client overlay immediately reflects the
    * RankEntry + pending-review authority instead of preserving a stale pre-save badge.

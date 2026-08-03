@@ -1,5 +1,6 @@
 import type { RankEntryStatus } from "~/.generated/prisma/client"
 import type { BeltRenderData } from "~/components/common/belt-swatch"
+import { topInDiscipline } from "~/lib/belt/discipline-scope"
 import { nameInitials, passportDisplayName } from "~/lib/identity/passport-display"
 import {
   type LineageClaimBadgeStatus,
@@ -71,10 +72,9 @@ export function memberAvatarSrc(node: LineageNodeRow): string | null {
  * (the ONE canonical rank model), so callers read `.rankAward.awardedAt` for the promotion date.
  */
 export function memberTopRankEntry(node: LineageNodeRow, disciplineId?: string | null) {
-  const entries = node.passport?.rankEntries ?? []
-  if (!disciplineId) return entries[0] ?? null
   // Pre-sorted by sortOrder desc → the first entry in this discipline is its top belt.
-  return entries.find(entry => entry.rank.rankSystem?.discipline?.id === disciplineId) ?? null
+  const entries = node.passport?.rankEntries ?? []
+  return topInDiscipline(entries, disciplineId, entry => entry.rank.rankSystem?.discipline?.id)
 }
 
 /**
@@ -319,31 +319,38 @@ export function buildChildGroups({
 /**
  * Total descendant count per member (whole subtree below them, excluding self),
  * computed once from the children map. Powers the board's count badges so a
- * collapsed node shows how many people are hidden under it. Cycle-safe (a
- * `seen` set on each path) so malformed/cyclic display data can't infinite-loop;
- * results are memoized for an O(n) forest.
+ * collapsed node shows how many people are hidden under it. Cycle-safe (one shared
+ * `onPath` set tracks the current DFS path) so malformed/cyclic display data can't
+ * infinite-loop; results are memoized for a genuinely O(n) forest.
  */
 export function buildDescendantCounts(
   childrenByParentId: Map<string | null, CanvasMember[]>,
 ): Map<string, number> {
   const counts = new Map<string, number>()
+  // The current DFS path, mutated in place (add on enter, remove on backtrack). At the
+  // entry of every recursive call it holds exactly the ancestor chain — identical contents
+  // to the per-node `new Set(seen)` snapshot it replaces — so the cycle guard and memo
+  // interaction are byte-preserved, but we no longer clone the path at each node (that made
+  // it O(n·depth); this is O(n) across the forest — D-062).
+  const onPath = new Set<string>()
 
-  function count(memberId: string, seen: Set<string>): number {
-    if (seen.has(memberId)) return 0
+  function count(memberId: string): number {
+    if (onPath.has(memberId)) return 0
     const cached = counts.get(memberId)
     if (cached !== undefined) return cached
 
-    const nextSeen = new Set(seen).add(memberId)
+    onPath.add(memberId)
     const children = childrenByParentId.get(memberId) ?? []
     let total = children.length
-    for (const child of children) total += count(child.id, nextSeen)
+    for (const child of children) total += count(child.id)
+    onPath.delete(memberId)
 
     counts.set(memberId, total)
     return total
   }
 
   for (const children of childrenByParentId.values()) {
-    for (const child of children) count(child.id, new Set())
+    for (const child of children) count(child.id)
   }
 
   return counts

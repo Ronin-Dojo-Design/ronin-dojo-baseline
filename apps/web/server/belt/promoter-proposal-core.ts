@@ -213,13 +213,22 @@ export async function lockUntilStableAuthorityAnchor<T extends { id: string }>({
 }): Promise<T | null> {
   const lockedAwardIds = new Set([targetAwardId])
 
-  while (true) {
+  // Each non-terminating pass locks exactly ONE new award id, so the loop is bounded by the
+  // member's finite award count (realistically a handful of belts). The cap converts a
+  // would-be infinite spin — malformed data or a resolve() that never stabilizes — into a
+  // loud failure instead of hanging the transaction (D-062). Never hit for real data.
+  const MAX_ANCHOR_LOCK_PASSES = 1000
+  for (let pass = 0; pass < MAX_ANCHOR_LOCK_PASSES; pass++) {
     const anchor = await resolve()
     if (!anchor || lockedAwardIds.has(anchor.id)) return anchor
 
     await lock(anchor.id)
     lockedAwardIds.add(anchor.id)
   }
+
+  throw new Error(
+    `lockUntilStableAuthorityAnchor: authority anchor did not stabilize within ${MAX_ANCHOR_LOCK_PASSES} passes`,
+  )
 }
 
 async function resolveLockedAnchor(
