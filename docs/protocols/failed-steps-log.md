@@ -4,8 +4,8 @@ slug: failed-steps-log
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-08-02
-last_agent: claude-session-0736
+updated: 2026-08-03
+last_agent: claude-session-0739-adjacent
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -1396,6 +1396,32 @@ Read this section at bow-in instead of skimming every individual entry.
   active worktree lane exists.
 - **Status:** open — recovered cleanly this session (canonical restored to clean `main`; diff relocated +
   committed on the lane branch `01de3eed`); guard-extension is the residual.
+
+### FS-0058 — `prisma db push` builds an unseedable fresh DB: generated column `Tool.tierPriority` silently degrades (P2011 "(not available)")
+
+- **Session:** SESSION_0739-adjacent scratch-DB dry run (2026-08-03); diagnosed + fixed in worktree lane
+  `interesting-haibt-c75613`.
+- **What happened:** fresh scratch DB stood up via `bunx prisma db push`, then `bun prisma/seed.ts` died at
+  the first `db.tool.create()` (seed.ts:515) with P2011 "Null constraint violation on the (not available)"
+  — `@prisma/adapter-pg` hides the column name. The real column is `Tool.tierPriority` (PG error 23502
+  names it on a hand-replayed INSERT).
+- **Root cause:** migration `20260520004112_uplift_L3_schema_wave` hand-authors `tierPriority` as
+  `GENERATED ALWAYS AS (CASE WHEN "tier" = 'Premium' THEN 0 ELSE 1 END) STORED`; Prisma cannot express
+  generated columns, so `schema.prisma` carries an empty `@default(dbgenerated())`. `db push` builds from
+  the schema alone → plain `NOT NULL` column with **no default and no generation** — and the client omits
+  the field from INSERTs because it believes the DB fills it. Only `prisma migrate deploy` (the ratified
+  mechanism — prod prebuild, `setup-e2e-db.ts`) replays the real shape; `db push` was an off-recipe way to
+  provision the scratch DB. `tierPriority` is currently the ONLY schema element `db push` cannot recreate
+  (citext is covered by `extensions = [citext]`).
+- **Corrective action:** `apps/web/prisma/seed.ts` now runs an `ensureToolTierPriorityGenerated()`
+  pre-flight — if `information_schema` reports `is_generated = 'NEVER'`, it transactionally rebuilds the
+  column (+ its `Tool_tierPriority_publishedAt_idx`) to the canonical migration shape; no-op on
+  migrate-deploy DBs. Verified end-to-end on two fresh scratch DBs: db-push path (repair fires, seed
+  completes, 8 Premium→0 / 16 Free→1) and migrate-deploy path (no repair, seed completes). Prevention:
+  provision fresh local DBs with `migrate deploy` (force BOTH `DATABASE_URL` and `DIRECT_URL` — dotenv
+  backfills `DIRECT_URL` from `.env` otherwise), not `db push`.
+- **Status:** closed — seed completes on both provisioning paths; residual: any future hand-authored SQL
+  that `db push` cannot recreate re-opens this class.
 
 ### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
 
