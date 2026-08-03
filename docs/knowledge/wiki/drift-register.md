@@ -4,7 +4,7 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-08-02
+updated: 2026-08-03
 last_agent: claude-session-0737
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
@@ -995,3 +995,18 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   ESSENTIAL. **New minor code-shape follow-ups (out-of-scope, deferred):** `verificationStatus`
   field-name carries a presentation `RankEntryStatus` value (rename candidate post-#380); 4 divergent
   `formatDate` helpers → one shared UTC helper someday.
+
+### D-063 — `ronin-project-context.md` local copy still monorepo-era (contradicts ADR 0055/0059)
+
+- **Source:** SESSION_0739 `/rr` (next-session automation research) — Giddy architecture pass,
+  verified by direct read.
+- **Drift:** `docs/knowledge/wiki/ronin-project-context.md:72-77` still states "One monorepo
+  (this repo) hosts… No separate prod repos" — the monorepo-era hosting model that ADR 0055
+  (brand-repo separation) and ADR 0059 (multi-repo operating model) superseded at the
+  `ecefd008` fork. The canonical copy lives in RDD-Monorepo; the local copy needs a five-repo
+  conform pass (or a supersession banner pointing at the ADRs) so bow-in reads don't
+  re-absorb dead law.
+- **Fix direction:** conform the local copy from the RDD-Monorepo canonical (cherry-pick down,
+  per the process-OS up-sync pattern) in a docs lane; verify no other monorepo-era hosting
+  claims survive in the same file.
+- **Status:** open.

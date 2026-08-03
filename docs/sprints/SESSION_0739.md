@@ -2,7 +2,7 @@
 title: "SESSION 0739 — #380 G-011 RankAward table-drop: ratified migration plan (plan-only)"
 slug: session-0739
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-08-03
 updated: 2026-08-03
 last_agent: claude-fable-session-0739
@@ -172,11 +172,20 @@ run twice (tsc/lint/full suite per commit).
 | --- | --- | --- |
 | SESSION_0739_TASK_01 | landed | Explore sweep (7 runtime flows via ONE sync seam `rank-entry-compatibility.ts:37`; 5 no-sync seed/import writers; GamificationEvent FK dead; no read-guard escapes) + prodsnap evidence (stale snapshot caveat: 14 entries vs prod's recorded 111; 22 orphan awards = 7/30–31 import runs). Fork A RESOLVED: keep `source` (real reader `belt-gate.ts:88`). |
 | SESSION_0739_TASK_02 | landed | `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` — full ratifiable plan (3-PR sequence, trigger DDL, B0–B2 backfill SQL, V1–V9 + P1–P5, rollback per stage, PR3 point-of-no-return, §7 writer-cutover inventory). Giddy verdict PASS-WITH-FIXES; all 12 findings (1 blocker: relax `RankEntry.rankAwardId` NOT NULL/Cascade at PR2 · 3 majors: delete-orphan awards, post-swap fact-sync gap, V2/V7 PR3-unsatisfiability · 8 minors) applied to the doc. wiki-lint 0 errors. |
-| SESSION_0739_TASK_03 | landed | Operator RATIFIED the plan 2026-08-03 (one-word pick); doc flipped `draft → ratified`; PR1-execution baton staged in Next session. |
+| SESSION_0739_TASK_03 | landed | Operator RATIFIED the plan 2026-08-03 (one-word pick); doc flipped `draft → ratified`; PROMPT_TEMPLATE baton + SESSION_0740 stub staged. |
 | SESSION_0739_TASK_04 | landed | No-sync writer sweep: seam type widened structurally (`rank-entry-compatibility.ts`), 11 sync sites wired across seed.ts / seed-baseline-lineage.ts / seed-baseline-owner.ts / both BBL import scripts; owner probe repointed `userId → passportId` (runtime thrower); chip commit `62f90c12` cherry-picked (Tool.tierPriority + FS-0058). Commits `0732f622`, `ee7184bf`, `d9fe6a45`; PR #411 opened on operator grant. |
 
 **Decisions resolved:** Forks A–D picked at bow-in (Evidence · Trigger · Direct · 3-PR); Fable 5
-model-fit confirmed.
+model-fit confirmed; plan ratified; PR #411 merged on the operator's go-on-green
+(squash `cb452182`); /rr next-session-automation commissioned + delivered (not acted on).
+
+## Goal verdict
+
+**EXTENDED.** The plan-only goal landed (ratified #380 plan, all issue requirements) AND the
+session overshot on operator word: no-sync writer fix sweep + seam type fix, chip-branch
+consolidation, /ggr 9.15 clear, PR #411 MERGED to main, cross-doc backlink sweep (5 docs),
+PROMPT_TEMPLATE baton + SESSION_0740 stub staged, and the /rr next-session-automation report
+delivered for the parallel planning session.
 
 ## Verification
 
@@ -189,7 +198,9 @@ model-fit confirmed.
 | `bun run test --parallel=1` ×3 (per code commit) | 1972 pass / 0 fail each run |
 | Scratch-DB seed proof (`ronindojo_scratch_0739`, dropped after) | seed.ts + seed-baseline-lineage: **25 awards / 25 entries / 0 orphans**; provenance/status derivation correct; owner seed blocked by design (needs Brian's live Better-Auth user) |
 | `bunx fallow audit --changed-since origin/main` + `health` | neutral delta — flagged complexity all inherited in one-shot scripts; maintainability 89.8 (good) |
-| PR #411 CI | read-guard/tsc/scripts-tsc/oxc/unit/`CI complete` green; Playwright pending at record time |
+| PR #411 CI | ALL GREEN at merge: `CI complete` + `Playwright complete` (chromium 26m18s) + read-guard/tsc/scripts-tsc/oxc/unit |
+| Merge | **MERGED** squash `cb452182` 2026-08-03 19:29 UTC on operator go-on-green; remote+local branches deleted; prod auto-deploy fired (seed/script paths, runtime unchanged) |
+| bow-out-gates.sh | all deterministic gates PASS (task-log 3 rows · wiki:lint 0 err · secret scan clean · graphify 15358 nodes/33651 edges); "missing baton" flag = the staged 0740 stub's own empty Next-section (legitimate); G-011 cross-off DECLINED (plan landed, drop pending) |
 
 ## Artifacts
 
@@ -197,9 +208,26 @@ model-fit confirmed.
 | --- | --- | --- |
 | None. | | |
 
+## /rr record — next-session-start automation (operator-commissioned, TASK_05-equivalent)
+
+- **Queries:** `graphify query "auto session headless driver bow-in automation scheduled
+  overnight orchestrator"` + `"recipe cards staged stub PROMPT_TEMPLATE baton kickoff prompt
+  hydrate lane"` → surfaced `scripts/auto-session.sh` (0582 run-rung), recipes set, hooks.
+- **Report:** `docs/architecture/research/research-review-next-session-automation.md`
+  (Petey pipeline/options + Giddy architecture/overlap, both verified-by-read).
+- **Recommendation (one, phased):** Phase 0 baton self-containment (`autonomy:`/`model:` facets
+  + prompt-in-stub) + `bow-in-gates.sh` hook hydration → Phase 1 refit `auto-session.sh`
+  (operator-fired) → Phase 2 calibrate → Phase 3 queue-gated scheduled fire (behind G-014/G-015).
+  Rejected-first alternatives: dynamic Workflow engine (second bow-in SoT), cron-first
+  (stale-spec), /loop (cold-process doctrine).
+- **Route:** Proposed ledger edit at bow-out — G-023-child goal row for Phases 0–1, sequenced
+  against the G-031 S5 collision (one owner). NOT acted on this session per operator word;
+  intake for the parallel /ppp + wayfinder planning session (3 collision tickets named in §Overlap).
+
 ## Open decisions / blockers
 
-- Plan RATIFIED 2026-08-03. Push of this session's branch still HELD for explicit authorization.
+- Plan RATIFIED 2026-08-03; PR #411 pushed + MERGED on the operator's explicit go-on-green.
+  Close branch push+merge granted at bow-out (operator Q3).
 - Pre-execution action carried into the plan: refresh `ronindojo_prodsnap` (stale: 14 entries vs
   prod's recorded 111) before shadow-replay rehearsal.
 - ~~Latent bug routed out-of-lane~~ — superseded: the `seed-baseline-owner.ts` probe fix came
@@ -312,15 +340,33 @@ ratified decision record.
 
 | Step | Proof |
 | --- | --- |
-| JETTY/frontmatter + backlinks sweep | |
-| Wiki lint | |
-| Reflections routing receipt | |
-| Code-quality gate (Class-A) | |
-| Runtime verification (Doug) + artifact URL | |
-| Deferral guard (§6.8) | |
-| Memory sweep · next-session unblock | |
-| Git hygiene · Graphify update | |
+| JETTY/frontmatter + backlinks sweep | seam `@changed`/`@wired` updated; 4 touched docs' `updated:` bumped; plan-doc frontmatter `ratified`; sync-rules stale-banner + `updated:` |
+| Wiki lint | `bun run wiki:lint` — 0 errors / 115 warnings (all pre-existing), re-run after every close-content write |
+| Reflections routing receipt | 5 lessons → 5 routes (FS-0059 · D-063 · plan-doc §0 · memory ×2 · /rr report §Open) — see Reflections |
+| Code-quality gate (Class-A) | /ggr 9.15 recorded above (seam = the Class-A unit, 9.14; no caps binding) |
+| Runtime verification (Doug) + artifact URL | Doug independent pass 9.2 (gates re-run, 1972/0 ×2 of 3 runs his+ours) + scratch-DB seed proof 25/25/0; no UI surface touched → no visual artifact |
+| Deferral guard (§6.8) | clean — no unrouted deferrals; G-011 cross-off explicitly declined with reason; /rr recommendation routed as Proposed ledger edit (below) |
+| Memory sweep · next-session unblock | `dev-environment-gotchas` +FS-0059 trap · `rank-belt-truth` #380-plan-ratified rewrite (post-send drift corrected) · SESSION_0740 stub + baton staged |
+| Git hygiene · Graphify update | single close branch `session-0739-close` (2 doc files + ledger rows); PR #411 merged `cb452182`; graphify refreshed post-merge (15358/33651/1796) |
+
+**Proposed ledger edit (single-writer discipline):** goals-ledger — mint a G-023-child row for
+next-session-automation Phases 0–1 (per the /rr report), sequenced against the G-031 S5
+collision; ownership decided in the operator's parallel /ppp + wayfinder planning session.
 
 ## Reflections
 
-- 
+- A schema-drop plan hinges on constraints the schema already enforces — Giddy's blocker (the
+  NOT NULL + Cascade anchor breaking post-cutover inserts) was visible in `schema.prisma:2313`
+  all along; grill the *residual* schema, not just the new design. → route: plan doc §4-PR2 (1i)
+- Prevention text buried in another FS row's prose isn't prevention — I hit the DIRECT_URL trap
+  hours after FS-0058 documented it in a parallel lane. → route: FS-0059 (+ memory
+  dev-environment-gotchas, the agent read path)
+- A "stale snapshot" can invert an investigation: the 22 orphan awards were real data pointing at
+  a real writer-class gap, but the alarming "live display bug" read was a snapshot artifact —
+  date-stamp the evidence base before concluding. → route: plan doc §0 stale-prodsnap caveat
+- Seam types are wiring policy: `Pick<typeof db>` silently excluded every plain-client script and
+  bred inline copies; a structural parameter type IS the fix, not more copies. → route: memory
+  rank-belt-truth (#380 block) + wiring-ledger WL-P2-42 addendum
+- /rr with two lens-split researchers (pipeline vs architecture/overlap) converged on the same
+  small-first recommendation independently — the split is worth keeping for automation-shaped
+  questions. → route: /rr report §Open questions (intake for the parallel planning session)
