@@ -56,7 +56,15 @@ function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "Unknown date"
   const d = typeof date === "string" ? new Date(date) : date
   if (Number.isNaN(d.getTime())) return "Unknown date"
-  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+  // UTC-stable (D-062): awardedAt is a date-only midnight-UTC instant, so a local-zone
+  // render west of UTC read it back one day early (e.g. 2020-01-01 → "Dec 31, 2019").
+  // Matches the register's other belt/lineage date helpers (rank-history / drawer).
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(d)
 }
 
 export function PromoterChangeModal({

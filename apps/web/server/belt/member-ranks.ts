@@ -4,6 +4,7 @@
  * @wired   server/belt/member-ranks.test.ts; first runtime adoption is SESSION_0732 #377 read guard
  */
 import type { Prisma } from "~/.generated/prisma/client"
+import { topInDiscipline } from "~/lib/belt/discipline-scope"
 import { rankEntryDisplayOrder } from "~/server/belt/rank-entry-display-order"
 import type {
   RankEntryTrustAxes,
@@ -116,8 +117,5 @@ export async function memberTopRankView(
   dbClient: MemberRanksDb = db,
 ): Promise<RankEntryView | null> {
   const ranks = await memberRanks(passportId, dbClient)
-  if (disciplineId) {
-    return ranks.find(entry => entry.disciplineId === disciplineId) ?? null
-  }
-  return ranks[0] ?? null
+  return topInDiscipline(ranks, disciplineId, entry => entry.disciplineId)
 }

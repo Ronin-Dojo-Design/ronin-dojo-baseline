@@ -282,8 +282,10 @@ describe("buildDescendantCounts", () => {
     assert.equal(counts.get("root"), 2)
     assert.equal(counts.get("child"), 1)
     assert.equal(counts.get("grandchild"), 0)
-    assert.ok((counts.get("cycle-a") ?? Number.POSITIVE_INFINITY) <= 2)
-    assert.ok((counts.get("cycle-b") ?? Number.POSITIVE_INFINITY) <= 2)
+    // Exact (byte-stable) cycle results — the shared-path O(n) rewrite must reproduce the
+    // same counts the per-node snapshot set produced, not merely stay bounded (D-062).
+    assert.equal(counts.get("cycle-a"), 1)
+    assert.equal(counts.get("cycle-b"), 2)
   })
 })
 

@@ -4,6 +4,7 @@
  * @wired   server/belt/router.ts, server/belt/queries.ts, server/belt/profile-projection.ts, server/belt/promoter-proposal-core.ts, server/web/claims/submit-rank-promotion-claim.ts
  */
 import type { RankAwardSource, RankAwardVerificationStatus } from "~/.generated/prisma/client"
+import { topInDiscipline } from "~/lib/belt/discipline-scope"
 
 /**
  * Pure belt-journey gating logic (Slice 3 — Petey Plan 0477 Locked #5).
@@ -39,9 +40,7 @@ export type GateAward = {
  * which the onboarding/import path seeds).
  */
 export function ceilingSortOrder(awards: GateAward[], disciplineId: string | null): number | null {
-  const top = disciplineId
-    ? (awards.find(a => a.rank.rankSystem?.disciplineId === disciplineId) ?? null)
-    : (awards[0] ?? null)
+  const top = topInDiscipline(awards, disciplineId, a => a.rank.rankSystem?.disciplineId)
   return top ? top.rank.sortOrder : null
 }
 
@@ -211,8 +210,6 @@ export function isTopAward(
   awards: GateAward[],
   disciplineId: string | null,
 ): boolean {
-  const top = disciplineId
-    ? (awards.find(a => a.rank.rankSystem?.disciplineId === disciplineId) ?? null)
-    : (awards[0] ?? null)
+  const top = topInDiscipline(awards, disciplineId, a => a.rank.rankSystem?.disciplineId)
   return top?.id === rankAwardId
 }

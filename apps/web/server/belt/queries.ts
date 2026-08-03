@@ -77,10 +77,10 @@ export const gateAwardSelect = {
 
 export type MemberAward = Prisma.RankAwardGetPayload<{ select: typeof gateAwardSelect }>
 
+// The explicit bridge from legacy award provenance to canonical member status: IMPORTED
+// renders VERIFIED while immutable origin remains separately on RankEntry.provenance.
+// (Canonical doc lives on the function in rank-entry-trust-axes.ts.)
 export { rankEntryStatusForAward }
-
-/** Explicit bridge from legacy award provenance to canonical member status. */
-// IMPORTED renders VERIFIED while immutable origin remains separately on RankEntry.provenance.
 
 /** The gate only needs status + discipline-scoped sortOrder. */
 export function toGateAward(
