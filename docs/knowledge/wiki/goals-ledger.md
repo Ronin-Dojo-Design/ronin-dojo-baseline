@@ -66,7 +66,17 @@ aggregator reads it with no new parser logic.
   LANDED (SESSION_0460)** — Mammoth app wired off localStorage onto `mammoth_dev` (Prisma adapter + server
   actions + DB-backed AdminKanban store; guardrails preserved; one Project SoT; headless-verified;
   `next build` green; MB-DATA-002 done). Phase 2 **cloud half** (Neon provision + Vercel wiring) +
-  loop-board Phase B (G-003) deferred, operator-gated/SHIP-gated.
+  loop-board Phase B (G-003) deferred, operator-gated/SHIP-gated. **Phase 2 cloud half — first slice
+  STARTED (SESSION_0738):** #398 preview-isolation **LANDED** — prod `DATABASE_URL`/`DIRECT_URL`
+  scoped Production-only; Preview on a dedicated Neon `preview` branch; Standard Deployment
+  Protection; `production` branch protected; throwaway additive-migration proof passed (Preview build
+  logged `SKIP: VERCEL_ENV=preview`; prod `_prisma_migrations` unchanged). **Giddy /rr finding:** the
+  strategy is already ratified ADR-0038 law — claim the existing **single, multi-tenant** Neon DB as
+  BBL's (no rename, no data move) and stand up **new Neon projects per other brand** as they cut over;
+  the shared DB still physically holds non-BBL rows (`Rank`: 195 null/BBL, 20 Baseline, 1 BBL), so
+  "claim as BBL" = declare now + a LATER gated purge. Sequence + report:
+  `docs/reviews/2026-08-03-neon-brand-db-separation-rr.md`. Remaining behind the proof gate: per-brand
+  new Neon projects (staggered), then #380, then the non-BBL purge.
 - **Why:** a shared DB couples products (a client migration can break BBL); BBL's lineage graph
   deserves its own failure domain + backup posture. Completes ADR 0034's multi-product model.
 
