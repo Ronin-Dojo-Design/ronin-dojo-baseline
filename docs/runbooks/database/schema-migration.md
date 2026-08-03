@@ -123,11 +123,11 @@ have executed a table-drop). The gate now (`scripts/prebuild-migrate.ts`):
 | Vercel **production** (`VERCEL_ENV=production`) | ✅ the ONE sanctioned prod-apply path |
 | Vercel **preview / development** | ⛔ SKIP, loudly |
 
-**Completing the fix (operator, Vercel dashboard):** scope the prod `DATABASE_URL` /
-`DIRECT_URL` values to the Production environment ONLY and point the Preview environment at
-a **Neon branch** DB. Until that lands, a preview whose code depends on a new column 500s at
-runtime — that is the intended safe failure, never a silent prod write. Never "fix" a
-broken preview by widening the gate or copying prod creds into preview scope.
+**The fix (✅ LANDED SESSION_0738 — see the section directly below):** prod `DATABASE_URL` /
+`DIRECT_URL` are scoped to the Production environment ONLY and the Preview environment points at a
+**Neon `preview` branch**. A preview whose code depends on an *unmerged* migration 500s until that
+migration is explicitly applied to the branch — that is the intended safe failure, never a silent
+prod write. Never "fix" a broken preview by widening the gate or copying prod creds into preview scope.
 
 ##### ✅ LANDED (SESSION_0738 — #398 / D-058): preview isolation is live
 
