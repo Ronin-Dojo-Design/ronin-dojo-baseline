@@ -2,13 +2,14 @@
 title: "SESSION 0738 — fan-out: #398 FI-001 proof lane (A) + D-062 register extras (B) via recipe cards"
 slug: session-0738
 type: session--open
-status: staged
+status: in-progress
 created: 2026-08-02
-updated: 2026-08-02
-last_agent: claude-session-0737
+updated: 2026-08-03
+last_agent: claude-session-0738
 sprint: S13
 lane: bbl
 recipe: "epic-plan"
+status_note: "in-progress — Brian elected BOTH lanes (A unblocked); no SotD snapshot"
 goal_ids: []
 tickets: []
 next_session:
@@ -20,7 +21,7 @@ backlinks:
 
 # SESSION 0738 — fan-out: #398 FI-001 proof (A) + D-062 register extras (B)
 
-**Date:** <YYYY-MM-DD> · **Operator:** Brian + <agent>-session-0738
+**Date:** 2026-08-03 · **Operator:** Brian + claude-session-0738
 
 ## Goal
 
@@ -56,8 +57,40 @@ Frontmatter `status:` is the single source of truth (staged → in-progress at b
   do not co-edit canonical. Lane A is DB/deploy-shaped (foreground gates + operator-gated dashboard
   steps); lane B is pure-cleanup (behavior-preserving, verify vs the frozen RankAward/#380 seam).
 
+## Lane A — #398 discovery + Giddy /rr (DB separation)
+
+- **Reframed, HELD (no prod change).** Confirmed the #398 defect LIVE (`DATABASE_URL`+`DIRECT_URL`
+  scoped `Production, Preview` on the `ronin-dojo-baseline` project = BBL's, misnamed, git-connected
+  to `black-belt-legacy`; only BBL is git-connected → Previews are BBL-only). Topology surprise: the
+  project still owns stale MMB/Baseline/RDD prod domains (mid-cutover). Operator elected "separate BBL
+  first" → ran **/rr** (seq-research-recommend) with Giddy.
+- **Graphify prior-art:** `graphify query "per product database provisioning brand separation neon"`
+  → ADR 0038, ADR 0057, `docs/runbooks/database/per-app-db-separation.md`, G-002, `new-brand-setup`.
+- **Report:** `docs/reviews/2026-08-03-neon-brand-db-separation-rr.md`.
+- **Recommendation (Giddy):** operator's instinct is **already ratified law** — claim the existing
+  Neon project as BBL's (declare + env-scope, **no rename, no data move**), stand up a **new Neon
+  project** per other brand as it cuts over, layer a **Neon Preview branch** to close #398. This is
+  execution of G-002 Phase-2 cloud half, not a new ADR.
+- **Key correction:** BBL's prod DB is **ONE multi-tenant DB** (Brand enum column, 136 models,
+  ~40 brand-scoped), **not** per-brand databases — Baseline rows physically still inside (prodsnap
+  `Rank`: 195 null/BBL, 20 Baseline, 1 BBL). "Claim as BBL" = declare now + purge foreign rows LATER
+  (gated destructive lane).
+- **Routing (pending operator ratify):** stage ONE next slice = **#398 Preview-isolation** (Neon
+  Preview branch + Production-only env scoping + explicit preview-migration mechanism + throwaway
+  additive-PR proof) — unblocks both the BBL claim and #380. Per-brand new projects / #380 drop /
+  non-BBL purge stay BEHIND that proof gate. Note the single-multi-tenant-DB finding on G-002.
+
+## Lane B — D-062 register extras (DONE)
+
+- PR **#407** (branch `session-0738-d062-extras`, commit `b1ec7f60`). All 5 items done
+  (verificationStatus→`z.nativeEnum(RankEntryStatus)` verified-safe; accessor extracted to
+  `lib/belt/discipline-scope.ts`; `buildDescendantCounts` O(n) byte-identical; UTC `formatDate`;
+  cosmetics). tsc/test/lint + `next build` green; `rank-award-read-guard` PASS. Pushed on operator's
+  word; **merge held** for operator. Ledger findings to route at bow-out: verificationStatus field
+  misnomer, 4× divergent formatDate helpers, `bootstrap.sh` missing custom-output `prisma generate`.
+
 ## Next session
 
-- **Goal:** TBD at bow-out.
+- **Goal:** TBD at bow-out (leading candidate: the staged #398 Preview-isolation slice above).
 - **First task:** TBD.
 - **Kickoff prompt:** n/a — staged stub; hydrate at bow-in.

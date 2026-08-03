@@ -129,6 +129,35 @@ a **Neon branch** DB. Until that lands, a preview whose code depends on a new co
 runtime — that is the intended safe failure, never a silent prod write. Never "fix" a
 broken preview by widening the gate or copying prod creds into preview scope.
 
+##### ✅ LANDED (SESSION_0738 — #398 / D-058): preview isolation is live
+
+Prod `DATABASE_URL` / `DIRECT_URL` are now scoped **Production-only**; the **Preview** environment
+points at a dedicated **Neon `preview` branch** (child of `production`); Preview deployments sit
+behind Vercel **Standard Deployment Protection**; and the **`production` Neon branch is protected**
+(no accidental delete/reset). Proof: a throwaway additive-migration PR's Preview build logged
+`[prebuild-migrate] SKIP: VERCEL_ENV=preview`, went READY against the branch, and prod
+`_prisma_migrations` gained **0** rows.
+
+**Preview-branch migration mechanism (ratified SESSION_0738 — manual model):**
+
+- **One persistent `preview` branch** — NOT per-PR, and **no branch expiration / auto-delete**
+  (every Preview deploy depends on it, so it must persist). Keep it fresh by **resetting it from
+  `production`** (Neon → branch → *Reset from parent*) **after a migration merges to main** — never
+  by deleting it. Reset ≠ delete.
+- The `prebuild-migrate.ts` guard keeps **skipping** Preview. When a PR's Preview genuinely needs
+  its *unmerged* migration exercised, apply that ONE migration explicitly to the branch — **anti
+  prod-misfire rail: use a dedicated `PREVIEW_DIRECT_URL` (the `preview` branch's unpooled URL,
+  NEVER prod), confirm the target DB identity FIRST, and never run `migrate dev` here:**
+  ```bash
+  # 1. Confirm identity (Neon SQL editor on the `preview` branch, or):
+  #    bunx prisma db execute --url "$PREVIEW_DIRECT_URL" --stdin <<< 'select current_database();'
+  # 2. Apply the reviewed migration to the branch ONLY:
+  DATABASE_URL="$PREVIEW_DIRECT_URL" DIRECT_URL="$PREVIEW_DIRECT_URL" bunx prisma migrate deploy
+  ```
+  After merge, the reset-from-`production` step restores parity (drops the hand-applied copy).
+- **Revisit** CI-automation + per-PR **ephemeral** Neon branches (those *would* carry a short
+  expiration TTL) only if migration-bearing previews become frequent or concurrent.
+
 ```bash
 cd /Users/brianscott/dev/black-belt-legacy/apps/web
 # Either author against an explicitly pinned scratch DB, or create/hand-author the migration directory.
