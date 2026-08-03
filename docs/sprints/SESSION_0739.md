@@ -13,7 +13,7 @@ recipe:
 vault_session:
 goal_ids: [G-011]
 tickets: ["380"]
-next_session:
+next_session: docs/sprints/SESSION_0740.md
 pairs_with:
 
   - docs/sprints/SESSION_0738.md
@@ -215,19 +215,80 @@ model-fit confirmed.
   `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` (§1, §4-PR1, §6) ·
   `apps/web/prisma/schema.prisma` RankAward/RankEntry · migration
   `20260709000000_add_rank_entry_compatibility_anchor` · ADR 0058.
-- **Kickoff prompt:**
+- **Kickoff prompt** (filled from `_template/PROMPT_TEMPLATE.md`, SESSION_0734 convention):
 
   ```text
-  /bow-in — execute #380 PR1 (expand+backfill) per the RATIFIED plan at
-  docs/product/black-belt-legacy/380-rankaward-drop-plan.md (SESSION_0739; forks pinned
-  Evidence/Trigger/Direct/3-PR — do NOT reopen them). ATTENDED lane. Order: (1) refresh
-  ronindojo_prodsnap; (2) shadow-replay the hand-authored PR1 migration (migrate dev stays
-  BANNED); (3) foreground preflight P1/P3/P4/P5 vs live prod, read-only, DB-identity first,
-  record numbers in the SESSION file; (4) author migration + schema.prisma additive changes +
-  PR1 JETTY annotations ONLY (no writer/reader code changes); (5) gates green; (6) HOLD —
-  build → verify → show → operator word to push/merge. Post-merge: V1–V6 vs prod, numbers into
-  the SESSION file. Rollback rider: inverse SQL in the PR body; rollback = forward-inverse PR.
-  Laws: ADR 0035/0058 display law; provenance immutable; never scope by rank.brand.
+  /bow-in — SESSION_0740 = #380 PR1 — RankAward-drop expand+backfill (attended execution lane).
+  Act as PETEY orchestrator (Fable 5 — sub-work stays on Fable 5 unless a handoff to Codex says
+  otherwise). Repo: black-belt-legacy (ONE repo, ADR 0059).
+
+  FS-0024 GUARD FIRST, before ANY mutating git: pwd + `git remote -v` must be the black-belt-legacy
+  canonical (/Users/brianscott/dev/black-belt-legacy, remote Ronin-Dojo-Design/black-belt-legacy)
+  — never the read-only dirstarter_template, never a sibling brand repo. On mismatch STOP and paste
+  pwd + git remote -v verbatim — do NOT mutate the wrong tree. ADOPT-STUB: SESSION_0740 is
+  pre-staged (status: staged) — adopt it (flip to in-progress, no cp, ADR 0049). Worktree-isolation
+  law: don't edit in canonical if a co-session is live (canonical-claim.sh check decides).
+
+  RECIPE: seq-lane-build — the plan doc IS the spec:
+  docs/product/black-belt-legacy/380-rankaward-drop-plan.md §4-PR1 (+§6 validations, §0 caveats).
+
+  WHY THIS SESSION: #380 (G-011, FI-001 critical path). SESSION_0739 ratified the 3-PR drop plan
+  and PR #411 landed it with the no-sync writer sweep. This session executes STAGE 1 only —
+  additive expand + idempotent backfill (reversible; no destructive step, no writer cutover).
+  Done = PR1 merged, V1–V6 green against live prod, numbers recorded in the SESSION file.
+
+  BRANCH: session-0740-380-pr1-expand off current main (explicit git pull --ff-only origin main
+  first). Commit-only in-lane — YOU push foreground on the operator's word. NEVER git add -A
+  (FS-0035 — stage explicit paths only).
+
+  SCOPE = n/a — greenfield migration lane: ONE hand-authored migration
+  (expand_rank_entry_facts per plan A1–A5/B0–B2) + the matching schema.prisma additive block +
+  PR1 JETTY annotations. Nothing else.
+
+  TIERED WORK:
+  - T1 DEEP — the new migration SQL + schema.prisma RankEntry/satellite additive block.
+  - T3 VERIFY-NOT-REWRITE — preflight/validation query scripts (scratchpad only, read-only vs prod).
+  - FROZEN REVIEW-ONLY — ALL app writer/reader code (cutover is PR2), all other docs; findings
+    route to the plan doc's PR2 section or ledger rows. Zero edits.
+
+  HARD CONSTRAINTS: behavior parity (additive-only; writers untouched) · ADR 0035/0058 display law
+  (awardedAt DESC NULLS LAST; never scope by rank.brand) · provenance immutable · migrate dev
+  BANNED on the shared DB — hand-authored + shadow-replayed only · prisma CLI prefers .env's
+  DIRECT_URL over a shell DATABASE_URL: override BOTH when targeting scratch/shadow (SESSION_0739
+  near-miss) · tests never weakened · no secrets/PII into git.
+
+  INHERITED LAWS (do NOT re-open or regress): forks pinned Evidence-keep-source / Trigger /
+  Direct / 3-PR (operator, 2026-08-03) · IMPORTED-lock stays LIFTED · B0's re_ id prefix is
+  load-bearing vs the prod rank-entry- prefix (rollback safety) · GamificationEvent gets NO
+  replacement column (dead FK, P5-guarded) · B0 fail-closed residual rule (V1b=0 or abort).
+
+  RUN ORDER (grade-drives-fix-drives-re-gate):
+  1. Refresh ronindojo_prodsnap + shadow-replay the PR1 migration — grader: Doug — done-means:
+     replay clean on refreshed snapshot AND ronindojo_shadow; row counts recorded.
+  2. Foreground prod preflight P1/P3/P4/P5 (read-only, SELECT current_database() first) —
+     grader: operator readout — done-means: numbers in the SESSION file; P4/P5 = 0 or
+     operator-ratified loss.
+  3. Author migration + schema additive block + JETTY — grader: Giddy (SQL diffed line-by-line
+     against plan §4-PR1) — done-means: migration matches the ratified plan exactly; inverse SQL
+     in the PR body.
+  4. Gates green → PR → HOLD for the word; post-merge V1–V6 vs prod — grader: Doug — done-means:
+     all six at expected values, recorded in ## Verification.
+  Final: Giddy /ggr — clear line 9.0+; composite + caps recorded in the SESSION file; anything
+  unreached routes to a ledger row, never silently dropped.
+
+  BOW-OUT (closing.md, full close): findings routed N/N with ids (§6.7 router) · Graphify refresh
+  POST-MERGE ONLY · re-run bun run wiki:lint after writing close content · stage SESSION_0741
+  stub + fill PROMPT_TEMPLATE for it · HOLD the close push for Brian's explicit word — /bow-out
+  is NOT push authorization.
+
+  STANDING RULES: you NEVER merge without the operator's explicit word · main is PR-only,
+  server-enforced — never push to main from a worktree · hand-authored migrations only · Brian
+  may be on mobile — SHORT readouts, one line per step, forks framed for a one-word pick · on any
+  limit/config/sandbox error STOP and paste the EXACT error text verbatim; if unknown, say
+  "I don't know."
+
+  FIRST LINE BACK: (1) PR #411 merged-to-main confirmed (this lane depends on it), (2) FS-0024
+  guard result, (3) prodsnap refresh + shadow-replay verdict.
   ```
 
 ## Close evidence
