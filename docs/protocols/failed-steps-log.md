@@ -1423,7 +1423,28 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Status:** closed — seed completes on both provisioning paths; residual: any future hand-authored SQL
   that `db push` cannot recreate re-opens this class.
 
-### Pattern 1: L1 component inventory gate bypass (FS-0001 → FS-0008 → FS-0014)
+### FS-0059 — prisma CLI URL precedence: `.env` `DIRECT_URL` silently overrides a shell `DATABASE_URL` (db push hit prodsnap, not scratch)
+
+- **Session:** SESSION_0739 (2026-08-03), scratch-DB seed-proof lane.
+- **What happened:** `DATABASE_URL=<scratch> bunx prisma db push` was expected to build
+  `ronindojo_scratch_0739`; it actually ran against `ronindojo_prodsnap` — the tell was the
+  "about to drop `playing_with_neon` (30 rows)" warning, impossible on a fresh DB. Damage:
+  local-only (the disposable snapshot lost its Neon demo table; 150 tables + all data intact;
+  no Neon/prod contact). Scratch DB had 0 tables.
+- **Root cause:** `apps/web/prisma.config.ts` resolves the CLI datasource as
+  `process.env.DIRECT_URL ?? env("DATABASE_URL")` and its `import "dotenv/config"` backfills
+  `DIRECT_URL` from `apps/web/.env` — so a shell `DATABASE_URL` override loses to the dotenv
+  `DIRECT_URL` unless BOTH are overridden. **Read-path recurrence class (FS-0037):** FS-0058's
+  corrective action had already documented "force BOTH `DATABASE_URL` and `DIRECT_URL`" hours
+  earlier in a parallel lane — the prevention existed only inside another FS row's prose, outside
+  this session's read path.
+- **Corrective action:** re-run with both vars overridden (verified: scratch got 149 tables, push
+  target proven by table-count + `playing_with_neon` probe before proceeding). Prevention routed:
+  memory `dev-environment-gotchas` row (the agent read path) + the #380 execution baton's HARD
+  CONSTRAINTS line carries the both-vars rule explicitly (SESSION_0739 `## Next session`).
+- **Status:** mitigated — the trap is inherent to `prisma.config.ts`'s precedence; candidate hard
+  fix for a future lane: a `scripts/` scratch-provision wrapper that refuses to run when the
+  resolved target ≠ the requested target (print `current_database()` first, FS-0058-style).
 
 **3 occurrences** across 3 different agent contexts (Claude SESSION_0014, Claude SESSION_0031, Copilot SESSION_0049). Root cause: agent jumps from "clear task" to "implement" without reading `components/common/` or `dirstarter-component-inventory.md`. Mitigations exist in 5+ places but are not consulted. **Current status: mitigated but repeat-prone.** The `.github/copilot-instructions.md` HARD RULE section is the strongest gate — it's in every agent's system prompt.
 
