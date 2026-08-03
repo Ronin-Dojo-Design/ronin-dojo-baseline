@@ -33,10 +33,14 @@ fi
 echo "▶ bun install"
 bun install
 
-# 3. Ensure the Prisma client exists (idempotent; covers the throwaway-env path).
-if [ ! -d "$ROOT/apps/web/.generated/prisma" ]; then
-  echo "▶ prisma generate (client was not materialized by postinstall)"
-  (cd "$ROOT/apps/web" && bunx prisma generate --no-hints)
+# 3. Ensure apps/web's Prisma client is fully materialized (idempotent; covers the throwaway-env path).
+#    Gate on the client FILE, not just the output dir: a half-run postinstall can leave an EMPTY
+#    `.generated/prisma/` behind, which a `-d` check would treat as "present" and skip — leaving a
+#    broken client that breaks `bun scripts/*.ts` guards and the pre-commit hook. Regenerate via the
+#    workspace `db:generate` script (the single source of truth for the generate flags).
+if [ ! -f "$ROOT/apps/web/.generated/prisma/client.ts" ]; then
+  echo "▶ prisma generate (apps/web client not materialized by postinstall)"
+  bun run --filter @ronin-dojo/web db:generate
 fi
 
 # SESSION_0712 (Phase C) — materialize the gitignored Claude settings from the tracked template
