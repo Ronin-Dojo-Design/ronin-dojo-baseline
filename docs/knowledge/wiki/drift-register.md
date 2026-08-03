@@ -876,11 +876,15 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix:** SESSION_0730 — `apps/web/scripts/prebuild-migrate.ts` gates on `VERCEL_ENV`
   (production/local apply; preview/development SKIP loudly); docs + hook corrected; RISK row 16;
   #380 carries an explicit blocker until the operator scopes preview env creds to a Neon branch.
-- **Status: MITIGATED (migration gate live); runtime risk OPEN** — residual prod creds in preview
-  scope are risk-register row 16 / #398. `prebuild-migrate.ts` deliberately skips previews, so a
-  preview Neon branch also needs an explicit, reviewed migration mechanism. Close only after a
-  throwaway additive PR proves DB identity, branch migration, successful render, and the recorded
-  Deployment Protection decision.
+- **Status: ✅ RESOLVED (SESSION_0738 — #398 closed).** Preview isolation executed live: prod
+  `DATABASE_URL`/`DIRECT_URL` scoped **Production-only**; Preview on a dedicated Neon `preview` branch;
+  **Standard Deployment Protection**; `production` branch protected. Explicit preview-migration
+  mechanism ratified + documented (`schema-migration.md`: single persistent branch, reset-from-
+  `production` after merge, `PREVIEW_DIRECT_URL` + echo-identity guardrail, guard keeps skipping
+  preview). **Proof** (throwaway PR #408, reverted): Preview build logged
+  `[prebuild-migrate] SKIP: VERCEL_ENV=preview`, went READY against the branch, prod
+  `_prisma_migrations` gained **0** rows. RISK-16 clears. (Runtime residual before this: prod creds in
+  preview scope.)
 
 ### D-059 — Two out-of-scope belt comments still assert the superseded IMPORTED authority lock
 
@@ -982,6 +986,12 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   behavior-preserving clusters: async `memberTopRank` → `memberTopRankView`; `use-drawer-profile`
   colocated test + redundant-`?.` drop + `rankProgressPercent` un-export; stale `drawer-types` comment;
   `:117` cast → payload-derived `SystemLadderRank` + F2 `Equals<BeltFamily, Prisma.BeltFamily>` mirror.
-  **Still OPEN (carried to SESSION_0738 fan-out lane B):** `schemas.ts:98` `z.string()`→enum (verify no
-  valid trust value excluded first), the first-in-discipline accessor extraction, `buildDescendantCounts`
-  O(depth) perf, the non-UTC `formatDate` off-by-one, cosmetics. `canvas-model.ts` cyc-89 stays ESSENTIAL.
+  **✅ CLOSED (SESSION_0738 / PR #407):** all remaining extras cleared — `schemas.ts:98`
+  `z.string()`→`z.nativeEnum(RankEntryStatus)` (verified-safe: producer set is exactly
+  `{PENDING,UNVERIFIED,VERIFIED,DISPUTED}`); `topInDiscipline` accessor extracted to
+  `lib/belt/discipline-scope.ts` (4 sites); `buildDescendantCounts` O(n) byte-identical;
+  `promoter-change-modal` `formatDate` UTC-fixed; cosmetics (`cuid`→`nonEmptyId`, bounded anchor loop,
+  orphan doc-comment). `/ggr` 9.1/10; `rank-award-read-guard` PASS. `canvas-model.ts` cyc-89 stays
+  ESSENTIAL. **New minor code-shape follow-ups (out-of-scope, deferred):** `verificationStatus`
+  field-name carries a presentation `RankEntryStatus` value (rename candidate post-#380); 4 divergent
+  `formatDate` helpers → one shared UTC helper someday.
