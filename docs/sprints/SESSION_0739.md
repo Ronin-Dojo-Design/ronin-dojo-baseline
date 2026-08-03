@@ -98,6 +98,18 @@ Frontmatter `status:` is the single source of truth (`in-progress` → `closed`,
 - **Done means:** plan doc exists, passes Giddy review, honors ADR 0035/0058 display law +
   provenance immutability + IMPORTED ratification; wiki-lint clean.
 
+#### SESSION_0739_TASK_04 — Fix sweep: close the no-sync writer gap (operator-added post-ratification)
+
+- **Agent:** Petey/Cody inline · **Depends on:** TASK_02 (inventory §7b named the gap)
+- **What / steps:** wire `syncRankEntryFromAward` into the no-sync RankAward writers
+  (`prisma/seed.ts` ×2, `prisma/seed-baseline-lineage.ts` ×4 incl. the rankId-remap heals,
+  `scripts/import-bbl-members-full.ts`, `scripts/enrich-bbl-members-pods.ts` ×2); widen the seam's
+  client type structurally so plain-`PrismaClient` scripts can call it (the old `Pick<typeof db>`
+  was WHY they inlined/skipped). SKIP `seed-baseline-owner.ts` — owned by the parallel chip
+  session (branch `claude/interesting-haibt-c75613`); its sync wiring follows after that merge.
+- **Done means:** tsc 0 errors · lint clean · `bun run test --parallel=1` green · commit shown,
+  push HELD for the word.
+
 #### SESSION_0739_TASK_03 — Operator ratification + execution baton
 
 - **Agent:** Petey · **Depends on:** TASK_02

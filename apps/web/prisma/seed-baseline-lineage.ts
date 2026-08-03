@@ -1,6 +1,7 @@
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "~/.generated/prisma/client"
 import { DIRTY_DOZEN_LABEL } from "~/lib/lineage/dirty-dozen"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { repointPromoterIdentityForMerge } from "~/server/identity/repoint-promoter-identity"
 
 /**
@@ -810,6 +811,8 @@ async function ensureRankAward(
         location,
       },
     })
+    // Heals entry-less awards on re-runs — display-invisible since the #397 read collapse.
+    await syncRankEntryFromAward(db, existing.id)
     counts.rankAwardsFound++
     console.log(`   RankAward ${rankShortName} for ${passportId.slice(0, 6)}: exists, refreshed`)
     return existing.id
@@ -825,6 +828,7 @@ async function ensureRankAward(
     },
     select: { id: true },
   })
+  await syncRankEntryFromAward(db, created.id)
   counts.rankAwardsCreated++
   console.log(
     `   ✅ Created RankAward ${rankShortName} for ${passportId.slice(0, 6)} (id=${created.id})`,
@@ -1614,6 +1618,7 @@ async function main() {
           await db.rankAward.delete({ where: { id: staleCoral.id } })
         } else {
           await db.rankAward.update({ where: { id: staleCoral.id }, data: { rankId: bk6.id } })
+          await syncRankEntryFromAward(db, staleCoral.id)
         }
         console.log("   Haueter correction: stale coral award repointed to BK6")
       }
@@ -1646,6 +1651,7 @@ async function main() {
           await db.rankAward.delete({ where: { id: staleCoral.id } })
         } else {
           await db.rankAward.update({ where: { id: staleCoral.id }, data: { rankId: bk5.id } })
+          await syncRankEntryFromAward(db, staleCoral.id)
         }
         console.log("   Hosken correction: stale coral award repointed to BK5")
       }

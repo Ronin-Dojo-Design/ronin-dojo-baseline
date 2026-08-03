@@ -2,6 +2,7 @@ import { PrismaPg } from "@prisma/adapter-pg"
 import { addDays } from "date-fns"
 import { PrismaClient, ToolStatus, ToolTier, type UserRole } from "~/.generated/prisma/client"
 import { assertSafeSeedTarget } from "~/scripts/seed-target-guard"
+import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 
 // Seed uses its own Prisma client to bypass env.ts validation
 // (which requires all production env vars to be set)
@@ -1622,13 +1623,15 @@ async function main() {
       else if (tu.disciplineId === eskrima.id) awardRank = eskrimaL3
 
       if (awardRank) {
-        await db.rankAward.create({
+        // An award without its RankEntry is display-invisible since the #397 read collapse.
+        const award = await db.rankAward.create({
           data: {
             passportId: passport.id,
             rankId: awardRank.id,
             awardedAt: now,
           },
         })
+        await syncRankEntryFromAward(db, award.id)
         // Update membership with current rank
         await db.membership.update({
           where: { id: membership.id },
@@ -1726,9 +1729,10 @@ async function main() {
     },
   })
   if (muayThaiPrajioud) {
-    await db.rankAward.create({
+    const mtAward = await db.rankAward.create({
       data: { passportId: mtMikePassport.id, rankId: muayThaiPrajioud.id, awardedAt: now },
     })
+    await syncRankEntryFromAward(db, mtAward.id)
   }
   console.log("Created Muay Thai Mike (PUBLIC, ACTIVE, ranked)")
 

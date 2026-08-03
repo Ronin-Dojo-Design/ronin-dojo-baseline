@@ -1,12 +1,52 @@
 /**
  * @added   SESSION_0520 (2026-07-09)
+ * @changed SESSION_0739 — structural client type: the old `Pick<typeof db, …>` rejected the plain
+ *          `PrismaClient` that seeds/import scripts use, which is why script-created awards
+ *          skipped the sync and were display-invisible after the #397 read collapse.
  * @why     Mirror transitional RankAward writes into RankEntry while keeping trust axes distinct
- * @wired   server/belt/router.ts, server/belt/promoter-proposal-core.ts, server/belt/rank-entry-trust-axes.ts, e2e/helpers/seed-rank-entries.ts
+ * @wired   server/belt/router.ts, server/belt/promoter-proposal-core.ts, server/belt/rank-entry-trust-axes.ts, e2e/helpers/seed-rank-entries.ts, prisma/seed.ts, prisma/seed-baseline-lineage.ts, scripts/import-bbl-members-full.ts, scripts/enrich-bbl-members-pods.ts
  */
+import type {
+  RankAwardVerificationStatus,
+  RankEntryProvenance,
+  RankEntryStatus,
+} from "~/.generated/prisma/client"
 import { deriveRankEntryTrustAxesFromAwardStatus } from "~/server/belt/rank-entry-trust-axes"
-import type { db } from "~/services/db"
 
-export type RankEntryCompatibilityDb = Pick<typeof db, "rankAward" | "rankEntry">
+/**
+ * Minimal structural surface (method syntax on purpose — parameter bivariance is what lets the
+ * extended app `db`, its transaction clients, AND a plain script `PrismaClient` all satisfy it).
+ */
+export type RankEntryCompatibilityDb = {
+  rankAward: {
+    findUniqueOrThrow(args: {
+      where: { id: string }
+      select: { passportId: true; rankId: true; verificationStatus: true }
+    }): Promise<{
+      passportId: string
+      rankId: string
+      verificationStatus: RankAwardVerificationStatus
+    }>
+  }
+  rankEntry: {
+    upsert(args: {
+      where: { rankAwardId: string }
+      create: {
+        rankAwardId: string
+        passportId: string
+        rankId: string
+        status: RankEntryStatus
+        provenance: RankEntryProvenance
+      }
+      update: {
+        passportId: string
+        rankId: string
+        status: RankEntryStatus
+        provenance: RankEntryProvenance
+      }
+    }): Promise<unknown>
+  }
+}
 
 /**
  * Synchronize the canonical RankEntry aggregate from its temporary RankAward
