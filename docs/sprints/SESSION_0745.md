@@ -39,7 +39,7 @@ from `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` §4-PR2.
 
 | Lane | Session | Branch | Driver | Item | In-lane gates | PR | Expected state at AM |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| L1 | SESSION_0746 | `auto/session-0746-recipe-contracts` | codex gpt-5.6-sol (commit-only) | petey-plan-0741 §B2 — recipe-card contract block + `recipe:` wiki-lint check | tsc · wiki:lint (+ negative fixture) · lint | — (wave 1) | PR open |
+| L1 | SESSION_0746 | `auto/session-0746-recipe-contracts` | Claude Cody (salvage) | petey-plan-0741 §B2 — recipe-card contract block + `recipe:` wiki-lint check | typecheck · scripts-tsc · wiki:lint · fixture tests · lint · orch build | **#424** | ✅ PR open |
 | L2 | SESSION_0747 | `auto/session-0747-drift-docs` | Claude Cody (salvage) | Drift conform sweep D-063 + D-057 + D-059 (docs + comment-only code) | grep-proofs=0 · wiki:lint · typecheck · lint · orch build | **#423** | ✅ PR open |
 | L3 | SESSION_0748 | `auto/session-0748-378-lineage-tests` | codex gpt-5.6-sol (commit-only) | #378 — Discipline-code collision + P2002/P2034 cross-suite flakes (test-only) | full suite green ×3 repeats, REAL_EXIT each | — (wave 2) | PR open |
 | L5 | SESSION_0749 | `auto/session-0749-tff006-billing-flake` | codex gpt-5.6-sol (commit-only) | TFF-006 — billing portal/checkout flake, bounded repro-or-report | fix: suite green ×3 · report: forensics section | — (wave 3) | PR open OR forensics report committed |
@@ -124,5 +124,21 @@ ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_wo
   conform + `ronin-project-context.md:31` residual routed).
 - Lane deviation log: ran `next typegen` via canonical `bun run typecheck` (not on the
   forbidden list; bare tsc unusable in a fresh worktree) — sound call, noted for AM.
+
+### Wave 1 result — L1 DONE → PR #424 (2026-08-04 ~01:05) — **WAVE 1 COMPLETE**
+
+- Commit `fad9d033`, 31 files (= exact owned set: 21 cards + wiki-lint.ts + test + 6 fixtures +
+  llm-wiki-schema + SESSION_0746), +822/−7. Lane gates all 0; orchestrator independently re-ran
+  wiki:lint (0 errors / 122 warnings = 115 baseline + exactly the 7 new R9 history warnings) +
+  the fixture test (9 pass) + foreground `next build` REAL_EXIT=0. Pushed + PR #424 opened
+  under the standing word.
+- **AM ratification items** (detail in SESSION_0746 + PR body): ① R9 severity extension —
+  `sprints/_archive/**` warning-at-most regardless of status (fossilized staged stubs with
+  retired recipe values would be 3 unfixable errors); live enforcement fully armed. ② No root
+  tsconfig — canonical root gate is `bun run typecheck`; fix future lane-prompt wording.
+  ③ wiki-lint `main()` behind `import.meta.main` (test seam, CLI unchanged). ④ One candidate
+  drift row (historical recipe-value drift) proposed, not minted.
+- Wave 2 (L3 / SESSION_0748, #378 lineage tests) dispatched on wave-1 completion; L5 holds for
+  wave 3 (test-DB serialization).
 
 <!-- wave results + later wave records land here, pushed after every wave -->
