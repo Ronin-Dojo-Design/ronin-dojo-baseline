@@ -41,7 +41,7 @@ from `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` §4-PR2.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | L1 | SESSION_0746 | `auto/session-0746-recipe-contracts` | Claude Cody (salvage) | petey-plan-0741 §B2 — recipe-card contract block + `recipe:` wiki-lint check | typecheck · scripts-tsc · wiki:lint · fixture tests · lint · orch build | **#424** | ✅ PR open |
 | L2 | SESSION_0747 | `auto/session-0747-drift-docs` | Claude Cody (salvage) | Drift conform sweep D-063 + D-057 + D-059 (docs + comment-only code) | grep-proofs=0 · wiki:lint · typecheck · lint · orch build | **#423** | ✅ PR open |
-| L3 | SESSION_0748 | `auto/session-0748-378-lineage-tests` | codex gpt-5.6-sol (commit-only) | #378 — Discipline-code collision + P2002/P2034 cross-suite flakes (test-only) | full suite green ×3 repeats, REAL_EXIT each | — (wave 2) | PR open |
+| L3 | SESSION_0748 | `auto/session-0748-378-lineage-tests` | Claude Cody (salvage) | #378 — Discipline-code collision + P2002/P2034 cross-suite flakes (test-only) | suite ×3 all green (1972/0 ×247 files) · typecheck · lint · orch build | **#425** | ✅ PR open |
 | L5 | SESSION_0749 | `auto/session-0749-tff006-billing-flake` | codex gpt-5.6-sol (commit-only) | TFF-006 — billing portal/checkout flake, bounded repro-or-report | fix: suite green ×3 · report: forensics section | — (wave 3) | PR open OR forensics report committed |
 
 **Stack note:** the 0743 plan's "L1 DECLARED STACK on the 0743 plan branch" clause is **moot** —
@@ -140,5 +140,22 @@ ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_wo
   drift row (historical recipe-value drift) proposed, not minted.
 - Wave 2 (L3 / SESSION_0748, #378 lineage tests) dispatched on wave-1 completion; L5 holds for
   wave 3 (test-DB serialization).
+
+### Wave 2 result — L3 DONE → PR #425 (2026-08-04 ~01:50) — **WAVE 2 COMPLETE**
+
+- Commit `9a7917fa`, 4 files (3 lineage test/fixture files + SESSION_0748; zero runtime
+  source). Baseline suite green pre-change; proof runs ×3 all REAL_EXIT=0 (1972 pass / 0 fail /
+  247 files); typecheck 0; lint 0; orchestrator foreground `next build` REAL_EXIT=0. Pushed +
+  PR #425 under the standing word.
+- Root causes (mechanism-level, detail in SESSION_0748): time-invariant Discipline short-code
+  truncation → run-scoped `shortCode()`; find-then-create on shared entitlement definitions +
+  afterAll delete → atomic upsert, definitions kept; Serializable-tx SSI aborts → bounded ×3
+  P2034-only victim-side retry (0 retries fired in proof runs — dormant guards). No assertion
+  weakened.
+- AM follow-ups proposed (SESSION_0748): TFF-010 flip + `editor-actions.test.ts:788` same-bug
+  follow-up; new TFF row for the P2002/P2034 pair patterns; `sweepStaleLifecycleRows` not
+  run-scoped (flagged only); close #378 after merge.
+- Wave 3 (L5 / SESSION_0749, TFF-006 bounded repro-or-report) dispatched after this record —
+  test-DB serialization honored (L3 suite runs finished before L5 starts).
 
 <!-- wave results + later wave records land here, pushed after every wave -->
