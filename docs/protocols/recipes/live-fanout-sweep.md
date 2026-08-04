@@ -19,6 +19,29 @@ tags:
   - orchestration
   - recipe
   - fanout
+personas:
+  - Petey (Opus) — the orchestrator; dispatch record, sweep, escalation valve, single push gate; does NOT build
+  - Cody ×N — one per build lane, each in its own worktree, each a full lane citizen
+  - Petey (sub) — drafts any plan lane in the trio; the operator grills it later
+  - Doug + Desi + Giddy — the review wave on each landed lane's commit
+  - Merge owner (Petey or operator) — runs merge-wave to one push at close on the word
+load_set:
+  - the N lane stubs (recipe lane SESSION files) — goal + owned files + frozen contract
+  - the disjointness proof (pairwise-empty owned-file sets; shared surfaces frozen)
+  - the per-lane gotcha floor (domain invariants), pulled from each stub
+inputs:
+  - N staged, genuinely-disjoint lane stubs with pinned prompts; operator present, ONE session
+gates:
+  - canonical-occupancy check (FS-0035) + the epic-plan pairwise-empty disjointness test before dispatch
+  - foreground gates only in every dispatch prompt; push posture quotes the operator's grant verbatim
+  - review-wave verdict per lane; merged-main gates before any push
+  - one push, only on the operator's explicit word
+output_contract:
+  - dispatch record (lane · branch/worktree · persona/model · prompt)
+  - per-lane held commit + a self-review line
+  - review-wave verdict per lane (GO / GO-WITH-NOTE / NO-GO → loop), findings routed
+  - merge record — land order, shared-ledger reconciliation, gate result on merged main
+  - one push gate — always waits for the operator's explicit word
 ---
 
 # Recipe — Live Fanout Sweep

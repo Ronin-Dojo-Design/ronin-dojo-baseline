@@ -20,6 +20,24 @@ tags:
   - merge
   - commit-gate
   - recipe
+personas:
+  - Giddy — owns merge posture; states the current gate when reporting status
+  - Operator — the ONLY approver of G4 (push)
+load_set:
+  - docs/protocols/merge-to-main.md (the rebase/PR/squash mechanics this card gates)
+  - the explicit-push-authorization law
+  - docs/rituals/closing.md §4/§4a/§4b (single-push-order sequencing)
+inputs:
+  - commits/branches moving up the ladder from a lane, fan-out, or close
+gates:
+  - the G0→G4 ladder — G2 requires typecheck · oxlint · oxfmt · touched-area tests · wiki-lint green + conventional message + trailer; default stop at G3; G4 only on the operator's explicit go
+  - hard guards — never auto-push, never auto-deploy, FS-0024 git guard before mutating git, never force-push main
+output_contract:
+  - current gate (G0–G4)
+  - branch name + head SHA
+  - commit list (or none)
+  - status PASS | FAIL | MANUAL STEP REQUIRED
+  - next 3 steps
 ---
 
 # Recipe — Merge Wave

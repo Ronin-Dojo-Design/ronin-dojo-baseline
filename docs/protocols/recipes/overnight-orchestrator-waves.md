@@ -20,6 +20,30 @@ tags:
   - overnight
   - autonomous
   - recipe
+personas:
+  - Petey — the long-lived orchestrator; plans each wave from the prior wave's results
+  - Cody ×N per wave — lane citizens in their own worktrees; drivers Claude (Fable/Sonnet) or codex commit-only
+  - Operator — steers by short texts; the ONLY authority for merges, deploys, anything beyond the standing word
+  - AM merge owner — a different, attended session that inherits the run
+load_set:
+  - docs/protocols/recipes/orchestrator.md (the single-wave engine this loops)
+  - docs/protocols/recipes/lane.md + .claude/skills/seq-lane-build/SKILL.md
+  - docs/protocols/recipes/merge-wave.md (overnight lanes stop at G3-equivalent)
+  - the explicit-push-authorization law — the standing word covers branch pushes + PR opens ONLY
+  - the codex sandbox memories (exec incantation + Keychain boundary)
+inputs:
+  - the operator's explicit in-session standing dispatch authorization + 2+ waves of planned or plannable-disjoint work
+gates:
+  - per lane — the lane's own gate set with REAL_EXIT recorded in its Verification table
+  - per wave — every PR verified open; done/blocked/crashed recorded before the continuation is planned
+  - at AM — full gates re-run after rebase onto current main; overnight green is evidence, never a merge pass
+  - the operator gate (LAW) — branches + PRs only; the MERGE gate stays held
+output_contract:
+  - everything in the orchestrator contract, per wave
+  - launch record + results appended to the AM stub and PUSHED after every wave
+  - running grand totals (waves / lanes / PR range)
+  - the operator decision-batch of open forks for the morning
+  - the final THE ORCHESTRATOR IS DONE marker
 ---
 
 # Recipe — Overnight Orchestrator Waves

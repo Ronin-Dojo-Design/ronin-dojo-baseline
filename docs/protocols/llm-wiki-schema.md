@@ -4,8 +4,8 @@ slug: llm-wiki-schema
 type: protocol
 status: active
 created: 2026-06-21
-updated: 2026-06-21
-last_agent: claude-session-0421
+updated: 2026-08-04
+last_agent: claude-cody-session-0746
 pairs_with:
   - docs/rituals/closing.md
 backlinks:
@@ -172,6 +172,35 @@ It does NOT replace:
 - sprint planning
 
 Those remain governed by SESSION docs and architecture files.
+
+## SESSION `recipe:` facet — resolution rule (petey-plan-0741 §B2, SESSION_0746)
+
+SESSION files (`docs/sprints/**/SESSION_NNNN.md`) may carry a `recipe:` frontmatter facet naming
+the recipe card or sequence skill the session hydrates from. `scripts/wiki-lint.ts` rule **R9**
+enforces it (negative-fixture proof: `scripts/wiki-lint.test.ts`):
+
+- A non-empty `recipe:` value must resolve to `docs/protocols/recipes/<value>.md` **or**
+  `.claude/skills/<value>/SKILL.md` — the repo's run→card→skill ladder. Live skill values like
+  `seq-lane-build`, `fallow-fix-loop`, `pp`, `review` pass via the second home.
+- Unresolvable value on a session whose `status:` is `staged` or `in-progress` → **error**
+  (fails `bun run wiki:lint`). Fix the value or add the card/skill — never weaken the check.
+- Unresolvable value on any other session (`closed` etc.) → **warning** only — history is never
+  rewritten (live examples: `wayfinder-work-through` / `wayfinder-epic-charting` on closed
+  0727/0728).
+- Archived sessions (`docs/sprints/_archive/**`) are history regardless of their fossilized
+  `status:` value (the monorepo-era archive carries frozen `staged`/`in-progress` stubs pointing
+  at retired card names) → warning at most.
+- Empty or absent `recipe:` is always fine. Values may be quoted or bare; inline `#` comments
+  (the SESSION template's comment-only form) are ignored.
+
+## Recipe-card contract block (petey-plan-0741 §B2 D3)
+
+Every card in `docs/protocols/recipes/` carries an additive frontmatter contract block —
+`personas:` · `load_set:` · `inputs:` · `gates:` · `output_contract:` — derived from the card's
+own body (persona pack, load-set, gates/done-means, minimum-output contract). `lane.md`'s 6-item
+minimum-output contract is the baseline `output_contract` other cards reference. Bodies stay
+prose (the why); seq-skills stay the executable order (ADR 0052 D7). When adding a new card,
+include the block; keys sit after the existing frontmatter keys.
 
 ## Final rule
 

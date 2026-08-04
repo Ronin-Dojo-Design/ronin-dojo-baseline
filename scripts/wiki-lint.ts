@@ -32,11 +32,18 @@ const REQUIRED_FRONTMATTER = ["title", "slug", "type", "status", "created", "upd
 // health was removed from JETTY 3.0 in SESSION_0027 — status field handles freshness
 const RECOMMENDED_FRONTMATTER: string[] = []
 
+// R9 (petey-plan-0741 §B2) — SESSION files whose `recipe:` facet is checked: anything under
+// sprints/ named SESSION_NNNN.md (relativePath is docs/-relative).
+const SESSION_FILE_PATTERN = /^sprints\/(?:.*\/)?SESSION_\d{4}\.md$/
+// Statuses that mean "live work": an unresolvable recipe: value is an ERROR here. Everything
+// else (closed, done, superseded, …) is history — never rewritten, so at most a warning.
+const RECIPE_ENFORCED_STATUSES = new Set(["staged", "in-progress"])
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface LintResult {
+export interface LintResult {
   rule: string
   severity: "error" | "warning"
   file: string
@@ -529,6 +536,75 @@ function R8_markdownFormatting(pages: ParsedPage[]): LintResult[] {
   return results
 }
 
+/**
+ * R9 — SESSION `recipe:` value resolution (petey-plan-0741 §B2, SESSION_0746)
+ *
+ * A non-empty `recipe:` frontmatter value on a SESSION file must resolve to
+ * `docs/protocols/recipes/<value>.md` OR `.claude/skills/<value>/SKILL.md`
+ * (the repo's run→card→skill ladder — live values like `seq-lane-build`,
+ * `fallow-fix-loop`, `pp`, `review` are skills and must pass).
+ *
+ * Severity split: an unresolvable value on a session whose `status:` is
+ * `staged` or `in-progress` is an ERROR (live work must hydrate from a real
+ * card/skill); any other session (`closed` etc.) is a WARNING only — history
+ * is never rewritten. Archived sessions (`sprints/_archive/**`) are history
+ * regardless of their fossilized `status:` value (the monorepo-era archive
+ * carries staged/in-progress stubs pointing at retired card names; those files
+ * are frozen), so they also warn at most. Empty/absent `recipe:` is always
+ * fine; values may be quoted or bare, and inline `#` comments are ignored.
+ */
+
+/** Normalize a frontmatter scalar: drop inline YAML comment, surrounding quotes. */
+export function normalizeFacetValue(raw: unknown): string {
+  if (typeof raw !== "string") return ""
+  // The SESSION template ships `recipe: # optional …` — a bare inline comment is an empty value.
+  const withoutComment = raw.replace(/(^|\s)#.*$/, "").trim()
+  return withoutComment.replace(/^["']|["']$/g, "").trim()
+}
+
+export function R9_recipeResolution(
+  pages: Array<Pick<ParsedPage, "relativePath" | "frontmatter">>,
+  repoRoot: string = REPO_ROOT,
+): LintResult[] {
+  const results: LintResult[] = []
+
+  for (const page of pages) {
+    if (!SESSION_FILE_PATTERN.test(page.relativePath)) continue
+
+    const value = normalizeFacetValue(page.frontmatter.recipe)
+    if (!value) continue
+
+    const cardPath = path.join(repoRoot, "docs/protocols/recipes", `${value}.md`)
+    const skillPath = path.join(repoRoot, ".claude/skills", value, "SKILL.md")
+    if (existsSync(cardPath) || existsSync(skillPath)) continue
+
+    const status = normalizeFacetValue(page.frontmatter.status)
+    const isArchived = page.relativePath.includes("_archive/")
+    const isLive = !isArchived && RECIPE_ENFORCED_STATUSES.has(status)
+
+    results.push({
+      rule: "R9",
+      severity: isLive ? "error" : "warning",
+      file: page.relativePath,
+      message: `recipe: "${value}" resolves to neither docs/protocols/recipes/${value}.md nor .claude/skills/${value}/SKILL.md`,
+    })
+  }
+  return results
+}
+
+/**
+ * Test seam: parse one file's content and run the R9 check on it in isolation.
+ * `relativePath` is docs/-relative (e.g. "sprints/SESSION_0746.md").
+ */
+export function lintRecipeValue(
+  relativePath: string,
+  content: string,
+  repoRoot: string = REPO_ROOT,
+): LintResult[] {
+  const { frontmatter } = parseFrontmatter(content)
+  return R9_recipeResolution([{ relativePath, frontmatter }], repoRoot)
+}
+
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
@@ -553,6 +629,7 @@ async function main() {
     ...R6_emptyPages(pages),
     ...R7_healthDrift(pages),
     ...R8_markdownFormatting(pages),
+    ...R9_recipeResolution(pages),
   ]
 
   // Group by severity
@@ -582,6 +659,7 @@ async function main() {
     R6: "Empty/thin pages",
     R7: "Health score drift",
     R8: "Markdown formatting",
+    R9: "Unresolvable recipe value",
   }
 
   for (const [rule, items] of byRule) {
@@ -597,7 +675,10 @@ async function main() {
   process.exit(errors.length > 0 ? 1 : 0)
 }
 
-main().catch(err => {
-  console.error("Wiki lint failed:", err)
-  process.exit(2)
-})
+// Guarded so the R9 test seam can import this module without running the full scan.
+if (import.meta.main) {
+  main().catch(err => {
+    console.error("Wiki lint failed:", err)
+    process.exit(2)
+  })
+}

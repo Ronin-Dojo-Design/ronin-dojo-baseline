@@ -17,6 +17,28 @@ tags:
   - orchestration
   - recipe
   - overnight
+personas:
+  - Petey/operator-session — the orchestrator that wakes on the final lane's notification
+  - Giddy — the merge sweep (per-lane verify, merge order, disjointness re-check)
+  - Doug — clean uncontended gate rerun on the merged tree
+  - Operator — the only party who can open the push gate, at coffee
+load_set:
+  - each lane's SESSION_NNNN.md (Task log, Verification table, Proposed ledger edits)
+  - docs/protocols/recipes/merge-wave.md
+  - git worktree list + each lane's branch
+inputs:
+  - a completed overnight fan-out — the final lane's completion notification + the open PRs
+gates:
+  - merge-wave ladder driven to G3 only — the MERGE gate stays shut through the whole sweep
+  - clean uncontended test rerun on the merged tree (the authoritative one)
+  - escalation valve — conflict / NO-GO / gate failure / ambiguity → STOP, hold state
+output_contract:
+  - merge order executed per the parent plan, with per-merge dispositions
+  - proposed-ledger-edits applied ONCE, reverse-checked
+  - clean uncontended test rerun on the merged tree
+  - artifact re-render if any lane touched UI
+  - verdicts recorded per lane + the sweep itself
+  - push-gate state — explicit "HELD — awaiting the operator's word" + ntfy notification
 ---
 
 # Recipe — AM Coffee Merge Review

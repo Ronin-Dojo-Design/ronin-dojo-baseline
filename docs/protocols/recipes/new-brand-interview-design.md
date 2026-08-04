@@ -16,6 +16,24 @@ tags:
   - design
   - recipe
   - onboarding
+personas:
+  - Desi — owns it; extracts tokens, checks contrast + ui-kit L1 fit; recommends, never production code
+  - Operator — supplies the visual seed + ratifies the hue anchor
+  - Cody — consumes the token spec at build (not part of the interview)
+load_set:
+  - the PL-005 skin law (fixed-hue-brand-tint, planning-ledger)
+  - the visual seed — the render/mock/screenshot the brand starts from
+  - design-system-doctrine.md + the ui-kit token set
+  - G-018 (per-brand cockpit skins — the family the brand joins)
+inputs:
+  - a brand needing a skin + its visual seed
+gates:
+  - every semantic token verified against the PL-005 contrast floor
+  - L1 fit — reuse-only or a named extract-down to packages/ui-kit; no bespoke component, no hardcoded palette
+output_contract:
+  - a token spec — semantic tokens + fixed-hue anchor + contrast-floor proof
+  - an L1 fit statement — reuse-only, or a named extract-down for the kernel
+  - skin-family placement (G-018)
 ---
 
 # Recipe — New-Brand Design Interview

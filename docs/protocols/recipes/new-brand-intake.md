@@ -16,6 +16,23 @@ tags:
   - governance
   - onboarding
   - recipe
+personas:
+  - Petey — owns intake; turns the raw ask into structured requirements + the fork inputs
+  - Brandon — pulled in when the ask is brand/voice-heavy (hands off to the business interview)
+  - Operator — the source of truth for what the brand is and what the app must do
+load_set:
+  - the raw ask (operator directive, or a lead doc under docs/business/leads/)
+  - ADR 0051 taxonomy — first-party brand vs client
+  - ronin-project-context.md (the portfolio map)
+  - the kernel module inventory (what exists to reuse)
+  - the discovery-call agenda (Initial_Client_Meeting_Template)
+inputs:
+  - a new brand/client's raw ask or lead doc
+gates: []
+output_contract:
+  - a brand brief at docs/product/<brand>/brand-brief.md (confirmed vs recommended vs operator-to-fill)
+  - the fork inputs for new-brand-setup (home · scope · modules)
+  - open questions consolidated for the operator
 ---
 
 # Recipe — New-Brand Intake

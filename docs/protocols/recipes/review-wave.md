@@ -18,6 +18,26 @@ tags:
   - orchestration
   - recipe
   - review
+personas:
+  - Doug — always; independent gate re-run + failure-mode source review + runtime UAT on a hermetic scratch DB
+  - Desi — when member-facing or shared-primitive UI changed; dispatched IN the wave, not at close
+  - Giddy — when structure moved (new files/dirs, protocol/ritual edits, ADR-worthy decisions)
+load_set:
+  - the commit/diff under review + the SESSION file's Task log (what it claims)
+  - the gotcha-encoded brief — prior reviewer findings as hard constraints
+  - domain invariants relevant to the diff (from the lane's gotcha floor)
+inputs:
+  - one landed commit (single-lane, fan-out sweep, or epic slice) — all reviewers review the SAME commit
+gates:
+  - reviewers verify, they do not fix — findings resume to the original builder
+  - delta re-verify after batched fixes; refactors prove behavior-preservation
+  - NO-GO loops back to the batched-fix step; the push gate always waits for the operator's word
+output_contract:
+  - findings ranked P1 / P2 / P3, each with file:line and concrete evidence
+  - batched-fix resume — the P1+P2 list (plus elected P3s) handed to the ORIGINAL builder in one batch
+  - delta re-verify — re-run affected gates + the specific reviewer probe per fixed finding
+  - review log entry per reviewer (reviewed tasks, verdict, score, routed follow-ups)
+  - verdict GO / GO-WITH-NOTE → merge-wave's push gate; NO-GO → loop
 ---
 
 # Recipe — Review Wave

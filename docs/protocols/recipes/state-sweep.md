@@ -19,6 +19,26 @@ tags:
   - orchestration
   - recipe
   - assessment
+personas:
+  - Petey (assessor) — reads ledgers, renders status, ranks the autonomous shortlist; never builds, never grills
+  - Operator — receives the render + shortlist; the only one who commits under a shared canonical
+load_set:
+  - the backlog ledgers — planning · wiring · goals · POST_LAUNCH_SOT · drift · TFF · DBS · risk registers · FS
+  - the aggregators — bun scripts/ledger-backlog.ts + board-backlog.ts
+  - the wayfinder maps (gh issue list --label wayfinder:map + child tickets)
+  - live-lane owned-file sets (to prove candidate disjointness)
+inputs:
+  - the repo's current state — ledgers, maps, in-flight lanes (read-first; no plan, no build)
+gates:
+  - occupancy check FIRST — canonical held ⇒ no add -A, no commit; writes staged or held for the operator
+  - staleness-verify every candidate against source before listing it
+  - push nothing — ledger flips land only on the operator's word
+output_contract:
+  - status render — the published Artifact link (live counts)
+  - ranked autonomous shortlist — ledger id · owned-file set · model · recipe · exact gate · size
+  - stale ledger flips applied or staged-for-apply, each with evidence
+  - N copy-paste lane stubs, pairwise-disjoint, with a suggested merge order
+  - excluded-with-reason list — never silently dropped
 ---
 
 # Recipe — State Sweep
