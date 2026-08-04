@@ -24,8 +24,9 @@ const verifyRankEntrySchema = z.object({
  *
  * Durability: for a NON-IMPORTED underlying award we promote
  * `RankAward.verificationStatus → VERIFIED` so the derived entry stays VERIFIED across
- * future syncs. IMPORTED awards keep their provenance (belt-gate still treats them as
- * authority-owned / read-only, and `rankEntryStatusForAward` already derives them to
+ * future syncs. IMPORTED awards keep their provenance (member self-reports since
+ * SESSION_0730 + #397 — member-editable after claim, provenance locks nothing — and
+ * `rankEntryStatusForAward` already derives them to
  * VERIFIED). Idempotent: re-verifying a VERIFIED entry is a no-op end-state. Audited.
  */
 export const verifyRankEntry = adminActionClient

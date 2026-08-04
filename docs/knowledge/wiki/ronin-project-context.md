@@ -4,9 +4,9 @@ slug: ronin-project-context
 type: concept
 status: active
 created: 2026-05-18
-updated: 2026-07-27
+updated: 2026-08-04
 author: Brian + Giddy
-last_agent: claude-session-0590
+last_agent: claude-cody-session-0747
 backlinks:
   - docs/knowledge/wiki/index.md
   - docs/knowledge/wiki/repo-truth-index.md
@@ -67,21 +67,31 @@ harness (four brand-skins crammed into ONE app → collapsed to single-brand BBL
 `getRequestBrand` sites slated for prune). A brand skin per *deploy* (white-label instance) is
 alive; multiple skins in one app via the enum is what's dead.
 
-## Repo & product strategy (ADR 0034; taxonomy ratified by ADR 0051)
+## Repo & product strategy (ADR 0055/0059; taxonomy per ADR 0051)
 
-**One monorepo (this repo) hosts the kernel + every brand's apps** (`kernel → brand → app`, ADR
-0051); deploy unit = **per-app Vercel projects** (`ignoreCommand`); `main` = prod, previews =
-staging. **No separate prod repos.** The in-app multi-*brand* `Brand` enum (~170 `getRequestBrand`
-sites) is dead → single-brand collapse to BBL + full prune; **multi-*app* (separate apps in one
-monorepo, one deploy per brand/instance) is the model.** Repo name stays neutral (**not**
-`black-belt-legacy`). A true separate repo is reserved for a **client handoff** only. (Old docs:
-"platform"=the kernel, "product"=an app — ADR 0051 word-fix table.)
+> **Superseded (2026-08, five-repo era):** the monorepo-era hosting claims this section carried
+> ("one monorepo hosts the kernel + every brand's apps", "no separate prod repos", "repo name
+> stays neutral") were superseded by [ADR 0055](../../adr/0055-brand-repo-separation.md)
+> (brand-repo separation) and [ADR 0059](../../adr/0059-multi-repo-operating-model.md)
+> (multi-repo operating model). This file's canonical upstream copy lives in **rdd-monorepo**;
+> the upstream conform routes there and syncs down by cherry-pick.
+
+**This is the `black-belt-legacy` brand repo** — one of five sibling repos forked at `ecefd008`
+with full shared history (fork-don't-rewrite, ADR 0055): black-belt-legacy ·
+baseline-martial-arts · mammoth-metal-buildings · usa-stickfighting · **rdd-monorepo** (keeps
+everything; upstream-of-record for `packages/ui-kit` + the process OS — cherry-picked down,
+never forked). The `kernel → brand → app` taxonomy survives (ADR 0051, as amended by ADR 0055);
+deploy unit = **the app's own Vercel project + DB** (`ignoreCommand`); `main` = prod, PR
+previews = staging; **session = one repo** (ADR 0059). The in-app multi-*brand* `Brand` enum
+(~170 `getRequestBrand` sites) is dead → single-brand collapse to BBL + full prune;
+**brand-per-deploy is the model.** (Old docs: "platform"=the kernel, "product"=an app — ADR 0051
+word-fix table.)
 
 | Surface | Role | North star |
 | --- | --- | --- |
-| `apps/web` — **Black Belt Legacy** | flagship **app** (BBL brand); **permanent in-repo** (never handed off) | the verified lineage **graph** (asset/moat); **mission** (preserve the Machado / Bob Bass lineage) is the engine; revenue is exhaust; **optimize the claim loop**. Full vision: BBL PRD. |
-| `packages/ui-kit` | the shared **kernel** (m-card, boards, tokens) | reusable leverage; published as a package on client handoff (ADR 0033 D1) |
-| `clients/*` — e.g. Mammoth CRM | **client-brand apps** | in-repo until a contractual handoff, then own repo consuming `ui-kit` |
+| `apps/web` — **Black Belt Legacy** | flagship **app** (BBL brand); the surviving app surface of THIS repo | the verified lineage **graph** (asset/moat); **mission** (preserve the Machado / Bob Bass lineage) is the engine; revenue is exhaust; **optimize the claim loop**. Full vision: BBL PRD. |
+| `packages/ui-kit` | the shared **kernel** (m-card, boards, tokens) | upstream-of-record = **rdd-monorepo** (ADR 0055) — cherry-pick kernel commits down, never fork them |
+| `clients/*` — e.g. Mammoth CRM | **client-brand apps** | live in **rdd-monorepo** / their own brand repos, **not here**; a contractual handoff gets its own repo consuming `ui-kit` (ADR 0033 D1) |
 
 ## Non-negotiable rules
 
