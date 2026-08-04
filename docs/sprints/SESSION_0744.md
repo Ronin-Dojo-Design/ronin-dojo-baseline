@@ -1,5 +1,5 @@
 ---
-title: "SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 5 Codex commit-only lanes"
+title: "SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 4 Codex commit-only lanes"
 slug: session-0744
 type: session--open
 status: staged
@@ -25,23 +25,23 @@ backlinks:
   - docs/knowledge/wiki/index.md
 ---
 
-# SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 5 Codex commit-only lanes
+# SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 4 Codex commit-only lanes
 
 **Date:** staged 2026-08-03 (SESSION_0743) · **Operator:** Brian + <agent>-session-0744
 
 ## Goal
 
 Execute the ratified overnight fanout
-([petey-plan-0743](plans/petey-plan-0743-overnight-codex-fanout.md)): dispatch lanes L1–L5 as
+([petey-plan-0743](plans/petey-plan-0743-overnight-codex-fanout.md)): dispatch lanes L1/L2/L3/L5 (L4 stale-dropped by amendment) as
 Codex commit-only worktree lanes per the Claudex variant of
 `recipes/overnight-orchestrator-waves.md`, ending at **branches + open PRs only** — never a
-merge. Done = 5 PRs open (or blocked/crashed honestly recorded), AM stub staged + pushed with
+merge. Done = 4 PRs open (or blocked/crashed honestly recorded), AM stub staged + pushed with
 the full lane inventory, findings routed per lane.
 
 ## Kickoff prompt (D4 — the baton lives HERE; this stub is self-contained)
 
 ```text
-/bow-in — SESSION_0744 = the overnight Claudex fanout (Fable 5 orchestrator, 5 Codex
+/bow-in — SESSION_0744 = the overnight Claudex fanout (Fable 5 orchestrator, 4 Codex
 commit-only lanes). Act as PETEY orchestrator. Repo: black-belt-legacy (ONE repo, ADR 0059).
 
 FS-0024 GUARD FIRST: pwd + git remote -v = black-belt-legacy canonical; on mismatch STOP +
@@ -50,7 +50,7 @@ paste verbatim. git fetch; ff main if behind + clean. ADOPT-STUB: SESSION_0744 i
 session-0744-overnight-fanout is ALREADY reserved — adopt it.
 
 RECIPE: recipes/overnight-orchestrator-waves.md §Variant Claudex commit-only — the plan IS
-the spec: docs/sprints/plans/petey-plan-0743-overnight-codex-fanout.md (§A lanes L1–L5 with
+the spec: docs/sprints/plans/petey-plan-0743-overnight-codex-fanout.md (§A lanes L1/L2/L3/L5 — L4 STALE-DROPPED, see §A amendment — with
 owned sets + gates, §Disjointness matrix, §Ops notes, §Risks). Re-litigate NOTHING — every
 fork is pinned (P1–P5) or excluded (§D).
 
@@ -60,9 +60,9 @@ PR #361 surfaces are UNTOUCHABLE tonight (§D exclusion list).
 
 RUN ORDER:
 1. Stage + push the AM_Coffee_Merge_Review stub (mint via ledger-id-next, serial, §1
-   guards) with the L1–L5 lane inventory table — recipe §7 precondition; can't stage = don't
+   guards) with the L1/L2/L3/L5 lane inventory table — recipe §7 precondition; can't stage = don't
    start.
-2. Wave 1 = L1 + L2 + L4 (no-DB lanes, concurrent worktrees). L1 branches from the 0743 plan
+2. Wave 1 = L1 + L2 (no-DB lanes, concurrent worktrees; L4 stale-dropped). L1 branches from the 0743 plan
    branch (DECLARED STACK, MERGE-AFTER the 0743 plan PR — carry it in the PR body).
 3. Wave 2 = L3 · Wave 3 = L5 (test-suite lanes serialized — shared local test DB).
 4. Per lane: worktree + parent-shell bootstrap (strip RESEND_API_KEY) → lane-prompt with the

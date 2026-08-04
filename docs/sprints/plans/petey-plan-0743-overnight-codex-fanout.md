@@ -115,22 +115,15 @@ first, THEN attended #380 PR2.
   `bun test --parallel=1 --path-ignore-patterns='e2e/**'` **green across 3 repeats**, `REAL_EXIT`
   recorded each run.
 
-### L4 — FS-0046: CI typecheck covers the root `scripts/` tree
+### ~~L4 — FS-0046: CI typecheck covers the root `scripts/` tree~~ — **STALE-DROPPED (amendment, 2026-08-03 post-ratification)**
 
-- **Goal:** the FS row's proposed fix — add a `tsc -p scripts/tsconfig.json --noEmit` step to CI
-  (`.github/workflows/ci.yml`) so a type error in root scripts can't merge green + fix any type
-  errors the new step surfaces.
-- **Owned files:** `.github/workflows/ci.yml` · `scripts/**/*.ts` type-fixes **EXCLUDING
-  `scripts/wiki-lint.ts`** (L1-owned; a type error there = finding routed to the lane SESSION
-  file, not fixed here) + own `SESSION_NNNN.md`.
-- **Disjointness:** workflows are touched by no other lane; the wiki-lint carve-out keeps
-  L4 ∩ L1 = ∅. Does NOT touch `scripts/bow-out-gates.sh` (0742 B1-owned; it's bash anyway).
-- **Lane-prompt outline:** HARD-RULES → read FS-0046 → run `tsc -p scripts/tsconfig.json
-  --noEmit` first (inventory errors) → add CI step (changes-machinery aware: step must not break
-  docs-only PR passes) → fix surfaced errors within the allowlist → gates.
-- **Machine gate:** `tsc -p scripts/tsconfig.json --noEmit` green in-sandbox · full
-  `bunx tsc --noEmit` green · the PR's own required checks green at open (the new step runs on
-  the PR itself — self-proving).
+**Already done.** `.github/workflows/ci.yml:217` has carried the exact proposed fix since
+SESSION_0719 / PR #362: a dedicated `scripts-typecheck` job (`bunx tsc -p scripts/tsconfig.json
+--noEmit`), deliberately always-run (not gated on changes-machinery) and wired into the required
+`CI complete` check. The FS-0046 row was never flipped — flipped with this amendment. Caught by
+the #420 merge-check readout ("Typecheck scripts (tsc)" green on a docs-only PR). The overnight
+run is **4 lanes: L1 · L2 · L3 · L5**; wave 1 = L1 + L2. L1's `scripts/wiki-lint.ts` carve-out
+is moot but harmless.
 
 ### L5 — TFF-006: billing portal/checkout flake — bounded repro-or-report
 
@@ -219,8 +212,8 @@ NULL + Cascade→SetNull) — high blast radius, operator-attended only.
   < lane-prompt.md`
 - **Gates:** in-sandbox tsc/test/lint per lane; orchestrator foreground `next build` (normal
   shell, `REAL_EXIT`, never `| tail` — PL-010) at push time; push branch + `gh pr create` → STOP.
-- **Wave shape:** wave 1 = L1 + L2 + L4 (no-DB lanes, concurrent) · wave 2 = L3 · wave 3 = L5
-  (test-suite lanes serialized — shared local test DB).
+- **Wave shape (amended — L4 stale-dropped):** wave 1 = L1 + L2 (no-DB lanes, concurrent) ·
+  wave 2 = L3 · wave 3 = L5 (test-suite lanes serialized — shared local test DB).
 - **Salvage rule:** Codex limit-wall mid-lane → a Claude session adopts the same worktree, disk
   truth first (recipe §4).
 
