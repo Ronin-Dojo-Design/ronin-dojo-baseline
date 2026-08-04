@@ -15,7 +15,7 @@ model: "Fable 5" # orchestrator; lanes = codex gpt-5.6-sol commit-only (plan P1)
 vault_session:
 goal_ids: [G-031, G-023]
 tickets: ["378"]
-next_session:
+next_session: SESSION_0745
 pairs_with:
 
   - docs/sprints/SESSION_0743.md
@@ -84,6 +84,13 @@ FIRST LINE BACK: FS-0024 status + "adopted stub 0744 on reserved branch" + AM-st
 wave-1 lane numbers.
 ```
 
+## Goal verdict
+
+**YES** (operator-confirmed at bow-out) — 4 lane PRs opened (#423/#424/#425/#426), never-merge
+held, everything honestly recorded; the Codex→Claude driver substitution was pre-authorized
+salvage under the operator's mid-run word. (Claudex-variant proving carries as an open AM item,
+not a goal miss.)
+
 ## Outcome — GOAL MET (with driver substitution)
 
 **4 PRs open: #423 (L2) · #424 (L1) · #425 (L3) · #426 (L5)** + orchestrator baton PR #422.
@@ -140,8 +147,52 @@ baton pushed per wave) is proven again, Claude-native.
 
 None (no UI surface touched; no State-of-Dojo snapshot requested — operator asleep).
 
+## Review log
+
+- `/ggr`: **n/a per bow-out-gates Gate 12d** — "no shippable code touched (apps/web|packages)
+  — /ggr score not required." The orchestrator branch is docs-only (SESSION_0744/0745); all
+  lane CODE ships on its own PR with per-lane machine gates recorded, and gets its attended
+  review at the SESSION_0745 AM sweep (recipe: per-lane rebase + full gates + quarantine
+  check before any merge).
+
+## Full close evidence (pre-filled)
+
+| Gate | Result |
+| --- | --- |
+| Task log | PASS in this file (runner graded staged 0745 — highest-number quirk, known) |
+| Format-fix (code) | 0 code files (orchestrator branch) |
+| wiki:lint | 0 err / 115 warn |
+| Build | skipped on orchestrator branch (docs-only); per-lane foreground `next build` REAL_EXIT=0 (L1/L2/L3), N/A (L5 docs-only) |
+| /ggr (code session) | n/a (no code touched — Gate 12d) |
+| Graphify | nodes=15312 edges=34463 communities=1765 · refresh deferred POST-MERGE (plan §bar-4) |
+| Git state | branch=session-0744-overnight-fanout · clean |
+| Secret scan | PASS (clean) |
+| Evidence-artifact URL | n/a — no UI surface; no snapshot requested |
+| Next-session baton | SESSION_0745 staged (below) |
+| Session telemetry | unavailable (no transcript/payload resolved) |
+| Ledger cross-off | D-057/D-059/D-063 + TFF/G candidates detected — deliberately NOT flipped (frozen overnight); proposed edits routed per lane, AM owner applies in ONE commit |
+
+## Reflections
+
+1. **The recipe's resilience beat its driver.** Codex 402'd before token one; because every
+   judgment was pre-made in lane prompts and worktrees were already cut, swapping drivers cost
+   ~2 minutes and zero re-planning. The HARD-RULES-prompt + worktree + commit-only shape is
+   driver-agnostic — that's the durable asset.
+2. **PL-010 recurses into dispatch wrappers.** I piped the codex command through `| tail`
+   in the same session that pinned "never pipe gates." Driver invocations ARE gates.
+3. **Bounded contracts work.** L5's repro-or-report bound produced a genuinely useful negative
+   result (stale TFF row + latent-coupling map) instead of an overnight wild-goose chase.
+4. **Stale-spec law earned its keep again:** stack clause moot, TFF-006 row stale, "root tsc"
+   gate wording wrong — all caught by verify-first without derailing any lane.
+
 ## Next session
 
-SESSION_0745 — AM_Coffee_Merge_Review (staged, attended): recon → quarantine → per-lane
-rebase+gates → merge on the operator's word → ONE ledger commit → Graphify refresh →
-cleanup → **then** attended #380 PR2.
+**SESSION_0745 — AM_Coffee_Merge_Review (staged, attended).** Recon → quarantine → per-lane
+rebase+gates → merge on the operator's word (order: #423 → #424 → #425 → #426 → #422 last) →
+ONE ledger commit → Graphify refresh → cleanup → **then** attended #380 PR2.
+
+Kickoff prompt: `/bow-in — SESSION_0745. Adopt the staged stub (flip staged → in-progress, no
+cp). Recipe: am-coffee-merge-review — the lane inventory + merge-owner checklist + wave
+records ARE the work order (everything in the stub). Merges/ledger-apply/cleanup are attended,
+on the operator's word per step. First: reactivation decision on the Codex workspace (AM item
+①) is independent — don't block the sweep on it.`
