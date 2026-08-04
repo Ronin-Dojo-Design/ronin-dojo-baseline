@@ -366,9 +366,12 @@ const FACT_LABEL: Record<FactKey, string> = {
  * `updateRankAwardFact(rankAwardId, { awardedAt, promoter, school })` — edit the
  * promotion FACT of an OWN award. NEVER changes `rankId` (not an input).
  *
- * SESSION_0501 ratified policy (per-fact, `memberFactEditability`):
- * - self-added STATED backfill → every fact fully editable (unchanged B1 behavior);
- * - authority-owned award (promotion-minted / IMPORTED) → the owner may FILL a fact
+ * SESSION_0501 ratified policy (per-fact, `memberFactEditability`; IMPORTED lock
+ * lifted SESSION_0730 + #397 — imported WP facts are member self-reports,
+ * member-editable after claim; provenance locks nothing):
+ * - self-added STATED backfill (incl. IMPORTED) → every fact fully editable
+ *   (unchanged B1 behavior);
+ * - authority-owned award (promotion-minted) → the owner may FILL a fact
  *   that is currently EMPTY but may never modify or clear a filled one → FORBIDDEN
  *   naming the locked fact(s);
  * - DISPUTED → fully locked for the owner.

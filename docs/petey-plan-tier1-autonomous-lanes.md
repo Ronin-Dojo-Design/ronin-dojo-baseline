@@ -158,7 +158,7 @@ Extend the bootstrap to also generate apps/baseline's client with a placeholder 
 mirroring the apps/web step.
 
 OWNED FILES (edit ONLY these):
-  - .claude/skills/worktree-setup/SKILL.md   (+ its .agents/ hardlink twin — keep byte-identical, D-053)
+  - .claude/skills/worktree-setup/SKILL.md   (+ its .agents/ symlink twin — keep byte-identical, D-053)
   - docs/runbooks/dev-environment/dev-environment.md  (§ Fresh worktree bootstrap)
 
 GATE (prove it, don't just document it):
