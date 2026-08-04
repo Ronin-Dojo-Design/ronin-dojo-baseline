@@ -4,8 +4,8 @@ slug: recipe-overnight-orchestrator-waves
 type: protocol
 status: active
 created: 2026-07-24
-updated: 2026-07-24
-last_agent: claude-session-0679
+updated: 2026-08-03
+last_agent: claude-fable-session-0743
 pairs_with:
   - docs/protocols/recipes/orchestrator.md
   - docs/protocols/recipes/pm-planning-lane.md
@@ -201,6 +201,40 @@ files, same-path ownership) — record the rejection in the stub. The operator s
 waves with short texts; each authorization covers the batch it names. When the operator says
 done (or the queue is empty): post the final grand-total record, mark **THE ORCHESTRATOR IS
 DONE** in the stub, go quiet.
+
+## Variant — Claudex commit-only fanout (Claude orchestrator + all-Codex lanes)
+
+Added SESSION_0743 ([petey-plan-0743](../../sprints/plans/petey-plan-0743-overnight-codex-fanout.md)).
+The all-Codex specialization of this card: **every** fanout lane is a Codex commit-only worktree
+citizen; the Claude orchestrator (Fable-class) owns everything Codex can't reach. Use when the
+night's queue is fully mechanical (bar below) and Claude budget is reserved for orchestration.
+
+**Division of labor (the Keychain boundary, §4, made total):**
+
+1. **Orchestrator (Claude):** serial-mints numbers (§1 guards) → stages the AM stub (§7) → cuts
+   worktrees + parent-shell bootstrap (§2) → writes each lane-prompt (§3 preamble) → dispatches
+   `codex exec` commit-only → runs the **foreground build gate in a normal shell** (`next build`;
+   in-sandbox SIGSEGV on `prisma generate` is ENVIRONMENTAL, never a code verdict) → pushes the
+   branch, opens the PR → **STOP, never merge** → routes findings to each lane's SESSION file.
+2. **Codex lane (commit-only):** edits + in-sandbox gates only — `bunx tsc --noEmit` ·
+   `bun run test --parallel=1` · `bun run lint` (writes files → stage explicit paths) → commits →
+   exits. No push, no PR, no build, no DB mutation beyond the test suite.
+
+**The hard auto-safety bar — a lane fans out overnight ONLY if ALL four hold:**
+
+1. **Fully specified** — written acceptance criteria, zero open operator forks.
+2. **Machine-gate-able** — clear pass/fail from sandbox-runnable gates; no human/visual judgment.
+3. **Disjoint** — provably empty-intersection owned file sets vs every other overnight lane AND
+   every live/staged attended lane; declared stacks (§5) are the only sanctioned exception.
+4. **No risky class** — no deploys/DNS/contracts/money/PII/external accounts; no schema migration
+   against a real DB (hand-authored only, run attended); domain invariants named in the dispatch
+   prompt; shared ledgers frozen (Proposed-ledger-edits discipline, §3.4).
+
+Candidates that fail the bar are recorded in the night's plan as rejected-with-reason — a silent
+drop reads as "covered" when it wasn't. Test-suite-running lanes share the local test DB: run
+them in **separate waves** (or per-lane DB names), never concurrently. The AM half is
+[AM_Coffee_Merge_Review](am-coffee-merge-review.md) — merges happen there, attended, before any
+deferred high-blast-radius continuation (e.g. a writer-cutover PR) begins.
 
 ## Gates
 
