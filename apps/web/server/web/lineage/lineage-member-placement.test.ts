@@ -31,6 +31,31 @@ import {
 import { applyLineageMemberPlacementUpdate } from "~/server/web/lineage/editor-actions"
 import { db } from "~/services/db"
 
+/**
+ * Issue #378 (SESSION_0725 flake): `applyLineageMemberPlacementUpdate` runs one SERIALIZABLE
+ * transaction. On the shared local DB, a concurrent suite/lane (or a lifecycle seed's stale-row
+ * sweep) can trigger a Postgres SSI abort or deadlock → Prisma P2034 ("Please retry your
+ * transaction"). Retrying a serialization-aborted tx IS the Postgres SSI contract (the runtime
+ * caller surfaces it to the user, who re-drags). Bounded retry on P2034 ONLY — every assertion
+ * on the resulting placement state is untouched, and any other error still throws immediately.
+ */
+const applyPlacementWithConflictRetry = async (
+  input: Parameters<typeof applyLineageMemberPlacementUpdate>[0],
+  attempts = 3,
+) => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await applyLineageMemberPlacementUpdate(input)
+    } catch (error) {
+      const code = (error as { code?: string } | null)?.code
+      if (code !== "P2034" || attempt >= attempts) throw error
+      console.warn(
+        `[lineage-member-placement.test] P2034 write-conflict on attempt ${attempt}/${attempts} — retrying (cross-suite conflict, issue #378)`,
+      )
+    }
+  }
+}
+
 describe("applyLineageMemberPlacementUpdate", () => {
   let fixture: LineageLifecycleFixture
 
@@ -48,7 +73,7 @@ describe("applyLineageMemberPlacementUpdate", () => {
     // A distinct target so the change is unambiguous (move B past the last sibling).
     const targetSortOrder = fixture.siblingInitialSortOrders[2] + 5
 
-    await applyLineageMemberPlacementUpdate({
+    await applyPlacementWithConflictRetry({
       db,
       brand: Brand.BBL,
       userId: fixture.treeEditorUserId,
@@ -74,7 +99,7 @@ describe("applyLineageMemberPlacementUpdate", () => {
   it("cross-group move changes visualGroupId but PRESERVES lineage parentage", async () => {
     const memberB = fixture.siblingMemberIds[1]
 
-    await applyLineageMemberPlacementUpdate({
+    await applyPlacementWithConflictRetry({
       db,
       brand: Brand.BBL,
       userId: fixture.treeEditorUserId,

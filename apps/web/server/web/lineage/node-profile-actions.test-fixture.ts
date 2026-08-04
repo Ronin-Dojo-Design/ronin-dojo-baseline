@@ -4,6 +4,7 @@
  * @wired   server/web/lineage/node-profile-actions.test.ts, server/web/lineage/node-profile-actions.safe-action.test.ts
  */
 import type { Brand } from "~/.generated/prisma/client"
+import { createFixtureRunIdentity } from "~/lib/test/fixture-ownership"
 import { syncRankEntryFromAward } from "~/server/belt/rank-entry-compatibility"
 import { db } from "~/services/db"
 
@@ -36,7 +37,12 @@ export async function seedNodeProfileActionCoreFixture({
       brand,
       name: tag("Discipline"),
       slug: tag("discipline"),
-      code: tag("DISC").slice(0, 16),
+      // TFF-010 (recurrence, SESSION_0709 / issue #378): `tag("DISC").slice(0, 16)` truncated
+      // the tag down to `session-NNNN-<first 3 digits of Date.now()>` — a TIME-INVARIANT
+      // constant, so any stranded row from a killed run (or a concurrent lane running this
+      // same file) P2002s `Discipline @@unique([code, brand])` forever after. Keep the unique
+      // suffix inside the 16-char code budget instead of truncating it off.
+      code: createFixtureRunIdentity("node-profile-fx").shortCode("disc"),
     },
   })
 
