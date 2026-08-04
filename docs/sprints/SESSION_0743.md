@@ -2,7 +2,7 @@
 title: "SESSION 0743 — PM_Planning: autonomous-session enablement + overnight Codex-fanout plan"
 slug: session-0743
 type: session--plan
-status: in-progress
+status: closed
 created: 2026-08-03
 updated: 2026-08-03
 last_agent: claude-fable-session-0743
@@ -36,6 +36,14 @@ auto-safe lane list vs the hard auto-safety bar, (B) the recipe-card extension o
 `overnight-orchestrator-waves`, (C) a staged launch stub, (D) the #380 PR2 deferred-continuation
 section (attended AM, excluded from overnight), and (E) the automation-B1 enablement plan per the
 0742 baton. From SESSION_0740 `## Next session` (operator-elected).
+
+## Goal verdict
+
+**YES — goal met.** All five deliverables landed and ratified on the operator's word ("Ratify and
+push"): petey-plan-0743 (status: ratified) with the 5-lane auto-safe list + rejected table (A/D/E),
+the Claudex commit-only variant in `overnight-orchestrator-waves.md` (B), the staged SESSION_0744
+launch stub + reservation branch (C), and the 0742 Fable-5 facet flip (E). Pushed as PR #420.
+The fanout itself is 0744's work, by design not this session's.
 
 ## Status
 
@@ -133,9 +141,87 @@ operator preference.
 
 | Command / smoke | Result |
 | --- | --- |
-| `bun run wiki:lint` | pending (run at close below) |
+| `bun run wiki:lint` | ✅ REAL_EXIT=0 · 0 err / 115 pre-existing warn (pre-commit + gate runner + post-close re-run) |
 | Caffeinate window | ✅ live, ~12.1h at bow-in — covers overnight + AM start |
 | Disjointness proof | plan §Disjointness matrix — all intersections ∅ (L1 = declared stack) |
+| Stale-spec verification | WL-P2-10 deps grep-verified GONE from package.json (row stale → proposed edit) |
+| Push + PR | ✅ operator word "Ratify and push" — branch pushed, [PR #420](https://github.com/Ronin-Dojo-Design/black-belt-legacy/pull/420) open, merge HELD |
+
+## Artifacts
+
+None published (SotD publish declined at bow-in; live view = `/app/state`).
+
+## Open decisions / blockers
+
+- **None held.** Plan ratified; 0744 launch is the operator's paste tonight.
+- **Pre-launch merge rec:** merge PR #420 first (docs-only) so L1 branches from `origin/main`
+  instead of the declared stack; fanout works either way.
+
+## Next session
+
+- **Goal:** SESSION_0744 (staged, ADR 0049/D4 in-stub baton) — execute the overnight Claudex
+  fanout: L1–L5 as Codex commit-only lanes, branches + open PRs only, never merge.
+- **First task:** adopt the 0744 stub (flip staged → in-progress on reserved branch
+  `session-0744-overnight-fanout`), then stage + push the AM_Coffee_Merge_Review stub before
+  wave 1 (recipe §7 precondition).
+- **Kickoff prompt:** lives IN the stub — `docs/sprints/SESSION_0744.md` § "Kickoff prompt (D4)"
+  (self-contained; this section is the pointer per the D4 convention).
+
+## Close evidence
+
+**/ggr composite:** **9.2 / 10 — CLEARS (≥9.0)** · **Caps applied:** none. (Plan lane →
+plan-quality rubric; per the 0740 precedent the QAR wraps the in-session review — "one review not
+two": the operator grill pinned P1–P5, every lane fact was verify-first checked against live state
+— which caught WL-P2-10 stale — disjointness proven per-pair, rejected candidates recorded with
+reasons, gates named per lane. Not re-run as a second multi-agent pass: docs-only, no code.)
+**Systemic health:** CI n/a in-session (PR #420 docs-only, changes-machinery) · findings routed
+(below) · FS patterns exercised: FS-0024 guard held · FS-0035 claim held · FS-0048 cited ·
+**FS-0054 recurred** (gate runner graded staged 0744, not closing 0743 — fix already owned by
+0742 B1 slice (e); worked remainder manually against 0743) · PL-010 avoided (full capture +
+REAL_EXIT on every gate).
+**Reviewer verdicts:** Giddy = wrapped in /ggr above (plan-quality) · Doug = n/a (no runtime
+surface) · Desi = n/a (no UI).
+**Findings ≥ medium:** (1) WL-P2-10 dep-slice stale → `## Proposed ledger edits` (AM owner
+applies). (2) FS-0054 recurrence evidence → noted here; row already open, no new row.
+**ADR / ubiquitous-language check:** ADR 0049 (staged stubs + reservation branches) followed;
+ADR 0052 D7 (no parallel baton doc — kickoff in-stub) followed; ADR 0056 push flow followed;
+no ADR changes. New term codified: **"Claudex commit-only fanout"** (recipe §Variant).
+
+| Step | Proof |
+| --- | --- |
+| JETTY/frontmatter + backlinks sweep | PASS — new docs carry full frontmatter; pairs_with wired both ways |
+| Wiki lint | 0 err / 115 warn (pre-existing) — gate runner + post-close re-run |
+| Reflections routing receipt | 4 lessons → 4 routes (below) |
+| Code-quality gate (Class-A) | n/a — no code written (Gate 12d concurs) |
+| Runtime verification (Doug) + artifact URL | n/a — no runtime surface; no artifact (SotD declined) |
+| Deferral guard (§6.8) | #380 PR2 deferral re-recorded (plan §D); 0742 B1 stays staged attended-only |
+| Memory sweep · next-session unblock | no new memory rows (FS-0054 + Claudex pattern already covered by existing rows/repo docs); 0744 stub = the unblock |
+| Git hygiene · Graphify update | branch `session-0743-pm-autonomy-plan` pushed → PR #420; tree clean; graphify nodes=15362 edges=33656 (gate runner) |
+| Session telemetry | ~3.99M tokens (52K output) · est $8.17 · 23m (gate runner Gate 14) |
+
+**Ledger cross-off candidates (Gate 9, detect-only) — confirmed NO flips:** FS-0024/FS-0035 =
+recurring-pattern rows exercised, not resolved; G-023/G-031 = in-progress epics this session
+advances, not completes.
+
+## Reflections
+
+- The gate runner still grades the highest-numbered file even when it's a `status: staged` stub —
+  recurred exactly as FS-0054 predicts; the fix is already scoped as 0742 B1 slice (e), so the
+  cost tonight was manual remainder work, not a new failure class. → route: FS-0054 (recurrence
+  noted in Close evidence; no new row)
+- Verify-first survey caught a fully stale ledger row (WL-P2-10's deps were long gone) BEFORE it
+  became a wasted overnight lane — the recipe's failure-mode-3 law ("verify current state before
+  building") pays for itself at planning time, not just dispatch time. → route: proposed ledger
+  edit in this file (AM owner applies)
+- An "autonomous-ready" backlog is mostly NOT ready: of ~15 surveyed candidates only 5 cleared
+  the 4-condition bar, and the commonest failures were unpinned forks (bar 1) and
+  non-sandbox-runnable gates (bar 2). Pre-labeling issues like #378 ("autonomous, AFK-safe,
+  owned files listed") is what makes a lane dispatchable — write tickets that way. → route:
+  petey-plan-0743 §Rejected table (the reusable evidence)
+- Model-name disputes between a baton and the executing agent's environment should surface as an
+  operator fork, not a silent relabel — the kickoff's "correction" was itself wrong (Opus 5 is
+  released), and the operator's pick (Fable 5) was a preference the record now states accurately.
+  → route: petey-plan-0743 §E model note
 
 ## Artifacts
 
