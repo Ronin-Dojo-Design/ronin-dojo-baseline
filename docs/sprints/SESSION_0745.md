@@ -40,7 +40,7 @@ from `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` §4-PR2.
 | Lane | Session | Branch | Driver | Item | In-lane gates | PR | Expected state at AM |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | L1 | SESSION_0746 | `auto/session-0746-recipe-contracts` | codex gpt-5.6-sol (commit-only) | petey-plan-0741 §B2 — recipe-card contract block + `recipe:` wiki-lint check | tsc · wiki:lint (+ negative fixture) · lint | — (wave 1) | PR open |
-| L2 | SESSION_0747 | `auto/session-0747-drift-docs` | codex gpt-5.6-sol (commit-only) | Drift conform sweep D-063 + D-057 + D-059 (docs + comment-only code) | grep-proofs=0 · wiki:lint · tsc | — (wave 1) | PR open |
+| L2 | SESSION_0747 | `auto/session-0747-drift-docs` | Claude Cody (salvage) | Drift conform sweep D-063 + D-057 + D-059 (docs + comment-only code) | grep-proofs=0 · wiki:lint · typecheck · lint · orch build | **#423** | ✅ PR open |
 | L3 | SESSION_0748 | `auto/session-0748-378-lineage-tests` | codex gpt-5.6-sol (commit-only) | #378 — Discipline-code collision + P2002/P2034 cross-suite flakes (test-only) | full suite green ×3 repeats, REAL_EXIT each | — (wave 2) | PR open |
 | L5 | SESSION_0749 | `auto/session-0749-tff006-billing-flake` | codex gpt-5.6-sol (commit-only) | TFF-006 — billing portal/checkout flake, bounded repro-or-report | fix: suite green ×3 · report: forensics section | — (wave 3) | PR open OR forensics report committed |
 
@@ -112,5 +112,17 @@ ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_wo
   (1 = L1+L2 · 2 = L3 · 3 = L5). Driver column in the inventory: Claude Cody (salvage).
 - AM follow-up item: reactivate/re-bill the Codex workspace if Claudex fanouts should stay
   Codex-driven; `deactivated_workspace` needs an attended fix on chatgpt.com.
+
+### Wave 1 result — L2 DONE → PR #423 (2026-08-04 ~00:45)
+
+- Commit `2a009ee3`, 5 files (the exact owned set), 233+/20−. Belt-file diff machine-proven
+  comment-only (zero non-comment ± lines). Lane gates: grep-proofs G1–G5 = 0 · wiki:lint 0
+  errors · `bun run typecheck` 0 · lint 0. Orchestrator foreground `next build` REAL_EXIT=0.
+  Pushed + PR #423 opened under the standing word.
+- Proposed ledger edits (in SESSION_0747, AM owner applies): D-057 → resolved-local (upstream
+  rdd-monorepo wording fix still routed) · D-059 → resolved · D-063 → resolved-local (upstream
+  conform + `ronin-project-context.md:31` residual routed).
+- Lane deviation log: ran `next typegen` via canonical `bun run typecheck` (not on the
+  forbidden list; bare tsc unusable in a fresh worktree) — sound call, noted for AM.
 
 <!-- wave results + later wave records land here, pushed after every wave -->
