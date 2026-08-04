@@ -25,16 +25,22 @@ const TS = Date.now()
 const PREFIX = `session-0419-${TS}`
 const tag = (name: string) => `${PREFIX}-${name}`
 
-const createdEntitlementIds: string[] = []
-
+/**
+ * Issue #378 (SESSION_0725 flake): the old findUnique-then-create was a non-atomic race —
+ * two suites on the shared local DB could both miss and both create, and the loser threw
+ * P2002 on `Entitlement @@unique([brand, key])` in beforeAll. Native upsert (INSERT … ON
+ * CONFLICT) is atomic. These are brand-wide DEFINITION rows (live in prod/prodsnap already),
+ * not per-test data — so they are upserted and left in place, mirroring
+ * `e2e/helpers/seed-lineage-lifecycle-db.ts`. Deleting them in afterAll was the other half
+ * of the cross-suite hazard: it yanked the definition out from under any concurrent suite's
+ * comp-grant path mid-run.
+ */
 async function ensureEntitlement(key: string, name: string) {
-  const existing = await db.entitlement.findUnique({
+  return db.entitlement.upsert({
     where: { brand_key: { brand: TEST_BRAND, key } },
+    update: {},
+    create: { brand: TEST_BRAND, key, name },
   })
-  if (existing) return existing
-  const entitlement = await db.entitlement.create({ data: { brand: TEST_BRAND, key, name } })
-  createdEntitlementIds.push(entitlement.id)
-  return entitlement
 }
 
 type Fixture = {
@@ -109,6 +115,33 @@ const bind = async (email: string, nodeId: string, expiresAt: Date | null = null
     data: { email: email.toLowerCase(), nodeId, brand: TEST_BRAND, expiresAt },
   })
 
+/**
+ * Issue #378 (SESSION_0725 flake): the reconciler runs each binding in a SERIALIZABLE tx and —
+ * by contract — swallows failures, leaving the binding UNCONSUMED "so a later sign-in retries".
+ * Under cross-suite pressure on the shared local DB (concurrent lanes' suites/seed sweeps),
+ * Postgres SSI can abort that tx, which surfaced here as a happy-path assertion failure.
+ * Mirror the runtime contract: re-invoke (= the "later sign-in") a bounded number of times,
+ * ONLY while the binding remains unconsumed, and warn loudly when a retry fires. Assertions
+ * below are untouched — consumption, account attach, and comps are still fully asserted.
+ */
+const reconcileUntilConsumed = async (
+  args: { userId: string; email: string; emailVerified: boolean },
+  bindingId: string,
+  attempts = 3,
+) => {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    await reconcilePendingLineageClaims(args)
+    const binding = await db.lineagePendingClaim.findUnique({
+      where: { id: bindingId },
+      select: { consumedAt: true },
+    })
+    if (binding?.consumedAt) return
+    console.warn(
+      `[reconcile-pending-claims.test] binding unconsumed after attempt ${attempt}/${attempts} — retrying (cross-suite conflict, issue #378)`,
+    )
+  }
+}
+
 beforeAll(async () => {
   await ensureEntitlement(LINEAGE_PREMIUM_ENTITLEMENT_KEY, "Lineage Premium")
   await ensureEntitlement(LINEAGE_ELITE_ENTITLEMENT_KEY, "Lineage Elite")
@@ -129,9 +162,8 @@ afterAll(async () => {
   await db.lineageNode.deleteMany({ where: { slug: { startsWith: PREFIX } } })
   await db.passport.deleteMany({ where: { displayName: { startsWith: PREFIX } } })
   await db.user.deleteMany({ where: { id: { startsWith: PREFIX } } })
-  for (const id of createdEntitlementIds) {
-    await db.entitlement.delete({ where: { id } }).catch(() => {})
-  }
+  // Entitlement DEFINITION rows ({BBL, LINEAGE_PREMIUM/ELITE}) are intentionally NOT deleted —
+  // see the ensureEntitlement doc block (issue #378 cross-suite hazard).
 })
 
 describe("reconcilePendingLineageClaims", () => {
@@ -139,11 +171,10 @@ describe("reconcilePendingLineageClaims", () => {
     const fx = await createFixture("happy")
     const binding = await bind(fx.claimantEmail, fx.nodeId)
 
-    await reconcilePendingLineageClaims({
-      userId: fx.claimantUserId,
-      email: fx.claimantEmail,
-      emailVerified: true,
-    })
+    await reconcileUntilConsumed(
+      { userId: fx.claimantUserId, email: fx.claimantEmail, emailVerified: true },
+      binding.id,
+    )
 
     const [passport, consumed, comps] = await Promise.all([
       db.passport.findUnique({ where: { id: fx.nodePassportId } }),
