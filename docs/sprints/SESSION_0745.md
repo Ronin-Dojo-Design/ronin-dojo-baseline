@@ -93,4 +93,24 @@ surface untouched · 0742 B1 surface untouched · PR #361 untouched · SotD kern
 - Salvage posture (operator word at launch): any Codex stall → the 0744 orchestrator adopts the
   lane worktree directly and lands it, disk truth first.
 
+### Wave 1 AMENDMENT — Codex DOWN at dispatch (2026-08-04 ~00:13) → Claude salvage engaged
+
+Both L1 and L2 `codex exec` dispatches died in <1 min on the identical error (verbatim):
+
+```
+ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_workspace"}}, url: https://chatgpt.com/backend-api/codex/responses
+```
+
+- Diagnosis: the Codex CLI's ChatGPT workspace is **deactivated** (billing/org state — HTTP 402,
+  `deactivated_workspace`). Not transient; both lanes identical; no retry. Codex is OFF for the
+  whole night — L3/L5 would hit the same wall.
+- Authorization: operator's explicit mid-run word at launch — "pick up and land here if any
+  codex interruptions/issues arise (usage limit hit or any other issue that stops codex)."
+- **Salvage form:** all 4 lanes convert to Claude-driven (Cody subagents of the 0744
+  orchestrator), SAME worktrees, SAME lane prompts, SAME commit-only exit contract (lane
+  commits, STOPs; orchestrator runs foreground gates + push + PR). Wave shape unchanged
+  (1 = L1+L2 · 2 = L3 · 3 = L5). Driver column in the inventory: Claude Cody (salvage).
+- AM follow-up item: reactivate/re-bill the Codex workspace if Claudex fanouts should stay
+  Codex-driven; `deactivated_workspace` needs an attended fix on chatgpt.com.
+
 <!-- wave results + later wave records land here, pushed after every wave -->
