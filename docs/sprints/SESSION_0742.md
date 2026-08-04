@@ -11,7 +11,7 @@ lane: repo
 lane_seq:
 recipe: seq-lane-build
 autonomy: attended-only # D8 — never headless-ok by default; operator may flip at paste. (Facet previews the B1 convention this very lane builds — first exemplar, plan D4/D5.)
-model: "Opus 5 (fast mode)" # D5 staging pin (PROMPT_TEMPLATE routing rec, docs/governance lane); operator override at paste wins.
+model: "Fable 5" # D5 staging pin — operator-elected at SESSION_0743 grill (was "Opus 5 (fast mode)"; flip is preference, not correction — see petey-plan-0743 §E model note); operator override at paste wins.
 vault_session:
 goal_ids: [G-031, G-023]
 tickets: []
