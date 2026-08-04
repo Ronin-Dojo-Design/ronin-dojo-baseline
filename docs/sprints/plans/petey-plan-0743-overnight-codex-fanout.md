@@ -2,7 +2,7 @@
 title: "Petey plan 0743 — overnight Codex fanout (Claudex commit-only) + autonomous-session enablement"
 slug: petey-plan-0743-overnight-codex-fanout
 type: plan
-status: proposed
+status: ratified
 created: 2026-08-03
 updated: 2026-08-03
 last_agent: claude-fable-session-0743
@@ -19,9 +19,9 @@ backlinks:
 
 # Petey plan 0743 — overnight Codex fanout + autonomous-session enablement
 
-**Mode:** plan + recipe extension + staged launch stub; NO product build this session. **Ratify:**
-one word flips `status: proposed → ratified`. **Runs tonight only if ratified** — the fanout itself
-executes in SESSION_0744 (staged stub, operator pastes `/bow-in`).
+**Mode:** plan + recipe extension + staged launch stub; NO product build this session.
+**Ratified:** operator word, SESSION_0743 (2026-08-03, "Ratify and push"). The fanout executes in
+SESSION_0744 (staged stub, operator pastes `/bow-in`).
 
 ## The one sentence
 
