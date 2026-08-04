@@ -1010,3 +1010,21 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
   per the process-OS up-sync pattern) in a docs lane; verify no other monorepo-era hosting
   claims survive in the same file.
 - **Status:** open.
+
+### D-064 — `Passport.memberPreferences` exists in prod but not in schema/migrations (untracked prod column)
+
+- **Source:** SESSION_0740 (#380 PR1) — `prisma migrate diff` (applied prodsnap vs schema) after the
+  prod-parity prodsnap refresh; corroborated by grep.
+- **Drift:** the `Passport` table in prod Neon (`neondb`) has a `memberPreferences` column that is
+  **absent from `apps/web/prisma/schema.prisma`, created by NO migration file, unused by any app
+  code, and not previously in this register.** Almost certainly an out-of-band `db push` / manual
+  `ALTER TABLE` that was later removed from the schema without a drop migration (or added directly to
+  prod). The stray `playing_with_neon` Neon-onboarding table also persists in prod (benign, same class).
+- **Why it matters:** prod↔schema divergence that `migrate diff` will keep reporting; specifically
+  relevant to **#380 PR3** (destructive stage) and any future full-schema drift gate — an untracked
+  column can surprise a `migrate diff --exit-code` CI check or a schema-reconciliation pass.
+- **Fix direction:** decide keep-or-drop with the operator. If drop: a hand-authored migration
+  `ALTER TABLE "Passport" DROP COLUMN "memberPreferences"` (verify 0 non-null rows first) + drop
+  `playing_with_neon`. If keep: add the column to `schema.prisma` + a no-op reconciliation migration so
+  the DB and schema agree. Low urgency (unused), but close before PR3.
+- **Status:** open.
