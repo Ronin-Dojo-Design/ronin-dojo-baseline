@@ -72,4 +72,25 @@ surface untouched · 0742 B1 surface untouched · PR #361 untouched · SotD kern
 
 ## Wave records (appended by the 0744 orchestrator)
 
-<!-- wave launch records + results land here, pushed after every wave -->
+### Wave 1 — LAUNCHED 2026-08-04 ~00:15 (L1 + L2, concurrent)
+
+- Base for ALL lanes: `origin/main` @ `d2a622a4`. Caffeinate live, ~11.4h remaining (expires
+  ≈11:30 AM) — covers the run.
+- **L1** SESSION_0746 · `auto/session-0746-recipe-contracts` · worktree `../ronin-0746`
+  (bootstrapped, RESEND_API_KEY stripped) · codex gpt-5.6-sol, effort=high, commit-only,
+  network off.
+- **L2** SESSION_0747 · `auto/session-0747-drift-docs` · worktree `../ronin-0747` (same
+  bootstrap) · codex gpt-5.6-sol, effort=high, commit-only, network off.
+- **Orchestrator judgment calls made at dispatch (for AM review):**
+  1. L1 `recipe:`-lint resolution rule pinned: value resolves to a recipe card OR a
+     `.claude/skills/<name>/SKILL.md` (run→card→skill ladder — live values like
+     `seq-lane-build`/`pp`/`review` are skills); unresolvable → ERROR only when the session is
+     `staged`/`in-progress`, WARNING on closed history (never rewrite closed files; live
+     examples `wayfinder-work-through`/`-epic-charting` on closed 0727/0728).
+  2. L2 D-059 comment fix scoped: promotion-minted stays authority-owned; only IMPORTED's
+     classification corrected (per SESSION_0730 + #397 law).
+  3. Stack clause moot (recorded above): all four lanes fork origin/main.
+- Salvage posture (operator word at launch): any Codex stall → the 0744 orchestrator adopts the
+  lane worktree directly and lands it, disk truth first.
+
+<!-- wave results + later wave records land here, pushed after every wave -->
