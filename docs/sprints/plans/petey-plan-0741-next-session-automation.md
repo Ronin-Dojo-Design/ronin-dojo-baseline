@@ -64,10 +64,14 @@ here so the build sessions grill nothing.
   (c) extend Gate 13c: follow the pointer, verify the stub carries the fenced kickoff +
   facets; implement D10's headless fail mode; (d) extend `.claude/hooks/bow-in-gates.sh` to
   emit stub path + Goal + First-task + `recipe:` + `autonomy:` + top-3 board picks
-  (`board-backlog --json`) at SessionStart.
+  (`board-backlog --json`) at SessionStart; (e) **prerequisite of (c):** the runner's Gate 1
+  SESSION_FILE resolution (`bow-out-gates.sh:42-51`) learns to skip `status: staged` stubs —
+  today it grades the highest-numbered file, so a close with a staged stub present grades
+  the stub (Giddy /ggr finding, SESSION_0741).
 - **Files:** `docs/sprints/_template/SESSION_TEMPLATE.md` · `_template/PROMPT_TEMPLATE.md` ·
-  `scripts/bow-out-gates.sh` (13c block) · `.claude/hooks/bow-in-gates.sh` ·
-  `docs/rituals/closing.md` (baton wording).
+  `scripts/bow-out-gates.sh` (Gate 1 resolution + 13c block) · `.claude/hooks/bow-in-gates.sh` ·
+  `docs/rituals/closing.md` (baton wording) · `.claude/skills/bow-out/SKILL.md` if it
+  restates the baton home (FS-0037 skill-body rule).
 - **Done means:** a staged stub validates through the extended 13c; a fresh session's
   SessionStart output shows the hydration block; `docs/sprints/SESSION_0742.md` itself is the
   first conforming exemplar.
@@ -78,8 +82,9 @@ here so the build sessions grill nothing.
 
 - **What:** additive frontmatter block (`personas/load_set/inputs/gates/output_contract`) on
   every `docs/protocols/recipes/*.md` card, lifting `lane.md`'s 6-item minimum-output
-  contract as the first `output_contract`; a wiki-lint (or gate) check that any SESSION
-  `recipe:` value names an existing card.
+  contract as the first `output_contract`; a **wiki-lint** check (pinned home — NOT the gate
+  runner, which B1 owns; keeps B1 ∥ B2 disjoint) that any SESSION `recipe:` value names an
+  existing card.
 - **Done means:** all cards carry the block; lint fails on a bogus `recipe:` value.
 - **Depends on:** nothing (disjoint from B1 — fan-out candidate).
 
