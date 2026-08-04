@@ -97,6 +97,8 @@ model User {
   passport                   Passport?
   memberships                Membership[]
   awardedRankAwards          RankAward[]                 @relation("AwardedBy")
+  // @added (#380 PR1) — promoter (acting-account) back-relation for folded RankEntry facts.
+  awardedRankEntries         RankEntry[]                 @relation("RankEntryAwardedBy")
   ownedOrganizations         Organization[]              @relation("OrganizationOwner")
   lineageTreeAccessGrants    LineageTreeAccess[]         @relation("LineageTreeAccessUser")
   lineageTreeAccessGranted   LineageTreeAccess[]         @relation("LineageTreeAccessGrantedBy")
@@ -1129,6 +1131,8 @@ model Passport {
   rankAwardsEarned        RankAward[]
   rankAwardsPromoted      RankAward[]       @relation("PromotedByPassport")
   rankEntries             RankEntry[]
+  // @added (#380 PR1) — historical-promoter back-relation for folded RankEntry facts.
+  rankEntriesPromoted     RankEntry[]       @relation("RankEntryPromotedByPassport")
   expectedPromoterReviews RankEntryReview[] @relation("RankEntryReviewExpectedPromoter")
   proposedPromoterReviews RankEntryReview[] @relation("RankEntryReviewProposedPromoter")
   fightRecords            FightRecord[]
@@ -1257,7 +1261,9 @@ model Organization {
 
   // @added   SESSION_0311 (2026-05-30) — lineage Phase 3-0
   // @why     Awarding-school link for promotions (RankAward.organizationId); extends ADR 0016
-  rankAwards RankAward[]
+  rankAwards  RankAward[]
+  // @added (#380 PR1) — awarding-school back-relation for folded RankEntry facts.
+  rankEntries RankEntry[]
 
   // @added   SESSION_0318 (2026-05-31) — host venue for promotion ceremonies (PromotionEvent.hostOrganizationId)
   hostedPromotionEvents PromotionEvent[] @relation("PromotionEventHostOrg")
@@ -2209,6 +2215,15 @@ enum RankEntryProvenance {
   EARNED
 }
 
+// @added (#380 PR1) — belt fact `source` folded from RankAwardSource into RankEntry (transitional
+// dual-home until the PR2 cutover; RankAwardSource drops in PR3). STATED = member self-report,
+// EARNED = system/promoter-minted. Distinct from `provenance` (IMPORTED|EARNED): a STATED report
+// can still be provenance EARNED. See 380-rankaward-drop-plan.md §2 (Fork A — kept).
+enum RankEntrySource {
+  STATED
+  EARNED
+}
+
 enum RankEntryReviewStatus {
   PENDING
   APPROVED
@@ -2293,21 +2308,47 @@ model RankAward {
 /// Canonical member rank aggregate. The first migration keeps RankAward as its
 /// compatibility anchor while authenticated profile reads and writes move over.
 model RankEntry {
-  id        String          @id @default(cuid(2))
-  status    RankEntryStatus @default(UNVERIFIED)
+  id         String              @id @default(cuid(2))
+  status     RankEntryStatus     @default(UNVERIFIED)
   // @added SESSION_0729 (#375 → #376) — IMMUTABLE origin axis, set once at sync. Distinct from the
   // mutable `status`. Historical metadata only (SESSION_0730): IMPORTED = the one-time WP
   // Gravity-Form self-report migration; it locks NOTHING (the member owns their imported
   // self-report) and never renders publicly. Backfill maps the anchor award's verificationStatus
   // (IMPORTED → IMPORTED, else EARNED). Final disposition rides #380.
   provenance RankEntryProvenance @default(EARNED)
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+
+  // @added (#380 PR1) — belt FACTS folded from RankAward into RankEntry. TRANSITIONAL dual-home:
+  // in PR1 writers still write RankAward and these are backfill-only (B1); the PR2 cutover flips
+  // writers/readers to RankEntry-native and PR3 drops RankAward. See 380-rankaward-drop-plan.md §4.
+  /// @added (#380 PR1) — fact folded from RankAward; transitional dual-home until PR2 cutover.
+  awardedAt DateTime?
+  /// @added (#380 PR1) — fact folded from RankAward; transitional dual-home until PR2 cutover.
+  notes     String?
+  /// @added (#380 PR1) — fact folded from RankAward; transitional dual-home until PR2 cutover.
+  location  String?
+  /// @added (#380 PR1) — fact folded from RankAward.source; transitional dual-home until PR2 cutover.
+  source    RankEntrySource @default(STATED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   passport   Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
   passportId String
   rank       Rank     @relation(fields: [rankId], references: [id], onDelete: Restrict)
   rankId     String
+
+  // @added (#380 PR1) — promoter/school/ceremony FACT FKs folded from RankAward. All SET NULL:
+  // promoter FKs (awardedBy/awardedByPassport) are the SESSION_0740 amendment to plan §4-A3
+  // (NO ACTION → SET NULL) so the claim-finalize identity-merge delete keeps working in the
+  // PR1→PR2 window; organization/promotionEvent mirror RankAward's existing SetNull. Backfill-only.
+  awardedBy           User?           @relation("RankEntryAwardedBy", fields: [awardedById], references: [id], onDelete: SetNull)
+  awardedById         String?
+  awardedByPassport   Passport?       @relation("RankEntryPromotedByPassport", fields: [awardedByPassportId], references: [id], onDelete: SetNull)
+  awardedByPassportId String?
+  organization        Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  organizationId      String?
+  promotionEvent      PromotionEvent? @relation(fields: [promotionEventId], references: [id], onDelete: SetNull)
+  promotionEventId    String?
 
   /// Temporary one-to-one migration anchor; remove only after legacy cutover.
   rankAward   RankAward @relation(fields: [rankAwardId], references: [id], onDelete: Cascade)
@@ -2315,9 +2356,20 @@ model RankEntry {
 
   reviews RankEntryReview[]
 
+  // @added (#380 PR1) — satellite carry-relations mirror RankAward's; rows are backfilled via the
+  // rankAwardId anchor (B2). The physical satellite rankAwardId columns drop in PR3.
+  milestone            RankMilestone?
+  lineageRelationships LineageRelationship[]
+  mediaAttachments     MediaAttachment[]
+
   @@unique([passportId, rankId])
   @@index([passportId, status])
   @@index([rankId])
+  @@index([passportId, awardedAt])
+  @@index([awardedById])
+  @@index([awardedByPassportId])
+  @@index([organizationId])
+  @@index([promotionEventId])
 }
 
 /// Steward workflow contract for higher-rank and proposed promoter/school changes.
@@ -2362,6 +2414,11 @@ model RankMilestone {
   rankAward   RankAward @relation(fields: [rankAwardId], references: [id], onDelete: Cascade)
   rankAwardId String    @unique
 
+  /// @added (#380 PR1) — carry-anchor to RankEntry; backfilled via rankAwardId (B2). Becomes the
+  /// sole (NOT NULL) anchor at PR3 when rankAwardId drops. Cascade mirrors the rankAward anchor.
+  rankEntry   RankEntry? @relation(fields: [rankEntryId], references: [id], onDelete: Cascade)
+  rankEntryId String?    @unique
+
   media MediaAttachment[]
 }
 
@@ -2392,6 +2449,8 @@ model PromotionEvent {
   hostOrganizationId String?
 
   rankAwards       RankAward[]
+  // @added (#380 PR1) — ceremony-grouping back-relation for folded RankEntry facts.
+  rankEntries      RankEntry[]
   mediaAttachments MediaAttachment[] // shared event gallery
   visualGroups     LineageVisualGroup[] // per-tree cohort boxes that represent this event
 
@@ -2859,12 +2918,18 @@ model LineageRelationship {
   toNodeId    String
   rankAward   RankAward?  @relation(fields: [rankAwardId], references: [id], onDelete: SetNull)
   rankAwardId String?
+  // @added (#380 PR1) — carry-anchor to RankEntry (§5 semantics: survives re-awards, SetNull on
+  // entry delete). Backfilled via rankAwardId (B2). rankAwardId column + its unique/index drop in PR3.
+  rankEntry   RankEntry?  @relation(fields: [rankEntryId], references: [id], onDelete: SetNull)
+  rankEntryId String?
 
   @@unique([rankAwardId])
+  @@unique([rankEntryId])
   @@index([fromNodeId])
   @@index([toNodeId])
   @@index([fromNodeId, toNodeId, type])
   @@index([type, rankAwardId])
+  @@index([type, rankEntryId])
   @@index([verificationStatus])
 }
 
@@ -3878,6 +3943,9 @@ model MediaAttachment {
   techniqueId           String?
   eventId               String?
   rankAwardId           String?
+  // @added (#380 PR1) — carry-anchor to RankEntry (SetNull, plain index — matches the rankAward
+  // optional-relation contract). Backfilled via rankAwardId (B2); rankAwardId retires at PR2/PR3.
+  rankEntryId           String?
   rankMilestoneId       String?
   courseId              String?
   organizationId        String?
@@ -3893,6 +3961,7 @@ model MediaAttachment {
   technique           Technique?           @relation(fields: [techniqueId], references: [id])
   event               Event?               @relation(fields: [eventId], references: [id])
   rankAward           RankAward?           @relation(fields: [rankAwardId], references: [id])
+  rankEntry           RankEntry?           @relation(fields: [rankEntryId], references: [id], onDelete: SetNull)
   rankMilestone       RankMilestone?       @relation(fields: [rankMilestoneId], references: [id])
   course              Course?              @relation(fields: [courseId], references: [id])
   organization        Organization?        @relation(fields: [organizationId], references: [id])
@@ -3905,6 +3974,7 @@ model MediaAttachment {
   @@index([techniqueId])
   @@index([eventId])
   @@index([rankAwardId])
+  @@index([rankEntryId])
   @@index([rankMilestoneId])
   @@index([courseId])
   @@index([organizationId])
