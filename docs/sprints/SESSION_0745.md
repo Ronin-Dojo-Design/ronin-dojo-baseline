@@ -42,7 +42,7 @@ from `docs/product/black-belt-legacy/380-rankaward-drop-plan.md` §4-PR2.
 | L1 | SESSION_0746 | `auto/session-0746-recipe-contracts` | Claude Cody (salvage) | petey-plan-0741 §B2 — recipe-card contract block + `recipe:` wiki-lint check | typecheck · scripts-tsc · wiki:lint · fixture tests · lint · orch build | **#424** | ✅ PR open |
 | L2 | SESSION_0747 | `auto/session-0747-drift-docs` | Claude Cody (salvage) | Drift conform sweep D-063 + D-057 + D-059 (docs + comment-only code) | grep-proofs=0 · wiki:lint · typecheck · lint · orch build | **#423** | ✅ PR open |
 | L3 | SESSION_0748 | `auto/session-0748-378-lineage-tests` | Claude Cody (salvage) | #378 — Discipline-code collision + P2002/P2034 cross-suite flakes (test-only) | suite ×3 all green (1972/0 ×247 files) · typecheck · lint · orch build | **#425** | ✅ PR open |
-| L5 | SESSION_0749 | `auto/session-0749-tff006-billing-flake` | codex gpt-5.6-sol (commit-only) | TFF-006 — billing portal/checkout flake, bounded repro-or-report | fix: suite green ×3 · report: forensics section | — (wave 3) | PR open OR forensics report committed |
+| L5 | SESSION_0749 | `auto/session-0749-tff006-billing-flake` | Claude Cody (salvage) | TFF-006 — billing portal/checkout flake, bounded repro-or-report | path B: NOT reproduced — suite ×3 all green; forensics committed | **#426** | ✅ PR open (forensics-only) |
 
 **Stack note:** the 0743 plan's "L1 DECLARED STACK on the 0743 plan branch" clause is **moot** —
 the 0743 plan PRs (#420, #421) merged to main before this run launched (remote branch deleted).
@@ -158,4 +158,33 @@ ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_wo
 - Wave 3 (L5 / SESSION_0749, TFF-006 bounded repro-or-report) dispatched after this record —
   test-DB serialization honored (L3 suite runs finished before L5 starts).
 
-<!-- wave results + later wave records land here, pushed after every wave -->
+### Wave 3 result — L5 DONE (path B) → PR #426 (2026-08-04 ~02:25) — **WAVE 3 COMPLETE**
+
+- Bounded contract exited on **path B: NOT REPRODUCED**. Commit `934470c4` = SESSION_0749.md
+  only (193 lines, forensics report; zero test/source files). 3× full-suite runs all
+  REAL_EXIT=0 (1972 pass / 0 fail / 247 files; 293s/301s/302s). Docs-only diff → orchestrator
+  build gate N/A (no build surface). Pushed + PR #426 under the standing word.
+- Key forensic: **TFF-006 row is stale** (105→247 files; brand now BBL; portal routes via
+  `getStripeClient(Brand.BBL)`). Latent coupling documented: 3 fixed `cus_test_*` literals vs
+  globally-unique `stripeCustomerId` + webhook-test prefix sweep — prophylactic de-literalize
+  named but deliberately NOT applied (reverted-#91 trap). Decisive next experiment: CI
+  rerun-until-fail. Proposed row text in SESSION_0749.
+- L3-noise watch: quiet (zero lineage failures in L5's runs).
+
+### FINAL GRAND TOTAL — **THE ORCHESTRATOR IS DONE** (2026-08-04 ~02:30)
+
+- **3 waves · 4 lanes · 4 PRs: #423 (L2) · #424 (L1) · #425 (L3) · #426 (L5)** + the
+  orchestrator's own #422 (this baton). 0 merges, 0 deploys, 0 shared-ledger writes, 0
+  schema changes. All lanes forked `origin/main` @ `d2a622a4`; every lane machine-gate-green
+  (or bounded-clean) before its PR; every push/PR under the ratified standing word only.
+- **Driver note for the record:** Codex never ran a token tonight — 402
+  `deactivated_workspace` at first dispatch; entire fanout executed as Claude Cody salvage
+  under the operator's explicit mid-run word. The Claudex recipe itself is UNPROVEN as of
+  tonight; the wave/worktree/commit-only/orchestrator-gates machinery is proven again.
+- **AM decision batch (beyond per-lane items above):** ① reactivate/re-bill the Codex
+  workspace (or re-plan future fanouts Claude-native); ② ratify L1's R9 archive-severity
+  extension; ③ apply the four lanes' proposed ledger edits in ONE canonical commit
+  (SESSION_0746/0747/0748/0749 + SESSION_0744's own); ④ close #378 after #425 merges;
+  ⑤ worktree/branch cleanup after merges (`ronin-0744/46/47/48/49`).
+- Merge order recommendation stands: L2 #423 → L1 #424 → L3 #425 → L5 #426 (+ #422 last, after
+  its wave records stop moving). Then attended #380 PR2.

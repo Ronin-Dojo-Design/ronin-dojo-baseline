@@ -2,7 +2,7 @@
 title: "SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 4 Codex commit-only lanes"
 slug: session-0744
 type: session--open
-status: in-progress
+status: closed
 created: 2026-08-03
 updated: 2026-08-04
 last_agent: claude-fable-session-0744
@@ -84,4 +84,64 @@ FIRST LINE BACK: FS-0024 status + "adopted stub 0744 on reserved branch" + AM-st
 wave-1 lane numbers.
 ```
 
-<!-- Sections below filled by the executing session per SESSION_TEMPLATE / closing.md. -->
+## Outcome — GOAL MET (with driver substitution)
+
+**4 PRs open: #423 (L2) · #424 (L1) · #425 (L3) · #426 (L5)** + orchestrator baton PR #422.
+0 merges · 0 deploys · 0 shared-ledger writes · 0 schema changes · every push/PR under the
+ratified standing word. Full per-wave records + AM decision batch: SESSION_0745 §Wave records.
+
+**Driver substitution:** Codex died at first dispatch — verbatim:
+`ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_workspace"}}` —
+so zero Codex tokens ran. Operator's explicit mid-run word ("pick up and land here if any codex
+interruptions/issues arise") converted all 4 lanes to Claude Cody salvage in the same worktrees
+under the same lane prompts + commit-only contract; orchestrator kept foreground gates, pushes,
+PR opens. The **Claudex variant remains unproven**; the wave machinery (worktree isolation ·
+HARD-RULES prompts · commit-only lanes · orchestrator foreground `next build` gates · AM-stub
+baton pushed per wave) is proven again, Claude-native.
+
+## Task log (terse)
+
+1. FS-0024 PASS · fetch · adopted reserved branch · ff to `d2a622a4` · worktree `../ronin-0744`.
+2. Serial mints (§1 guards, one proven iteration first): 0745 AM stub · 0746 L1 · 0747 L2 ·
+   0748 L3 · 0749 L5; claims = branches, all cut from `origin/main` (stack clause moot —
+   #420/#421 pre-merged).
+3. AM stub staged + pushed BEFORE wave 1 (recipe §7) on own PR #422.
+4. 4× worktree + parent-shell bootstrap (`.env` copied with `RESEND_API_KEY` stripped).
+5. Wave 1 L1+L2 → Codex 402 → salvage; Cody lanes DONE; orch verification (allowlist ·
+   comment-only proof · independent lint/test re-runs · foreground builds REAL_EXIT=0) →
+   PRs #423/#424. Wave 2 L3 → #425 (suite ×3 green). Wave 3 L5 → #426 (path B forensics).
+6. Baton pushed after every wave; THE ORCHESTRATOR IS DONE marked in 0745.
+
+## Verification (orchestrator-run, REAL_EXIT captured bare)
+
+| Gate | L1 | L2 | L3 | L5 |
+| --- | --- | --- | --- | --- |
+| Foreground `npx next build` | 0 | 0 | 0 | N/A (docs-only diff) |
+| Commit allowlist vs owned set | exact (31) | exact (5) | exact (4) | exact (1) |
+| Independent re-proof | wiki:lint 0 err + fixture test 9 pass | comment-only diff grep = 0 lines | suite ×3 by lane (1972/0 ×247) | 3-run table verbatim in 0749 |
+
+## Proposed ledger edits (AM owner applies in the ONE canonical commit)
+
+1. **PL (PL-010 recurrence, orchestrator self-report):** the codex dispatch wrapper itself
+   piped through `| tail`, masking codex's real exit (402 surfaced via output text, not `$?`).
+   Rule already exists; recurrence site = dispatch wrappers. Proposed row: "PL-010 applies to
+   DISPATCH commands too — capture driver `$?` before any pipe."
+2. **INC/FS candidate (Codex 402):** overnight Claudex fanout lost its entire Codex fleet at
+   dispatch to `deactivated_workspace` (billing state, unattended-undetectable beforehand).
+   Prevention: add a **pre-flight `codex exec` smoke** (1-token ping) to the
+   overnight-orchestrator-waves preconditions before staging a Codex-driver night.
+3. **Recipe/prompt wording fix:** lane-prompt gate "`bunx tsc --noEmit` (root)" is wrong — no
+   root tsconfig; canonical root gate is `bun run typecheck` (L1 AM note ②; L2 hit the same
+   wall via `next typegen`). Fix in overnight-orchestrator-waves §3 examples when next edited.
+4. Lane-proposed edits: see SESSION_0746 §(drift row candidate) · 0747 §(D-057/D-059/D-063
+   flips) · 0748 §(TFF-010 flip + new TFF row + #378 close) · 0749 §(TFF-006 status text).
+
+## Artifacts
+
+None (no UI surface touched; no State-of-Dojo snapshot requested — operator asleep).
+
+## Next session
+
+SESSION_0745 — AM_Coffee_Merge_Review (staged, attended): recon → quarantine → per-lane
+rebase+gates → merge on the operator's word → ONE ledger commit → Graphify refresh →
+cleanup → **then** attended #380 PR2.
