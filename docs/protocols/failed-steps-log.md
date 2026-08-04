@@ -1209,7 +1209,12 @@ Read this section at bow-in instead of skimming every individual entry.
 - **Corrective action:** (1) this row; (2) **proposed fix** — add a `scripts/` typecheck step
   (`tsc -p scripts/tsconfig.json --noEmit`) to CI and/or the pre-push gate. Deliberately NOT folded
   into this hygiene lane (keeps its blast radius to the SotD script) — routed as a follow-up.
-- **Status:** open (fix proposed, not yet landed).
+- **Status:** **resolved** (SESSION_0743 cross-off). The fix landed in SESSION_0719 / PR #362:
+  `.github/workflows/ci.yml:217` `scripts-typecheck` job (`bunx tsc -p scripts/tsconfig.json
+  --noEmit`), deliberately always-run (scripts/ is in the changes-machinery ignore-set) and wired
+  into the required `CI complete` check. Verified green on the docs-only PR #420 readout
+  (2026-08-03); the row was simply never flipped — which itself briefly staged a stale overnight
+  lane (petey-plan-0743 L4, amended out).
 
 ### FS-0047 — a review agent flagged a live unit-test's fixture as a deletable "orphan"
 
