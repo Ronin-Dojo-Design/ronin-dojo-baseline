@@ -19,6 +19,26 @@ tags:
   - design
   - recipe
   - review
+personas:
+  - Desi — always, the reviewer; reviews, does not fix
+  - Cody — batched-fix executor after the operator elects fixes (behavior-preserving only)
+  - Giddy — only if a finding is structural (god-component, kernel-extraction candidate)
+load_set:
+  - the bounded surface — route closure / merged diff range / component family
+  - design-system-doctrine.md + Dirstarter L1 inventory + custom-component-inventory + ADR 0045
+  - open DES-NNN rows on this surface
+inputs:
+  - a bounded surface list written into the SESSION task before review
+gates:
+  - behavior-preserving — a behavior change is an operator-ratified, logged exception
+  - every reviewed surface has a filed finding or a "conforms" note
+  - zero new near-dupes of L1 / inventory primitives left unticketed
+output_contract:
+  - bounded surface list (routes/files reviewed)
+  - DES-NNN rows filed (or "none — surface conforms"), severity-ranked with recommendations
+  - fixes applied (behavior-preserving) vs ticketed, each routed
+  - re-verify evidence for applied fixes (screenshot / read_page, dark + mobile if layout moved)
+  - verdict GO / GO-WITH-NOTE → the push gate (always waits for the operator's word)
 ---
 
 # Recipe — Desi Design Review

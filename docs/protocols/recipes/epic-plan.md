@@ -18,6 +18,26 @@ tags:
   - orchestration
   - recipe
   - planning
+personas:
+  - Petey — owns the plan; grills every open fork before a single lane prompt is written
+  - Giddy — the disjointness proof from the real tree, not by assertion
+  - Operator — resolves every fork the grill surfaces
+load_set:
+  - the epic's G-0xx goals-ledger row (the plan of record)
+  - bun scripts/ledger-backlog.ts + board-backlog.ts
+  - prior sessions on the same epic
+  - ADRs / domain invariants the epic touches
+inputs:
+  - a multi-slice epic needing decomposition + the grill's ratified fork answers
+gates:
+  - shape decided first — sequential / fan-out / §5b in-session chain / overnight pair
+  - every operator fork pinned — an unresolved fork blocks the lane prompt
+output_contract:
+  - lane definitions — scope, explicit non-goals, owned ledger rows per lane
+  - disjointness proof — pairwise-empty owned file sets, proven by listing the real tree
+  - merge order with reasons, naming any lane that must rebase
+  - paste-ready, self-contained prompts, one per lane
+  - pinned forks quoted verbatim into the prompts that depend on them
 ---
 
 # Recipe — Epic Plan

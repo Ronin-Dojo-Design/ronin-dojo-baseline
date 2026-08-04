@@ -20,6 +20,28 @@ tags:
   - orchestration
   - recipe
   - onboarding
+personas:
+  - Petey — owns the plan; grills + pins the whole fork set before any build lane launches
+  - Giddy — the structural proof (apps/* peer vs clients/* standalone, disjointness, DB isolation shape)
+  - Brandon — runs the business interview
+  - Desi — runs the design interview
+  - Cody / Doug — build + verify the onboarding scaffold in follow-on sessions
+  - Operator — resolves every fork; gates cloud provisioning (Neon/Vercel/domain/email)
+load_set:
+  - ADR 0034 + ADR 0038 + ADR 0051
+  - new-client-runbook.md + scripts/new-client-scaffold.ts (the proven mechanical path)
+  - per-app-db-separation.md (the isolation proof)
+  - the two structural exemplars — apps/baseline vs clients/mammoth-build-crm
+  - the intake brief (what the app does)
+inputs:
+  - a new brand/client to stand up + its intake brief (makes the forks answerable)
+gates:
+  - ALL forks pinned before dispatch — home · DB · email · deploy+domain · scope
+output_contract:
+  - the fork set pinned, every row answered and quoted into the first build stub
+  - the brand brief (intake + business + design interviews; client brands add the client interview)
+  - a slice roadmap with the immediate first stub staged (ADR 0049)
+  - a G-NNN program row in the goals-ledger for the deploy
 ---
 
 # Recipe — New-Brand Setup

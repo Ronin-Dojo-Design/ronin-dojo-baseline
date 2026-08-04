@@ -18,6 +18,24 @@ tags:
   - orchestration
   - recipe
   - overnight
+personas:
+  - Petey — grills every open operator fork to a ratified answer
+  - Operator — pins every fork before the session closes (the autonomy gate)
+load_set:
+  - the open backlog — bun scripts/ledger-backlog.ts + board-backlog.ts
+  - fan-out-session-recipe.md + epic-plan.md (shape each lane, prove disjointness)
+  - .claude/skills/seq-lane-build/SKILL.md (what a self-contained dispatch prompt needs)
+  - autonomous-sessions.md + scripts/auto-session.sh — prior art, consume don't reinvent
+inputs:
+  - a day's open backlog + the operator's fork answers
+gates:
+  - nothing overnight runs on an unresolved decision — every fork pinned before close
+  - overnight posture — push branches + open PRs under the standing word; the MERGE gate held
+output_contract:
+  - N reservation branches, one per lane, minted per ADR 0049
+  - N staged lane stubs — status staged, recipe lane, dispatch prompt filled, every fork pinned
+  - ONE orchestrator staged stub carrying all N prompts verbatim + the dispatch instruction
+  - a model/experiment note for any non-default model (an experiment, never a silent default)
 ---
 
 # Recipe — PM Planning Lane

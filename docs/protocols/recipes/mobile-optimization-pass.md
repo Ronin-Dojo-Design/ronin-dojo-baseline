@@ -19,6 +19,26 @@ tags:
   - mobile
   - recipe
   - review
+personas:
+  - Desi — always, the reviewer on the mobile viewport; does not fix
+  - Cody — batched-fix executor after the operator elects fixes (behavior-preserving)
+  - Doug — only if a fix touches a runtime data path (re-verify on the hermetic scratch DB)
+load_set:
+  - the bounded surface — route closure / diff / component family
+  - the motion + haptics constraints (useReducedMotion fallback always; iOS Safari has no haptics)
+  - open DES-NNN rows tagged mobile on this surface
+inputs:
+  - a bounded surface reviewed on a real 375×812 viewport (+ 768 if it reflows)
+gates:
+  - no horizontal scroll at 375px on any reviewed surface
+  - touch targets ≥ 44px; no hover-only mobile action
+  - applied fixes re-verified with a mobile screenshot
+output_contract:
+  - bounded surface list + the viewport(s) tested
+  - DES-NNN mobile rows filed (or "conforms"), severity-ranked with recommendations
+  - fixes applied vs ticketed, routed
+  - screenshot evidence at 375px (before/after for any applied fix)
+  - verdict GO / GO-WITH-NOTE → the push gate (waits for the operator's word)
 ---
 
 # Recipe — Mobile Optimization Pass

@@ -16,6 +16,24 @@ tags:
   - client
   - recipe
   - onboarding
+personas:
+  - Petey / Brandon — run the interview (scope/handoff mechanics; brand/voice)
+  - Operator — the client liaison; carries approvals back and forth
+  - Giddy — the handoff structural check (extract-on-handoff, ADR 0033 D1)
+load_set:
+  - the client lead/proposal under docs/business/leads/<client>
+  - ADR 0033 D1 — in-repo until contractual handoff, then extract consuming the published ui-kit
+  - the showcase entry template (business interview §5)
+  - the RDD client-onboarding templates (NDA / MSA+SOW / discovery agenda — blank templates, not legal advice)
+inputs:
+  - a clients/* brand headed for contractual handoff; signing order NDA → discovery → MSA+SOW → handoff
+gates:
+  - nothing published without testimonial / metric / name-logo sign-off
+output_contract:
+  - client requirements doc
+  - approvals ledger — signed-off assets or explicit "not yet"
+  - handoff checklist — the extract-on-handoff plan (ADR 0033)
+  - prepared NDA + MSA/SOW from the templates, attached to the ledger
 ---
 
 # Recipe — New-Brand Client Interview

@@ -18,6 +18,28 @@ tags:
   - onboarding
   - recipe
   - deploy
+personas:
+  - Cody — builds the scaffold + gates + self-review
+  - Giddy — structural sign-off (home pattern, disjointness, DB isolation)
+  - Doug — verifies the new deploy unit (root gates never cover a clients/* product)
+  - Operator — gates every ⛔ step; one push at close
+load_set:
+  - the pinned fork set from new-brand-setup (home pattern decided at intake)
+  - new-client-runbook.md + scripts/new-client-scaffold.ts
+  - per-app-db-separation.md
+  - the deploy + Resend runbooks under docs/runbooks/
+inputs:
+  - a pinned setup fork set — home · DB · email · deploy+domain · scope
+gates:
+  - every ⛔ step operator-gated (install, DB, Neon, Vercel, domain, email, push)
+  - prod migrate-only (prebuild migrate deploy); never migrate dev / db push on prod
+  - ignoreCommand watches <app> packages bun.lock package.json
+  - real exit codes on build gates — never piped through tail
+output_contract:
+  - Products-CI green on the new app (peer needs the 3 CI edits); root gates untouched or green
+  - DB isolation proof — other product DBs byte-identical; new tables only in <name>_dev
+  - next build green off the merge diff with the real exit code
+  - env parity green; cloud slices add live URL + email smoke
 ---
 
 # Recipe — New-Brand Onboarding

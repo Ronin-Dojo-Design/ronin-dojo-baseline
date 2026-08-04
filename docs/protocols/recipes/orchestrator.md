@@ -17,6 +17,24 @@ tags:
   - governance
   - orchestration
   - recipe
+personas:
+  - Petey/operator — the dispatcher; issues each lane with its pinned prompt verbatim
+  - Cody ×N — one per lane, each in its own worktree, each a full lane citizen
+  - Doug/Desi/Giddy — the review wave that runs once lanes land
+load_set:
+  - the parent epic-plan's pinned prompts (dispatch verbatim, never re-derive or re-open a fork)
+  - .claude/skills/seq-lane-build/SKILL.md
+  - the reservation branches / staged stubs the planning session created
+inputs:
+  - an already-planned epic-plan fan-out — live-attended, overnight staged stub, or crash-resume
+gates:
+  - canonical-occupancy check (FS-0035) before dispatch; never git add -A in canonical
+  - escalation valve — merge conflict / NO-GO / gate failure / genuine ambiguity → STOP, hold state, push gate shut
+output_contract:
+  - dispatch record — which lanes launched, on which branches/worktrees, with which prompt
+  - landing record per lane — done / blocked / crashed-then-resumed, with evidence
+  - trigger to the merge sweep on the FINAL lane landing (completion-triggered, not cron)
+  - zero silent state loss — a crashed lane is resumed or explicitly reported with last-known state
 ---
 
 # Recipe — Orchestrator

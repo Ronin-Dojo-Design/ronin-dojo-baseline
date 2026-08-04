@@ -16,6 +16,25 @@ tags:
   - brand
   - recipe
   - onboarding
+personas:
+  - Brandon — owns it; separates confirmed truth / recommendation / operator-to-fill; never publishes or writes code
+  - Operator — the source of confirmed truth; ratifies positioning + mission
+  - Petey — consumes the module map + showcase model for scope/sequencing
+load_set:
+  - the raw ask (operator directive / intake brief)
+  - ADR 0051 taxonomy + the CLAUDE.md North Star
+  - ronin-project-context.md (the portfolio map)
+  - the kernel module inventory (reuse vs net-new)
+inputs:
+  - a brand's raw material — the ask or the intake brief
+gates:
+  - no copy is canon until operator sign-off
+  - entitlements reuse existing authz — never a 5th system
+output_contract:
+  - brand brief at docs/product/<brand>/brand-brief.md with the confirmed/rec/operator-to-fill legend
+  - module map — reuse vs net-new, path-cited
+  - entitlement split — public/authed, reuse-only
+  - open questions consolidated for the operator
 ---
 
 # Recipe — New-Brand Business Interview

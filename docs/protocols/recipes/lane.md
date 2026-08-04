@@ -17,6 +17,28 @@ tags:
   - governance
   - orchestration
   - recipe
+personas:
+  - Cody — runs the lane (build + gates + self-review)
+  - Doug — reviews the landed commit, same-session or in the next review-wave
+  - Petey/operator — dispatcher; writes the lane prompt, pins every fork before dispatch
+load_set:
+  - the dispatch prompt itself (lane specifics)
+  - .claude/skills/seq-lane-build/SKILL.md
+  - docs/protocols/cody-preflight.md
+  - docs/protocols/fan-out-session-recipe.md §3–4
+inputs:
+  - a pinned dispatch prompt — goal, owned-file contract, non-goals, grill outcomes, session number, gates
+gates:
+  - docs+governance lane — wiki:lint + targeted script tests if scripts touched
+  - app-code lane — typecheck · lint:check · format:check · bun run test · next build, plus runtime proof if a runtime surface changed
+  - schema-touching lane — app-code gates + hand-authored migration, never prisma migrate dev
+output_contract:
+  - files touched — the owned-set diff, nothing outside it
+  - gate outputs — copy-pasted command results, not "gates passed"
+  - runtime evidence — when a runtime surface changed; otherwise "no runtime surface touched"
+  - proposed ledger edits — a session-file section, never a direct edit to a shared ledger
+  - commit(s) — local only, conventional message, on the lane branch; no push, no PR, no deploy
+  - deliberately-not-done list — named, not silently dropped
 ---
 
 # Recipe — Lane

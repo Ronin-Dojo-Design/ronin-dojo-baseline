@@ -20,6 +20,26 @@ tags:
   - a11y
   - recipe
   - review
+personas:
+  - Desi — always, the reviewer; walks the flow end-to-end, does not fix
+  - Cody — batched-fix executor after the operator elects fixes (behavior-preserving)
+  - Doug — if the flow is a conversion path (funnel completes on a hermetic scratch DB after any fix)
+load_set:
+  - the surface / flow, bounded entry → exit (route closure or end-to-end funnel)
+  - the funnel invariants (claim loop, join-funnel comp-gate, magic-link rules) from the domain hub
+  - open DES-NNN rows tagged ui-ux on this surface
+inputs:
+  - a bounded surface or end-to-end funnel written into the SESSION task
+gates:
+  - one clear visual priority + an accessible primary path per surface
+  - no dead-end / color-only signal / unlabelled control left unticketed
+  - applied fixes behavior-preserving + re-verified (flow re-walk + a11y spot-check)
+output_contract:
+  - the bounded surface/flow (entry → exit) reviewed
+  - DES-NNN ui-ux rows filed (or "conforms"), severity-ranked with recommendations
+  - fixes applied vs ticketed, routed
+  - re-verify evidence — flow re-walk (+ funnel completion on scratch DB) + a11y spot-check
+  - verdict GO / GO-WITH-NOTE → the push gate (waits for the operator's word)
 ---
 
 # Recipe — UI/UX Pass

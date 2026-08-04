@@ -18,6 +18,29 @@ tags:
   - quality
   - recipe
   - review
+personas:
+  - /code-quality + /fallow-fix-loop — always, the scoring + fix engines (the card only bookends them)
+  - Desi — on any lane that changed member-facing or shared-primitive UI (in the review pass, not at close)
+  - Doug — on any lane with its own gates/deploy (root gates never cover clients/*)
+  - Giddy — when structure moved, or the operator elects a fresh structural pass
+load_set:
+  - the trunk diff range <base>..<head>, excluding close-writer bookkeeping commits
+  - each lane's SESSION record + the close-wave's Giddy verdict
+  - domain invariants on the touched files (from the lane's gotcha floor)
+inputs:
+  - a merged trunk of N landed lanes, bounded by the diff and partitioned by deploy unit
+gates:
+  - fallow baseline before any edit; final delta ≤ baseline or justified
+  - behavior-preserving — Class-A / hard-cap fixes only; anything else is a ratified, logged exception
+  - delta-neutral re-verify — typecheck + oxlint + format:check (any touched apps/web file) + bun run test --parallel=1
+  - FS-0051 — affected-E2E manifest when a canonical read model / payload / projection / fixture contract changed
+output_contract:
+  - fallow baseline → final table per scoped file, proving the delta down or justified
+  - /code-quality score per code file, ≥ 8.5 or a documented reason
+  - fix list applied (behavior-preserving) vs ticketed (cross-boundary/behavior-changing), each routed
+  - re-verify evidence — delta-neutral tests + format:check green + affected-e2e as applicable
+  - review log entry per lane; unresolved findings → Proposed ledger edits, never silently dropped
+  - verdict GO / GO-WITH-NOTE → the per-deploy-unit push gate (waits for the operator's word)
 ---
 
 # Recipe — Quality Suite
