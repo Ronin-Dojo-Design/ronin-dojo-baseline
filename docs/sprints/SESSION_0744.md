@@ -2,10 +2,10 @@
 title: "SESSION 0744 — Overnight Claudex fanout: Fable 5 orchestrator + 4 Codex commit-only lanes"
 slug: session-0744
 type: session--open
-status: staged
+status: in-progress
 created: 2026-08-03
-updated: 2026-08-03
-last_agent: claude-fable-session-0743
+updated: 2026-08-04
+last_agent: claude-fable-session-0744
 sprint: S13
 lane: repo
 lane_seq:
