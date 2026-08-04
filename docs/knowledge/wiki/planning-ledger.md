@@ -4,8 +4,8 @@ slug: planning-ledger
 type: reference
 status: active
 created: 2026-07-20
-updated: 2026-07-30
-last_agent: claude-session-0692
+updated: 2026-08-04
+last_agent: claude-fable-session-0745
 pairs_with:
   - docs/knowledge/wiki/goals-ledger.md
   - docs/protocols/loop-of-loops-ledger-driven-sessions.md
@@ -307,6 +307,12 @@ plan scope.
      client after a schema lands) vs stay docs-only. A recurring FS is the trigger to promote.
   4. **Define "the mitigation stuck":** how do we know an FS didn't recur after capture? (a recurrence
      counter / a periodic self-audit).
+- **Recurrence (SESSION_0744, orchestrator self-report; recorded SESSION_0745 AM sweep):** the codex
+  dispatch wrapper itself piped through `| tail`, masking the driver's real exit — the 402
+  `deactivated_workspace` fatal surfaced via output text, not `$?`. Rule already durably documented for
+  GATE commands; recurrence site = **dispatch** commands. Applied fix: overnight-orchestrator-waves rule
+  5 now reads "no piped gate **or dispatch** commands — capture the driver's `$?` before any pipe."
+  Further evidence for this row's capture≠prevention thesis.
 - **Note:** related to the abstraction-ladder doctrine (run → card → skill) — this is the same
   "prove the fix is durable, don't just log it" instinct applied to the FS log.
 - **Goal row:** none yet (mint a `G-NNN` if it graduates to a program).

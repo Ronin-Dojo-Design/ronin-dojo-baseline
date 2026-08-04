@@ -4,8 +4,8 @@ slug: incidents
 type: protocol
 status: active
 created: 2026-04-26
-updated: 2026-07-26
-last_agent: claude-session-0712
+updated: 2026-08-04
+last_agent: claude-fable-session-0745
 ---
 
 # Incidents Log
@@ -38,3 +38,4 @@ See [closing ritual — unclean close recovery](../../rituals/closing.md#unclean
 | 2026-07-22 | SESSION_0583 / 0585 / 0613 | unclean-close | Three sessions left `status: in-progress` after their work landed + pushed (commits `28b5fd95`, `9d4a397b`, `4632eabf`); each had full `What landed` + historical "push gate held" text. Surfaced by the State-of-Dojo `needs-you` feed flooding with resolved-but-open sessions | Verified work landed via git, flipped all three frontmatter `status:` → `closed` (docs-only). Root of the projection noise is stale source data, not the projection. | SESSION_0617 |
 | 2026-07-26 | SESSION_0711 (#342 squash) | unclean-close | The #342 squash-merge reintroduced the pre-renumber ADR files (docs/adr/0001–0004 duplicates of 0055–0058) alongside the ec075daa renames, and the renamed files kept old-number titles/H1s — HEAD carried a half-renumbered corpus | Found at SESSION_0712 bow-in survey; duplicates dropped + renumber finished (`a654233f`), README table completed | SESSION_0712 |
 | 2026-07-26 | SESSION_0674 | unclean-close | Frontmatter stayed `in-review` after the build merged (PR #303, `b2fc7013` — `/app/state/[brand]` + BrandStatePanel); same class as the 0583/0585/0613 stale-status flood | Verified merge via git, flipped frontmatter `status:` → `closed` (docs-only) in SESSION_0712 | SESSION_0712 |
+| 2026-08-04 | SESSION_0744 | driver-outage | Overnight Claudex fanout lost its entire Codex fleet at first dispatch — both L1/L2 `codex exec` calls died <1 min on `402 Payment Required {"detail":{"code":"deactivated_workspace"}}` (ChatGPT workspace billing state; unattended-undetectable beforehand; the dispatch wrapper's `\| tail` also masked the real exit — PL-010 recurrence) | All 4 lanes converted to Claude Cody salvage under the operator's explicit mid-run word — same worktrees, same prompts, same commit-only contract; 4/4 PRs landed (#423–#426), zero loss. Prevention applied SESSION_0745: pre-flight `codex exec` smoke added to overnight-orchestrator-waves Preconditions; workspace reactivation is an attended chatgpt.com billing fix (operator). Claudex-as-Codex recipe remains UNPROVEN | SESSION_0744 (salvage) + SESSION_0745 (prevention) |

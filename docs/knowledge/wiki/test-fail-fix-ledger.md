@@ -4,8 +4,8 @@ slug: test-fail-fix-ledger
 type: reference
 status: active
 created: 2026-06-04
-updated: 2026-07-26
-last_agent: codex-session-0551
+updated: 2026-08-04
+last_agent: claude-fable-session-0745
 pairs_with:
   - docs/sprints/SESSION_0341.md
   - docs/sprints/SESSION_0342.md
@@ -57,6 +57,64 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
 
 ## Active Clusters
 
+### TFF-013 — lineage cross-suite P2002/P2034 pair: find-then-create race + Serializable SSI aborts
+
+- **Status:** `fixed` (SESSION_0748, PR #425 — test-only; applied SESSION_0745 AM sweep).
+- **What broke (SESSION_0725 pair, full-suite only):** (a) `reconcile-pending-claims.test.ts` P2002 —
+  find-then-create on the shared `{BBL, LINEAGE_PREMIUM/ELITE}` entitlement **definitions** raced a
+  sibling file creating the same `brand_key`, and its afterAll deleted the shared rows out from under
+  later files; (b) `lineage-member-placement.test.ts` P2034 — `applyLineageMemberPlacementUpdate` runs a
+  Serializable tx; cross-file SSI aborts surfaced as victim-side P2034.
+- **Fix:** (a) atomic flat `upsert` on `brand_key` (Prisma native `INSERT … ON CONFLICT`, mirrors
+  `e2e/helpers/seed-lineage-lifecycle-db.ts:54-76`) and **definitions kept** — no afterAll delete of
+  shared rows; (b) bounded ×3 **P2034-only** victim-side retry
+  (`lineage-member-placement.test.ts:42-57` — rethrows any other code, warns loudly; 0 retries fired in
+  3× proof runs = dormant guards); (c) run-scoped `shortCode()` in `fixture-ownership.ts:43-56` kills the
+  time-invariant Discipline-code truncation (the TFF-010 class). No assertion weakened (AM Doug audit:
+  every `expect` byte-identical to main).
+- **Reusable patterns:** find-then-create on a shared unique key is a cross-suite race — **upsert it**;
+  a Serializable-tx call in a test needs a **bounded P2034-only retry** on a shared DB; shared
+  entitlement **definitions are never deleted** by a test's cleanup.
+- **Follow-ups routed:** `editor-actions.test.ts:788` same-bug `shortCode()` move (see TFF-010
+  recurrence); `sweepStaleLifecycleRows` in `seed-lineage-lifecycle-db.ts` not run-scoped — cross-lane
+  live-fixture deletion hazard (MEMBER_NOT_FOUND signature, distinct from P2034), flagged-only.
+- **Closes:** issue #378.
+
+### TFF-014 — pre-commit-format-guard harness hangs at its 30s ceiling (environmental, machine-state)
+
+- **Status:** `open` (environmental — machine-state class, NOT a code defect; first sighting
+  SESSION_0745 AM sweep, Doug verification of PR #425).
+- **What broke:** `apps/web/scripts/pre-commit-format-guard.test.ts:20` ("defeats partial staging
+  without mutating the index or worktree") timed out at 30000ms during a local full-suite run
+  (1971 pass / 1 fail / 247 files), `error: pre-commit integration harness failed`, 1 dangling process.
+- **Disambiguation chain (reusable recipe):** (a) structurally unreachable from the reviewed diff
+  (git-hook harness, no shared code); (b) reproduces in isolation (30.06s); (c) hung subprocess via `ps`
+  = `oxfmt` on the harness's deliberate spaced-filename fixture (`member ranks.ts`,
+  `pre-commit.test.sh:126-128`); (d) `oxfmt` on the same spaced file directly = 33ms OK — filename not
+  the trigger; (e) **decisive:** the identical harness hangs ≥25s run from the untouched canonical
+  `main` checkout, while CI `Unit tests (bun test)` at the same head SHA is green → environmental.
+- **Machine-state suspects at capture:** a stale `oxfmt --lsp` from the canonical checkout running
+  since 2026-08-01 (PID 94233); sandboxed review shell as a second variable.
+- **Fix direction:** kill the stale `oxfmt --lsp` and re-run the harness in a clean shell; if it still
+  hangs, instrument `pre-commit.test.sh` with a per-step timeout to pin which step wedges. CI remains
+  the authoritative gate for this file until closed.
+
+### TFF-015 — schedule safe-action hook timeout under full-suite load (environmental/load class)
+
+- **Status:** `open` (first sighting SESSION_0745 merged-tree rerun; environmental/load class,
+  machine-state sibling of TFF-014).
+- **What broke:** `server/web/schedule/actions.safe-action.test.ts` — an "(unnamed)" fail at 5011ms,
+  "a beforeEach/afterEach hook timed out for this test", under the full `bun run test` suite
+  (run 2: 1968 pass / 2 fail — the other fail was TFF-014). **Passes isolated 3/3 in 2.5s.**
+- **Context:** two consecutive uncontended merged-tree runs produced SHIFTING failure sets
+  (run 1: 7 fail + 1 error, 1922 ran — failing names lost to a `| tail` capture miss, the PL-010
+  trap, recorded honestly; run 2: 2 fail, 1970 ran). CI green at every merged PR head + main tip
+  `7ccf9392` (CI + Playwright success). Same machine-state suspects as TFF-014 (stale `oxfmt --lsp`
+  PID 94233 since 2026-08-01).
+- **Fix direction:** clear the stale `oxfmt --lsp` / clean-shell rerun; if it recurs cleanly, raise
+  or instrument the hook timeout and check schedule-fixture cross-suite contention. CI authoritative
+  meanwhile.
+
 ### TFF-010 — paywall e2e seed: unique `code` derived by truncating OFF the unique suffix (P2002 under parallel workers)
 
 - **Status:** `fixed` (SESSION_0551).
@@ -80,12 +138,25 @@ reproduce a full-suite cluster with bare `bun test` (mock leak) or unbounded `--
   cleanup deletes the row) — but a suite run KILLED mid-file (this session: lane crashes on the shared
   prodsnap DB) strands the row, and every later run of that file P2002s at setup. Fixed-by-cleanup
   (stranded `session-0184-1785005311040-*` fixture rows deleted; file 6/6 green after). The code fix —
-  same `createFixtureRunIdentity(...).shortCode()` move as above — still owed on this file and any other
-  `tag(...).slice(0,16)` site; grep `slice(0, 16)` under `apps/web/**/*.test.ts` when picking this up.
+  same `createFixtureRunIdentity(...).shortCode()` move as above — **fixed for
+  `node-profile-actions.test-fixture.ts` (SESSION_0748, PR #425)**; remaining `slice(0, 16)` site =
+  `apps/web/server/web/lineage/editor-actions.test.ts:788` (same-bug follow-up, routed via TFF-013).
 
 ### TFF-006 — billing portal/checkout cluster flakes in the full suite *under `--parallel=1`* (105-file scale)
 
-- **Status:** `open` (needs local repro — see below).
+- **Status:** `open` — **not reproduced at 247-file scale (SESSION_0749: 3× consecutive full-suite
+  green, 1972 pass / 0 fail each, local prodsnap).** Row facts below are stale: brand is now **BBL**
+  (not BASELINE_MARTIAL_ARTS), suite is **247** files (not 105), portal action routes via
+  `getStripeClient(Brand.BBL)`. Kept open as a **monitor** (operator call, SESSION_0745): next
+  escalation = N≥10 local loop or **CI rerun-until-fail** (both historical reds were CI); prophylactic
+  candidate = de-literalize the 3 fixed `cus_test_*` IDs (`actions.test.ts:110`,
+  `checkout-actions.test.ts:495,607`) — deliberately NOT applied cold (the reverted-#91 trap below).
+  Latent-coupling notes (SESSION_0749 forensics + AM Doug review): the fixed literals coexist with
+  globally-unique `stripeCustomerId` (`schema.prisma:1961`) + the webhook test's `cus_test_` prefix
+  sweeps (`route.test.ts:414,446,593`) — stranded-row mechanism = the TFF-010 recurrence class; AND an
+  env-dependent mock bypass: if `STRIPE_SECRET_KEY_BBL` is ever set in a test/CI env, `stripeBBL`
+  becomes a real client and `getStripeClient(Brand.BBL)` (`services/stripe.ts:82-83`) bypasses the
+  mocked platform `stripe` key → deterministic breakage or live API calls.
 - **Last observed:** 2026-06-17. PR #89 CI (`bun run test`, `--parallel=1`) — `1 fail / 620 pass`:
   `createBillingPortalSession - safe-action wrapper > redirects to a Stripe Customer Portal session`.
   The **sibling** cluster (`createProgramEnrollmentCheckout`, `createLineageMembershipCheckout` in

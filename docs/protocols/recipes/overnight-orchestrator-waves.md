@@ -94,6 +94,10 @@ repeatable law.
 - The AM merge-session stub is stage-able (see AM-stub-as-baton below) — if you can't stage the
   baton, you can't hand off the run; don't start.
 - Operator's standing authorization is explicit and in-session (not inferred from a prior night).
+- **Codex-driver pre-flight smoke (SESSION_0744 lesson):** before staging a Codex-driven night, run a
+  1-token `codex exec` ping and check its REAL exit — a deactivated/billing-dead workspace (402
+  `deactivated_workspace`) is unattended-undetectable otherwise and kills the whole fleet at dispatch.
+  Smoke fails → re-plan the night Claude-native or stop; don't dispatch into a dead driver.
 
 ## The wave loop (steps)
 
@@ -144,8 +148,9 @@ Every dispatch prompt opens with a HARD-RULES block. The anatomy, all parts mand
 4. **Proposed-ledger-edits discipline** — findings go in the lane's SESSION file under
    `## Proposed ledger edits`; the AM merge owner assigns ids via `ledger-id-next` and applies
    ALL lanes' edits in ONE canonical commit.
-5. **Real exit codes** — no piped gate commands (`| tail` masks `$?` — PL-010); capture and
-   record `REAL_EXIT`.
+5. **Real exit codes** — no piped gate **or dispatch** commands (`| tail` masks `$?` — PL-010;
+   SESSION_0744's codex-dispatch wrapper hid a fatal 402 exactly this way); capture the driver's
+   `$?` before any pipe and record `REAL_EXIT`.
 6. **Explicit-path staging** — never `git add -A`.
 7. **Exit contract** — verbatim commit message (with `Co-Authored-By` trailer), `git push -u
    origin HEAD`, `gh pr create --fill`, **STOP. Never merge.**
@@ -240,7 +245,9 @@ night's queue is fully mechanical (bar below) and Claude budget is reserved for 
    `codex exec` commit-only → runs the **foreground build gate in a normal shell** (`next build`;
    in-sandbox SIGSEGV on `prisma generate` is ENVIRONMENTAL, never a code verdict) → pushes the
    branch, opens the PR → **STOP, never merge** → routes findings to each lane's SESSION file.
-2. **Codex lane (commit-only):** edits + in-sandbox gates only — `bunx tsc --noEmit` ·
+2. **Codex lane (commit-only):** edits + in-sandbox gates only — `bun run typecheck` (the canonical
+   root gate; bare `bunx tsc --noEmit` is wrong — there is no root tsconfig, and a fresh worktree
+   lacks `next typegen` output, so bare tsc false-reds on `PageProps`/`LayoutProps`) ·
    `bun run test --parallel=1` · `bun run lint` (writes files → stage explicit paths) → commits →
    exits. No push, no PR, no build, no DB mutation beyond the test suite.
 
