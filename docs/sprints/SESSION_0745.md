@@ -2,10 +2,10 @@
 title: "SESSION 0745 — AM_Coffee_Merge_Review: morning sweep of the 0744 overnight Claudex fanout"
 slug: session-0745
 type: session--open
-status: staged
+status: in-progress
 created: 2026-08-04
 updated: 2026-08-04
-last_agent: claude-fable-session-0744
+last_agent: claude-fable-session-0745
 sprint: S13
 lane: repo
 recipe: am-coffee-merge-review
@@ -188,3 +188,101 @@ ERROR: unexpected status 402 Payment Required: {"detail":{"code":"deactivated_wo
   ⑤ worktree/branch cleanup after merges (`ronin-0744/46/47/48/49`).
 - Merge order recommendation stands: L2 #423 → L1 #424 → L3 #425 → L5 #426 (+ #422 last, after
   its wave records stop moving). Then attended #380 PR2.
+
+---
+
+## Bow-in (SESSION_0745 executing agent — Fable 5, attended)
+
+- FS-0024 guard: PASS (canonical checkout, `Ronin-Dojo-Design/black-belt-legacy`). Canonical claim:
+  SESSION_0745. githooks doctor: PASS.
+- **Previous-session goal verdict: SESSION_0744 = YES** — 4/4 lanes landed as open PRs
+  (#423/#424/#425/#426) + baton #422; zero merges/deploys/ledger-writes overnight; exclusions held.
+  Driver caveat honestly recorded: Codex never ran a token (402 `deactivated_workspace`), entire
+  fanout was Claude Cody salvage — Claudex-as-Codex remains UNPROVEN.
+- Petey bow-in questions asked (opening.md 6b): lane = this sweep (operator elected, with a
+  pre-merge review gate added — see below); queue = baton AM decision batch + #361 (untouched);
+  no pivot. State-of-Dojo publish ask: **declined** (live `/app/state` suffices).
+- Parallel-lane assessment (1d): single-lane — the sweep is serial by design (merge train + one
+  canonical ledger commit).
+- **Operator course-correction at bow-in:** run `/ggr` + `/pr-fix-loop` on the five PRs BEFORE any
+  merge. Executed as a 5-agent review fan-out (Doug ×4 + Giddy ×1), reusing the overnight worktrees;
+  test-DB serialized (#424's reviewer ran its fixture test alone in batch 1; #425's reviewer ran the
+  full suite alone in batch 2).
+
+## Task log
+
+- SESSION_0745_TASK_01 — pre-merge review gate (/ggr + /pr-fix-loop) on #423 #424 #425 #426 #422 — DONE
+- SESSION_0745_TASK_02 — merge train #423→#424→#425→#426→#422 (operator go) — DONE
+- SESSION_0745_TASK_03 — ledger apply ONCE (this commit) — DONE
+- SESSION_0745_TASK_04 — merged-tree full-suite rerun — DONE (verdict: code-green; local reds
+  environmental — see Close evidence)
+- SESSION_0745_TASK_05 — Graphify refresh + worktree/branch cleanup — pending
+- SESSION_0745_TASK_06 — attended #380 PR2 re-orientation (hold for explicit go) — pending
+
+## Review log (/ggr — pre-merge QAR gate, 5 independent reviewers)
+
+| PR | Reviewer | Score | Verdict | Key findings |
+| --- | --- | --- | --- | --- |
+| #423 (L2) | Doug | 9.3 | READY | comment-only independently re-proven across TWO belt files (lane said one — undercount, not breach); P2: D-063 sweep missed `ronin-project-context.md:59` → folded into the D-063 flip here |
+| #424 (L1) | Doug | 9.3 | READY | all gates re-run green incl. exact +7 R9 warning delta vs fresh 115 baseline; wiki-lint.test.ts wired to NO automated gate → WL-P2-84 minted here; APFS case-insensitive `existsSync` + traversal shape → noted in WL-P2-84 |
+| #425 (L3) | Doug | 9.52→8.9 (cap) | READY | assertion-integrity pass (every expect byte-identical); 3/3 mechanisms sound; full-suite 1971/1972 — single fail proven ENVIRONMENTAL (reproduces on untouched main, CI green at head) → cap released by TFF-014 minted here |
+| #426 (L5) | Doug | 9.1 | READY | 11/13 forensic claims verified to the line; 1 refuted (TFF-005 cite → actually TFF-010 class — corrected in the TFF-006 edit here); STRIPE_SECRET_KEY_BBL mock-bypass hazard added to TFF-006 |
+| #422 (baton) | Giddy | 9.4 | READY | record verified exact to the OID; post-merge R9 lint proven safe both merge orders; ledger-edit dedupe honored (ONE incidents row, not two) |
+
+## Merge record (operator go given at the gate — all five, in order)
+
+| PR | Squash commit |
+| --- | --- |
+| #423 | `49462c1b` |
+| #424 | `165cded7` |
+| #425 | `0f6f0492` |
+| #426 | `596d39bb` |
+| #422 | `7ccf9392` |
+
+Only #361 remains open (untouched, per exclusions). Vercel prod auto-deploys fired on the code-bearing
+tips (#423 comment-only, #425 test-only — both behavior-safe by proof).
+
+## Decisions ratified (operator, at the merge gate)
+
+1. **R9 archive-severity extension: RATIFIED as shipped** — `sprints/_archive/**` unresolvable
+   `recipe:` values warn at most, never error; live staged/in-progress enforcement fully armed.
+2. **7 permanent R9 history warnings: ACCEPTED as permanent** — no history-suppression, no drift row
+   minted (L1's candidate row deliberately not minted, per the default the lane proposed).
+3. **TFF-006: kept `open` as a monitor** — corrected facts + hazards recorded; escalation = N≥10 local
+   loop or CI rerun-until-fail, scheduled when the operator chooses.
+4. **#425's 8.9 environmental cap: ACCEPTED** with the TFF-014 row landing in this commit (score
+   releases to 9.5 per the matrix's own release rule).
+
+## Ledger apply (ONE canonical commit — this one; reverse-checked against all five sources)
+
+- `drift-register.md`: D-057 → resolved-local · D-059 → resolved · D-063 → resolved-local **amended**
+  with the AM-review residuals (`ronin-project-context.md:31/:58/:59` → upstream conform route).
+- `test-fail-fix-ledger.md`: TFF-013 minted (P2002/P2034 pair, fixed 0748; closes #378) · TFF-014
+  minted (pre-commit-format-guard environmental hang, first sighting) · TFF-010 recurrence flipped
+  (node-profile-actions fixed; `editor-actions.test.ts:788` remaining) · TFF-006 monitor rewrite.
+- `wiring-ledger.md`: WL-P2-84 minted (wiki-lint.test.ts ↔ ci.yml, built-not-wired).
+- `planning-ledger.md`: PL-010 recurrence bullet (dispatch wrappers).
+- `incidents.md`: SESSION_0744 driver-outage row (Codex 402 — deduped to ONE row per Giddy).
+- `recipes/overnight-orchestrator-waves.md`: rule 5 gate-or-DISPATCH pipe ban · Preconditions
+  pre-flight codex smoke · Codex-lane gate wording `bunx tsc --noEmit` → `bun run typecheck`.
+- Not minted by decision: L1's R9-history drift row (decision 2 above).
+- 0744 task-log re-grade (Giddy P3): covered by this sweep's #422 review (9.4) — the runner-graded-
+  wrong-file quirk is recorded, no further action.
+- TFF-015 minted post-apply (merged-tree rerun finding — amended into this same commit).
+
+## Close evidence — TASK_04 merged-tree suite verdict
+
+- **Authoritative: GREEN.** Main tip `7ccf9392` CI ✅ + Playwright ✅; every merged PR head ran its
+  full CI suite green pre-merge (intermediate main runs `0f6f0492`/`596d39bb` show `cancelled` =
+  GitHub concurrency auto-cancel on supersession, not failures).
+- **Local runs: environmental red, honestly recorded.** Run 1: 1915/7 fail/1 error (1922 ran) —
+  failing names LOST to a `| tail -20` capture (the PL-010 trap, this agent's own miss; full-log
+  capture used for run 2). Run 2: 1968/2 fail (1970 ran, 408s) — fail 1 = TFF-014 (harness hang,
+  proven from untouched main), fail 2 = TFF-015 (schedule hook timeout, passes isolated 3/3).
+  Shifting failure sets across consecutive uncontended runs + isolation-green + CI-green = machine
+  state, prime suspect the stale `oxfmt --lsp` PID 94233 (running since 2026-08-01). Both classes
+  routed (TFF-014/TFF-015); no flake write-off — rows carry the fix directions.
+- **Systemic health:** CI = green (main tip `7ccf9392` runs: CI + Playwright E2E success) · findings
+  routed 100% (TFF-013/014/015 · WL-P2-84 · D-flips · PL-010 recurrence · incidents row) · FS
+  patterns: PL-010 pipe-trap recurred twice (0744 dispatch wrapper + this session's run-1 capture) —
+  both recorded on the PL-010 row/evidence, durable-prevention remains PL-010's open thesis.

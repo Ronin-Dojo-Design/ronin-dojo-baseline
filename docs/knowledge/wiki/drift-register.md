@@ -4,8 +4,8 @@ slug: drift-register
 type: protocol
 status: active
 created: 2026-04-27
-updated: 2026-08-03
-last_agent: claude-session-0737
+updated: 2026-08-04
+last_agent: claude-fable-session-0745
 source_pages:
   - docs/knowledge/wiki/concepts/open-brain-repo-memory.md
   - docs/sprints/_archive/SESSION_0017.md
@@ -27,7 +27,7 @@ Track contradictions, stale claims, and unresolved tensions between sources. Eac
 - **Source B:** disk reality — `.claude/skills/<name>` are directory **symlinks** into `.agents/skills/<name>` (`ls -la` confirmed); matching inodes are the symlink resolving to the same file, not two `ln`-linked inodes.
 - **Consequence:** an agent told to "re-establish the hardlink with `ln -f`" hunts for links that don't exist. Functionally the twins update together either way, but the terminology misleads a dispatched lane.
 - **Decision:** reconcile "hardlink" → "symlink" wording in D-053 + the citing docs; canonical fix upstream in rdd-monorepo (process-OS upstream-of-record).
-- **Status:** open — drift identified, wording fix routed (upstream).
+- **Status:** **RESOLVED in black-belt-legacy (SESSION_0747, lane L2; applied SESSION_0745 AM sweep, PR #423).** The one live "hardlink" cite (`docs/petey-plan-tier1-autonomous-lanes.md:161`) now reads "symlink twin". History cites (closed sessions, archives, this row) intentionally untouched. Canonical upstream wording fix still routed to rdd-monorepo (process-OS upstream-of-record).
 - **Found in:** SESSION_0722 (Lane B reflection) + SESSION_0720 AM sweep (Giddy F4).
 
 ### D-056 — Synced kernel skills hardcode a repo name (re-drifts on every cherry-pick)
@@ -898,7 +898,7 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Decision:** do not expand SESSION_0731 beyond the operator-defined #397/#399 touched set. Carry
   the two comment-only corrections as a proposed rider for SESSION_0732/#377 or the next belt-doc
   sweep; no behavior change.
-- **Status:** open. **Found in:** SESSION_0731 hostile implementation close.
+- **Status:** **RESOLVED (SESSION_0747, lane L2; applied SESSION_0745 AM sweep, PR #423).** Both stale comments corrected COMMENT-ONLY: `router.ts` fact-edit doc-comment no longer classes IMPORTED as authority-owned (member self-report, member-editable after claim — SESSION_0730 + #397); `verify-rank-entry.ts` parenthetical corrected the same way, durability wording intact. Zero behavior change (comment-only diff machine-verified by lane + independent Doug re-proof; apps/web typecheck green). **Found in:** SESSION_0731 hostile implementation close.
 
 ### D-060 — Storage monitoring still makes Turbopack trace the project root during production build
 
@@ -1009,7 +1009,15 @@ The D-016 residual sweep checked for radix *imports* but missed a *semantic* dif
 - **Fix direction:** conform the local copy from the RDD-Monorepo canonical (cherry-pick down,
   per the process-OS up-sync pattern) in a docs lane; verify no other monorepo-era hosting
   claims survive in the same file.
-- **Status:** open.
+- **Status:** **RESOLVED locally (SESSION_0747, lane L2; applied SESSION_0745 AM sweep, PR #423).**
+  Supersession banner (ADR 0055/0059; canonical upstream copy = rdd-monorepo) + five-repo rewrite of
+  "## Repo & product strategy" + conformed surface-table rows in the local copy. **Residuals (AM-sweep
+  Doug review, route into the upstream rdd-monorepo conform):** the intro line still says "working in
+  ronin-dojo-baseline" (`ronin-project-context.md:31`); brands-table rows `:58` ("flagship, permanent
+  in-repo") and `:59` (`clients/mammoth-build-crm` "in-repo until a contractual handoff" — `clients/`
+  is absent here, contradicts the conformed `:94`) survived the lane's file-wide sweep — fold the whole
+  brands table (`:53-62`) into the upstream conform so it syncs from canonical rather than being
+  spot-patched again. Upstream conform of the canonical copy still routed (cherry-pick down).
 
 ### D-064 — `Passport.memberPreferences` exists in prod but not in schema/migrations (untracked prod column)
 
